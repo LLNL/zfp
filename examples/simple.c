@@ -38,6 +38,7 @@ compress(double* array, int nx, int ny, int nz, double tolerance, int decompress
   /* associate bit stream with allocated buffer */
   stream = stream_open(buffer, bufsize);
   zfp_stream_set_bit_stream(zfp, stream);
+  zfp_stream_rewind(zfp);
 
   /* compress or decompress entire array */
   if (decompress) {

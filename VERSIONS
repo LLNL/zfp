@@ -1,3 +1,25 @@
+zfp 0.5.0, February 29, 2016
+
+  - Modified CODEC to more efficiently encode blocks whose values are all
+    zero or are smaller in magnitude than the absolute error tolerance.
+    This allows representing "empty" blocks using only one bit each.  This
+    version is not backwards compatible with prior zfp versions.
+
+  - Changed behavior of zfp_compress and zfp_decompress to not automatically
+    rewind the bit stream.  This makes it easier to concatenate multiple
+    compressed bit streams, e.g. when compressing vector fields or multiple
+    scalars together.
+
+  - Added functions for compactly encoding the compression parameters
+    and field meta data, e.g. for producing self-contained compressed
+    streams.  Also added functions for reading and writing a header
+    containing these parameters.
+
+  - Changed the zfp example program interface to allow reading and writing
+    compressed streams, optionally with a header.  The zfp tool can now be
+    used to compress and decompress files as a stand alone utility.
+
+
 zfp 0.4.1, December 28, 2015
 
   - Fixed bug that caused segmentation fault when compressing 3D arrays

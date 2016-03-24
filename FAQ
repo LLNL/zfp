@@ -17,6 +17,10 @@ Q10: Why does zfp corrupt memory if my allocated buffer is too small?
 Q11: Are zfp compressed streams portable across platforms?
 Q12: How can I achieve finer rate granularity?
 Q13: Can I generate progressive zfp streams?
+Q14: How do I initialize the decompressor?
+Q15: Must I use the same parameters during compression and decompression?
+Q16: Do strides have to match during compression and decompression?
+Q17: Why does zfp sometimes not respect my error tolerance?
 
 -------------------------------------------------------------------------------
 
@@ -178,7 +182,8 @@ One way around this problem (when not in fixed-rate mode) is to use the
 maxbits parameter in conjunction with the maximum precision or maximum
 absolute error parameters to limit the size of compressed blocks.  Finally,
 the function zfp_stream_maximum_size returns a conservative buffer size
-that is guaranteed to be large enough to hold the compressed data.
+that is guaranteed to be large enough to hold the compressed data and the
+optional header.
 
 -------------------------------------------------------------------------------
 
@@ -250,3 +255,117 @@ word size is 64 bits and there are n blocks, then
 implies that after every m 64-bit words have been decoded, the bit stream
 is advanced by m * n words to the next set of m 64-bit words associated
 with the block.
+
+-------------------------------------------------------------------------------
+
+Q14: How do I initialize the decompressor?
+
+A: The zfp_stream and zfp_field objects usually need to be initialized with
+the same values as they had during compression (but see Q15 for exceptions).
+These objects hold the compression mode and parameters, and field data like
+the scalar type and dimensions.  By default, these parameters are not stored
+with the compressed stream (the "codestream") and prior to zfp 0.5.0 had to
+be maintained separately by the application.
+
+Since version 0.5.0, functions exist for reading and writing a 12- to 19-byte
+header that encodes compression and field parameters.  For applications that
+wish to embed only the compression parameters, e.g. when the field dimensions
+are already known, there are separate functions that encode and decode this
+information independently.
+
+-------------------------------------------------------------------------------
+
+Q15: Must I use the same parameters during compression and decompression?
+
+A: Not necessarily.  It is possible to use more tightly constrained zfp_stream
+parameters during decompression than were used during compression.  For
+instance, one may use a larger minbits, smaller maxbits, smaller maxprec, or
+larger minexp during decompression to process fewer compressed bits than are
+stored, and to decompress the array more quickly at a lower precision.  This
+may be useful in situations where the precision and accuracy requirements are
+not known a priori, thus forcing conservative settings during compression, or
+when the compressed stream is used for multiple purposes.  For instance,
+visualization usually has less stringent precision requirements than
+quantitative data analysis.  This feature of decompressing to a lower precision
+is particularly useful when the stream is stored progressively (see Q13).
+
+Note that one may not use less constrained parameters during decompression,
+e.g. one cannot ask for more than maxprec bits of precision when decompressing.
+
+-------------------------------------------------------------------------------
+
+Q16: Do strides have to match during compression and decompression?
+
+A: No.  For instance, a 2D vector field
+
+  float in[ny][nx][2];
+
+could be compressed as two scalar fields with strides sx = 2, sy = 2 * nx,
+and with pointers &in[0][0][0] and &in[0][0][1] to the first value of each
+scalar field.  These two scalar fields can later be decompressed as
+non-interleaved fields
+
+  float out[2][ny][nx];
+
+using strides sx = 1, sy = nx and pointers &out[0][0][0] and &out[1][0][0].
+
+-------------------------------------------------------------------------------
+
+Q17: Why does zfp sometimes not respect my error tolerance?
+
+A: zfp does not store each floating-point value independently, but represents
+a group of values (4, 16, or 64 values, depending on dimensionality) as linear
+combinations like averages by evaluating arithmetic expressions.  Just like in
+uncompressed IEEE floating-point arithmetic, both representation error and
+roundoff error in the least significant bit(s) often occur.
+
+To illustrate this, consider compressing the following 1D array of four floats
+
+  float f[4] = { 1, 1e-1, 1e-2, 1e-3 };
+
+using the zfp command-line tool:
+
+  zfp -f -a 0 4 0 0 input.dat output.dat
+
+In spite of an error tolerance of zero, the reconstructed values are
+
+  float g[4] = { 1, 1e-1, 9.999998e-03, 9.999946e-04 };
+
+with a (computed) maximum error of 5.472e-9.  Because f[3] = 1e-3 can only
+be approximately represented in radix-2 floating-point, the actual error
+is even smaller: 5.424e-9.  This reconstruction error is primarily due to zfp's
+block-floating-point representation, which expresses the four values relative
+to a single, common binary exponent.  Such exponent alignment occurs also in
+regular IEEE floating-point operations like addition.  For instance,
+
+  float x = (f[0] + f[3]) - 1;
+
+should of course result in x = f[3] = 1e-3, but due to exponent alignment
+a few of the least significant bits of f[3] are lost in the addition, giving
+a result of x = 1.0000467e-3 and a roundoff error of 4.668e-8.  Similarly,
+
+  float sum = f[0] + f[1] + f[2] + f[3];
+
+should return sum = 1.111, but is computed as 1.1110000610.  Moreover, the
+value 1.111 cannot even be represented exactly in (radix-2) floating-point;
+the closest float is 1.1109999.  Thus the computed error
+
+  float error = sum - 1.111f;
+
+which itself has some roundoff error, is 1.192e-7.
+
+Phew!  Note how the error introduced by zfp (5.472e-9) is in fact one to two
+orders of magnitude smaller than the roundoff errors (4.668e-8 and 1.192e-7)
+introduced by IEEE floating-point in these computations.  This lower error
+is in part due to zfp's use of 30-bit significands compared to IEEE's 24-bit
+single-precision significands.  Note that data sets with a large dynamic
+range, e.g. where adjacent values differ a lot in magnitude, are more
+susceptible to representation errors.
+
+The moral of the story is that error tolerances smaller than machine epsilon
+(relative to the data range) cannot always be satisfied by zfp.  Nor are such
+tolerances necessarily meaningful for representing floating-point data that
+originated in floating-point arithmetic expressions, since accumulated
+roundoff errors are likely to swamp compression errors.  Because such roundoff
+errors occur frequently in floating-point arithmetic, insisting on lossless
+compression on the grounds of accuracy is tenuous at best.
