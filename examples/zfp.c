@@ -1,16 +1,12 @@
-/* C89 version of zfp.cpp that illustrates how to call the compressor from C */
-
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "zfp.h"
+#include "macros.h"
 
 #define PI 3.14159265358979323846
-
-#define min(x, y) ((x) < (y) ? (x) : (y))
-#define max(x, y) ((x) > (y) ? (x) : (y))
 
 static double
 func(uint x, uint y, uint z, uint nx, uint ny, uint nz)
@@ -31,8 +27,8 @@ func(uint x, uint y, uint z, uint nx, uint ny, uint nz)
 
 void usage()
 {
-  fprintf(stderr, "Usage: zfp [options] <nx> [ny nz infile outfile]\n");
-  fprintf(stderr, "  nx, ny, nz : grid dimensions (set nz = 0 for 2D, ny = nz = 0 for 1D)\n");
+  fprintf(stderr, "Usage: zfp <options> <nx> [ny nz infile outfile]\n");
+  fprintf(stderr, "  nx, ny, nz : array dimensions (set nz = 0 for 2D, ny = nz = 0 for 1D)\n");
   fprintf(stderr, "  infile : optional floating-point input file to compress\n");
   fprintf(stderr, "  outfile : optional output file for reconstructed data\n");
   fprintf(stderr, "Options:\n");
@@ -43,14 +39,14 @@ void usage()
   fprintf(stderr, "  -a <tolerance> : fixed accuracy (absolute error tolerance)\n");
   fprintf(stderr, "  -c <minbits> <maxbits> <maxprec> <minexp> : advanced usage\n");
   fprintf(stderr, "      minbits : min # bits per 4^d values in d dimensions\n");
-  fprintf(stderr, "      maxbits : max # bits per 4^d values in d dimensions\n");
+  fprintf(stderr, "      maxbits : max # bits per 4^d values in d dimensions (0 for unlimited)\n");
   fprintf(stderr, "      maxprec : max # bits of precision per value (0 for full)\n");
   fprintf(stderr, "      minexp : min bit plane # coded (-1074 for all bit planes)\n");
   fprintf(stderr, "Examples:\n");
   fprintf(stderr, "  zfp -f -r 16 100 100 100 : 2x fixed-rate compression of 100x100x100 floats\n");
   fprintf(stderr, "  zfp -d -r 32 1000000 : 2x fixed-rate compression of stream of 1M doubles\n");
   fprintf(stderr, "  zfp -d -p 32 1000 1000 : 32-bit precision compression of 1000x1000 doubles\n");
-  fprintf(stderr, "  zfp -d -a 1e-9 1000000 : compression of 1M doubles with < 1e-9 error\n");
+  fprintf(stderr, "  zfp -d -a 1e-9 1000000 : compression of 1M doubles with < 1e-9 max error\n");
   fprintf(stderr, "  zfp -d -c 64 64 0 -1074 1000000 : 4x fixed-rate compression of 1M doubles\n");
   exit(EXIT_FAILURE);
 }
@@ -58,17 +54,17 @@ void usage()
 int main(int argc, char* argv[])
 {
   /* default settings */
-  uint type = 0;
+  zfp_type type = zfp_type_none;
   uint nx = 0;
   uint ny = 0;
   uint nz = 0;
   double rate = 0;
   uint precision = 0;
   double tolerance = 0;
-  uint minbits = 0;
-  uint maxbits = 0;
-  uint maxprec = 0;
-  int minexp = INT_MIN;
+  uint minbits = ZFP_MIN_BITS;
+  uint maxbits = ZFP_MAX_BITS;
+  uint maxprec = ZFP_MAX_PREC;
+  int minexp = ZFP_MIN_EXP;
   char* inpath = 0;
   char* outpath = 0;
   char mode = 0;
@@ -76,20 +72,24 @@ int main(int argc, char* argv[])
   /* local variables */
   int i;
   int dp;
-  zfp_params params;
+  zfp_field* field;
+  zfp_stream* zfp;
+  bitstream* stream;
   uint mx;
   uint my;
   uint mz;
+  uint dims;
   size_t typesize;
   size_t insize;
+  size_t outsize;
+  size_t bufsize;
   void* f;
   float* ff;
   double* fd;
   void* g;
   float* gf;
   double* gd;
-  size_t outsize;
-  unsigned char* zip;
+  void* buffer;
   double e;
   double fmin;
   double fmax;
@@ -115,10 +115,10 @@ int main(int argc, char* argv[])
           mode = 'c';
           break;
         case 'd':
-          type = ZFP_TYPE_DOUBLE;
+          type = zfp_type_double;
           break;
         case 'f':
-          type = ZFP_TYPE_FLOAT;
+          type = zfp_type_float;
           break;
         case 'p':
           if (++i == argc || sscanf(argv[i], "%u", &precision) != 1)
@@ -151,10 +151,10 @@ int main(int argc, char* argv[])
 
   /* make sure we know floating-point type */
   switch (type) {
-    case ZFP_TYPE_FLOAT:
+    case zfp_type_float:
       dp = 0;
       break;
-    case ZFP_TYPE_DOUBLE:
+    case zfp_type_double:
       dp = 1;
       break;
     default:
@@ -163,28 +163,39 @@ int main(int argc, char* argv[])
   }
 
   /* set array type and size */
-  zfp_init(&params);
-  params.type = type;
-  params.nx = nx;
-  params.ny = ny;
-  params.nz = nz;
+  if (nz)
+    field = zfp_field_3d(NULL, type, nx, ny, nz);
+  else if (ny)
+    field = zfp_field_2d(NULL, type, nx, ny);
+  else if (nx)
+    field = zfp_field_1d(NULL, type, nx);
+  else {
+    fprintf(stderr, "must specify array dimensions\n");
+    return EXIT_FAILURE;
+  }
+  dims = zfp_field_dimensionality(field);
 
   /* set compression mode */
+  zfp = zfp_stream_open(NULL);
   switch (mode) {
     case 'a':
-      zfp_set_accuracy(&params, tolerance);
+      zfp_stream_set_accuracy(zfp, tolerance, type);
       break;
     case 'p':
-      zfp_set_precision(&params, precision);
+      zfp_stream_set_precision(zfp, precision, type);
       break;
     case 'r':
-      zfp_set_rate(&params, rate);
+      zfp_stream_set_rate(zfp, rate, type, dims, 0);
       break;
     case 'c':
-      params.minbits = minbits;
-      params.maxbits = maxbits;
-      params.maxprec = maxprec;
-      params.minexp = minexp;
+      if (!maxbits)
+        maxbits = ZFP_MAX_BITS;
+      if (!maxprec)
+        maxprec = zfp_field_precision(field);
+      if (!zfp_stream_set_params(zfp, minbits, maxbits, maxprec, minexp)) {
+        fprintf(stderr, "invalid compression parameters\n");
+        return EXIT_FAILURE;
+      }
       break;
     default:
       fprintf(stderr, "must specify compression parameters via -a, -c, -p, or -r\n");
@@ -192,27 +203,34 @@ int main(int argc, char* argv[])
   }
 
   /* effective array dimensions */
-  mx = max(nx, 1u);
-  my = max(ny, 1u);
-  mz = max(nz, 1u);
+  mx = MAX(nx, 1u);
+  my = MAX(ny, 1u);
+  mz = MAX(nz, 1u);
 
   /* size of floating-point type in bytes */
   typesize = dp ? sizeof(double) : sizeof(float);
 
   /* allocate space for uncompressed and compressed fields */
   insize = mx * my * mz * typesize;
-  outsize = zfp_estimate_compressed_size(&params);
-  if (!outsize) {
+  bufsize = zfp_stream_maximum_size(zfp, field);
+  if (!bufsize) {
     fprintf(stderr, "invalid compression parameters\n");
     return EXIT_FAILURE;
   }
   f = malloc(insize);
+  zfp_field_set_pointer(field, f);
   ff = (float*)f;
   fd = (double*)f;
   g = malloc(insize);
   gf = (float*)g;
   gd = (double*)g;
-  zip = malloc(outsize);
+  buffer = malloc(bufsize);
+  stream = stream_open(buffer, bufsize);
+  zfp_stream_set_bit_stream(zfp, stream);
+  if (!f || !g || !buffer || !stream) {
+    fprintf(stderr, "memory allocation failed\n");
+    return EXIT_FAILURE;
+  }
 
   /* initialize uncompressed field */
   if (inpath) {
@@ -243,7 +261,7 @@ int main(int argc, char* argv[])
   }
 
   /* compress data */
-  outsize = zfp_compress(&params, f, zip, outsize);
+  outsize = zfp_compress(zfp, field);
   if (outsize == 0) {
     fprintf(stderr, "compression failed\n");
     return EXIT_FAILURE;
@@ -253,18 +271,28 @@ int main(int argc, char* argv[])
 #if IT_SEEMS_TOO_GOOD_TO_BE_TRUE
   /* for skeptics: relocate compressed data */
   {
-    unsigned char* copy = malloc(outsize);
-    memcpy(copy, zip, outsize);
-    free(zip);
-    zip = copy;
+    uchar* copy = malloc(outsize);
+    memcpy(copy, buffer, outsize);
+    stream_close(stream);
+    free(buffer);
+    buffer = copy;
+    stream = stream_open(buffer, outsize);
+    zfp_stream_set_bit_stream(zfp, stream);
   }
 #endif
 
   /* decompress data */
-  if (!zfp_decompress(&params, g, zip, outsize)) {
+  zfp_field_set_pointer(field, g);
+  if (!zfp_decompress(zfp, field)) {
     fprintf(stderr, "decompression failed\n");
     return EXIT_FAILURE;
   }
+
+  /* free compressed buffer */
+  zfp_field_free(field);
+  zfp_stream_close(zfp);
+  stream_close(stream);
+  free(buffer);
 
   /* write reconstructed data */
   if (outpath) {
@@ -288,10 +316,10 @@ int main(int argc, char* argv[])
   for (i = 0; (uint)i < mx * my * mz; i++) {
     double d = fabs(dp ? fd[i] - gd[i] : ff[i] - gf[i]);
     double val = dp ? fd[i] : ff[i];
-    emax = max(emax, d);
+    emax = MAX(emax, d);
     e += d * d;
-    fmin = min(fmin, val);
-    fmax = max(fmax, val);
+    fmin = MIN(fmin, val);
+    fmax = MAX(fmax, val);
   }
   e = sqrt(e / (mx * my * mz));
   nrmse = e / (fmax - fmin);
@@ -302,7 +330,6 @@ int main(int argc, char* argv[])
   /* clean up */
   free(f);
   free(g);
-  free(zip);
 
   return EXIT_SUCCESS;
 }

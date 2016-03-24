@@ -1,9 +1,9 @@
 INTRODUCTION
 
-  This is zfp 0.3.1, an open source C++ library for compressed floating-point
+  This is zfp 0.4.0, an open source C/C++ library for compressed numerical
   arrays that support high throughput read and write random access.  zfp was
   written by Peter Lindstrom at Lawrence Livermore National Laboratory, and
-  is based on the algorithm described in the following paper:
+  is loosely based on the algorithm described in the following paper:
 
     Peter Lindstrom
     "Fixed-Rate Compressed Floating-Point Arrays"
@@ -11,17 +11,21 @@ INTRODUCTION
       20(12):2674-2683, December 2014
     doi:10.1109/TVCG.2014.2346458
 
-  zfp was designed to achieve high compression ratios and therefore uses
-  lossy but optionally error-bounded compression.  Although bit-for-bit
-  lossless compression is not always possible, zfp is usually accurate to
-  within machine epsilon in near-lossless mode.
+  zfp was originally designed for floating-point data only, but has been
+  extended to also support integer data, and could for instance be used to
+  compress images and quantized volumetric data.  To achieve high compression
+  ratios, zfp uses lossy but optionally error-bounded compression.  Although
+  bit-for-bit lossless compression of floating-point data is not always
+  possible, zfp is usually accurate to within machine epsilon in near-lossless
+  mode.
 
-  zfp works best for 2D and 3D arrays that exhibit spatial coherence.
-  Although zfp also provides a 1D array class that can be used for 1D
-  signals or even unstructured floating-point streams, the compression
-  scheme has not been well optimized for this use case, and rate and quality
-  may not be competitive with floating-point compressors designed for 1D
-  streams.
+  zfp works best for 2D and 3D arrays that exhibit spatial coherence, such
+  as smooth fields from physics simulations, images, regularly sampled terrain
+  surfaces, etc.  Although zfp also provides a 1D array class that can be used
+  for 1D signals such as audio, or even unstructured floating-point streams,
+  the compression scheme has not been well optimized for this use case, and
+  rate and quality may not be competitive with floating-point compressors
+  designed specifically for 1D streams.
 
   zfp is freely available as open source under a BSD license, as outlined in
   the file 'LICENSE'.  For information on the API and general usage, please
@@ -30,15 +34,24 @@ INTRODUCTION
 
 INSTALLATION
 
-  The main compression codec and array classes are implemented entirely in
-  header files, and therefore can be included as is without pre-compilation.
-  C wrappers also exist for compressing entire arrays, which are made
-  available through a small library called libzfp.  To compile libzfp and
-  all example programs (see below for more details) on Linux or OS X, type
+  zfp consists of three distinct parts: a compression library written in C;
+  a set of C++ header files that implement compressed arrays; and a set of
+  C and C++ examples.  The main compression codec is written in C and should
+  conform to both the ISO C89 and C99 standards.  The C++ array classes are
+  implemented entirely in header files and can be included as is, but since
+  they call the compression library applications must link with libzfp.
+
+  To compile libzfp and all example programs (see below for more details)
+  on Linux or OS X, type
 
     make
 
-  from this directory.  Then, to test the compressor using testzfp, type
+  from this directory.  This compiles libzfp as a static library and the
+  example programs.  To optionally create a shared library, type
+
+    make shared
+
+  and set LD_LIBRARY_PATH to point to ./lib.  To test the compressor, type
 
     make test
 
@@ -55,10 +68,10 @@ INSTALLATION
 
   zfp has successfully been built and tested using these compilers:
 
-    gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.1
-    icc versions 12.0.5, 12.1.5, 13.0.1, 14.0.3
+    gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.2
+    icc versions 12.0.5, 12.1.5, 13.0.1, 14.0.3, 15.0.4
+    clang versions 3.4.2, 3.6.0
     xlc version 12.1
-    clang versions 3.2 3.4.2
     mingw32-gcc version 4.8.1
 
 
@@ -71,30 +84,84 @@ ALGORITHM OVERVIEW
   similar to current hardware texture compression schemes for image
   coding implemented on graphics cards and mobile devices.
 
-  The zfp compression scheme is based on three components, outlined below.
+  The compression scheme implemented in this version of zfp has evolved
+  from the method described in the paper cited above, and can conceptually
+  be thought of as consisting of eight sequential steps (in practice some
+  steps are consolidated or exist only for illustrative purposes):
 
   (1) The d-dimensional array is partitioned into blocks of dimensions 4^d.
-  The independent floating-point values in a block are converted to what is
-  known as a block-floating-point representation, which uses a single, common
-  floating-point exponent for all 4^d values.  The effect of this conversion
-  is to turn each floating-point value into a 32- or 64-bit signed integer.
+  If the array dimensions are not multiples of four, then blocks near the
+  boundary are padded to the next multiple of four.  This padding is
+  invisible to the application.
 
-  (2) The integers are decorrelated using a custom, high-speed, orthogonal
-  transform similar to the discrete cosine transform used in JPEG image
-  coding.  The transform exploits separability and is implemented efficiently
-  in-place using the lifting scheme.  If the data is "smooth," then this
-  transform will turn most integers into small signed values clustered
-  around zero.
+  (2) The independent floating-point values in a block are converted to what
+  is known as a block-floating-point representation, which uses a single,
+  common floating-point exponent for all 4^d values.  The effect of this
+  conversion is to turn each floating-point value into a 31- or 63-bit
+  signed integer.  Note that this step is not performed if the input data
+  already consists of integers.
 
-  (3) The transform coefficients are compressed using embedded coding by
-  exploiting the property that most coefficients have many leading zeros.
-  This coder emits one bit at a time, with each successive bit potentially
-  improving the quality of the reconstructed signal.  The early bits are
-  most important and have the greatest impact on signal quality, with the
-  last few bits providing very small changes.  The resulting compressed
-  bit stream can be truncated at any point and still allow for a valid
-  reconstruction.  This property is the basis for the fixed-rate
-  functionality and random access to fixed-size blocks supported by zfp.
+  (3) The integers are decorrelated using a custom, high-speed, near
+  orthogonal transform similar to the discrete cosine transform used in
+  JPEG image coding.  The transform exploits separability and is implemented
+  efficiently in-place using the lifting scheme, requiring only 2.5*d
+  integer additions and 1.5*d bit shifts by one per integer in d dimensions.
+  If the data is "smooth," then this transform will turn most integers into
+  small signed values clustered around zero.
+
+  (4) The two's complement signed integers are converted to their negabinary
+  (base negative two) representation using one addition and one bit-wise
+  exclusive or per integer.  Because negabinary has no dedicated single sign
+  bit, these integers are subsequently treated as unsigned.
+
+  (5) The unsigned integer coefficients are reordered in a manner similar to
+  JPEG zig-zag ordering so that statistically they appear in a roughly
+  monotonically decreasing order.  Coefficients corresponding to low
+  frequencies tend to have larger magnitude, and are listed first.  In 3D,
+  coefficients corresponding to frequencies i, j, k in the three dimensions
+  are ordered by i + j + k first, and then by i^2 + j^2 + k^2.
+
+  (6) The bits that represent the list of 4^d integers are now ordered by
+  coefficient.  These bits are transposed so that they are instead ordered
+  by bit plane, from most to least significant bit.  Viewing each bit plane
+  as an integer, with the lowest bit corresponding to the lowest frequency
+  coefficient, the anticipation is that the first several of these transposed
+  integers are small, because the coefficients are assumed to be ordered by
+  magnitude.
+
+  (7) The transform coefficients are compressed losslessly using embedded
+  coding by exploiting the property that the coefficients tend to have many
+  leading zeros that need not be encoded explicitly.  Each bit plane is
+  encoded in two parts, from lowest to highest bit.  First the n lowest bits
+  are emitted verbatim, where n depends on previous bit planes and is
+  initially zero.  Then a variable-length representation of the remaining
+  4^d - n bits, x, is encoded.  For such an integer x, a single bit is
+  emitted to indicate if x = 0, in which case we are done with the current
+  bit plane.  If not, then bits of x are emitted, starting from the lowest
+  bit, until a one bit is emitted.  This triggers another test whether this
+  is the highest set bit of x, and the result of this test is output as a
+  single bit.  If not, then the procedure repeats until all n of x's value
+  bits have been output, where 2^(n-1) <= x < 2^n.  This can be thought of
+  as a run-length encoding of the zeros of x, where the run lengths are
+  expressed in unary.  The current value of n is then passed on to the next
+  bit plane, which is encoded by first emitting its n lowest bits.  The
+  assumption is that these bits correspond to n coefficients whose most
+  significant bits have already been output, i.e. these n bits are
+  essentially random and not compressible.  Following this, the remaining
+  4^d - n bits of the bit plane are run-length encoded as described above,
+  which potentially results in n being increased.
+
+  (8) The embedded coder emits one bit at a time, with each successive bit
+  potentially improving the quality of the reconstructed signal.  The early
+  bits are most important and have the greatest impact on signal quality,
+  with the last few bits providing very small changes.  The resulting
+  compressed bit stream can be truncated at any point and still allow for a
+  valid approximate reconstruction of the original signal.  The final step
+  truncates the bit stream in one of three ways: to a fixed number of bits
+  (the fixed-rate mode); after some fixed number of bit planes have been
+  encoded (the fixed-precision mode); or until a lowest bit plane number has
+  been encoded, as expressed in relation to the common floating-point
+  exponent within the block (the fixed-accuracy mode).
 
   Various parameters are exposed for controlling the quality and compressed
   size of a block, and can be specified by the user at a very fine
@@ -103,7 +170,7 @@ ALGORITHM OVERVIEW
 
 CODE EXAMPLES
 
-  The 'examples' directory includes three programs that make use of the
+  The 'examples' directory includes five programs that make use of the
   compressor.  'testzfp' provides regression testing that exercises most
   of the functionality of libzfp and the array classes.  The tests assume
   the default compiler settings, i.e. with none of the macros in Config
@@ -125,18 +192,20 @@ CODE EXAMPLES
 
   Running diffusion with the following arguments
 
-    diffusion 10.5
+    diffusion 8
+    diffusion 12
     diffusion 32
     diffusion 64
 
   should result in this output
 
-    rate=10.5 sum=0.990821 error=1.531267e-06
-    rate=32 sum=0.998326 error=1.967958e-07
+    rate=8 sum=0.996429 error=4.774326e-07
+    rate=12 sum=0.998337 error=1.967825e-07
+    rate=24 sum=0.998326 error=1.967958e-07
     rate=64 sum=0.998326 error=1.967957e-07
 
   The 'zfp' program is intended for evaluating the rate-distortion
-  (compression rate and quality) provided by the compressor.  It either
+  (compression ratio and quality) provided by the compressor.  It either
   generates a test data set or takes a raw array of floats or doubles as
   input.  It optionally outputs the reconstructed array obtained after
   lossy compression followed by decompression.  Various statistics on
@@ -186,8 +255,8 @@ CODE EXAMPLES
   Fixed rate (option -r):
     In fixed-rate mode, each compressed block of 4^d values in d dimensions
     is stored using a fixed number of bits specified by the user.  This can
-    be achieved using option -c by setting minbits = maxbits, maxprec = 0,
-    and minexp = INT_MIN.  The fixed-rate mode is needed to support random
+    be achieved using option -c by setting minbits = maxbits, maxprec = 64,
+    and minexp = -1074.  The fixed-rate mode is needed to support random
     access to blocks, where the amortized number of bits used per value is
     given by rate = maxbits / 4^d.  Note that each block stores a common
     exponent, and maxbits must be at least 8 for single precision and 11
@@ -198,7 +267,7 @@ CODE EXAMPLES
     vary, but the number of bit planes (i.e. the precision) encoded for the
     transform coefficients is fixed.  This mode is achieved by specifying
     the precision in maxprec and fully relaxing the size constraints, i.e.
-    minbits = 0, maxbits = UINT_MAX, and minexp = INT_MIN.  Fixed-precision
+    minbits = 0, maxbits = 4170, and minexp = -1074.  Fixed-precision
     mode is preferable when relative rather than absolute errors matter.
 
   Fixed accuracy (option -a):
@@ -216,12 +285,12 @@ CODE EXAMPLES
     (especially for 3D arrays), but can conservatively be set so that even
     for worst-case inputs the error tolerance is respected.  To achieve
     fixed accuracy to within 'tolerance', use the -a <tolerance> option,
-    which sets minexp = floor(log2(tolerance)), minbits = 0,
-    maxbits = UINT_MAX, and minprec = 0.  As in fixed-precision mode, the
-    number of bits used per block is not fixed but is dictated by the data.
-    Use -a 0 to achieve near-lossless compression.  Fixed-accuracy mode
-    gives the highest quality (in terms of absolute error) for a given
-    compression rate, and is preferable when random access is not needed.
+    which sets minexp = floor(log2(tolerance)), minbits = 0, maxbits = 4170,
+    and maxprec = 64.  As in fixed-precision mode, the number of bits used
+    per block is not fixed but is dictated by the data.  Use -a 0 to achieve
+    near-lossless compression.  Fixed-accuracy mode gives the highest quality
+    (in terms of absolute error) for a given compression rate, and is
+    preferable when random access is not needed.
 
   As mentioned above, other combinations of constraints can be used.
   For example, to ensure that the compressed stream is not larger than
@@ -243,15 +312,37 @@ CODE EXAMPLES
   should result in the following output
 
     in=4000000 out=2000000 ratio=2 rate=16
-      rmse=7.486e-10 nrmse=3.748e-10 maxe=2.98e-08 psnr=182.50
+      rmse=7.484e-10 nrmse=3.748e-10 maxe=2.98e-08 psnr=182.50
     in=8000000 out=4000000 ratio=2 rate=32
-      rmse=5.411e-13 nrmse=2.705e-13 maxe=2.21e-12 psnr=245.34
-    in=8000000 out=1698243 ratio=4.71 rate=13.59
-      rmse=1.241e-09 nrmse=6.205e-10 maxe=6.453e-09 psnr=178.12
-    in=8000000 out=2933987 ratio=2.73 rate=23.47
-      rmse=2.021e-10 nrmse=1.01e-10 maxe=5.79e-10 psnr=193.89
+      rmse=3.434e-13 nrmse=1.717e-13 maxe=1.801e-12 psnr=249.28
+    in=8000000 out=1666080 ratio=4.8 rate=13.33
+      rmse=7.443e-10 nrmse=3.721e-10 maxe=4.775e-09 psnr=182.57
+    in=8000000 out=2947768 ratio=2.71 rate=23.58
+      rmse=1.173e-10 nrmse=5.865e-11 maxe=4.068e-10 psnr=198.61
     in=8000000 out=2000000 ratio=4 rate=16
-      rmse=2.234e-07 nrmse=1.117e-07 maxe=9.473e-07 psnr=133.02
+      rmse=1.45e-07 nrmse=7.248e-08 maxe=7.931e-07 psnr=136.78
+
+  The speed program takes two optional parameters:
+
+    speed [rate] [blocks]
+
+  It measures the throughput of compression and decompression of 3D
+  double-precision data (in megabytes of uncompressed data per second).
+  By default, a rate of 1 bit/value and two million blocks are
+  processed.
+
+  The pgm program illustrates how zfp can be used to compress grayscale
+  images in the pgm format.  The usage is:
+
+    pgm <param> <input.pgm >output.pgm
+
+  If param is positive, it is interpreted as the rate in bits per pixel,
+  which ensures that each block of 4x4 pixels is compressed to a fixed
+  number of bits, as in texture compression codecs.  If param is negative,
+  then fixed-precision mode is used with precision -param, which tends to
+  give higher quality for the same rate.  This use of zfp is not intended
+  to compete with existing texture and image compression formats, but
+  exists merely to demonstrate how to compress 8-bit integer data with zfp.
 
   Finally, the testzfp program performs regression testing.  By default,
   small, pregenerated floating-point arrays are used in the test, since
@@ -319,11 +410,14 @@ LIMITATIONS AND MISSING FEATURES
   - zfp arrays are not thread-safe.  We are considering options for
     supporting multi-threaded access, e.g. for OpenMP parallelization.
 
-  - zfp does not run on the GPU.  We hope to port zfp to the GPU within
-    the next few months.
+  - This version of zfp does not run on the GPU.  Some work has been done to
+    port zfp to CUDA, and we expect to release such a version in the near
+    future.
 
 
 QUESTIONS, COMMENTS, AND BUG REPORTS
 
   For bug reports, questions, and suggestions for improvements, please
-  contact Peter Lindstrom at pl@llnl.gov.
+  contact Peter Lindstrom at pl@llnl.gov.  If you end up using zfp in an
+  application, please consider sharing with the author your success story
+  and/or any issues encountered.

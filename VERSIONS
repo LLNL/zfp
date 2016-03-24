@@ -1,3 +1,37 @@
+zfp 0.4.0, December 5, 2015
+
+  - Substantial changes to the compression algorithm that improves rate
+    distortion by about 6 dB and speed by a factor of 2-3.  These changes
+    are not backward compatible with previous versions of zfp.
+
+  - Added support for 31-bit and 63-bit integer data, as well as shorter
+    integer types.
+
+  - Rewrote compression codec entirely in C to make linking and calling
+    easier from other programming languages, and to expose the low-level
+    interface through C instead of C++.  This necessitated significant
+    changes to the API as well.
+
+  - Minor changes to the C++ compressed array API, as well as major
+    implementation changes to support the C library.  The namespace and
+    public types are now all in lower case.
+
+  - Deprecated support for general fixed-point decorrelating transforms
+    and slimmed down implementation.
+
+  - Added new examples for evaluating the throughput of the (de)compressor
+    and for compressing grayscale images in the pgm format.
+
+  - Added FAQ.
+
+
+zfp 0.3.2, December 3, 2015
+
+  - Fixed bug in Array::get() that caused the wrong cached block to be
+    looked up, thus occasionally copying incorrect values back to parts
+    of the array.
+
+
 zfp 0.3.1, May 6, 2015
 
   - Fixed rare bug caused by exponent underflow in blocks with no normal

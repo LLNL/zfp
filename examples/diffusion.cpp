@@ -11,7 +11,7 @@
   #include "array2d.h"
 #else
   #include "zfparray2.h"
-  using namespace ZFP;
+  using namespace zfp;
 #endif
 
 int main(int argc, char* argv[])
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
   const double pi = 3.14159265358979323846;
 
   // initialize u (constructor zero-initializes)
-  Array2d u(nx, ny, rate);
+  array2d u(nx, ny, rate);
   rate = u.rate();
   u(x0, y0) = 1;
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
   for (t = 0; t < tfinal; t += dt) {
     std::cerr << "t=" << std::fixed << t << std::endl;
     // compute du/dt
-    Array2d du(nx, ny, rate);
+    array2d du(nx, ny, rate);
     for (int y = 1; y < ny - 1; y++) {
       for (int x = 1; x < nx - 1; x++) {
         double uxx = (u(x - 1, y) - 2 * u(x, y) + u(x + 1, y)) / (dx * dx);
