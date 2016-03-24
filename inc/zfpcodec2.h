@@ -2,6 +2,7 @@
 #define ZFP_CODEC2_H
 
 #include <algorithm>
+#include <climits>
 #include <cmath>
 #include "types.h"
 #include "zfpcodec.h"
@@ -19,16 +20,19 @@ template <
   Int clift,       // transform lifting constant
   uint ebits       // number of exponent bits in Scalar (e.g. 8)
 >
-class Codec2 : public Codec<BitStream, Fixed, Int, clift, ebits> {
+class Codec2 : public Codec<BitStream, 2, Scalar, Fixed, Int, clift, ebits> {
 protected:
-  typedef Codec<BitStream, Fixed, Int, clift, ebits> BaseCodec;
+  typedef Codec<BitStream, 2, Scalar, Fixed, Int, clift, ebits> BaseCodec;
 
 public:
   // constructor
-  Codec2(BitStream& bitstream, uint nmin = 0, uint nmax = 0, uint pmax = 0, int emin = -(1 << ebits)) : BaseCodec(bitstream, nmin, nmax, pmax, emin) {}
+  Codec2(BitStream& bitstream, uint nmin = 0, uint nmax = 0, uint pmax = 0, int emin = INT_MIN) : BaseCodec(bitstream, nmin, nmax, pmax, emin) {}
 
   // exposed functions from base codec
-  using BaseCodec::configure; // (uint nmin, uint nmax, uint pmax, int emin)
+  using BaseCodec::configure; 
+  using BaseCodec::set_rate; 
+  using BaseCodec::set_precision;
+  using BaseCodec::set_accuracy;
   using BaseCodec::fwd_lift;
   using BaseCodec::inv_lift;
 

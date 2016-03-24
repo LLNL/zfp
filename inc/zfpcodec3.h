@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <climits>
 #include "types.h"
 #include "zfpcodec.h"
 #include "intcodec64.h"
@@ -19,16 +20,19 @@ template <
   Int clift,       // transform lifting constant
   uint ebits       // number of exponent bits in Scalar (e.g. 8)
 >
-class Codec3 : public Codec<BitStream, Fixed, Int, clift, ebits> {
+class Codec3 : public Codec<BitStream, 3, Scalar, Fixed, Int, clift, ebits> {
 protected:
-  typedef Codec<BitStream, Fixed, Int, clift, ebits> BaseCodec;
+  typedef Codec<BitStream, 3, Scalar, Fixed, Int, clift, ebits> BaseCodec;
 
 public:
   // constructor
-  Codec3(BitStream& bitstream, uint nmin = 0, uint nmax = 0, uint pmax = 0, int emin = -(1 << ebits)) : BaseCodec(bitstream, nmin, nmax, pmax, emin) {}
+  Codec3(BitStream& bitstream, uint nmin = 0, uint nmax = 0, uint pmax = 0, int emin = INT_MIN) : BaseCodec(bitstream, nmin, nmax, pmax, emin) {}
 
   // exposed functions from base codec
-  using BaseCodec::configure; // (uint nmin, uint nmax, uint pmax, int emin)
+  using BaseCodec::configure; 
+  using BaseCodec::set_rate; 
+  using BaseCodec::set_precision;
+  using BaseCodec::set_accuracy;
   using BaseCodec::fwd_lift;
   using BaseCodec::inv_lift;
 

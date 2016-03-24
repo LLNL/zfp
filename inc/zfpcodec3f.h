@@ -1,6 +1,7 @@
 #ifndef ZFP_CODEC3F_H
 #define ZFP_CODEC3F_H
 
+#include <climits>
 #include "zfpcodec3.h"
 #include "fixedpoint32.h"
 
@@ -10,7 +11,7 @@ namespace ZFP {
 template <class BitStream>
 class Codec3f : public Codec3<BitStream, float, FixedPoint::FixedPoint32<4>, int, unsigned int, 0x152a8000, 8u> {
 public:
-  Codec3f(BitStream& bitstream, uint nmin = 0, uint nmax = 0, uint pmax = 0, int emin = -(1 << 8)) : Codec3<BitStream, float, FixedPoint::FixedPoint32<4>, int, unsigned int, 0x152a8000, 8u>(bitstream, nmin, nmax, pmax, emin) {}
+  Codec3f(BitStream& bitstream, uint nmin = 0, uint nmax = 0, uint pmax = 0, int emin = INT_MIN) : Codec3<BitStream, float, FixedPoint::FixedPoint32<4>, int, unsigned int, 0x152a8000, 8u>(bitstream, nmin, nmax, pmax, emin) {}
 };
 
 }

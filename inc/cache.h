@@ -8,9 +8,7 @@
   #include <iostream>
 #endif
 
-typedef unsigned int uint;
-
-// two-way skew-associative write-back cache
+// direct-mapped or two-way skew-associative write-back cache
 template <class Line>
 class Cache {
 public:
@@ -43,18 +41,58 @@ public:
     Index x;
   };
 
+  // sequential iterator for looping over cache lines
+  class const_iterator {
+  public:
+    friend class Cache;
+    class Pair {
+    public:
+      Pair(Line* l, Tag t) : line(l), tag(t) {}
+      Line* line;
+      Tag tag;
+    };
+    const_iterator& operator++()
+    {
+      advance();
+      return *this;
+    }
+    const_iterator operator++(int)
+    {
+      const_iterator iter = *this;
+      advance();
+      return iter;
+    }
+    const Pair& operator*() const { return pair; }
+    const Pair* operator->() const { return &pair; }
+    operator const void*() const { return pair.line ? this : 0; }
+
+  protected:
+    const_iterator(Cache* cache) : c(cache), pair(cache->line, cache->tag[0])
+    {
+      if (!pair.tag.used())
+        advance();
+    }
+    void advance()
+    {
+      if (pair.line) {
+        uint i;
+        for (i = pair.line - c->line + 1; i <= c->mask && !c->tag[i].used(); i++);
+        pair = (i <= c->mask ? Pair(c->line + i, c->tag[i]) : Pair(0, Tag()));
+      }
+    }
+    Cache* c;
+    Pair pair;
+  };
+
   // allocate cache with at least minsize lines
-  Cache(uint minsize)
+  Cache(uint minsize) : tag(0), line(0)
   {
-    for (mask = minsize ? minsize - 1 : 1; mask & (mask + 1); mask |= mask + 1);
-    tag = (Tag*)allocate(((size_t)mask + 1) * sizeof(Tag), 0x100);
-    line = (Line*)allocate(((size_t)mask + 1) * sizeof(Line), 0x100);
+    resize(minsize);
 #ifdef CACHE_PROFILE
     std::cerr << "cache lines=" << mask + 1 << std::endl;
     phit[0] = shit[0] = miss[0] = back[0] = 0;
     phit[1] = shit[1] = miss[1] = back[1] = 0;
 #endif
-    clear();
   }
 
   ~Cache()
@@ -67,6 +105,18 @@ public:
 #endif
   }
 
+  // cache size in number of lines
+  uint size() const { return mask + 1; }
+
+  // change cache size to at least minsize lines (all contents will be lost)
+  void resize(uint minsize)
+  {
+    for (mask = minsize ? minsize - 1 : 1; mask & (mask + 1); mask |= mask + 1);
+    reallocate(tag, ((size_t)mask + 1) * sizeof(Tag), 0x100);
+    reallocate(line, ((size_t)mask + 1) * sizeof(Line), 0x100);
+    clear();
+  }
+
   // look up cache line #x and return pointer to it if in the cache;
   // otherwise return null
   const Line* lookup(Index x) const
@@ -74,7 +124,7 @@ public:
     uint i = primary(x);
     if (tag[i].index() == x)
       return line + i;
-#ifndef CACHE_ONEWAY
+#ifdef CACHE_TWOWAY
     uint j = secondary(x);
     if (tag[j].index() == x)
       return line + j;
@@ -97,7 +147,7 @@ public:
 #endif
       return tag[i];
     }
-#ifndef CACHE_ONEWAY
+#ifdef CACHE_TWOWAY
     uint j = secondary(x);
     if (tag[j].index() == x) {
       ptr = line + j;
@@ -128,6 +178,16 @@ public:
     for (uint i = 0; i <= mask; i++)
       tag[i].clear();
   }
+
+  // flush cache line
+  void flush(const Line* l)
+  {
+    uint i = l - line;
+    tag[i].clear();
+  }
+
+  // return iterator to first cache line
+  const_iterator first() { return const_iterator(this); }
 
 protected:
   uint primary(Index x) const { return x & mask; }
