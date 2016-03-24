@@ -95,19 +95,19 @@ from the method described in the paper cited above, and can conceptually
 be thought of as consisting of eight sequential steps (in practice some
 steps are consolidated or exist only for illustrative purposes):
 
-(1) The d-dimensional array is partitioned into blocks of dimensions 4^d.
+1. The d-dimensional array is partitioned into blocks of dimensions 4^d.
 If the array dimensions are not multiples of four, then blocks near the
 boundary are padded to the next multiple of four.  This padding is
 invisible to the application.
 
-(2) The independent floating-point values in a block are converted to what
+2. The independent floating-point values in a block are converted to what
 is known as a block-floating-point representation, which uses a single,
 common floating-point exponent for all 4^d values.  The effect of this
 conversion is to turn each floating-point value into a 31- or 63-bit
 signed integer.  Note that this step is not performed if the input data
 already consists of integers.
 
-(3) The integers are decorrelated using a custom, high-speed, near
+3. The integers are decorrelated using a custom, high-speed, near
 orthogonal transform similar to the discrete cosine transform used in
 JPEG image coding.  The transform exploits separability and is implemented
 efficiently in-place using the lifting scheme, requiring only 2.5*d
@@ -115,19 +115,19 @@ integer additions and 1.5*d bit shifts by one per integer in d dimensions.
 If the data is "smooth," then this transform will turn most integers into
 small signed values clustered around zero.
 
-(4) The two's complement signed integers are converted to their negabinary
+4. The two's complement signed integers are converted to their negabinary
 (base negative two) representation using one addition and one bit-wise
 exclusive or per integer.  Because negabinary has no dedicated single sign
 bit, these integers are subsequently treated as unsigned.
 
-(5) The unsigned integer coefficients are reordered in a manner similar to
+5. The unsigned integer coefficients are reordered in a manner similar to
 JPEG zig-zag ordering so that statistically they appear in a roughly
 monotonically decreasing order.  Coefficients corresponding to low
 frequencies tend to have larger magnitude, and are listed first.  In 3D,
 coefficients corresponding to frequencies i, j, k in the three dimensions
 are ordered by i + j + k first, and then by i^2 + j^2 + k^2.
 
-(6) The bits that represent the list of 4^d integers are now ordered by
+6. The bits that represent the list of 4^d integers are now ordered by
 coefficient.  These bits are transposed so that they are instead ordered
 by bit plane, from most to least significant bit.  Viewing each bit plane
 as an integer, with the lowest bit corresponding to the lowest frequency
@@ -135,7 +135,7 @@ coefficient, the anticipation is that the first several of these transposed
 integers are small, because the coefficients are assumed to be ordered by
 magnitude.
 
-(7) The transform coefficients are compressed losslessly using embedded
+7. The transform coefficients are compressed losslessly using embedded
 coding by exploiting the property that the coefficients tend to have many
 leading zeros that need not be encoded explicitly.  Each bit plane is
 encoded in two parts, from lowest to highest bit.  First the n lowest bits
@@ -157,7 +157,7 @@ essentially random and not compressible.  Following this, the remaining
 4^d - n bits of the bit plane are run-length encoded as described above,
 which potentially results in n being increased.
 
-(8) The embedded coder emits one bit at a time, with each successive bit
+8. The embedded coder emits one bit at a time, with each successive bit
 potentially improving the quality of the reconstructed signal.  The early
 bits are most important and have the greatest impact on signal quality,
 with the last few bits providing very small changes.  The resulting
