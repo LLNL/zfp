@@ -23,7 +23,7 @@ public:
     blksize(block_size(rate)),
     bytes(0),
     data(0),
-    codec(stream, 0, CHAR_BIT * blksize),
+    codec(stream, 0, uint(CHAR_BIT * blksize)),
     cache(lines(csize, nx, ny)),
     dims(0)
   {
@@ -109,7 +109,7 @@ public:
     off_t offset = 0;
     const uchar* d = dims;
     for (uint j = 0; j < my; j++, p += 4 * (nx - mx))
-      for (uint i = 0; i < mx; i++, p += 4, offset += blksize) {
+      for (uint i = 0; i < mx; i++, p += 4, offset += off_t(blksize)) {
         uint b = block(i, j);
         const CacheLine* line = cache.lookup(b + 1);
         if (line)
@@ -127,7 +127,7 @@ public:
     off_t offset = 0;
     const uchar* d = dims;
     for (uint j = 0; j < my; j++, p += 4 * (nx - mx))
-      for (uint i = 0; i < mx; i++, p += 4, offset += blksize) {
+      for (uint i = 0; i < mx; i++, p += 4, offset += off_t(blksize)) {
         stream.seek(offset);
         codec.encode(p, 1, nx, d ? *d++ : 0);
         stream.flush();
@@ -245,12 +245,12 @@ protected:
     if (c != b) {
       if (t.dirty()) {
         // write back dirty cache line
-        stream.seek(c * blksize);
+        stream.seek(off_t(c * blksize));
         codec.encode(p->a, 1, 4, dims ? dims[c] : 0);
         stream.flush();
       }
       // fetch cache line
-      stream.seek(b * blksize);
+      stream.seek(off_t(b * blksize));
       codec.decode(p->a, 1, 4);
     }
     return p;
@@ -296,7 +296,7 @@ protected:
   // number of cache lines corresponding to size (or suggested size if zero)
   static uint lines(size_t size, uint nx, uint ny)
   {
-    uint n = (size ? size : 8 * nx * sizeof(Scalar)) / sizeof(CacheLine);
+    uint n = uint((size ? size : 8 * nx * sizeof(Scalar)) / sizeof(CacheLine));
     return std::max(n, 1u);
   }
 

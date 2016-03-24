@@ -5,8 +5,15 @@
 #include "types.h"
 
 #if defined(__GNUC__)
-#elif defined(__IBMC__)
+#elif defined(__IBMCPP__)
   #include <builtins.h>
+#elif defined(_WIN64)
+  #include <intrin.h>
+  #ifndef HAVE_C99_MATH
+    // for old versions of MSVC that do not have C99 math support
+    inline long int lrint(double x) { return  (long int)x; }
+    inline long long int llrint(double x) { return (long long int)x; }
+  #endif
 #else
   #error "compiler not supported"
 #endif
@@ -22,8 +29,12 @@ uclz<uint32>(uint32 x)
 {
 #if defined(__GNUC__)
   return __builtin_clz(x);
-#elif defined(__IBMC__)
+#elif defined(__IBMCPP__)
   return __cntlz4(x);
+#elif defined(_WIN64)
+  unsigned long n;
+  _BitScanReverse(&n, x);
+  return 31 - n;
 #endif
 }
 
@@ -33,8 +44,12 @@ uclz<uint64>(uint64 x)
 {
 #if defined(__GNUC__)
   return __builtin_clzll(x);
-#elif defined(__IBMC__)
+#elif defined(__IBMCPP__)
   return __cntlz8(x);
+#elif defined(_WIN64)
+  unsigned long n;
+  _BitScanReverse64(&n, x);
+  return 63 - n;
 #endif
 }
 
@@ -44,8 +59,12 @@ uctz<uint32>(uint32 x)
 {
 #if defined(__GNUC__)
   return __builtin_ctz(x);
-#elif defined(__IBMC__)
+#elif defined(__IBMCPP__)
   return __cnttz4(x);
+#elif defined(_WIN64)
+  unsigned long n;
+  _BitScanForward(&n, x);
+  return n;
 #endif
 }
 
@@ -55,8 +74,12 @@ uctz<uint64>(uint64 x)
 {
 #if defined(__GNUC__)
   return __builtin_ctzll(x);
-#elif defined(__IBMC__)
+#elif defined(__IBMCPP__)
   return __cnttz8(x);
+#elif defined(_WIN64)
+  unsigned long n;
+  _BitScanForward64(&n, x);
+  return n;
 #endif
 }
 
@@ -64,9 +87,9 @@ template <>
 inline uint
 ufls<uint32>(uint32 x)
 {
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(_WIN64)
   return x ? CHAR_BIT * sizeof(x) - uclz<uint32>(x) : 0;
-#elif defined(__IBMC__)
+#elif defined(__IBMCPP__)
   return CHAR_BIT * sizeof(x) - uclz<uint32>(x);
 #endif
 }
@@ -75,9 +98,9 @@ template <>
 inline uint
 ufls<uint64>(uint64 x)
 {
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(_WIN64)
   return x ? CHAR_BIT * sizeof(x) - uclz<uint64>(x) : 0;
-#elif defined(__IBMC__)
+#elif defined(__IBMCPP__)
   return CHAR_BIT * sizeof(x) - uclz<uint64>(x);
 #endif
 }

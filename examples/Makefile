@@ -1,26 +1,4 @@
-# run diffusion without compression
-# DEFS += -DWITHOUT_COMPRESSION
-
-# use fast transform with only shifts and adds
-# DEFS += -DZFP_FAST_TRANSFORM
-
-# enable fixed-point range checking
-# DEFS += -DFIXPT_RANGE_CHECK
-
-# signed right shift >> is not arithmetic shift
-# DEFS += -DFIXPT_NO_ARITHMETIC_SHIFT
-
-# use aligned memory allocation
-# DEFS += -DALIGNED_ALLOC
-
-# use two-way skew-associative cache
-# DEFS += -DCACHE_TWOWAY
-
-# use faster but more collision prone hash function
-# DEFS += -DCACHE_HASH
-
-# count cache misses
-# DEFS += -DCACHE_PROFILE
+include ../Config
 
 CXX = g++
 CC = gcc
@@ -40,7 +18,8 @@ diffusion: diffusion.cpp
 
 # C89 mode
 zfp: zfp.c ../lib/libzfp.a
-	$(CC) $(CFLAGS) -L../lib zfp.c -lzfp -lm -lstdc++ -o zfp
+	$(CC) $(CFLAGS) -c zfp.c
+	$(CXX) $(CXXFLAGS) zfp.o -L../lib -lzfp -lm -o zfp
 
 clean:
-	rm -f $(TARGETS)
+	rm -f $(TARGETS) zfp.o

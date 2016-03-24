@@ -61,7 +61,7 @@
 #ifndef ZFP_H
 #define ZFP_H
 
-#define ZFP_VERSION 0x0020 /* library version number: 0.2.0 */
+#define ZFP_VERSION 0x0021 /* library version number: 0.2.1 */
 
 #define ZFP_TYPE_FLOAT  1 /* single precision */
 #define ZFP_TYPE_DOUBLE 2 /* double precision */

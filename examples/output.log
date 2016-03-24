@@ -1,0 +1,27 @@
+Running diffusion with the following arguments
+
+  diffusion 10.5
+  diffusion 32
+  diffusion 64
+
+should result in this output:
+
+  rate=10.5 sum=0.985353 error=2.557615e-06
+  rate=32 sum=0.998326 error=1.967958e-07
+  rate=64 sum=0.998326 error=1.967957e-07
+
+The following invocations of zfp
+
+  zfp -f -r 16 100 100 100
+  zfp -d -r 32 1000000
+  zfp -d -p 32 1000 1000
+  zfp -d -a 1e-9 1000000
+  zfp -d -c 64 64 0 -1074 1000000
+
+should result in the following output:
+
+  in=4000000 out=2000000 ratio=2 rate=16 rmse=9.739e-09 nrmse=4.877e-09 maxe=5.96e-08 psnr=160.2
+  in=8000000 out=4000000 ratio=2 rate=32 rmse=6.663e-12 nrmse=3.332e-12 maxe=2.754e-11 psnr=223.5
+  in=8000000 out=2641547 ratio=3.03 rate=21.13 rmse=7.245e-10 nrmse=3.623e-10 maxe=3.755e-09 psnr=182.8
+  in=8000000 out=3273970 ratio=2.44 rate=26.19 rmse=2.337e-10 nrmse=1.168e-10 maxe=6.337e-10 psnr=192.6
+  in=8000000 out=2000000 ratio=4 rate=16 rmse=2.763e-07 nrmse=1.382e-07 maxe=9.764e-07 psnr=131.2

@@ -29,9 +29,9 @@ public:
 #endif
     val = lrint(x);
   }
-  operator float() const { return ::ldexpf(val, intbits - wlen); }
+  operator float() const { return ::ldexpf(float(val), intbits - wlen); }
 
-  float ldexp(int e) const { return ::ldexpf(val, intbits - wlen + e); }
+  float ldexp(int e) const { return ::ldexpf(float(val), intbits - wlen + e); }
 
   int32 reinterpret() const { return val; }
   static FixedPoint32 reinterpret(int32 x) { return FixedPoint32(x); }
@@ -127,7 +127,7 @@ private:
         z < INT_MIN)
       throw std::overflow_error("fixed-point overflow");
 #endif
-    return z;
+    return int32(z);
   }
 
   // compute x << n with optional overflow check

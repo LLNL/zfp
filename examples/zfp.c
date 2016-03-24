@@ -242,6 +242,7 @@ int main(int argc, char* argv[])
     fprintf(stderr, "compression failed\n");
     return EXIT_FAILURE;
   }
+  rate = CHAR_BIT * (double)outsize / (mx * my * mz);
 
 #if IT_SEEMS_TOO_GOOD_TO_BE_TRUE
   /* for skeptics: relocate compressed data */
@@ -290,7 +291,7 @@ int main(int argc, char* argv[])
   nrmse = e / (fmax - fmin);
   psnr = 20 * log10((fmax - fmin) / (2 * e));
   
-  fprintf(stderr, "in=%lu out=%lu ratio=%.3g rmse=%.4g nrmse=%.4g maxe=%.4g psnr=%.4g\n", (unsigned long)insize, (unsigned long)outsize, (double)insize / outsize, e, nrmse, emax, psnr);
+  fprintf(stderr, "in=%lu out=%lu ratio=%.3g rate=%.4g rmse=%.4g nrmse=%.4g maxe=%.4g psnr=%.4g\n", (unsigned long)insize, (unsigned long)outsize, (double)insize / outsize, rate, e, nrmse, emax, psnr);
 
   /* clean up */
   free(f);

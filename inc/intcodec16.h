@@ -15,8 +15,6 @@ public:
   static inline void decode(BitStream& bitstream, Int* data, uint minbits = 0, uint maxbits = UINT_MAX, uint maxprec = UINT_MAX);
 
 protected:
-  using IntCodec<BitStream, Int, UInt>::encode;
-  using IntCodec<BitStream, Int, UInt>::decode;
   using IntCodec<BitStream, Int, UInt>::width;
 };
 
@@ -34,7 +32,7 @@ IntCodec16<BitStream, Int, UInt>::encode(BitStream& bitstream, const Int* data, 
   w = (w << 6) + width(data +  3,  3, m);
   w = (w << 6) + width(data +  1,  2, m);
   w = (w << 6) + width(data +  0,  1, m);
-  encode(bitstream, data, minbits, maxbits, maxprec, 0x334321u, w);
+  IntCodec<BitStream, Int, UInt>::encode(bitstream, data, minbits, maxbits, maxprec, 0x334321u, w);
 }
 
 // decode a set of 16 integers
@@ -42,7 +40,7 @@ template <class BitStream, typename Int, typename UInt>
 void
 IntCodec16<BitStream, Int, UInt>::decode(BitStream& bitstream, Int* data, uint minbits, uint maxbits, uint maxprec)
 {
-  decode(bitstream, data, minbits, maxbits, maxprec, 0x334321u, 16);
+  IntCodec<BitStream, Int, UInt>::decode(bitstream, data, minbits, maxbits, maxprec, 0x334321u, 16);
 }
 
 #endif

@@ -4,12 +4,13 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 
 #ifdef WITHOUT_COMPRESSION
   #include "array2d.h"
 #else
-  #include "../inc/zfparray2d.h"
+  #include "zfparray2d.h"
   using namespace ZFP;
 #endif
 
@@ -63,13 +64,14 @@ int main(int argc, char* argv[])
 
   // initialize u (constructor zero-initializes)
   Array2d u(nx, ny, rate);
+  rate = u.rate();
   u(x0, y0) = 1;
 
   // iterate until final time
   std::cerr.precision(6);
   double t;
   for (t = 0; t < tfinal; t += dt) {
-    std::cerr << "t = " << std::fixed << t << std::endl;
+    std::cerr << "t=" << std::fixed << t << std::endl;
     // compute du/dt
     Array2d du(nx, ny, rate);
     for (int y = 1; y < ny - 1; y++) {
@@ -98,9 +100,8 @@ int main(int argc, char* argv[])
     }
   }
   e = sqrt(e / ((nx - 2) * (ny - 2)));
-  std::cerr << "sum = " << std::fixed << sum << std::endl;
-  std::cout.precision(6);
-  std::cout << "error = " << std::scientific << e << std::endl;
+  std::cerr.unsetf(std::ios::fixed);
+  std::cerr << "rate=" << rate << " sum=" << std::fixed << sum << " error=" << std::setprecision(6) << std::scientific << e << std::endl;
 
   return 0;
 }
