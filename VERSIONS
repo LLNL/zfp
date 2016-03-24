@@ -1,8 +1,25 @@
+zfp 0.4.1, December 28, 2015
+
+  - Fixed bug that caused segmentation fault when compressing 3D arrays
+    whose dimensions are not multiples of four.  Specifically, arrays of
+    dimensions nx * ny * nz, with ny not a multiple of four, were not
+    handled correctly.
+
+  - Modified examples/fields.h to ensure standard compliance.  Previously,
+    C99 support was needed to handle the hex float constants, which are
+    not supported in C++98.
+
+  - Added simple.c as a minimal example of how to call the compressor.
+
+  - Changed compilation of diffusion example to output two executables:
+    one with and one without compression.
+
+
 zfp 0.4.0, December 5, 2015
 
-  - Substantial changes to the compression algorithm that improves rate
-    distortion by about 6 dB and speed by a factor of 2-3.  These changes
-    are not backward compatible with previous versions of zfp.
+  - Substantial changes to the compression algorithm that improve PSNR
+    by about 6 dB and speed by a factor of 2-3.  These changes are not
+    backward compatible with previous versions of zfp.
 
   - Added support for 31-bit and 63-bit integer data, as well as shorter
     integer types.

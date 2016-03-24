@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
   bitstream* stream;
   void* buffer;
   size_t bytes;
+  size_t size;
 
   switch (argc) {
     case 2:
@@ -80,7 +81,7 @@ int main(int argc, char* argv[])
     }
 
   zfp_stream_flush(zfp);
-  size_t size = zfp_stream_compressed_size(zfp);
+  size = zfp_stream_compressed_size(zfp);
   fprintf(stderr, "%u compressed bytes (%.2f bps)\n", (uint)size, (double)size * CHAR_BIT / (nx * ny));
 
   /* decompress */

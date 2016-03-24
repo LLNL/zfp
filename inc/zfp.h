@@ -67,10 +67,10 @@
 
 /* macros ------------------------------------------------------------------ */
 
-#define ZFP_VERSION 0x0040    /* library version number: 0.4.0 */
+#define ZFP_VERSION 0x0041    /* library version number: 0.4.1 */
 #define ZFP_VERSION_MAJOR 0   /* library major version number */
 #define ZFP_VERSION_MINOR 4   /* library minor version number */
-#define ZFP_VERSION_RELEASE 0 /* library release version number */
+#define ZFP_VERSION_RELEASE 1 /* library release version number */
 
 #define ZFP_MIN_BITS     0 /* minimum number of bits per block */
 #define ZFP_MAX_BITS  4170 /* maximum number of bits per block */
