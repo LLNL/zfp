@@ -1,3 +1,9 @@
+zfp 0.3.1, May 6, 2015
+
+  - Fixed rare bug caused by exponent underflow in blocks with no normal
+    and some denormal numbers.
+
+
 zfp 0.3.0, March 3, 2015
 
   - Modified the default decorrelating transform to one that uses only
@@ -29,6 +35,7 @@ zfp 0.3.0, March 3, 2015
 
   - Added testzfp for regression testing.
 
+
 zfp 0.2.1, December 12, 2014
 
   - Added Win64 support via Microsoft Visual Studio compiler.
@@ -38,6 +45,7 @@ zfp 0.2.1, December 12, 2014
   - Made several minor changes to suppress compiler warnings.
 
   - Documented expected output for the diffusion example.
+
 
 zfp 0.2.0, December 2, 2014
 
@@ -73,6 +81,7 @@ zfp 0.2.0, December 2, 2014
       to the number of compressed bits per floating-point value, while
       the precision refers to the number of uncompressed bits.  The Array
       API was changed accordingly.
+
 
 zfp 0.1.0, November 12, 2014
 

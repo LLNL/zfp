@@ -2,8 +2,8 @@
 #define ZFP_CODEC3_H
 
 #include <algorithm>
-#include <cmath>
 #include <climits>
+#include <cmath>
 #include "zfpcodec.h"
 #include "intcodec64.h"
 
@@ -31,8 +31,6 @@ public:
   using BaseCodec::set_rate; 
   using BaseCodec::set_precision;
   using BaseCodec::set_accuracy;
-  using BaseCodec::fwd_lift;
-  using BaseCodec::inv_lift;
 
   // encode 4*4*4 block from p using strides (sx, sy, sz)
   inline void encode(const Scalar* p, uint sx, uint sy, uint sz);
@@ -62,6 +60,11 @@ protected:
 
   // maximum precision for block with given maximum exponent
   uint precision(int maxexp) const { return std::min(maxprec, uint(std::max(0, maxexp - minexp + 8))); }
+
+  // imported functions from base codec
+  using BaseCodec::exponent;
+  using BaseCodec::fwd_lift;
+  using BaseCodec::inv_lift;
 
   // imported data from base codec
   using BaseCodec::stream;
@@ -169,15 +172,13 @@ template <class BitStream, typename Scalar>
 int Codec3<BitStream, Scalar>::fwd_cast(Fixed* q, const Scalar* p, uint sx, uint sy, uint sz)
 {
   // compute maximum exponent
-  int emax = -ebias;
   Scalar fmax = 0;
   for (uint z = 0; z < 4; z++, p += sz - 4 * sy)
     for (uint y = 0; y < 4; y++, p += sy - 4 * sx)
       for (uint x = 0; x < 4; x++, p += sx)
         fmax = std::max(fmax, std::fabs(*p));
   p -= 4 * sz;
-  if (fmax > 0)
-    std::frexp(fmax, &emax);
+  int emax = exponent(fmax);
 
   // normalize by maximum exponent and convert to fixed-point
   for (uint z = 0; z < 4; z++, p += sz - 4 * sy)
@@ -193,15 +194,13 @@ template <class BitStream, typename Scalar>
 int Codec3<BitStream, Scalar>::fwd_cast(Fixed* q, const Scalar* p, uint sx, uint sy, uint sz, uint nx, uint ny, uint nz)
 {
   // compute maximum exponent
-  int emax = -ebias;
   Scalar fmax = 0;
   for (uint z = 0; z < nz; z++, p += sz - ny * sy)
     for (uint y = 0; y < ny; y++, p += sy - nx * sx)
       for (uint x = 0; x < nx; x++, p += sx)
         fmax = std::max(fmax, std::fabs(*p));
   p -= nz * sz;
-  if (fmax > 0)
-    std::frexp(fmax, &emax);
+  int emax = exponent(fmax);
 
   // normalize by maximum exponent and convert to fixed-point
   for (uint z = 0; z < nz; z++, p += sz - ny * sy, q += 16 - 4 * ny)
