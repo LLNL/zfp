@@ -1,6 +1,6 @@
 INTRODUCTION
 
-  This is zfp 0.2.1, an open source C++ library for compressed floating-point
+  This is zfp 0.3.0, an open source C++ library for compressed floating-point
   arrays that support high throughput read and write random access.  zfp was
   written by Peter Lindstrom at Lawrence Livermore National Laboratory, and
   is based on the algorithm described in the following paper:
@@ -20,8 +20,8 @@ INTRODUCTION
   Although zfp also provides a 1D array class that can be used for 1D
   signals or even unstructured floating-point streams, the compression
   scheme has not been well optimized for this use case, and rate and quality
-  are not likely to be competitive with floating-point compressors designed
-  for 1D streams.
+  may not be competitive with floating-point compressors designed for 1D
+  streams.
 
   zfp is freely available as open source under a BSD license, as outlined in
   the file 'LICENSE'.  For information on the API and general usage, please
@@ -33,23 +33,33 @@ INSTALLATION
   The main compression codec and array classes are implemented entirely in
   header files, and therefore can be included as is without pre-compilation.
   C wrappers also exist for compressing entire arrays, which are made
-  available through a small library called libzfp.  To compile libzfp on
-  Linux or OS X, type
+  available through a small library called libzfp.  To compile libzfp and
+  all example programs (see below for more details) on Linux or OS X, type
 
-    cd src; make
+    make
 
-  It is not necessary to compile libzfp if the Array or Codec classes are
-  used directly.
+  from this directory.  Then, to test the compressor using testzfp, type
 
-  There are also two code examples that show how to use libzfp and the array
-  classes.  To compile them, first compile libzfp and then type
+    make test
 
-    cd examples; make
-  
-  See below for more details on these example programs.
+  If the compilation or regression tests fail, it is possible that some of
+  the macros in the file 'Config' have to be adjusted.  Also, the tests may
+  fail due to minute differences in the computed floating-point fields
+  being compressed (as indicated by checksum errors).  It is surprisingly
+  difficult to portably generate a floating-point array that agrees
+  bit-for-bit across platforms.  If most tests succeed and the failures
+  result in byte sizes and error values reasonably close to the expected
+  values, then it is likely that the compressor is working correctly.
 
-  If the compilation or example programs fail, it is possible that some of
-  the macros in the file 'Config' have to be adjusted.
+  NOTE: zfp requires 64-bit compiler and operating system support.
+
+  zfp has successfully been built and tested using these compilers:
+
+    gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.1
+    icc versions 12.0.5, 12.1.5, 13.0.1, 14.0.3
+    xlc version 12.1
+    clang versions 3.2 3.4.2
+    mingw32-gcc version 4.8.1
 
 
 ALGORITHM OVERVIEW
@@ -93,13 +103,18 @@ ALGORITHM OVERVIEW
 
 CODE EXAMPLES
 
-  The 'examples' directory includes two programs that make use of the
-  compressor.  The 'diffusion' example is a simple forward Euler solver
-  for the heat equation on a 2D regular grid, and is intended to show
-  how to declare and work with zfp's compressed arrays, as well as give
-  an idea of how changing the compression rate affects the error in
-  the solution.  It is possible to compile this code with conventional
-  uncompressed arrays for comparison (see the Makefile).  The usage is:
+  The 'examples' directory includes three programs that make use of the
+  compressor.  'testzfp' provides regression testing that exercises most
+  of the functionality of libzfp and the array classes.  The tests assume
+  the default compiler settings, i.e. with none of the macros in Config
+  defined.
+
+  The 'diffusion' example is a simple forward Euler solver for the heat
+  equation on a 2D regular grid, and is intended to show how to declare
+  and work with zfp's compressed arrays, as well as give an idea of how
+  changing the compression rate affects the error in the solution.  It is
+  possible to compile this code with conventional uncompressed arrays for
+  comparison (see the Config macro WITHOUT_COMPRESSION).  The usage is:
 
     diffusion [rate] [nx] [ny] [nt]
 
@@ -107,6 +122,18 @@ CODE EXAMPLES
   double-precision floating-point value (default = 64); 'nx' and 'ny'
   specify the grid size (default = 100x100); and 'nt' specifies the number
   of time steps to run (the default is to run until time t = 1).
+
+  Running diffusion with the following arguments
+
+    diffusion 10.5
+    diffusion 32
+    diffusion 64
+
+  should result in this output
+
+    rate=10.5 sum=0.990821 error=1.531267e-06
+    rate=32 sum=0.998326 error=1.967958e-07
+    rate=64 sum=0.998326 error=1.967957e-07
 
   The 'zfp' program is intended for evaluating the rate-distortion
   (compression rate and quality) provided by the compressor.  It either
@@ -178,8 +205,8 @@ CODE EXAMPLES
     In fixed-accuracy mode, all transform coefficient bit planes up to a
     minimum bit plane number are encoded.  (The actual minimum bit plane
     is not necessarily minexp, but depends on the dimensionality of the
-    data.  The reason for this is that the orthogonal transform incurs
-    range expansion, and the amount of expansion depends on the number of
+    data.  The reason for this is that the inverse transform incurs range
+    expansion, and the amount of expansion depends on the number of
     dimensions.)  Thus, minexp should be interpreted as the base-2 logarithm
     of an absolute error tolerance.  In other words, given an uncompressed
     value f and a reconstructed value g, the absolute difference |f - g|
@@ -205,6 +232,36 @@ CODE EXAMPLES
   minbits = maxbits, zero-bits are padded to blocks that compress to fewer
   than maxbits bits.
 
+  The following invocations of zfp
+
+    zfp -f -r 16 100 100 100
+    zfp -d -r 32 1000000
+    zfp -d -p 32 1000 1000
+    zfp -d -a 1e-9 1000000
+    zfp -d -c 64 64 0 -1074 1000000
+
+  should result in the following output
+
+    in=4000000 out=2000000 ratio=2 rate=16
+      rmse=7.486e-10 nrmse=3.748e-10 maxe=2.98e-08 psnr=182.50
+    in=8000000 out=4000000 ratio=2 rate=32
+      rmse=5.411e-13 nrmse=2.705e-13 maxe=2.21e-12 psnr=245.34
+    in=8000000 out=1698243 ratio=4.71 rate=13.59
+      rmse=1.241e-09 nrmse=6.205e-10 maxe=6.453e-09 psnr=178.12
+    in=8000000 out=2933987 ratio=2.73 rate=23.47
+      rmse=2.021e-10 nrmse=1.01e-10 maxe=5.79e-10 psnr=193.89
+    in=8000000 out=2000000 ratio=4 rate=16
+      rmse=2.234e-07 nrmse=1.117e-07 maxe=9.473e-07 psnr=133.02
+
+  Finally, the testzfp program performs regression testing.  By default,
+  small, pregenerated floating-point arrays are used in the test, since
+  they tend to have the same binary representation across platforms,
+  whereas it can be difficult to computationally generate bit-for-bit
+  identical arrays.  To test larger arrays, modify the TESTZFP_* macros
+  in Config.  When large arrays are used, the (de)compression throughput
+  is also measured and reported in number of uncompressed bytes per
+  second.
+
 
 LIMITATIONS AND MISSING FEATURES
 
@@ -212,7 +269,7 @@ LIMITATIONS AND MISSING FEATURES
   to the code and soliciting feedback on how to improve zfp for the first
   full release.  As such, the zfp API is experimental and has not been
   fixed, and it is entirely possible that future versions will employ a
-  different API.
+  different API or even a different codec.
 
   Below is a list of known limitations and desirable features that may make
   it into future versions of zfp.
@@ -224,15 +281,17 @@ LIMITATIONS AND MISSING FEATURES
     the original data and nearly losslessly compressed data.
 
   - Special values like infinity and NaN are not supported.  Denormalized
-    floating-point numbers are, however, correctly handled.
+    floating-point numbers are, however, correctly handled.  There is an
+    implicit assumption that floating point conforms to IEEE, though
+    extensions to other floating-point formats should be possible with
+    minor effort.
 
   - Currently no compressed format exists for storing compressed arrays
     externally, e.g. on disk.  Although it is possible to compress data
     to memory and write the compressed stream out, no meta data is
     embedded in the stream, and it is entirely up to the user to ensure
     that the data is read back in and interpreted according to the original
-    array dimensions and floating-point type.  A compressed format is in
-    development.
+    array dimensions and floating-point type.
 
   - No iterators are provided for traversing an array, and currently one
     has to use integer indexing.  Performance could in cases be improved
@@ -256,6 +315,12 @@ LIMITATIONS AND MISSING FEATURES
     compressed 64-bit-per-value storage of 128-bit quad-precision numbers
     could greatly improve the accuracy of double-precision floating-point
     computations using the same amount of storage.
+
+  - zfp arrays are not thread-safe.  We are considering options for
+    supporting multi-threaded access, e.g. for OpenMP parallelization.
+
+  - zfp does not run on the GPU.  We hope to port zfp to the GPU within
+    the next few months.
 
 
 QUESTIONS, COMMENTS, AND BUG REPORTS

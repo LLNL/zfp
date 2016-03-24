@@ -10,7 +10,7 @@
 #ifdef WITHOUT_COMPRESSION
   #include "array2d.h"
 #else
-  #include "zfparray2d.h"
+  #include "zfparray2.h"
   using namespace ZFP;
 #endif
 
@@ -94,12 +94,12 @@ int main(int argc, char* argv[])
     for (int x = 1; x < nx - 1; x++) {
       double px = dx * (x - x0);
       double f = u(x, y);
-      double g = dx * dy * exp(-(px * px + py * py) / (4 * k * t)) / (4 * pi * k * t);
+      double g = dx * dy * std::exp(-(px * px + py * py) / (4 * k * t)) / (4 * pi * k * t);
       e += (f - g) * (f - g);
       sum += f;
     }
   }
-  e = sqrt(e / ((nx - 2) * (ny - 2)));
+  e = std::sqrt(e / ((nx - 2) * (ny - 2)));
   std::cerr.unsetf(std::ios::fixed);
   std::cerr << "rate=" << rate << " sum=" << std::fixed << sum << " error=" << std::setprecision(6) << std::scientific << e << std::endl;
 

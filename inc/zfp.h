@@ -61,7 +61,7 @@
 #ifndef ZFP_H
 #define ZFP_H
 
-#define ZFP_VERSION 0x0021 /* library version number: 0.2.1 */
+#define ZFP_VERSION 0x0030 /* library version number: 0.3.0 */
 
 #define ZFP_TYPE_FLOAT  1 /* single precision */
 #define ZFP_TYPE_DOUBLE 2 /* double precision */
@@ -87,6 +87,43 @@ typedef struct {
   uint maxprec; /* maximum number of bitplanes to store */
   int minexp;   /* minimum bitplane number (soft error tolerance = 2^minexp) */
 } zfp_params;
+
+/* initialize parameters to default values */
+void
+zfp_init(
+  zfp_params* params
+);
+
+/* set floating-point scalar type */
+uint                  /* scalar type or zero on failure */
+zfp_set_type(
+  zfp_params* params, /* compression parameters */
+  uint type           /* float (1) or double (2) */
+);
+
+/* set dimensions of 1D array */
+void
+zfp_set_size_1d(
+  zfp_params* params, /* compression parameters */
+  uint n              /* number of scalars */
+);
+
+/* set dimensions of 2D array */
+void
+zfp_set_size_2d(
+  zfp_params* params, /* compression parameters */
+  uint nx,            /* array x dimensions */
+  uint ny             /* array y dimensions */
+);
+
+/* set dimensions of 3D array */
+void
+zfp_set_size_3d(
+  zfp_params* params, /* compression parameters */
+  uint nx,            /* array x dimensions */
+  uint ny,            /* array y dimensions */
+  uint nz             /* array z dimensions */
+);
 
 /* set fixed rate (params->{type,nx,ny,nz} must be set already) */
 double                /* actual compression rate */

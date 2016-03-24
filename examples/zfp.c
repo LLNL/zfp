@@ -18,9 +18,14 @@ func(uint x, uint y, uint z, uint nx, uint ny, uint nz)
 #if RANDOM_FIELD
   return drand48();
 #else
-  return cos(2 * PI * (x + 0.5) / nx) *
-         cos(2 * PI * (y + 0.5) / ny) *
-         cos(2 * PI * (z + 0.5) / nz);
+  double fx = 2 * (x + 0.5) / nx - 1;
+  double fy = 2 * (y + 0.5) / ny - 1;
+  double fz = 2 * (z + 0.5) / nz - 1;
+#if 1
+  return cos(PI * fx) * cos(PI * fy) * cos(PI * fz);
+#else
+  return exp(-8 * (fx * fx + fy * fy + fz * fz));
+#endif
 #endif
 }
 
@@ -158,6 +163,7 @@ int main(int argc, char* argv[])
   }
 
   /* set array type and size */
+  zfp_init(&params);
   params.type = type;
   params.nx = nx;
   params.ny = ny;
@@ -291,7 +297,7 @@ int main(int argc, char* argv[])
   nrmse = e / (fmax - fmin);
   psnr = 20 * log10((fmax - fmin) / (2 * e));
   
-  fprintf(stderr, "in=%lu out=%lu ratio=%.3g rate=%.4g rmse=%.4g nrmse=%.4g maxe=%.4g psnr=%.4g\n", (unsigned long)insize, (unsigned long)outsize, (double)insize / outsize, rate, e, nrmse, emax, psnr);
+  fprintf(stderr, "in=%lu out=%lu ratio=%.3g rate=%.4g rmse=%.4g nrmse=%.4g maxe=%.4g psnr=%.2f\n", (unsigned long)insize, (unsigned long)outsize, (double)insize / outsize, rate, e, nrmse, emax, psnr);
 
   /* clean up */
   free(f);

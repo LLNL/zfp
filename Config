@@ -1,13 +1,60 @@
-DEFS =
+# compiler settings -----------------------------------------------------------
+
+# GNU compiler
+CC = gcc
+CXX = g++
+CFLAGS = -O3 -fPIC -ansi -Wall -I../inc $(DEFS)
+CXXFLAGS = $(CFLAGS)
+
+# IBM compiler
+# CC = xlc
+# CXX = xlc++
+# CFLAGS = -O2 -qmaxmem=-1 -qpic=large -I../inc $(DEFS)
+# CXXFLAGS= $(CFLAGS)
+
+# optional compiler macros ----------------------------------------------------
+
+# run regression test with medium sized arrays
+# DEFS += -DTESTZFP_MEDIUM_ARRAYS
+
+# run regression test with large arrays
+# DEFS += -DTESTZFP_LARGE_ARRAYS
 
 # run diffusion without compression
 # DEFS += -DWITHOUT_COMPRESSION
 
-# use fast transform with only shifts and adds
-# DEFS += -DZFP_FAST_TRANSFORM
+# use low-correlation phase-shifted Haar basis
+# DEFS += -DZFP_CLIFT=ZFP_CLIFT_HAAR_LO -DZFP_ORTHOGONAL_TRANSFORM
+
+# use Walsh-Hadamard basis
+# DEFS += -DZFP_CLIFT=ZFP_CLIFT_WHT -DZFP_ORTHOGONAL_TRANSFORM
+
+# use HCT basis
+# DEFS += -DZFP_CLIFT=ZFP_CLIFT_HCT -DZFP_ORTHOGONAL_TRANSFORM
+
+# use DCT basis
+# DEFS += -DZFP_CLIFT=ZFP_CLIFT_DCT -DZFP_ORTHOGONAL_TRANSFORM
+
+# use basis from Vis 2014 paper
+# DEFS += -DZFP_CLIFT=ZFP_CLIFT_VIS2014 -DZFP_ORTHOGONAL_TRANSFORM
+
+# use slant/Gram polynomial basis
+# DEFS += -DZFP_CLIFT=ZFP_CLIFT_GRAM -DZFP_ORTHOGONAL_TRANSFORM
+
+# use high-correlation phase-shifted Haar basis
+# DEFS += -DZFP_CLIFT=ZFP_CLIFT_HAAR_HI -DZFP_ORTHOGONAL_TRANSFORM
+
+# use orthogonal transform from Vis 2014 paper (overrides ZFP_CLIFT)
+# DEFS += -DZFP_VIS2014_TRANSFORM
+
+# use orthogonal transform (can be used with ZFP_CLIFT)
+# DEFS += -DZFP_ORTHOGONAL_TRANSFORM
 
 # enable fixed-point range checking
 # DEFS += -DFIXPT_RANGE_CHECK
+
+# enable fixed-point integer rounding
+# DEFS += -DFIXPT_ROUND
 
 # signed right shift >> is not arithmetic shift
 # DEFS += -DFIXPT_NO_ARITHMETIC_SHIFT
@@ -19,7 +66,7 @@ DEFS =
 # DEFS += -DCACHE_TWOWAY
 
 # use faster but more collision prone hash function
-# DEFS += -DCACHE_HASH
+# DEFS += -DCACHE_FAST_HASH
 
 # count cache misses
 # DEFS += -DCACHE_PROFILE

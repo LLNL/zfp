@@ -8,11 +8,12 @@
 #include "types.h"
 #include "memory.h"
 #include "cache.h"
+#include "zfpcodec3.h"
 
 namespace ZFP {
 
 // compressed 3D array of scalars
-template <typename Scalar, class Codec>
+template <typename Scalar>
 class Array3 {
 public:
   Array3() : nx(0), ny(0), nz(0), mx(0), my(0), mz(0), blksize(0), bytes(0), data(0), codec(stream, 0, 0), cache(0), dims(0) {}
@@ -110,11 +111,11 @@ public:
   // decompress array and store at p
   void get(Scalar* p) const
   {
-    off_t offset = 0;
+    size_t offset = 0;
     const uchar* d = dims;
     for (uint k = 0; k < mz; k++, p += 4 * nx * (ny - my))
       for (uint j = 0; j < my; j++, p += 4 * (nx - mx))
-        for (uint i = 0; i < mx; i++, p += 4, offset += off_t(blksize)) {
+        for (uint i = 0; i < mx; i++, p += 4, offset += blksize) {
           uint b = block(i, j, k);
           const CacheLine* line = cache.lookup(b + 1);
           if (line)
@@ -129,11 +130,11 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
-    off_t offset = 0;
+    size_t offset = 0;
     const uchar* d = dims;
     for (uint k = 0; k < mz; k++, p += 4 * nx * (ny - my))
       for (uint j = 0; j < my; j++, p += 4 * (nx - mx))
-        for (uint i = 0; i < mx; i++, p += 4, offset += off_t(blksize)) {
+        for (uint i = 0; i < mx; i++, p += 4, offset += blksize) {
           stream.seek(offset);
           codec.encode(p, 1, nx, nx * ny, d ? *d++ : 0);
           stream.flush();
@@ -254,12 +255,12 @@ protected:
     if (c != b) {
       if (t.dirty()) {
         // write back dirty cache line
-        stream.seek(off_t(c * blksize));
+        stream.seek(c * blksize);
         codec.encode(p->a, 1, 4, 16, dims ? dims[c] : 0);
         stream.flush();
       }
       // fetch cache line
-      stream.seek(off_t(b * blksize));
+      stream.seek(b * blksize);
       codec.decode(p->a, 1, 4, 16);
     }
     return p;
@@ -317,10 +318,13 @@ protected:
   size_t bytes; // total bytes of compressed data
   mutable uchar* data; // pointer to compressed data
   mutable MemoryBitStream stream; // bit stream for compressed data
-  mutable Codec codec; // compression codec
+  mutable Codec3<MemoryBitStream, Scalar> codec; // compression codec
   mutable Cache<CacheLine> cache; // cache of decompressed blocks
   uchar* dims; // precomputed block dimensions (or null if uniform)
 };
+
+typedef Array3<float> Array3f;
+typedef Array3<double> Array3d;
 
 }
 
