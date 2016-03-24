@@ -1,4 +1,8 @@
+ZFP
+===
+
 INTRODUCTION
+------------
 
   This is zfp 0.5.0, an open source C/C++ library for compressed numerical
   arrays that support high throughput read and write random access.  zfp was
@@ -33,6 +37,7 @@ INTRODUCTION
 
 
 INSTALLATION
+------------
 
   zfp consists of three distinct parts: a compression library written in C;
   a set of C++ header files that implement compressed arrays; and a set of
@@ -76,6 +81,7 @@ INSTALLATION
 
 
 ALGORITHM OVERVIEW
+------------------
 
   The zfp lossy compression scheme is based on the idea of breaking a
   d-dimensional array into independent blocks of 4^d values, e.g. 4x4x4
@@ -169,6 +175,7 @@ ALGORITHM OVERVIEW
 
 
 CODE EXAMPLES
+-------------
 
   The 'examples' directory includes six programs that make use of the
   compressor.
@@ -288,7 +295,7 @@ CODE EXAMPLES
     all-zeros bit and common exponent, and maxbits must be at least 9 for
     single precision and 12 for double precision.
 
-  Fixed precision (option -p): 
+  Fixed precision (option -p):
     In fixed-precision mode, the number of bits used to encode a block may
     vary, but the number of bit planes (i.e. the precision) encoded for the
     transform coefficients is fixed.  This mode is achieved by specifying
@@ -362,6 +369,7 @@ CODE EXAMPLES
 
 
 LIMITATIONS AND MISSING FEATURES
+--------------------------------
 
   zfp is released as a beta version with the intent of giving people access
   to the code and soliciting feedback on how to improve zfp for the first
@@ -415,6 +423,7 @@ LIMITATIONS AND MISSING FEATURES
 
 
 QUESTIONS, COMMENTS, AND BUG REPORTS
+------------------------------------
 
   For bug reports, questions, and suggestions for improvements, please
   contact Peter Lindstrom at pl@llnl.gov.  If you end up using zfp in an
