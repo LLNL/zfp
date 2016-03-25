@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <math.h>
+#include <stdio.h>
 #include "../inline/inline.h"
 #include "../inline/bitstream.c"
 
@@ -124,7 +125,7 @@ _t1(encode_ints, UInt)(bitstream* _restrict stream, uint maxbits, uint maxprec, 
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
   uint intprec = CHAR_BIT * (uint)sizeof(UInt);
-  uint kmin = intprec - maxprec;
+  uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint bits = maxbits;
   uint i, k, m, n;
   uint64 x;
@@ -187,13 +188,29 @@ _t2(zfp_encode_block, Int, DIMS)(zfp_stream* zfp, const Int* iblock)
 uint
 _t2(zfp_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
 {
-  _cache_align(Int iblock[BLOCK_SIZE]);
   /* compute maximum exponent */
   int emax = _t1(exponent_block, Scalar)(fblock, BLOCK_SIZE);
-  /* perform forward block-floating-point transform */
-  _t1(fwd_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
-  /* encode common exponent */
-  stream_write_bits(zfp->stream, emax + EBIAS, EBITS);
-  /* encode integer block */
-  return EBITS + _t2(encode_block, Int, DIMS)(zfp->stream, zfp->minbits - EBITS, zfp->maxbits - EBITS, _t2(precision, Scalar, DIMS)(emax, zfp->maxprec, zfp->minexp), iblock);
+  int maxprec = _t2(precision, Scalar, DIMS)(emax, zfp->maxprec, zfp->minexp);
+  uint e = maxprec ? emax + EBIAS : 0;
+  /* encode block only if biased exponent is nonzero */
+  if (e) {
+    _cache_align(Int iblock[BLOCK_SIZE]);
+    /* encode common exponent; LSB indicates that exponent is nonzero */
+    int ebits = EBITS + 1;
+    stream_write_bits(zfp->stream, 2 * e + 1, ebits);
+    /* perform forward block-floating-point transform */
+    _t1(fwd_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
+    /* encode integer block */
+    return ebits + _t2(encode_block, Int, DIMS)(zfp->stream, zfp->minbits - ebits, zfp->maxbits - ebits, maxprec, iblock);
+  }
+  else {
+    /* write single zero-bit to indicate that all values are zero */
+    stream_write_bit(zfp->stream, 0);
+    if (zfp->minbits > 1) {
+      stream_pad(zfp->stream, zfp->minbits - 1);
+      return zfp->minbits;
+    }
+    else
+      return 1;
+  }
 }

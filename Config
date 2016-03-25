@@ -4,9 +4,9 @@
 CC = gcc
 CXX = g++
 FLAGS = -O3 -fPIC -Wall -I../inc $(DEFS)
-#CFLAGS = $(FLAGS) -std=c89 -pedantic -Wno-long-long -Wno-unused-function
-CFLAGS = $(FLAGS) -std=c99 -pedantic
-CXXFLAGS = $(FLAGS) -std=c++98 -pedantic -Wno-long-long
+CFLAGS = $(FLAGS) -std=c89 -Wno-unused-function
+#CFLAGS = $(FLAGS) -std=c99
+CXXFLAGS = $(FLAGS) -std=c++98
 
 # IBM compiler
 # CC = xlc
@@ -29,6 +29,9 @@ CXXFLAGS = $(FLAGS) -std=c++98 -pedantic -Wno-long-long
 
 # run regression test with large arrays
 # DEFS += -DTESTZFP_LARGE_ARRAYS
+
+# run diffusion without compression
+# DEFS += -DWITHOUT_COMPRESSION
 
 # use aligned memory allocation
 # DEFS += -DALIGNED_ALLOC

@@ -76,7 +76,7 @@ _t1(decode_ints, UInt)(bitstream* _restrict stream, uint maxbits, uint maxprec, 
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
   uint intprec = CHAR_BIT * (uint)sizeof(UInt);
-  uint kmin = intprec - maxprec;
+  uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint bits = maxbits;
   uint i, k, m, n;
   uint64 x;
@@ -137,12 +137,29 @@ _t2(zfp_decode_block, Int, DIMS)(zfp_stream* zfp, Int* iblock)
 uint
 _t2(zfp_decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock)
 {
-  _cache_align(Int iblock[BLOCK_SIZE]);
-  /* decode common exponent */
-  int emax = stream_read_bits(zfp->stream, EBITS) - EBIAS;
-  /* decode integer block */
-  uint bits = _t2(decode_block, Int, DIMS)(zfp->stream, zfp->minbits - EBITS, zfp->maxbits - EBITS, _t2(precision, Scalar, DIMS)(emax, zfp->maxprec, zfp->minexp), iblock);
-  /* perform inverse block-floating-point transform */
-  _t1(inv_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
-  return EBITS + bits;
+  /* test if block has nonzero values */
+  if (stream_read_bit(zfp->stream)) {
+    _cache_align(Int iblock[BLOCK_SIZE]);
+    /* decode common exponent */
+    uint ebits = EBITS + 1;
+    int emax = stream_read_bits(zfp->stream, ebits - 1) - EBIAS;
+    int maxprec = _t2(precision, Scalar, DIMS)(emax, zfp->maxprec, zfp->minexp);
+    /* decode integer block */
+    uint bits = _t2(decode_block, Int, DIMS)(zfp->stream, zfp->minbits - ebits, zfp->maxbits - ebits, maxprec, iblock);
+    /* perform inverse block-floating-point transform */
+    _t1(inv_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
+    return ebits + bits;
+  }
+  else {
+    /* set all values to zero */
+    uint i;
+    for (i = 0; i < BLOCK_SIZE; i++)
+      *fblock++ = 0;
+    if (zfp->minbits > 1) {
+      stream_skip(zfp->stream, zfp->minbits - 1);
+      return zfp->minbits;
+    }
+    else
+      return 1;
+  }
 }

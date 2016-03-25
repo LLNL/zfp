@@ -67,15 +67,31 @@
 
 /* macros ------------------------------------------------------------------ */
 
-#define ZFP_VERSION 0x0041    /* library version number: 0.4.1 */
+/* library version information */
+#define ZFP_VERSION 0x0050    /* library version number: 0.5.0 */
 #define ZFP_VERSION_MAJOR 0   /* library major version number */
-#define ZFP_VERSION_MINOR 4   /* library minor version number */
-#define ZFP_VERSION_RELEASE 1 /* library release version number */
+#define ZFP_VERSION_MINOR 5   /* library minor version number */
+#define ZFP_VERSION_RELEASE 0 /* library release version number */
 
+/* default compression parameters */
 #define ZFP_MIN_BITS     0 /* minimum number of bits per block */
-#define ZFP_MAX_BITS  4170 /* maximum number of bits per block */
+#define ZFP_MAX_BITS  4171 /* maximum number of bits per block */
 #define ZFP_MAX_PREC    64 /* maximum precision supported */
 #define ZFP_MIN_EXP  -1074 /* minimum floating-point base-2 exponent */
+
+/* header masks (enable via bitwise or; reader must use same mask) */
+#define ZFP_HEADER_MAGIC  0x1u /* embed 32-bit magic */
+#define ZFP_HEADER_FIELD  0x2u /* embed 52-bit field type and dimensions */
+#define ZFP_HEADER_PARAMS 0x4u /* embed 12- or 64-bit compression parameters */
+#define ZFP_HEADER_FULL   0x7u /* embed all of the above */
+
+/* number of bits per header entry */
+#define ZFP_MAGIC_BITS       32 /* number of magic word bits */
+#define ZFP_META_BITS        52 /* number of field metadata bits */
+#define ZFP_MODE_SHORT_BITS  12 /* number of mode bits in short format */
+#define ZFP_MODE_LONG_BITS   64 /* number of mode bits in long format */
+#define ZFP_HEADER_BITS     148 /* max number of header bits */
+#define ZFP_MODE_SHORT_MAX  ((1u << ZFP_MODE_SHORT_BITS) - 2)
 
 /* types ------------------------------------------------------------------- */
 
@@ -129,6 +145,12 @@ zfp_stream_close(
 bitstream*                 /* bit stream associated with compressed stream */
 zfp_stream_bit_stream(
   const zfp_stream* stream /* compressed stream */
+);
+
+/* get all compression parameters in a compact representation */
+uint64                     /* 12- or 64-bit encoding of parameters */
+zfp_stream_mode(
+  const zfp_stream* zfp    /* compressed stream */
 );
 
 /* get all compression parameters (pointers may be NULL) */
@@ -189,6 +211,13 @@ zfp_stream_set_accuracy(
   zfp_type type       /* scalar type to compress */
 );
 
+/* set all compression parameters from compact representation (expert mode) */
+int                   /* nonzero upon success */
+zfp_stream_set_mode(
+  zfp_stream* stream, /* compressed stream */
+  uint64 mode         /* 12- or 64-bit encoding of parameters */
+);
+
 /* set all compression parameters (expert mode) */
 int                   /* nonzero upon success */
 zfp_stream_set_params(
@@ -205,16 +234,16 @@ zfp_stream_set_params(
 zfp_field* /* pointer to default initialized field */
 zfp_field_alloc();
 
-/* allocate meta data for 1D field f[nx] */
-zfp_field*       /* allocated field meta data */
+/* allocate metadata for 1D field f[nx] */
+zfp_field*       /* allocated field metadata */
 zfp_field_1d(
   void* pointer, /* pointer to uncompressed scalars (may be NULL) */
   zfp_type type, /* scalar type */
   uint nx        /* number of scalars */
 );
 
-/* allocate meta data for 2D field f[ny][nx] */
-zfp_field*       /* allocated field meta data */
+/* allocate metadata for 2D field f[ny][nx] */
+zfp_field*       /* allocated field metadata */
 zfp_field_2d(
   void* pointer, /* pointer to uncompressed scalars (may be NULL) */
   zfp_type type, /* scalar type */
@@ -222,8 +251,8 @@ zfp_field_2d(
   uint ny        /* number of scalars in y dimension */
 );
 
-/* allocate meta data for 3D field f[nz][ny][nx] */
-zfp_field*       /* allocated field meta data */
+/* allocate metadata for 3D field f[nz][ny][nx] */
+zfp_field*       /* allocated field metadata */
 zfp_field_3d(
   void* pointer, /* pointer to uncompressed scalars (may be NULL) */
   zfp_type type, /* scalar type */
@@ -232,10 +261,10 @@ zfp_field_3d(
   uint nz        /* number of scalars in z dimension */
 );
 
-/* deallocate field meta data */
+/* deallocate field metadata */
 void
 zfp_field_free(
-  zfp_field* field /* field meta data */
+  zfp_field* field /* field metadata */
 );
 
 /* high-level API: uncompressed array inspectors --------------------------- */
@@ -243,39 +272,45 @@ zfp_field_free(
 /* pointer to first element of field */
 void*                    /* array pointer */
 zfp_field_pointer(
-  const zfp_field* field /* field meta data */
+  const zfp_field* field /* field metadata */
 );
 
 /* field scalar type */
 zfp_type                 /* scalar type */
 zfp_field_type(
-  const zfp_field* field /* field meta data */
+  const zfp_field* field /* field metadata */
 );
 
 /* precision of field scalar type */
 uint                     /* scalar type precision in number of bits */
 zfp_field_precision(
-  const zfp_field* field /* field meta data */
+  const zfp_field* field /* field metadata */
 );
 
 /* field dimensionality (1, 2, or 3) */
 uint                     /* number of dimensions */
 zfp_field_dimensionality(
-  const zfp_field* field /* field meta data */
+  const zfp_field* field /* field metadata */
 );
 
 /* field size in number of array elements */
 size_t                    /* total number of scalars */
 zfp_field_size(
-  const zfp_field* field, /* field meta data */
+  const zfp_field* field, /* field metadata */
   uint* size              /* number of elements per dimension (may be NULL) */
 );
 
 /* field strides per dimension */
 int                       /* zero if array is contiguous */
 zfp_field_stride(
-  const zfp_field* field, /* field meta data */
+  const zfp_field* field, /* field metadata */
   int* stride             /* stride in elements per dimension (may be NULL) */
+);
+
+/* field scalar type and dimensions */
+uint64                   /* compact 52-bit encoding of metadata */
+zfp_field_metadata(
+  const zfp_field* field /* field metadata */
 );
 
 /* high-level API: uncompressed array specification ------------------------ */
@@ -283,28 +318,28 @@ zfp_field_stride(
 /* set pointer to first scalar in field */
 void
 zfp_field_set_pointer(
-  zfp_field* field, /* field meta data */
+  zfp_field* field, /* field metadata */
   void* pointer     /* pointer to first scalar */
 );
 
 /* set field scalar type */
 zfp_type            /* actual scalar type */
 zfp_field_set_type(
-  zfp_field* field, /* field meta data */
+  zfp_field* field, /* field metadata */
   zfp_type type     /* desired scalar type */
 );
 
 /* set 1D field size */
 void
 zfp_field_set_size_1d(
-  zfp_field* field, /* field meta data */
+  zfp_field* field, /* field metadata */
   uint nx           /* number of scalars */
 );
 
 /* set 2D field size */
 void
 zfp_field_set_size_2d(
-  zfp_field* field, /* field meta data */
+  zfp_field* field, /* field metadata */
   uint nx,          /* number of scalars in x dimension */
   uint ny           /* number of scalars in y dimension */
 );
@@ -312,7 +347,7 @@ zfp_field_set_size_2d(
 /* set 3D field size */
 void
 zfp_field_set_size_3d(
-  zfp_field* field, /* field meta data */
+  zfp_field* field, /* field metadata */
   uint nx,          /* number of scalars in x dimension */
   uint ny,          /* number of scalars in y dimension */
   uint nz           /* number of scalars in z dimension */
@@ -321,14 +356,14 @@ zfp_field_set_size_3d(
 /* set 1D field stride in number of scalars */
 void
 zfp_field_set_stride_1d(
-  zfp_field* field, /* field meta data */
+  zfp_field* field, /* field metadata */
   int sx            /* stride in number of scalars: &f[1] - &f[0] */
 );
 
 /* set 2D field strides in number of scalars */
 void
 zfp_field_set_stride_2d(
-  zfp_field* field, /* field meta data */
+  zfp_field* field, /* field metadata */
   int sx,           /* stride in x dimension: &f[0][1] - &f[0][0] */
   int sy            /* stride in y dimension: &f[1][0] - &f[0][0] */
 );
@@ -336,10 +371,17 @@ zfp_field_set_stride_2d(
 /* set 3D field strides in number of scalars */
 void
 zfp_field_set_stride_3d(
-  zfp_field* field, /* field meta data */
+  zfp_field* field, /* field metadata */
   int sx,           /* stride in x dimension: &f[0][0][1] - &f[0][0][0] */
   int sy,           /* stride in y dimension: &f[0][1][0] - &f[0][0][0] */
   int sz            /* stride in z dimension: &f[1][0][0] - &f[0][0][0] */
+);
+
+/* set field scalar type and dimensions */
+int                 /* nonzero upon success */
+zfp_field_set_metadata(
+  zfp_field* field, /* field metadata */
+  uint64 meta       /* compact 52-bit encoding of metadata */
 );
 
 /* high-level API: compression and decompression --------------------------- */
@@ -348,14 +390,30 @@ zfp_field_set_stride_3d(
 size_t                   /* actual number of bytes of compressed storage */
 zfp_compress(
   zfp_stream* stream,    /* compressed stream */
-  const zfp_field* field /* field meta data */
+  const zfp_field* field /* field metadata */
 );
 
 /* decompress entire field (nonzero return value upon success) */
 int                   /* nonzero upon success */
 zfp_decompress(
   zfp_stream* stream, /* compressed stream */
-  zfp_field* field    /* field meta data */
+  zfp_field* field    /* field metadata */
+);
+
+/* write compression parameters and field metadata (optional) */
+size_t                    /* number of bits written or zero upon failure */
+zfp_write_header(
+  zfp_stream* stream,     /* compressed stream */
+  const zfp_field* field, /* field metadata */
+  uint mask               /* information to write */
+);
+
+/* read compression parameters and field metadata when previously written */
+size_t                /* number of bits read or zero upon failure */
+zfp_read_header(
+  zfp_stream* stream, /* compressed stream */
+  zfp_field* field,   /* field metadata */
+  uint mask           /* information to read */
 );
 
 /* low-level API: stream manipulation -------------------------------------- */
@@ -363,6 +421,12 @@ zfp_decompress(
 /* flush bit stream--must be called after last encode call or between seeks */
 void
 zfp_stream_flush(
+  zfp_stream* stream /* compressed bit stream */
+);
+
+/* align bit stream on next word boundary (decoding analogy to flush) */
+void
+zfp_stream_align(
   zfp_stream* stream /* compressed bit stream */
 );
 

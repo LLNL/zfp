@@ -91,7 +91,7 @@ compressor, the dimensions and type must first be specified in a zfp_field
 parameter object that encapsulates the type, size, and memory layout of the
 array:
 
-  // allocate meta data for the 3D array a[nz][ny][nx]
+  // allocate metadata for the 3D array a[nz][ny][nx]
   uint dims = 3;
   zfp_type type = zfp_type_double;
   zfp_field* field = zfp_field_3d(&a[0][0][0], type, nx, ny, nz);
@@ -110,7 +110,7 @@ The zfp_field parameter object holds information about the uncompressed
 array.  To specify the compressed array, a zfp_stream object must be
 allocated:
 
-  // allocate meta data for a compressed stream
+  // allocate metadata for a compressed stream
   zfp_stream* zfp = zfp_stream_open(NULL);
 
 We may now specify the rate, precision, or accuracy (see the README file
@@ -158,14 +158,23 @@ Finally, the array is compressed as follows:
 
 The return value is the actual number of bytes of compressed storage, and
 as already mentioned, size <= bufsize.  If size = 0, then the compressor
-failed.
+failed.  Since zfp 0.5.0, the compressor does not rewind the bit stream
+before compressing, which allows multiple fields to be compressed one
+after the other.  The return value from zfp_compress is always the total
+number of bytes of compressed storage so far relative to the memory
+location pointed to by 'buffer'.
 
 To decompress the data, the field and compression parameters must be
 initialized with the same values as used for compression, either via
 the same sequence of function calls as above, or by recording these
-fields and setting them directly.  NOTE: Meta data such as array
-dimensions and compression parameters are not stored in the compressed
-stream--it is up to the caller to store this information separately.
+fields and setting them directly.  Metadata such as array dimensions and
+compression parameters are by default not stored in the compressed stream.
+It is up to the caller to store this information, either separately from
+the compressed data, or via the zfp_write_header and zfp_read_header calls.
+These calls allow the user to specify what information to store in the
+header, including a 'magic' format identifier, the field type and
+dimensions, and the compression parameters (see the ZFP_HEADER_* macros).
+
 In addition to this initialization, the bit stream has to be rewound to
 the beginning:
 
@@ -188,7 +197,7 @@ buffer overruns or other types of programmer error.
 
 Like the high-level API, the low-level API also makes use of the zfp_stream
 parameter object (see section above) to specify compression parameters and
-storage, but does not encapsulate array meta data in a zfp_field object.
+storage, but does not encapsulate array metadata in a zfp_field object.
 Functions exists for encoding and decoding complete or partial blocks, with
 or without strided access.  In non-strided mode, the uncompressed block to
 be encoded or decoded is assumed to be stored contiguously.  For example,
@@ -216,6 +225,8 @@ The block above could also have been compressed as follows using strides:
   int sy = &block[0][1][0] - &block[0][0][0]; // y stride =  4
   int sz = &block[1][0][0] - &block[0][0][0]; // z stride = 16
   uint bits = zfp_encode_block_strided_double_3(zfp, block, sx, sy, sz);
+
+The strides are measured in number of scalars, not in bytes.
 
 For partial blocks, e.g. near the boundaries of arrays whose dimensions
 are not multiples of four, there are corresponding functions that accept

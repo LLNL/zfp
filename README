@@ -1,6 +1,6 @@
 INTRODUCTION
 
-  This is zfp 0.4.1, an open source C/C++ library for compressed numerical
+  This is zfp 0.5.0, an open source C/C++ library for compressed numerical
   arrays that support high throughput read and write random access.  zfp was
   written by Peter Lindstrom at Lawrence Livermore National Laboratory, and
   is loosely based on the algorithm described in the following paper:
@@ -69,7 +69,7 @@ INSTALLATION
   zfp has successfully been built and tested using these compilers:
 
     gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.2, 5.1.0
-    icc versions 12.0.5, 12.1.5, 13.0.1, 14.0.3, 15.0.4
+    icc versions 12.0.5, 12.1.5, 15.0.4, 16.0.1
     clang versions 3.4.2, 3.6.0
     xlc version 12.1
     mingw32-gcc version 4.8.1
@@ -207,43 +207,58 @@ CODE EXAMPLES
 
   should result in this output
 
-    rate=8 sum=0.996429 error=4.774326e-07
-    rate=12 sum=0.998337 error=1.967825e-07
-    rate=20 sum=0.998326 error=1.967955e-07
+    rate=8 sum=0.996442 error=4.813938e-07
+    rate=12 sum=0.998338 error=1.967777e-07
+    rate=20 sum=0.998326 error=1.967952e-07
     rate=64 sum=0.998326 error=1.967957e-07
 
   For speed and quality comparison, diffusion-raw solves the same problem
-  using uncompressed arrays.
+  using uncompressed double-precision arrays.
 
-  The 'zfp' program is intended for evaluating the rate-distortion
-  (compression ratio and quality) provided by the compressor.  It either
-  generates a test data set or takes a raw array of floats or doubles as
-  input.  It optionally outputs the reconstructed array obtained after
-  lossy compression followed by decompression.  Various statistics on
-  compression rate and error are also displayed.
+  The 'zfp' program is primarily intended for evaluating the rate-distortion
+  (compression ratio and quality) provided by the compressor, but since
+  version 0.5.0 also allows reading and writing compressed data sets.  zfp
+  takes as input a raw, binary array of floats or doubles, and optionally
+  outputs a compressed or reconstructed array obtained after lossy
+  compression followed by decompression.  Various statistics on compression
+  rate and error are also displayed.
 
-  The zfp usage is:
+  zfp requires a set of command-line options, the most important being the
+  -i option that specifies that the input is uncompressed.  When present,
+  "-i <file>" tells zfp to read the uncompressed input file and compress it
+  to memory.  If desired, the compressed stream can be written to an ouptut
+  file using "-z <file>".  When -i is absent, on the other hand, -z names
+  the compressed input (not output) file, which is then decompressed.  In
+  either case, "-o <file>" can be used to output the reconstructed array
+  resulting from lossy compression and decompression.
 
-    zfp [options] <nx> [ny nz infile outfile]
+  So, to compress a file, use "-i file.in -z file.zfp".  To later decompress
+  the file, use "-z file.zfp -o file.out".  A single dash "-" can be used in
+  place of a file name to denote standard input or output.
 
-  The floating-point precision (single or double) must be specified using
-  either -f (float) or -d (double).  Additional options are available
-  for specifying compression parameters, and are discussed below.
+  When reading uncompressed input, the floating-point precision (single or
+  double) must be specified using either -f (float) or -d (double).  In
+  addition, the array dimensions must be specified using "-1 nx" (for 1D
+  arrays), "-2 nx ny" (for 2D arrays), or "-3 nx ny nz" (for 3D arrays).
+  For multidimensional arrays, x varies faster than y, which in turn varies
+  faster than z.  That is, a 3D input file should correspond to a flattened
+  C array declared as a[nz][ny][nx].
 
-  zfp takes three arguments for array dimensions.  For 3D arrays of
-  dimensions nx * ny * nz, x varies faster than y, which in turn varies
-  faster than z.  That is, the input file should correspond to a flattened
-  C array declared as a[nz][ny][nx].  For 2D arrays, specify nz = 0 (or
-  leave this argument out); for 1D arrays, set ny = nz = 0.  Note that if
-  nz is set to one for a 2D array, then the data will be treated as 3D and
-  padded, which may negatively impact the compression rate or quality.
-  Similarly, if ny = 1, nz = 0, then the data will be treated as 2D rather
-  than 1D.
+  Note that "-2 nx ny" is not equivalent to "-3 nx ny 1", even though the
+  same number of values are compressed.  One invokes the 2D codec, while the
+  other uses the 3D codec, which in this example has to pad the input to an
+  nx * ny * 4 array since arrays are partitioned into blocks of dimensions
+  4^d.  Such padding usually negatively impacts compression.
 
-  In addition to the array dimensions, zfp accepts several options for
-  specifying how the data is to be compressed.  The most general of these,
-  the -c option, takes four constraint parameters that together can be
-  used to achieve various effects.  These constraints are:
+  Using -h, the array dimensions and type are stored in a header of the
+  compressed stream so that they do not have to be specified on the command
+  line during decompression.  The header also stores compression parameters,
+  which are described below.
+
+  zfp accepts several options for specifying how the data is to be compressed.
+  The most general of these, the -c option, takes four constraint parameters
+  that together can be used to achieve various effects.  These constraints
+  are:
 
     minbits: the minimum number of bits used to represent a block
     maxbits: the maximum number of bits used to represent a block
@@ -269,16 +284,16 @@ CODE EXAMPLES
     be achieved using option -c by setting minbits = maxbits, maxprec = 64,
     and minexp = -1074.  The fixed-rate mode is needed to support random
     access to blocks, where the amortized number of bits used per value is
-    given by rate = maxbits / 4^d.  Note that each block stores a common
-    exponent, and maxbits must be at least 8 for single precision and 11
-    for double precision.
+    given by rate = maxbits / 4^d.  Note that each block stores a leading
+    all-zeros bit and common exponent, and maxbits must be at least 9 for
+    single precision and 12 for double precision.
 
   Fixed precision (option -p): 
     In fixed-precision mode, the number of bits used to encode a block may
     vary, but the number of bit planes (i.e. the precision) encoded for the
     transform coefficients is fixed.  This mode is achieved by specifying
     the precision in maxprec and fully relaxing the size constraints, i.e.
-    minbits = 0, maxbits = 4170, and minexp = -1074.  Fixed-precision
+    minbits = 0, maxbits = 4171, and minexp = -1074.  Fixed-precision
     mode is preferable when relative rather than absolute errors matter.
 
   Fixed accuracy (option -a):
@@ -296,7 +311,7 @@ CODE EXAMPLES
     (especially for 3D arrays), but can conservatively be set so that even
     for worst-case inputs the error tolerance is respected.  To achieve
     fixed accuracy to within 'tolerance', use the -a <tolerance> option,
-    which sets minexp = floor(log2(tolerance)), minbits = 0, maxbits = 4170,
+    which sets minexp = floor(log2(tolerance)), minbits = 0, maxbits = 4171,
     and maxprec = 64.  As in fixed-precision mode, the number of bits used
     per block is not fixed but is dictated by the data.  Use -a 0 to achieve
     near-lossless compression.  Fixed-accuracy mode gives the highest quality
@@ -311,27 +326,6 @@ CODE EXAMPLES
   double.  The minbits parameter is useful only in fixed-rate mode--when
   minbits = maxbits, zero-bits are padded to blocks that compress to fewer
   than maxbits bits.
-
-  The following invocations of zfp
-
-    zfp -f -r 16 100 100 100
-    zfp -d -r 32 1000000
-    zfp -d -p 32 1000 1000
-    zfp -d -a 1e-9 1000000
-    zfp -d -c 64 64 0 -1074 1000000
-
-  should result in the following output
-
-    in=4000000 out=2000000 ratio=2 rate=16
-      rmse=7.484e-10 nrmse=3.748e-10 maxe=2.98e-08 psnr=182.50
-    in=8000000 out=4000000 ratio=2 rate=32
-      rmse=3.434e-13 nrmse=1.717e-13 maxe=1.801e-12 psnr=249.28
-    in=8000000 out=1666080 ratio=4.8 rate=13.33
-      rmse=7.443e-10 nrmse=3.721e-10 maxe=4.775e-09 psnr=182.57
-    in=8000000 out=2947768 ratio=2.71 rate=23.58
-      rmse=1.173e-10 nrmse=5.865e-11 maxe=4.068e-10 psnr=198.61
-    in=8000000 out=2000000 ratio=4 rate=16
-      rmse=1.45e-07 nrmse=7.248e-08 maxe=7.931e-07 psnr=136.78
 
   The 'speed' program takes two optional parameters:
 
@@ -390,13 +384,6 @@ LIMITATIONS AND MISSING FEATURES
     extensions to other floating-point formats should be possible with
     minor effort.
 
-  - Currently no compressed format exists for storing compressed arrays
-    externally, e.g. on disk.  Although it is possible to compress data
-    to memory and write the compressed stream out, no meta data is
-    embedded in the stream, and it is entirely up to the user to ensure
-    that the data is read back in and interpreted according to the original
-    array dimensions and floating-point type.
-
   - No iterators are provided for traversing an array, and currently one
     has to use integer indexing.  Performance could in cases be improved
     by limiting the traversal to sequential access.
@@ -424,8 +411,7 @@ LIMITATIONS AND MISSING FEATURES
     supporting multi-threaded access, e.g. for OpenMP parallelization.
 
   - This version of zfp does not run on the GPU.  Some work has been done to
-    port zfp to CUDA, and we expect to release such a version in the near
-    future.
+    port zfp to CUDA, and we expect to release such a version in the future.
 
 
 QUESTIONS, COMMENTS, AND BUG REPORTS

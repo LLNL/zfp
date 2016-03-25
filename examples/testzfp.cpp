@@ -112,6 +112,7 @@ test_rate(zfp_stream* stream, const zfp_field* input, double rate, Scalar tolera
 #ifdef WITH_TIMINGS
   clock_t c = clock();
 #endif
+  zfp_stream_rewind(stream);
   size_t outsize = zfp_compress(stream, input);
 #ifdef WITH_TIMINGS
   double time = double(clock() - c) / CLOCKS_PER_SEC;
@@ -120,8 +121,9 @@ test_rate(zfp_stream* stream, const zfp_field* input, double rate, Scalar tolera
 #endif
   bool pass = true;
   // make sure compressed size matches rate
-  if (outsize != bufsize) {
-    status << " [" << outsize << " != " << bufsize << "]";
+  size_t bytes = (size_t)floor(rate * zfp_field_size(input, NULL) / CHAR_BIT + 0.5);
+  if (outsize != bytes) {
+    status << " [" << outsize << " != " << bytes << "]";
     pass = false;
   }
   std::cout << std::setw(width) << std::left << status.str() << (pass ? " OK " : "FAIL") << std::endl;
@@ -139,6 +141,7 @@ test_rate(zfp_stream* stream, const zfp_field* input, double rate, Scalar tolera
 #ifdef WITH_TIMINGS
   c = clock();
 #endif
+  zfp_stream_rewind(stream);
   pass = zfp_decompress(stream, output);
   if (!pass)
     status << " [decompression failed]";
@@ -194,6 +197,7 @@ test_precision(zfp_stream* stream, const zfp_field* input, uint precision, size_
   std::ostringstream status;
   status << "  compress:  ";
   status << " precision=" << std::setw(2) << precision;
+  zfp_stream_rewind(stream);
   size_t outsize = zfp_compress(stream, input);
   double ratio = double(n * sizeof(Scalar)) / outsize;
   status << " ratio=" << std::fixed << std::setprecision(3) << std::setw(7) << ratio;
@@ -215,6 +219,7 @@ test_precision(zfp_stream* stream, const zfp_field* input, uint precision, size_
   zfp_field* output = zfp_field_alloc();
   *output = *input;
   zfp_field_set_pointer(output, g);
+  zfp_stream_rewind(stream);
   pass = zfp_decompress(stream, output);
   if (!pass)
     status << " [decompression failed]";
@@ -249,6 +254,7 @@ test_accuracy(zfp_stream* stream, const zfp_field* input, Scalar tolerance, size
   std::ostringstream status;
   status << "  compress:  ";
   status << " tolerance=" << std::scientific << std::setprecision(3) << tolerance;
+  zfp_stream_rewind(stream);
   size_t outsize = zfp_compress(stream, input);
   double ratio = double(n * sizeof(Scalar)) / outsize;
   status << " ratio=" << std::fixed << std::setprecision(3) << std::setw(7) << ratio;
@@ -270,6 +276,7 @@ test_accuracy(zfp_stream* stream, const zfp_field* input, Scalar tolerance, size
   zfp_field* output = zfp_field_alloc();
   *output = *input;
   zfp_field_set_pointer(output, g);
+  zfp_stream_rewind(stream);
   pass = zfp_decompress(stream, output);
   if (!pass)
     status << " [decompression failed]";
@@ -491,40 +498,40 @@ test(uint m)
 #if TEST_SIZE == 4
       Scalar emax[2][3][4] = {
         {
-          {1.998e+00, 5.299e-03, 0.000e+00},
-          {2.356e-01, 3.567e-04, 7.451e-09},
-          {2.244e-01, 1.509e-03, 7.451e-08},
+          {1.998e+00, 7.767e-03, 0.000e+00},
+          {2.356e-01, 3.939e-04, 7.451e-09},
+          {2.479e-01, 1.525e-03, 7.451e-08},
         },
         {
-          {1.998e+00, 6.550e-01, 1.360e-05},
-          {3.361e+00, 2.101e-02, 1.684e-06},
-          {6.737e-01, 3.204e-02, 5.990e-06},
+          {1.998e+00, 9.976e-01, 1.360e-05},
+          {2.944e+00, 2.491e-02, 2.578e-06},
+          {6.103e-01, 3.253e-02, 6.467e-06},
         }
       };
 #elif TEST_SIZE == 8
       Scalar emax[2][3][4] = {
         {
           {2.000e+00, 1.425e-03, 0.000e+00},
-          {6.973e-02, 1.193e-05, 2.329e-10},
-          {1.864e-02, 3.100e-05, 1.193e-07},
+          {7.110e-02, 1.264e-05, 2.329e-10},
+          {1.864e-02, 2.814e-05, 1.193e-07},
         },
         {
-          {2.000e+00, 6.668e-01, 3.084e-06, 0.000e+00},
-          {1.288e+00, 2.777e-03, 1.784e-08, 0.000e+00},
-          {2.963e-01, 1.351e-03, 7.060e-08, 3.470e-18},
+          {2.000e+00, 1.001e+00, 3.084e-06, 0.000e+00},
+          {2.266e+00, 3.509e-03, 1.784e-08, 0.000e+00},
+          {2.494e-01, 1.473e-03, 7.060e-08, 3.470e-18},
         }
       };
 #elif TEST_SIZE == 16
       Scalar emax[2][3][4] = {
         {
           {2.000e+00, 1.304e-03, 0.000e+00},
-          {4.563e-02, 7.153e-07, 2.911e-11},
+          {6.907e-02, 5.961e-07, 2.911e-11},
           {3.458e-03, 7.153e-07, 2.385e-07},
         },
         {
-          {2.000e+00, 6.667e-01, 5.532e-07, 0.000e+00},
-          {1.352e+00, 2.822e-04, 1.646e-10, 5.294e-23},
-          {5.483e-02, 6.843e-05, 4.564e-10, 8.674e-19},
+          {2.000e+00, 1.001e+00, 6.353e-07, 0.000e+00},
+          {2.036e+00, 3.174e-04, 1.646e-10, 5.294e-23},
+          {5.483e-02, 8.559e-05, 4.564e-10, 8.674e-19},
         }
       };
 #endif
@@ -540,40 +547,40 @@ test(uint m)
 #if TEST_SIZE == 4
       size_t bytes[2][3][3] = {
         {
-          {2048, 3128, 6144},
-          { 544, 1264, 4104},
-          { 120,  712, 4088},
+          {2176, 3256, 6272},
+          { 576, 1296, 4136},
+          { 128,  720, 4096},
         },
         {
-          {3512, 6528, 14448},
-          {1360, 4200, 12280},
-          { 736, 4112, 12296},
+          {3640, 6656, 14576},
+          {1392, 4232, 12312},
+          { 744, 4120, 12304},
         },
       };
 #elif TEST_SIZE == 8
       size_t bytes[2][3][3] = {
         {
-          {130688, 196288, 341736},
-          { 33168,  61584, 160960},
-          {  8344,  26256, 132848},
+          {138864, 204456, 349888},
+          { 35216,  63632, 163008},
+          {  8856,  26768, 133360},
         },
         {
-          {220856, 366072, 778312},
-          { 67728, 167120, 562144},
-          { 27792, 134392, 588088},
+          {229048, 374264, 786504},
+          { 69776, 169168, 564192},
+          { 28304, 134904, 588600},
         },
       };
 #elif TEST_SIZE == 16
       size_t bytes[2][3][3] = {
         {
-          {8363720, 12558440, 20966592},
-          {2109184,  3326520,  7656680},
-          { 537888,  1244360,  4770448},
+          {8886920, 13080944, 21487696},
+          {2240256,  3457592,  7787752},
+          { 570656,  1277128,  4803216},
         },
         {
-          {14130560, 22535304, 45440920},
-          { 3719712,  8037448, 25018448},
-          { 1342672,  4868784, 24307032},
+          {14654848, 23059592, 45965208},
+          { 3850784,  8168520, 25149520},
+          { 1375440,  4901552, 24339800},
         },
       };
 #endif
@@ -587,40 +594,40 @@ test(uint m)
 #if TEST_SIZE == 4
       size_t bytes[2][3][3] = {
         {
-          {4624, 10056, 14064},
-          {2888,  8688, 12184},
-          {4256, 10400, 12272},
+          {4752, 10184, 14192},
+          {2920,  8720, 12216},
+          {4264, 10408, 12280},
         },
         {
-          {5008, 25288, 30832},
-          {2984, 23632, 28664},
-          {4280, 25272, 28680},
+          {5136, 25416, 30960},
+          {3016, 23664, 28696},
+          {4288, 25280, 28688},
         },
       };
 #elif TEST_SIZE == 8
       size_t bytes[2][3][3] = {
         {
-          {264320, 544672, 784408},
-          {103448, 327232, 570504},
-          { 90072, 380752, 588016},
+          {272208, 552856, 792528},
+          {105440, 329280, 572552},
+          { 90584, 381264, 588528},
         },
         {
-          {288888, 1470456, 1826224},
-          {109592, 1248008, 1607672},
-          { 91608, 1327032, 1636656},
+          {296672, 1478648, 1834416},
+          {111560, 1250056, 1609720},
+          { 92120, 1327544, 1637168},
         },
       };
 #elif TEST_SIZE == 16
       size_t bytes[2][3][3] = {
         {
-          {16911584, 31705512, 46913344},
-          { 5209080, 14696416, 28789888},
-          { 2690280, 12655368, 26276064},
+          {17416688, 32229448, 47431656},
+          { 5327000, 14827440, 28920960},
+          { 2721504, 12688136, 26308832},
         },
         {
-          {18484448, 84671072, 107441160},
-          { 5602296, 63286728,  86838152},
-          { 2788584, 66312824,  89124528},
+          {18982344, 85195360, 107965448},
+          { 5715280, 63417800,  86969224},
+          { 2819224, 66345592,  89157296},
         },
       };
 #endif
@@ -631,7 +638,7 @@ test(uint m)
 #if TEST_SIZE == 4
     Scalar emax[2][3] = {
       {0.000e+00, 7.451e-09, 7.451e-08},
-      {1.883e-10, 5.731e-09, 2.804e-08},
+      {2.354e-10, 5.731e-09, 2.804e-08},
     };
     Scalar dfmax[2][3] = {
       {4.385e-03, 9.260e-02, 3.760e-01},
@@ -640,7 +647,7 @@ test(uint m)
 #elif TEST_SIZE == 8
     Scalar emax[2][3] = {
       {0.000e+00, 2.329e-10, 1.193e-07},
-      {1.293e-11, 5.678e-11, 4.294e-10},
+      {1.302e-11, 5.678e-11, 4.148e-10},
     };
     Scalar dfmax[2][3] = {
       {6.866e-05, 1.792e-03, 2.239e-02},
@@ -649,11 +656,11 @@ test(uint m)
 #elif TEST_SIZE == 16
     Scalar emax[2][3] = {
       {0.000e+00, 2.911e-11, 2.385e-07},
-      {4.464e-13, 3.051e-13, 1.162e-12},
+      {4.464e-13, 3.051e-13, 1.224e-12},
     };
     Scalar dfmax[2][3] = {
-      {1.073e-06, 2.912e-05, 4.714e-04},
-      {1.073e-06, 2.883e-05, 4.714e-04},
+      {1.073e-06, 2.906e-05, 4.714e-04},
+      {1.073e-06, 2.880e-05, 4.714e-04},
     };
 #endif
     double rate = 24;
