@@ -1,10 +1,12 @@
-#include "zfpcompress.h"
+#include "zfp.h"
 #include "zfpcodec1f.h"
 #include "zfpcodec1d.h"
 #include "zfpcodec2f.h"
 #include "zfpcodec2d.h"
 #include "zfpcodec3f.h"
 #include "zfpcodec3d.h"
+
+// private functions ----------------------------------------------------------
 
 static size_t
 compress1f(MemoryBitStream& stream, const float* in, uint nx, uint minbits, uint maxbits, uint maxprec, int minexp)
@@ -138,45 +140,108 @@ decompress3d(MemoryBitStream& stream, double* out, uint nx, uint ny, uint nz, ui
         codec.decode(p, 1, nx, nx * ny, codec.dims(std::min(nx - x, 4u), std::min(ny - y, 4u), std::min(nz - z, 4u)));
 }
 
-namespace ZFP {
+// public functions -----------------------------------------------------------
+
+double
+zfp_set_rate(zfp_params* p, double rate)
+{
+  uint dims = p->nz ? 3 : p->ny ? 2 : 1;
+  uint n = 1u << (2 * dims);
+  uint bits = lrint(n * rate);
+  bits = std::max(bits, p->type == ZFP_TYPE_FLOAT ? 8u : 11u);
+  p->minbits = bits;
+  p->maxbits = bits;
+  p->maxprec = 0;
+  p->minexp = INT_MIN;
+  return double(bits) / n;
+}
+
+uint
+zfp_set_precision(zfp_params* p, uint precision)
+{
+  uint maxprec = p->type * CHAR_BIT * sizeof(float);
+  p->minbits = 0;
+  p->maxbits = UINT_MAX;
+  p->maxprec = precision ? std::min(maxprec, precision) : maxprec;
+  p->minexp = INT_MIN;
+  return precision;
+}
+
+double
+zfp_set_accuracy(zfp_params* p, double tolerance)
+{
+  int emin = tolerance > 0 ? static_cast<int>(floor(log2(tolerance))) : INT_MIN;
+  p->minbits = 0;
+  p->maxbits = UINT_MAX;
+  p->maxprec = 0;
+  p->minexp = emin;
+  return tolerance > 0 ? ldexp(1, emin) : 0;
+}
 
 size_t
-compress(const void* in, void* out, bool dp, uint nx, uint ny, uint nz, uint minbits, uint maxbits, uint maxprec, int minexp)
+zfp_estimate_compressed_size(const zfp_params* p)
 {
-  if (!nx)
+  if (!p->nx)
     return 0;
-  size_t inbytes = nx * std::max(ny, 1u) * std::max(nz, 1u) * sizeof(double);
-  MemoryBitStream stream;
-  stream.open(out, 2 * inbytes);
-  if (nz)
-    return dp ? compress3d(stream, (const double*)in, nx, ny, nz, minbits, maxbits, maxprec, minexp)
-              : compress3f(stream, (const float*)in,  nx, ny, nz, minbits, maxbits, maxprec, minexp);
-  else if (ny)
-    return dp ? compress2d(stream, (const double*)in, nx, ny, minbits, maxbits, maxprec, minexp)
-              : compress2f(stream, (const float*)in,  nx, ny, minbits, maxbits, maxprec, minexp);
-  else
-    return dp ? compress1d(stream, (const double*)in, nx, minbits, maxbits, maxprec, minexp)
-              : compress1f(stream, (const float*)in,  nx, minbits, maxbits, maxprec, minexp);
+  bool dp;
+  switch (p->type) {
+    case ZFP_TYPE_FLOAT:
+      dp = false;
+      break;
+    case ZFP_TYPE_DOUBLE:
+      dp = true;
+      break;
+    default:
+      return 0;
+  }
+  uint mx = (std::max(p->nx, 1u) + 3) / 4;
+  uint my = (std::max(p->ny, 1u) + 3) / 4;
+  uint mz = (std::max(p->nz, 1u) + 3) / 4;
+  size_t blocks = size_t(mx) * size_t(my) * size_t(mz);
+  uint dims = 1 + (p->ny == 0 ? 0 : 1) + (p->nz == 0 ? 0 : 1);
+  uint values = 1u << (2 * dims);
+  uint maxprec = p->maxprec ? p->maxprec : p->type * CHAR_BIT * sizeof(float);
+  uint maxbits = (dp ? 11 : 8) + 3 * dims + values * (maxprec + 1);
+  maxbits = std::min(maxbits, p->maxbits);
+  maxbits = std::max(maxbits, p->minbits);
+  return (blocks * maxbits + CHAR_BIT - 1) / CHAR_BIT;
 }
 
-bool
-decompress(const void* in, void* out, bool dp, uint nx, uint ny, uint nz, uint minbits, uint maxbits, uint maxprec, int minexp)
+size_t
+zfp_compress(const zfp_params* p, const void* in, void* out, size_t outsize)
 {
-  if (!nx)
-    return false;
-  size_t inbytes = nx * std::max(ny, 1u) * std::max(nz, 1u) * sizeof(double);
+  if (!p->nx)
+    return 0;
   MemoryBitStream stream;
-  stream.open((void*)in, 2 * inbytes);
-  if (nz)
-    dp ? decompress3d(stream, (double*)out, nx, ny, nz, minbits, maxbits, maxprec, minexp)
-       : decompress3f(stream, (float*)out,  nx, ny, nz, minbits, maxbits, maxprec, minexp);
-  else if (ny)
-    dp ? decompress2d(stream, (double*)out, nx, ny, minbits, maxbits, maxprec, minexp)
-       : decompress2f(stream, (float*)out,  nx, ny, minbits, maxbits, maxprec, minexp);
+  stream.open(out, outsize);
+  bool dp = (p->type == ZFP_TYPE_DOUBLE);
+  if (p->nz)
+    return dp ? compress3d(stream, (const double*)in, p->nx, p->ny, p->nz, p->minbits, p->maxbits, p->maxprec, p->minexp)
+              : compress3f(stream, (const float*)in,  p->nx, p->ny, p->nz, p->minbits, p->maxbits, p->maxprec, p->minexp);
+  else if (p->ny)
+    return dp ? compress2d(stream, (const double*)in, p->nx, p->ny, p->minbits, p->maxbits, p->maxprec, p->minexp)
+              : compress2f(stream, (const float*)in,  p->nx, p->ny, p->minbits, p->maxbits, p->maxprec, p->minexp);
   else
-    dp ? decompress1d(stream, (double*)out, nx, minbits, maxbits, maxprec, minexp)
-       : decompress1f(stream, (float*)out,  nx, minbits, maxbits, maxprec, minexp);
-  return true;
+    return dp ? compress1d(stream, (const double*)in, p->nx, p->minbits, p->maxbits, p->maxprec, p->minexp)
+              : compress1f(stream, (const float*)in,  p->nx, p->minbits, p->maxbits, p->maxprec, p->minexp);
 }
 
+int
+zfp_decompress(const zfp_params* p, void* out, const void* in, size_t insize)
+{
+  if (!p->nx)
+    return false;
+  MemoryBitStream stream;
+  stream.open((void*)in, insize);
+  bool dp = (p->type == ZFP_TYPE_DOUBLE);
+  if (p->nz)
+    dp ? decompress3d(stream, (double*)out, p->nx, p->ny, p->nz, p->minbits, p->maxbits, p->maxprec, p->minexp)
+       : decompress3f(stream, (float*)out,  p->nx, p->ny, p->nz, p->minbits, p->maxbits, p->maxprec, p->minexp);
+  else if (p->ny)
+    dp ? decompress2d(stream, (double*)out, p->nx, p->ny, p->minbits, p->maxbits, p->maxprec, p->minexp)
+       : decompress2f(stream, (float*)out,  p->nx, p->ny, p->minbits, p->maxbits, p->maxprec, p->minexp);
+  else
+    dp ? decompress1d(stream, (double*)out, p->nx, p->minbits, p->maxbits, p->maxprec, p->minexp)
+       : decompress1f(stream, (float*)out,  p->nx, p->minbits, p->maxbits, p->maxprec, p->minexp);
+  return true;
 }

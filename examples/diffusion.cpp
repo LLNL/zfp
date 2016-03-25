@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
   int nx = 0;
   int ny = 0;
   int nt = 0;
-  double precision = 64;
+  double rate = 64;
 
   // parse arguments
   switch (argc) {
@@ -32,14 +32,14 @@ int main(int argc, char* argv[])
         goto usage;
       // FALLTHROUGH
     case 2:
-      if (sscanf(argv[1], "%lf", &precision) != 1)
+      if (sscanf(argv[1], "%lf", &rate) != 1)
         goto usage;
       // FALLTHROUGH
     case 1:
       break;
     default:
     usage:
-      std::cerr << "Usage: diffusion [precision] [nx] [ny] [nt]" << std::endl;
+      std::cerr << "Usage: diffusion [rate] [nx] [ny] [nt]" << std::endl;
       return EXIT_FAILURE;
   }
 
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
   const double pi = 3.14159265358979323846;
 
   // initialize u (constructor zero-initializes)
-  Array2d u(nx, ny, precision);
+  Array2d u(nx, ny, rate);
   u(x0, y0) = 1;
 
   // iterate until final time
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
   for (t = 0; t < tfinal; t += dt) {
     std::cerr << "t = " << std::fixed << t << std::endl;
     // compute du/dt
-    Array2d du(nx, ny, precision);
+    Array2d du(nx, ny, rate);
     for (int y = 1; y < ny - 1; y++) {
       for (int x = 1; x < nx - 1; x++) {
         double uxx = (u(x - 1, y) - 2 * u(x, y) + u(x + 1, y)) / (dx * dx);

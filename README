@@ -1,20 +1,20 @@
 INTRODUCTION
 
-  This is zfp 0.1.0, an open source C++ library for compressed floating-point
-  arrays that support both read and write random access.  zfp was written by
-  Peter Lindstrom at Lawrence Livermore National Laboratory, and is based on
-  the algorithm described in the following paper:
+  This is zfp 0.2.0, an open source C++ library for compressed floating-point
+  arrays that support high throughput read and write random access.  zfp was
+  written by Peter Lindstrom at Lawrence Livermore National Laboratory, and
+  is based on the algorithm described in the following paper:
 
     Peter Lindstrom
     "Fixed-Rate Compressed Floating-Point Arrays"
     IEEE Transactions on Visualization and Computer Graphics,
-      20(12):2674-2683, December 2014.
+      20(12):2674-2683, December 2014
     doi:10.1109/TVCG.2014.2346458
 
-  zfp was designed to achieve high compression ratios of floating-point
-  data, and therefore employs lossy but optionally error-bounded compression.
-  Although bit-for-bit lossless compression is not always possible, zfp can
-  approach almost perfectly lossless compression for most data sets.
+  zfp was designed to achieve high compression ratios and therefore uses
+  lossy but optionally error-bounded compression.  Although bit-for-bit
+  lossless compression is not always possible, zfp is usually accurate to
+  within machine epsilon in near-lossless mode.
 
   zfp works best for 2D and 3D arrays that exhibit spatial coherence.
   Although zfp also provides a 1D array class that can be used for 1D
@@ -30,12 +30,22 @@ INTRODUCTION
 
 INSTALLATION
 
-  The main compressor and array classes are implemented entirely in header
-  files, and therefore no installation is necessary.  To compile the code
-  examples on Linux or OS X, type
+  The main compression codec and array classes are implemented entirely in
+  header files, and therefore can be included as is without pre-compilation.
+  C wrappers also exist for compressing entire arrays, which are made
+  available through a small library called libzfp.  To compile libzfp on
+  Linux or OS X, type
+
+    cd src; make
+
+  It is not necessary to compile libzfp if the Array or Codec classes are
+  used directly.
+
+  There are also two code examples that show how to use libzfp and the array
+  classes.  To compile them, first compile libzfp and then type
 
     cd examples; make
-
+  
   See below for more details on these example programs.
 
 
@@ -45,8 +55,8 @@ ALGORITHM OVERVIEW
   d-dimensional array into independent blocks of 4^d values, e.g. 4x4x4
   values in three dimensions.  Each block is compressed/decompressed
   entirely independently from all other blocks.  In this sense, zfp is
-  similar to current texture compression schemes for image coding
-  implemented in hardware on graphics cards and mobile devices.
+  similar to current hardware texture compression schemes for image
+  coding implemented on graphics cards and mobile devices.
 
   The zfp compression scheme is based on three components, outlined below.
 
@@ -57,9 +67,9 @@ ALGORITHM OVERVIEW
   is to turn each floating-point value into a 32- or 64-bit signed integer.
 
   (2) The integers are decorrelated using a custom, high-speed, orthogonal
-  transform, much in the spirit of the discrete cosine transform used in
-  JPEG image coding.  The transform exploits separability and is implemented
-  efficiently using the lifting scheme.  If the data is "smooth," then this
+  transform similar to the discrete cosine transform used in JPEG image
+  coding.  The transform exploits separability and is implemented efficiently
+  in-place using the lifting scheme.  If the data is "smooth," then this
   transform will turn most integers into small signed values clustered
   around zero.
 
@@ -70,8 +80,8 @@ ALGORITHM OVERVIEW
   most important and have the greatest impact on signal quality, with the
   last few bits providing very small changes.  The resulting compressed
   bit stream can be truncated at any point and still allow for a valid
-  reconstruction.  This property is the basis for the fixed-rate functionality
-  and random access to fixed-size blocks supported by zfp.
+  reconstruction.  This property is the basis for the fixed-rate
+  functionality and random access to fixed-size blocks supported by zfp.
 
   Various parameters are exposed for controlling the quality and compressed
   size of a block, and can be specified by the user at a very fine
@@ -84,91 +94,151 @@ CODE EXAMPLES
   compressor.  The 'diffusion' example is a simple forward Euler solver
   for the heat equation on a 2D regular grid, and is intended to show
   how to declare and work with zfp's compressed arrays, as well as give
-  an idea of how changing the zfp precision affects the error in the
-  solution.  It is possible to compile this code with conventional
-  uncompressed arrays for comparison.  The usage is:
+  an idea of how changing the compression rate affects the error in
+  the solution.  It is possible to compile this code with conventional
+  uncompressed arrays for comparison (see the Makefile).  The usage is:
 
-    diffusion [precision] [nx] [ny] [nt]
+    diffusion [rate] [nx] [ny] [nt]
 
-  where 'precision' specifies the exact number of bits to store per
-  floating-point value (default = 64); 'nx' and 'ny' specify the grid size
-  (default = 100x100); and 'nt' specifies the number of time steps to run
-  (the default is to run until time t = 1).
+  where 'rate' specifies the exact number of compressed bits to store per
+  double-precision floating-point value (default = 64); 'nx' and 'ny'
+  specify the grid size (default = 100x100); and 'nt' specifies the number
+  of time steps to run (the default is to run until time t = 1).
 
   The 'zfp' program is intended for evaluating the rate-distortion
-  (compression rate and quality) provided by the compressor.  It takes
-  a raw array of floats or doubles as input, and optionally outputs the
-  reconstructed array obtained after lossy compression followed by
-  decompression.  Various statistics on compression rate and error are
-  also displayed.
+  (compression rate and quality) provided by the compressor.  It either
+  generates a test data set or takes a raw array of floats or doubles as
+  input.  It optionally outputs the reconstructed array obtained after
+  lossy compression followed by decompression.  Various statistics on
+  compression rate and error are also displayed.
 
-  zfp takes three arguments for array dimensions.  For 2D arrays, specify
-  nz = 0; for 1D arrays, set ny = nz = 0.  Note that if nz is set to one
-  for a 2D array, then the data will be treated as 3D and padded, which
-  may negatively impact the compression rate.
+  The zfp usage is:
 
-  In addition to the array dimensions, zfp accepts four constraint
-  parameters that, together, can be used to achieve various effects.
-  These constraints are:
+    zfp [options] <nx> [ny nz infile outfile]
+
+  The floating-point precision (single or double) must be specified using
+  either -f (float) or -d (double).  Additional options are available
+  for specifying compression parameters, and are discussed below.
+
+  zfp takes three arguments for array dimensions.  For 3D arrays of
+  dimensions nx * ny * nz, x varies faster than y, which in turn varies
+  faster than z.  That is, the input file should correspond to a flattened
+  C array declared as a[nz][ny][nx].  For 2D arrays, specify nz = 0 (or
+  leave this argument out); for 1D arrays, set ny = nz = 0.  Note that if
+  nz is set to one for a 2D array, then the data will be treated as 3D and
+  padded, which may negatively impact the compression rate or quality.
+  Similarly, if ny = 1, nz = 0, then the data will be treated as 2D rather
+  than 1D.
+
+  In addition to the array dimensions, zfp accepts several options for
+  specifying how the data is to be compressed.  The most general of these,
+  the -c option, takes four constraint parameters that together can be
+  used to achieve various effects.  These constraints are:
 
     minbits: the minimum number of bits used to represent a block
     maxbits: the maximum number of bits used to represent a block
     maxprec: the maximum number of bit planes encoded
     minexp:  the smallest bit plane number encoded
 
-  Bit plane e here refers to the bits in a data set whose place value is
-  2^e.  For instance, in single-precision floating-point bit planes -149
-  through 127 are supported (when also counting denormalized numbers).
+  Options -r, -p, and -a provide a simpler interface to setting all of
+  the above parameters (see below).  Bit plane e refers to those bits whose
+  place value is 2^e.  For instance, in single precision, bit planes -149
+  through 127 are supported (when also counting denormalized numbers); for
+  double precision, bit planes -1074 through 1023 are supported.
 
   Care must be taken to allow all constraints to be met, as encoding
-  stops as soon as a single constraint is violated.  The effects of
-  the above four parameters are best explained in terms of the three main
-  compression modes supported by zfp (see ALGORITHM OVERVIEW above for
+  terminates as soon as a single constraint is violated (except minbits,
+  which is satisfied at the end of encoding by padding zeros).  The effects
+  of the above four parameters are best explained in terms of the three main
+  compression modes supported by zfp (see Algorithm Overview above for
   additional details):
 
-  Fixed rate:
-    In fixed-rate mode, each block of 4^d values in d dimensions is stored
-    using a fixed number of bits specified by the user.  This is achieved
-    by setting minbits = maxbits, maxprec = 0, and minexp = -1024.  The
-    fixed-rate mode is needed to support random access to blocks.  Note
-    that the amortized number of bits used per value is maxbits / 4^d.
+  Fixed rate (option -r):
+    In fixed-rate mode, each compressed block of 4^d values in d dimensions
+    is stored using a fixed number of bits specified by the user.  This can
+    be achieved using option -c by setting minbits = maxbits, maxprec = 0,
+    and minexp = INT_MIN.  The fixed-rate mode is needed to support random
+    access to blocks, where the amortized number of bits used per value is
+    given by rate = maxbits / 4^d.  Note that each block stores a common
+    exponent, and maxbits must be at least 8 for single precision and 11
+    for double precision.
 
-  Fixed precision:
+  Fixed precision (option -p): 
     In fixed-precision mode, the number of bits used to encode a block may
     vary, but the number of bit planes (i.e. the precision) encoded for the
     transform coefficients is fixed.  This mode is achieved by specifying
     the precision in maxprec and fully relaxing the size constraints, i.e.
-    minbits = 0, maxbits = UINT_MAX, and minexp = -1024.  Fixed-precision
-    mode allows bounding the relative error.
+    minbits = 0, maxbits = UINT_MAX, and minexp = INT_MIN.  Fixed-precision
+    mode is preferable when relative rather than absolute errors matter.
 
-  Fixed accuracy:
+  Fixed accuracy (option -a):
     In fixed-accuracy mode, all transform coefficient bit planes up to a
-    minimum bit plane number are encoded.  The actual minimum bit plane
+    minimum bit plane number are encoded.  (The actual minimum bit plane
     is not necessarily minexp, but depends on the dimensionality of the
     data.  The reason for this is that the orthogonal transform incurs
     range expansion, and the amount of expansion depends on the number of
-    dimensions.  Thus, minexp should be interpreted as the base-2 logarithm
+    dimensions.)  Thus, minexp should be interpreted as the base-2 logarithm
     of an absolute error tolerance.  In other words, given an uncompressed
     value f and a reconstructed value g, the absolute difference |f - g|
-    is guaranteed to be at most 2^minexp.  Note that this error tolerance
-    is not always tight (especially for 3D arrays), but can conservatively
-    be set so that even for worst-case inputs the error tolerance is
-    respected.  To achieve fixed accuracy to within 'tolerance', set
-    minexp = floor(log2(tolerance)), minbits = 0, maxbits = UINT_MAX, and
-    minprec = 0.  As in fixed-precision mode, the number of bits used per
-    block is not fixed but dictated by the data.
+    is guaranteed to be at most 2^minexp.  (Note that it is not possible to
+    guarantee error tolerances smaller than machine epsilon relative to the
+    largest value within a block.)  This error tolerance is not always tight
+    (especially for 3D arrays), but can conservatively be set so that even
+    for worst-case inputs the error tolerance is respected.  To achieve
+    fixed accuracy to within 'tolerance', use the -a <tolerance> option,
+    which sets minexp = floor(log2(tolerance)), minbits = 0,
+    maxbits = UINT_MAX, and minprec = 0.  As in fixed-precision mode, the
+    number of bits used per block is not fixed but is dictated by the data.
+    Use -a 0 to achieve near-lossless compression.  Fixed-accuracy mode
+    gives the highest quality (in terms of absolute error) for a given
+    compression rate, and is preferable when random access is not needed.
 
   As mentioned above, other combinations of constraints can be used.
   For example, to ensure that the compressed stream is not larger than
   the uncompressed one, or that it fits within the amount of memory
   allocated, one may in conjunction with other constraints set
   maxbits = 4^d * CHAR_BIT * sizeof(Type), where Type is either float or
-  double.  The minbits parameter is useful only in fixed-rate mode--it
-  ensures that zero-bits are padded to blocks that compress to fewer
-  than minbits = maxbits bits.
+  double.  The minbits parameter is useful only in fixed-rate mode--when
+  minbits = maxbits, zero-bits are padded to blocks that compress to fewer
+  than maxbits bits.
 
 
 VERSIONS
+
+  zfp 0.2.0, December 2, 2014
+
+    - The compression interface from zfpcompress was relocated to a
+      separate library, called libzfp, and modified to be callable from C.
+      This API now uses a parameter object (zfp_params) to specify array
+      type and dimensions as well as compression parameters.
+
+    - Several utility functions were added to simplify libzfp usage:
+
+      o Functions for setting the rate, precision, and accuracy.
+        Corresponding functions were also added to the Codec class.
+
+      o A function for estimating the buffer size needed for compression.
+
+    - The Array class functionality was expanded:
+
+      o Support for accessing the compressed bit stream stored with an
+        array, e.g. for offline compressed storage and for initializing
+        an already compressed array.
+
+      o Functions for dynamically specifying the cache size.
+
+      o The default cache is now direct-mapped instead of two-way
+        associative.
+
+    - Minor bug fixes:
+
+      o Corrected the value of the lowest possible bit plane to account for
+        both the smallest exponent and the number of bits in the significand.
+
+      o Corrected inconsistent use of rate and precision.  The rate refers
+        to the number of compressed bits per floating-point value, while
+        the precision refers to the number of uncompressed bits.  The Array
+        API was changed accordingly.
 
   zfp 0.1.0, November 12, 2014
 
@@ -177,7 +247,7 @@ VERSIONS
 
 LIMITATIONS AND MISSING FEATURES
 
-  zfp is released as a beta version, with the intent of giving people access
+  zfp is released as a beta version with the intent of giving people access
   to the code and soliciting feedback on how to improve zfp for the first
   full release.  As such, the zfp API is experimental and has not been
   fixed, and it is entirely possible that future versions will employ a
@@ -192,8 +262,8 @@ LIMITATIONS AND MISSING FEATURES
     compression in a future version by compressing the difference between
     the original data and nearly losslessly compressed data.
 
-  - Special values like infinity and NaN are not supported.  Denorms are
-    correctly handled.
+  - Special values like infinity and NaN are not supported.  Denormalized
+    floating-point numbers are, however, correctly handled.
 
   - Currently no compressed format exists for storing compressed arrays
     externally, e.g. on disk.  Although it is possible to compress data
@@ -202,10 +272,6 @@ LIMITATIONS AND MISSING FEATURES
     that the data is read back in and interpreted according to the original
     array dimensions and floating-point type.  A compressed format is in
     development.
-
-  - The compressed array class does not provide functions for accessing
-    the compressed representation.  Rather, one has to use the ZFP::Codec
-    classes to get at the compressed data.
 
   - No iterators are provided for traversing an array, and currently one
     has to use integer indexing.  Performance could in cases be improved
@@ -222,7 +288,7 @@ LIMITATIONS AND MISSING FEATURES
 
   - Only single and double precision types are supported.  Generalizations
     to IEEE half and quad precision would be useful.  For instance,
-    compressed 64-bit-per-value storage of 128-bit quad precision numbers
+    compressed 64-bit-per-value storage of 128-bit quad-precision numbers
     could greatly improve the accuracy of double-precision floating-point
     computations using the same amount of storage.
 

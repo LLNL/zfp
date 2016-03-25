@@ -1,66 +1,146 @@
 OVERVIEW
 
-zfp consists of two distinct components: (1) a block-based codec that
-performs compression and (2) a set of C++ compressed array classes for
-single- and double-precision data in one, two, and three dimensions.
+zfp consists of three distinct components: (1) a set of low-level C++
+codecs for compressing and decompressing block subsets of one-, two-,
+and three-dimensional single- and double-precision arrays; (2) a set
+of corresponding C++ compressed array classes; and (3) a high-level C
+interface for compressing and decompressing contiguous floating-point
+arrays.
 
-The compression codec operates on individual d-dimensional blocks of size
+The compression codecs operate on individual d-dimensional blocks of size
 4^d, e.g. 4 values in 1D, 4x4 = 16 values in 2D, and 4x4x4 = 64 values in
 3D.  The block being compressed need not be stored contiguously but can
 be processed by specifying regular strides in each dimension.  This is
 useful if the block is stored uncompressed as part of a larger array.
 
-The array classes represent an array of floating-point values as a
-collection of compressed blocks, each whose size in number of bits is
-fixed and specified by the user.  The array classes make use of caching
-of uncompressed blocks to reduce the number of compression and
-decompression calls.  Whenever an array value is read, the corresponding
-block is first looked up in the cache, and if found the uncompressed
-value is returned.  Otherwise the block is first decompressed and
-stored in the cache.  Whenever an array element is written (whether
-actually modified or not), a "dirty bit" is set with the cached block
-to indicate that it must be compressed back to persistent storage
-when evicted from the cache.
+The array classes represent an entire array of floating-point values as
+a collection of compressed blocks, each whose compressed size in number
+of bits is fixed and specified by the user.  The array classes cache
+uncompressed blocks to reduce the number of compression and decompression
+calls.  Whenever an array value is read, the corresponding block is first
+looked up in the cache, and if found the uncompressed value is returned.
+Otherwise the block is first decompressed and stored in the cache.
+Whenever an array element is written (whether actually modified or not),
+a "dirty bit" is set with its cached block to indicate that the block
+must be compressed back to persistent storage when evicted from the cache.
 
-The code examples below are for 3D arrays of doubles, but it should be
-clear how to modify the function calls for 1D or 2D arrays.
+The libzfp C interface is useful for quickly compressing and archiving
+large floating-point arrays of arbitrary dimensions without having to
+understand the technical details of the compression algorithm and codec.
+This library comes with utility functions for specifying the compression
+rate, precision, or accuracy of the compressed data.
+
+All code examples below are for 3D arrays of doubles, but it should be
+clear how to modify the function calls for single precision and for 1D
+or 2D arrays.
 
 
 GENERAL DESIGN AND LIMITATIONS
 
 The zfp API has been designed to facilitate integration with existing
 applications.  After initial array declaration, a zfp array can often
-be used in place of a regular C/C++ array or STL vector, e.g. using
-a[i] indexing for 1D arrays or a(i, j) for 2D arrays.  There are,
-however, some important differences.  For instance, it is not possible
-to take the address of an array element, i.e. constructions like &a[i]
-and a + i are not allowed.  Moreover, the operators [] and () do not
-return regular C++ references.  Instead, a proxy reference class is
-used (similar to how STL bit vectors are implemented).  These proxy
-references can, however, safely be passed to functions and used where
-regular references can.  Finally, although it is possible to convert
-an uncompressed array to a compressed zfp array, there currently is
-no mechanism for initializing an array from external storage, e.g.
-via fread() or similar calls.
+be used in place of a regular C/C++ array or STL vector, e.g. using flat
+indexing via a[index] or using multidimensional indexing via a(i),
+a(i, j), or a(i, j, k).  There are, however, some important differences.
+For instance, it is not possible to take the address of an array element,
+i.e. constructions like &a[i] and a + i are not allowed.  Moreover, the
+operators [] and () do not return regular C++ references.  Instead, a
+proxy reference class is used (similar to how STL bit vectors are
+implemented).  These proxy references can, however, safely be passed to
+functions and used where regular references can.
 
 zfp does not support special floating-point values like infinities and
-NaNs, although denormalized numbers should be handled correctly.
-Similarly, because the compressor assumes that the signal is smooth,
+NaNs, although denormalized numbers are handled correctly.  Similarly,
+because the compressor assumes that the array values vary smoothly,
 using finite but large values like HUGE_VAL in place of infinities is
 not advised, as this will introduce large errors in smaller values
 within the same block.
 
-zfp is implemented entirely as header files, and makes extensive use
-of C++ templates to reduce code redundancy.  Most classes are wrapped
-in the ZFP namespace.
+The zfp C++ classes are implemented entirely as header files and make
+extensive use of C++ templates to reduce code redundancy.  Most classes
+are wrapped in the ZFP namespace.
 
 
-ZFP COMPRESSION AND DECOMPRESSION
+API OVERVIEW
 
-The zfp codec can be used as a generic compressor without making use
-of the array classes.  Users interested only in the array classes, which
-do not directly expose anything related to compression other than
-compression rate control, may safely skip this section.
+The documentation is divided into three parts: the high-level libzfp
+library; the low-level compression codecs; and the compressed array
+classes (in that order).  Users interested only in the compressed arrays,
+which do not directly expose anything related to compression other than
+compression rate control, may safely skip the next two sections.
+
+
+ZFP HIGH-LEVEL C INTERFACE: libzfp
+
+Users concerned only with storing their floating-point data compressed may
+use zfp as a black box that maps a contiguous floating-point array to a
+compressed bit stream.  The intent of libzfp is to provide a high-level
+interface to the compressor that can be called from both C and C++ (and
+possibly other languages).  libzfp does not support strided access, but
+requires the array to be stored contiguously in conventional C row-major
+format.  The low-level interface below provides additional functionality.
+
+Consider compressing the 3D C/C++ array
+
+  double a[nz][ny][nx];
+
+where nx, ny, and nz can be any positive dimensions.  To invoke the libzfp
+compressor, the dimensions and type must first be specified in a zfp_params
+parameter object:
+
+  zfp_params p;
+  p.type = ZFP_TYPE_DOUBLE; // use ZFP_TYPE_FLOAT for single precision
+  p.nx = nx;
+  p.ny = ny; // ny = 0 for 1D arrays
+  p.nz = nz; // nz = 0 for 1D and 2D arrays
+
+Once the array type and dimensions are set, one can specify the rate,
+precision, or accuracy:
+
+  double actual_rate = zfp_set_rate(&p, rate);
+  uint actual_precision = zfp_set_precision(&p, precision);
+  double actual_tolerance = zfp_set_accuracy(&p, tolerance);
+
+Note that only one of these three functions should be called, and only
+after the fields type, nx, ny, and nz of p have been initialized.  The
+return value from these functions may differ slightly from the argument
+passed due to constraints imposed by the compressor, e.g. each block must
+be stored using a whole number of bits at least as large as the the number
+of bits in the floating-point exponent; the precision cannot exceed the
+number of bits in a floating-point value (i.e. 32 for single and 64 for
+double precision); and the tolerance must be a power of two.
+
+The compression parameters have now been specified, but before compression
+can occur a buffer large enough to hold the compressed bit stream must be
+allocated.  Another utility function exists for estimating how many bytes
+are needed:
+
+  size_t bufsize = zfp_estimate_compressed_size(&p);
+  unsigned char* buffer = new unsigned char[bufsize];
+
+Note that zfp_estimate_compressed_size returns the smallest buffer size
+necessary to safely compress the data--the actual compressed size may be
+smaller.  If the fields of p are for whatever reason not initialized
+correctly, then zfp_estimate_compressed_size returns 0.
+
+Finally, the array is compressed as follows:
+
+  size_t size = zfp_compress(&p, &a[0][0][0], buffer, bufsize);
+
+The return value is the actual number of bytes of compressed storage, and
+as already mentioned, size <= bufsize.  If size = 0, then the compressor
+failed.
+
+To decompress the data, p must be initialized with the same values as
+used for compression, either via the same sequence of function calls
+as above, or by recording these fields and setting them directly.
+
+  bool success = zfp_decompress(&p, &a[0][0][0], buffer, bufsize);
+
+The return value is zero/false if the decompressor failed.
+
+
+ZFP LOW-LEVEL COMPRESSION AND DECOMPRESSION CODEC
 
 To instantiate a zfp codec, the user must choose a corresponding bit stream
 class for reading and writing compressed data.  Currently only one such
@@ -91,7 +171,15 @@ Here nmin and nmax are the minimum and maximum total number of bits to use
 for the compressed block; pmax specifies the maximum precision for the
 block, i.e. the number of bit planes coded; and emin specifies the minimum
 exponent, i.e. the lowest bit plane coded.  These parameters are discussed
-in more detail in the 'README' document.
+in more detail in the 'README' document.  A simpler interface exists for
+specifying fixed-rate, fixed-precision, or fixed-accuracy modes:
+
+  codec.set_rate(rate); // set fixed rate in bits per value
+  codec.set_precision(precision); // set fixed precision in bits per value
+  codec.set_accuracy(tolerance); // set fixed accuracy via error tolerance
+
+Each of these functions returns the actual rate, precision, or tolerance
+used, which may differ slightly from the parameter passed.
 
 A contiguous 3D block is compressed as follows:
 
@@ -126,7 +214,7 @@ stream to the beginning (for sequential block access):
 
   stream.rewind(); // rewind stream to beginning of buffer
 
-The data is then compressed as follows:
+The data is then decompressed as follows:
 
   codec.decode(&a[0][0][0], sx, sy, sz); // decompress block
 
@@ -161,30 +249,31 @@ The description below is for 3D arrays of doubles--the necessary changes
 for other array types should be obvious.  To declare and zero initialize
 an array, use
 
-  ZFP::Array3<double> a(nx, ny, nz, precision); // declare nx * ny * nz array
+  ZFP::Array3<double> a(nx, ny, nz, rate); // declare nx * ny * nz array
 
 This declaration is conceptually equivalent to
 
   double a[nz][ny][nx];
 
-but with the user specifying the effective precision and amount of storage.
-(A predefined type Array3d also exists, while the suffix 'f' is used for
-floats.)  Note that the array dimensions can be arbitrary, and need not be
-multiples of four (see above for a discussion of incomplete blocks).
-The 'precision' argument specifies how many bits per value (amortized) to
-store in the compressed representation.  Because the block size is currently
-restricted to a whole number of bytes, the precision argument can be
-specified in increments of 8 / 4^d bits in d dimensions, i.e.
+but with the user specifying the amount of storage used.  (A predefined type
+Array3d also exists, while the suffix 'f' is used for floats.)  Note that
+the array dimensions can be arbitrary, and need not be multiples of four
+(see above for a discussion of incomplete blocks).  The 'rate' argument
+specifies how many bits per value (amortized) to store in the compressed
+representation.  Because the block size is currently restricted to a whole
+number of bytes, the precision argument can be specified in increments of
+8 / 4^d bits in d dimensions, i.e.
 
   1D arrays: 2-bit granularity
   2D arrays: 1/2-bit granularity
   3D arrays: 1/8-bit granularity
 
 Because the arrays are compressed, the effective precision is likely to be
-much higher than the user-specified precision.
+higher than the user-specified rate.
 
 The array can also optionally be initialized from an existing floating-point
-array with an x stride of 1, y stride of nx, and z stride of nx * ny:
+array stored at 'pointer' with an x stride of 1, y stride of nx, and z stride
+of nx * ny:
 
   ZFP::Array3d a(nx, ny, nz, precision, pointer, cache_size);
 
@@ -202,6 +291,17 @@ Similarly, a get() function exists for retrieving uncompressed data:
 
   const double* pointer; // pointer to where to write uncompressed data
   a.get(pointer); // decompress and store the array at pointer
+
+The compressed representation of an array can also be queried or initialized 
+directly without having to convert to/from its floating-point representation:
+
+  size_t bytes = compressed_size(); // number of bytes of compressed storage
+  uchar* compressed_data(); // pointer to compressed data
+
+The array can through this pointer be initialized from offline compressed
+storage, but only after its dimensions and rate have been specified (see
+above).  For this to work properly, the cache must first be emptied via a
+flush() call (see below).
 
 Through operator overloading, the array can be accessed in one of two ways.
 For read accesses, use
@@ -221,7 +321,8 @@ and compound assignment operators.  For example:
 
 Whereas one might expect these operators to return a (non-const) reference
 to an array element, this would allow seating a reference to a value that
-currently is cached but is transient, which could be unsafe.  Therefore,
+currently is cached but is transient, which could be unsafe.  Moreover,
+this would preclude detecting when an array element is modified.  Therefore,
 the return type of both operators [] and () is a proxy reference class,
 similar to std::vector<bool>::reference from the STL library.  Because
 read accesses to a mutable object cannot call the const-qualified accessor,
@@ -230,11 +331,12 @@ a proxy reference may be returned even for read calls, e.g. in
   a[i - 1] = a[i];
 
 the array a clearly must be mutable to allow assignment to a[i - 1], and
-therefore the read access a[i] returns type ZFP::Array3d::reference.
+therefore the read access a[i] returns type ZFP::Array3d::reference.  The
+value associated with the read access is obtained via an implicit conversion.
 
 Array dimensions (nx, ny, nz) can be queried using these functions:
 
-  size_t size(); // return total number of elements nx * ny * nz
+  size_t size(); // total number of elements nx * ny * nz
   uint size_x(); // nx
   uint size_y(); // ny
   uint size_z(); // nz
@@ -248,13 +350,13 @@ When clear = true, the array is explicitly zeroed.  In either case, all
 previous contents of the array are lost.  If nx = ny = nz = 0, all storage
 is freed.
 
-Finally, the precision supported by the array may be queried via
+Finally, the rate supported by the array may be queried via
 
-  double precision(); // number of bits per value
+  double rate(); // number of compressed bits per value
 
 and changed using
 
-  void reprec(precision); // change precision
+  void set_rate(rate); // change rate
 
 This also destroys prior contents.
 
@@ -277,4 +379,18 @@ such as gathering data from neighboring elements.  This allows limiting the
 cache misses to compulsory ones.  If the cache_size parameter is set to
 zero bytes, then this default of two layers is used.
 
-Currently the cache size has to be specified at time of declaration.
+The cache size can be set during construction, or can be set at a later
+time via
+
+  void set_cache_size(bytes); // change cache size
+
+Note that if bytes = 0, then the array dimensions must have already been
+specified for the default size to be computed correctly.  When the cache
+is resized, it is first flushed if not already empty.  The cache can
+also be flushed explicitly if desired by calling
+
+  void flush(); // empty cache by first compressing any modified blocks
+
+To query the byte size of the cache, use
+
+  size_t cache_size(); // actual cache size in bytes

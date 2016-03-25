@@ -17,10 +17,10 @@ class Array2 {
 public:
   Array2() : nx(0), ny(0), mx(0), my(0), blksize(0), bytes(0), data(0), codec(stream, 0, 0), cache(0), dims(0) {}
 
-  // constructor of nx * ny array using prec bits per value, at least
+  // constructor of nx * ny array using rate bits per value, at least
   // csize bytes of cache, and optionally initialized from flat array p
-  Array2(uint nx, uint ny, double prec, const Scalar* p = 0, size_t csize = 0) :
-    blksize(block_size(prec)),
+  Array2(uint nx, uint ny, double rate, const Scalar* p = 0, size_t csize = 0) :
+    blksize(block_size(rate)),
     bytes(0),
     data(0),
     codec(stream, 0, CHAR_BIT * blksize),
@@ -32,6 +32,7 @@ public:
       set(p);
   }
 
+  // destructor
   ~Array2() { free(); }
 
   // total number of elements in array
@@ -40,9 +41,6 @@ public:
   // array dimensions
   uint size_x() const { return nx; }
   uint size_y() const { return ny; }
-
-  // precision in bits per value
-  double precision() const { return CHAR_BIT * blksize / 16.0; }
 
   // resize the array (all previously stored data will be lost)
   void resize(uint nx, uint ny, bool clear = true)
@@ -70,26 +68,39 @@ public:
     }
   }
 
-  // change precision
-  void reprec(double prec)
+  // rate in bits per value
+  double rate() const { return CHAR_BIT * blksize / 16.0; }
+
+  // set compression rate in bits per value
+  void set_rate(double rate)
   {
-    blksize = block_size(prec);
+    blksize = block_size(rate);
     codec.configure(0, CHAR_BIT * blksize, 0, INT_MIN),
     alloc();
   }
 
-  // initialize array by copying and compressing data stored at p
-  void set(const Scalar* p)
+  // cache size in number of bytes
+  size_t cache_size() const { return cache.size() * sizeof(CacheLine); }
+
+  // set minimum cache size in bytes (array dimensions must be known)
+  void set_cache_size(size_t csize)
   {
-    off_t offset = 0;
-    const uchar* d = dims;
-    for (uint j = 0; j < my; j++, p += 4 * (nx - mx))
-      for (uint i = 0; i < mx; i++, p += 4, offset += blksize) {
-        stream.seek(offset);
-        codec.encode(p, 1, nx, d ? *d++ : 0);
+    flush();
+    cache.resize(lines(csize, nx, ny));
+  }
+
+  // flush cache by compressing all modified cached blocks
+  void flush() const
+  {
+    for (typename Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
+      if (p->tag.dirty()) {
+        uint b = p->tag.index() - 1;
+        stream.seek(b * blksize);
+        codec.encode(p->line->a, 1, 4, dims ? dims[b] : 0);
         stream.flush();
       }
-    cache.clear();
+      cache.flush(p->line);
+    }
   }
 
   // decompress array and store at p
@@ -108,6 +119,31 @@ public:
           codec.decode(p, 1, nx, d ? *d++ : 0);
         }
       }
+  }
+
+  // initialize array by copying and compressing data stored at p
+  void set(const Scalar* p)
+  {
+    off_t offset = 0;
+    const uchar* d = dims;
+    for (uint j = 0; j < my; j++, p += 4 * (nx - mx))
+      for (uint i = 0; i < mx; i++, p += 4, offset += blksize) {
+        stream.seek(offset);
+        codec.encode(p, 1, nx, d ? *d++ : 0);
+        stream.flush();
+      }
+    cache.clear();
+  }
+
+  // number of bytes of compressed data
+  size_t compressed_size() const { return bytes; }
+
+  // pointer to compressed data for read or write access
+  uchar* compressed_data() const
+  {
+    // first write back any modified cached data
+    flush();
+    return data;
   }
 
   // reference to a single array value
@@ -210,10 +246,7 @@ protected:
       if (t.dirty()) {
         // write back dirty cache line
         stream.seek(c * blksize);
-        if (dims)
-          codec.encode(p->a, 1, 4, dims[c]);
-        else
-          codec.encode(p->a, 1, 4);
+        codec.encode(p->a, 1, 4, dims ? dims[c] : 0);
         stream.flush();
       }
       // fetch cache line
@@ -257,13 +290,13 @@ protected:
     j = index;
   }
 
-  // compressed block size for given precision
-  static size_t block_size(double prec) { return (lrint(16 * prec) + CHAR_BIT - 1) / CHAR_BIT; }
+  // compressed block size in bytes for given rate
+  static size_t block_size(double rate) { return (lrint(16 * rate) + CHAR_BIT - 1) / CHAR_BIT; }
 
   // number of cache lines corresponding to size (or suggested size if zero)
   static uint lines(size_t size, uint nx, uint ny)
   {
-    uint n = (size ? size : 8 * nx * sizeof(Scalar)) / (16 * sizeof(Scalar));
+    uint n = (size ? size : 8 * nx * sizeof(Scalar)) / sizeof(CacheLine);
     return std::max(n, 1u);
   }
 
