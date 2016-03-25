@@ -1,6 +1,6 @@
 INTRODUCTION
 
-  This is zfp 0.4.0, an open source C/C++ library for compressed numerical
+  This is zfp 0.4.1, an open source C/C++ library for compressed numerical
   arrays that support high throughput read and write random access.  zfp was
   written by Peter Lindstrom at Lawrence Livermore National Laboratory, and
   is loosely based on the algorithm described in the following paper:
@@ -68,7 +68,7 @@ INSTALLATION
 
   zfp has successfully been built and tested using these compilers:
 
-    gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.2
+    gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.2, 5.1.0
     icc versions 12.0.5, 12.1.5, 13.0.1, 14.0.3, 15.0.4
     clang versions 3.4.2, 3.6.0
     xlc version 12.1
@@ -134,8 +134,8 @@ ALGORITHM OVERVIEW
   leading zeros that need not be encoded explicitly.  Each bit plane is
   encoded in two parts, from lowest to highest bit.  First the n lowest bits
   are emitted verbatim, where n depends on previous bit planes and is
-  initially zero.  Then a variable-length representation of the remaining
-  4^d - n bits, x, is encoded.  For such an integer x, a single bit is
+  initially zero.  Then a variable-length representation, x, of the
+  remaining 4^d - n bits is encoded.  For such an integer x, a single bit is
   emitted to indicate if x = 0, in which case we are done with the current
   bit plane.  If not, then bits of x are emitted, starting from the lowest
   bit, until a one bit is emitted.  This triggers another test whether this
@@ -170,20 +170,28 @@ ALGORITHM OVERVIEW
 
 CODE EXAMPLES
 
-  The 'examples' directory includes five programs that make use of the
-  compressor.  'testzfp' provides regression testing that exercises most
-  of the functionality of libzfp and the array classes.  The tests assume
-  the default compiler settings, i.e. with none of the macros in Config
-  defined.
+  The 'examples' directory includes six programs that make use of the
+  compressor.
+
+  The 'simple' program is a minimal example that shows how to call the
+  compressor and decompressor on a double-precision 3D array.  Without
+  the '-d' option, it will compress the array and write the compressed
+  stream to standard output.  With the '-d' option, it will instead
+  read the compressed stream from standard input and decompress the
+  array:
+
+    simple > compressed.zfp
+    simple -d < compressed.zfp
+
+  For a more elaborate use of the compressor, see the 'zfp' example.
 
   The 'diffusion' example is a simple forward Euler solver for the heat
   equation on a 2D regular grid, and is intended to show how to declare
   and work with zfp's compressed arrays, as well as give an idea of how
-  changing the compression rate affects the error in the solution.  It is
-  possible to compile this code with conventional uncompressed arrays for
-  comparison (see the Config macro WITHOUT_COMPRESSION).  The usage is:
+  changing the compression rate affects the error in the solution.  The
+  usage is:
 
-    diffusion [rate] [nx] [ny] [nt]
+    diffusion-zfp [rate] [nx] [ny] [nt]
 
   where 'rate' specifies the exact number of compressed bits to store per
   double-precision floating-point value (default = 64); 'nx' and 'ny'
@@ -192,17 +200,20 @@ CODE EXAMPLES
 
   Running diffusion with the following arguments
 
-    diffusion 8
-    diffusion 12
-    diffusion 32
-    diffusion 64
+    diffusion-zfp 8
+    diffusion-zfp 12
+    diffusion-zfp 20
+    diffusion-zfp 64
 
   should result in this output
 
     rate=8 sum=0.996429 error=4.774326e-07
     rate=12 sum=0.998337 error=1.967825e-07
-    rate=24 sum=0.998326 error=1.967958e-07
+    rate=20 sum=0.998326 error=1.967955e-07
     rate=64 sum=0.998326 error=1.967957e-07
+
+  For speed and quality comparison, diffusion-raw solves the same problem
+  using uncompressed arrays.
 
   The 'zfp' program is intended for evaluating the rate-distortion
   (compression ratio and quality) provided by the compressor.  It either
@@ -322,7 +333,7 @@ CODE EXAMPLES
     in=8000000 out=2000000 ratio=4 rate=16
       rmse=1.45e-07 nrmse=7.248e-08 maxe=7.931e-07 psnr=136.78
 
-  The speed program takes two optional parameters:
+  The 'speed' program takes two optional parameters:
 
     speed [rate] [blocks]
 
@@ -331,7 +342,7 @@ CODE EXAMPLES
   By default, a rate of 1 bit/value and two million blocks are
   processed.
 
-  The pgm program illustrates how zfp can be used to compress grayscale
+  The 'pgm' program illustrates how zfp can be used to compress grayscale
   images in the pgm format.  The usage is:
 
     pgm <param> <input.pgm >output.pgm
@@ -344,14 +355,16 @@ CODE EXAMPLES
   to compete with existing texture and image compression formats, but
   exists merely to demonstrate how to compress 8-bit integer data with zfp.
 
-  Finally, the testzfp program performs regression testing.  By default,
-  small, pregenerated floating-point arrays are used in the test, since
-  they tend to have the same binary representation across platforms,
-  whereas it can be difficult to computationally generate bit-for-bit
-  identical arrays.  To test larger arrays, modify the TESTZFP_* macros
-  in Config.  When large arrays are used, the (de)compression throughput
-  is also measured and reported in number of uncompressed bytes per
-  second.
+  Finally, the 'testzfp' program performs regression testing that exercises
+  most of the functionality of libzfp and the array classes.  The tests
+  assume the default compiler settings, i.e. with none of the macros in
+  Config defined.  By default, small, pregenerated floating-point arrays are
+  used in the test, since they tend to have the same binary representation
+  across platforms, whereas it can be difficult to computationally generate
+  bit-for-bit identical arrays.  To test larger arrays, modify the TESTZFP_*
+  macros in Config.  When large arrays are used, the (de)compression
+  throughput is also measured and reported in number of uncompressed bytes
+  per second.
 
 
 LIMITATIONS AND MISSING FEATURES

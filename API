@@ -163,8 +163,11 @@ failed.
 To decompress the data, the field and compression parameters must be
 initialized with the same values as used for compression, either via
 the same sequence of function calls as above, or by recording these
-fields and setting them directly.  Moreover, the bit stream has to be
-rewound to the beginning:
+fields and setting them directly.  NOTE: Meta data such as array
+dimensions and compression parameters are not stored in the compressed
+stream--it is up to the caller to store this information separately.
+In addition to this initialization, the bit stream has to be rewound to
+the beginning:
 
   // rewind compressed stream and decompress array
   zfp_stream_rewind(zfp);

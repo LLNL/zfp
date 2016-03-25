@@ -2,9 +2,25 @@ The following is a list of answers to frequently asked questions.  For
 questions not answered here or elsewhere in the documentation, please
 e-mail the author at pl@llnl.gov.
 
+Questions answered in this FAQ:
+
+ Q1: Can zfp compress vector fields?
+ Q2: Should I declare a 2D array as zfp::array1d a(nx * ny, rate)?
+ Q3: How can I initialize a zfp compressed array from disk?
+ Q4: Can I use zfp to represent dense matrices?
+ Q5: Can zfp compress logically regular but geometrically irregular data?
+ Q6: Does zfp handle infinities, NaNs, and denormal floating-point numbers?
+ Q7: Can zfp handle data with some missing values?
+ Q8: Can I use zfp to store integer data?
+ Q9: Can I compress 32-bit integers using zfp?
+Q10: Why does zfp corrupt memory if my allocated buffer is too small?
+Q11: Are zfp compressed streams portable across platforms?
+Q12: How can I achieve finer rate granularity?
+Q13: Can I generate progressive zfp streams?
+
 -------------------------------------------------------------------------------
 
-Q: I have a 2D vector field
+Q1: I have a 2D vector field
 
   double velocity[ny][nx][2];
 
@@ -27,7 +43,7 @@ or as
 
 -------------------------------------------------------------------------------
 
-Q: I have a 2D scalar field of dimensions nx * ny that I allocate as
+Q2: I have a 2D scalar field of dimensions nx * ny that I allocate as
 
   double* a = new double[nx * ny];
 
@@ -53,7 +69,7 @@ for the same rate.
 
 -------------------------------------------------------------------------------
 
-Q: I have a large, uncompressed, 3D data set
+Q3: I have a large, uncompressed, 3D data set
 
   double a[nz][ny][nx];
 
@@ -84,7 +100,7 @@ i.e. (nx / 4) * (ny / 4) blocks in the example above.
 
 -------------------------------------------------------------------------------
 
-Q: Can I use zfp to represent dense matrices?
+Q4: Can I use zfp to represent dense matrices?
 
 A: Yes, but your mileage may vary.  Dense matrices, unlike smooth scalar
 fields, rarely exhibit correlation between adjacent rows and columns.  Thus,
@@ -92,7 +108,7 @@ the quality or compression ratio may suffer.
 
 -------------------------------------------------------------------------------
 
-Q: My data is logically structured but irregularly sampled, e.g. it is
+Q5: My data is logically structured but irregularly sampled, e.g. it is
 rectilinear, curvilinear, or Lagrangian, or uses an irregular spacing of
 quadrature points.  Can I still use zfp to compress it?
 
@@ -103,7 +119,7 @@ irregular the sampling is.
 
 -------------------------------------------------------------------------------
 
-Q: Does zfp handle infinities and NaNs?  What about denormal floating-point
+Q6: Does zfp handle infinities and NaNs?  What about denormal floating-point
 numbers?
 
 A: No, only finite, valid floating-point values are supported.  If a block
@@ -113,7 +129,7 @@ handled correctly.
 
 -------------------------------------------------------------------------------
 
-Q: My data has some missing values that are flagged by very large numbers,
+Q7: My data has some missing values that are flagged by very large numbers,
 e.g. 1e30.  Is that OK?
 
 A: Although all finite numbers are "correctly" handled, such large sentinel
@@ -126,21 +142,21 @@ excluded from compression.
 
 -------------------------------------------------------------------------------
 
-Q: Can I use zfp to store integer data such as 8-bit quantized images or 16-bit
-digital elevation models?
+Q8: Can I use zfp to store integer data such as 8-bit quantized images or
+16-bit digital elevation models?
 
-A: Yes, but the data has to be promoted to 32-bit signed integers first.  This
-should be done one block at a time using an appropriate zfp_promote_*_to_int32
-function call (see zfp.h).  Note that these functions shift the low-precision
-integers into the most significant bits of 31-bit (not 32-bit) integers and
-also convert unsigned to signed integers.  Do use these functions rather than
-simply casting 8-bit integers to 32 bits to avoid wasting compressed bits to
-encode leading zeros.  Moreover, in fixed-precision mode, set the precision
-relative to the precision of the source data.
+A: Yes (as of version 0.4.0), but the data has to be promoted to 32-bit signed
+integers first.  This should be done one block at a time using an appropriate
+zfp_promote_*_to_int32 function call (see zfp.h).  Note that these functions
+shift the low-precision integers into the most significant bits of 31-bit (not
+32-bit) integers and also convert unsigned to signed integers.  Do use these
+functions rather than simply casting 8-bit integers to 32 bits to avoid wasting
+compressed bits to encode leading zeros.  Moreover, in fixed-precision mode,
+set the precision relative to the precision of the source data.
 
 -------------------------------------------------------------------------------
 
-Q: I have some 32-bit integer data.  Can I compress it using zfp's 32-bit
+Q9: I have some 32-bit integer data.  Can I compress it using zfp's 32-bit
 integer support?
 
 A: Maybe.  zfp compression of 32-bit and 64-bit integers requires that each
@@ -150,7 +166,7 @@ integers 0 <= x < 2^32, the data has to be promoted to 64 bits first.
 
 -------------------------------------------------------------------------------
 
-Q: Why does zfp corrupt memory rather than return an error code if not enough
+Q10: Why does zfp corrupt memory rather than return an error code if not enough
 memory is allocated for the compressed data?
 
 A: This is for performance reasons.  zfp was primarily designed for fast
@@ -166,7 +182,7 @@ that is guaranteed to be large enough to hold the compressed data.
 
 -------------------------------------------------------------------------------
 
-Q: Are zfp compressed streams portable across platforms?  Are there, for
+Q11: Are zfp compressed streams portable across platforms?  Are there, for
 example, endianness issues?
 
 A: To ensure portability across different endian platforms, the bit stream
@@ -187,7 +203,7 @@ Issues may arise on architectures that do not support IEEE floating point.
 
 -------------------------------------------------------------------------------
 
-Q: How can I achieve finer rate granularity?
+Q12: How can I achieve finer rate granularity?
 
 A: For d-dimensional arrays, zfp supports a granularity of 8 / 4^d bits, i.e.
 the rate can be specified in increments of a fraction of a bit for 2D and 3D
@@ -209,7 +225,7 @@ speed.  See the Config file.
 
 -------------------------------------------------------------------------------
 
-Q: Can I generate progressive zfp streams?
+Q13: Can I generate progressive zfp streams?
 
 A: Yes, but it requires some coding effort.  There is no high-level support
 for progressive zfp streams.  To implement progressive fixed-rate streams, 

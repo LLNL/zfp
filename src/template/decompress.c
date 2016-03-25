@@ -84,6 +84,7 @@ _t2(decompress_strided, Scalar, 3)(zfp_stream* stream, zfp_field* field)
         _t2(zfp_decode_partial_block_strided, Scalar, 3)(stream, data, 4, ny - y, 4, sx, sy, sz);
       if (x < nx)
         _t2(zfp_decode_partial_block_strided, Scalar, 3)(stream, data, nx - x, ny - y, 4, sx, sy, sz);
+      data -= mx * sx;
     }
   }
   if (z < nz) {

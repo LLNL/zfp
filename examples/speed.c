@@ -76,7 +76,7 @@ static const uint64 block[] = {
 
 int main(int argc, char* argv[])
 {
-  size_t n = 0x200000;
+  uint n = 0x200000;
   double rate = 1;
   zfp_field* field;
   uint insize;
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 
   switch (argc) {
     case 3:
-      sscanf(argv[2], "%zu", &n);
+      sscanf(argv[2], "%u", &n);
       /* FALLTHROUGH */
     case 2:
       sscanf(argv[1], "%lf", &rate);
