@@ -31,8 +31,6 @@ public:
   using BaseCodec::set_rate;
   using BaseCodec::set_precision;
   using BaseCodec::set_accuracy;
-  using BaseCodec::fwd_lift;
-  using BaseCodec::inv_lift;
 
   // encode 4 samples from p using stride sx
   inline void encode(const Scalar* p, uint sx);
@@ -62,6 +60,11 @@ protected:
   // maximum precision for block with given maximum exponent
   uint precision(int maxexp) const { return std::min(maxprec, uint(std::max(0, maxexp - minexp + 4))); }
 
+  // imported functions from base codec
+  using BaseCodec::exponent;
+  using BaseCodec::fwd_lift;
+  using BaseCodec::inv_lift;
+
   // imported data from base codec
   using BaseCodec::stream;
   using BaseCodec::minbits;
@@ -78,13 +81,11 @@ template <class BitStream, typename Scalar>
 int Codec1<BitStream, Scalar>::fwd_cast(Fixed* q, const Scalar* p, uint sx)
 {
   // compute maximum exponent
-  int emax = -ebias;
   Scalar fmax = 0;
   for (uint x = 0; x < 4; x++, p += sx)
     fmax = std::max(fmax, std::fabs(*p));
   p -= 4 * sx;
-  if (fmax > 0)
-    std::frexp(fmax, &emax);
+  int emax = exponent(fmax);
 
   // normalize by maximum exponent and convert to fixed-point
   for (uint x = 0; x < 4; x++, p += sx, q++)
@@ -98,13 +99,11 @@ template <class BitStream, typename Scalar>
 int Codec1<BitStream, Scalar>::fwd_cast(Fixed* q, const Scalar* p, uint sx, uint nx)
 {
   // compute maximum exponent
-  int emax = -ebias;
   Scalar fmax = 0;
   for (uint x = 0; x < nx; x++, p += sx)
     fmax = std::max(fmax, std::fabs(*p));
   p -= nx * sx;
-  if (fmax > 0)
-    std::frexp(fmax, &emax);
+  int emax = exponent(fmax);
 
   // normalize by maximum exponent and convert to fixed-point
   for (uint x = 0; x < nx; x++, p += sx, q++)

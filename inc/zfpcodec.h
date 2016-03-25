@@ -66,6 +66,18 @@ protected:
     return std::ldexp(1, minexp);
   }
 
+  // return normalized floating-point exponent for x >= 0
+  static int exponent(Scalar x)
+  {
+    if (x > 0) {
+      int e;
+      std::frexp(x, &e);
+      // clamp exponent in case x is denormalized
+      return std::max(e, 1 - ebias);
+    }
+    return -ebias;
+  }
+
   BitStream& stream; // bit stream to read from/write to
   uint minbits;      // min # bits stored per block
   uint maxbits;      // max # bits stored per block

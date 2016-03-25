@@ -1,6 +1,6 @@
 INTRODUCTION
 
-  This is zfp 0.3.0, an open source C++ library for compressed floating-point
+  This is zfp 0.3.1, an open source C++ library for compressed floating-point
   arrays that support high throughput read and write random access.  zfp was
   written by Peter Lindstrom at Lawrence Livermore National Laboratory, and
   is based on the algorithm described in the following paper:
