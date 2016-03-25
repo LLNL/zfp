@@ -17,19 +17,28 @@ typedef unsigned long long uint64;
 template <int intbits = 32>
 class FixedPoint64 {
 public:
+  typedef int64 Int;
+  typedef double FloatingPoint;
+
   FixedPoint64(double x = 0, int e = 0)
   {
-    x = ::ldexp(x, wlen - intbits + e);
+    x = std::ldexp(x, wlen - intbits + e);
 #ifdef FIXPT_RANGE_CHECK
     if (rint(x) > LLONG_MAX ||
         rint(x) < LLONG_MIN)
       throw std::overflow_error("fixed-point overflow");
 #endif
-    val = llrint(x);
+#ifdef FIXPT_ROUND
+   val = llrint(x);
+#else
+    val = static_cast<int64>(x);
+#endif
   }
-  operator double() const { return ::ldexp(double(val), intbits - wlen); }
 
-  double ldexp(int e) const { return ::ldexp(double(val), intbits - wlen + e); }
+  operator double() const { return std::ldexp(double(val), intbits - wlen); }
+  double floating() const { return operator double(); }
+
+  double ldexp(int e) const { return std::ldexp(double(val), intbits - wlen + e); }
 
   int64 reinterpret() const { return val; }
   static FixedPoint64 reinterpret(int64 x) { return FixedPoint64(x); }
@@ -201,7 +210,21 @@ operator*(const FixedPoint64<n>& x, const FixedPoint64<n>& y)
 
 template <int n>
 inline FixedPoint64<n>
+operator*(const FixedPoint64<n>& x, int y)
+{
+  return FixedPoint64<n>(x) *= y;
+}
+
+template <int n>
+inline FixedPoint64<n>
 operator/(const FixedPoint64<n>& x, const FixedPoint64<n>& y)
+{
+  return FixedPoint64<n>(x) /= y;
+}
+
+template <int n>
+inline FixedPoint64<n>
+operator/(const FixedPoint64<n>& x, int y)
 {
   return FixedPoint64<n>(x) /= y;
 }

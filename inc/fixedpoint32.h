@@ -19,19 +19,28 @@ typedef unsigned long long uint64;
 template <int intbits = 16>
 class FixedPoint32 {
 public:
+  typedef int32 Int;
+  typedef float FloatingPoint;
+
   FixedPoint32(float x = 0, int e = 0)
   {
-    x = ::ldexpf(x, wlen - intbits + e);
+    x = std::ldexp(x, wlen - intbits + e);
 #ifdef FIXPT_RANGE_CHECK
     if (rintf(x) > INT_MAX ||
         rintf(x) < INT_MIN)
       throw std::overflow_error("fixed-point overflow");
 #endif
+#ifdef FIXPT_ROUND
     val = lrint(x);
+#else
+    val = static_cast<int32>(x);
+#endif
   }
-  operator float() const { return ::ldexpf(float(val), intbits - wlen); }
 
-  float ldexp(int e) const { return ::ldexpf(float(val), intbits - wlen + e); }
+  operator float() const { return std::ldexp(float(val), intbits - wlen); }
+  float floating() const { return operator float(); }
+
+  float ldexp(int e) const { return std::ldexp(float(val), intbits - wlen + e); }
 
   int32 reinterpret() const { return val; }
   static FixedPoint32 reinterpret(int32 x) { return FixedPoint32(x); }
@@ -181,7 +190,21 @@ operator*(const FixedPoint32<n>& x, const FixedPoint32<n>& y)
 
 template <int n>
 inline FixedPoint32<n>
+operator*(const FixedPoint32<n>& x, int y)
+{
+  return FixedPoint32<n>(x) *= y;
+}
+
+template <int n>
+inline FixedPoint32<n>
 operator/(const FixedPoint32<n>& x, const FixedPoint32<n>& y)
+{
+  return FixedPoint32<n>(x) /= y;
+}
+
+template <int n>
+inline FixedPoint32<n>
+operator/(const FixedPoint32<n>& x, int y)
 {
   return FixedPoint32<n>(x) /= y;
 }

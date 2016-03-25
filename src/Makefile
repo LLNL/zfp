@@ -1,19 +1,20 @@
 include ../Config
 
-CXX = g++
-CXXFLAGS = -g -O3 -ansi -Wall -I../inc $(DEFS)
-
 TARGET = ../lib/libzfp.a
+
+all: $(TARGET)
 
 $(TARGET): libzfp.o
 	rm -f $@
 	ar rc $@ $^
 
+libzfp.o: ../Config
+
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
 clean:
-	@rm -f libzfp.o
+	rm -f libzfp.o
 
 cleanall: clean
-	@rm -f $(TARGET)
+	rm -f $(TARGET)

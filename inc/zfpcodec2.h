@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <climits>
 #include <cmath>
-#include "types.h"
 #include "zfpcodec.h"
 #include "intcodec16.h"
 
@@ -13,16 +12,15 @@ namespace ZFP {
 // generic compression codec for 2D blocks of 4*4 scalars
 template <
   class BitStream, // implementation of bitwise I/O
-  typename Scalar, // floating-point scalar type being stored (e.g. float)
-  class Fixed,     // fixed-point type of same width as Scalar
-  typename Int,    // signed integer type of same width as Scalar (e.g. int)
-  typename UInt,   // unsigned integer type of same width as Scalar (e.g. unsigned int)
-  Int clift,       // transform lifting constant
-  uint ebits       // number of exponent bits in Scalar (e.g. 8)
+  typename Scalar  // floating-point scalar type being stored (e.g. float)
 >
-class Codec2 : public Codec<BitStream, 2, Scalar, Fixed, Int, clift, ebits> {
+class Codec2 : public Codec<BitStream, Scalar, 2> {
 protected:
-  typedef Codec<BitStream, 2, Scalar, Fixed, Int, clift, ebits> BaseCodec;
+  typedef Codec<BitStream, Scalar, 2> BaseCodec;
+  typedef typename BaseCodec::Fixed Fixed;
+  typedef typename BaseCodec::Int Int;
+  typedef typename BaseCodec::UInt UInt;
+  using BaseCodec::ebits;
 
 public:
   // constructor
@@ -53,17 +51,17 @@ public:
 
 protected:
   // functions for performing forward and inverse transform
-  static int fwd_cast(Fixed* fp, const Scalar* p, uint sx, uint sy);
-  static int fwd_cast(Fixed* fp, const Scalar* p, uint sx, uint sy, uint nx, uint ny);
-  static void inv_cast(const Fixed* fp, Scalar* p, uint sx, uint sy, int emax);
-  static void inv_cast(const Fixed* fp, Scalar* p, uint sx, uint sy, uint nx, uint ny, int emax);
+  static int fwd_cast(Fixed* q, const Scalar* p, uint sx, uint sy);
+  static int fwd_cast(Fixed* q, const Scalar* p, uint sx, uint sy, uint nx, uint ny);
+  static void inv_cast(const Fixed* q, Scalar* p, uint sx, uint sy, int emax);
+  static void inv_cast(const Fixed* q, Scalar* p, uint sx, uint sy, uint nx, uint ny, int emax);
   static void fwd_xform(Fixed* p);
   static void fwd_xform(Fixed* p, uint nx, uint ny);
   static void inv_xform(Fixed* p);
   static uchar index(uint x, uint y) { return x + 4 * y; }
 
   // maximum precision for block with given maximum exponent
-  uint precision(int maxexp) const { return std::min(maxprec, uint(std::max(0, maxexp - minexp + 5))); }
+  uint precision(int maxexp) const { return std::min(maxprec, uint(std::max(0, maxexp - minexp + 6))); }
 
   // imported data from base codec
   using BaseCodec::stream;
@@ -78,12 +76,9 @@ protected:
   static const uchar perm[16];            // permutation of basis functions
 };
 
-// macros for aiding code readability
-#define TEMPLATE template <class BitStream, typename Scalar, class Fixed, typename Int, typename UInt, Int clift, uint ebits>
-#define CODEC2 Codec2<BitStream, Scalar, Fixed, Int, UInt, clift, ebits>
-
 // ordering of basis vectors by increasing sequency
-TEMPLATE const uchar CODEC2::perm[16] align_(16) = {
+template <class BitStream, typename Scalar>
+const uchar Codec2<BitStream, Scalar>::perm[16] align_(16) = {
   index(0, 0), //  0 : 0
 
   index(1, 0), //  1 : 1
@@ -112,69 +107,70 @@ TEMPLATE const uchar CODEC2::perm[16] align_(16) = {
 };
 
 // convert from floating-point to fixed-point
-TEMPLATE int CODEC2::fwd_cast(Fixed* fp, const Scalar* p, uint sx, uint sy)
+template <class BitStream, typename Scalar>
+int Codec2<BitStream, Scalar>::fwd_cast(Fixed* q, const Scalar* p, uint sx, uint sy)
 {
   // compute maximum exponent
   int emax = -ebias;
+  Scalar fmax = 0;
   for (uint y = 0; y < 4; y++, p += sy - 4 * sx)
     for (uint x = 0; x < 4; x++, p += sx)
-      if (*p != 0) {
-        int e;
-        frexp(*p, &e);
-        if (e > emax)
-          emax = e;
-      }
+      fmax = std::max(fmax, std::fabs(*p));
   p -= 4 * sy;
+  if (fmax > 0)
+    std::frexp(fmax, &emax);
 
   // normalize by maximum exponent and convert to fixed-point
   for (uint y = 0; y < 4; y++, p += sy - 4 * sx)
-    for (uint x = 0; x < 4; x++, p += sx, fp++)
-      *fp = Fixed(*p, -emax);
+    for (uint x = 0; x < 4; x++, p += sx, q++)
+      *q = Fixed(*p, -emax);
 
   return emax;
 }
 
 // convert from floating-point to fixed-point for partial block
-TEMPLATE int CODEC2::fwd_cast(Fixed* fp, const Scalar* p, uint sx, uint sy, uint nx, uint ny)
+template <class BitStream, typename Scalar>
+int Codec2<BitStream, Scalar>::fwd_cast(Fixed* q, const Scalar* p, uint sx, uint sy, uint nx, uint ny)
 {
   // compute maximum exponent
   int emax = -ebias;
+  Scalar fmax = 0;
   for (uint y = 0; y < ny; y++, p += sy - nx * sx)
     for (uint x = 0; x < nx; x++, p += sx)
-      if (*p != 0) {
-        int e;
-        frexp(*p, &e);
-        if (e > emax)
-          emax = e;
-      }
+      fmax = std::max(fmax, std::fabs(*p));
   p -= ny * sy;
+  if (fmax > 0)
+    std::frexp(fmax, &emax);
 
   // normalize by maximum exponent and convert to fixed-point
-  for (uint y = 0; y < ny; y++, p += sy - nx * sx, fp += 4 - nx)
-    for (uint x = 0; x < nx; x++, p += sx, fp++)
-      *fp = Fixed(*p, -emax);
+  for (uint y = 0; y < ny; y++, p += sy - nx * sx, q += 4 - nx)
+    for (uint x = 0; x < nx; x++, p += sx, q++)
+      *q = Fixed(*p, -emax);
 
   return emax;
 }
 
 // convert from fixed-point to floating-point
-TEMPLATE void CODEC2::inv_cast(const Fixed* fp, Scalar* p, uint sx, uint sy, int emax)
+template <class BitStream, typename Scalar>
+void Codec2<BitStream, Scalar>::inv_cast(const Fixed* q, Scalar* p, uint sx, uint sy, int emax)
 {
   for (uint y = 0; y < 4; y++, p += sy - 4 * sx)
-    for (uint x = 0; x < 4; x++, p += sx, fp++)
-      *p = fp->ldexp(emax);
+    for (uint x = 0; x < 4; x++, p += sx, q++)
+      *p = q->ldexp(emax);
 }
 
 // convert from fixed-point to floating-point for partial block
-TEMPLATE void CODEC2::inv_cast(const Fixed* fp, Scalar* p, uint sx, uint sy, uint nx, uint ny, int emax)
+template <class BitStream, typename Scalar>
+void Codec2<BitStream, Scalar>::inv_cast(const Fixed* q, Scalar* p, uint sx, uint sy, uint nx, uint ny, int emax)
 {
-  for (uint y = 0; y < ny; y++, p += sy - nx * sx, fp += 4 - nx)
-    for (uint x = 0; x < nx; x++, p += sx, fp++)
-      *p = fp->ldexp(emax);
+  for (uint y = 0; y < ny; y++, p += sy - nx * sx, q += 4 - nx)
+    for (uint x = 0; x < nx; x++, p += sx, q++)
+      *p = q->ldexp(emax);
 }
 
 // perform forward block transform
-TEMPLATE void CODEC2::fwd_xform(Fixed* p)
+template <class BitStream, typename Scalar>
+void Codec2<BitStream, Scalar>::fwd_xform(Fixed* p)
 {
   for (uint y = 0; y < 4; y++)
     fwd_lift(p + 4 * y, 1);
@@ -183,7 +179,8 @@ TEMPLATE void CODEC2::fwd_xform(Fixed* p)
 }
 
 // perform forward block transform for partial block
-TEMPLATE void CODEC2::fwd_xform(Fixed* p, uint nx, uint ny)
+template <class BitStream, typename Scalar>
+void Codec2<BitStream, Scalar>::fwd_xform(Fixed* p, uint nx, uint ny)
 {
   // first transform pads and extends block to full size along x
   for (uint y = 0; y < ny; y++)
@@ -193,7 +190,8 @@ TEMPLATE void CODEC2::fwd_xform(Fixed* p, uint nx, uint ny)
 }
 
 // perform inverse block transform
-TEMPLATE void CODEC2::inv_xform(Fixed* p)
+template <class BitStream, typename Scalar>
+void Codec2<BitStream, Scalar>::inv_xform(Fixed* p)
 {
   for (uint x = 0; x < 4; x++)
     inv_lift(p + 1 * x, 4);
@@ -202,24 +200,26 @@ TEMPLATE void CODEC2::inv_xform(Fixed* p)
 }
 
 // encode 4*4 block from p using strides
-TEMPLATE void CODEC2::encode(const Scalar* p, uint sx, uint sy)
+template <class BitStream, typename Scalar>
+void Codec2<BitStream, Scalar>::encode(const Scalar* p, uint sx, uint sy)
 {
   // convert to fixed-point
-  Fixed fp[16];
-  int emax = fwd_cast(fp, p, sx, sy);
+  Fixed q[16];
+  int emax = fwd_cast(q, p, sx, sy);
   // perform block transform
-  fwd_xform(fp);
+  fwd_xform(q);
   // reorder and convert to integer
   Int buffer[16];
   for (uint i = 0; i < 16; i++)
-    buffer[i] = fp[perm[i]].reinterpret();
+    buffer[i] = q[perm[i]].reinterpret();
   // encode block
   stream.write(emax + ebias, ebits);
   codec.encode(stream, buffer, minbits, maxbits, precision(emax));
 }
 
 // encode block shaped by dims from p using strides
-TEMPLATE void CODEC2::encode(const Scalar* p, uint sx, uint sy, uint dims)
+template <class BitStream, typename Scalar>
+void Codec2<BitStream, Scalar>::encode(const Scalar* p, uint sx, uint sy, uint dims)
 {
   if (!dims)
     encode(p, sx, sy);
@@ -228,14 +228,14 @@ TEMPLATE void CODEC2::encode(const Scalar* p, uint sx, uint sy, uint dims)
     uint nx = 4 - (dims & 3u); dims >>= 2;
     uint ny = 4 - (dims & 3u); dims >>= 2;
     // convert to fixed-point
-    Fixed fp[16];
-    int emax = fwd_cast(fp, p, sx, sy, nx, ny);
+    Fixed q[16];
+    int emax = fwd_cast(q, p, sx, sy, nx, ny);
     // perform block transform
-    fwd_xform(fp, nx, ny);
+    fwd_xform(q, nx, ny);
     // reorder and convert to integer
     Int buffer[16];
     for (uint i = 0; i < 16; i++)
-      buffer[i] = fp[perm[i]].reinterpret();
+      buffer[i] = q[perm[i]].reinterpret();
     // encode block
     stream.write(emax + ebias, ebits);
     codec.encode(stream, buffer, minbits, maxbits, precision(emax));
@@ -243,24 +243,26 @@ TEMPLATE void CODEC2::encode(const Scalar* p, uint sx, uint sy, uint dims)
 }
 
 // decode 4*4 block to p using strides
-TEMPLATE void CODEC2::decode(Scalar* p, uint sx, uint sy)
+template <class BitStream, typename Scalar>
+void Codec2<BitStream, Scalar>::decode(Scalar* p, uint sx, uint sy)
 {
   // decode block
   int emax = stream.read(ebits) - ebias;
   Int buffer[16];
   codec.decode(stream, buffer, minbits, maxbits, precision(emax));
   // reorder and convert to fixed-point
-  Fixed fp[16];
+  Fixed q[16];
   for (uint i = 0; i < 16; i++)
-    fp[perm[i]] = Fixed::reinterpret(buffer[i]);
+    q[perm[i]] = Fixed::reinterpret(buffer[i]);
   // perform block transform
-  inv_xform(fp);
+  inv_xform(q);
   // convert to floating-point
-  inv_cast(fp, p, sx, sy, emax);
+  inv_cast(q, p, sx, sy, emax);
 }
 
 // decode block shaped by dims to p using strides
-TEMPLATE void CODEC2::decode(Scalar* p, uint sx, uint sy, uint dims)
+template <class BitStream, typename Scalar>
+void Codec2<BitStream, Scalar>::decode(Scalar* p, uint sx, uint sy, uint dims)
 {
   if (!dims)
     decode(p, sx, sy);
@@ -273,18 +275,29 @@ TEMPLATE void CODEC2::decode(Scalar* p, uint sx, uint sy, uint dims)
     Int buffer[16];
     codec.decode(stream, buffer, minbits, maxbits, precision(emax));
     // reorder and convert to fixed-point
-    Fixed fp[16];
+    Fixed q[16];
     for (uint i = 0; i < 16; i++)
-      fp[perm[i]] = Fixed::reinterpret(buffer[i]);
+      q[perm[i]] = Fixed::reinterpret(buffer[i]);
     // perform block transform
-    inv_xform(fp);
+    inv_xform(q);
     // convert to floating-point
-    inv_cast(fp, p, sx, sy, nx, ny, emax);
+    inv_cast(q, p, sx, sy, nx, ny, emax);
   }
 }
 
-#undef TEMPLATE
-#undef CODEC2
+// codec for 2D blocks of floats (inheritance used in lieu of template typedef)
+template <class BitStream>
+class Codec2f : public Codec2<BitStream, float> {
+public:
+  Codec2f(BitStream& bitstream, uint nmin = 0, uint nmax = 0, uint pmax = 0, int emin = INT_MIN) : Codec2<BitStream, float>(bitstream, nmin, nmax, pmax, emin) {}
+};
+
+// codec for 2D blocks of doubles (inheritance used in lieu of template typedef)
+template <class BitStream>
+class Codec2d : public Codec2<BitStream, double> {
+public:
+  Codec2d(BitStream& bitstream, uint nmin = 0, uint nmax = 0, uint pmax = 0, int emin = INT_MIN) : Codec2<BitStream, double>(bitstream, nmin, nmax, pmax, emin) {}
+};
 
 }
 

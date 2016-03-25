@@ -14,15 +14,15 @@ namespace ZFP {
 // base codec for nD blocks
 template <
   class BitStream, // implementation of bitwise I/O
-  uint dims,       // data dimensionality (1, 2, or 3)
   typename Scalar, // floating-point type (e.g. float)
-  class Fixed,     // fixed-point type of same width as Scalar
-  typename Int,    // signed integer type of same width as Scalar (e.g. int)
-  Int clift,       // transform lifting constant
-  uint ebits       // number of floating-point exponent bits (e.g. 8)
+  uint dims        // data dimensionality (1, 2, or 3)
 >
-class Codec : protected Transform<Fixed, Int, clift> {
+class Codec : protected Transform<typename ScalarTraits<Scalar>::Fixed> {
 protected:
+  typedef typename ScalarTraits<Scalar>::Fixed Fixed;
+  typedef typename ScalarTraits<Scalar>::Int Int;
+  typedef typename ScalarTraits<Scalar>::UInt UInt;
+
   // constructor
   Codec(BitStream& bitstream, uint nmin = 0, uint nmax = 0, uint pmax = 0, int emin = INT_MIN) : stream(bitstream) { configure(nmin, nmax, pmax, emin); }
 
@@ -59,11 +59,11 @@ protected:
   {
     int emin = INT_MIN;
     if (tolerance > 0) {
-      frexp(tolerance, &emin);
+      std::frexp(tolerance, &emin);
       emin--;
     }
     configure(0, UINT_MAX, 0, emin);
-    return ldexp(1, minexp);
+    return std::ldexp(1, minexp);
   }
 
   BitStream& stream; // bit stream to read from/write to
@@ -72,7 +72,8 @@ protected:
   uint maxprec;      // max # bits stored per value
   int minexp;        // min bitplane number stored
 
-  static const int ebias = (1 << (ebits - 1)) - 1;  // floating-point exponent bias
+  static const uint ebits = ScalarTraits<Scalar>::ebits; // number of exponent bits
+  static const int ebias = (1 << (ebits - 1)) - 1; // floating-point exponent bias
 };
 
 }

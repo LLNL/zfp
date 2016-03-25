@@ -52,7 +52,7 @@ public:
   void rewind() { seek(0); }
 
   // seek to a whole-byte offset
-  void seek(off_t offset)
+  void seek(size_t offset)
   {
     ptr = begin + offset;
     buffer = 1u;

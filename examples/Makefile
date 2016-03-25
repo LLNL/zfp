@@ -1,25 +1,28 @@
 include ../Config
 
-CXX = g++
-CC = gcc
-CXXFLAGS = -g -O3 -ansi -Wall -I../inc $(DEFS)
-CFLAGS = $(CXXFLAGS) -pedantic
-
-TARGETS = diffusion zfp
+TARGETS = diffusion testzfp zfp
 
 all: $(TARGETS)
 
 diffusion: diffusion.cpp
 	$(CXX) $(CXXFLAGS) diffusion.cpp -o diffusion
 
+testzfp: testzfp.cpp ../lib/libzfp.a
+	$(CXX) $(CXXFLAGS) testzfp.cpp -L../lib -lzfp -o testzfp
+
+zfp: zfp.o ../lib/libzfp.a
+	$(CXX) $(CXXFLAGS) zfp.o -L../lib -lzfp -lm -o zfp
+
 # C++ mode
-# zfp: zfp.cpp ../lib/libzfp.a
-#	$(CXX) $(CXXFLAGS) -L../lib zfp.cpp -lzfp -o zfp
+#zfp.o: zfp.cpp
+#	$(CXX) $(CXXFLAGS) -c zfp.cpp
 
 # C89 mode
-zfp: zfp.c ../lib/libzfp.a
+zfp.o: zfp.c
 	$(CC) $(CFLAGS) -c zfp.c
-	$(CXX) $(CXXFLAGS) zfp.o -L../lib -lzfp -lm -o zfp
+
+test: testzfp
+	./testzfp
 
 clean:
 	rm -f $(TARGETS) zfp.o

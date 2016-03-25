@@ -89,6 +89,7 @@ compressor, the dimensions and type must first be specified in a zfp_params
 parameter object:
 
   zfp_params p;
+  zfp_init(&p); // initialize members of zfp_params structure
   p.type = ZFP_TYPE_DOUBLE; // use ZFP_TYPE_FLOAT for single precision
   p.nx = nx;
   p.ny = ny; // ny = 0 for 1D arrays
@@ -105,7 +106,7 @@ Note that only one of these three functions should be called, and only
 after the fields type, nx, ny, and nz of p have been initialized.  The
 return value from these functions may differ slightly from the argument
 passed due to constraints imposed by the compressor, e.g. each block must
-be stored using a whole number of bits at least as large as the the number
+be stored using a whole number of bits at least as large as the number
 of bits in the floating-point exponent; the precision cannot exceed the
 number of bits in a floating-point value (i.e. 32 for single and 64 for
 double precision); and the tolerance must be a power of two.
@@ -158,7 +159,7 @@ the fixed-rate feature of zfp can be used to avoid buffer overrun).
 Given a bit stream, a codec for 3D arrays of doubles is declared as
 follows:
 
-  ZFP::Codec3<double> codec(stream); // codec for 3D blocks of doubles
+  ZFP::Codec3<MemoryBitStream, double> codec(stream); // coder/decoder
 
 1D and 2D arrays are declared via Codec1 and Codec2, respectively.
 
@@ -289,7 +290,7 @@ data to the compressed array:
 
 Similarly, a get() function exists for retrieving uncompressed data:
 
-  const double* pointer; // pointer to where to write uncompressed data
+  double* pointer; // pointer to where to write uncompressed data
   a.get(pointer); // decompress and store the array at pointer
 
 The compressed representation of an array can also be queried or initialized 

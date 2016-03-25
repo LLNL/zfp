@@ -11,10 +11,10 @@ template <class BitStream, typename Int, typename UInt>
 class IntCodec {
 public:
   // encode nested groups of signed integers
-  static inline void encode(BitStream& bitstream, const Int* data, uint minbits, uint maxbits, uint maxprec, uint64 group, uint64 w);
+  static inline void encode(BitStream& bitstream, const Int* data, uint minbits, uint maxbits, uint maxprec, uint64 count, uint64 width);
 
   // decode nested groups of signed integers
-  static inline void decode(BitStream& bitstream, Int* data, uint minbits, uint maxbits, uint maxprec, uint64 group, uint count);
+  static inline void decode(BitStream& bitstream, Int* data, uint minbits, uint maxbits, uint maxprec, uint64 count, uint size);
 
 protected:
   // maximum number of significant bits for elements in data[0 ... n-1]
@@ -32,48 +32,59 @@ protected:
 
 // encode nested groups of signed integers
 template <class BitStream, typename Int, typename UInt>
-inline void IntCodec<BitStream, Int, UInt>::encode(BitStream& bitstream, const Int* data, uint minbits, uint maxbits, uint maxprec, uint64 group, uint64 w)
+inline void IntCodec<BitStream, Int, UInt>::encode(BitStream& bitstream, const Int* data, uint minbits, uint maxbits, uint maxprec, uint64 count, uint64 width)
 {
+  if (!maxbits)
+    return;
+
   BitStream stream = bitstream;
   uint bits = maxbits;
   uint kmin = intprec > maxprec ? intprec - maxprec : 0;
 
   // output one bit plane at a time from MSB to LSB
   for (uint k = intprec, n = 0; k-- > kmin;) {
-    // determine active set
-    while (group) {
-      if (!bits--)
-        goto exit;
-      if ((w & 0x3fu) > k) {
-        // grow active set
+    // encode bit plane k
+    for (uint i = 0;;) {
+      // encode group of significant values
+      for (; i < n; i++) {
+        // encode bit k of data[i]
+        bool sign = data[i] < 0;
+        UInt x = UInt(sign ? -data[i] : +data[i]) >> k;
+        // write bit k of |data[i]|
+        stream.write(x & UInt(1));
+        if (!--bits)
+          goto exit;
+        if (x == UInt(1)) {
+          // write sign bit also
+          stream.write(sign);
+          if (!--bits)
+            goto exit;
+        }
+      }
+      // have all groups been encoded?
+      if (!count)
+        break;
+      // test next group
+      if ((width & 0x3fu) > k) {
+        // group is significant; peel off and encode first subgroup
         stream.write(true);
-        n += group & 0xfu;
-        group >>= 4;
-        w >>= 6;
+        if (!--bits)
+          goto exit;
+        n += count & 0xfu;
+        count >>= 4;
+        width >>= 6;
       }
       else {
-        // done growing
+        // group is insignificant; continue with next bit plane
         stream.write(false);
-        break;
-      }
-    }
-    // encode bit plane for active set (first n values)
-    for (uint i = 0; i < n; i++) {
-      bool sign = data[i] < 0;
-      UInt x = UInt(sign ? -data[i] : +data[i]) >> k;
-      // write bit k of |data[i]|
-      if (!bits--)
-        goto exit;
-      stream.write(x & UInt(1));
-      if (x == UInt(1)) {
-        // write sign bit also
-        if (!bits--)
+        if (!--bits)
           goto exit;
-        stream.write(sign);
+        break;
       }
     }
   }
 
+  // pad with zeros in case fewer than minbits bits have been written
   while (bits-- > maxbits - minbits)
     stream.write(false);
 
@@ -83,47 +94,54 @@ exit:
 
 // decode nested groups of signed integers
 template <class BitStream, typename Int, typename UInt>
-inline void IntCodec<BitStream, Int, UInt>::decode(BitStream& bitstream, Int* data, uint minbits, uint maxbits, uint maxprec, uint64 group, uint count)
+inline void IntCodec<BitStream, Int, UInt>::decode(BitStream& bitstream, Int* data, uint minbits, uint maxbits, uint maxprec, uint64 count, uint size)
 {
   BitStream stream = bitstream;
   uint bits = maxbits;
   uint kmin = intprec > maxprec ? intprec - maxprec : 0;
 
   // initialize data array to all zeros
-  std::fill(data, data + count, Int(0));
+  std::fill(data, data + size, Int(0));
 
   // input one bit plane at a time from MSB to LSB
   for (uint k = intprec, n = 0; k-- > kmin;) {
-    // determine active set
-    while (group) {
-      // grow active set?
+    // decode bit plane k
+    for (uint i = 0;;) {
+      // decode group of significant values
+      for (; i < n; i++) {
+        // read bit k of |data[i]|
+        if (!bits--)
+          goto exit;
+        UInt x = UInt(stream.read()) << k;
+        // NOTE: conditionals reordered to reduce branch mispredictions
+        if (data[i])
+          data[i] += data[i] < 0 ? -x : +x;
+        else if (x) {
+          // read sign bit also
+          if (!bits--)
+            goto exit;
+          data[i] = stream.read() ? -x : +x;
+        }
+      }
+      // have all groups been decoded?
+      if (!count)
+        break;
+      // test next group
       if (!bits--)
         goto exit;
       if (stream.read()) {
-        n += group & 0xfu;
-        group >>= 4;
+        // group is significant; peel off and decode first subgroup
+        n += count & 0xfu;
+        count >>= 4;
       }
-      else
+      else {
+        // group is insignificant; continue with next bit plane
         break;
-    }
-    // decode bit plane for active set (first n values)
-    for (uint i = 0; i < n; i++) {
-      // read bit k of |data[i]|
-      if (!bits--)
-        goto exit;
-      UInt x = UInt(stream.read()) << k;
-      // NOTE: conditionals reordered to reduce branch mispredictions
-      if (data[i])
-        data[i] += data[i] < 0 ? -x : +x;
-      else if (x) {
-        // read sign bit also
-        if (!bits--)
-          goto exit;
-        data[i] = stream.read() ? -x : +x;
       }
     }
   }
 
+  // read at least minbits bits
   while (bits-- > maxbits - minbits)
     stream.read();
 

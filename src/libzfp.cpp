@@ -1,10 +1,7 @@
 #include "zfp.h"
-#include "zfpcodec1f.h"
-#include "zfpcodec1d.h"
-#include "zfpcodec2f.h"
-#include "zfpcodec2d.h"
-#include "zfpcodec3f.h"
-#include "zfpcodec3d.h"
+#include "zfpcodec1.h"
+#include "zfpcodec2.h"
+#include "zfpcodec3.h"
 
 // private functions ----------------------------------------------------------
 
@@ -141,6 +138,56 @@ decompress3d(MemoryBitStream& stream, double* out, uint nx, uint ny, uint nz, ui
 }
 
 // public functions -----------------------------------------------------------
+
+void
+zfp_init(zfp_params* p)
+{
+  p->type = ZFP_TYPE_FLOAT;
+  p->nx = 0;
+  p->ny = 0;
+  p->nz = 0;
+  p->minbits = 0;
+  p->maxbits = 0;
+  p->maxprec = 0;
+  p->minexp = INT_MIN;
+}
+
+uint
+zfp_set_type(zfp_params* p, uint type)
+{
+  switch (type) {
+    case ZFP_TYPE_FLOAT:
+    case ZFP_TYPE_DOUBLE:
+      p->type = type;
+      return type;
+    default:
+      return 0;
+  }
+}
+
+void
+zfp_set_size_1d(zfp_params* p, uint n)
+{
+  p->nx = n;
+  p->ny = 0;
+  p->nz = 0;
+}
+
+void
+zfp_set_size_2d(zfp_params* p, uint nx, uint ny)
+{
+  p->nx = nx;
+  p->ny = ny;
+  p->nz = 0;
+}
+
+void
+zfp_set_size_3d(zfp_params* p, uint nx, uint ny, uint nz)
+{
+  p->nx = nx;
+  p->ny = ny;
+  p->nz = nz;
+}
 
 double
 zfp_set_rate(zfp_params* p, double rate)
