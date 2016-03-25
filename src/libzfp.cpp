@@ -170,12 +170,16 @@ zfp_set_precision(zfp_params* p, uint precision)
 double
 zfp_set_accuracy(zfp_params* p, double tolerance)
 {
-  int emin = tolerance > 0 ? static_cast<int>(floor(log2(tolerance))) : INT_MIN;
+  int emin = INT_MIN;
+  if (tolerance > 0) {
+    frexp(tolerance, &emin);
+    emin--;
+  }
   p->minbits = 0;
   p->maxbits = UINT_MAX;
   p->maxprec = 0;
   p->minexp = emin;
-  return tolerance > 0 ? ldexp(1, emin) : 0;
+  return tolerance > 0 ? ldexp(1.0, emin) : 0;
 }
 
 size_t

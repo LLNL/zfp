@@ -1,0 +1,48 @@
+zfp 0.2.1, December 12, 2014
+
+  - Added Win64 support via Microsoft Visual Studio compiler.
+
+  - Fixed broken support for IBM's xlc compiler.
+
+  - Made several minor changes to suppress compiler warnings.
+
+  - Documented expected output for the diffusion example.
+
+zfp 0.2.0, December 2, 2014
+
+  - The compression interface from zfpcompress was relocated to a
+    separate library, called libzfp, and modified to be callable from C.
+    This API now uses a parameter object (zfp_params) to specify array
+    type and dimensions as well as compression parameters.
+
+  - Several utility functions were added to simplify libzfp usage:
+
+    o Functions for setting the rate, precision, and accuracy.
+      Corresponding functions were also added to the Codec class.
+
+    o A function for estimating the buffer size needed for compression.
+
+  - The Array class functionality was expanded:
+
+    o Support for accessing the compressed bit stream stored with an
+      array, e.g. for offline compressed storage and for initializing
+      an already compressed array.
+
+    o Functions for dynamically specifying the cache size.
+
+    o The default cache is now direct-mapped instead of two-way
+      associative.
+
+  - Minor bug fixes:
+
+    o Corrected the value of the lowest possible bit plane to account for
+      both the smallest exponent and the number of bits in the significand.
+
+    o Corrected inconsistent use of rate and precision.  The rate refers
+      to the number of compressed bits per floating-point value, while
+      the precision refers to the number of uncompressed bits.  The Array
+      API was changed accordingly.
+
+zfp 0.1.0, November 12, 2014
+
+  - Initial beta release.

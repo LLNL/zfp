@@ -27,9 +27,9 @@ public:
 #endif
     val = llrint(x);
   }
-  operator double() const { return ::ldexp(val, intbits - wlen); }
+  operator double() const { return ::ldexp(double(val), intbits - wlen); }
 
-  double ldexp(int e) const { return ::ldexp(val, intbits - wlen + e); }
+  double ldexp(int e) const { return ::ldexp(double(val), intbits - wlen + e); }
 
   int64 reinterpret() const { return val; }
   static FixedPoint64 reinterpret(int64 x) { return FixedPoint64(x); }

@@ -1,3 +1,5 @@
+include ../Config
+
 CXX = g++
 CXXFLAGS = -g -O3 -ansi -Wall -I../inc $(DEFS)
 

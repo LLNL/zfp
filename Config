@@ -1,0 +1,28 @@
+DEFS =
+
+# run diffusion without compression
+# DEFS += -DWITHOUT_COMPRESSION
+
+# use fast transform with only shifts and adds
+# DEFS += -DZFP_FAST_TRANSFORM
+
+# enable fixed-point range checking
+# DEFS += -DFIXPT_RANGE_CHECK
+
+# signed right shift >> is not arithmetic shift
+# DEFS += -DFIXPT_NO_ARITHMETIC_SHIFT
+
+# use aligned memory allocation
+# DEFS += -DALIGNED_ALLOC
+
+# use two-way skew-associative cache
+# DEFS += -DCACHE_TWOWAY
+
+# use faster but more collision prone hash function
+# DEFS += -DCACHE_HASH
+
+# count cache misses
+# DEFS += -DCACHE_PROFILE
+
+# for recent versions of MSVC
+# DEFS += -DHAVE_C99_MATH

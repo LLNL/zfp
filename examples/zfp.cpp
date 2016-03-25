@@ -216,6 +216,7 @@ int main(int argc, char* argv[])
     std::cerr << "compression failed" << std::endl;
     return EXIT_FAILURE;
   }
+  rate = CHAR_BIT * double(outsize) / (mx * my * mz);
 
 #if IT_SEEMS_TOO_GOOD_TO_BE_TRUE
   // for skeptics: relocate compressed data
@@ -262,7 +263,7 @@ int main(int argc, char* argv[])
   double nrmse = e / (fmax - fmin);
   double psnr = 20 * log10((fmax - fmin) / (2 * e));
   
-  std::cerr << "in=" << insize << " out=" << outsize << " ratio=" << std::setprecision(3) << double(insize) / outsize << " rmse=" << std::setprecision(4) << e << " nrmse=" << nrmse << " maxe=" << emax << " psnr=" << psnr << std::endl;
+  std::cerr << "in=" << insize << " out=" << outsize << " ratio=" << std::setprecision(3) << double(insize) / outsize << " rate=" << std::setprecision(4) << rate << " rmse=" << e << " nrmse=" << nrmse << " maxe=" << emax << " psnr=" << psnr << std::endl;
 
   // clean up
   delete[] static_cast<unsigned char*>(f);

@@ -1,6 +1,6 @@
 INTRODUCTION
 
-  This is zfp 0.2.0, an open source C++ library for compressed floating-point
+  This is zfp 0.2.1, an open source C++ library for compressed floating-point
   arrays that support high throughput read and write random access.  zfp was
   written by Peter Lindstrom at Lawrence Livermore National Laboratory, and
   is based on the algorithm described in the following paper:
@@ -47,6 +47,9 @@ INSTALLATION
     cd examples; make
   
   See below for more details on these example programs.
+
+  If the compilation or example programs fail, it is possible that some of
+  the macros in the file 'Config' have to be adjusted.
 
 
 ALGORITHM OVERVIEW
@@ -203,48 +206,6 @@ CODE EXAMPLES
   than maxbits bits.
 
 
-VERSIONS
-
-  zfp 0.2.0, December 2, 2014
-
-    - The compression interface from zfpcompress was relocated to a
-      separate library, called libzfp, and modified to be callable from C.
-      This API now uses a parameter object (zfp_params) to specify array
-      type and dimensions as well as compression parameters.
-
-    - Several utility functions were added to simplify libzfp usage:
-
-      o Functions for setting the rate, precision, and accuracy.
-        Corresponding functions were also added to the Codec class.
-
-      o A function for estimating the buffer size needed for compression.
-
-    - The Array class functionality was expanded:
-
-      o Support for accessing the compressed bit stream stored with an
-        array, e.g. for offline compressed storage and for initializing
-        an already compressed array.
-
-      o Functions for dynamically specifying the cache size.
-
-      o The default cache is now direct-mapped instead of two-way
-        associative.
-
-    - Minor bug fixes:
-
-      o Corrected the value of the lowest possible bit plane to account for
-        both the smallest exponent and the number of bits in the significand.
-
-      o Corrected inconsistent use of rate and precision.  The rate refers
-        to the number of compressed bits per floating-point value, while
-        the precision refers to the number of uncompressed bits.  The Array
-        API was changed accordingly.
-
-  zfp 0.1.0, November 12, 2014
-
-    - Initial beta release.
-
-
 LIMITATIONS AND MISSING FEATURES
 
   zfp is released as a beta version with the intent of giving people access
@@ -276,6 +237,10 @@ LIMITATIONS AND MISSING FEATURES
   - No iterators are provided for traversing an array, and currently one
     has to use integer indexing.  Performance could in cases be improved
     by limiting the traversal to sequential access.
+
+  - It is not possible to access subarrays via pointers, e.g. via
+    double* p = &a[offset]; p[i] = ...  A pointer proxy class similar to
+    the reference class would be useful.
 
   - There currently is no way to make a complete copy of a compressed
     array, i.e. a = b; does not work for arrays a and b.

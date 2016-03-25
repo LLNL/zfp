@@ -57,7 +57,11 @@ protected:
   // set fixed accuracy in terms of absolute error tolerance
   double set_accuracy(double tolerance)
   {
-    int emin = tolerance > 0 ? static_cast<int>(floor(log2(tolerance))) : INT_MIN;
+    int emin = INT_MIN;
+    if (tolerance > 0) {
+      frexp(tolerance, &emin);
+      emin--;
+    }
     configure(0, UINT_MAX, 0, emin);
     return ldexp(1, minexp);
   }
