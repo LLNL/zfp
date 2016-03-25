@@ -1,28 +1,27 @@
 include ../Config
 
-TARGETS = diffusion testzfp zfp
+TARGETS = diffusion pgm speed testzfp zfp
 
 all: $(TARGETS)
 
-diffusion: diffusion.cpp
-	$(CXX) $(CXXFLAGS) diffusion.cpp -o diffusion
+diffusion: diffusion.cpp ../lib/libzfp.a
+	$(CXX) $(CXXFLAGS) -I../array diffusion.cpp -L../lib -lzfp -o diffusion
+
+pgm: pgm.c ../lib/libzfp.a
+	$(CC) $(CFLAGS) pgm.c -L../lib -lzfp -lm -o pgm
+
+speed: speed.c ../lib/libzfp.a
+	$(CC) $(CFLAGS) speed.c -L../lib -lzfp -lm -o speed
 
 testzfp: testzfp.cpp ../lib/libzfp.a
-	$(CXX) $(CXXFLAGS) testzfp.cpp -L../lib -lzfp -o testzfp
+	$(CXX) $(CXXFLAGS) -I../array testzfp.cpp -L../lib -lzfp -o testzfp
+	
 
-zfp: zfp.o ../lib/libzfp.a
-	$(CXX) $(CXXFLAGS) zfp.o -L../lib -lzfp -lm -o zfp
-
-# C++ mode
-#zfp.o: zfp.cpp
-#	$(CXX) $(CXXFLAGS) -c zfp.cpp
-
-# C89 mode
-zfp.o: zfp.c
-	$(CC) $(CFLAGS) -c zfp.c
+zfp: zfp.c ../lib/libzfp.a
+	$(CC) $(CFLAGS) zfp.c -L../lib -lzfp -lm -o zfp
 
 test: testzfp
 	./testzfp
 
 clean:
-	rm -f $(TARGETS) zfp.o
+	rm -f $(TARGETS)

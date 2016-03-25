@@ -1,0 +1,236 @@
+The following is a list of answers to frequently asked questions.  For
+questions not answered here or elsewhere in the documentation, please
+e-mail the author at pl@llnl.gov.
+
+-------------------------------------------------------------------------------
+
+Q: I have a 2D vector field
+
+  double velocity[ny][nx][2];
+
+of dimensions nx * ny.  Can I use a 3D zfp array to store this as
+
+  array3d velocity(2, nx, ny, rate);
+
+A: Although this could be done, zfp assumes that consecutive values are
+related.  The two velocity components (vx, vy) are almost suredly independent,
+and would not exhibit smoothness.  This will severely hurt the compression
+rate or quality.  Instead, consider storing vx and vy as two separate 2D
+scalar arrays
+
+  array2d vx(nx, ny, rate);
+  array2d vy(nx, ny, rate);
+
+or as
+
+  array2d velocity[2] = {array2d(nx, ny, rate), array2d(nx, ny, rate)};
+
+-------------------------------------------------------------------------------
+
+Q: I have a 2D scalar field of dimensions nx * ny that I allocate as
+
+  double* a = new double[nx * ny];
+
+and index as
+
+  a[x + nx * y]
+
+Should I use a corresponding zfp array
+
+  array1d a(nx * ny, rate);
+
+to store my data in compressed form?
+
+A: Although this is certainly possible, if the scalar field exhibits
+coherence in both spatial dimensions, then far better results can be
+achieved by using a 2D array
+
+  array2d a(nx, ny, rate);
+
+Although both compressed arrays can be indexed as above, the 2D array can
+exploit smoothness in both dimensions and improve the quality dramatically
+for the same rate.
+
+-------------------------------------------------------------------------------
+
+Q: I have a large, uncompressed, 3D data set
+
+  double a[nz][ny][nx];
+
+stored on disk that I would like to read into a compressed array.  This data
+set will not fit in memory uncompressed.  What is the best way of doing this?
+
+A: Using a zfp array
+
+  array3d a(nx, ny, nz, rate);
+
+the most straightforward way is to read one floating-point value at a time
+and copy it into the array:
+
+  for (uint z = 0; z < nz; z++)
+    for (uint y = 0; y < ny; y++)
+      for (uint x = 0; x < nx; x++) {
+        double f;
+        if (fread(&f, sizeof(f), 1, file) == 1)
+          a(x, y, z) = f;
+        else
+          // handle I/O error
+      }
+
+Note, however, that if the array cache is not large enough, then this may
+compress blocks before they have been completely filled.  Therefore it is
+recommended that the cache holds at least one complete layer of blocks,
+i.e. (nx / 4) * (ny / 4) blocks in the example above.
+
+-------------------------------------------------------------------------------
+
+Q: Can I use zfp to represent dense matrices?
+
+A: Yes, but your mileage may vary.  Dense matrices, unlike smooth scalar
+fields, rarely exhibit correlation between adjacent rows and columns.  Thus,
+the quality or compression ratio may suffer.
+
+-------------------------------------------------------------------------------
+
+Q: My data is logically structured but irregularly sampled, e.g. it is
+rectilinear, curvilinear, or Lagrangian, or uses an irregular spacing of
+quadrature points.  Can I still use zfp to compress it?
+
+A: Yes, as long as the data is (or can be) represented as a logical
+multidimensional array, though your mileage may vary.  zfp has been designed
+for uniformly sampled data, and compression will in general suffer the more
+irregular the sampling is.
+
+-------------------------------------------------------------------------------
+
+Q: Does zfp handle infinities and NaNs?  What about denormal floating-point
+numbers?
+
+A: No, only finite, valid floating-point values are supported.  If a block
+contains a NaN or an infinity, undefined behavior is invoked due to the
+C math function frexp being undefined for non-numbers.  Denorms are, however,
+handled correctly.
+
+-------------------------------------------------------------------------------
+
+Q: My data has some missing values that are flagged by very large numbers,
+e.g. 1e30.  Is that OK?
+
+A: Although all finite numbers are "correctly" handled, such large sentinel
+values are likely to pollute nearby values, because all values within a block
+are expressed with respect to a common largest exponent.  The presence of
+very large values may result in complete loss of precision of nearby, valid
+numbers.  Currently no solution to this problem is available, but future
+versions of zfp will likely support a bit mask to tag values that should be
+excluded from compression.
+
+-------------------------------------------------------------------------------
+
+Q: Can I use zfp to store integer data such as 8-bit quantized images or 16-bit
+digital elevation models?
+
+A: Yes, but the data has to be promoted to 32-bit signed integers first.  This
+should be done one block at a time using an appropriate zfp_promote_*_to_int32
+function call (see zfp.h).  Note that these functions shift the low-precision
+integers into the most significant bits of 31-bit (not 32-bit) integers and
+also convert unsigned to signed integers.  Do use these functions rather than
+simply casting 8-bit integers to 32 bits to avoid wasting compressed bits to
+encode leading zeros.  Moreover, in fixed-precision mode, set the precision
+relative to the precision of the source data.
+
+-------------------------------------------------------------------------------
+
+Q: I have some 32-bit integer data.  Can I compress it using zfp's 32-bit
+integer support?
+
+A: Maybe.  zfp compression of 32-bit and 64-bit integers requires that each
+integer f have magnitude |f| < 2^30 and |f| < 2^62, respectively.  To handle
+signed integers that span the entire range -2^31 <= x < 2^31, or unsigned
+integers 0 <= x < 2^32, the data has to be promoted to 64 bits first.
+
+-------------------------------------------------------------------------------
+
+Q: Why does zfp corrupt memory rather than return an error code if not enough
+memory is allocated for the compressed data?
+
+A: This is for performance reasons.  zfp was primarily designed for fast
+random access to fixed-rate compressed arrays, where checking for buffer
+overruns is unnecessary.  Adding a test for every compressed byte output
+would significantly compromise performance.
+
+One way around this problem (when not in fixed-rate mode) is to use the
+maxbits parameter in conjunction with the maximum precision or maximum
+absolute error parameters to limit the size of compressed blocks.  Finally,
+the function zfp_stream_maximum_size returns a conservative buffer size
+that is guaranteed to be large enough to hold the compressed data.
+
+-------------------------------------------------------------------------------
+
+Q: Are zfp compressed streams portable across platforms?  Are there, for
+example, endianness issues?
+
+A: To ensure portability across different endian platforms, the bit stream
+must be written in increments of single bytes on big endian processors (e.g.
+PowerPC, SPARC), which is achieved by compiling zfp with
+
+  -DBITSTREAM_WORD_TYPE=uint8
+
+See the Config file.  Note that on little endian processors (e.g. Intel
+x86-64 and AMD64), the word size does not affect the bit stream produced,
+and thus the default word size may be used.  By default, zfp uses a word
+size of 64 bits, which results in the coarsest rate granularity but fastest
+(de)compression.  If cross-platform portability is not needed, then the
+maximum word size is recommended (but see also the next question).
+
+Furthermore, zfp assumes that the floating-point format conforms to IEEE 754.
+Issues may arise on architectures that do not support IEEE floating point.
+
+-------------------------------------------------------------------------------
+
+Q: How can I achieve finer rate granularity?
+
+A: For d-dimensional arrays, zfp supports a granularity of 8 / 4^d bits, i.e.
+the rate can be specified in increments of a fraction of a bit for 2D and 3D
+arrays.  Such fine rate selection is always available for sequential
+compression (e.g. when calling zfp_compress).  
+
+Unlike in sequential compression, zfp's compressed arrays require random
+access writes, which are supported only at the granularity of whole words.
+By default, a word is 64 bits, which gives a rate granularity of 64 / 4^d
+in d dimensions, i.e. 16 bits in 1D, 4 bits in 2D, and 1 bit in 3D.
+
+To achieve finer granularity, recompile zfp with a smaller (but as large as
+possible) stream word size, e.g.
+
+  -DBITSTREAM_WORD_TYPE=uint8
+
+gives the finest possible granularity, but at the expense of (de)compression
+speed.  See the Config file.
+
+-------------------------------------------------------------------------------
+
+Q: Can I generate progressive zfp streams?
+
+A: Yes, but it requires some coding effort.  There is no high-level support
+for progressive zfp streams.  To implement progressive fixed-rate streams, 
+the fixed-length bit streams should be interleaved among the blocks that
+make up an array.  For instance, if a 3D array uses 1024 bits per block,
+then those 1024 bits could be broken down into, say, 16 pieces of 64 bits
+each, resulting in 16 discrete quality settings.  By storing the blocks
+interleaved such that the first 64 bits of all blocks are contiguous,
+followed by the next 64 bits of all blocks, etc., one can achieve progressive
+decompression by setting the maxbits parameter (see zfp_stream_set_params)
+to the number of bits per block received so far.
+
+To enable interleaving of blocks, zfp must first be compiled with
+
+  -DBIT_STREAM_STRIDED
+
+to enable strided bit stream access.  In the example above, if the stream
+word size is 64 bits and there are n blocks, then
+
+  stream_set_stride(stream, m, n);
+
+implies that after every m 64-bit words have been decoded, the bit stream
+is advanced by m * n words to the next set of m 64-bit words associated
+with the block.

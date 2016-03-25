@@ -90,8 +90,8 @@ public:
     resize(minsize);
 #ifdef CACHE_PROFILE
     std::cerr << "cache lines=" << mask + 1 << std::endl;
-    phit[0] = shit[0] = miss[0] = back[0] = 0;
-    phit[1] = shit[1] = miss[1] = back[1] = 0;
+    hit[0][0] = hit[1][0] = miss[0] = back[0] = 0;
+    hit[0][1] = hit[1][1] = miss[1] = back[1] = 0;
 #endif
   }
 
@@ -100,8 +100,8 @@ public:
     deallocate(tag);
     deallocate(line);
 #ifdef CACHE_PROFILE
-    std::cerr << "cache R1=" << phit[0] << " R2=" << shit[0] << " RM=" << miss[0] << " RB=" << back[0]
-              <<      " W1=" << phit[1] << " W2=" << shit[1] << " WM=" << miss[1] << " WB=" << back[1] << std::endl;
+    std::cerr << "cache R1=" << hit[0][0] << " R2=" << hit[1][0] << " RM=" << miss[0] << " RB=" << back[0]
+              <<      " W1=" << hit[0][1] << " W2=" << hit[1][1] << " WM=" << miss[1] << " WB=" << back[1] << std::endl;
 #endif
   }
 
@@ -143,7 +143,7 @@ public:
       if (write)
         tag[i].mark();
 #ifdef CACHE_PROFILE
-      phit[write]++;
+      hit[0][write]++;
 #endif
       return tag[i];
     }
@@ -215,10 +215,9 @@ protected:
   Tag* tag;   // cache line tags
   Line* line; // actual decompressed cache lines
 #ifdef CACHE_PROFILE
-  unsigned long long phit[2]; // number of primary hits
-  unsigned long long shit[2]; // number of secondary hits
-  unsigned long long miss[2]; // number of misses
-  unsigned long long back[2]; // number of write-backs
+  uint64 hit[2][2]; // number of primary/secondary read/write hits
+  uint64 miss[2];   // number of read/write misses
+  uint64 back[2];   // number of write-backs due to read/writes
 #endif
 };
 

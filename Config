@@ -3,8 +3,10 @@
 # GNU compiler
 CC = gcc
 CXX = g++
-CFLAGS = -O3 -fPIC -ansi -Wall -I../inc $(DEFS)
-CXXFLAGS = $(CFLAGS)
+FLAGS = -O3 -fPIC -Wall -I../inc $(DEFS)
+#CFLAGS = $(FLAGS) -std=c89 -Wno-unused-function
+CFLAGS = $(FLAGS) -std=c99
+CXXFLAGS = $(FLAGS) -std=c++98
 
 # IBM compiler
 # CC = xlc
@@ -14,6 +16,14 @@ CXXFLAGS = $(CFLAGS)
 
 # optional compiler macros ----------------------------------------------------
 
+# use smaller bit stream word type for finer rate granularity
+# DEFS += -DBIT_STREAM_WORD_TYPE=uint8
+# DEFS += -DBIT_STREAM_WORD_TYPE=uint16
+# DEFS += -DBIT_STREAM_WORD_TYPE=uint32
+
+# enable strided access for progressive zfp streams
+# DEFS += -DBIT_STREAM_STRIDED
+
 # run regression test with medium sized arrays
 # DEFS += -DTESTZFP_MEDIUM_ARRAYS
 
@@ -22,42 +32,6 @@ CXXFLAGS = $(CFLAGS)
 
 # run diffusion without compression
 # DEFS += -DWITHOUT_COMPRESSION
-
-# use low-correlation phase-shifted Haar basis
-# DEFS += -DZFP_CLIFT=ZFP_CLIFT_HAAR_LO -DZFP_ORTHOGONAL_TRANSFORM
-
-# use Walsh-Hadamard basis
-# DEFS += -DZFP_CLIFT=ZFP_CLIFT_WHT -DZFP_ORTHOGONAL_TRANSFORM
-
-# use HCT basis
-# DEFS += -DZFP_CLIFT=ZFP_CLIFT_HCT -DZFP_ORTHOGONAL_TRANSFORM
-
-# use DCT basis
-# DEFS += -DZFP_CLIFT=ZFP_CLIFT_DCT -DZFP_ORTHOGONAL_TRANSFORM
-
-# use basis from Vis 2014 paper
-# DEFS += -DZFP_CLIFT=ZFP_CLIFT_VIS2014 -DZFP_ORTHOGONAL_TRANSFORM
-
-# use slant/Gram polynomial basis
-# DEFS += -DZFP_CLIFT=ZFP_CLIFT_GRAM -DZFP_ORTHOGONAL_TRANSFORM
-
-# use high-correlation phase-shifted Haar basis
-# DEFS += -DZFP_CLIFT=ZFP_CLIFT_HAAR_HI -DZFP_ORTHOGONAL_TRANSFORM
-
-# use orthogonal transform from Vis 2014 paper (overrides ZFP_CLIFT)
-# DEFS += -DZFP_VIS2014_TRANSFORM
-
-# use orthogonal transform (can be used with ZFP_CLIFT)
-# DEFS += -DZFP_ORTHOGONAL_TRANSFORM
-
-# enable fixed-point range checking
-# DEFS += -DFIXPT_RANGE_CHECK
-
-# enable fixed-point integer rounding
-# DEFS += -DFIXPT_ROUND
-
-# signed right shift >> is not arithmetic shift
-# DEFS += -DFIXPT_NO_ARITHMETIC_SHIFT
 
 # use aligned memory allocation
 # DEFS += -DALIGNED_ALLOC
