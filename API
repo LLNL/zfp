@@ -1,0 +1,280 @@
+OVERVIEW
+
+zfp consists of two distinct components: (1) a block-based codec that
+performs compression and (2) a set of C++ compressed array classes for
+single- and double-precision data in one, two, and three dimensions.
+
+The compression codec operates on individual d-dimensional blocks of size
+4^d, e.g. 4 values in 1D, 4x4 = 16 values in 2D, and 4x4x4 = 64 values in
+3D.  The block being compressed need not be stored contiguously but can
+be processed by specifying regular strides in each dimension.  This is
+useful if the block is stored uncompressed as part of a larger array.
+
+The array classes represent an array of floating-point values as a
+collection of compressed blocks, each whose size in number of bits is
+fixed and specified by the user.  The array classes make use of caching
+of uncompressed blocks to reduce the number of compression and
+decompression calls.  Whenever an array value is read, the corresponding
+block is first looked up in the cache, and if found the uncompressed
+value is returned.  Otherwise the block is first decompressed and
+stored in the cache.  Whenever an array element is written (whether
+actually modified or not), a "dirty bit" is set with the cached block
+to indicate that it must be compressed back to persistent storage
+when evicted from the cache.
+
+The code examples below are for 3D arrays of doubles, but it should be
+clear how to modify the function calls for 1D or 2D arrays.
+
+
+GENERAL DESIGN AND LIMITATIONS
+
+The zfp API has been designed to facilitate integration with existing
+applications.  After initial array declaration, a zfp array can often
+be used in place of a regular C/C++ array or STL vector, e.g. using
+a[i] indexing for 1D arrays or a(i, j) for 2D arrays.  There are,
+however, some important differences.  For instance, it is not possible
+to take the address of an array element, i.e. constructions like &a[i]
+and a + i are not allowed.  Moreover, the operators [] and () do not
+return regular C++ references.  Instead, a proxy reference class is
+used (similar to how STL bit vectors are implemented).  These proxy
+references can, however, safely be passed to functions and used where
+regular references can.  Finally, although it is possible to convert
+an uncompressed array to a compressed zfp array, there currently is
+no mechanism for initializing an array from external storage, e.g.
+via fread() or similar calls.
+
+zfp does not support special floating-point values like infinities and
+NaNs, although denormalized numbers should be handled correctly.
+Similarly, because the compressor assumes that the signal is smooth,
+using finite but large values like HUGE_VAL in place of infinities is
+not advised, as this will introduce large errors in smaller values
+within the same block.
+
+zfp is implemented entirely as header files, and makes extensive use
+of C++ templates to reduce code redundancy.  Most classes are wrapped
+in the ZFP namespace.
+
+
+ZFP COMPRESSION AND DECOMPRESSION
+
+The zfp codec can be used as a generic compressor without making use
+of the array classes.  Users interested only in the array classes, which
+do not directly expose anything related to compression other than
+compression rate control, may safely skip this section.
+
+To instantiate a zfp codec, the user must choose a corresponding bit stream
+class for reading and writing compressed data.  Currently only one such
+class is provided, called MemoryBitStream, and can be found in bitstream.h.
+Such a bit stream can be declared as
+
+  MemoryBitStream stream(buffer, size); // bit stream 
+
+where 'buffer' points to already allocated storage of 'size' bytes.
+For performance reasons, the bit stream class does not test for
+buffer overrun--it is up to the user to ensure that enough space has
+been allocated (in practice, this is not a serious limitation since
+the fixed-rate feature of zfp can be used to avoid buffer overrun).
+
+Given a bit stream, a codec for 3D arrays of doubles is declared as
+follows:
+
+  ZFP::Codec3<double> codec(stream); // codec for 3D blocks of doubles
+
+1D and 2D arrays are declared via Codec1 and Codec2, respectively.
+
+Compression parameters like the rate and precision can optionally be
+specified with the codec constructor, or set via the configure call:
+
+  codec.configure(nmin, nmax, pmax, emin); // set compression parameters
+
+Here nmin and nmax are the minimum and maximum total number of bits to use
+for the compressed block; pmax specifies the maximum precision for the
+block, i.e. the number of bit planes coded; and emin specifies the minimum
+exponent, i.e. the lowest bit plane coded.  These parameters are discussed
+in more detail in the 'README' document.
+
+A contiguous 3D block is compressed as follows:
+
+  double a[4][4][4];
+  // initialize a
+  uint sx = &a[0][0][1] - &a[0][0][0]; // x stride = 1
+  uint sy = &a[0][1][0] - &a[0][0][0]; // y stride = 4
+  uint sz = &a[1][0][0] - &a[0][0][0]; // z stride = 16
+  codec.encode(&a[0][0][0], sx, sy, sz); // encode block
+
+The strides must be specified even if the block is contiguous.  Another
+block can then be compressed by calling codec.encode() again.  For the
+final block compressed, any buffered compressed bits need to be flushed:
+
+  stream.flush(); // flush any buffered compressed bits
+
+The MemoryBitStream class allows random access seeks only to whole byte
+boundaries:
+
+  stream.seek(offset); // position stream at given byte offset
+
+Thus, if blocks are to be decompressed in non-sequential order, then the
+stream should be flushed after each codec.encode() call, after which one
+can query the stream position via
+
+  size_t size = stream.size(); // obtain current position within stream
+
+To decompress a block, the bit stream first needs to be positioned where
+the compressed data resides, either by having obtained this position via
+stream.size() before the block was compressed, or by rewinding the
+stream to the beginning (for sequential block access):
+
+  stream.rewind(); // rewind stream to beginning of buffer
+
+The data is then compressed as follows:
+
+  codec.decode(&a[0][0][0], sx, sy, sz); // decompress block
+
+If desired, different strides can be used for the compression and
+decompression calls.
+
+For incomplete blocks that have fewer than 4x4x4 values (e.g. at the
+boundary of a data set whose dimensions are not multiples of four), special
+encode and decode calls exist.  These have an integer parameter 'dims'
+as last argument, which efficiently encodes the 3D dimensions of the
+block.  For a block of size nx * ny * nz, where 1 <= nx, ny, nz <= 4,
+a function codec.dims() exists for computing this parameter.  For example,
+an incomplete block can be encoded as:
+
+  double a[2][2][3];
+  // initialize a
+  uint sx = &a[0][0][1] - &a[0][0][0]; // x stride = 1
+  uint sy = &a[0][1][0] - &a[0][0][0]; // y stride = 3
+  uint sz = &a[1][0][0] - &a[0][0][0]; // z stride = 6
+  codec.encode(&a[0][0][0], sx, sy, sz, codec.dims(3, 2, 2)); // encode block
+
+
+COMPRESSED ARRAYS
+
+Currently there are six array classes for 1D, 2D, and 3D arrays, each of
+which can represent single or double precision values.  Although these
+arrays store values in a form different from conventional single- and
+double-precision floating point, the user interacts with the arrays via
+floats and doubles.
+
+The description below is for 3D arrays of doubles--the necessary changes
+for other array types should be obvious.  To declare and zero initialize
+an array, use
+
+  ZFP::Array3<double> a(nx, ny, nz, precision); // declare nx * ny * nz array
+
+This declaration is conceptually equivalent to
+
+  double a[nz][ny][nx];
+
+but with the user specifying the effective precision and amount of storage.
+(A predefined type Array3d also exists, while the suffix 'f' is used for
+floats.)  Note that the array dimensions can be arbitrary, and need not be
+multiples of four (see above for a discussion of incomplete blocks).
+The 'precision' argument specifies how many bits per value (amortized) to
+store in the compressed representation.  Because the block size is currently
+restricted to a whole number of bytes, the precision argument can be
+specified in increments of 8 / 4^d bits in d dimensions, i.e.
+
+  1D arrays: 2-bit granularity
+  2D arrays: 1/2-bit granularity
+  3D arrays: 1/8-bit granularity
+
+Because the arrays are compressed, the effective precision is likely to be
+much higher than the user-specified precision.
+
+The array can also optionally be initialized from an existing floating-point
+array with an x stride of 1, y stride of nx, and z stride of nx * ny:
+
+  ZFP::Array3d a(nx, ny, nz, precision, pointer, cache_size);
+
+The 'cache_size' argument specifies the minimum number of bytes to allocate
+for the cache of uncompressed blocks (see the section on Caching below for
+more details).
+
+If not already initialized, a function set() can be used to copy uncompressed
+data to the compressed array:
+
+  const double* pointer; // pointer to uncompressed, initialized data
+  a.set(pointer); // initialize compressed array with floating-point data
+
+Similarly, a get() function exists for retrieving uncompressed data:
+
+  const double* pointer; // pointer to where to write uncompressed data
+  a.get(pointer); // decompress and store the array at pointer
+
+Through operator overloading, the array can be accessed in one of two ways.
+For read accesses, use
+
+  double value = a[index]; // fetch value with given flat array index
+  double value = a(i, j, k); // fetch value with 3D index (i, j, k)
+
+These access the same value if and only if index = i + nx * (j + ny * k).
+Note that 0 <= i < nx, 0 <= j < ny, and 0 <= k < nz, and i varies faster
+than j, which varies faster than k.
+
+Array values may be written and updated using the usual set of C++ assignment
+and compound assignment operators.  For example:
+
+  a[index] = value; // set value at flat array index
+  a(i, j, k) += value; // increment value with 3D index (i, j, k)
+
+Whereas one might expect these operators to return a (non-const) reference
+to an array element, this would allow seating a reference to a value that
+currently is cached but is transient, which could be unsafe.  Therefore,
+the return type of both operators [] and () is a proxy reference class,
+similar to std::vector<bool>::reference from the STL library.  Because
+read accesses to a mutable object cannot call the const-qualified accessor,
+a proxy reference may be returned even for read calls, e.g. in
+
+  a[i - 1] = a[i];
+
+the array a clearly must be mutable to allow assignment to a[i - 1], and
+therefore the read access a[i] returns type ZFP::Array3d::reference.
+
+Array dimensions (nx, ny, nz) can be queried using these functions:
+
+  size_t size(); // return total number of elements nx * ny * nz
+  uint size_x(); // nx
+  uint size_y(); // ny
+  uint size_z(); // nz
+
+The array dimensions can also be changed dynamically, e.g. if not known
+at declaration time, using
+
+  void resize(uint nx, uint ny, uint nz, bool clear = true);
+
+When clear = true, the array is explicitly zeroed.  In either case, all
+previous contents of the array are lost.  If nx = ny = nz = 0, all storage
+is freed.
+
+Finally, the precision supported by the array may be queried via
+
+  double precision(); // number of bits per value
+
+and changed using
+
+  void reprec(precision); // change precision
+
+This also destroys prior contents.
+
+
+CACHING
+
+As mentioned above, the array class maintains a software write-back cache
+of at least one uncompressed block.  When a block in this cache is evicted
+(e.g. due to a conflict), it is compressed only if it has previously been
+modified.
+
+The size cache to use is specified by the user, and is an important
+parameter that needs careful consideration in order to balance the extra
+memory usage, performance, and quality (recall that data loss is incurred
+only when a block is evicted from the cache and compressed).  Although the
+best choice varies from one application to another, we suggest allocating
+at least two layers of blocks (2 * (nx / 4) * (ny / 4) blocks) for
+applications that stream through the array and perform stencil computations
+such as gathering data from neighboring elements.  This allows limiting the
+cache misses to compulsory ones.  If the cache_size parameter is set to
+zero bytes, then this default of two layers is used.
+
+Currently the cache size has to be specified at time of declaration.
