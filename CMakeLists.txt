@@ -99,7 +99,7 @@ if(C_COMPILER_SUPPORTS_WALL)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 endif()
 
-check_c_compiler_flag(-Wall C_COMPILER_SUPPORTS_WNO_UNUSED_FUNCTION)
+check_c_compiler_flag(-Wno-unused-function C_COMPILER_SUPPORTS_WNO_UNUSED_FUNCTION)
 if(C_COMPILER_SUPPORTS_WNO_UNUSED_FUNCTION)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
 endif()
