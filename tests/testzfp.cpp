@@ -436,267 +436,289 @@ test_array(Array& a, const Scalar* f, uint n, double tolerance, double dfmax)
 // test arrays with m^6 scalars
 template <typename Scalar>
 inline uint
-test(uint m)
+test(uint m, size_t d)
 {
   uint failures = 0;
   uint n = m * m * m * m * m * m;
   Scalar* f = new Scalar[n];
-  // test 1D, 2D, and 3D arrays
-  for (uint d = 1; d <= 3; d++) {
-    // determine array size
-    uint nx, ny, nz;
-    zfp_field* field = zfp_field_alloc();
-    zfp_field_set_type(field, zfp::codec<Scalar>::type);
-    zfp_field_set_pointer(field, f);
-    switch (d) {
-      case 1:
-        nx = n;
-        ny = 0;
-        nz = 0;
-        zfp_field_set_size_1d(field, nx);
-        break;
-      case 2:
-        nx = m * m * m;
-        ny = m * m * m;
-        nz = 0;
-        zfp_field_set_size_2d(field, nx, ny);
-        break;
-      case 3:
-        nx = m * m;
-        ny = m * m;
-        nz = m * m;
-        zfp_field_set_size_3d(field, nx, ny, nz);
-        break;
-    }
-    initialize<Scalar>(f, nx, ny, nz, polynomial);
-    uint t = (zfp_field_type(field) == zfp_type_float ? 0 : 1);
-    std::cout << "testing " << d << "D array of " << (t == 0 ? "floats" : "doubles") << std::endl;
 
-    // test data integrity
-    uint32 checksum[2][3] = {
-#if TEST_SIZE == 4
-      { 0xdad6fd69u, 0x000f8df1u, 0x60993f48u },
-      { 0x8d95b1fdu, 0x96a0e601u, 0x66e77c83u },
-#elif TEST_SIZE == 8
-      { 0x269fb420u, 0xfc4fd405u, 0x733b9643u },
-      { 0x3321e28bu, 0xfcb8f0f0u, 0xd0f6d6adu },
-#elif TEST_SIZE == 16
-      { 0x62d6c2b5u, 0x88aa838eu, 0x84f98253u },
-      { 0xf2bd03a4u, 0x10084595u, 0xb8df0e02u },
-#endif
-    };
-    uint32 h = hash(f, n * sizeof(Scalar));
-    if (h != checksum[t][d - 1])
-      std::cout << "warning: array checksum mismatch; tests below may fail" << std::endl;
-
-    // open compressed stream
-    zfp_stream* stream = zfp_stream_open(0);
-
-    // test fixed rate
-    for (uint rate = 2u >> t, i = 0; rate <= 32 * (t + 1); rate *= 4, i++) {
-      // expected max errors
-#if TEST_SIZE == 4
-      Scalar emax[2][3][4] = {
-        {
-          {1.998e+00, 7.767e-03, 0.000e+00},
-          {2.356e-01, 3.939e-04, 7.451e-09},
-          {2.479e-01, 1.525e-03, 7.451e-08},
-        },
-        {
-          {1.998e+00, 9.976e-01, 1.360e-05},
-          {2.944e+00, 2.491e-02, 2.578e-06},
-          {6.103e-01, 3.253e-02, 6.467e-06},
-        }
-      };
-#elif TEST_SIZE == 8
-      Scalar emax[2][3][4] = {
-        {
-          {2.000e+00, 1.425e-03, 0.000e+00},
-          {7.110e-02, 1.264e-05, 2.329e-10},
-          {1.864e-02, 2.814e-05, 1.193e-07},
-        },
-        {
-          {2.000e+00, 1.001e+00, 3.084e-06, 0.000e+00},
-          {2.266e+00, 3.509e-03, 1.784e-08, 0.000e+00},
-          {2.494e-01, 1.473e-03, 7.060e-08, 3.470e-18},
-        }
-      };
-#elif TEST_SIZE == 16
-      Scalar emax[2][3][4] = {
-        {
-          {2.000e+00, 1.304e-03, 0.000e+00},
-          {6.907e-02, 5.961e-07, 2.911e-11},
-          {3.458e-03, 7.153e-07, 2.385e-07},
-        },
-        {
-          {2.000e+00, 1.001e+00, 6.353e-07, 0.000e+00},
-          {2.036e+00, 3.174e-04, 1.646e-10, 5.294e-23},
-          {5.483e-02, 8.559e-05, 4.564e-10, 8.674e-19},
-        }
-      };
-#endif
-      failures += test_rate<Scalar>(stream, field, rate, emax[t][d - 1][i]);
-    }
-
-    if (stream_word_bits != 64)
-      std::cout << "warning: stream word size is smaller than 64; tests below may fail" << std::endl;
-
-    // test fixed precision
-    for (uint prec = 4u << t, i = 0; i < 3; prec *= 2, i++) {
-      // expected compressed sizes
-#if TEST_SIZE == 4
-      size_t bytes[2][3][3] = {
-        {
-          {2176, 3256, 6272},
-          { 576, 1296, 4136},
-          { 128,  720, 4096},
-        },
-        {
-          {3640, 6656, 14576},
-          {1392, 4232, 12312},
-          { 744, 4120, 12304},
-        },
-      };
-#elif TEST_SIZE == 8
-      size_t bytes[2][3][3] = {
-        {
-          {138864, 204456, 349888},
-          { 35216,  63632, 163008},
-          {  8856,  26768, 133360},
-        },
-        {
-          {229048, 374264, 786504},
-          { 69776, 169168, 564192},
-          { 28304, 134904, 588600},
-        },
-      };
-#elif TEST_SIZE == 16
-      size_t bytes[2][3][3] = {
-        {
-          {8886920, 13080944, 21487696},
-          {2240256,  3457592,  7787752},
-          { 570656,  1277128,  4803216},
-        },
-        {
-          {14654848, 23059592, 45965208},
-          { 3850784,  8168520, 25149520},
-          { 1375440,  4901552, 24339800},
-        },
-      };
-#endif
-      failures += test_precision<Scalar>(stream, field, prec, bytes[t][d - 1][i]);
-    }
-
-    // test fixed accuracy
-    for (uint i = 0; i < 3; i++) {
-      Scalar tol[] = { 1e-3, 2 * std::numeric_limits<Scalar>::epsilon(), 0 };
-      // expected compressed sizes
-#if TEST_SIZE == 4
-      size_t bytes[2][3][3] = {
-        {
-          {4752, 10184, 14192},
-          {2920,  8720, 12216},
-          {4264, 10408, 12280},
-        },
-        {
-          {5136, 25416, 30960},
-          {3016, 23664, 28696},
-          {4288, 25280, 28688},
-        },
-      };
-#elif TEST_SIZE == 8
-      size_t bytes[2][3][3] = {
-        {
-          {272208, 552856, 792528},
-          {105440, 329280, 572552},
-          { 90584, 381264, 588528},
-        },
-        {
-          {296672, 1478648, 1834416},
-          {111560, 1250056, 1609720},
-          { 92120, 1327544, 1637168},
-        },
-      };
-#elif TEST_SIZE == 16
-      size_t bytes[2][3][3] = {
-        {
-          {17416688, 32229448, 47431656},
-          { 5327000, 14827440, 28920960},
-          { 2721504, 12688136, 26308832},
-        },
-        {
-          {18982344, 85195360, 107965448},
-          { 5715280, 63417800,  86969224},
-          { 2819224, 66345592,  89157296},
-        },
-      };
-#endif
-      failures += test_accuracy<Scalar>(stream, field, tol[i], bytes[t][d - 1][i]);
-    }
-
-    // test compressed array support
-#if TEST_SIZE == 4
-    Scalar emax[2][3] = {
-      {0.000e+00, 7.451e-09, 7.451e-08},
-      {2.354e-10, 5.731e-09, 2.804e-08},
-    };
-    Scalar dfmax[2][3] = {
-      {4.385e-03, 9.260e-02, 3.760e-01},
-      {4.385e-03, 9.260e-02, 3.760e-01},
-    };
-#elif TEST_SIZE == 8
-    Scalar emax[2][3] = {
-      {0.000e+00, 2.329e-10, 1.193e-07},
-      {1.302e-11, 5.678e-11, 4.148e-10},
-    };
-    Scalar dfmax[2][3] = {
-      {6.866e-05, 1.792e-03, 2.239e-02},
-      {6.866e-05, 1.792e-03, 2.239e-02},
-    };
-#elif TEST_SIZE == 16
-    Scalar emax[2][3] = {
-      {0.000e+00, 2.911e-11, 2.385e-07},
-      {4.464e-13, 3.051e-13, 1.224e-12},
-    };
-    Scalar dfmax[2][3] = {
-      {1.073e-06, 2.906e-05, 4.714e-04},
-      {1.073e-06, 2.880e-05, 4.714e-04},
-    };
-#endif
-    double rate = 24;
-    switch (d) {
-      case 1: {
-          zfp::array1<Scalar> a(nx, rate, f);
-          failures += test_array(a, f, n, emax[t][d - 1], dfmax[t][d - 1]);
-        }
-        break;
-      case 2: {
-          zfp::array2<Scalar> a(nx, ny, rate, f);
-          failures += test_array(a, f, n, emax[t][d - 1], dfmax[t][d - 1]);
-        }
-        break;
-      case 3: {
-          zfp::array3<Scalar> a(nx, ny, nz, rate, f);
-          failures += test_array(a, f, n, emax[t][d - 1], dfmax[t][d - 1]);
-        }
-        break;
-    }
-
-    std::cout << std::endl;
-    zfp_stream_close(stream);
-    zfp_field_free(field);
+  // determine array size
+  uint nx, ny, nz;
+  zfp_field* field = zfp_field_alloc();
+  zfp_field_set_type(field, zfp::codec<Scalar>::type);
+  zfp_field_set_pointer(field, f);
+  switch (d) {
+    case 1:
+      nx = n;
+      ny = 0;
+      nz = 0;
+      zfp_field_set_size_1d(field, nx);
+      break;
+    case 2:
+      nx = m * m * m;
+      ny = m * m * m;
+      nz = 0;
+      zfp_field_set_size_2d(field, nx, ny);
+      break;
+    case 3:
+      nx = m * m;
+      ny = m * m;
+      nz = m * m;
+      zfp_field_set_size_3d(field, nx, ny, nz);
+      break;
   }
+  initialize<Scalar>(f, nx, ny, nz, polynomial);
+  uint t = (zfp_field_type(field) == zfp_type_float ? 0 : 1);
+  std::cout << "testing " << d << "D array of " << (t == 0 ? "floats" : "doubles") << std::endl;
+
+  // test data integrity
+  uint32 checksum[2][3] = {
+#if TEST_SIZE == 4
+    { 0xdad6fd69u, 0x000f8df1u, 0x60993f48u },
+    { 0x8d95b1fdu, 0x96a0e601u, 0x66e77c83u },
+#elif TEST_SIZE == 8
+    { 0x269fb420u, 0xfc4fd405u, 0x733b9643u },
+    { 0x3321e28bu, 0xfcb8f0f0u, 0xd0f6d6adu },
+#elif TEST_SIZE == 16
+    { 0x62d6c2b5u, 0x88aa838eu, 0x84f98253u },
+    { 0xf2bd03a4u, 0x10084595u, 0xb8df0e02u },
+#endif
+  };
+  uint32 h = hash(f, n * sizeof(Scalar));
+  if (h != checksum[t][d - 1])
+    std::cout << "warning: array checksum mismatch; tests below may fail" << std::endl;
+
+  // open compressed stream
+  zfp_stream* stream = zfp_stream_open(0);
+
+  // test fixed rate
+  for (uint rate = 2u >> t, i = 0; rate <= 32 * (t + 1); rate *= 4, i++) {
+    // expected max errors
+#if TEST_SIZE == 4
+    Scalar emax[2][3][4] = {
+      {
+        {1.998e+00, 7.767e-03, 0.000e+00},
+        {2.356e-01, 3.939e-04, 7.451e-09},
+        {2.479e-01, 1.525e-03, 7.451e-08},
+      },
+      {
+        {1.998e+00, 9.976e-01, 1.360e-05},
+        {2.944e+00, 2.491e-02, 2.578e-06},
+        {6.103e-01, 3.253e-02, 6.467e-06},
+      }
+    };
+#elif TEST_SIZE == 8
+    Scalar emax[2][3][4] = {
+      {
+        {2.000e+00, 1.425e-03, 0.000e+00},
+        {7.110e-02, 1.264e-05, 2.329e-10},
+        {1.864e-02, 2.814e-05, 1.193e-07},
+      },
+      {
+        {2.000e+00, 1.001e+00, 3.084e-06, 0.000e+00},
+        {2.266e+00, 3.509e-03, 1.784e-08, 0.000e+00},
+        {2.494e-01, 1.473e-03, 7.060e-08, 3.470e-18},
+      }
+    };
+#elif TEST_SIZE == 16
+    Scalar emax[2][3][4] = {
+      {
+        {2.000e+00, 1.304e-03, 0.000e+00},
+        {6.907e-02, 5.961e-07, 2.911e-11},
+        {3.458e-03, 7.153e-07, 2.385e-07},
+      },
+      {
+        {2.000e+00, 1.001e+00, 6.353e-07, 0.000e+00},
+        {2.036e+00, 3.174e-04, 1.646e-10, 5.294e-23},
+        {5.483e-02, 8.559e-05, 4.564e-10, 8.674e-19},
+      }
+    };
+#endif
+    failures += test_rate<Scalar>(stream, field, rate, emax[t][d - 1][i]);
+  }
+
+  if (stream_word_bits != 64)
+    std::cout << "warning: stream word size is smaller than 64; tests below may fail" << std::endl;
+
+  // test fixed precision
+  for (uint prec = 4u << t, i = 0; i < 3; prec *= 2, i++) {
+    // expected compressed sizes
+#if TEST_SIZE == 4
+    size_t bytes[2][3][3] = {
+      {
+        {2176, 3256, 6272},
+        { 576, 1296, 4136},
+        { 128,  720, 4096},
+      },
+      {
+        {3640, 6656, 14576},
+        {1392, 4232, 12312},
+        { 744, 4120, 12304},
+      },
+    };
+#elif TEST_SIZE == 8
+    size_t bytes[2][3][3] = {
+      {
+        {138864, 204456, 349888},
+        { 35216,  63632, 163008},
+        {  8856,  26768, 133360},
+      },
+      {
+        {229048, 374264, 786504},
+        { 69776, 169168, 564192},
+        { 28304, 134904, 588600},
+      },
+    };
+#elif TEST_SIZE == 16
+    size_t bytes[2][3][3] = {
+     {
+        {8886920, 13080944, 21487696},
+        {2240256,  3457592,  7787752},
+        { 570656,  1277128,  4803216},
+      },
+      {
+        {14654848, 23059592, 45965208},
+        { 3850784,  8168520, 25149520},
+        { 1375440,  4901552, 24339800},
+      },
+    };
+#endif
+    failures += test_precision<Scalar>(stream, field, prec, bytes[t][d - 1][i]);
+  }
+
+  // test fixed accuracy
+  for (uint i = 0; i < 3; i++) {
+    Scalar tol[] = { 1e-3, 2 * std::numeric_limits<Scalar>::epsilon(), 0 };
+    // expected compressed sizes
+#if TEST_SIZE == 4
+    size_t bytes[2][3][3] = {
+      {
+        {4752, 10184, 14192},
+        {2920,  8720, 12216},
+        {4264, 10408, 12280},
+      },
+      {
+        {5136, 25416, 30960},
+        {3016, 23664, 28696},
+        {4288, 25280, 28688},
+      },
+    };
+#elif TEST_SIZE == 8
+    size_t bytes[2][3][3] = {
+      {
+        {272208, 552856, 792528},
+        {105440, 329280, 572552},
+        { 90584, 381264, 588528},
+      },
+      {
+        {296672, 1478648, 1834416},
+        {111560, 1250056, 1609720},
+        { 92120, 1327544, 1637168},
+      },
+    };
+#elif TEST_SIZE == 16
+    size_t bytes[2][3][3] = {
+      {
+        {17416688, 32229448, 47431656},
+        { 5327000, 14827440, 28920960},
+        { 2721504, 12688136, 26308832},
+      },
+      {
+        {18982344, 85195360, 107965448},
+        { 5715280, 63417800,  86969224},
+        { 2819224, 66345592,  89157296},
+      },
+    };
+#endif
+    failures += test_accuracy<Scalar>(stream, field, tol[i], bytes[t][d - 1][i]);
+  }
+
+  // test compressed array support
+#if TEST_SIZE == 4
+  Scalar emax[2][3] = {
+    {0.000e+00, 7.451e-09, 7.451e-08},
+    {2.354e-10, 5.731e-09, 2.804e-08},
+  };
+  Scalar dfmax[2][3] = {
+    {4.385e-03, 9.260e-02, 3.760e-01},
+    {4.385e-03, 9.260e-02, 3.760e-01},
+  };
+#elif TEST_SIZE == 8
+  Scalar emax[2][3] = {
+    {0.000e+00, 2.329e-10, 1.193e-07},
+    {1.302e-11, 5.678e-11, 4.148e-10},
+  };
+  Scalar dfmax[2][3] = {
+    {6.866e-05, 1.792e-03, 2.239e-02},
+    {6.866e-05, 1.792e-03, 2.239e-02},
+  };
+#elif TEST_SIZE == 16
+  Scalar emax[2][3] = {
+    {0.000e+00, 2.911e-11, 2.385e-07},
+    {4.464e-13, 3.051e-13, 1.224e-12},
+  };
+  Scalar dfmax[2][3] = {
+    {1.073e-06, 2.906e-05, 4.714e-04},
+    {1.073e-06, 2.880e-05, 4.714e-04},
+  };
+#endif
+  double rate = 24;
+  switch (d) {
+    case 1: {
+        zfp::array1<Scalar> a(nx, rate, f);
+        failures += test_array(a, f, n, emax[t][d - 1], dfmax[t][d - 1]);
+      }
+      break;
+    case 2: {
+        zfp::array2<Scalar> a(nx, ny, rate, f);
+        failures += test_array(a, f, n, emax[t][d - 1], dfmax[t][d - 1]);
+      }
+      break;
+    case 3: {
+        zfp::array3<Scalar> a(nx, ny, nz, rate, f);
+        failures += test_array(a, f, n, emax[t][d - 1], dfmax[t][d - 1]);
+      }
+      break;
+  }
+
+  std::cout << std::endl;
+  zfp_stream_close(stream);
+  zfp_field_free(field);
 
   delete[] f;
   return failures;
 }
 
-int main()
+int main(int argc, char **argv)
 {
   uint failures = 0;
   uint m = TEST_SIZE;
-  failures += test<float>(m);
-  failures += test<double>(m);
+
+  if(argc == 1)
+  {
+    for(size_t d = 1; d <= 3; ++d)
+    {
+      failures += test<float>(m, d);
+      failures += test<double>(m, d);
+    }
+  }
+  else
+  {
+    std::stringstream ss;
+    ss << argv[1] << " " << argv[2];
+    size_t d, p;
+    ss >> d >> p;
+    if(!ss || d < 1 || d > 3 || !(p == 32 || p == 64))
+    {
+      std::cerr << "Usage: " << argv[0] << " [ndims float_precision]\n";
+      return EXIT_FAILURE;
+    }
+    if(p == 32)
+      failures = test<float>(m, d);
+    else
+      failures = test<double>(m, d);
+  }
+
   if (failures)
     std::cout << failures << " test(s) failed" << std::endl;
   else

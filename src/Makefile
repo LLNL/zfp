@@ -19,6 +19,8 @@ static: $(LIB)/libzfp.a
 
 shared: $(LIB)/libzfp.so
 
+all: static shared
+
 clean:
 	rm -f $(TARGETS) $(OBJECTS)
 	[ -d $(LIB) ] && rmdir $(LIB) || true
