@@ -1,15 +1,23 @@
-MAKEFLAGS += --no-print-directory
+#MAKEFLAGS += --no-print-directory
 
-all:
-	@cd src; $(MAKE)
-	@cd utils; $(MAKE)
-	@cd examples; $(MAKE)
-	@cd tests; $(MAKE)
+all: static shared utils examples tests
+
+static:
+	@cd src; $(MAKE) static
 
 shared:
 	@cd src; $(MAKE) shared
 
-test:
+utils: static
+	@cd utils; $(MAKE)
+
+examples: static
+	@cd examples; $(MAKE)
+
+tests: static
+	@cd tests; $(MAKE)
+
+test: tests static
 	@cd tests; $(MAKE) test
 
 clean:
@@ -17,3 +25,4 @@ clean:
 	@cd utils; $(MAKE) clean
 	@cd examples; $(MAKE) clean
 	@cd tests; $(MAKE) clean
+	rm -rf lib
