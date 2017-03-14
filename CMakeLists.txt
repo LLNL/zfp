@@ -42,6 +42,9 @@ endif()
 # Top level options
 #------------------------------------------------------------------------------#
 
+# Use this to get a usable export library when building a DLL on Windows
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 # Suggest C99
 # Falls back to C89 if 99 is not supported
 set(CMAKE_C_STANDARD 99)
