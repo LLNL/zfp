@@ -4,7 +4,7 @@ ZFP
 INTRODUCTION
 ------------
 
-This is zfp 0.5.0, an open source C/C++ library for compressed numerical
+This is zfp 0.5.1, an open source C/C++ library for compressed numerical
 arrays that support high throughput read and write random access.  zfp was
 written by Peter Lindstrom at Lawrence Livermore National Laboratory, and
 is loosely based on the algorithm described in the following paper:
@@ -33,7 +33,8 @@ designed specifically for 1D streams.
 
 zfp is freely available as open source under a BSD license, as outlined in
 the file 'LICENSE'.  For information on the API and general usage, please
-see the file 'API' in this directory.
+see the file 'API' in this directory.  The file 'ISSUES' discusses common
+issues and serves as a troubleshooting guide.
 
 
 INSTALLATION
@@ -44,15 +45,32 @@ a set of C++ header files that implement compressed arrays; and a set of
 C and C++ examples.  The main compression codec is written in C and should
 conform to both the ISO C89 and C99 standards.  The C++ array classes are
 implemented entirely in header files and can be included as is, but since
-they call the compression library applications must link with libzfp.
+they call the compression library, applications must link with libzfp.
 
-To compile libzfp and all example programs (see below for more details)
-on Linux or OS X, type
+On Linux, macOS, and MinGW, zfp is easiest compiled using gcc and gmake.
+CMake support is also available, e.g. for Windows builds.  See below for
+instructions on GNU and CMake builds.
+
+zfp has successfully been built and tested using these compilers:
+
+    gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.2, 5.3.1, 6.2.1
+    icc versions 12.0.5, 12.1.5, 15.0.4, 16.0.1
+    clang version 3.6.0
+    xlc version 12.1
+    mingw32-gcc version 4.8.1
+    Visual Studio version 14.0
+
+NOTE: zfp requires 64-bit compiler and operating system support.
+
+## GNU builds 
+
+To compile zfp using gcc, type
 
     make
 
-from this directory.  This compiles libzfp as a static library and the
-example programs.  To optionally create a shared library, type
+from this directory.  This builds libzfp as a static library as well as
+utilities and example programs.  To optionally create a shared library,
+type
 
     make shared
 
@@ -69,15 +87,29 @@ bit-for-bit across platforms.  If most tests succeed and the failures
 result in byte sizes and error values reasonably close to the expected
 values, then it is likely that the compressor is working correctly.
 
-NOTE: zfp requires 64-bit compiler and operating system support.
+## CMake builds
 
-zfp has successfully been built and tested using these compilers:
+To build zfp using CMake on Linux or macOS, start a Unix shell and type
 
-    gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.2, 5.1.0
-    icc versions 12.0.5, 12.1.5, 15.0.4, 16.0.1
-    clang versions 3.4.2, 3.6.0
-    xlc version 12.1
-    mingw32-gcc version 4.8.1
+    mkdir build
+    cd build
+    cmake ..
+    make
+
+To also build the examples, replace the cmake line with
+
+    cmake -DBUILD_EXAMPLES=ON ..
+
+To build zfp using Visual Studio on Windows, start an MSBuild shell and type
+
+    mkdir build
+    cd build
+    cmake ..
+    msbuild /p:Configuration=Release zfp.sln
+    msbuild /p:Configuration=Debug   zfp.sln
+
+This builds zfp in both debug and release mode.  See the instructions for
+Linux on how to change the cmake line to also build the example programs.
 
 
 ALGORITHM OVERVIEW
@@ -104,8 +136,12 @@ invisible to the application.
 is known as a block-floating-point representation, which uses a single,
 common floating-point exponent for all 4^d values.  The effect of this
 conversion is to turn each floating-point value into a 31- or 63-bit
-signed integer.  Note that this step is not performed if the input data
-already consists of integers.
+signed integer.  If the values in the block are all zero or are smaller
+in magnitude than the fixed-accuracy tolerance (see below), then only a
+single bit is stored with the block to indicate that it is "empty" and
+expands to all zeros.  Note that the block-floating-point conversion and
+empty-block encoding are not performed if the input data is represented as
+integers rather than floating-point numbers.
 
 3. The integers are decorrelated using a custom, high-speed, near
 orthogonal transform similar to the discrete cosine transform used in
@@ -115,22 +151,22 @@ integer additions and 1.5*d bit shifts by one per integer in d dimensions.
 If the data is "smooth," then this transform will turn most integers into
 small signed values clustered around zero.
 
-4. The two's complement signed integers are converted to their negabinary
-(base negative two) representation using one addition and one bit-wise
-exclusive or per integer.  Because negabinary has no dedicated single sign
-bit, these integers are subsequently treated as unsigned.
-
-5. The unsigned integer coefficients are reordered in a manner similar to
+4. The signed integer coefficients are reordered in a manner similar to
 JPEG zig-zag ordering so that statistically they appear in a roughly
 monotonically decreasing order.  Coefficients corresponding to low
 frequencies tend to have larger magnitude, and are listed first.  In 3D,
 coefficients corresponding to frequencies i, j, k in the three dimensions
 are ordered by i + j + k first, and then by i^2 + j^2 + k^2.
 
-6. The bits that represent the list of 4^d integers are now ordered by
-coefficient.  These bits are transposed so that they are instead ordered
-by bit plane, from most to least significant bit.  Viewing each bit plane
-as an integer, with the lowest bit corresponding to the lowest frequency
+5. The two's complement signed integers are converted to their negabinary
+(base negative two) representation using one addition and one bit-wise
+exclusive or per integer.  Because negabinary has no dedicated single sign
+bit, these integers are subsequently treated as unsigned.
+
+6. The bits that represent the list of 4^d integers are transposed so
+that instead of being ordered by coefficient they are ordered by bit
+plane, from most to least significant bit.  Viewing each bit plane as an
+unsigned integer, with the lowest bit corresponding to the lowest frequency
 coefficient, the anticipation is that the first several of these transposed
 integers are small, because the coefficients are assumed to be ordered by
 magnitude.
@@ -140,22 +176,23 @@ coding by exploiting the property that the coefficients tend to have many
 leading zeros that need not be encoded explicitly.  Each bit plane is
 encoded in two parts, from lowest to highest bit.  First the n lowest bits
 are emitted verbatim, where n depends on previous bit planes and is
-initially zero.  Then a variable-length representation, x, of the
-remaining 4^d - n bits is encoded.  For such an integer x, a single bit is
+initially zero.  Then a variable-length representation of the remaining
+4^d - n bits, x, is encoded.  For such an integer x, a single bit is
 emitted to indicate if x = 0, in which case we are done with the current
 bit plane.  If not, then bits of x are emitted, starting from the lowest
 bit, until a one bit is emitted.  This triggers another test whether this
 is the highest set bit of x, and the result of this test is output as a
-single bit.  If not, then the procedure repeats until all n of x's value
-bits have been output, where 2^(n-1) <= x < 2^n.  This can be thought of
+single bit.  If not, then the procedure repeats until all m of x's value
+bits have been output, where 2^(m-1) <= x < 2^m.  This can be thought of
 as a run-length encoding of the zeros of x, where the run lengths are
-expressed in unary.  The current value of n is then passed on to the next
-bit plane, which is encoded by first emitting its n lowest bits.  The
-assumption is that these bits correspond to n coefficients whose most
-significant bits have already been output, i.e. these n bits are
-essentially random and not compressible.  Following this, the remaining
-4^d - n bits of the bit plane are run-length encoded as described above,
-which potentially results in n being increased.
+expressed in unary.  The total number of value bits, n, in this bit plane
+is then incremented by m before being passed to the next bit plane, which
+is encoded by first emitting its n lowest bits.  The assumption is that
+these bits correspond to n coefficients whose most significant bits have
+already been output, i.e. these n bits are essentially random and not
+compressible.  Following this, the remaining 4^d - n bits of the bit plane
+are run-length encoded as described above, which potentially results in n
+being increased.
 
 8. The embedded coder emits one bit at a time, with each successive bit
 potentially improving the quality of the reconstructed signal.  The early
@@ -165,8 +202,8 @@ compressed bit stream can be truncated at any point and still allow for a
 valid approximate reconstruction of the original signal.  The final step
 truncates the bit stream in one of three ways: to a fixed number of bits
 (the fixed-rate mode); after some fixed number of bit planes have been
-encoded (the fixed-precision mode); or until a lowest bit plane number has
-been encoded, as expressed in relation to the common floating-point
+encoded (the fixed-precision mode); or until a lowest bit plane number
+has been encoded, as expressed in relation to the common floating-point
 exponent within the block (the fixed-accuracy mode).
 
 Various parameters are exposed for controlling the quality and compressed
@@ -174,66 +211,22 @@ size of a block, and can be specified by the user at a very fine
 granularity.  These parameters are discussed below.
 
 
-CODE EXAMPLES
--------------
+ZFP COMMAND LINE TOOL
+---------------------
 
-The 'examples' directory includes six programs that make use of the
-compressor.
-
-The 'simple' program is a minimal example that shows how to call the
-compressor and decompressor on a double-precision 3D array.  Without
-the '-d' option, it will compress the array and write the compressed
-stream to standard output.  With the '-d' option, it will instead
-read the compressed stream from standard input and decompress the
-array:
-
-    simple > compressed.zfp
-    simple -d < compressed.zfp
-
-For a more elaborate use of the compressor, see the 'zfp' example.
-
-The 'diffusion' example is a simple forward Euler solver for the heat
-equation on a 2D regular grid, and is intended to show how to declare
-and work with zfp's compressed arrays, as well as give an idea of how
-changing the compression rate affects the error in the solution.  The
-usage is:
-
-    diffusion-zfp [rate] [nx] [ny] [nt]
-
-where 'rate' specifies the exact number of compressed bits to store per
-double-precision floating-point value (default = 64); 'nx' and 'ny'
-specify the grid size (default = 100x100); and 'nt' specifies the number
-of time steps to run (the default is to run until time t = 1).
-
-Running diffusion with the following arguments
-
-    diffusion-zfp 8
-    diffusion-zfp 12
-    diffusion-zfp 20
-    diffusion-zfp 64
-
-should result in this output
-
-    rate=8 sum=0.996442 error=4.813938e-07
-    rate=12 sum=0.998338 error=1.967777e-07
-    rate=20 sum=0.998326 error=1.967952e-07
-    rate=64 sum=0.998326 error=1.967957e-07
-
-For speed and quality comparison, diffusion-raw solves the same problem
-using uncompressed double-precision arrays.
-
-The 'zfp' program is primarily intended for evaluating the rate-distortion
-(compression ratio and quality) provided by the compressor, but since
-version 0.5.0 also allows reading and writing compressed data sets.  zfp
-takes as input a raw, binary array of floats or doubles, and optionally
-outputs a compressed or reconstructed array obtained after lossy
-compression followed by decompression.  Various statistics on compression
-rate and error are also displayed.
+The 'zfp' executable in the bin directory is primarily intended for
+evaluating the rate-distortion (compression ratio and quality) provided by
+the compressor, but since version 0.5.0 also allows reading and writing
+compressed data sets.  zfp takes as input a raw, binary array of floats or
+doubles in native byte order, and optionally outputs a compressed or
+reconstructed array obtained after lossy compression followed by
+decompression.  Various statistics on compression rate and error are also
+displayed.
 
 zfp requires a set of command-line options, the most important being the
 -i option that specifies that the input is uncompressed.  When present,
 "-i <file>" tells zfp to read the uncompressed input file and compress it
-to memory.  If desired, the compressed stream can be written to an ouptut
+to memory.  If desired, the compressed stream can be written to an output
 file using "-z <file>".  When -i is absent, on the other hand, -z names
 the compressed input (not output) file, which is then decompressed.  In
 either case, "-o <file>" can be used to output the reconstructed array
@@ -334,6 +327,55 @@ double.  The minbits parameter is useful only in fixed-rate mode--when
 minbits = maxbits, zero-bits are padded to blocks that compress to fewer
 than maxbits bits.
 
+
+CODE EXAMPLES
+-------------
+
+The 'examples' directory includes five programs that make use of the
+compressor.
+
+The 'simple' program is a minimal example that shows how to call the
+compressor and decompressor on a double-precision 3D array.  Without
+the '-d' option, it will compress the array and write the compressed
+stream to standard output.  With the '-d' option, it will instead
+read the compressed stream from standard input and decompress the
+array:
+
+    simple > compressed.zfp
+    simple -d < compressed.zfp
+
+For a more elaborate use of the compressor, see the 'zfp' utility.
+
+The 'diffusion' example is a simple forward Euler solver for the heat
+equation on a 2D regular grid, and is intended to show how to declare
+and work with zfp's compressed arrays, as well as give an idea of how
+changing the compression rate affects the error in the solution.  The
+usage is:
+
+    diffusion-zfp [rate] [nx] [ny] [nt]
+
+where 'rate' specifies the exact number of compressed bits to store per
+double-precision floating-point value (default = 64); 'nx' and 'ny'
+specify the grid size (default = 100x100); and 'nt' specifies the number
+of time steps to run (the default is to run until time t = 1).
+
+Running diffusion with the following arguments
+
+    diffusion-zfp 8
+    diffusion-zfp 12
+    diffusion-zfp 20
+    diffusion-zfp 64
+
+should result in this output
+
+    rate=8 sum=0.996442 error=4.813938e-07
+    rate=12 sum=0.998338 error=1.967777e-07
+    rate=20 sum=0.998326 error=1.967952e-07
+    rate=64 sum=0.998326 error=1.967957e-07
+
+For speed and quality comparison, diffusion-raw solves the same problem
+using uncompressed double-precision arrays.
+
 The 'speed' program takes two optional parameters:
 
     speed [rate] [blocks]
@@ -356,16 +398,34 @@ give higher quality for the same rate.  This use of zfp is not intended
 to compete with existing texture and image compression formats, but
 exists merely to demonstrate how to compress 8-bit integer data with zfp.
 
-Finally, the 'testzfp' program performs regression testing that exercises
-most of the functionality of libzfp and the array classes.  The tests
-assume the default compiler settings, i.e. with none of the macros in
-Config defined.  By default, small, pregenerated floating-point arrays are
-used in the test, since they tend to have the same binary representation
-across platforms, whereas it can be difficult to computationally generate
-bit-for-bit identical arrays.  To test larger arrays, modify the TESTZFP_*
-macros in Config.  When large arrays are used, the (de)compression
-throughput is also measured and reported in number of uncompressed bytes
-per second.
+The 'inplace' example shows how one might use zfp to perform in-place
+compression and decompression when memory is at a premium.  Here the
+floating-point array is overwritten with compressed data, which is later
+decompressed back in place.  This example also shows how to make use of
+some of the low-level features of zfp, such as its low-level, block-based
+compression API and bit stream functions that perform seeks on the bit
+stream.  The program takes one optional argument:
+
+    inplace [tolerance]
+
+which specifies the fixed-accuracy absolute tolerance to use during
+compression.  Please see FAQ #19 for more on the limitations of in-place
+compression.
+
+
+REGRESSION TESTING
+------------------
+
+The 'testzfp' program in the 'tests' directory performs regression testing
+that exercises most of the functionality of libzfp and the array classes.
+The tests assume the default compiler settings, i.e. with none of the
+macros in Config defined.  By default, small, pregenerated floating-point
+arrays are used in the test, since they tend to have the same binary
+representation across platforms, whereas it can be difficult to
+computationally generate bit-for-bit identical arrays.  To test larger
+arrays, modify the TESTZFP_* macros in Config.  When large arrays are
+used, the (de)compression throughput is also measured and reported in
+number of uncompressed bytes per second.
 
 
 LIMITATIONS AND MISSING FEATURES
@@ -398,10 +458,11 @@ it into future versions of zfp.
 
 - It is not possible to access subarrays via pointers, e.g. via
   double* p = &a[offset]; p[i] = ...  A pointer proxy class similar to
-  the reference class would be useful.
+  the reference class will be added in the near future.
 
 - There currently is no way to make a complete copy of a compressed
-  array, i.e. a = b; does not work for arrays a and b.
+  array, i.e. a = b; does not work for arrays a and b.  Copy constructors
+  and assignment operators will be added in the near future.
 
 - zfp can potentially provide higher precision than conventional float
   and double arrays, but the interface currently does not expose this.
@@ -414,6 +475,11 @@ it into future versions of zfp.
   compressed 64-bit-per-value storage of 128-bit quad-precision numbers
   could greatly improve the accuracy of double-precision floating-point
   computations using the same amount of storage.
+
+- Complex-valued arrays are not directly supported.  Real and imaginary
+  components must be stored as separate arrays, which may result in lost
+  opportunities for compression, e.g. if the complex magnitude is constant
+  and only the phase varies.
 
 - zfp arrays are not thread-safe.  We are considering options for
   supporting multi-threaded access, e.g. for OpenMP parallelization.

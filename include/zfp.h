@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2014-2015, Lawrence Livermore National Security, LLC.
+** Copyright (c) 2014-2017, Lawrence Livermore National Security, LLC.
 ** Produced at the Lawrence Livermore National Laboratory.
 ** Written by Peter Lindstrom.
 ** LLNL-CODE-663824.
@@ -61,17 +61,35 @@
 #ifndef ZFP_H
 #define ZFP_H
 
-#include "types.h"
-#include "system.h"
+#include "zfp/types.h"
+#include "zfp/system.h"
 #include "bitstream.h"
 
 /* macros ------------------------------------------------------------------ */
 
+/* stringification */
+#define _zfp_str_(x) # x
+#define _zfp_str(x) _zfp_str_(x)
+
 /* library version information */
-#define ZFP_VERSION 0x0050    /* library version number: 0.5.0 */
 #define ZFP_VERSION_MAJOR 0   /* library major version number */
 #define ZFP_VERSION_MINOR 5   /* library minor version number */
-#define ZFP_VERSION_RELEASE 0 /* library release version number */
+#define ZFP_VERSION_RELEASE 1 /* library release version number */
+
+/* codec version number (see also zfp_codec_version) */
+#define ZFP_CODEC 5
+
+/* library version number (see also zfp_library_version) */
+#define ZFP_VERSION \
+  ((ZFP_VERSION_MAJOR << 8) + \
+   (ZFP_VERSION_MINOR << 4) + \
+   (ZFP_VERSION_RELEASE << 0))
+
+/* library version string (see also zfp_version_string) */
+#define ZFP_VERSION_STRING \
+  _zfp_str(ZFP_VERSION_MAJOR) "." \
+  _zfp_str(ZFP_VERSION_MINOR) "." \
+  _zfp_str(ZFP_VERSION_RELEASE)
 
 /* default compression parameters */
 #define ZFP_MIN_BITS     0 /* minimum number of bits per block */
@@ -80,9 +98,9 @@
 #define ZFP_MIN_EXP  -1074 /* minimum floating-point base-2 exponent */
 
 /* header masks (enable via bitwise or; reader must use same mask) */
-#define ZFP_HEADER_MAGIC  0x1u /* embed 32-bit magic */
-#define ZFP_HEADER_FIELD  0x2u /* embed 52-bit field type and dimensions */
-#define ZFP_HEADER_PARAMS 0x4u /* embed 12- or 64-bit compression parameters */
+#define ZFP_HEADER_MAGIC  0x1u /* embed 64-bit magic */
+#define ZFP_HEADER_META   0x2u /* embed 52-bit field metadata */
+#define ZFP_HEADER_MODE   0x4u /* embed 12- or 64-bit compression mode */
 #define ZFP_HEADER_FULL   0x7u /* embed all of the above */
 
 /* number of bits per header entry */
@@ -90,7 +108,7 @@
 #define ZFP_META_BITS        52 /* number of field metadata bits */
 #define ZFP_MODE_SHORT_BITS  12 /* number of mode bits in short format */
 #define ZFP_MODE_LONG_BITS   64 /* number of mode bits in long format */
-#define ZFP_HEADER_BITS     148 /* max number of header bits */
+#define ZFP_HEADER_MAX_BITS 148 /* max number of header bits */
 #define ZFP_MODE_SHORT_MAX  ((1u << ZFP_MODE_SHORT_BITS) - 2)
 
 /* types ------------------------------------------------------------------- */
@@ -124,6 +142,19 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* public data ------------------------------------------------------------- */
+
+extern_ const uint zfp_codec_version;         /* codec version ZFP_CODEC */
+extern_ const uint zfp_library_version;       /* library version ZFP_VERSION */
+extern_ const char* const zfp_version_string; /* verbose version string */
+
+/* high-level API: utility functions --------------------------------------- */
+
+size_t          /* byte size of scalar type */
+zfp_type_size(
+  zfp_type type /* scalar type */
+);
 
 /* high-level API: compressed stream construction/destruction -------------- */
 
@@ -199,16 +230,14 @@ zfp_stream_set_rate(
 uint                  /* actual precision */
 zfp_stream_set_precision(
   zfp_stream* stream, /* compressed stream */
-  uint precision,     /* desired precision in uncompressed bits/scalar */
-  zfp_type type       /* scalar type to compress */
+  uint precision      /* desired precision in uncompressed bits/scalar */
 );
 
 /* set accuracy as absolute error tolerance (fixed-accuracy mode) */
 double                /* actual error tolerance */
 zfp_stream_set_accuracy(
   zfp_stream* stream, /* compressed stream */
-  double tolerance,   /* desired error tolerance */
-  zfp_type type       /* scalar type to compress */
+  double tolerance    /* desired error tolerance */
 );
 
 /* set all compression parameters from compact representation (expert mode) */
@@ -269,7 +298,7 @@ zfp_field_free(
 
 /* high-level API: uncompressed array inspectors --------------------------- */
 
-/* pointer to first element of field */
+/* pointer to first scalar in field */
 void*                    /* array pointer */
 zfp_field_pointer(
   const zfp_field* field /* field metadata */
@@ -293,18 +322,18 @@ zfp_field_dimensionality(
   const zfp_field* field /* field metadata */
 );
 
-/* field size in number of array elements */
+/* field size in number of scalars */
 size_t                    /* total number of scalars */
 zfp_field_size(
   const zfp_field* field, /* field metadata */
-  uint* size              /* number of elements per dimension (may be NULL) */
+  uint* size              /* number of scalars per dimension (may be NULL) */
 );
 
 /* field strides per dimension */
 int                       /* zero if array is contiguous */
 zfp_field_stride(
   const zfp_field* field, /* field metadata */
-  int* stride             /* stride in elements per dimension (may be NULL) */
+  int* stride             /* stride in scalars per dimension (may be NULL) */
 );
 
 /* field scalar type and dimensions */
@@ -419,13 +448,13 @@ zfp_read_header(
 /* low-level API: stream manipulation -------------------------------------- */
 
 /* flush bit stream--must be called after last encode call or between seeks */
-void
+size_t
 zfp_stream_flush(
   zfp_stream* stream /* compressed bit stream */
 );
 
 /* align bit stream on next word boundary (decoding analogy to flush) */
-void
+size_t
 zfp_stream_align(
   zfp_stream* stream /* compressed bit stream */
 );
@@ -455,8 +484,12 @@ uint zfp_encode_block_float_1(zfp_stream* stream, const float* block);
 uint zfp_encode_block_double_1(zfp_stream* stream, const double* block);
 
 /* encode 1D complete or partial block from strided array */
+uint zfp_encode_block_strided_int32_1(zfp_stream* stream, const int32* p, int sx);
+uint zfp_encode_block_strided_int64_1(zfp_stream* stream, const int64* p, int sx);
 uint zfp_encode_block_strided_float_1(zfp_stream* stream, const float* p, int sx);
 uint zfp_encode_block_strided_double_1(zfp_stream* stream, const double* p, int sx);
+uint zfp_encode_partial_block_strided_int32_1(zfp_stream* stream, const int32* p, uint nx, int sx);
+uint zfp_encode_partial_block_strided_int64_1(zfp_stream* stream, const int64* p, uint nx, int sx);
 uint zfp_encode_partial_block_strided_float_1(zfp_stream* stream, const float* p, uint nx, int sx);
 uint zfp_encode_partial_block_strided_double_1(zfp_stream* stream, const double* p, uint nx, int sx);
 
@@ -467,8 +500,12 @@ uint zfp_encode_block_float_2(zfp_stream* stream, const float* block);
 uint zfp_encode_block_double_2(zfp_stream* stream, const double* block);
 
 /* encode 2D complete or partial block from strided array */
+uint zfp_encode_partial_block_strided_int32_2(zfp_stream* stream, const int32* p, uint nx, uint ny, int sx, int sy);
+uint zfp_encode_partial_block_strided_int64_2(zfp_stream* stream, const int64* p, uint nx, uint ny, int sx, int sy);
 uint zfp_encode_partial_block_strided_float_2(zfp_stream* stream, const float* p, uint nx, uint ny, int sx, int sy);
 uint zfp_encode_partial_block_strided_double_2(zfp_stream* stream, const double* p, uint nx, uint ny, int sx, int sy);
+uint zfp_encode_block_strided_int32_2(zfp_stream* stream, const int32* p, int sx, int sy);
+uint zfp_encode_block_strided_int64_2(zfp_stream* stream, const int64* p, int sx, int sy);
 uint zfp_encode_block_strided_float_2(zfp_stream* stream, const float* p, int sx, int sy);
 uint zfp_encode_block_strided_double_2(zfp_stream* stream, const double* p, int sx, int sy);
 
@@ -479,8 +516,12 @@ uint zfp_encode_block_float_3(zfp_stream* stream, const float* block);
 uint zfp_encode_block_double_3(zfp_stream* stream, const double* block);
 
 /* encode 3D complete or partial block from strided array */
+uint zfp_encode_block_strided_int32_3(zfp_stream* stream, const int32* p, int sx, int sy, int sz);
+uint zfp_encode_block_strided_int64_3(zfp_stream* stream, const int64* p, int sx, int sy, int sz);
 uint zfp_encode_block_strided_float_3(zfp_stream* stream, const float* p, int sx, int sy, int sz);
 uint zfp_encode_block_strided_double_3(zfp_stream* stream, const double* p, int sx, int sy, int sz);
+uint zfp_encode_partial_block_strided_int32_3(zfp_stream* stream, const int32* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
+uint zfp_encode_partial_block_strided_int64_3(zfp_stream* stream, const int64* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
 uint zfp_encode_partial_block_strided_float_3(zfp_stream* stream, const float* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
 uint zfp_encode_partial_block_strided_double_3(zfp_stream* stream, const double* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
 
@@ -499,8 +540,12 @@ uint zfp_decode_block_float_1(zfp_stream* stream, float* block);
 uint zfp_decode_block_double_1(zfp_stream* stream, double* block);
 
 /* decode 1D complete or partial block from strided array */
+uint zfp_decode_block_strided_int32_1(zfp_stream* stream, int32* p, int sx);
+uint zfp_decode_block_strided_int64_1(zfp_stream* stream, int64* p, int sx);
 uint zfp_decode_block_strided_float_1(zfp_stream* stream, float* p, int sx);
 uint zfp_decode_block_strided_double_1(zfp_stream* stream, double* p, int sx);
+uint zfp_decode_partial_block_strided_int32_1(zfp_stream* stream, int32* p, uint nx, int sx);
+uint zfp_decode_partial_block_strided_int64_1(zfp_stream* stream, int64* p, uint nx, int sx);
 uint zfp_decode_partial_block_strided_float_1(zfp_stream* stream, float* p, uint nx, int sx);
 uint zfp_decode_partial_block_strided_double_1(zfp_stream* stream, double* p, uint nx, int sx);
 
@@ -511,8 +556,12 @@ uint zfp_decode_block_float_2(zfp_stream* stream, float* block);
 uint zfp_decode_block_double_2(zfp_stream* stream, double* block);
 
 /* decode 2D complete or partial block from strided array */
+uint zfp_decode_block_strided_int32_2(zfp_stream* stream, int32* p, int sx, int sy);
+uint zfp_decode_block_strided_int64_2(zfp_stream* stream, int64* p, int sx, int sy);
 uint zfp_decode_block_strided_float_2(zfp_stream* stream, float* p, int sx, int sy);
 uint zfp_decode_block_strided_double_2(zfp_stream* stream, double* p, int sx, int sy);
+uint zfp_decode_partial_block_strided_int32_2(zfp_stream* stream, int32* p, uint nx, uint ny, int sx, int sy);
+uint zfp_decode_partial_block_strided_int64_2(zfp_stream* stream, int64* p, uint nx, uint ny, int sx, int sy);
 uint zfp_decode_partial_block_strided_float_2(zfp_stream* stream, float* p, uint nx, uint ny, int sx, int sy);
 uint zfp_decode_partial_block_strided_double_2(zfp_stream* stream, double* p, uint nx, uint ny, int sx, int sy);
 
@@ -523,8 +572,12 @@ uint zfp_decode_block_float_3(zfp_stream* stream, float* block);
 uint zfp_decode_block_double_3(zfp_stream* stream, double* block);
 
 /* decode 3D complete or partial block from strided array */
+uint zfp_decode_block_strided_int32_3(zfp_stream* stream, int32* p, int sx, int sy, int sz);
+uint zfp_decode_block_strided_int64_3(zfp_stream* stream, int64* p, int sx, int sy, int sz);
 uint zfp_decode_block_strided_float_3(zfp_stream* stream, float* p, int sx, int sy, int sz);
 uint zfp_decode_block_strided_double_3(zfp_stream* stream, double* p, int sx, int sy, int sz);
+uint zfp_decode_partial_block_strided_int32_3(zfp_stream* stream, int32* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
+uint zfp_decode_partial_block_strided_int64_3(zfp_stream* stream, int64* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
 uint zfp_decode_partial_block_strided_float_3(zfp_stream* stream, float* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
 uint zfp_decode_partial_block_strided_double_3(zfp_stream* stream, double* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
 

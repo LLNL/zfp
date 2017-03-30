@@ -76,7 +76,7 @@ static const uint64 block[] = {
 
 int main(int argc, char* argv[])
 {
-  size_t n = 0x200000;
+  uint blocks = 0x200000;
   double rate = 1;
   zfp_field* field;
   uint insize;
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 
   switch (argc) {
     case 3:
-      sscanf(argv[2], "%zu", &n);
+      sscanf(argv[2], "%u", &blocks);
       /* FALLTHROUGH */
     case 2:
       sscanf(argv[1], "%lf", &rate);
@@ -98,8 +98,8 @@ int main(int argc, char* argv[])
   }
 
   /* declare array to compress */
-  field = zfp_field_3d(NULL, zfp_type_double, 4, 4, 4 * n);
-  insize = n * sizeof(block);
+  field = zfp_field_3d(NULL, zfp_type_double, 4, 4, 4 * blocks);
+  insize = blocks * sizeof(block);
 
   /* allocate storage for compressed bit stream */
   zfp = zfp_stream_open(NULL);
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 
   /* compress */
   c = clock();
-  for (i = 0; i < n; i++)
+  for (i = 0; i < blocks; i++)
     zfp_encode_block_double_3(zfp, (const double*)block);
   zfp_stream_flush(zfp);
   time = (double)(clock() - c) / CLOCKS_PER_SEC;
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
   /* decompress */
   zfp_stream_rewind(zfp);
   c = clock();
-  for (i = 0; i < n; i++) {
+  for (i = 0; i < blocks; i++) {
     double a[64];
     zfp_decode_block_double_3(zfp, a);
   }

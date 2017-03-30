@@ -1,5 +1,5 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef ZFP_TYPES_H
+#define ZFP_TYPES_H
 
 typedef unsigned char uchar;
 typedef unsigned short ushort;

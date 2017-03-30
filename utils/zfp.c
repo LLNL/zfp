@@ -1,10 +1,11 @@
+#include <float.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "zfp.h"
-#include "macros.h"
+#include "zfp/macros.h"
 
 /*
 File I/O is done using the following combinations of i, o, s, and z:
@@ -29,13 +30,16 @@ The 7 major tasks to be accomplished are:
 static void
 print_error(const void* fin, const void* fout, zfp_type type, uint n)
 {
-  const float* ff = fin;
-  const double* fd = fin;
-  const float* gf = fout;
-  const double* gd = fout;
-  int single = (type == zfp_type_float);
-  double fmin = single ? ff[0] : fd[0];
-  double fmax = fmin;
+  const int32* i32i = fin;
+  const int64* i64i = fin;
+  const float* f32i = fin;
+  const double* f64i = fin;
+  const int32* i32o = fout;
+  const int64* i64o = fout;
+  const float* f32o = fout;
+  const double* f64o = fout;
+  double fmin = +DBL_MAX;
+  double fmax = -DBL_MAX;
   double erms = 0;
   double ermsn = 0;
   double emax = 0;
@@ -43,8 +47,27 @@ print_error(const void* fin, const void* fout, zfp_type type, uint n)
   uint i;
 
   for (i = 0; i < n; i++) {
-    double d = fabs(single ? ff[i] - gf[i] : fd[i] - gd[i]);
-    double val = single ? ff[i] : fd[i];
+    double d, val;
+    switch (type) {
+      case zfp_type_int32:
+        d = fabs((double)(i32i[i] - i32o[i]));
+        val = (double)i32i[i];
+        break;
+      case zfp_type_int64:
+        d = fabs((double)(i64i[i] - i64o[i]));
+        val = (double)i64i[i];
+        break;
+      case zfp_type_float:
+        d = fabs((double)(f32i[i] - f32o[i]));
+        val = (double)f32i[i];
+        break;
+      case zfp_type_double:
+        d = fabs(f64i[i] - f64o[i]);
+        val = f64i[i];
+        break;
+      default:
+        return;
+    }
     emax = MAX(emax, d);
     erms += d * d;
     fmin = MIN(fmin, val);
@@ -59,6 +82,7 @@ print_error(const void* fin, const void* fout, zfp_type type, uint n)
 static void
 usage()
 {
+  fprintf(stderr, "%s\n", zfp_version_string);
   fprintf(stderr, "Usage: zfp <options>\n");
   fprintf(stderr, "General options:\n");
   fprintf(stderr, "  -h : read/write array and compression parameters from/to compressed header\n");
@@ -71,9 +95,10 @@ usage()
   fprintf(stderr, "Array type and dimensions (needed with -i):\n");
   fprintf(stderr, "  -f : single precision (float type)\n");
   fprintf(stderr, "  -d : double precision (double type)\n");
-  fprintf(stderr, "  -1 <nx> : 1D array dimensions\n");
-  fprintf(stderr, "  -2 <nx> <ny> : 2D array dimensions\n");
-  fprintf(stderr, "  -3 <nx> <ny> <nz> : 3D array dimensions\n");
+  fprintf(stderr, "  -t <i32|i64|f32|f64> : integer or floating scalar type\n");
+  fprintf(stderr, "  -1 <nx> : dimensions for 1D array a[nx]\n");
+  fprintf(stderr, "  -2 <nx> <ny> : dimensions for 2D array a[ny][nx]\n");
+  fprintf(stderr, "  -3 <nx> <ny> <nz> : dimensions for 3D array a[nz][ny][nx]\n");
   fprintf(stderr, "Compression parameters (needed with -i):\n");
   fprintf(stderr, "  -r <rate> : fixed rate (# compressed bits per floating-point value)\n");
   fprintf(stderr, "  -p <precision> : fixed precision (# uncompressed bits per value)\n");
@@ -135,6 +160,9 @@ int main(int argc, char* argv[])
   size_t zfpsize = 0;
   size_t bufsize = 0;
 
+  if (argc == 1)
+    usage();
+
   /* parse command-line arguments */
   for (i = 1; i < argc; i++) {
     if (argv[i][0] != '-' || argv[i][2])
@@ -175,11 +203,9 @@ int main(int argc, char* argv[])
         break;
       case 'd':
         type = zfp_type_double;
-        typesize = sizeof(double);
         break;
       case 'f':
         type = zfp_type_float;
-        typesize = sizeof(float);
         break;
       case 'h':
         header = 1;
@@ -210,6 +236,20 @@ int main(int argc, char* argv[])
       case 's':
         stats = 1;
         break;
+      case 't':
+        if (++i == argc)
+          usage();
+        if (!strcmp(argv[i], "i32"))
+          type = zfp_type_int32;
+        else if (!strcmp(argv[i], "i64"))
+          type = zfp_type_int64;
+        else if (!strcmp(argv[i], "f32"))
+          type = zfp_type_float;
+        else if (!strcmp(argv[i], "f64"))
+          type = zfp_type_double;
+        else
+          usage();
+        break;
       case 'z':
         if (++i == argc)
           usage();
@@ -221,6 +261,8 @@ int main(int argc, char* argv[])
     }
   }
 
+  typesize = zfp_type_size(type);
+
   /* make sure we have an input file */
   if (!inpath && !zfppath) {
     fprintf(stderr, "must specify uncompressed or compressed input file via -i or -z\n");
@@ -229,19 +271,19 @@ int main(int argc, char* argv[])
 
   /* make sure we know floating-point type */
   if ((inpath || !header) && !typesize) {
-    fprintf(stderr, "must specify scalar type via -f or -d\n");
+    fprintf(stderr, "must specify scalar type via -f, -d, or -t or header via -h\n");
     return EXIT_FAILURE;
   }
 
   /* make sure we know array dimensions */
   if ((inpath || !header) && !dims) {
-    fprintf(stderr, "must specify array dimensions via -1, -2, or -3\n");
+    fprintf(stderr, "must specify array dimensions via -1, -2, or -3 or header via -h\n");
     return EXIT_FAILURE;
   }
 
   /* make sure we know (de)compression mode and parameters */
   if ((inpath || !header) && !mode) {
-    fprintf(stderr, "must specify compression parameters via -a, -c, -p, or -r\n");
+    fprintf(stderr, "must specify compression parameters via -a, -c, -p, or -r or header via -h\n");
     return EXIT_FAILURE;
   }
 
@@ -332,10 +374,10 @@ int main(int argc, char* argv[])
     /* set (de)compression mode */
     switch (mode) {
       case 'a':
-        zfp_stream_set_accuracy(zfp, tolerance, type);
+        zfp_stream_set_accuracy(zfp, tolerance);
         break;
       case 'p':
-        zfp_stream_set_precision(zfp, precision, type);
+        zfp_stream_set_precision(zfp, precision);
         break;
       case 'r':
         zfp_stream_set_rate(zfp, rate, type, dims, 0);
@@ -461,7 +503,8 @@ int main(int argc, char* argv[])
 
   /* print compression and error statistics */
   if (!quiet) {
-    fprintf(stderr, "type=%s nx=%u ny=%u nz=%u", type == zfp_type_float ? "float" : "double", nx, ny, nz);
+    const char* type_name[] = { "int32", "int64", "float", "double" };
+    fprintf(stderr, "type=%s nx=%u ny=%u nz=%u", type_name[type - zfp_type_int32], nx, ny, nz);
     fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / (nx * ny * nz));
     if (stats)
       print_error(fi, fo, type, nx * ny * nz);

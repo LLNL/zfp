@@ -1,23 +1,34 @@
 include ../Config
 
-TARGETS = diffusion-raw diffusion-zfp pgm simple speed
+BINDIR = ../bin
+TARGETS = $(BINDIR)/diffusion-raw\
+	  $(BINDIR)/diffusion-zfp\
+	  $(BINDIR)/inplace\
+	  $(BINDIR)/pgm\
+	  $(BINDIR)/simple\
+	  $(BINDIR)/speed
+CLIBS = -L../lib -lzfp -lm
+CXXLIBS = -L../lib -lzfp
 
 all: $(TARGETS)
 
-diffusion-raw: diffusion.cpp ../lib/libzfp.a
-	$(CXX) $(CXXFLAGS) -DWITHOUT_COMPRESSION -I../array diffusion.cpp ../lib/libzfp.a -o diffusion-raw
+$(BINDIR)/diffusion-raw: diffusion.cpp ../lib/libzfp.a
+	$(CXX) $(CXXFLAGS) -DWITHOUT_COMPRESSION -I../array diffusion.cpp $(CXXLIBS) -o $@
 
-diffusion-zfp: diffusion.cpp ../lib/libzfp.a
-	$(CXX) $(CXXFLAGS) -I../array diffusion.cpp ../lib/libzfp.a -o diffusion-zfp
+$(BINDIR)/diffusion-zfp: diffusion.cpp ../lib/libzfp.a
+	$(CXX) $(CXXFLAGS) -I../array diffusion.cpp $(CXXLIBS) -o $@
 
-pgm: pgm.c ../lib/libzfp.a
-	$(CC) $(CFLAGS) pgm.c ../lib/libzfp.a -lm -o pgm
+$(BINDIR)/inplace: inplace.c ../lib/libzfp.a
+	$(CC) $(CFLAGS) inplace.c $(CLIBS) -o $@
 
-simple: simple.c ../lib/libzfp.a
-	$(CC) $(CFLAGS) simple.c ../lib/libzfp.a -lm -o simple
+$(BINDIR)/pgm: pgm.c ../lib/libzfp.a
+	$(CC) $(CFLAGS) pgm.c $(CLIBS) -o $@
 
-speed: speed.c ../lib/libzfp.a
-	$(CC) $(CFLAGS) speed.c ../lib/libzfp.a -lm -o speed
+$(BINDIR)/simple: simple.c ../lib/libzfp.a
+	$(CC) $(CFLAGS) simple.c $(CLIBS) -o $@
+
+$(BINDIR)/speed: speed.c ../lib/libzfp.a
+	$(CC) $(CFLAGS) speed.c $(CLIBS) -o $@
 
 clean:
-	rm -f $(TARGETS) fields.o
+	rm -f $(TARGETS)

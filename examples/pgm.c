@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
   /* initialize compressed stream */
   zfp = zfp_stream_open(NULL);
   if (rate < 0)
-    zfp_stream_set_precision(zfp, (uint)floor(0.5 - rate), zfp_type_int32);
+    zfp_stream_set_precision(zfp, (uint)floor(0.5 - rate));
   else
     zfp_stream_set_rate(zfp, rate, zfp_type_int32, 2, 0);
   bytes = zfp_stream_maximum_size(zfp, field);

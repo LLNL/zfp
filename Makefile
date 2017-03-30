@@ -1,28 +1,21 @@
-#MAKEFLAGS += --no-print-directory
+# see Config file for compile-time settings
 
-all: static shared utils examples tests
+MAKEFLAGS += --no-print-directory
 
-static:
-	@cd src; $(MAKE) static
+all:
+	@cd src; $(MAKE) clean static
+	@cd utils; $(MAKE) clean all
+	@cd tests; $(MAKE) clean all
+	@cd examples; $(MAKE) clean all
 
 shared:
 	@cd src; $(MAKE) shared
 
-utils: static
-	@cd utils; $(MAKE)
-
-examples: static
-	@cd examples; $(MAKE)
-
-tests: static
-	@cd tests; $(MAKE)
-
-test: tests static
+test:
 	@cd tests; $(MAKE) test
 
 clean:
 	@cd src; $(MAKE) clean
 	@cd utils; $(MAKE) clean
-	@cd examples; $(MAKE) clean
 	@cd tests; $(MAKE) clean
-	rm -rf lib
+	@cd examples; $(MAKE) clean

@@ -11,7 +11,7 @@ namespace zfp {
 template < typename Scalar, class Codec = zfp::codec<Scalar> >
 class array2 : public array {
 public:
-  array2() : array(2, Codec::type) {}
+  array2() : array(2, Codec::type), cache(0) {}
 
   // constructor of nx * ny array using rate bits per value, at least
   // csize bytes of cache, and optionally initialized from flat array p

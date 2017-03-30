@@ -2,7 +2,7 @@
 #define MEMORY_H
 
 #include <cstdlib>
-#include "types.h"
+#include "zfp/types.h"
 
 inline void*
 allocate(size_t size, size_t alignment = 0)

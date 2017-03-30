@@ -1,3 +1,53 @@
+zfp 0.5.1, March 28, 2017
+
+  - This release primarily fixes a few minor issues but also includes
+    changes in anticipation of a large number of planned future additions
+    to the library.  No changes have been made to the compressed format,
+    which is backwards compatible with version 0.5.0.
+
+  - Added high-level API support for integer types.
+
+  - Separated library version from CODEC version and added version string.
+
+  - Added example that illustrates in-place compression.
+
+  - Added support for CMake builds.
+
+  - Corrected inconsistent naming of BIT_STREAM macros in code and
+    documentation.
+
+  - Renamed some of the header bit mask macros.
+
+  - Added return values to stream_skip and stream_flush to indicate the
+    number of bits skipped or output.
+
+  - Renamed stream_block and stream_delta to make it clear that they refer
+    to strided streams.  Added missing definition of stream_stride_block.
+
+  - Changed int/uint types in places to use ptrdiff_t/size_t where
+    appropriate.
+
+  - Changed API for zfp_set_precision and zfp_set_accuracy to not require
+    the scalar type.
+
+  - Added missing static keyword in decode_block.
+
+  - Changed testzfp to allow specifying which tests to perform on the
+    command line.
+
+  - Fixed bug that prevented defining uninitialized arrays.
+
+  - Fixed incorrect computation of array sizes in zfp_field_size.
+
+  - Fixed minor issues that prevented code from compiling on Windows.
+
+  - Fixed issue with fixed-accuracy headers that caused unnecessary storage.
+
+  - Modified directory structure.
+
+  - Added documentation that discusses common issues with using zfp.
+
+
 zfp 0.5.0, February 29, 2016
 
   - Modified CODEC to more efficiently encode blocks whose values are all

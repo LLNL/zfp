@@ -1,18 +1,11 @@
-# compiler settings -----------------------------------------------------------
+# default compiler settings ---------------------------------------------------
 
-# GNU compiler
 CC = gcc
 CXX = g++
-FLAGS = -O3 -fPIC -Wall -I../inc $(DEFS)
-CFLAGS = $(FLAGS) -std=c89 -Wno-unused-function
-#CFLAGS = $(FLAGS) -std=c99
-CXXFLAGS = $(FLAGS) -std=c++98
-
-# IBM compiler
-# CC = xlc
-# CXX = xlc++
-# CFLAGS = -O2 -qmaxmem=-1 -qpic=large -I../inc $(DEFS)
-# CXXFLAGS= $(CFLAGS)
+FLAGS = -O3 -fPIC -Wall -I../include $(DEFS)
+# CFLAGS = -std=c89 -Wno-unused-function $(FLAGS)
+CFLAGS = -std=c99 $(FLAGS)
+CXXFLAGS = -std=c++98 $(FLAGS)
 
 # optional compiler macros ----------------------------------------------------
 
@@ -20,18 +13,10 @@ CXXFLAGS = $(FLAGS) -std=c++98
 # DEFS += -DBIT_STREAM_WORD_TYPE=uint8
 # DEFS += -DBIT_STREAM_WORD_TYPE=uint16
 # DEFS += -DBIT_STREAM_WORD_TYPE=uint32
+# DEFS += -DBIT_STREAM_WORD_TYPE=uint64
 
 # enable strided access for progressive zfp streams
 # DEFS += -DBIT_STREAM_STRIDED
-
-# run regression test with medium sized arrays
-# DEFS += -DTESTZFP_MEDIUM_ARRAYS
-
-# run regression test with large arrays
-# DEFS += -DTESTZFP_LARGE_ARRAYS
-
-# run diffusion without compression
-# DEFS += -DWITHOUT_COMPRESSION
 
 # use aligned memory allocation
 # DEFS += -DALIGNED_ALLOC
@@ -44,6 +29,3 @@ CXXFLAGS = $(FLAGS) -std=c++98
 
 # count cache misses
 # DEFS += -DCACHE_PROFILE
-
-# for recent versions of MSVC
-# DEFS += -DHAVE_C99_MATH

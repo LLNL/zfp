@@ -96,9 +96,9 @@ array:
   zfp_type type = zfp_type_double;
   zfp_field* field = zfp_field_3d(&a[0][0][0], type, nx, ny, nz);
 
-For single-precision data, use zfp_type_float.  Note that the high-level
-API does not support integer arrays (zfp_type_int32 and zfp_type_int64).
-Such arrays must be compressed via the low-level interface.
+For single-precision data, use zfp_type_float.  As of version 0.5.1, the
+the high-level API also supports integer arrays (zfp_type_int32 and
+zfp_type_int64).  See FAQs #8 and #9 regarding integer compression.
 
 Functions similar to zfp_field_3d exist for declaring 1D and 2D arrays.
 If the dimensionality of the array is unknown at this point, then a generic
@@ -118,8 +118,8 @@ for more details on the meaning of these parameters):
 
   // set compression mode and parameters
   zfp_stream_set_rate(zfp, rate, type, dims, 0);
-  zfp_stream_set_precision(zfp, precision, type);
-  zfp_stream_set_accuracy(zfp, tolerance, type);
+  zfp_stream_set_precision(zfp, precision);
+  zfp_stream_set_accuracy(zfp, tolerance);
 
 Note that only one of these three functions should be called.  The return
 value from these functions gives the actual rate, precision, or tolerance,
@@ -170,13 +170,15 @@ the same sequence of function calls as above, or by recording these
 fields and setting them directly.  Metadata such as array dimensions and
 compression parameters are by default not stored in the compressed stream.
 It is up to the caller to store this information, either separately from
-the compressed data, or via the zfp_write_header and zfp_read_header calls.
-These calls allow the user to specify what information to store in the
-header, including a 'magic' format identifier, the field type and
-dimensions, and the compression parameters (see the ZFP_HEADER_* macros).
+the compressed data, or via the zfp_write_header and zfp_read_header calls,
+which must precede the corresponding zfp_compress and zfp_decompress
+calls, respectively.  These calls allow the user to specify what
+information to store in the header, including a 'magic' format identifier,
+the field type and dimensions, and the compression parameters (see the
+ZFP_HEADER_* macros).
 
 In addition to this initialization, the bit stream has to be rewound to
-the beginning:
+the beginning (before reading the header and decompressing the data):
 
   // rewind compressed stream and decompress array
   zfp_stream_rewind(zfp);
@@ -190,7 +192,7 @@ ZFP LOW-LEVEL COMPRESSION AND DECOMPRESSION CODEC
 For applications that wish to compress or decompress portions of an array
 on demand, a low-level interface is available.  Since this API is useful
 primarily for supporting random access, the user also needs to manipulate
-the bit stream (see inc/bitstream.h), e.g. to position the bit pointer
+the bit stream (see include/bitstream.h), e.g. to position the bit pointer
 to where data is to be read or written.  Please be advised that the bit
 stream functions have been optimized for speed, and do not check for
 buffer overruns or other types of programmer error.
@@ -198,7 +200,7 @@ buffer overruns or other types of programmer error.
 Like the high-level API, the low-level API also makes use of the zfp_stream
 parameter object (see section above) to specify compression parameters and
 storage, but does not encapsulate array metadata in a zfp_field object.
-Functions exists for encoding and decoding complete or partial blocks, with
+Functions exist for encoding and decoding complete or partial blocks, with
 or without strided access.  In non-strided mode, the uncompressed block to
 be encoded or decoded is assumed to be stored contiguously.  For example,
 
@@ -232,6 +234,8 @@ For partial blocks, e.g. near the boundaries of arrays whose dimensions
 are not multiples of four, there are corresponding functions that accept
 parameters (nx, ny, nz) to specify the actual block dimensions, with
 1 <= nx, ny, nz <= 4.  Corresponding functions exist for decompression.
+Such partial blocks typically do not compress as well as full blocks and
+should be avoided if possible.
 
 To position a bit stream for reading (decompression), use
 
@@ -258,7 +262,7 @@ decompress only the first 256 bits of each block:
   zfp_stream_set_params(zfp, 256, 256, maxprec, minexp);
 
 This feature may be combined with progressive decompression, as discussed
-further in the FAQ.
+further in FAQ #13.
 
 
 COMPRESSED ARRAYS
@@ -297,9 +301,9 @@ representation.  By default the block size is restricted to a multiple of
   2D arrays: 4-bit granularity
   3D arrays: 1-bit granularity
 
-For finer granularity, the BITSTREAM_WORD_TYPE macro needs to be set to a
-type narrower than 64 bits, e.g. if set to uint8 the rate granularity
-becomes 8 / 4^d bits in d dimensions, or
+For finer granularity, the BIT_STREAM_WORD_TYPE macro needs to be set to a
+type narrower than 64 bits during compilation of libzfp, e.g. if set to
+uint8 the rate granularity becomes 8 / 4^d bits in d dimensions, or
 
   1D arrays: 2-bit granularity
   2D arrays: 1/2-bit granularity
@@ -381,7 +385,7 @@ Array dimensions (nx, ny, nz) can be queried using these functions:
   uint size_z(); // nz
 
 The array dimensions can also be changed dynamically, e.g. if not known
-at declaration time, using
+at time of construction, using
 
   void resize(uint nx, uint ny, uint nz, bool clear = true);
 
@@ -405,7 +409,7 @@ CACHING
 As mentioned above, the array class maintains a software write-back cache
 of at least one uncompressed block.  When a block in this cache is evicted
 (e.g. due to a conflict), it is compressed back to permanent storage only
-if it has previously been modified.
+if it was modified while stored in the cache.
 
 The size cache to use is specified by the user, and is an important
 parameter that needs careful consideration in order to balance the extra

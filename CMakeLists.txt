@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
+if(WIN32)
+  cmake_minimum_required(VERSION 3.4)
+else()
+  cmake_minimum_required(VERSION 3.1)
+endif()
 
 # Fail immediately if not using an out-of-source build
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
@@ -10,7 +14,7 @@ endif()
 #------------------------------------------------------------------------------#
 # Parse version number from zfp.h
 #------------------------------------------------------------------------------#
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/inc/zfp.h _zfp_h_contents)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/include/zfp.h _zfp_h_contents)
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MAJOR[ \t]+([0-9]+).*"
      "\\1" ZFP_VERSION_MAJOR ${_zfp_h_contents})
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MINOR[ \t]+([0-9]+).*"
@@ -42,6 +46,15 @@ endif()
 # Top level options
 #------------------------------------------------------------------------------#
 
+# Windows specific options
+if(WIN32)
+  # Use this to get a usable export library when building a DLL on Windows
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+  # Silence extraneous Visual Studio specific warnings
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS /wd4146 /wd4305)
+endif()
+
 # Suggest C99
 # Falls back to C89 if 99 is not supported
 set(CMAKE_C_STANDARD 99)
@@ -50,9 +63,9 @@ include(CMakeDependentOption)
 
 # Typically you'd always be able to enable shared libraries but default
 # configurations with the Cray toolchain will explicitly disable shared lib
-# supprot and only allow static libs.  Making this a cmake_dependent_option
-# will ensure that shared library support will be disabled if the system doesnt
-# support it.
+# support and only allow static libs.  Making this a cmake_dependent_option
+# will ensure that shared library support will be disabled if the system does
+# not support it.
 
 # Setup shared library / -fPIC stuff
 get_property(SHARED_LIBS_SUPPORTED GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS)
@@ -77,8 +90,6 @@ set_property(CACHE ZFP_BIT_STREAM_WORD_SIZE PROPERTY STRINGS "8;16;32;64")
 
 option(ZFP_WITH_BIT_STREAM_STRIDED
   "Enable strided access for progressive zfp streams" OFF)
-
-option(ZFP_WITH_COMPRESSION "Enable or disable compression" ON)
 
 option(ZFP_WITH_ALIGNED_ALLOC "Enabled aligned memory allocation" OFF)
 
@@ -114,5 +125,13 @@ endif()
 # Header install
 #------------------------------------------------------------------------------#
 
-install(DIRECTORY inc/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY array/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+#------------------------------------------------------------------------------#
+# Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel
+#------------------------------------------------------------------------------#
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of CMake build" FORCE)
+endif()

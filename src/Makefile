@@ -1,28 +1,24 @@
 include ../Config
 
-LIB = ../lib
-TARGETS = $(LIB)/libzfp.a $(LIB)/libzfp.so
-OBJECTS = bitstream.o decode1f.o decode1d.o encode1f.o encode1d.o decode2f.o decode2d.o encode2f.o encode2d.o decode3f.o decode3d.o encode3f.o encode3d.o zfp.o
+LIBDIR = ../lib
+TARGETS = $(LIBDIR)/libzfp.a $(LIBDIR)/libzfp.so
+OBJECTS = bitstream.o decode1i.o decode1l.o decode1f.o decode1d.o encode1i.o encode1l.o encode1f.o encode1d.o decode2i.o decode2l.o decode2f.o decode2d.o encode2i.o encode2l.o encode2f.o encode2d.o decode3i.o decode3l.o decode3f.o decode3d.o encode3i.o encode3l.o encode3f.o encode3d.o zfp.o
 
-all: shared static
+static: $(LIBDIR)/libzfp.a
 
-$(LIB)/libzfp.a: $(OBJECTS)
-	mkdir -p $(LIB)
+shared: $(LIBDIR)/libzfp.so
+
+clean:
+	rm -f $(TARGETS) $(OBJECTS)
+
+$(LIBDIR)/libzfp.a: $(OBJECTS)
+	mkdir -p $(LIBDIR)
 	rm -f $@
 	ar rc $@ $^
 
-$(LIB)/libzfp.so: $(OBJECTS)
-	mkdir -p $(LIB)
-	rm -f $@
+$(LIBDIR)/libzfp.so: $(OBJECTS)
+	mkdir -p $(LIBDIR)
 	$(CC) $(CFLAGS) -shared $^ -o $@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
-
-static: $(LIB)/libzfp.a
-
-shared: $(LIB)/libzfp.so
-
-clean:
-	rm -f $(TARGETS) $(OBJECTS)
-	[ -d $(LIB) ] && rmdir $(LIB) || true

@@ -3,8 +3,8 @@
 
 // single- and double-precision fields for regression testing
 
-extern const float array_float[3][4096];
-extern const double array_double[3][4096];
+extern "C" const float array_float[3][4096];
+extern "C" const double array_double[3][4096];
 
 template <typename Scalar>
 struct Field {
