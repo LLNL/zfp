@@ -1,0 +1,13 @@
+version: 0.5.1-{build}
+
+environment:
+  matrix:
+    - GENERATOR: Visual Studio 14 2015 Win64
+
+build_script:
+  - mkdir build
+  - cd build
+  - cmake -G "%GENERATOR%" ..
+  - cmake --build .
+  - ctest -V -C "Debug"
+
