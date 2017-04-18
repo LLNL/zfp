@@ -182,7 +182,7 @@ stream_capacity(const bitstream* s)
 
 /* number of words per block */
 inline_ size_t
-stream_stride_block(const bitstream* stream)
+stream_stride_block(const bitstream* s)
 {
 #ifdef BIT_STREAM_STRIDED
   return s->mask + 1;
