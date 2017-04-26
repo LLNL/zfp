@@ -24,6 +24,8 @@ include_directories(${source_dir}/include)
 # include home dir so #include statements are clear in test files
 include_directories(${ZFP_SOURCE_DIR} ${ZFP_SOURCE_DIR}/include)
 
+add_subdirectory(src/inline)
+
 
 add_executable(testzfp testzfp.cpp fields.c)
 target_link_libraries(testzfp zfp)
