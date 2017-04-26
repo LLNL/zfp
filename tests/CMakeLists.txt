@@ -1,3 +1,30 @@
+# clone cmocka 1.1.0 into /build
+include(ExternalProject)
+ExternalProject_Add(
+  cmocka_cloned
+  GIT_REPOSITORY    git://git.cryptomilk.org/projects/cmocka.git
+  GIT_TAG           cmocka-1.1.0
+  SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
+  BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
+  CMAKE_ARGS        -DWITH_STATIC_LIB=ON
+  BUILD_COMMAND     $(MAKE) cmocka_static
+  INSTALL_COMMAND   ""
+)
+ExternalProject_Get_Property(cmocka_cloned source_dir binary_dir)
+
+# name static library cmocka, wire up against cmocka_cloned
+add_library(cmocka STATIC IMPORTED GLOBAL)
+set_property(TARGET cmocka
+  PROPERTY
+  IMPORTED_LOCATION  "${binary_dir}/src/libcmocka.a"
+)
+add_dependencies(cmocka cmocka_cloned)
+include_directories(${source_dir}/include)
+
+# include home dir so #include statements are clear in test files
+include_directories(${ZFP_SOURCE_DIR} ${ZFP_SOURCE_DIR}/include)
+
+
 add_executable(testzfp testzfp.cpp fields.c)
 target_link_libraries(testzfp zfp)
 
