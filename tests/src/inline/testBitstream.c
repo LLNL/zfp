@@ -14,7 +14,8 @@ word
 generateCheckeredWord(int n)
 {
   word w = 0;
-  for (int i = 0; i < wsize; i+=n) {
+  int i;
+  for (i = 0; i < wsize; i+=n) {
     w += (word)1 << i;
   }
   return w;

@@ -1,0 +1,5 @@
+add_subdirectory(inline)
+
+add_executable(testZfpEncodeBlock1dInt32 testZfpEncodeBlock1dInt32.c)
+target_link_libraries(testZfpEncodeBlock1dInt32 cmocka zfp)
+add_test(NAME testZfpEncodeBlock1dInt32 COMMAND testZfpEncodeBlock1dInt32)

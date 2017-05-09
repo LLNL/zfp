@@ -56,7 +56,8 @@ given_Strided_when_ReadWordCompletesBlock_expect_PtrAdvancedByStrideLen(void **s
   bitstream* s = ((struct setupVars *)*state)->b;
   word* prevPtr = s->ptr;
 
-  for (int i = 0; i < BLOCK_SIZE - 1; i++) {
+  int i;
+  for (i = 0; i < BLOCK_SIZE - 1; i++) {
     stream_read_word(s);
     assert_ptr_equal(s->ptr, prevPtr + 1);
     prevPtr = s->ptr;
@@ -72,7 +73,8 @@ given_Strided_when_WriteWordCompletesBlock_expect_PtrAdvancedByStrideLen(void **
   bitstream* s = ((struct setupVars *)*state)->b;
   word* prevPtr = s->ptr;
 
-  for (int i = 0; i < BLOCK_SIZE - 1; i++) {
+  int i;
+  for (i = 0; i < BLOCK_SIZE - 1; i++) {
     stream_write_word(s, 0);
     assert_ptr_equal(s->ptr, prevPtr + 1);
     prevPtr = s->ptr;
