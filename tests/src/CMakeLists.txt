@@ -23,3 +23,8 @@ add_test(NAME testZfpEncodeBlock3dInt32 COMMAND testZfpEncodeBlock3dInt32)
 add_executable(testZfpEncodeBlock3dInt64 testZfpEncodeBlock3dInt64.c)
 target_link_libraries(testZfpEncodeBlock3dInt64 cmocka zfp)
 add_test(NAME testZfpEncodeBlock3dInt64 COMMAND testZfpEncodeBlock3dInt64)
+
+# strided
+add_executable(testZfpEncodeBlockStrided1dInt32 testZfpEncodeBlockStrided1dInt32.c)
+target_link_libraries(testZfpEncodeBlockStrided1dInt32 cmocka zfp)
+add_test(NAME testZfpEncodeBlockStrided1dInt32 COMMAND testZfpEncodeBlockStrided1dInt32)
