@@ -1,8 +1,8 @@
 #include "src/encode3i.c"
 
 #include "constants/3dInt32.h"
-#include "testMacros.h"
-#include "utils32.c"
+#include "utils/testMacros.h"
+#include "utils/utils32.c"
 #include "zfpEncodeBlockStridedBase.c"
 
 int main()

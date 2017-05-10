@@ -1,8 +1,8 @@
 #include "src/encode3l.c"
 
 #include "constants/3dInt64.h"
-#include "testMacros.h"
-#include "utils64.c"
+#include "utils/testMacros.h"
+#include "utils/utils64.c"
 #include "zfpEncodeBlockBase.c"
 
 int main()

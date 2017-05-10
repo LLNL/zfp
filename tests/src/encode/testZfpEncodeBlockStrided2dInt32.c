@@ -1,8 +1,8 @@
 #include "src/encode2i.c"
 
 #include "constants/2dInt32.h"
-#include "testMacros.h"
-#include "utils32.c"
+#include "utils/testMacros.h"
+#include "utils/utils32.c"
 #include "zfpEncodeBlockStridedBase.c"
 
 int main()
