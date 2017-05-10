@@ -1,0 +1,23 @@
+add_executable(testZfpDecodeBlock1dInt32 testZfpDecodeBlock1dInt32.c)
+target_link_libraries(testZfpDecodeBlock1dInt32 cmocka zfp)
+add_test(NAME testZfpDecodeBlock1dInt32 COMMAND testZfpDecodeBlock1dInt32)
+
+add_executable(testZfpDecodeBlock1dInt64 testZfpDecodeBlock1dInt64.c)
+target_link_libraries(testZfpDecodeBlock1dInt64 cmocka zfp)
+add_test(NAME testZfpDecodeBlock1dInt64 COMMAND testZfpDecodeBlock1dInt64)
+
+add_executable(testZfpDecodeBlock2dInt32 testZfpDecodeBlock2dInt32.c)
+target_link_libraries(testZfpDecodeBlock2dInt32 cmocka zfp)
+add_test(NAME testZfpDecodeBlock2dInt32 COMMAND testZfpDecodeBlock2dInt32)
+
+add_executable(testZfpDecodeBlock2dInt64 testZfpDecodeBlock2dInt64.c)
+target_link_libraries(testZfpDecodeBlock2dInt64 cmocka zfp)
+add_test(NAME testZfpDecodeBlock2dInt64 COMMAND testZfpDecodeBlock2dInt64)
+
+add_executable(testZfpDecodeBlock3dInt32 testZfpDecodeBlock3dInt32.c)
+target_link_libraries(testZfpDecodeBlock3dInt32 cmocka zfp)
+add_test(NAME testZfpDecodeBlock3dInt32 COMMAND testZfpDecodeBlock3dInt32)
+
+add_executable(testZfpDecodeBlock3dInt64 testZfpDecodeBlock3dInt64.c)
+target_link_libraries(testZfpDecodeBlock3dInt64 cmocka zfp)
+add_test(NAME testZfpDecodeBlock3dInt64 COMMAND testZfpDecodeBlock3dInt64)
