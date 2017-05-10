@@ -8,6 +8,10 @@
 #define SX 2
 #define SY (3 * 4*SX)
 #define SZ (2 * 4*SY)
+#define PX 1
+#define PY 2
+#define PZ 3
+
 #define DUMMY_VAL 99
 
 struct setupVars {
@@ -163,6 +167,25 @@ encodeBlockStrided(zfp_stream* stream, Int* dataArr)
   return numBitsWritten;
 }
 
+uint
+encodePartialBlockStrided(zfp_stream* stream, Int* dataArr)
+{
+  uint numBitsWritten;
+  switch (DIMS) {
+    case 1:
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Int, 1)(stream, dataArr, PX, SX);
+      break;
+    case 2:
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Int, 2)(stream, dataArr, PX, PY, SX, SY);
+      break;
+    case 3:
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Int, 3)(stream, dataArr, PX, PY, PZ, SX, SY, SZ);
+      break;
+  }
+
+  return numBitsWritten;
+}
+
 static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
@@ -240,4 +263,121 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_BitstreamChe
 
   UInt checksum = hashBitstream(stream_data(s), stream_size(s));
   assert_int_equal(checksum, CHECKSUM_ENCODED_BLOCK);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_ReturnValReflectsNumBitsWrittenToBitstream)(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  uint returnValBits = encodePartialBlockStrided(stream, bundle->dataArr);
+  // do not flush, otherwise extra zeros included in count
+
+  assert_int_equal(returnValBits, stream_wtell(s));
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyStridedEntriesUsed)(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  // encode original block
+  encodePartialBlockStrided(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+  UInt originalChecksum = hashBitstream(stream_data(s), stream_size(s));
+
+  // zero bitstream's memory
+  uint writtenBits = stream_wtell(s);
+  stream_rewind(s);
+  stream_pad(s, writtenBits);
+  stream_rewind(s);
+
+  // tweak non-strided (unused) entries
+  resetRandGen();
+  free(bundle->dataArr);
+  initializeStridedArray(&bundle->dataArr, DUMMY_VAL + 1);
+
+  // encode new block
+  encodePartialBlockStrided(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+  UInt newChecksum = hashBitstream(stream_data(s), stream_size(s));
+
+  assert_int_equal(newChecksum, originalChecksum);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyEntriesWithinPartialBlockBoundsUsed)(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  // encode original block
+  encodePartialBlockStrided(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+  UInt originalChecksum = hashBitstream(stream_data(s), stream_size(s));
+
+  // zero bitstream's memory
+  uint writtenBits = stream_wtell(s);
+  stream_rewind(s);
+  stream_pad(s, writtenBits);
+  stream_rewind(s);
+
+  // tweak block entries outside partial block subset
+  // block entry (i, j, k)
+  int i, j, k;
+  switch(DIMS) {
+    case 1:
+      for (i = PX; i < 4; i++) {
+        bundle->dataArr[SX*i] = DUMMY_VAL;
+      }
+      break;
+
+    case 2:
+      for (j = 0; j < 4; j++) {
+        for (i = 0; i < 4; i++) {
+          if (i >= PX || j >= PY) {
+            bundle->dataArr[SY*j + SX*i] = DUMMY_VAL;
+          }
+        }
+      }
+      break;
+
+    case 3:
+      for (k = 0; k < 4; k++) {
+        for (j = 0; j < 4; j++) {
+          for (i = 0; i < 4; i++) {
+            if (i >= PX || j >= PY || k >= PZ) {
+              bundle->dataArr[SZ*k + SY*j + SX*i] = DUMMY_VAL;
+            }
+          }
+        }
+      }
+      break;
+  }
+
+  // encode new block
+  encodePartialBlockStrided(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+  UInt newChecksum = hashBitstream(stream_data(s), stream_size(s));
+
+  assert_int_equal(newChecksum, originalChecksum);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_BitstreamChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  encodePartialBlockStrided(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+
+  UInt checksum = hashBitstream(stream_data(s), stream_size(s));
+  assert_int_equal(checksum, CHECKSUM_ENCODED_PARTIAL_BLOCK);
 }
