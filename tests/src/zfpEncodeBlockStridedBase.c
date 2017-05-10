@@ -16,6 +16,72 @@ struct setupVars {
   zfp_stream* stream;
 };
 
+// write random output to strided entries, dummyVal elsewhere
+void
+initializeStridedArray(Int** dataArrPtr, Int dummyVal)
+{
+  int i, j, k, countX, countY, countZ;
+  // absolute entry (i,j,k)
+  //   0 <= i < countX, (same for j,countY and k,countZ)
+  // strided entry iff (i,j,k) % (countX/4, countY/4, countZ/4) == (0,0,0)
+  switch(DIMS) {
+    case 1:
+      countX = 4 * SX;
+      *dataArrPtr = malloc(sizeof(Int) * countX);
+      assert_non_null(*dataArrPtr);
+
+      for (i = 0; i < countX; i++) {
+        if (i % SX) {
+          (*dataArrPtr)[i] = dummyVal;
+        } else {
+          (*dataArrPtr)[i] = nextSignedRand();
+        }
+      }
+
+      break;
+
+    case 2:
+      countX = 4 * SX;
+      countY = SY / SX;
+      *dataArrPtr = malloc(sizeof(Int) * countX * countY);
+      assert_non_null(*dataArrPtr);
+
+      for (j = 0; j < countY; j++) {
+        for (i = 0; i < countX; i++) {
+          if (i % (countX/4) || j % (countY/4)) {
+            (*dataArrPtr)[countX*j + i] = dummyVal;
+          } else {
+            (*dataArrPtr)[countX*j + i] = nextSignedRand();
+          }
+        }
+      }
+
+      break;
+
+    case 3:
+      countX = 4 * SX;
+      countY = SY / SX;
+      countZ = SZ / SY;
+      *dataArrPtr = malloc(sizeof(Int) * countX * countY * countZ);
+      assert_non_null(*dataArrPtr);
+
+      for (k = 0; k < countZ; k++) {
+        for (j = 0; j < countY; j++) {
+          for (i = 0; i < countX; i++) {
+            if (i % (countX/4) || j % (countY/4) || k % (countZ/4)) {
+              (*dataArrPtr)[countX*countY*k + countX*j + i] = dummyVal;
+            } else {
+              (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRand();
+            }
+          }
+        }
+      }
+
+      break;
+  }
+
+}
+
 static int
 setup(void **state)
 {
@@ -23,16 +89,7 @@ setup(void **state)
   assert_non_null(bundle);
 
   resetRandGen();
-
-  bundle->dataArr = malloc(sizeof(Int) * BLOCK_SIZE * SX);
-  assert_non_null(bundle);
-  int i, x;
-  for (i = 0; i < BLOCK_SIZE; i++) {
-    bundle->dataArr[i*SX] = nextSignedRand();
-    for (x = 1; x < SX; x++) {
-      bundle->dataArr[i*SX + x] = DUMMY_VAL;
-    }
-  }
+  initializeStridedArray(&bundle->dataArr, DUMMY_VAL);
 
   zfp_type type = ZFP_TYPE_INT;
   zfp_field* field;
@@ -110,7 +167,21 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashSignedArray(bundle->dataArr, BLOCK_SIZE, SX), CHECKSUM_ORIGINAL_DATA_BLOCK);
+
+  UInt checksum;
+  switch (DIMS) {
+    case 1:
+      checksum = hashSignedArray(bundle->dataArr, BLOCK_SIZE, SX);
+      break;
+    case 2:
+      checksum = hash2dStridedBlock(bundle->dataArr, SX, SY);
+      break;
+    case 3:
+      checksum = hash3dStridedBlock(bundle->dataArr, SX, SY, SZ);
+      break;
+  }
+
+  assert_int_equal(checksum, CHECKSUM_ORIGINAL_DATA_BLOCK);
 }
 
 static void
@@ -144,13 +215,10 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_OnlyStridedE
   stream_pad(s, writtenBits);
   stream_rewind(s);
 
-  // tweak array values
-  int i, x;
-  for (i = 0; i < BLOCK_SIZE; i++) {
-    for (x = 1; x < SX; x++) {
-      bundle->dataArr[i*SX + x] = DUMMY_VAL + 1;
-    }
-  }
+  // tweak non-strided (unused) entries
+  resetRandGen();
+  free(bundle->dataArr);
+  initializeStridedArray(&bundle->dataArr, DUMMY_VAL + 1);
 
   // encode new block
   encodeBlockStrided(stream, bundle->dataArr);

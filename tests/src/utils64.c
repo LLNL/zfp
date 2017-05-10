@@ -94,6 +94,58 @@ hashSignedArray(const int64* arr, int nx, int sx)
 }
 
 static uint64
+hash2dStridedBlock(const int64* arr, int sx, int sy)
+{
+  // fletcher's checksum
+  const int64* p = arr;
+  uint32 h1 = 0;
+  uint32 h2 = 0;
+  uint x, y;
+  for (y = 0; y < 4; p += sy - 4*sx, y++) {
+    for (x = 0; x < 4; p += sx, x++) {
+      uint64 uVal = (uint64)(*p);
+
+      uint32 val1 = (uint32)(uVal & 0xffffffff);
+      hashValue(val1, &h1);
+
+      uint32 val2 = (uint32)((uVal >> 32) & 0xffffffff);
+      hashValue(val2, &h2);
+    }
+  }
+  uint64 result1 = (uint64)hashFinish(h1);
+  uint64 result2 = (uint64)hashFinish(h2);
+
+  return result1 + (result2 << 32);
+}
+
+static uint64
+hash3dStridedBlock(const int64* arr, int sx, int sy, int sz)
+{
+  // fletcher's checksum
+  const int64* p = arr;
+  uint32 h1 = 0;
+  uint32 h2 = 0;
+  uint x, y, z;
+  for (z = 0; z < 4; p += sz - 4*sy, z++) {
+    for (y = 0; y < 4; p += sy - 4*sx, y++) {
+      for (x = 0; x < 4; p += sx, x++) {
+        uint64 uVal = (uint64)(*p);
+
+        uint32 val1 = (uint32)(uVal & 0xffffffff);
+        hashValue(val1, &h1);
+
+        uint32 val2 = (uint32)((uVal >> 32) & 0xffffffff);
+        hashValue(val2, &h2);
+      }
+    }
+  }
+  uint64 result1 = (uint64)hashFinish(h1);
+  uint64 result2 = (uint64)hashFinish(h2);
+
+  return result1 + (result2 << 32);
+}
+
+static uint64
 hashBitstream(void* ptrStart, size_t bufsizeBytes)
 {
   int n = bufsizeBytes / sizeof(UInt);
