@@ -1,0 +1,6 @@
+#define ZFP_TYPE_INT zfp_type_int32
+#define DIM_INT_STR 2dInt32
+#define ZFP_RATE_PARAM_BITS 19
+
+#define CHECKSUM_ORIGINAL_DATA_BLOCK 0x94aada73
+#define CHECKSUM_ENCODED_BLOCK 0xd66288e9

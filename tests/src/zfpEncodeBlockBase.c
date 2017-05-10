@@ -42,7 +42,7 @@ setup(void **state)
   }
 
   zfp_stream* stream = zfp_stream_open(NULL);
-  zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, 1, 0);
+  zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
   char* buffer = calloc(bufsizeBytes, sizeof(char));

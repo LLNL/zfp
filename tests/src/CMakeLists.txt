@@ -7,3 +7,19 @@ add_test(NAME testZfpEncodeBlock1dInt32 COMMAND testZfpEncodeBlock1dInt32)
 add_executable(testZfpEncodeBlock1dInt64 testZfpEncodeBlock1dInt64.c)
 target_link_libraries(testZfpEncodeBlock1dInt64 cmocka zfp)
 add_test(NAME testZfpEncodeBlock1dInt64 COMMAND testZfpEncodeBlock1dInt64)
+
+add_executable(testZfpEncodeBlock2dInt32 testZfpEncodeBlock2dInt32.c)
+target_link_libraries(testZfpEncodeBlock2dInt32 cmocka zfp)
+add_test(NAME testZfpEncodeBlock2dInt32 COMMAND testZfpEncodeBlock2dInt32)
+
+add_executable(testZfpEncodeBlock2dInt64 testZfpEncodeBlock2dInt64.c)
+target_link_libraries(testZfpEncodeBlock2dInt64 cmocka zfp)
+add_test(NAME testZfpEncodeBlock2dInt64 COMMAND testZfpEncodeBlock2dInt64)
+
+add_executable(testZfpEncodeBlock3dInt32 testZfpEncodeBlock3dInt32.c)
+target_link_libraries(testZfpEncodeBlock3dInt32 cmocka zfp)
+add_test(NAME testZfpEncodeBlock3dInt32 COMMAND testZfpEncodeBlock3dInt32)
+
+add_executable(testZfpEncodeBlock3dInt64 testZfpEncodeBlock3dInt64.c)
+target_link_libraries(testZfpEncodeBlock3dInt64 cmocka zfp)
+add_test(NAME testZfpEncodeBlock3dInt64 COMMAND testZfpEncodeBlock3dInt64)
