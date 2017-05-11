@@ -8,6 +8,9 @@
 #define SX 2
 #define SY (3 * 4*SX)
 #define SZ (2 * 4*SY)
+#define PX 1
+#define PY 2
+#define PZ 3
 
 #define DUMMY_VAL 99
 
@@ -200,6 +203,25 @@ encodeBlockStrided(zfp_stream* stream, Int* dataArr)
 }
 
 uint
+encodePartialBlockStrided(zfp_stream* stream, Int* dataArr)
+{
+  uint numBitsWritten;
+  switch (DIMS) {
+    case 1:
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Int, 1)(stream, dataArr, PX, SX);
+      break;
+    case 2:
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Int, 2)(stream, dataArr, PX, PY, SX, SY);
+      break;
+    case 3:
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Int, 3)(stream, dataArr, PX, PY, PZ, SX, SY, SZ);
+      break;
+  }
+
+  return numBitsWritten;
+}
+
+uint
 decodeBlockStrided(zfp_stream* stream, Int* dataArr)
 {
   uint numBitsRead;
@@ -216,6 +238,123 @@ decodeBlockStrided(zfp_stream* stream, Int* dataArr)
   }
 
   return numBitsRead;
+}
+
+uint
+decodePartialBlockStrided(zfp_stream* stream, Int* dataArr)
+{
+  uint numBitsRead;
+  switch (DIMS) {
+    case 1:
+      numBitsRead = _t2(zfp_decode_partial_block_strided, Int, 1)(stream, dataArr, PX, SX);
+      break;
+    case 2:
+      numBitsRead = _t2(zfp_decode_partial_block_strided, Int, 2)(stream, dataArr, PX, PY, SX, SY);
+      break;
+    case 3:
+      numBitsRead = _t2(zfp_decode_partial_block_strided, Int, 3)(stream, dataArr, PX, PY, PZ, SX, SY, SZ);
+      break;
+  }
+
+  return numBitsRead;
+}
+
+void
+assertNonStridedEntriesZero(Int* data)
+{
+  int i, j, k, countX, countY, countZ;
+  switch(DIMS) {
+    case 1:
+      countX = 4 * SX;
+
+      for (i = 0; i < countX; i++) {
+        if (i % SX) {
+          assert_int_equal(data[i], 0);
+        }
+      }
+
+      break;
+
+    case 2:
+      countX = 4 * SX;
+      countY = SY / SX;
+
+      for (j = 0; j < countY; j++) {
+        for (i = 0; i < countX; i++) {
+          if (i % (countX/4) || j % (countY/4)) {
+            assert_int_equal(data[countX*j + i], 0);
+          }
+        }
+      }
+
+      break;
+
+    case 3:
+      countX = 4 * SX;
+      countY = SY / SX;
+      countZ = SZ / SY;
+
+      for (k = 0; k < countZ; k++) {
+        for (j = 0; j < countY; j++) {
+          for (i = 0; i < countX; i++) {
+            if (i % (countX/4) || j % (countY/4) || k % (countZ/4)) {
+              assert_int_equal(data[countX*countY*k + countX*j + i], 0);
+            }
+          }
+        }
+      }
+
+      break;
+  }
+}
+
+void
+assertEntriesOutsidePartialBlockBoundsZero(Int* data)
+{
+  int i, j, k, countX, countY, countZ;
+  switch(DIMS) {
+    case 1:
+      countX = 4 * SX;
+
+      for (i = 0; i < countX; i++) {
+        if (i/SX >= PX) {
+          assert_int_equal(data[i], 0);
+        }
+      }
+
+      break;
+
+    case 2:
+      countX = 4 * SX;
+      countY = SY / SX;
+
+      for (j = 0; j < countY; j++) {
+        for (i = 0; i < countX; i++) {
+          if (i/(countX/4) >= PX || j/(countY/4) >= PY) {
+            assert_int_equal(data[countX*j + i], 0);
+          }
+        }
+      }
+
+      break;
+
+    case 3:
+      countX = 4 * SX;
+      countY = SY / SX;
+      countZ = SZ / SY;
+
+      for (k = 0; k < countZ; k++) {
+        for (j = 0; j < countY; j++) {
+          for (i = 0; i < countX; i++) {
+            if (i/(countX/4) >= PX || j/(countY/4) >= PY || k/(countZ/4) >= PZ) {
+              assert_int_equal(data[countX*countY*k + countX*j + i], 0);
+            }
+          }
+        }
+      }
+
+      break;
+  }
 }
 
 static void
@@ -253,50 +392,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlockStrided_expect_OnlyStridedE
   zfp_stream_rewind(stream);
   decodeBlockStrided(stream, bundle->decodedDataArr);
 
-  int i, j, k, countX, countY, countZ;
-  switch(DIMS) {
-    case 1:
-      countX = 4 * SX;
-
-      for (i = 0; i < countX; i++) {
-        if (i % SX) {
-          assert_int_equal(bundle->decodedDataArr[i], 0);
-        }
-      }
-
-      break;
-
-    case 2:
-      countX = 4 * SX;
-      countY = SY / SX;
-
-      for (j = 0; j < countY; j++) {
-        for (i = 0; i < countX; i++) {
-          if (i % (countX/4) || j % (countY/4)) {
-            assert_int_equal(bundle->decodedDataArr[countX*j + i], 0);
-          }
-        }
-      }
-
-      break;
-
-    case 3:
-      countX = 4 * SX;
-      countY = SY / SX;
-      countZ = SZ / SY;
-
-      for (k = 0; k < countZ; k++) {
-        for (j = 0; j < countY; j++) {
-          for (i = 0; i < countX; i++) {
-            if (i % (countX/4) || j % (countY/4) || k % (countZ/4)) {
-              assert_int_equal(bundle->decodedDataArr[countX*countY*k + countX*j + i], 0);
-            }
-          }
-        }
-      }
-
-      break;
-  }
+  assertNonStridedEntriesZero(bundle->decodedDataArr);
 }
 
 static void
@@ -313,4 +409,66 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlockStrided_expect_ArrayChecksu
   decodeBlockStrided(stream, bundle->decodedDataArr);
 
   assert_int_equal(hashStridedArray(bundle->decodedDataArr), CHECKSUM_DECODED_BLOCK);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_ReturnValReflectsNumBitsReadFromBitstream)(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  encodePartialBlockStrided(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+  zfp_stream_rewind(stream);
+
+  uint returnValBits = decodePartialBlockStrided(stream, bundle->decodedDataArr);
+
+  assert_int_equal(returnValBits, stream_rtell(s));
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_NonStridedEntriesUnchangedInDestinationArray)(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  encodePartialBlockStrided(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+  stream_rewind(s);
+  decodePartialBlockStrided(stream, bundle->decodedDataArr);
+
+  assertNonStridedEntriesZero(bundle->decodedDataArr);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_EntriesOutsidePartialBlockBoundsUnchangedInDestinationArray)(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  encodePartialBlockStrided(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+  stream_rewind(s);
+  decodePartialBlockStrided(stream, bundle->decodedDataArr);
+
+  assertEntriesOutsidePartialBlockBoundsZero(bundle->decodedDataArr);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_ArrayChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  encodePartialBlockStrided(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+  zfp_stream_rewind(stream);
+
+  decodePartialBlockStrided(stream, bundle->decodedDataArr);
+
+  assert_int_equal(hashStridedArray(bundle->decodedDataArr), CHECKSUM_DECODED_PARTIAL_BLOCK);
 }
