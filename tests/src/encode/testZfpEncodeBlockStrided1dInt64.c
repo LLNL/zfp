@@ -2,7 +2,8 @@
 
 #include "constants/1dInt64.h"
 #include "utils/testMacros.h"
-#include "utils/utils64.c"
+#include "utils/rand64.c"
+#include "utils/hash64.c"
 #include "zfpEncodeBlockStridedBase.c"
 
 int main()
