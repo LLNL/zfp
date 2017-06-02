@@ -1,0 +1,3 @@
+add_executable(testZfpEndtoend1dInt32 testZfpEndtoend1dInt32.c)
+target_link_libraries(testZfpEndtoend1dInt32 cmocka zfp)
+add_test(NAME testZfpEndtoend1dInt32 COMMAND testZfpEndtoend1dInt32)
