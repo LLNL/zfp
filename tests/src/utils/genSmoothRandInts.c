@@ -133,7 +133,7 @@ generateSmoothRandInts(Int* outputArr, int outputLen)
   generateNRandInts(initialDataptsArr, initialLen, randArr64, outputLen, amplitude);
 
   if (is32Bit) {
-    cast64ArrayTo32(randArr64, outputLen, outputArr);
+    cast64ArrayTo32(randArr64, outputLen, (int32*)outputArr);
     free(randArr64);
   }
 }
