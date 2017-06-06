@@ -7,7 +7,12 @@
 
 #define DATA_LEN 1000000
 
+typedef enum {
+  FIXED_PRECISION = 1,
+} zfp_mode;
+
 struct setupVars {
+  zfp_mode zfpMode;
   Int* dataArr;
   Int* decompressedArr;
   void* buffer;
@@ -17,10 +22,9 @@ struct setupVars {
 };
 
 static int
-setup(void **state)
+setupChosenZfpMode(void **state)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
-  assert_non_null(bundle);
+  struct setupVars *bundle = *state;
 
   resetRandGen();
 
@@ -51,7 +55,16 @@ setup(void **state)
   }
 
   zfp_stream* stream = zfp_stream_open(NULL);
-  zfp_stream_set_precision(stream, ZFP_PREC_PARAM_BITS);
+
+  switch(bundle->zfpMode) {
+    case FIXED_PRECISION:
+      zfp_stream_set_precision(stream, ZFP_PREC_PARAM_BITS);
+      break;
+
+    default:
+      fail_msg("Invalid zfp mode during setupChosenZfpMode()");
+      break;
+  }
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
   char* buffer = calloc(bufsizeBytes, sizeof(char));
@@ -68,6 +81,20 @@ setup(void **state)
   bundle->decompressField = decompressField;
   bundle->stream = stream;
   *state = bundle;
+
+  return 0;
+}
+
+static int
+setupFixedPrec(void **state)
+{
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  bundle->zfpMode = FIXED_PRECISION;
+  *state = bundle;
+
+  setupChosenZfpMode(state);
 
   return 0;
 }
@@ -106,7 +133,15 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompress_expect_BitstreamChecksumMa
   zfp_compress(stream, field);
 
   UInt checksum = hashBitstream(stream_data(s), stream_size(s));
-  assert_int_equal(checksum, CHECKSUM_COMPRESSED_ARRAY_BITSTREAM);
+  switch (bundle->zfpMode) {
+    case FIXED_PRECISION:
+      assert_int_equal(checksum, CHECKSUM_FP_COMPRESSED_BITSTREAM);
+      break;
+
+    default:
+      fail_msg("Invalid zfp mode during test");
+      break;
+  }
 }
 
 static void
@@ -123,5 +158,13 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompress_expect_ArrayChecksumMatc
   zfp_decompress(stream, bundle->decompressField);
 
   UInt checksum = hashSignedArray(bundle->decompressedArr, DATA_LEN, 1);
-  assert_int_equal(checksum, CHECKSUM_DECOMPRESSED_ARRAY);
+  switch (bundle->zfpMode) {
+    case FIXED_PRECISION:
+      assert_int_equal(checksum, CHECKSUM_FP_DECOMPRESSED_ARRAY);
+      break;
+
+    default:
+      fail_msg("Invalid zfp mode during test");
+      break;
+  }
 }
