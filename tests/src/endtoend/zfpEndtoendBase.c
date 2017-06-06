@@ -9,6 +9,7 @@
 
 typedef enum {
   FIXED_PRECISION = 1,
+  FIXED_RATE = 2
 } zfp_mode;
 
 struct setupVars {
@@ -61,6 +62,10 @@ setupChosenZfpMode(void **state)
       zfp_stream_set_precision(stream, ZFP_PREC_PARAM_BITS);
       break;
 
+    case FIXED_RATE:
+      zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
+      break;
+
     default:
       fail_msg("Invalid zfp mode during setupChosenZfpMode()");
       break;
@@ -92,6 +97,20 @@ setupFixedPrec(void **state)
   assert_non_null(bundle);
 
   bundle->zfpMode = FIXED_PRECISION;
+  *state = bundle;
+
+  setupChosenZfpMode(state);
+
+  return 0;
+}
+
+static int
+setupFixedRate(void **state)
+{
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  bundle->zfpMode = FIXED_RATE;
   *state = bundle;
 
   setupChosenZfpMode(state);
@@ -138,6 +157,10 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompress_expect_BitstreamChecksumMa
       assert_int_equal(checksum, CHECKSUM_FP_COMPRESSED_BITSTREAM);
       break;
 
+    case FIXED_RATE:
+      assert_int_equal(checksum, CHECKSUM_FR_COMPRESSED_BITSTREAM);
+      break;
+
     default:
       fail_msg("Invalid zfp mode during test");
       break;
@@ -163,8 +186,31 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompress_expect_ArrayChecksumMatc
       assert_int_equal(checksum, CHECKSUM_FP_DECOMPRESSED_ARRAY);
       break;
 
+    case FIXED_RATE:
+      assert_int_equal(checksum, CHECKSUM_FR_DECOMPRESSED_ARRAY);
+      break;
+
     default:
       fail_msg("Invalid zfp mode during test");
       break;
   }
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, FixedRate_when_ZfpCompress_expect_CompressedBitrateComparableToChosenRate)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->zfpMode != FIXED_RATE) {
+    fail_msg("Test requires fixed rate mode");
+  }
+
+  zfp_field* field = bundle->field;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  size_t compressedBytes = zfp_compress(stream, field);
+  float bitsPerValue = (float)compressedBytes * 8. / DATA_LEN;
+  float maxBitrate = ZFP_RATE_PARAM_BITS + RATE_TOL;
+
+  assert_true(bitsPerValue <= maxBitrate);
 }
