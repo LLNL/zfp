@@ -27,12 +27,15 @@ setupChosenZfpMode(void **state)
 {
   struct setupVars *bundle = *state;
 
-  resetRandGen();
-
   bundle->dataArr = malloc(sizeof(Int) * DATA_LEN);
   assert_non_null(bundle->dataArr);
 
-  generateSmoothRandInts(bundle->dataArr, DATA_LEN);
+  int dataSideLen = (DIMS == 3) ? 100 : (DIMS == 2) ? 1000 : 1000000;
+  if (sizeof(Int) == sizeof(int32)) {
+    generateSmoothRandInts32((int32*)bundle->dataArr, dataSideLen, DIMS, 32 - 2);
+  } else {
+    generateSmoothRandInts64((int64*)bundle->dataArr, dataSideLen, DIMS, 64 - 2);
+  }
 
   bundle->decompressedArr = malloc(sizeof(Int) * DATA_LEN);
   assert_non_null(bundle->decompressedArr);

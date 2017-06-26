@@ -2,7 +2,7 @@
 
 #include "constants/1dInt32.h"
 #include "utils/testMacros.h"
-#include "utils/genSmoothRandInts.c"
+#include "utils/genSmoothRandInts.h"
 #include "utils/hash32.c"
 #include "zfpEndtoendBase.c"
 

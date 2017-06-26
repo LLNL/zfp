@@ -1,139 +1,642 @@
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "utils/rand64.c"
+#include "fixedpoint96.h"
+#include "include/zfp/types.h"
+#include "rand64.c"
+
+static int
+intPow(int base, int exponent)
+{
+  int result = 1;
+
+  int i;
+  for (i = 0; i < exponent; i++) {
+    result *= base;
+  }
+
+  return result;
+}
+
+static int
+computeOffset(int k, int j, int i, int sideLen, int numDims)
+{
+  int result = 0;
+
+  switch (numDims) {
+    case 3:
+      result += k * sideLen * sideLen;
+
+    case 2:
+      result += j * sideLen;
+
+    case 1:
+      result += i;
+  }
+
+  return result;
+}
 
 static void
-computeWeights(double f, double weights[4])
+generateWeights(fixedPt* f, fixedPt weights[4])
 {
-  weights[0] = (f * (nextRandDouble() - 0.5) - 1) / 16;
-  weights[1] = (f * (nextRandDouble() - 0.5) + 9) / 16;
-  weights[2] = (f * (nextRandDouble() - 0.5) + 9) / 16;
-  weights[3] = 1.0 - (weights[0] + weights[1] + weights[2]);
+  fixedPt oneHalf = {0, (uint32)0x80000000};
+  fixedPt one = {1, 0};
+  fixedPt nine = {9, 0};
+  fixedPt oneSixteenth = {0, (uint32)0x10000000};
+
+  weights[0] = (fixedPt){0, nextRand32()};
+  subtract(&(weights[0]), &oneHalf, &(weights[0]));
+  multiply(&(weights[0]), f, &(weights[0]));
+  subtract(&(weights[0]), &one, &(weights[0]));
+  multiply(&(weights[0]), &oneSixteenth, &(weights[0]));
+
+  weights[1] = (fixedPt){0, nextRand32()};
+  subtract(&(weights[1]), &oneHalf, &(weights[1]));
+  multiply(&(weights[1]), f, &(weights[1]));
+  add(&(weights[1]), &nine, &(weights[1]));
+  multiply(&(weights[1]), &oneSixteenth, &(weights[1]));
+
+  weights[2] = (fixedPt){0, nextRand32()};
+  subtract(&(weights[2]), &oneHalf, &(weights[2]));
+  multiply(&(weights[2]), f, &(weights[2]));
+  add(&(weights[2]), &nine, &(weights[2]));
+  multiply(&(weights[2]), &oneSixteenth, &(weights[2]));
+
+  weights[3] = (fixedPt){1, 0};
+  subtract(&(weights[3]), &(weights[0]), &(weights[3]));
+  subtract(&(weights[3]), &(weights[1]), &(weights[3]));
+  subtract(&(weights[3]), &(weights[2]), &(weights[3]));
+}
+
+static void
+computeTensorProductDouble(fixedPt* initialVec, int initialVecLen, int numDims, fixedPt** outputArrPtr)
+{
+  int i, j, k, index;
+
+  int outputArrLen = intPow(initialVecLen, numDims);
+
+  *outputArrPtr = malloc(outputArrLen * sizeof(fixedPt));
+
+  switch(numDims) {
+    case 1:
+      for (i = 0; i < initialVecLen; i++) {
+        (*outputArrPtr)[i] = initialVec[i];
+      }
+
+      break;
+
+    case 2:
+      for (j = 0; j < initialVecLen; j++) {
+        for (i = 0; i < initialVecLen; i++) {
+          index = j*initialVecLen + i;
+
+          fixedPt* fp = &((*outputArrPtr)[index]);
+          *fp = initialVec[i];
+          multiply(fp, &(initialVec[j]), fp);
+        }
+      }
+
+      break;
+
+    case 3:
+      for (k = 0; k < initialVecLen; k++) {
+        for (j = 0; j < initialVecLen; j++) {
+          for (i = 0; i < initialVecLen; i++) {
+            index = k*initialVecLen*initialVecLen + j*initialVecLen + i;
+
+            fixedPt* fp = &((*outputArrPtr)[index]);
+            *fp = initialVec[i];
+            multiply(fp, &(initialVec[j]), fp);
+            multiply(fp, &(initialVec[k]), fp);
+          }
+        }
+      }
+
+      break;
+  }
+}
+
+// returns the length of the resulting array
+static int
+computeTensorProduct(int64* initialVec, int initialVecLen, int numDims, int64** outputArrPtr)
+{
+  int i, j, k, index;
+
+  int outputArrLen = intPow(initialVecLen, numDims);
+  *outputArrPtr = malloc(outputArrLen * sizeof(int64));
+
+  switch(numDims) {
+    case 1:
+      for (i = 0; i < initialVecLen; i++) {
+        (*outputArrPtr)[i] = initialVec[i];
+      }
+
+      break;
+
+    case 2:
+      for (j = 0; j < initialVecLen; j++) {
+        for (i = 0; i < initialVecLen; i++) {
+          index = j*initialVecLen + i;
+          (*outputArrPtr)[index] = initialVec[i] * initialVec[j];
+        }
+      }
+
+      break;
+
+    case 3:
+      for (k = 0; k < initialVecLen; k++) {
+        for (j = 0; j < initialVecLen; j++) {
+          for (i = 0; i < initialVecLen; i++) {
+            index = computeOffset(k, j, i, initialVecLen, 3);
+            (*outputArrPtr)[index] = initialVec[i] * initialVec[j] * initialVec[k];
+          }
+        }
+      }
+
+      break;
+  }
+
+  return outputArrLen;
+}
+
+static void
+generateGridWeights(fixedPt* f, fixedPt** gridWeights)
+{
+  fixedPt fourWeights[4];
+  generateWeights(f, fourWeights);
+
+  computeTensorProductDouble(fourWeights, 4, 2, gridWeights);
+}
+
+static void
+generateCubeWeights(fixedPt* f, fixedPt** cubeWeights)
+{
+  fixedPt fourWeights[4];
+  generateWeights(f, fourWeights);
+
+  computeTensorProductDouble(fourWeights, 4, 3, cubeWeights);
 }
 
 // displace val by 2*(distance out of bounds), only if out of bounds
-static void
-knockBack(double* val, uint64 amplitude)
-{
-  double maxBound = (double)amplitude;
-  double minBound = -maxBound;
-  if (*val > maxBound) {
-    *val -= 2 * (*val - maxBound);
-  } else if (*val < minBound) {
-    *val += 2 * (minBound - *val);
-  }
-}
-
 static int64
-dotProd(int64 a[4], double b[4], uint64 amplitude)
+knockBack(int64 val, uint64 amplitude)
 {
-  double val = a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
-  knockBack(&val, amplitude);
+  int64 maxBound = (int64)amplitude;
+  int64 minBound = -maxBound;
+  if (val > maxBound) {
+    val -= 2 * (val - maxBound);
+  } else if (val < minBound) {
+    val += 2 * (minBound - val);
+  }
 
-  return (int64)val;
+  return val;
 }
 
-// generates array containing same entries as before, but with additional points
-// to left and right of each point (except endpoints)
-// inputArr size n -> outputArr size 2*n-1
+// uses 4 points: a dot b
+// a[] is strided
 static void
-generateLargerNoisedArray(int64* inputArr, int n, uint64 amplitude, int64** outputArr)
+dotProd1d(int64* a, size_t stride, fixedPt b[4], uint64 amplitude, int64* result)
 {
-  int64* paddedInputArr = malloc((n+2) * sizeof(int64));
-  memcpy(paddedInputArr + 1, inputArr, n * sizeof(int64));
-  paddedInputArr[0] = 0;
-  paddedInputArr[n+2 - 1] = 0;
-
-  double f = sqrt(256. / n);
-  double* weights = malloc(4 * sizeof(double));
+  fixedPt acc = {0, 0};
 
   int i;
-  int outputLen = 2*n - 1;
-  for (i = 0; i+1 < outputLen; i+=2) {
-    // copy same point from input
-    (*outputArr)[i] = inputArr[i/2];
+  for (i = 0; i < 4; i++) {
+    fixedPt val = {a[i*stride], 0};
 
-    // compute new noisy point
-    computeWeights(f, weights);
-    (*outputArr)[i+1] = dotProd(paddedInputArr + i/2, weights, amplitude);
+    multiply(&val, &(b[i]), &val);
+    add(&acc, &val, &acc);
   }
 
-  // copy final point from input
-  (*outputArr)[outputLen-1] = inputArr[(outputLen-1)/2];
+  roundFixedPt(&acc, result);
+}
+
+// uses 4x4 points: a dot b
+// a[] is strided: strideI < strideJ
+static void
+dotProd2d(int64* a, size_t strideI, size_t strideJ, fixedPt b[16], uint64 amplitude, int64* result)
+{
+  fixedPt acc = {0, 0};
+
+  int i, j;
+  for (j = 0; j < 4; j++) {
+    for (i = 0; i < 4; i++) {
+      int aOffset = j*strideJ + i*strideI;
+      fixedPt val = {a[aOffset], 0};
+
+      multiply(&val, &(b[j*4 + i]), &val);
+      add(&acc, &val, &acc);
+    }
+  }
+
+  roundFixedPt(&acc, result);
+}
+
+// uses 4x4x4 points: a dot b
+// a[] is strided: strideI < strideJ < strideK
+static void
+dotProd3d(int64* a, size_t strideI, size_t strideJ, size_t strideK, fixedPt b[64], uint64 amplitude, int64* result)
+{
+  fixedPt acc = {0, 0};
+
+  int i, j, k;
+  for (k = 0; k < 4; k++) {
+    for (j = 0; j < 4; j++) {
+      for (i = 0; i < 4; i++) {
+        int aOffset = k*strideK + j*strideJ + i*strideI;
+        fixedPt val = {a[aOffset], 0};
+
+        multiply(&val, &(b[k*16 + j*4 + i]), &val);
+        add(&acc, &val, &acc);
+      }
+    }
+  }
+
+  roundFixedPt(&acc, result);
+}
+
+// uses 4 points
+static void
+edgeWeightedSum(int64* data, size_t stride, fixedPt* f, uint64 amplitude, int64* result)
+{
+  fixedPt weights[4];
+  generateWeights(f, weights);
+
+  int64 val;
+  dotProd1d(data, stride, weights, amplitude, &val);
+
+  *result = knockBack(val, amplitude);
+}
+
+// uses 4x4 points
+static void
+faceWeightedSum(int64* data, size_t strideI, size_t strideJ, fixedPt* f, uint64 amplitude, int64* result)
+{
+  fixedPt* weights;
+  generateGridWeights(f, &weights);
+
+  int64 val;
+  dotProd2d(data, strideI, strideJ, weights, amplitude, &val);
+  free(weights);
+
+  *result = knockBack(val, amplitude);
+}
+
+// uses 4x4x4 points
+static void
+cubeWeightedSum(int64* data, size_t strideI, size_t strideJ, size_t strideK, fixedPt* f, uint64 amplitude, int64* result)
+{
+  fixedPt* weights;
+  generateCubeWeights(f, &weights);
+
+  int64 val;
+  dotProd3d(data, strideI, strideJ, strideK, weights, amplitude, &val);
+  free(weights);
+
+  *result = knockBack(val, amplitude);
+}
+
+// resulting array: [0 (inputArr) 0]
+// size n -> (n+2)
+static void
+createPadded1dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
+{
+  memcpy(paddedArr + 1, inputArr, inputSideLen * sizeof(int64));
+
+  paddedArr[0] = 0;
+  paddedArr[inputSideLen + 1] = 0;
+}
+
+// resulting array's outermost rows and columns are zero
+// size m*n -> (m+2)*(n+2)
+static void
+createPadded2dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
+{
+  int paddedSideLen = inputSideLen + 2;
+
+  int i, j;
+  for (j = 0; j < paddedSideLen; j++) {
+    for (i = 0; i < paddedSideLen; i++) {
+      int64 val;
+      if (j == 0 || j == (paddedSideLen-1)
+          || i == 0 || i == (paddedSideLen-1)) {
+        val = 0;
+      } else {
+        int inputIndex = (j-1)*inputSideLen + (i-1);
+        val = inputArr[inputIndex];
+      }
+
+      int paddedIndex = j*paddedSideLen + i;
+      paddedArr[paddedIndex] = val;
+    }
+  }
+}
+
+// resulting array's outermost entries are zero
+// size m*n*p -> (m+2)*(n+2)*(p+2)
+static void
+createPadded3dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
+{
+  int paddedSideLen = inputSideLen + 2;
+
+  int i, j, k;
+  for (k = 0; k < paddedSideLen; k++) {
+    for (j = 0; j < paddedSideLen; j++) {
+      for (i = 0; i < paddedSideLen; i++) {
+        int64 val;
+        if (k == 0 || k == (paddedSideLen-1)
+            || j == 0 || j == (paddedSideLen-1)
+            || i == 0 || i == (paddedSideLen-1)) {
+          val = 0;
+        } else {
+          int inputIndex = (k-1)*inputSideLen*inputSideLen + (j-1)*inputSideLen + (i-1);
+          val = inputArr[inputIndex];
+        }
+
+        int paddedIndex = k*paddedSideLen*paddedSideLen + j*paddedSideLen + i;
+        paddedArr[paddedIndex] = val;
+      }
+    }
+  }
+}
+
+// Generate a larger array containing all the original array's points
+// plus entries in between adjacent points from the original array
+// 
+// These new entries are computed as weighted sums from
+// its local neighborhood , plus some random noise
+static void
+produceLargerNoisedArray(int64* inputArr, int inputSideLen, int numDims, uint64 amplitude, fixedPt* f, int64* outputArr)
+{
+  // pad (border/enclose) inputArr with zeros
+  int paddedSideLen = inputSideLen + 2;
+  int paddedTotalLen = intPow(paddedSideLen, numDims);
+  int64* paddedInputArr = malloc(paddedTotalLen * sizeof(int64));
+
+  int outputSideLen = 2*inputSideLen - 1;
+  int maxI = outputSideLen, maxJ = 1, maxK = 1;
+  switch (numDims) {
+    case 1:
+      createPadded1dArray(inputArr, inputSideLen, paddedInputArr);
+      break;
+
+    case 2:
+      createPadded2dArray(inputArr, inputSideLen, paddedInputArr);
+      maxJ = outputSideLen;
+      break;
+
+    case 3:
+      createPadded3dArray(inputArr, inputSideLen, paddedInputArr);
+      maxJ = outputSideLen;
+      maxK = outputSideLen;
+      break;
+  }
+
+  int outI, outJ, outK;
+  for (outK = 0; outK < maxK; outK++) {
+    int inK = outK / 2;
+
+    for (outJ = 0; outJ < maxJ; outJ++) {
+      int inJ = outJ / 2;
+
+      for (outI = 0; outI < maxI; outI++) {
+        int inI = outI / 2;
+
+        int64* firstElementPtr = paddedInputArr;
+        size_t stride;
+        int64 val;
+        if (outK % 2 == 0) {
+          if (outJ % 2 == 0) {
+            if (outI % 2 == 0) {
+              // vertex
+              int inputIndex = computeOffset(inK, inJ, inI, inputSideLen, numDims);
+
+              val = inputArr[inputIndex];
+            } else {
+              // edge centered point (i-direction)
+              firstElementPtr += computeOffset(inK+1, inJ+1, inI, paddedSideLen, numDims);
+
+              edgeWeightedSum(firstElementPtr, 1, f, amplitude, &val);
+            }
+
+          } else {
+            if (outI % 2 == 0) {
+              // edge centered point (j-direction)
+              firstElementPtr += computeOffset(inK+1, inJ, inI+1, paddedSideLen, numDims);
+              stride = paddedSideLen;
+
+              edgeWeightedSum(firstElementPtr, stride, f, amplitude, &val);
+            } else {
+              // face centered point (ij plane)
+              firstElementPtr += computeOffset(inK+1, inJ, inI, paddedSideLen, numDims);
+              size_t secondStride = paddedSideLen;
+
+              faceWeightedSum(firstElementPtr, 1, secondStride, f, amplitude, &val);
+            }
+          }
+        } else {
+          if (outJ % 2 == 0) {
+            if (outI % 2 == 0) {
+              // edge centered point (k-direction)
+              firstElementPtr += computeOffset(inK, inJ+1, inI+1, paddedSideLen, numDims);
+              stride = paddedSideLen * paddedSideLen;
+
+              edgeWeightedSum(firstElementPtr, stride, f, amplitude, &val);
+            } else {
+              // face centered point (ik plane)
+              firstElementPtr += computeOffset(inK, inJ+1, inI, paddedSideLen, numDims);
+              size_t secondStride = paddedSideLen * paddedSideLen;
+
+              faceWeightedSum(firstElementPtr, 1, secondStride, f, amplitude, &val);
+            }
+
+          } else {
+            if (outI % 2 == 0) {
+              // face centered point (jk plane)
+              firstElementPtr += computeOffset(inK, inJ, inI+1, paddedSideLen, numDims);
+              stride = paddedSideLen;
+              size_t secondStride = paddedSideLen * paddedSideLen;
+
+              faceWeightedSum(firstElementPtr, stride, secondStride, f, amplitude, &val);
+            } else {
+              // cube centered point
+              firstElementPtr += computeOffset(inK, inJ, inI, paddedSideLen, numDims);
+              size_t secondStride = paddedSideLen;
+              size_t thirdStride = paddedSideLen * paddedSideLen;
+
+              cubeWeightedSum(firstElementPtr, 1, secondStride, thirdStride, f, amplitude, &val);
+            }
+          }
+
+        }
+
+        int outputIndex = computeOffset(outK, outJ, outI, outputSideLen, numDims);
+        outputArr[outputIndex] = val;
+
+      }
+    }
+
+  }
 
   free(paddedInputArr);
-  free(weights);
+}
+
+// if vals are outside [-amplitude, amplitude], then set them to the boundary value
+// *this function should do nothing*
+static void
+clampValsIntoRange(int64* arr, int n, uint64 amplitude)
+{
+  int64 maxBound = (int64)amplitude;
+  int64 minBound = -maxBound;
+  int i;
+  for (i = 0; i < n; i++) {
+    if (arr[i] < minBound) {
+      arr[i] = minBound;
+    } else if (arr[i] > maxBound) {
+      arr[i] = maxBound;
+    }
+  }
+}
+
+static void
+copyArraySubset(int64* inputArr, int inputSideLen, int numDims, int64* outputArr, int outputSideLen)
+{
+  int i, j, k;
+  switch(numDims) {
+    case 1:
+      memcpy(outputArr, inputArr, outputSideLen * sizeof(int64));
+      break;
+
+    case 2:
+      for (j = 0; j < outputSideLen; j++) {
+        for (i = 0; i < outputSideLen; i++) {
+          outputArr[j*outputSideLen + i] = inputArr[j*inputSideLen + i];
+        }
+      }
+
+      break;
+
+    case 3:
+      for (k = 0; k < outputSideLen; k++) {
+        for (j = 0; j < outputSideLen; j++) {
+          for (i = 0; i < outputSideLen; i++) {
+            int outputIndex = k*outputSideLen*outputSideLen + j*outputSideLen + i;
+            int inputIndex = k*inputSideLen*inputSideLen + j*inputSideLen + i;
+            outputArr[outputIndex] = inputArr[inputIndex];
+          }
+        }
+      }
+
+      break;
+  }
 }
 
 // this will destroy (free) inputArr
 static void
-generateNRandInts(int64* inputArr, int inputLen, int64* outputArr, int outputLen, uint64 amplitude)
+generateNRandInts(int64* inputArr, int numDims, int inputSideLen, int64* outputArr, int outputSideLen, uint64 amplitude)
 {
+  // parameters used for random noise
+  fixedPt f = {7, 0};
+  fixedPt scaleFVal = {0, 0xaaaaaaaa};
+
   int64* currArr = inputArr;
-  int currLen = inputLen;
+  int currSideLen = inputSideLen;
 
   int64* nextArr;
-  int nextLen;
+  int nextSideLen, nextTotalLen;
 
-  // repeatedly generate larger arrays until have enough points
-  while(currLen < outputLen) {
-    nextLen = 2*currLen - 1;
-    nextArr = malloc(nextLen * sizeof(int64));
+  while(currSideLen < outputSideLen) {
+    nextSideLen = 2*currSideLen - 1;
+    nextTotalLen = intPow(nextSideLen, numDims);
 
-    generateLargerNoisedArray(currArr, currLen, amplitude, &nextArr);
+    nextArr = malloc(nextTotalLen * sizeof(int64));
+
+    produceLargerNoisedArray(currArr, currSideLen, numDims, amplitude, &f, nextArr);
 
     free(currArr);
     currArr = nextArr;
-    currLen = nextLen;
+    currSideLen = nextSideLen;
+
+    // reduce random noise multiplier
+    multiply(&f, &scaleFVal, &f);
   }
 
-  // copy first <outputLen> vals into outputArr
-  memcpy(outputArr, nextArr, outputLen * sizeof(int64));
+  // for safety (expected nop)
+  clampValsIntoRange(nextArr, nextTotalLen, amplitude);
+
+  copyArraySubset(nextArr, nextSideLen, numDims, outputArr, outputSideLen);
   free(nextArr);
 }
 
 static void
-cast64ArrayTo32(int64* arr64, int arrLen, int32* arr32) {
+cast64ArrayTo32(int64* inputArr, int arrLen, int32* outputArr)
+{
   int i;
   for (i = 0; i < arrLen; i++) {
-    arr32[i] = (int32)arr64[i];
+    outputArr[i] = (int32)inputArr[i];
+  }
+}
+
+// generate array that will be initially fed into generateNRandInts()
+static void
+generateInitialArray(int64* initialVec, int initialVecLen, int numDims, uint64 amplitude, int64** outputArrPtr)
+{
+  int totalLen = computeTensorProduct(initialVec, initialVecLen, numDims, outputArrPtr);
+
+  // compute signed amplitudes
+  int64 positiveAmp = (int64)amplitude;
+  int64 negativeAmp = -positiveAmp;
+
+  // set non-zero values to signed amplitude
+  int i;
+  for (i = 0; i < totalLen; i++) {
+    if ((*outputArrPtr)[i] > 0) {
+      (*outputArrPtr)[i] = positiveAmp;
+    } else if ((*outputArrPtr)[i] < 0) {
+      (*outputArrPtr)[i] = negativeAmp;
+    }
   }
 }
 
 // generate randomly correlated integers in range:
-// [-(2^30 - 1), 2^30 - 1] for 32 bit
-// [-(2^62 - 1), 2^62 - 1] for 64 bit
+// [-(2^amplitudeExp - 1), 2^amplitudeExp - 1] (64 bit)
 void
-generateSmoothRandInts(Int* outputArr, int outputLen)
+generateSmoothRandInts64(int64* outputArr, int outputSideLen, int numDims, int amplitudeExp)
 {
-  int is32Bit = sizeof(outputArr[0]) == sizeof(int32);
+  int outputLen = intPow(outputSideLen, numDims);
 
-  int amplitudeExp;
-  int64* randArr64;
-  if (is32Bit) {
-    amplitudeExp = 30;
-    randArr64 = malloc(outputLen * sizeof(int64));
-  } else {
-    amplitudeExp = 62;
-    randArr64 = (int64*)outputArr;
-  }
   uint64 amplitude = ((uint64)1 << amplitudeExp) - 1;
 
-  // initial datapoints (shape)
-  int initialLen = 5;
-  int64* initialDataptsArr = malloc(initialLen * sizeof(int64));
-  initialDataptsArr[0] = 0;
-  initialDataptsArr[1] = (int64)amplitude;
-  initialDataptsArr[2] = 0;
-  initialDataptsArr[3] = -initialDataptsArr[1];
-  initialDataptsArr[4] = 0;
+  // initial vector for tensor product (will be scaled to amplitude)
+  int initialSideLen = 5;
+  int64* initialVec = malloc(initialSideLen * sizeof(int64));
+  initialVec[0] = 0;
+  initialVec[1] = 1;
+  initialVec[2] = 0;
+  initialVec[3] = -1;
+  initialVec[4] = 0;
 
-  // initialDataptsArr free'd inside function
-  generateNRandInts(initialDataptsArr, initialLen, randArr64, outputLen, amplitude);
+  // initial array (tensor product of initial vector, also scaled to amplitude)
+  int64* inputArr;
+  generateInitialArray(initialVec, initialSideLen, numDims, amplitude, &inputArr);
+  free(initialVec);
 
-  if (is32Bit) {
-    cast64ArrayTo32(randArr64, outputLen, (int32*)outputArr);
-    free(randArr64);
-  }
+  resetRandGen();
+
+  // generate data (always done with int64)
+  // inputArr is free'd inside function
+  generateNRandInts(inputArr, numDims, initialSideLen, outputArr, outputSideLen, amplitude);
+}
+
+// generate randomly correlated integers in range:
+// [-(2^amplitudeExp - 1), 2^amplitudeExp - 1] (32 bit)
+void
+generateSmoothRandInts32(int32* outputArr32, int outputSideLen, int numDims, int amplitudeExp)
+{
+  int outputLen = intPow(outputSideLen, numDims);
+  int64* randArr64 = malloc(outputLen * sizeof(int64));
+
+  generateSmoothRandInts64(randArr64, outputSideLen, numDims, amplitudeExp);
+
+  cast64ArrayTo32(randArr64, outputLen, outputArr32);
+  free(randArr64);
 }

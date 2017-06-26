@@ -31,9 +31,9 @@ nextSignedRand()
   return (int64)nextUnsignedRand() - (int64)uDisplace;
 }
 
-// domain [0, 1]
-static double
-nextRandDouble()
+// returns integer [0, 2^32 - 1]
+static uint32
+nextRand32()
 {
-  return ((double)nextUnsignedRand()) / MAX_RAND_63;
+  return (uint32)(nextUnsignedRand() >> 31);
 }
