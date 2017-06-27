@@ -2,7 +2,7 @@
 
 #include "constants/3dInt64.h"
 #include "utils/testMacros.h"
-#include "utils/genSmoothRandInts.h"
+#include "utils/genSmoothRandNums.h"
 #include "utils/hash64.c"
 #include "zfpEndtoendBase.c"
 

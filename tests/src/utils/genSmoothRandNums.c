@@ -1,8 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "fixedpoint96.h"
 #include "include/zfp/types.h"
 #include "rand64.c"
+
+#define FLOAT_MANTISSA_BITS 23
+#define DOUBLE_MANTISSA_BITS 52
 
 static int
 intPow(int base, int exponent)
@@ -576,6 +580,24 @@ cast64ArrayTo32(int64* inputArr, int arrLen, int32* outputArr)
   }
 }
 
+static void
+convertIntArrToFloatArr(int64* inputArr, int arrLen, float* outputArr)
+{
+  int i;
+  for (i = 0; i < arrLen; i++) {
+    outputArr[i] = ldexpf((float)inputArr[i], -12);
+  }
+}
+
+static void
+convertIntArrToDoubleArr(int64* inputArr, int arrLen, double* outputArr)
+{
+  int i;
+  for (i = 0; i < arrLen; i++) {
+    outputArr[i] = ldexp((double)inputArr[i], -26);
+  }
+}
+
 // generate array that will be initially fed into generateNRandInts()
 static void
 generateInitialArray(int64* initialVec, int initialVecLen, int numDims, uint64 amplitude, int64** outputArrPtr)
@@ -639,4 +661,32 @@ generateSmoothRandInts32(int32* outputArr32, int outputSideLen, int numDims, int
 
   cast64ArrayTo32(randArr64, outputLen, outputArr32);
   free(randArr64);
+}
+
+// generate randomly correlated floats in range:
+// [-(2^11), 2^11 - 2^(-12)]
+void
+generateSmoothRandFloats(float* outputArr, int outputSideLen, int numDims)
+{
+  int outputLen = intPow(outputSideLen, numDims);
+  int64* intArr = malloc(outputLen * sizeof(int64));
+
+  generateSmoothRandInts64(intArr, outputSideLen, numDims, FLOAT_MANTISSA_BITS);
+
+  convertIntArrToFloatArr(intArr, outputLen, outputArr);
+  free(intArr);
+}
+
+// generate randomly correlated doubles in range:
+// [-(2^26), 2^26 - 2^(-26)]
+void
+generateSmoothRandDoubles(double* outputArr, int outputSideLen, int numDims)
+{
+  int outputLen = intPow(outputSideLen, numDims);
+  int64* intArr = malloc(outputLen * sizeof(int64));
+
+  generateSmoothRandInts64(intArr, outputSideLen, numDims, DOUBLE_MANTISSA_BITS);
+
+  convertIntArrToDoubleArr(intArr, outputLen, outputArr);
+  free(intArr);
 }

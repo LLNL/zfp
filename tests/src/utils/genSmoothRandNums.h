@@ -11,4 +11,10 @@ generateSmoothRandInts64(int64* outputArr, int outputSideLen, int numDims, int a
 void
 generateSmoothRandInts32(int32* outputArr, int outputSideLen, int numDims, int amplitudeExp);
 
+void
+generateSmoothRandFloats(float* outputArr, int outputSideLen, int numDims);
+
+void
+generateSmoothRandDoubles(double* outputArr, int outputSideLen, int numDims);
+
 #endif
