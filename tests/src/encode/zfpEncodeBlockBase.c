@@ -24,10 +24,14 @@ setup(void **state)
 
   int i;
   for (i = 0; i < BLOCK_SIZE; i++) {
-    bundle->dataArr[i] = nextSignedRand();
+    if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
+      bundle->dataArr[i] = nextSignedRandInt();
+    } else {
+      bundle->dataArr[i] = nextSignedRandFlPt();
+    }
   }
 
-  zfp_type type = ZFP_TYPE_INT;
+  zfp_type type = ZFP_TYPE;
   zfp_field* field;
   switch(DIMS) {
     case 1:

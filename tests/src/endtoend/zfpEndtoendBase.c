@@ -31,16 +31,32 @@ setupChosenZfpMode(void **state)
   assert_non_null(bundle->dataArr);
 
   int dataSideLen = (DIMS == 3) ? 100 : (DIMS == 2) ? 1000 : 1000000;
-  if (sizeof(Scalar) == sizeof(int32)) {
-    generateSmoothRandInts32((int32*)bundle->dataArr, dataSideLen, DIMS, 32 - 2);
-  } else {
-    generateSmoothRandInts64((int64*)bundle->dataArr, dataSideLen, DIMS, 64 - 2);
+  switch (ZFP_TYPE) {
+    case zfp_type_int32:
+      generateSmoothRandInts32((int32*)bundle->dataArr, dataSideLen, DIMS, 32 - 2);
+      break;
+
+    case zfp_type_int64:
+      generateSmoothRandInts64((int64*)bundle->dataArr, dataSideLen, DIMS, 64 - 2);
+      break;
+
+    case zfp_type_float:
+      fail_msg("zfp_type_float not yet implemented");
+      break;
+
+    case zfp_type_double:
+      fail_msg("zfp_type_double not yet implemented");
+      break;
+
+    default:
+      fail_msg("Invalid zfp_type during setupChosenZfpMode()");
+      break;
   }
 
   bundle->decompressedArr = malloc(sizeof(Scalar) * DATA_LEN);
   assert_non_null(bundle->decompressedArr);
 
-  zfp_type type = ZFP_TYPE_INT;
+  zfp_type type = ZFP_TYPE;
   zfp_field* field;
   zfp_field* decompressField;
   switch(DIMS) {

@@ -38,7 +38,11 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
         if (i % SX) {
           (*dataArrPtr)[i] = dummyVal;
         } else {
-          (*dataArrPtr)[i] = nextSignedRand();
+          if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
+            (*dataArrPtr)[i] = nextSignedRandInt();
+          } else {
+            (*dataArrPtr)[i] = nextSignedRandFlPt();
+          }
         }
       }
 
@@ -55,7 +59,11 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
           if (i % (countX/4) || j % (countY/4)) {
             (*dataArrPtr)[countX*j + i] = dummyVal;
           } else {
-            (*dataArrPtr)[countX*j + i] = nextSignedRand();
+            if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
+              (*dataArrPtr)[countX*j + i] = nextSignedRandInt();
+            } else {
+              (*dataArrPtr)[countX*j + i] = nextSignedRandFlPt();
+            }
           }
         }
       }
@@ -75,7 +83,11 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
             if (i % (countX/4) || j % (countY/4) || k % (countZ/4)) {
               (*dataArrPtr)[countX*countY*k + countX*j + i] = dummyVal;
             } else {
-              (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRand();
+              if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
+                (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandInt();
+              } else {
+                (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandFlPt();
+              }
             }
           }
         }
@@ -95,7 +107,7 @@ setup(void **state)
   resetRandGen();
   initializeStridedArray(&bundle->dataArr, DUMMY_VAL);
 
-  zfp_type type = ZFP_TYPE_INT;
+  zfp_type type = ZFP_TYPE;
   zfp_field* field;
   switch(DIMS) {
     case 1:

@@ -1,4 +1,4 @@
-#define ZFP_TYPE_INT zfp_type_int64
+#define ZFP_TYPE zfp_type_int64
 #define DIM_INT_STR 2dInt64
 #define ZFP_RATE_PARAM_BITS 19
 #define ZFP_PREC_PARAM_BITS 22
