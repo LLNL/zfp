@@ -15,14 +15,14 @@
 #define DUMMY_VAL 99
 
 struct setupVars {
-  Int* dataArr;
+  Scalar* dataArr;
   void* buffer;
   zfp_stream* stream;
 };
 
 // write random output to strided entries, dummyVal elsewhere
 void
-initializeStridedArray(Int** dataArrPtr, Int dummyVal)
+initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
 {
   int i, j, k, countX, countY, countZ;
   // absolute entry (i,j,k)
@@ -31,7 +31,7 @@ initializeStridedArray(Int** dataArrPtr, Int dummyVal)
   switch(DIMS) {
     case 1:
       countX = 4 * SX;
-      *dataArrPtr = malloc(sizeof(Int) * countX);
+      *dataArrPtr = malloc(sizeof(Scalar) * countX);
       assert_non_null(*dataArrPtr);
 
       for (i = 0; i < countX; i++) {
@@ -47,7 +47,7 @@ initializeStridedArray(Int** dataArrPtr, Int dummyVal)
     case 2:
       countX = 4 * SX;
       countY = SY / SX;
-      *dataArrPtr = malloc(sizeof(Int) * countX * countY);
+      *dataArrPtr = malloc(sizeof(Scalar) * countX * countY);
       assert_non_null(*dataArrPtr);
 
       for (j = 0; j < countY; j++) {
@@ -66,7 +66,7 @@ initializeStridedArray(Int** dataArrPtr, Int dummyVal)
       countX = 4 * SX;
       countY = SY / SX;
       countZ = SZ / SY;
-      *dataArrPtr = malloc(sizeof(Int) * countX * countY * countZ);
+      *dataArrPtr = malloc(sizeof(Scalar) * countX * countY * countZ);
       assert_non_null(*dataArrPtr);
 
       for (k = 0; k < countZ; k++) {
@@ -149,18 +149,18 @@ teardown(void **state)
 }
 
 uint
-encodeBlockStrided(zfp_stream* stream, Int* dataArr)
+encodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
 {
   uint numBitsWritten;
   switch (DIMS) {
     case 1:
-      numBitsWritten = _t2(zfp_encode_block_strided, Int, 1)(stream, dataArr, SX);
+      numBitsWritten = _t2(zfp_encode_block_strided, Scalar, 1)(stream, dataArr, SX);
       break;
     case 2:
-      numBitsWritten = _t2(zfp_encode_block_strided, Int, 2)(stream, dataArr, SX, SY);
+      numBitsWritten = _t2(zfp_encode_block_strided, Scalar, 2)(stream, dataArr, SX, SY);
       break;
     case 3:
-      numBitsWritten = _t2(zfp_encode_block_strided, Int, 3)(stream, dataArr, SX, SY, SZ);
+      numBitsWritten = _t2(zfp_encode_block_strided, Scalar, 3)(stream, dataArr, SX, SY, SZ);
       break;
   }
 
@@ -168,18 +168,18 @@ encodeBlockStrided(zfp_stream* stream, Int* dataArr)
 }
 
 uint
-encodePartialBlockStrided(zfp_stream* stream, Int* dataArr)
+encodePartialBlockStrided(zfp_stream* stream, Scalar* dataArr)
 {
   uint numBitsWritten;
   switch (DIMS) {
     case 1:
-      numBitsWritten = _t2(zfp_encode_partial_block_strided, Int, 1)(stream, dataArr, PX, SX);
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Scalar, 1)(stream, dataArr, PX, SX);
       break;
     case 2:
-      numBitsWritten = _t2(zfp_encode_partial_block_strided, Int, 2)(stream, dataArr, PX, PY, SX, SY);
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Scalar, 2)(stream, dataArr, PX, PY, SX, SY);
       break;
     case 3:
-      numBitsWritten = _t2(zfp_encode_partial_block_strided, Int, 3)(stream, dataArr, PX, PY, PZ, SX, SY, SZ);
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Scalar, 3)(stream, dataArr, PX, PY, PZ, SX, SY, SZ);
       break;
   }
 

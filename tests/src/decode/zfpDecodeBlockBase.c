@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 struct setupVars {
-  Int* dataArr;
+  Scalar* dataArr;
   void* buffer;
   zfp_stream* stream;
 };
@@ -19,7 +19,7 @@ setup(void **state)
 
   resetRandGen();
 
-  bundle->dataArr = malloc(sizeof(Int) * BLOCK_SIZE);
+  bundle->dataArr = malloc(sizeof(Scalar) * BLOCK_SIZE);
   assert_non_null(bundle->dataArr);
 
   int i;
@@ -91,11 +91,11 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ReturnValReflectsNu
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  _t2(zfp_encode_block, Int, DIMS)(stream, bundle->dataArr);
+  _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
   zfp_stream_flush(stream);
   zfp_stream_rewind(stream);
 
-  uint returnValBits = _t2(zfp_decode_block, Int, DIMS)(stream, bundle->dataArr);
+  uint returnValBits = _t2(zfp_decode_block, Scalar, DIMS)(stream, bundle->dataArr);
 
   assert_int_equal(returnValBits, stream_rtell(s));
 }
@@ -107,13 +107,13 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatche
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  _t2(zfp_encode_block, Int, DIMS)(stream, bundle->dataArr);
+  _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
   zfp_stream_flush(stream);
   zfp_stream_rewind(stream);
 
-  Int* decodedDataArr = calloc(BLOCK_SIZE, sizeof(Int));
+  Scalar* decodedDataArr = calloc(BLOCK_SIZE, sizeof(Scalar));
   assert_non_null(decodedDataArr);
-  _t2(zfp_decode_block, Int, DIMS)(stream, decodedDataArr);
+  _t2(zfp_decode_block, Scalar, DIMS)(stream, decodedDataArr);
 
   UInt checksum = hashSignedArray(decodedDataArr, BLOCK_SIZE, 1);
   free(decodedDataArr);

@@ -14,8 +14,8 @@ typedef enum {
 
 struct setupVars {
   zfp_mode zfpMode;
-  Int* dataArr;
-  Int* decompressedArr;
+  Scalar* dataArr;
+  Scalar* decompressedArr;
   void* buffer;
   zfp_field* field;
   zfp_field* decompressField;
@@ -27,17 +27,17 @@ setupChosenZfpMode(void **state)
 {
   struct setupVars *bundle = *state;
 
-  bundle->dataArr = malloc(sizeof(Int) * DATA_LEN);
+  bundle->dataArr = malloc(sizeof(Scalar) * DATA_LEN);
   assert_non_null(bundle->dataArr);
 
   int dataSideLen = (DIMS == 3) ? 100 : (DIMS == 2) ? 1000 : 1000000;
-  if (sizeof(Int) == sizeof(int32)) {
+  if (sizeof(Scalar) == sizeof(int32)) {
     generateSmoothRandInts32((int32*)bundle->dataArr, dataSideLen, DIMS, 32 - 2);
   } else {
     generateSmoothRandInts64((int64*)bundle->dataArr, dataSideLen, DIMS, 64 - 2);
   }
 
-  bundle->decompressedArr = malloc(sizeof(Int) * DATA_LEN);
+  bundle->decompressedArr = malloc(sizeof(Scalar) * DATA_LEN);
   assert_non_null(bundle->decompressedArr);
 
   zfp_type type = ZFP_TYPE_INT;

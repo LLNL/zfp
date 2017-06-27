@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 struct setupVars {
-  Int* dataArr;
+  Scalar* dataArr;
   void* buffer;
   zfp_stream* stream;
 };
@@ -19,7 +19,7 @@ setup(void **state)
 
   resetRandGen();
 
-  bundle->dataArr = malloc(sizeof(Int) * BLOCK_SIZE);
+  bundle->dataArr = malloc(sizeof(Scalar) * BLOCK_SIZE);
   assert_non_null(bundle);
 
   int i;
@@ -91,7 +91,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlock_expect_ReturnValReflectsNu
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  uint returnValBits = _t2(zfp_encode_block, Int, DIMS)(stream, bundle->dataArr);
+  uint returnValBits = _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
   // do not flush, otherwise extra zeros included in count
 
   assert_int_equal(returnValBits, stream_wtell(s));
@@ -104,7 +104,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlock_expect_BitstreamChecksumMa
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  _t2(zfp_encode_block, Int, DIMS)(stream, bundle->dataArr);
+  _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
   zfp_stream_flush(stream);
 
   UInt checksum = hashBitstream(stream_data(s), stream_size(s));
