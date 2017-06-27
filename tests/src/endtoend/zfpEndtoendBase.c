@@ -154,7 +154,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompress_expect_BitstreamChecksumMa
 
   zfp_compress(stream, field);
 
-  UInt checksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
   switch (bundle->zfpMode) {
     case FIXED_PRECISION:
       assert_int_equal(checksum, CHECKSUM_FP_COMPRESSED_BITSTREAM);

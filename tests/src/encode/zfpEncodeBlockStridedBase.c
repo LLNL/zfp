@@ -230,7 +230,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_OnlyStridedE
   // encode original block
   encodeBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
-  UInt originalChecksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 originalChecksum = hashBitstream(stream_data(s), stream_size(s));
 
   // zero bitstream's memory
   uint writtenBits = stream_wtell(s);
@@ -246,7 +246,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_OnlyStridedE
   // encode new block
   encodeBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
-  UInt newChecksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 newChecksum = hashBitstream(stream_data(s), stream_size(s));
 
   assert_int_equal(newChecksum, originalChecksum);
 }
@@ -261,7 +261,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_BitstreamChe
   encodeBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
 
-  UInt checksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
   assert_int_equal(checksum, CHECKSUM_ENCODED_BLOCK);
 }
 
@@ -288,7 +288,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyS
   // encode original block
   encodePartialBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
-  UInt originalChecksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 originalChecksum = hashBitstream(stream_data(s), stream_size(s));
 
   // zero bitstream's memory
   uint writtenBits = stream_wtell(s);
@@ -304,7 +304,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyS
   // encode new block
   encodePartialBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
-  UInt newChecksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 newChecksum = hashBitstream(stream_data(s), stream_size(s));
 
   assert_int_equal(newChecksum, originalChecksum);
 }
@@ -319,7 +319,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyE
   // encode original block
   encodePartialBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
-  UInt originalChecksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 originalChecksum = hashBitstream(stream_data(s), stream_size(s));
 
   // zero bitstream's memory
   uint writtenBits = stream_wtell(s);
@@ -363,7 +363,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyE
   // encode new block
   encodePartialBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
-  UInt newChecksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 newChecksum = hashBitstream(stream_data(s), stream_size(s));
 
   assert_int_equal(newChecksum, originalChecksum);
 }
@@ -378,6 +378,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_Bitst
   encodePartialBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
 
-  UInt checksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
   assert_int_equal(checksum, CHECKSUM_ENCODED_PARTIAL_BLOCK);
 }

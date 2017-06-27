@@ -107,6 +107,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlock_expect_BitstreamChecksumMa
   _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
   zfp_stream_flush(stream);
 
-  UInt checksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
   assert_int_equal(checksum, CHECKSUM_ENCODED_BLOCK);
 }

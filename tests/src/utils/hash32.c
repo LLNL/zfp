@@ -3,17 +3,6 @@
 #include "hashBase.c"
 
 static uint32
-hashUnsignedArray(const uint32* arr, int nx, int sx)
-{
-  uint32 h = 0;
-  const uint32* p;
-  for (p = arr; nx > 0; p += sx, nx--) {
-    hashValue(*p, &h);
-  }
-  return hashFinish(h);
-}
-
-static uint32
 hashSignedArray(const int32* arr, int nx, int sx)
 {
   uint32 h = 0;
@@ -55,11 +44,4 @@ hash3dStridedBlock(const int32* arr, int sx, int sy, int sz)
     }
   }
   return hashFinish(h);
-}
-
-static uint32
-hashBitstream(void* ptrStart, size_t bufsizeBytes)
-{
-  int n = bufsizeBytes / sizeof(UInt);
-  return hashUnsignedArray(ptrStart, n, 1);
 }
