@@ -182,7 +182,7 @@ hashStridedArray(Scalar* dataArr)
   UInt checksum = 0;
   switch (DIMS) {
     case 1:
-      checksum = hashSignedArray(dataArr, BLOCK_SIZE, SX);
+      checksum = hashArray(dataArr, BLOCK_SIZE, SX);
       break;
     case 2:
       checksum = hash2dStridedBlock(dataArr, SX, SY);

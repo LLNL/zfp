@@ -2,12 +2,14 @@
 #include "include/zfp/types.h"
 #include "hashBase.c"
 
+// all functions are used to hash 32-bit valued arrays (int32, float)
+
 static uint32
-hashSignedArray(const int32* arr, int nx, int sx)
+hashArray(const void* arr, int nx, int sx)
 {
   uint32 h = 0;
   const int32* p;
-  for (p = arr; nx > 0; p += sx, nx--) {
+  for (p = (int32*)arr; nx > 0; p += sx, nx--) {
     uint32 val = (uint32)(*p);
     hashValue(val, &h);
   }
@@ -15,9 +17,9 @@ hashSignedArray(const int32* arr, int nx, int sx)
 }
 
 static uint32
-hash2dStridedBlock(const int32* arr, int sx, int sy)
+hash2dStridedBlock(const void* arr, int sx, int sy)
 {
-  const int32* p = arr;
+  const int32* p = (int32*)arr;
   uint32 h = 0;
   uint x, y;
   for (y = 0; y < 4; p += sy - 4*sx, y++) {
@@ -30,9 +32,9 @@ hash2dStridedBlock(const int32* arr, int sx, int sy)
 }
 
 static uint32
-hash3dStridedBlock(const int32* arr, int sx, int sy, int sz)
+hash3dStridedBlock(const void* arr, int sx, int sy, int sz)
 {
-  const int32* p = arr;
+  const int32* p = (int32*)arr;
   uint32 h = 0;
   uint x, y, z;
   for (z = 0; z < 4; p += sz - 4*sy, z++) {

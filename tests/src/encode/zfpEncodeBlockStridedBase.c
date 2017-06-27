@@ -206,7 +206,7 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
   UInt checksum;
   switch (DIMS) {
     case 1:
-      checksum = hashSignedArray(bundle->dataArr, BLOCK_SIZE, SX);
+      checksum = hashArray(bundle->dataArr, BLOCK_SIZE, SX);
       break;
     case 2:
       checksum = hash2dStridedBlock(bundle->dataArr, SX, SY);

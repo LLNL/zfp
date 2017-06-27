@@ -157,7 +157,7 @@ static void
 when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashSignedArray(bundle->dataArr, DATA_LEN, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
+  assert_int_equal(hashArray(bundle->dataArr, DATA_LEN, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
 }
 
 static void
@@ -199,7 +199,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompress_expect_ArrayChecksumMatc
   // zfp_decompress() will write to bundle->decompressedArr
   zfp_decompress(stream, bundle->decompressField);
 
-  UInt checksum = hashSignedArray(bundle->decompressedArr, DATA_LEN, 1);
+  UInt checksum = hashArray(bundle->decompressedArr, DATA_LEN, 1);
   switch (bundle->zfpMode) {
     case FIXED_PRECISION:
       assert_int_equal(checksum, CHECKSUM_FP_DECOMPRESSED_ARRAY);

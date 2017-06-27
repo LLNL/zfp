@@ -3,12 +3,12 @@
 #include "hashBase.c"
 
 static uint64
-hashSignedArray(const int64* arr, int nx, int sx)
+hashArray(const void* arr, int nx, int sx)
 {
   uint32 h1 = 0;
   uint32 h2 = 0;
   const int64* p;
-  for (p = arr; nx > 0; p+=sx, nx--) {
+  for (p = (int64*)arr; nx > 0; p+=sx, nx--) {
     hashValue64((uint64)(*p), &h1, &h2);
   }
   uint64 result1 = (uint64)hashFinish(h1);
@@ -18,9 +18,9 @@ hashSignedArray(const int64* arr, int nx, int sx)
 }
 
 static uint64
-hash2dStridedBlock(const int64* arr, int sx, int sy)
+hash2dStridedBlock(const void* arr, int sx, int sy)
 {
-  const int64* p = arr;
+  const int64* p = (int64*)arr;
   uint32 h1 = 0;
   uint32 h2 = 0;
   uint x, y;
@@ -36,9 +36,9 @@ hash2dStridedBlock(const int64* arr, int sx, int sy)
 }
 
 static uint64
-hash3dStridedBlock(const int64* arr, int sx, int sy, int sz)
+hash3dStridedBlock(const void* arr, int sx, int sy, int sz)
 {
-  const int64* p = arr;
+  const int64* p = (int64*)arr;
   uint32 h1 = 0;
   uint32 h2 = 0;
   uint x, y, z;
