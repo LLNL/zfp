@@ -9,7 +9,8 @@
 
 typedef enum {
   FIXED_PRECISION = 1,
-  FIXED_RATE = 2
+  FIXED_RATE = 2,
+  FIXED_ACCURACY = 3
 } zfp_mode;
 
 struct setupVars {
@@ -85,6 +86,14 @@ setupChosenZfpMode(void **state)
       zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
       break;
 
+    case FIXED_ACCURACY:
+      if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
+        fail_msg("Invalid zfp mode during setupChosenZfpMode()");
+      }
+
+      zfp_stream_set_accuracy(stream, ZFP_ACC_PARAM);
+      break;
+
     default:
       fail_msg("Invalid zfp mode during setupChosenZfpMode()");
       break;
@@ -130,6 +139,20 @@ setupFixedRate(void **state)
   assert_non_null(bundle);
 
   bundle->zfpMode = FIXED_RATE;
+  *state = bundle;
+
+  setupChosenZfpMode(state);
+
+  return 0;
+}
+
+static int
+setupFixedAccuracy(void **state)
+{
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  bundle->zfpMode = FIXED_ACCURACY;
   *state = bundle;
 
   setupChosenZfpMode(state);
@@ -197,6 +220,17 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamC
 }
 
 static void
+_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->zfpMode != FIXED_ACCURACY) {
+    fail_msg("Invalid zfp mode during test");
+  }
+
+  assertZfpCompressBitstreamChecksumMatches(state, CHECKSUM_FA_COMPRESSED_BITSTREAM);
+}
+
+static void
 assertZfpCompressDecompressChecksumMatches(void **state, UInt expectedChecksum)
 {
   struct setupVars *bundle = *state;
@@ -233,6 +267,17 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChe
   }
 
   assertZfpCompressDecompressChecksumMatches(state, CHECKSUM_FR_DECOMPRESSED_ARRAY);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->zfpMode != FIXED_ACCURACY) {
+    fail_msg("Invalid zfp mode during test");
+  }
+
+  assertZfpCompressDecompressChecksumMatches(state, CHECKSUM_FA_DECOMPRESSED_ARRAY);
 }
 
 static void
