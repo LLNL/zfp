@@ -41,11 +41,11 @@ setupChosenZfpMode(void **state)
       break;
 
     case zfp_type_float:
-      fail_msg("zfp_type_float not yet implemented");
+      generateSmoothRandFloats((float*)bundle->dataArr, dataSideLen, DIMS);
       break;
 
     case zfp_type_double:
-      fail_msg("zfp_type_double not yet implemented");
+      generateSmoothRandDoubles((double*)bundle->dataArr, dataSideLen, DIMS);
       break;
 
     default:

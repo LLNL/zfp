@@ -1,3 +1,4 @@
+# int
 add_executable(testZfpEndtoend1dInt32 testZfpEndtoend1dInt32.c ../utils/fixedpoint96.c ../utils/genSmoothRandNums.c)
 target_link_libraries(testZfpEndtoend1dInt32 cmocka zfp)
 add_test(NAME testZfpEndtoend1dInt32 COMMAND testZfpEndtoend1dInt32)
@@ -21,3 +22,28 @@ add_test(NAME testZfpEndtoend3dInt32 COMMAND testZfpEndtoend3dInt32)
 add_executable(testZfpEndtoend3dInt64 testZfpEndtoend3dInt64.c ../utils/fixedpoint96.c ../utils/genSmoothRandNums.c)
 target_link_libraries(testZfpEndtoend3dInt64 cmocka zfp)
 add_test(NAME testZfpEndtoend3dInt64 COMMAND testZfpEndtoend3dInt64)
+
+# floating point
+add_executable(testZfpEndtoend1dFloat testZfpEndtoend1dFloat.c ../utils/fixedpoint96.c ../utils/genSmoothRandNums.c)
+target_link_libraries(testZfpEndtoend1dFloat cmocka zfp)
+add_test(NAME testZfpEndtoend1dFloat COMMAND testZfpEndtoend1dFloat)
+
+add_executable(testZfpEndtoend1dDouble testZfpEndtoend1dDouble.c ../utils/fixedpoint96.c ../utils/genSmoothRandNums.c)
+target_link_libraries(testZfpEndtoend1dDouble cmocka zfp)
+add_test(NAME testZfpEndtoend1dDouble COMMAND testZfpEndtoend1dDouble)
+
+add_executable(testZfpEndtoend2dFloat testZfpEndtoend2dFloat.c ../utils/fixedpoint96.c ../utils/genSmoothRandNums.c)
+target_link_libraries(testZfpEndtoend2dFloat cmocka zfp)
+add_test(NAME testZfpEndtoend2dFloat COMMAND testZfpEndtoend2dFloat)
+
+add_executable(testZfpEndtoend2dDouble testZfpEndtoend2dDouble.c ../utils/fixedpoint96.c ../utils/genSmoothRandNums.c)
+target_link_libraries(testZfpEndtoend2dDouble cmocka zfp)
+add_test(NAME testZfpEndtoend2dDouble COMMAND testZfpEndtoend2dDouble)
+
+add_executable(testZfpEndtoend3dFloat testZfpEndtoend3dFloat.c ../utils/fixedpoint96.c ../utils/genSmoothRandNums.c)
+target_link_libraries(testZfpEndtoend3dFloat cmocka zfp)
+add_test(NAME testZfpEndtoend3dFloat COMMAND testZfpEndtoend3dFloat)
+
+add_executable(testZfpEndtoend3dDouble testZfpEndtoend3dDouble.c ../utils/fixedpoint96.c ../utils/genSmoothRandNums.c)
+target_link_libraries(testZfpEndtoend3dDouble cmocka zfp)
+add_test(NAME testZfpEndtoend3dDouble COMMAND testZfpEndtoend3dDouble)
