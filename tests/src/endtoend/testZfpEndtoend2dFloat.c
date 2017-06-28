@@ -17,6 +17,7 @@ int main()
     cmocka_unit_test_setup_teardown(given_2dFloatArray_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches, setupFixedAccuracy, teardown),
     cmocka_unit_test_setup_teardown(given_2dFloatArray_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches, setupFixedAccuracy, teardown),
     cmocka_unit_test_setup_teardown(given_2dFloatArray_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate, setupFixedRate, teardown),
+    cmocka_unit_test_setup_teardown(given_2dFloatArray_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy, setupFixedAccuracy, teardown),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

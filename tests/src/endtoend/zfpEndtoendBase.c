@@ -4,6 +4,7 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+#include <math.h>
 
 #define DATA_LEN 1000000
 
@@ -297,4 +298,44 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_Compressed
   float maxBitrate = ZFP_RATE_PARAM_BITS + RATE_TOL;
 
   assert_true(bitsPerValue <= maxBitrate);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->zfpMode != FIXED_ACCURACY) {
+    fail_msg("Test requires fixed accuracy mode");
+  }
+
+  zfp_field* field = bundle->field;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  zfp_compress(stream, field);
+  zfp_stream_rewind(stream);
+
+  // zfp_decompress() will write to bundle->decompressedArr
+  zfp_decompress(stream, bundle->decompressField);
+
+  int i;
+  for (i = 0; i < DATA_LEN; i++) {
+    float absDiffF;
+    double absDiffD;
+
+    switch(ZFP_TYPE) {
+      case zfp_type_float:
+        absDiffF = fabsf(bundle->decompressedArr[i] - bundle->dataArr[i]);
+        assert_true(absDiffF < ZFP_ACC_PARAM);
+        break;
+
+      case zfp_type_double:
+        absDiffD = fabs(bundle->decompressedArr[i] - bundle->dataArr[i]);
+	assert_true(absDiffD < ZFP_ACC_PARAM);
+	break;
+
+      default:
+        fail_msg("Test requires zfp_type float or double");
+    }
+  }
 }
