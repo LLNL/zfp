@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "include/zfp/types.h"
 #include "hashBase.c"
 
@@ -8,42 +9,48 @@ static uint32
 hashArray(const void* arr, int nx, int sx)
 {
   uint32 h = 0;
-  const int32* p;
-  for (p = (int32*)arr; nx > 0; p += sx, nx--) {
-    uint32 val = (uint32)(*p);
+
+  for (; nx > 0; arr += sx * sizeof(uint32), nx--) {
+    uint32 val;
+    memcpy(&val, arr, sizeof(uint32));
     hashValue(val, &h);
   }
+
   return hashFinish(h);
 }
 
 static uint32
 hash2dStridedBlock(const void* arr, int sx, int sy)
 {
-  const int32* p = (int32*)arr;
   uint32 h = 0;
+
   uint x, y;
-  for (y = 0; y < 4; p += sy - 4*sx, y++) {
-    for (x = 0; x < 4; p += sx, x++) {
-      uint32 val = (uint32)(*p);
+  for (y = 0; y < 4; arr += (sy - 4*sx) * sizeof(uint32), y++) {
+    for (x = 0; x < 4; arr += sx * sizeof(uint32), x++) {
+      uint32 val;
+      memcpy(&val, arr, sizeof(uint32));
       hashValue(val, &h);
     }
   }
+
   return hashFinish(h);
 }
 
 static uint32
 hash3dStridedBlock(const void* arr, int sx, int sy, int sz)
 {
-  const int32* p = (int32*)arr;
   uint32 h = 0;
+
   uint x, y, z;
-  for (z = 0; z < 4; p += sz - 4*sy, z++) {
-    for (y = 0; y < 4; p += sy - 4*sx, y++) {
-      for (x = 0; x < 4; p += sx, x++) {
-        uint32 val = (uint32)(*p);
+  for (z = 0; z < 4; arr += (sz - 4*sy) * sizeof(uint32), z++) {
+    for (y = 0; y < 4; arr += (sy - 4*sx) * sizeof(uint32), y++) {
+      for (x = 0; x < 4; arr += sx * sizeof(uint32), x++) {
+        uint32 val;
+        memcpy(&val, arr, sizeof(uint32));
         hashValue(val, &h);
       }
     }
   }
+
   return hashFinish(h);
 }

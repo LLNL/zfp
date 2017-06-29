@@ -1,3 +1,5 @@
+#include <string.h>
+
 // Jenkins one-at-a-time hash; see http://www.burtleburtle.net/bob/hash/doobs.html
 
 #define MASK_32 (0xffffffff)
@@ -33,15 +35,17 @@ hashValue64(uint64 val, uint32* h1, uint32* h2)
 static uint64
 hashBitstream(void* ptrStart, size_t bufsizeBytes)
 {
-  const uint64* arr = (int64*)ptrStart;
   int nx = bufsizeBytes / sizeof(uint64);
 
   uint32 h1 = 0;
   uint32 h2 = 0;
-  const uint64* p;
-  for (p = arr; nx > 0; p++, nx--) {
-    hashValue64(*p, &h1, &h2);
+
+  for (; nx > 0; ptrStart += sizeof(uint64), nx--) {
+    uint64 val;
+    memcpy(&val, ptrStart, sizeof(uint64));
+    hashValue64(val, &h1, &h2);
   }
+
   uint64 result1 = (uint64)hashFinish(h1);
   uint64 result2 = (uint64)hashFinish(h2);
 
