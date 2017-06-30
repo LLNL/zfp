@@ -7,6 +7,7 @@
 #include <math.h>
 
 #define DATA_LEN 1000000
+#define RATE_TOL 1e-3
 
 typedef enum {
   FIXED_PRECISION = 1,
@@ -16,18 +17,35 @@ typedef enum {
 
 struct setupVars {
   zfp_mode zfpMode;
+
   Scalar* dataArr;
   Scalar* decompressedArr;
+
   void* buffer;
   zfp_field* field;
   zfp_field* decompressField;
   zfp_stream* stream;
+
+  // paramNum is 0, 1, or 2
+  //   used to compute fixed mode param
+  //   and to select proper checksum to compare against
+  int paramNum;
+  double rateParam;
+  int precParam;
+  double accParam;
+
+  uint64 compressedChecksums[3];
+  UInt decompressedChecksums[3];
 };
 
 static int
-setupChosenZfpMode(void **state)
+setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
 {
-  struct setupVars *bundle = *state;
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  bundle->zfpMode = zfpMode;
+  bundle->paramNum = paramNum;
 
   bundle->dataArr = malloc(sizeof(Scalar) * DATA_LEN);
   assert_non_null(bundle->dataArr);
@@ -78,13 +96,37 @@ setupChosenZfpMode(void **state)
 
   zfp_stream* stream = zfp_stream_open(NULL);
 
+  if (bundle->paramNum > 2 || bundle->paramNum < 0) {
+    fail_msg("Unknown paramNum during setupChosenZfpMode()");
+  }
+
   switch(bundle->zfpMode) {
     case FIXED_PRECISION:
-      zfp_stream_set_precision(stream, ZFP_PREC_PARAM_BITS);
+      bundle->precParam = 1u << (bundle->paramNum + 3);
+      zfp_stream_set_precision(stream, bundle->precParam);
+
+      bundle->compressedChecksums[0] = CHECKSUM_FP_COMPRESSED_BITSTREAM_0;
+      bundle->compressedChecksums[1] = CHECKSUM_FP_COMPRESSED_BITSTREAM_1;
+      bundle->compressedChecksums[2] = CHECKSUM_FP_COMPRESSED_BITSTREAM_2;
+
+      bundle->decompressedChecksums[0] = CHECKSUM_FP_DECOMPRESSED_ARRAY_0;
+      bundle->decompressedChecksums[1] = CHECKSUM_FP_DECOMPRESSED_ARRAY_1;
+      bundle->decompressedChecksums[2] = CHECKSUM_FP_DECOMPRESSED_ARRAY_2;
+
       break;
 
     case FIXED_RATE:
-      zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
+      bundle->rateParam = (double)(1u << (bundle->paramNum + 3));
+      zfp_stream_set_rate(stream, bundle->rateParam, type, DIMS, 0);
+
+      bundle->compressedChecksums[0] = CHECKSUM_FR_COMPRESSED_BITSTREAM_0;
+      bundle->compressedChecksums[1] = CHECKSUM_FR_COMPRESSED_BITSTREAM_1;
+      bundle->compressedChecksums[2] = CHECKSUM_FR_COMPRESSED_BITSTREAM_2;
+
+      bundle->decompressedChecksums[0] = CHECKSUM_FR_DECOMPRESSED_ARRAY_0;
+      bundle->decompressedChecksums[1] = CHECKSUM_FR_DECOMPRESSED_ARRAY_1;
+      bundle->decompressedChecksums[2] = CHECKSUM_FR_DECOMPRESSED_ARRAY_2;
+
       break;
 
     case FIXED_ACCURACY:
@@ -92,7 +134,17 @@ setupChosenZfpMode(void **state)
         fail_msg("Invalid zfp mode during setupChosenZfpMode()");
       }
 
-      zfp_stream_set_accuracy(stream, ZFP_ACC_PARAM);
+      bundle->accParam = ldexp(1.0, -(1u << bundle->paramNum));
+      zfp_stream_set_accuracy(stream, bundle->accParam);
+
+      bundle->compressedChecksums[0] = CHECKSUM_FA_COMPRESSED_BITSTREAM_0;
+      bundle->compressedChecksums[1] = CHECKSUM_FA_COMPRESSED_BITSTREAM_1;
+      bundle->compressedChecksums[2] = CHECKSUM_FA_COMPRESSED_BITSTREAM_2;
+
+      bundle->decompressedChecksums[0] = CHECKSUM_FA_DECOMPRESSED_ARRAY_0;
+      bundle->decompressedChecksums[1] = CHECKSUM_FA_DECOMPRESSED_ARRAY_1;
+      bundle->decompressedChecksums[2] = CHECKSUM_FA_DECOMPRESSED_ARRAY_2;
+
       break;
 
     default:
@@ -120,44 +172,65 @@ setupChosenZfpMode(void **state)
 }
 
 static int
-setupFixedPrec(void **state)
+setupFixedPrec0(void **state)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
-  assert_non_null(bundle);
-
-  bundle->zfpMode = FIXED_PRECISION;
-  *state = bundle;
-
-  setupChosenZfpMode(state);
-
+  setupChosenZfpMode(state, FIXED_PRECISION, 0);
   return 0;
 }
 
 static int
-setupFixedRate(void **state)
+setupFixedPrec1(void **state)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
-  assert_non_null(bundle);
-
-  bundle->zfpMode = FIXED_RATE;
-  *state = bundle;
-
-  setupChosenZfpMode(state);
-
+  setupChosenZfpMode(state, FIXED_PRECISION, 1);
   return 0;
 }
 
 static int
-setupFixedAccuracy(void **state)
+setupFixedPrec2(void **state)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
-  assert_non_null(bundle);
+  setupChosenZfpMode(state, FIXED_PRECISION, 2);
+  return 0;
+}
 
-  bundle->zfpMode = FIXED_ACCURACY;
-  *state = bundle;
+static int
+setupFixedRate0(void **state)
+{
+  setupChosenZfpMode(state, FIXED_RATE, 0);
+  return 0;
+}
 
-  setupChosenZfpMode(state);
+static int
+setupFixedRate1(void **state)
+{
+  setupChosenZfpMode(state, FIXED_RATE, 1);
+  return 0;
+}
 
+static int
+setupFixedRate2(void **state)
+{
+  setupChosenZfpMode(state, FIXED_RATE, 2);
+  return 0;
+}
+
+static int
+setupFixedAccuracy0(void **state)
+{
+  setupChosenZfpMode(state, FIXED_ACCURACY, 0);
+  return 0;
+}
+
+static int
+setupFixedAccuracy1(void **state)
+{
+  setupChosenZfpMode(state, FIXED_ACCURACY, 1);
+  return 0;
+}
+
+static int
+setupFixedAccuracy2(void **state)
+{
+  setupChosenZfpMode(state, FIXED_ACCURACY, 2);
   return 0;
 }
 
@@ -185,7 +258,7 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 }
 
 static void
-assertZfpCompressBitstreamChecksumMatches(void **state, uint64 expectedChecksum)
+assertZfpCompressBitstreamChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_field* field = bundle->field;
@@ -195,6 +268,8 @@ assertZfpCompressBitstreamChecksumMatches(void **state, uint64 expectedChecksum)
   zfp_compress(stream, field);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
+  uint64 expectedChecksum = bundle->compressedChecksums[bundle->paramNum];
+
   assert_int_equal(checksum, expectedChecksum);
 }
 
@@ -206,7 +281,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedPrecision_expect_Bitst
     fail_msg("Invalid zfp mode during test");
   }
 
-  assertZfpCompressBitstreamChecksumMatches(state, CHECKSUM_FP_COMPRESSED_BITSTREAM);
+  assertZfpCompressBitstreamChecksumMatches(state);
 }
 
 static void
@@ -217,7 +292,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamC
     fail_msg("Invalid zfp mode during test");
   }
 
-  assertZfpCompressBitstreamChecksumMatches(state, CHECKSUM_FR_COMPRESSED_BITSTREAM);
+  assertZfpCompressBitstreamChecksumMatches(state);
 }
 
 static void
@@ -228,11 +303,11 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_Bitstr
     fail_msg("Invalid zfp mode during test");
   }
 
-  assertZfpCompressBitstreamChecksumMatches(state, CHECKSUM_FA_COMPRESSED_BITSTREAM);
+  assertZfpCompressBitstreamChecksumMatches(state);
 }
 
 static void
-assertZfpCompressDecompressChecksumMatches(void **state, UInt expectedChecksum)
+assertZfpCompressDecompressChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_field* field = bundle->field;
@@ -245,6 +320,8 @@ assertZfpCompressDecompressChecksumMatches(void **state, UInt expectedChecksum)
   zfp_decompress(stream, bundle->decompressField);
 
   UInt checksum = hashArray(bundle->decompressedArr, DATA_LEN, 1);
+  UInt expectedChecksum = bundle->decompressedChecksums[bundle->paramNum];
+
   assert_int_equal(checksum, expectedChecksum);
 }
 
@@ -256,7 +333,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedPrecision_expect_Arr
     fail_msg("Invalid zfp mode during test");
   }
 
-  assertZfpCompressDecompressChecksumMatches(state, CHECKSUM_FP_DECOMPRESSED_ARRAY);
+  assertZfpCompressDecompressChecksumMatches(state);
 }
 
 static void
@@ -267,7 +344,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChe
     fail_msg("Invalid zfp mode during test");
   }
 
-  assertZfpCompressDecompressChecksumMatches(state, CHECKSUM_FR_DECOMPRESSED_ARRAY);
+  assertZfpCompressDecompressChecksumMatches(state);
 }
 
 static void
@@ -278,7 +355,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_Arra
     fail_msg("Invalid zfp mode during test");
   }
 
-  assertZfpCompressDecompressChecksumMatches(state, CHECKSUM_FA_DECOMPRESSED_ARRAY);
+  assertZfpCompressDecompressChecksumMatches(state);
 }
 
 static void
@@ -294,8 +371,8 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_Compressed
   bitstream* s = zfp_stream_bit_stream(stream);
 
   size_t compressedBytes = zfp_compress(stream, field);
-  float bitsPerValue = (float)compressedBytes * 8. / DATA_LEN;
-  float maxBitrate = ZFP_RATE_PARAM_BITS + RATE_TOL;
+  double bitsPerValue = (double)compressedBytes * 8. / DATA_LEN;
+  double maxBitrate = bundle->rateParam + RATE_TOL;
 
   assert_true(bitsPerValue <= maxBitrate);
 }
@@ -326,12 +403,12 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_Compre
     switch(ZFP_TYPE) {
       case zfp_type_float:
         absDiffF = fabsf(bundle->decompressedArr[i] - bundle->dataArr[i]);
-        assert_true(absDiffF < ZFP_ACC_PARAM);
+        assert_true(absDiffF < bundle->accParam);
         break;
 
       case zfp_type_double:
         absDiffD = fabs(bundle->decompressedArr[i] - bundle->dataArr[i]);
-	assert_true(absDiffD < ZFP_ACC_PARAM);
+	assert_true(absDiffD < bundle->accParam);
 	break;
 
       default:
