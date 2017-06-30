@@ -12,7 +12,11 @@
 typedef enum {
   FIXED_PRECISION = 1,
   FIXED_RATE = 2,
+
+#ifdef FL_PT_DATA
   FIXED_ACCURACY = 3
+#endif
+
 } zfp_mode;
 
 struct setupVars {
@@ -52,14 +56,8 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
 
   int dataSideLen = (DIMS == 3) ? 100 : (DIMS == 2) ? 1000 : 1000000;
   switch (ZFP_TYPE) {
-    case zfp_type_int32:
-      generateSmoothRandInts32((int32*)bundle->dataArr, dataSideLen, DIMS, 32 - 2);
-      break;
 
-    case zfp_type_int64:
-      generateSmoothRandInts64((int64*)bundle->dataArr, dataSideLen, DIMS, 64 - 2);
-      break;
-
+#ifdef FL_PT_DATA
     case zfp_type_float:
       generateSmoothRandFloats((float*)bundle->dataArr, dataSideLen, DIMS);
       break;
@@ -67,6 +65,15 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
     case zfp_type_double:
       generateSmoothRandDoubles((double*)bundle->dataArr, dataSideLen, DIMS);
       break;
+#else
+    case zfp_type_int32:
+      generateSmoothRandInts32((int32*)bundle->dataArr, dataSideLen, DIMS, 32 - 2);
+      break;
+
+    case zfp_type_int64:
+      generateSmoothRandInts64((int64*)bundle->dataArr, dataSideLen, DIMS, 64 - 2);
+      break;
+#endif
 
     default:
       fail_msg("Invalid zfp_type during setupChosenZfpMode()");
@@ -129,11 +136,8 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
 
       break;
 
+#ifdef FL_PT_DATA
     case FIXED_ACCURACY:
-      if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
-        fail_msg("Invalid zfp mode during setupChosenZfpMode()");
-      }
-
       bundle->accParam = ldexp(1.0, -(1u << bundle->paramNum));
       zfp_stream_set_accuracy(stream, bundle->accParam);
 
@@ -146,6 +150,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
       bundle->decompressedChecksums[2] = CHECKSUM_FA_DECOMPRESSED_ARRAY_2;
 
       break;
+#endif
 
     default:
       fail_msg("Invalid zfp mode during setupChosenZfpMode()");
@@ -213,6 +218,7 @@ setupFixedRate2(void **state)
   return 0;
 }
 
+#ifdef FL_PT_DATA
 static int
 setupFixedAccuracy0(void **state)
 {
@@ -233,6 +239,7 @@ setupFixedAccuracy2(void **state)
   setupChosenZfpMode(state, FIXED_ACCURACY, 2);
   return 0;
 }
+#endif
 
 static int
 teardown(void **state)
@@ -295,6 +302,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamC
   assertZfpCompressBitstreamChecksumMatches(state);
 }
 
+#ifdef FL_PT_DATA
 static void
 _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches)(void **state)
 {
@@ -305,6 +313,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_Bitstr
 
   assertZfpCompressBitstreamChecksumMatches(state);
 }
+#endif
 
 static void
 assertZfpCompressDecompressChecksumMatches(void **state)
@@ -347,6 +356,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChe
   assertZfpCompressDecompressChecksumMatches(state);
 }
 
+#ifdef FL_PT_DATA
 static void
 _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches)(void **state)
 {
@@ -357,6 +367,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_Arra
 
   assertZfpCompressDecompressChecksumMatches(state);
 }
+#endif
 
 static void
 _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate)(void **state)
@@ -377,6 +388,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_Compressed
   assert_true(bitsPerValue <= maxBitrate);
 }
 
+#ifdef FL_PT_DATA
 static void
 _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy)(void **state)
 {
@@ -416,3 +428,4 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_Compre
     }
   }
 }
+#endif
