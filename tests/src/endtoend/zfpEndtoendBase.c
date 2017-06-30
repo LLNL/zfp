@@ -4,6 +4,7 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 
 #define DATA_LEN 1000000
@@ -111,6 +112,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
     case FIXED_PRECISION:
       bundle->precParam = 1u << (bundle->paramNum + 3);
       zfp_stream_set_precision(stream, bundle->precParam);
+      printf("\t\tFixed precision param: %u\n", bundle->precParam);
 
       bundle->compressedChecksums[0] = CHECKSUM_FP_COMPRESSED_BITSTREAM_0;
       bundle->compressedChecksums[1] = CHECKSUM_FP_COMPRESSED_BITSTREAM_1;
@@ -125,6 +127,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
     case FIXED_RATE:
       bundle->rateParam = (double)(1u << (bundle->paramNum + 3));
       zfp_stream_set_rate(stream, bundle->rateParam, type, DIMS, 0);
+      printf("\t\tFixed rate param: %lf\n", bundle->rateParam);
 
       bundle->compressedChecksums[0] = CHECKSUM_FR_COMPRESSED_BITSTREAM_0;
       bundle->compressedChecksums[1] = CHECKSUM_FR_COMPRESSED_BITSTREAM_1;
@@ -140,6 +143,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
     case FIXED_ACCURACY:
       bundle->accParam = ldexp(1.0, -(1u << bundle->paramNum));
       zfp_stream_set_accuracy(stream, bundle->accParam);
+      printf("\t\tFixed accuracy param: %lf\n", bundle->accParam);
 
       bundle->compressedChecksums[0] = CHECKSUM_FA_COMPRESSED_BITSTREAM_0;
       bundle->compressedChecksums[1] = CHECKSUM_FA_COMPRESSED_BITSTREAM_1;
@@ -386,6 +390,8 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_Compressed
   double maxBitrate = bundle->rateParam + RATE_TOL;
 
   assert_true(bitsPerValue <= maxBitrate);
+
+  printf("\t\tCompressed bitrate: %lf\n", bitsPerValue);
 }
 
 #ifdef FL_PT_DATA
@@ -407,6 +413,8 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_Compre
   // zfp_decompress() will write to bundle->decompressedArr
   zfp_decompress(stream, bundle->decompressField);
 
+  float maxDiffF = 0;
+  double maxDiffD = 0;
   int i;
   for (i = 0; i < DATA_LEN; i++) {
     float absDiffF;
@@ -416,16 +424,32 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_Compre
       case zfp_type_float:
         absDiffF = fabsf(bundle->decompressedArr[i] - bundle->dataArr[i]);
         assert_true(absDiffF < bundle->accParam);
+
+        if (absDiffF > maxDiffF) {
+          maxDiffF = absDiffF;
+        }
+
         break;
 
       case zfp_type_double:
         absDiffD = fabs(bundle->decompressedArr[i] - bundle->dataArr[i]);
 	assert_true(absDiffD < bundle->accParam);
+
+        if (absDiffD > maxDiffD) {
+          maxDiffD = absDiffD;
+        }
+
 	break;
 
       default:
         fail_msg("Test requires zfp_type float or double");
     }
+  }
+
+  if (ZFP_TYPE == zfp_type_float) {
+    printf("\t\tMax abs error: %f\n", maxDiffF);
+  } else {
+    printf("\t\tMax abs error: %lf\n", maxDiffD);
   }
 }
 #endif
