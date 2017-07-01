@@ -3,15 +3,12 @@
 #include <setjmp.h>
 #include <cmocka.h>
 
-#include <stdio.h>
-#include <inttypes.h>
-
 #define BIT_STREAM_WORD_TYPE uint16
 
 #include "include/bitstream.h"
 #include "src/inline/bitstream.c"
 
-#define STREAM_WORD_CAPACITY 3
+#define STREAM_WORD_CAPACITY 4
 
 struct setupVars {
   void* buffer;
