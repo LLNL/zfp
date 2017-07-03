@@ -6,7 +6,7 @@ ExternalProject_Add(
   GIT_TAG           cmocka-1.1.0
   SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
   BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
-  CMAKE_ARGS        -DWITH_STATIC_LIB=ON
+  CMAKE_ARGS        -DWITH_STATIC_LIB=ON -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
   BUILD_COMMAND     $(MAKE) cmocka_static
   INSTALL_COMMAND   ""
 )
