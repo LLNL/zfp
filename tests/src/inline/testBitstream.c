@@ -8,21 +8,9 @@
 
 #define STREAM_WORD_CAPACITY 3
 
-// returns wsize-bit number with 1 every n bits, from LSB leftward
-// n=2 returns 0x5555555555555555
-word
-generateCheckeredWord(int n)
-{
-  word w = 0;
-  int i;
-  for (i = 0; i < wsize; i+=n) {
-    w += (word)1 << i;
-  }
-  return w;
-}
-
-#define WORD1 generateCheckeredWord(1)
-#define WORD2 generateCheckeredWord(2)
+#define WORD_MASK ((word)(-1))
+#define WORD1 WORD_MASK
+#define WORD2 (0x5555555555555555 & WORD_MASK)
 
 struct setupVars {
   void* buffer;
