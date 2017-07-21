@@ -1,13 +1,5 @@
 #include <limits.h>
-#include "include/zfp/types.h"
-
-typedef struct {
-  // the number represented = i + (2^-32)*f
-  // integer part
-  int64 i;
-  // fractional part
-  uint32 f;
-} fixedPt;
+#include "fixedpoint96.h"
 
 void
 initFixedPt(int64 i, uint32 f, fixedPt* result)
@@ -199,7 +191,7 @@ multiply(fixedPt* a, fixedPt* b, fixedPt* result)
   //   b = (2^32)*bi1 + bi0 + (2^-32)*bf
   //
   //   r = a*b =
-  // A            (2^64) * a1*b1
+  // A            (2^64) * ai1*bi1
   // B          + (2^32) * (ai1*bi0 + ai0*bi1)
   // C          + (ai0*bi0 + ai1*bf + af*bi1)
   // D          + (2^-32) * (ai0*bf + af*bi0)
