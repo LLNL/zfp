@@ -43,14 +43,12 @@ struct setupVars {
   UInt decompressedChecksums[3];
 };
 
+// run this once per (datatype, DIM) combination for performance
 static int
-setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
+setupRandomData(void** state)
 {
   struct setupVars *bundle = malloc(sizeof(struct setupVars));
   assert_non_null(bundle);
-
-  bundle->zfpMode = zfpMode;
-  bundle->paramNum = paramNum;
 
   bundle->dataArr = malloc(sizeof(Scalar) * DATA_LEN);
   assert_non_null(bundle->dataArr);
@@ -81,6 +79,26 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
       break;
   }
 
+  *state = bundle;
+
+  return 0;
+}
+
+static int
+teardownRandomData(void** state)
+{
+  struct setupVars *bundle = *state;
+  free(bundle->dataArr);
+  free(bundle);
+
+  return 0;
+}
+
+static int
+setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
+{
+  struct setupVars *bundle = *state;
+
   bundle->decompressedArr = malloc(sizeof(Scalar) * DATA_LEN);
   assert_non_null(bundle->decompressedArr);
 
@@ -104,10 +122,12 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
 
   zfp_stream* stream = zfp_stream_open(NULL);
 
+  bundle->paramNum = paramNum;
   if (bundle->paramNum > 2 || bundle->paramNum < 0) {
     fail_msg("Unknown paramNum during setupChosenZfpMode()");
   }
 
+  bundle->zfpMode = zfpMode;
   switch(bundle->zfpMode) {
     case FIXED_PRECISION:
       bundle->precParam = 1u << (bundle->paramNum + 3);
@@ -245,6 +265,7 @@ setupFixedAccuracy2(void **state)
 }
 #endif
 
+// dataArr and the struct itself are freed in teardownRandomData()
 static int
 teardown(void **state)
 {
@@ -254,9 +275,7 @@ teardown(void **state)
   zfp_field_free(bundle->field);
   zfp_field_free(bundle->decompressField);
   free(bundle->buffer);
-  free(bundle->dataArr);
   free(bundle->decompressedArr);
-  free(bundle);
 
   return 0;
 }
