@@ -441,7 +441,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_Compre
 
     switch(ZFP_TYPE) {
       case zfp_type_float:
-        absDiffF = fabsf(bundle->decompressedArr[i] - bundle->dataArr[i]);
+        absDiffF = fabsf((float)(bundle->decompressedArr[i] - bundle->dataArr[i]));
         assert_true(absDiffF < bundle->accParam);
 
         if (absDiffF > maxDiffF) {
