@@ -4,23 +4,27 @@
 int
 intPow(int base, int exponent);
 
+// a double pointer is passed because memory allocation
+// is taken care of within the functions
+
 // generate randomly correlated integers in range:
 // [-(2^amplitudeExp - 1), 2^amplitudeExp - 1] (64 bit)
 void
-generateSmoothRandInts64(int64* outputArr, int outputSideLen, int numDims, int amplitudeExp);
+generateSmoothRandInts64(int minTotalElements, int numDims, int amplitudeExp, int64** outputArr, int* outputSideLen, int* outputTotalLen);
 
 // generate randomly correlated integers in range:
 // [-(2^amplitudeExp - 1), 2^amplitudeExp - 1] (32 bit)
 void
-generateSmoothRandInts32(int32* outputArr, int outputSideLen, int numDims, int amplitudeExp);
+generateSmoothRandInts32(int minTotalElements, int numDims, int amplitudeExp, int32** outputArr32Ptr, int* outputSideLen, int* outputTotalLen);
 
+// generate randomly correlated floats in range:
+// [-(2^11), 2^11 - 2^(-12)]
 void
-generateSmoothRandFloats(float* outputArr, int outputSideLen, int numDims);
+generateSmoothRandFloats(int minTotalElements, int numDims, float** outputArrPtr, int* outputSideLen, int* outputTotalLen);
 
+// generate randomly correlated doubles in range:
+// [-(2^26), 2^26 - 2^(-26)]
 void
-generateSmoothRandDoubles(double* outputArr, int outputSideLen, int numDims);
-
-int
-calcSideLenGivenMinTotalElements(int minTotalElements, int numDims);
+generateSmoothRandDoubles(int minTotalElements, int numDims, double** outputArrPtr, int* outputSideLen, int* outputTotalLen);
 
 #endif

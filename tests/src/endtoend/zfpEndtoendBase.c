@@ -49,32 +49,26 @@ struct setupVars {
 static int
 setupRandomData(void** state)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  struct setupVars *bundle = calloc(1, sizeof(struct setupVars));
   assert_non_null(bundle);
-
-  bundle->dataSideLen = calcSideLenGivenMinTotalElements(MIN_TOTAL_ELEMENTS, DIMS);
-  bundle->totalDataLen = intPow(bundle->dataSideLen, DIMS);
-
-  bundle->dataArr = malloc(sizeof(Scalar) * bundle->totalDataLen);
-  assert_non_null(bundle->dataArr);
 
   switch (ZFP_TYPE) {
 
 #ifdef FL_PT_DATA
     case zfp_type_float:
-      generateSmoothRandFloats((float*)bundle->dataArr, bundle->dataSideLen, DIMS);
+      generateSmoothRandFloats(MIN_TOTAL_ELEMENTS, DIMS, (float**)&bundle->dataArr, &bundle->dataSideLen, &bundle->totalDataLen);
       break;
 
     case zfp_type_double:
-      generateSmoothRandDoubles((double*)bundle->dataArr, bundle->dataSideLen, DIMS);
+      generateSmoothRandDoubles(MIN_TOTAL_ELEMENTS, DIMS, (double**)&bundle->dataArr, &bundle->dataSideLen, &bundle->totalDataLen);
       break;
 #else
     case zfp_type_int32:
-      generateSmoothRandInts32((int32*)bundle->dataArr, bundle->dataSideLen, DIMS, 32 - 2);
+      generateSmoothRandInts32(MIN_TOTAL_ELEMENTS, DIMS, 32 - 2, (int32**)&bundle->dataArr, &bundle->dataSideLen, &bundle->totalDataLen);
       break;
 
     case zfp_type_int64:
-      generateSmoothRandInts64((int64*)bundle->dataArr, bundle->dataSideLen, DIMS, 64 - 2);
+      generateSmoothRandInts64(MIN_TOTAL_ELEMENTS, DIMS, 64 - 2, (int64**)&bundle->dataArr, &bundle->dataSideLen, &bundle->totalDataLen);
       break;
 #endif
 
@@ -82,6 +76,7 @@ setupRandomData(void** state)
       fail_msg("Invalid zfp_type during setupChosenZfpMode()");
       break;
   }
+  assert_non_null(bundle->dataArr);
 
   *state = bundle;
 
@@ -98,6 +93,7 @@ teardownRandomData(void** state)
   return 0;
 }
 
+// assumes setupRandomData() already run (having set some setupVars members)
 static int
 setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
 {

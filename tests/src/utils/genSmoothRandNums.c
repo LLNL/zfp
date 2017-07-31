@@ -536,7 +536,7 @@ copyArraySubset(int64* inputArr, int inputSideLen, int numDims, int64* outputArr
 
 // this will destroy (free) inputArr
 static void
-generateNRandInts(int64* inputArr, int numDims, int inputSideLen, int64* outputArr, int outputSideLen, uint64 amplitude)
+generateNRandInts(int64* inputArr, int inputSideLen, int minTotalElements, int numDims, uint64 amplitude, int64** outputArrPtr, int* outputSideLen, int* outputTotalLen)
 {
   // parameters used for random noise
   fixedPt f = {7, 0};
@@ -544,11 +544,12 @@ generateNRandInts(int64* inputArr, int numDims, int inputSideLen, int64* outputA
 
   int64* currArr = inputArr;
   int currSideLen = inputSideLen;
+  int currTotalLen = intPow(inputSideLen, numDims);
 
   int64* nextArr;
   int nextSideLen, nextTotalLen;
 
-  while(currSideLen < outputSideLen) {
+  while(currTotalLen < minTotalElements) {
     nextSideLen = 2*currSideLen - 1;
     nextTotalLen = intPow(nextSideLen, numDims);
 
@@ -559,6 +560,7 @@ generateNRandInts(int64* inputArr, int numDims, int inputSideLen, int64* outputA
     free(currArr);
     currArr = nextArr;
     currSideLen = nextSideLen;
+    currTotalLen = nextTotalLen;
 
     // reduce random noise multiplier
     multiply(&f, &scaleFVal, &f);
@@ -567,7 +569,14 @@ generateNRandInts(int64* inputArr, int numDims, int inputSideLen, int64* outputA
   // for safety (expected nop)
   clampValsIntoRange(nextArr, nextTotalLen, amplitude);
 
-  copyArraySubset(nextArr, nextSideLen, numDims, outputArr, outputSideLen);
+  // initialize output data
+  *outputSideLen = nextSideLen;
+  *outputTotalLen = nextTotalLen;
+  *outputArrPtr = malloc(*outputTotalLen * sizeof(int64));
+
+  // store output data
+  copyArraySubset(nextArr, nextSideLen, numDims, *outputArrPtr, *outputSideLen);
+
   free(nextArr);
 }
 
@@ -619,13 +628,9 @@ generateInitialArray(int64* initialVec, int initialVecLen, int numDims, uint64 a
   }
 }
 
-// generate randomly correlated integers in range:
-// [-(2^amplitudeExp - 1), 2^amplitudeExp - 1] (64 bit)
 void
-generateSmoothRandInts64(int64* outputArr, int outputSideLen, int numDims, int amplitudeExp)
+generateSmoothRandInts64(int minTotalElements, int numDims, int amplitudeExp, int64** outputArrPtr, int* outputSideLen, int* outputTotalLen)
 {
-  int outputLen = intPow(outputSideLen, numDims);
-
   uint64 amplitude = ((uint64)1 << amplitudeExp) - 1;
 
   // initial vector for tensor product (will be scaled to amplitude)
@@ -646,58 +651,41 @@ generateSmoothRandInts64(int64* outputArr, int outputSideLen, int numDims, int a
 
   // generate data (always done with int64)
   // inputArr is free'd inside function
-  generateNRandInts(inputArr, numDims, initialSideLen, outputArr, outputSideLen, amplitude);
+  generateNRandInts(inputArr, initialSideLen, minTotalElements, numDims, amplitude, outputArrPtr, outputSideLen, outputTotalLen);
 }
 
-// generate randomly correlated integers in range:
-// [-(2^amplitudeExp - 1), 2^amplitudeExp - 1] (32 bit)
 void
-generateSmoothRandInts32(int32* outputArr32, int outputSideLen, int numDims, int amplitudeExp)
+generateSmoothRandInts32(int minTotalElements, int numDims, int amplitudeExp, int32** outputArr32Ptr, int* outputSideLen, int* outputTotalLen)
 {
-  int outputLen = intPow(outputSideLen, numDims);
-  int64* randArr64 = malloc(outputLen * sizeof(int64));
+  int64* randArr64;
+  generateSmoothRandInts64(minTotalElements, numDims, amplitudeExp, &randArr64, outputSideLen, outputTotalLen);
 
-  generateSmoothRandInts64(randArr64, outputSideLen, numDims, amplitudeExp);
+  *outputArr32Ptr = calloc(*outputTotalLen, sizeof(int32));
+  cast64ArrayTo32(randArr64, *outputTotalLen, *outputArr32Ptr);
 
-  cast64ArrayTo32(randArr64, outputLen, outputArr32);
   free(randArr64);
 }
 
-// generate randomly correlated floats in range:
-// [-(2^11), 2^11 - 2^(-12)]
 void
-generateSmoothRandFloats(float* outputArr, int outputSideLen, int numDims)
+generateSmoothRandFloats(int minTotalElements, int numDims, float** outputArrPtr, int* outputSideLen, int* outputTotalLen)
 {
-  int outputLen = intPow(outputSideLen, numDims);
-  int64* intArr = malloc(outputLen * sizeof(int64));
+  int64* intArr;
+  generateSmoothRandInts64(minTotalElements, numDims, FLOAT_MANTISSA_BITS, &intArr, outputSideLen, outputTotalLen);
 
-  generateSmoothRandInts64(intArr, outputSideLen, numDims, FLOAT_MANTISSA_BITS);
+  *outputArrPtr = calloc(*outputTotalLen, sizeof(float));
+  convertIntArrToFloatArr(intArr, *outputTotalLen, *outputArrPtr);
 
-  convertIntArrToFloatArr(intArr, outputLen, outputArr);
   free(intArr);
 }
 
-// generate randomly correlated doubles in range:
-// [-(2^26), 2^26 - 2^(-26)]
 void
-generateSmoothRandDoubles(double* outputArr, int outputSideLen, int numDims)
+generateSmoothRandDoubles(int minTotalElements, int numDims, double** outputArrPtr, int* outputSideLen, int* outputTotalLen)
 {
-  int outputLen = intPow(outputSideLen, numDims);
-  int64* intArr = malloc(outputLen * sizeof(int64));
+  int64* intArr;
+  generateSmoothRandInts64(minTotalElements, numDims, DOUBLE_MANTISSA_BITS, &intArr, outputSideLen, outputTotalLen);
 
-  generateSmoothRandInts64(intArr, outputSideLen, numDims, DOUBLE_MANTISSA_BITS);
+  *outputArrPtr = calloc(*outputTotalLen, sizeof(double));
+  convertIntArrToDoubleArr(intArr, *outputTotalLen, *outputArrPtr);
 
-  convertIntArrToDoubleArr(intArr, outputLen, outputArr);
   free(intArr);
-}
-
-int
-calcSideLenGivenMinTotalElements(int minTotalElements, int numDims)
-{
-  int sideLen = 5;
-  while (intPow(sideLen, numDims) <= minTotalElements) {
-    sideLen = 2*sideLen - 1;
-  }
-
-  return sideLen;
 }
