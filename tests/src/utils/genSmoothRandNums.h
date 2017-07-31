@@ -20,4 +20,7 @@ generateSmoothRandFloats(float* outputArr, int outputSideLen, int numDims);
 void
 generateSmoothRandDoubles(double* outputArr, int outputSideLen, int numDims);
 
+int
+calcSideLenGivenMinTotalElements(int minTotalElements, int numDims);
+
 #endif

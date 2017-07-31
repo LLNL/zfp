@@ -690,3 +690,14 @@ generateSmoothRandDoubles(double* outputArr, int outputSideLen, int numDims)
   convertIntArrToDoubleArr(intArr, outputLen, outputArr);
   free(intArr);
 }
+
+int
+calcSideLenGivenMinTotalElements(int minTotalElements, int numDims)
+{
+  int sideLen = 5;
+  while (intPow(sideLen, numDims) <= minTotalElements) {
+    sideLen = 2*sideLen - 1;
+  }
+
+  return sideLen;
+}

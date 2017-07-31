@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#define MIN_TOTAL_ELEMENTS 1e6
 #define RATE_TOL 1e-3
 
 typedef enum {
@@ -51,7 +52,7 @@ setupRandomData(void** state)
   struct setupVars *bundle = malloc(sizeof(struct setupVars));
   assert_non_null(bundle);
 
-  bundle->dataSideLen = (DIMS == 3) ? 100 : (DIMS == 2) ? 1000 : 1000000;
+  bundle->dataSideLen = calcSideLenGivenMinTotalElements(MIN_TOTAL_ELEMENTS, DIMS);
   bundle->totalDataLen = intPow(bundle->dataSideLen, DIMS);
 
   bundle->dataArr = malloc(sizeof(Scalar) * bundle->totalDataLen);
@@ -409,11 +410,15 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_Compressed
 
   size_t compressedBytes = zfp_compress(stream, field);
   double bitsPerValue = (double)compressedBytes * 8. / bundle->totalDataLen;
-  double maxBitrate = bundle->rateParam + RATE_TOL;
 
-  assert_true(bitsPerValue <= maxBitrate);
+  // expect bitrate to scale wrt padded array length
+  int paddedArraySideLen = (bundle->dataSideLen + 3) & ~0x3;
+  int paddedArrayLen = intPow(paddedArraySideLen, DIMS);
+  double scaleFactor = (double)paddedArrayLen / bundle->totalDataLen;
+  double expectedBitsPerValue = bundle->rateParam * scaleFactor;
 
-  printf("\t\tCompressed bitrate: %lf\n", bitsPerValue);
+  printf("\t\t(Compressed bitrate, Expected bitrate): (%lf, %lf)\n", bitsPerValue, expectedBitsPerValue);
+  assert_true(bitsPerValue <= expectedBitsPerValue + RATE_TOL);
 }
 
 #ifdef FL_PT_DATA
