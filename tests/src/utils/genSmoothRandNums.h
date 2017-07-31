@@ -1,6 +1,9 @@
 #ifndef GEN_SMOOTH_RAND_INTS_H
 #define GEN_SMOOTH_RAND_INTS_H
 
+int
+intPow(int base, int exponent);
+
 // generate randomly correlated integers in range:
 // [-(2^amplitudeExp - 1), 2^amplitudeExp - 1] (64 bit)
 void

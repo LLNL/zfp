@@ -8,7 +8,7 @@
 #define FLOAT_MANTISSA_BITS 23
 #define DOUBLE_MANTISSA_BITS 52
 
-static int
+int
 intPow(int base, int exponent)
 {
   int result = 1;
