@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "utils/testMacros.h"
+
 #define MIN_TOTAL_ELEMENTS 1e6
 #define RATE_TOL 1e-3
 

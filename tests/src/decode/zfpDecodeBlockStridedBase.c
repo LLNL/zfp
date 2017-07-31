@@ -4,6 +4,7 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+#include "utils/testMacros.h"
 
 #define SX 2
 #define SY (3 * 4*SX)

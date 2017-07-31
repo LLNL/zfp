@@ -1,11 +1,9 @@
-#include <stdlib.h>
 #include <string.h>
-#include "include/zfp/types.h"
-#include "hashBase.c"
+#include "hash32.h"
 
 // all functions are used to hash 32-bit valued arrays (int32, float)
 
-static uint32
+uint32
 hashArray(const void* arr, int nx, int sx)
 {
   uint32 h = 0;
@@ -19,7 +17,7 @@ hashArray(const void* arr, int nx, int sx)
   return hashFinish(h);
 }
 
-static uint32
+uint32
 hash2dStridedBlock(const void* arr, int sx, int sy)
 {
   uint32 h = 0;
@@ -36,7 +34,7 @@ hash2dStridedBlock(const void* arr, int sx, int sy)
   return hashFinish(h);
 }
 
-static uint32
+uint32
 hash3dStridedBlock(const void* arr, int sx, int sy, int sz)
 {
   uint32 h = 0;

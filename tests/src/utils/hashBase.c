@@ -1,10 +1,11 @@
 #include <string.h>
+#include "hashBase.h"
 
 // Jenkins one-at-a-time hash; see http://www.burtleburtle.net/bob/hash/doobs.html
 
 #define MASK_32 (0xffffffff)
 
-static void
+void
 hashValue(uint32 val, uint32* h)
 {
   *h += val;
@@ -12,7 +13,7 @@ hashValue(uint32 val, uint32* h)
   *h ^= *h >> 6;
 }
 
-static uint32
+uint32
 hashFinish(uint32 h)
 {
   h += h << 3;
@@ -22,7 +23,7 @@ hashFinish(uint32 h)
   return h;
 }
 
-static void
+void
 hashValue64(uint64 val, uint32* h1, uint32* h2)
 {
   uint32 val1 = (uint32)(val & MASK_32);
@@ -32,7 +33,7 @@ hashValue64(uint64 val, uint32* h1, uint32* h2)
   hashValue(val2, h2);
 }
 
-static uint64
+uint64
 hashBitstream(void* ptrStart, size_t bufsizeBytes)
 {
   int nx = bufsizeBytes / sizeof(uint64);

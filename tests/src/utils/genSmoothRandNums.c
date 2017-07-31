@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+#include "genSmoothRandNums.h"
 #include "fixedpoint96.h"
-#include "include/zfp/types.h"
-#include "rand64.c"
+#include "rand64.h"
 
 #define FLOAT_MANTISSA_BITS 23
 #define DOUBLE_MANTISSA_BITS 52

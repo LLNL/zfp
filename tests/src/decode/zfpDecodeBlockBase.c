@@ -4,6 +4,7 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+#include "utils/testMacros.h"
 
 struct setupVars {
   Scalar* dataArr;

@@ -1,4 +1,5 @@
 #include <math.h>
+#include "rand32.h"
 
 #define SEED 5
 
@@ -10,14 +11,14 @@
 
 static uint64 X;
 
-static void
+void
 resetRandGen()
 {
   X = SEED;
 }
 
 // returns integer [0, 2^31 - 1]
-static uint32
+uint32
 nextUnsignedRand()
 {
   X = (MULTIPLIER*X + INCREMENT) % MODULO;
@@ -25,14 +26,14 @@ nextUnsignedRand()
 }
 
 // returns integer [-(2^30), 2^30 - 1]
-static int32
+int32
 nextSignedRandInt()
 {
   return (int32)nextUnsignedRand() - 0x40000000;
 }
 
 // returns float [-(2^11), 2^11 - 2^(-12)]
-static float
+float
 nextSignedRandFlPt()
 {
   // 23 bit signed number

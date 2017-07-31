@@ -1,9 +1,8 @@
 #include "src/decode3i.c"
 
 #include "constants/3dInt32.h"
-#include "utils/testMacros.h"
-#include "utils/rand32.c"
-#include "utils/hash32.c"
+#include "utils/rand32.h"
+#include "utils/hash32.h"
 #include "zfpDecodeBlockStridedBase.c"
 
 int main()

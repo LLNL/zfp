@@ -1,9 +1,8 @@
 #include "src/encode2f.c"
 
 #include "constants/2dFloat.h"
-#include "utils/testMacros.h"
-#include "utils/rand32.c"
-#include "utils/hash32.c"
+#include "utils/rand32.h"
+#include "utils/hash32.h"
 #include "zfpEncodeBlockStridedBase.c"
 
 int main()

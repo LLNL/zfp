@@ -1,9 +1,8 @@
 #include "src/encode2l.c"
 
 #include "constants/2dInt64.h"
-#include "utils/testMacros.h"
 #include "utils/genSmoothRandNums.h"
-#include "utils/hash64.c"
+#include "utils/hash64.h"
 #include "zfpEndtoendBase.c"
 
 int main()
