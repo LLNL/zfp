@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
 
 #define MIN_TOTAL_ELEMENTS 1e6

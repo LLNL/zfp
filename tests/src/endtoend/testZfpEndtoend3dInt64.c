@@ -1,7 +1,6 @@
 #include "src/encode3l.c"
 
 #include "constants/3dInt64.h"
-#include "utils/genSmoothRandNums.h"
 #include "utils/hash64.h"
 #include "zfpEndtoendBase.c"
 

@@ -1,7 +1,6 @@
 #include "src/encode2f.c"
 
 #include "constants/2dFloat.h"
-#include "utils/genSmoothRandNums.h"
 #include "utils/hash32.h"
 #include "zfpEndtoendBase.c"
 
