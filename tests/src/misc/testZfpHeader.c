@@ -39,10 +39,10 @@ setup(void **state)
   zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
-  char* buffer = calloc(bufsizeBytes, sizeof(char));
-  assert_non_null(buffer);
+  bundle->buffer = calloc(bufsizeBytes, sizeof(char));
+  assert_non_null(bundle->buffer);
 
-  bitstream* s = stream_open(buffer, bufsizeBytes);
+  bitstream* s = stream_open(bundle->buffer, bufsizeBytes);
   assert_non_null(s);
 
   zfp_stream_set_bit_stream(stream, s);
@@ -64,6 +64,7 @@ teardown(void **state)
   zfp_stream_close(bundle->stream);
   zfp_field_free(bundle->field);
   free(bundle->buffer);
+  free(bundle);
 
   return 0;
 }
