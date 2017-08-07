@@ -6,18 +6,26 @@ ExternalProject_Add(
   GIT_TAG           cmocka-1.1.0
   SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
   BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
-  CMAKE_ARGS        -DWITH_STATIC_LIB=ON -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-  BUILD_COMMAND     $(MAKE) cmocka_static
+  CMAKE_ARGS        -DWITH_STATIC_LIB=ON -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DUNIT_TESTING=OFF
+  BUILD_COMMAND     ${CMAKE_COMMAND} --build . WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
   INSTALL_COMMAND   ""
 )
 ExternalProject_Get_Property(cmocka_cloned source_dir binary_dir)
 
 # name static library cmocka, wire up against cmocka_cloned
 add_library(cmocka STATIC IMPORTED GLOBAL)
+
+# choose proper library path & extension
+if(WIN32)
+  set(IMPORTED_LOCATION_PATH "${binary_dir}/src/Debug/cmocka.lib")
+else()
+  set(IMPORTED_LOCATION_PATH "${binary_dir}/src/libcmocka.a")
+endif()
 set_property(TARGET cmocka
   PROPERTY
-  IMPORTED_LOCATION  "${binary_dir}/src/libcmocka.a"
+  IMPORTED_LOCATION "${IMPORTED_LOCATION_PATH}"
 )
+
 add_dependencies(cmocka cmocka_cloned)
 include_directories(${source_dir}/include)
 
