@@ -25,11 +25,11 @@ setup(void **state)
 
   int i;
   for (i = 0; i < BLOCK_SIZE; i++) {
-    if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
-      bundle->dataArr[i] = nextSignedRandInt();
-    } else {
-      bundle->dataArr[i] = nextSignedRandFlPt();
-    }
+#ifdef FL_PT_DATA
+    bundle->dataArr[i] = nextSignedRandFlPt();
+#else
+    bundle->dataArr[i] = nextSignedRandInt();
+#endif
   }
 
   zfp_type type = ZFP_TYPE;

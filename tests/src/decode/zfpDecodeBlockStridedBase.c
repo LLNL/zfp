@@ -45,11 +45,11 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
         if (i % SX) {
           (*dataArrPtr)[i] = dummyVal;
         } else {
-          if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
-            (*dataArrPtr)[i] = nextSignedRandInt();
-          } else {
-            (*dataArrPtr)[i] = nextSignedRandFlPt();
-          }
+#ifdef FL_PT_DATA
+          (*dataArrPtr)[i] = nextSignedRandFlPt();
+#else
+          (*dataArrPtr)[i] = nextSignedRandInt();
+#endif
         }
       }
 
@@ -68,11 +68,11 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
           if (i % (countX/4) || j % (countY/4)) {
             (*dataArrPtr)[countX*j + i] = dummyVal;
           } else {
-            if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
-              (*dataArrPtr)[countX*j + i] = nextSignedRandInt();
-            } else {
-              (*dataArrPtr)[countX*j + i] = nextSignedRandFlPt();
-            }
+#ifdef FL_PT_DATA
+            (*dataArrPtr)[countX*j + i] = nextSignedRandFlPt();
+#else
+            (*dataArrPtr)[countX*j + i] = nextSignedRandInt();
+#endif
           }
         }
       }
@@ -94,11 +94,11 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
             if (i % (countX/4) || j % (countY/4) || k % (countZ/4)) {
               (*dataArrPtr)[countX*countY*k + countX*j + i] = dummyVal;
             } else {
-              if (ZFP_TYPE == zfp_type_int32 || ZFP_TYPE == zfp_type_int64) {
-                (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandInt();
-              } else {
-                (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandFlPt();
-              }
+#ifdef FL_PT_DATA
+              (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandFlPt();
+#else
+              (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandInt();
+#endif
             }
           }
         }
