@@ -571,14 +571,14 @@ given_RewoundBitstream_when_WriteWord_expect_WordWrittenAtStreamBegin(void **sta
 static void
 when_BitstreamOpened_expect_ProperLengthAndBoundaries(void **state)
 {
-  const double NUM_WORDS = 4;
+  const int NUM_WORDS = 4;
 
   size_t bufferLenBytes = sizeof(word) * NUM_WORDS;
   void* buffer = malloc(bufferLenBytes);
   bitstream* s = stream_open(buffer, bufferLenBytes);
 
   void* streamBegin = stream_data(s);
-  void* computedStreamEnd = streamBegin + bufferLenBytes;
+  void* computedStreamEnd = (word*)streamBegin + NUM_WORDS;
 
   assert_ptr_equal(streamBegin, buffer);
   assert_ptr_equal(s->end, computedStreamEnd);

@@ -14,6 +14,6 @@ void
 hashValue64(uint64 val, uint32* h1, uint32* h2);
 
 uint64
-hashBitstream(void* ptrStart, size_t bufsizeBytes);
+hashBitstream(uint64* ptrStart, size_t bufsizeBytes);
 
 #endif

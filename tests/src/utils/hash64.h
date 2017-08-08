@@ -7,12 +7,12 @@
 // all functions are used to hash 64-bit valued arrays (int64, double)
 
 uint64
-hashArray(const void* arr, int nx, int sx);
+hashArray(const uint64* arr, int nx, int sx);
 
 uint64
-hash2dStridedBlock(const void* arr, int sx, int sy);
+hash2dStridedBlock(const uint64* arr, int sx, int sy);
 
 uint64
-hash3dStridedBlock(const void* arr, int sx, int sy, int sz);
+hash3dStridedBlock(const uint64* arr, int sx, int sy, int sz);
 
 #endif
