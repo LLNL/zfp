@@ -86,7 +86,7 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal((Int*)hashArray(bundle->dataArr, BLOCK_SIZE, 1), CHECKSUM_ORIGINAL_DATA_BLOCK);
+  assert_int_equal(hashArray((Int*)bundle->dataArr, BLOCK_SIZE, 1), CHECKSUM_ORIGINAL_DATA_BLOCK);
 }
 
 static void
