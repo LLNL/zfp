@@ -1,4 +1,3 @@
-#include <string.h>
 #include "hashBase.h"
 
 // Jenkins one-at-a-time hash; see http://www.burtleburtle.net/bob/hash/doobs.html
@@ -42,9 +41,7 @@ hashBitstream(uint64* ptrStart, size_t bufsizeBytes)
   uint32 h2 = 0;
 
   for (; nx > 0; ptrStart++, nx--) {
-    uint64 val;
-    memcpy(&val, ptrStart, sizeof(uint64));
-    hashValue64(val, &h1, &h2);
+    hashValue64(*ptrStart, &h1, &h2);
   }
 
   uint64 result1 = (uint64)hashFinish(h1);
