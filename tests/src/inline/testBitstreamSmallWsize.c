@@ -96,7 +96,7 @@ when_WriteBitsOverflowsBufferByMultipleWords_expect_WordsWrittenAndRemainingOver
   bitstream* s = ((struct setupVars *)*state)->b;
   stream_write_bits(s, EXISTING_BUFFER, EXISTING_BIT_COUNT);
 
-  word remainingWord = stream_write_bits(s, BITS_TO_WRITE, NUM_BITS_TO_WRITE);
+  uint64 remainingWord = stream_write_bits(s, BITS_TO_WRITE, NUM_BITS_TO_WRITE);
 
   assert_int_equal(remainingWord, WRITE_WORD3 >> (3*wsize - NUM_BITS_TO_WRITE));
   assert_int_equal(*s->begin, EXISTING_BUFFER

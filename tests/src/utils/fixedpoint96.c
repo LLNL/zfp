@@ -289,7 +289,7 @@ multiply(fixedPt* a, fixedPt* b, fixedPt* result)
     return 1;
   }
 
-  result->f = rf;
+  result->f = (uint32)rf;
   result->i = ri1 + ri0;
 
   return 0;

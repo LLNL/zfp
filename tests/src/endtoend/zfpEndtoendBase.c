@@ -10,7 +10,7 @@
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
 
-#define MIN_TOTAL_ELEMENTS 1e6
+#define MIN_TOTAL_ELEMENTS 1000000
 #define RATE_TOL 1e-3
 
 typedef enum {
@@ -26,8 +26,8 @@ typedef enum {
 struct setupVars {
   zfp_mode zfpMode;
 
-  int dataSideLen;
-  int totalDataLen;
+  size_t dataSideLen;
+  size_t totalDataLen;
   Scalar* dataArr;
   Scalar* decompressedArr;
 
@@ -411,8 +411,8 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_Compressed
   double bitsPerValue = (double)compressedBytes * 8. / bundle->totalDataLen;
 
   // expect bitrate to scale wrt padded array length
-  int paddedArraySideLen = (bundle->dataSideLen + 3) & ~0x3;
-  int paddedArrayLen = intPow(paddedArraySideLen, DIMS);
+  size_t paddedArraySideLen = (bundle->dataSideLen + 3) & ~0x3;
+  size_t paddedArrayLen = intPow(paddedArraySideLen, DIMS);
   double scaleFactor = (double)paddedArrayLen / bundle->totalDataLen;
   double expectedBitsPerValue = bundle->rateParam * scaleFactor;
 
@@ -441,7 +441,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_Compre
 
   float maxDiffF = 0;
   double maxDiffD = 0;
-  int i;
+  size_t i;
   for (i = 0; i < bundle->totalDataLen; i++) {
     float absDiffF;
     double absDiffD;

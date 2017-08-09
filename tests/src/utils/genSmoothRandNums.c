@@ -9,10 +9,10 @@
 #define FLOAT_MANTISSA_BITS 23
 #define DOUBLE_MANTISSA_BITS 52
 
-int
-intPow(int base, int exponent)
+size_t
+intPow(size_t base, int exponent)
 {
-  int result = 1;
+  size_t result = 1;
 
   int i;
   for (i = 0; i < exponent; i++) {
@@ -22,10 +22,10 @@ intPow(int base, int exponent)
   return result;
 }
 
-static int
-computeOffset(int k, int j, int i, int sideLen, int numDims)
+static size_t
+computeOffset(size_t k, size_t j, size_t i, size_t sideLen, int numDims)
 {
-  int result = 0;
+  size_t result = 0;
 
   switch (numDims) {
     case 3:
@@ -74,11 +74,11 @@ generateWeights(fixedPt* f, fixedPt weights[4])
 }
 
 static void
-computeTensorProductDouble(fixedPt* initialVec, int initialVecLen, int numDims, fixedPt** outputArrPtr)
+computeTensorProductDouble(fixedPt* initialVec, size_t initialVecLen, int numDims, fixedPt** outputArrPtr)
 {
-  int i, j, k, index;
+  size_t i, j, k, index;
 
-  int outputArrLen = intPow(initialVecLen, numDims);
+  size_t outputArrLen = intPow(initialVecLen, numDims);
 
   *outputArrPtr = malloc(outputArrLen * sizeof(fixedPt));
 
@@ -122,12 +122,12 @@ computeTensorProductDouble(fixedPt* initialVec, int initialVecLen, int numDims, 
 }
 
 // returns the length of the resulting array
-static int
-computeTensorProduct(int64* initialVec, int initialVecLen, int numDims, int64** outputArrPtr)
+static size_t
+computeTensorProduct(int64* initialVec, size_t initialVecLen, int numDims, int64** outputArrPtr)
 {
-  int i, j, k, index;
+  size_t i, j, k, index;
 
-  int outputArrLen = intPow(initialVecLen, numDims);
+  size_t outputArrLen = intPow(initialVecLen, numDims);
   *outputArrPtr = malloc(outputArrLen * sizeof(int64));
 
   switch(numDims) {
@@ -225,7 +225,7 @@ dotProd2d(int64* a, size_t strideI, size_t strideJ, fixedPt b[16], uint64 amplit
   int i, j;
   for (j = 0; j < 4; j++) {
     for (i = 0; i < 4; i++) {
-      int aOffset = j*strideJ + i*strideI;
+      size_t aOffset = j*strideJ + i*strideI;
       fixedPt val = {a[aOffset], 0};
 
       multiply(&val, &(b[j*4 + i]), &val);
@@ -247,7 +247,7 @@ dotProd3d(int64* a, size_t strideI, size_t strideJ, size_t strideK, fixedPt b[64
   for (k = 0; k < 4; k++) {
     for (j = 0; j < 4; j++) {
       for (i = 0; i < 4; i++) {
-        int aOffset = k*strideK + j*strideJ + i*strideI;
+        size_t aOffset = k*strideK + j*strideJ + i*strideI;
         fixedPt val = {a[aOffset], 0};
 
         multiply(&val, &(b[k*16 + j*4 + i]), &val);
@@ -303,7 +303,7 @@ cubeWeightedSum(int64* data, size_t strideI, size_t strideJ, size_t strideK, fix
 // resulting array: [0 (inputArr) 0]
 // size n -> (n+2)
 static void
-createPadded1dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
+createPadded1dArray(int64* inputArr, size_t inputSideLen, int64* paddedArr)
 {
   memcpy(paddedArr + 1, inputArr, inputSideLen * sizeof(int64));
 
@@ -314,11 +314,11 @@ createPadded1dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
 // resulting array's outermost rows and columns are zero
 // size m*n -> (m+2)*(n+2)
 static void
-createPadded2dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
+createPadded2dArray(int64* inputArr, size_t inputSideLen, int64* paddedArr)
 {
-  int paddedSideLen = inputSideLen + 2;
+  size_t paddedSideLen = inputSideLen + 2;
 
-  int i, j;
+  size_t i, j;
   for (j = 0; j < paddedSideLen; j++) {
     for (i = 0; i < paddedSideLen; i++) {
       int64 val;
@@ -326,11 +326,11 @@ createPadded2dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
           || i == 0 || i == (paddedSideLen-1)) {
         val = 0;
       } else {
-        int inputIndex = (j-1)*inputSideLen + (i-1);
+        size_t inputIndex = (j-1)*inputSideLen + (i-1);
         val = inputArr[inputIndex];
       }
 
-      int paddedIndex = j*paddedSideLen + i;
+      size_t paddedIndex = j*paddedSideLen + i;
       paddedArr[paddedIndex] = val;
     }
   }
@@ -339,11 +339,11 @@ createPadded2dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
 // resulting array's outermost entries are zero
 // size m*n*p -> (m+2)*(n+2)*(p+2)
 static void
-createPadded3dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
+createPadded3dArray(int64* inputArr, size_t inputSideLen, int64* paddedArr)
 {
-  int paddedSideLen = inputSideLen + 2;
+  size_t paddedSideLen = inputSideLen + 2;
 
-  int i, j, k;
+  size_t i, j, k;
   for (k = 0; k < paddedSideLen; k++) {
     for (j = 0; j < paddedSideLen; j++) {
       for (i = 0; i < paddedSideLen; i++) {
@@ -353,11 +353,11 @@ createPadded3dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
             || i == 0 || i == (paddedSideLen-1)) {
           val = 0;
         } else {
-          int inputIndex = (k-1)*inputSideLen*inputSideLen + (j-1)*inputSideLen + (i-1);
+          size_t inputIndex = (k-1)*inputSideLen*inputSideLen + (j-1)*inputSideLen + (i-1);
           val = inputArr[inputIndex];
         }
 
-        int paddedIndex = k*paddedSideLen*paddedSideLen + j*paddedSideLen + i;
+        size_t paddedIndex = k*paddedSideLen*paddedSideLen + j*paddedSideLen + i;
         paddedArr[paddedIndex] = val;
       }
     }
@@ -370,15 +370,15 @@ createPadded3dArray(int64* inputArr, int inputSideLen, int64* paddedArr)
 // These new entries are computed as weighted sums from
 // its local neighborhood , plus some random noise
 static void
-produceLargerNoisedArray(int64* inputArr, int inputSideLen, int numDims, uint64 amplitude, fixedPt* f, int64* outputArr)
+produceLargerNoisedArray(int64* inputArr, size_t inputSideLen, int numDims, uint64 amplitude, fixedPt* f, int64* outputArr)
 {
   // pad (border/enclose) inputArr with zeros
-  int paddedSideLen = inputSideLen + 2;
-  int paddedTotalLen = intPow(paddedSideLen, numDims);
+  size_t paddedSideLen = inputSideLen + 2;
+  size_t paddedTotalLen = intPow(paddedSideLen, numDims);
   int64* paddedInputArr = malloc(paddedTotalLen * sizeof(int64));
 
-  int outputSideLen = 2*inputSideLen - 1;
-  int maxI = outputSideLen, maxJ = 1, maxK = 1;
+  size_t outputSideLen = 2*inputSideLen - 1;
+  size_t maxI = outputSideLen, maxJ = 1, maxK = 1;
   switch (numDims) {
     case 1:
       createPadded1dArray(inputArr, inputSideLen, paddedInputArr);
@@ -396,15 +396,15 @@ produceLargerNoisedArray(int64* inputArr, int inputSideLen, int numDims, uint64 
       break;
   }
 
-  int outI, outJ, outK;
+  size_t outI, outJ, outK;
   for (outK = 0; outK < maxK; outK++) {
-    int inK = outK / 2;
+    size_t inK = outK / 2;
 
     for (outJ = 0; outJ < maxJ; outJ++) {
-      int inJ = outJ / 2;
+      size_t inJ = outJ / 2;
 
       for (outI = 0; outI < maxI; outI++) {
-        int inI = outI / 2;
+        size_t inI = outI / 2;
 
         int64* firstElementPtr = paddedInputArr;
         size_t stride;
@@ -413,7 +413,7 @@ produceLargerNoisedArray(int64* inputArr, int inputSideLen, int numDims, uint64 
           if (outJ % 2 == 0) {
             if (outI % 2 == 0) {
               // vertex
-              int inputIndex = computeOffset(inK, inJ, inI, inputSideLen, numDims);
+              size_t inputIndex = computeOffset(inK, inJ, inI, inputSideLen, numDims);
 
               val = inputArr[inputIndex];
             } else {
@@ -474,7 +474,7 @@ produceLargerNoisedArray(int64* inputArr, int inputSideLen, int numDims, uint64 
 
         }
 
-        int outputIndex = computeOffset(outK, outJ, outI, outputSideLen, numDims);
+        size_t outputIndex = computeOffset(outK, outJ, outI, outputSideLen, numDims);
         outputArr[outputIndex] = val;
 
       }
@@ -488,11 +488,11 @@ produceLargerNoisedArray(int64* inputArr, int inputSideLen, int numDims, uint64 
 // if vals are outside [-amplitude, amplitude], then set them to the boundary value
 // *this function should do nothing*
 static void
-clampValsIntoRange(int64* arr, int n, uint64 amplitude)
+clampValsIntoRange(int64* arr, size_t n, uint64 amplitude)
 {
   int64 maxBound = (int64)amplitude;
   int64 minBound = -maxBound;
-  int i;
+  size_t i;
   for (i = 0; i < n; i++) {
     if (arr[i] < minBound) {
       arr[i] = minBound;
@@ -503,9 +503,9 @@ clampValsIntoRange(int64* arr, int n, uint64 amplitude)
 }
 
 static void
-copyArraySubset(int64* inputArr, int inputSideLen, int numDims, int64* outputArr, int outputSideLen)
+copyArraySubset(int64* inputArr, size_t inputSideLen, int numDims, int64* outputArr, size_t outputSideLen)
 {
-  int i, j, k;
+  size_t i, j, k;
   switch(numDims) {
     case 1:
       memcpy(outputArr, inputArr, outputSideLen * sizeof(int64));
@@ -524,8 +524,8 @@ copyArraySubset(int64* inputArr, int inputSideLen, int numDims, int64* outputArr
       for (k = 0; k < outputSideLen; k++) {
         for (j = 0; j < outputSideLen; j++) {
           for (i = 0; i < outputSideLen; i++) {
-            int outputIndex = k*outputSideLen*outputSideLen + j*outputSideLen + i;
-            int inputIndex = k*inputSideLen*inputSideLen + j*inputSideLen + i;
+            size_t outputIndex = k*outputSideLen*outputSideLen + j*outputSideLen + i;
+            size_t inputIndex = k*inputSideLen*inputSideLen + j*inputSideLen + i;
             outputArr[outputIndex] = inputArr[inputIndex];
           }
         }
@@ -537,18 +537,18 @@ copyArraySubset(int64* inputArr, int inputSideLen, int numDims, int64* outputArr
 
 // this will destroy (free) inputArr
 static void
-generateNRandInts(int64* inputArr, int inputSideLen, int minTotalElements, int numDims, uint64 amplitude, int64** outputArrPtr, int* outputSideLen, int* outputTotalLen)
+generateNRandInts(int64* inputArr, size_t inputSideLen, size_t minTotalElements, int numDims, uint64 amplitude, int64** outputArrPtr, size_t* outputSideLen, size_t* outputTotalLen)
 {
   // parameters used for random noise
   fixedPt f = {7, 0};
   fixedPt scaleFVal = {0, 0xaaaaaaaa};
 
   int64* currArr = inputArr;
-  int currSideLen = inputSideLen;
-  int currTotalLen = intPow(inputSideLen, numDims);
+  size_t currSideLen = inputSideLen;
+  size_t currTotalLen = intPow(inputSideLen, numDims);
 
   int64* nextArr;
-  int nextSideLen, nextTotalLen;
+  size_t nextSideLen, nextTotalLen;
 
   while(currTotalLen < minTotalElements) {
     nextSideLen = 2*currSideLen - 1;
@@ -582,27 +582,27 @@ generateNRandInts(int64* inputArr, int inputSideLen, int minTotalElements, int n
 }
 
 static void
-cast64ArrayTo32(int64* inputArr, int arrLen, int32* outputArr)
+cast64ArrayTo32(int64* inputArr, size_t arrLen, int32* outputArr)
 {
-  int i;
+  size_t i;
   for (i = 0; i < arrLen; i++) {
     outputArr[i] = (int32)inputArr[i];
   }
 }
 
 static void
-convertIntArrToFloatArr(int64* inputArr, int arrLen, float* outputArr)
+convertIntArrToFloatArr(int64* inputArr, size_t arrLen, float* outputArr)
 {
-  int i;
+  size_t i;
   for (i = 0; i < arrLen; i++) {
     outputArr[i] = ldexpf((float)inputArr[i], -12);
   }
 }
 
 static void
-convertIntArrToDoubleArr(int64* inputArr, int arrLen, double* outputArr)
+convertIntArrToDoubleArr(int64* inputArr, size_t arrLen, double* outputArr)
 {
-  int i;
+  size_t i;
   for (i = 0; i < arrLen; i++) {
     outputArr[i] = ldexp((double)inputArr[i], -26);
   }
@@ -610,16 +610,16 @@ convertIntArrToDoubleArr(int64* inputArr, int arrLen, double* outputArr)
 
 // generate array that will be initially fed into generateNRandInts()
 static void
-generateInitialArray(int64* initialVec, int initialVecLen, int numDims, uint64 amplitude, int64** outputArrPtr)
+generateInitialArray(int64* initialVec, size_t initialVecLen, int numDims, uint64 amplitude, int64** outputArrPtr)
 {
-  int totalLen = computeTensorProduct(initialVec, initialVecLen, numDims, outputArrPtr);
+  size_t totalLen = computeTensorProduct(initialVec, initialVecLen, numDims, outputArrPtr);
 
   // compute signed amplitudes
   int64 positiveAmp = (int64)amplitude;
   int64 negativeAmp = -positiveAmp;
 
   // set non-zero values to signed amplitude
-  int i;
+  size_t i;
   for (i = 0; i < totalLen; i++) {
     if ((*outputArrPtr)[i] > 0) {
       (*outputArrPtr)[i] = positiveAmp;
@@ -630,12 +630,12 @@ generateInitialArray(int64* initialVec, int initialVecLen, int numDims, uint64 a
 }
 
 void
-generateSmoothRandInts64(int minTotalElements, int numDims, int amplitudeExp, int64** outputArrPtr, int* outputSideLen, int* outputTotalLen)
+generateSmoothRandInts64(size_t minTotalElements, int numDims, int amplitudeExp, int64** outputArrPtr, size_t* outputSideLen, size_t* outputTotalLen)
 {
   uint64 amplitude = ((uint64)1 << amplitudeExp) - 1;
 
   // initial vector for tensor product (will be scaled to amplitude)
-  int initialSideLen = 5;
+  size_t initialSideLen = 5;
   int64* initialVec = malloc(initialSideLen * sizeof(int64));
   initialVec[0] = 0;
   initialVec[1] = 1;
@@ -656,7 +656,7 @@ generateSmoothRandInts64(int minTotalElements, int numDims, int amplitudeExp, in
 }
 
 void
-generateSmoothRandInts32(int minTotalElements, int numDims, int amplitudeExp, int32** outputArr32Ptr, int* outputSideLen, int* outputTotalLen)
+generateSmoothRandInts32(size_t minTotalElements, int numDims, int amplitudeExp, int32** outputArr32Ptr, size_t* outputSideLen, size_t* outputTotalLen)
 {
   int64* randArr64;
   generateSmoothRandInts64(minTotalElements, numDims, amplitudeExp, &randArr64, outputSideLen, outputTotalLen);
@@ -668,7 +668,7 @@ generateSmoothRandInts32(int minTotalElements, int numDims, int amplitudeExp, in
 }
 
 void
-generateSmoothRandFloats(int minTotalElements, int numDims, float** outputArrPtr, int* outputSideLen, int* outputTotalLen)
+generateSmoothRandFloats(size_t minTotalElements, int numDims, float** outputArrPtr, size_t* outputSideLen, size_t* outputTotalLen)
 {
   int64* intArr;
   generateSmoothRandInts64(minTotalElements, numDims, FLOAT_MANTISSA_BITS, &intArr, outputSideLen, outputTotalLen);
@@ -680,7 +680,7 @@ generateSmoothRandFloats(int minTotalElements, int numDims, float** outputArrPtr
 }
 
 void
-generateSmoothRandDoubles(int minTotalElements, int numDims, double** outputArrPtr, int* outputSideLen, int* outputTotalLen)
+generateSmoothRandDoubles(size_t minTotalElements, int numDims, double** outputArrPtr, size_t* outputSideLen, size_t* outputTotalLen)
 {
   int64* intArr;
   generateSmoothRandInts64(minTotalElements, numDims, DOUBLE_MANTISSA_BITS, &intArr, outputSideLen, outputTotalLen);

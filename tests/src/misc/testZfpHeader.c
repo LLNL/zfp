@@ -196,19 +196,19 @@ given_customCompressParamsSet_when_zfpStreamModeCalled_expect_allParamsEncodedIn
 
   uint64 mode = zfp_stream_mode(stream);
 
-  uint endingToken = mode & MASK_12_BITS;
+  uint endingToken = (uint)(mode & MASK_12_BITS);
   mode >>= 12;
 
-  uint minBits = (mode & MASK_15_BITS) + 1;
+  uint minBits = (uint)(mode & MASK_15_BITS) + 1;
   mode >>= 15;
 
-  uint maxBits = (mode & MASK_15_BITS) + 1;
+  uint maxBits = (uint)(mode & MASK_15_BITS) + 1;
   mode >>= 15;
 
-  uint maxPrec = (mode & MASK_7_BITS) + 1;
+  uint maxPrec = (uint)(mode & MASK_7_BITS) + 1;
   mode >>= 7;
 
-  int minExp = (mode & MASK_15_BITS) - 16495;
+  int minExp = (int)(mode & MASK_15_BITS) - 16495;
 
   assert_int_equal(endingToken, 0xfffu);
   assert_int_equal(minBits, MIN_BITS);
