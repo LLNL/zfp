@@ -46,8 +46,8 @@ endif()
 # Top level options
 #------------------------------------------------------------------------------#
 
-# Windows specific options
-if(WIN32)
+# Windows (Visual Studio) specific options
+if(MSVC)
   # Use this to get a usable export library when building a DLL on Windows
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
