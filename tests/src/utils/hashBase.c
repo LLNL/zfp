@@ -35,12 +35,12 @@ hashValue64(uint64 val, uint32* h1, uint32* h2)
 uint64
 hashBitstream(uint64* ptrStart, size_t bufsizeBytes)
 {
-  int nx = bufsizeBytes / sizeof(uint64);
+  size_t nx = bufsizeBytes / sizeof(uint64);
 
   uint32 h1 = 0;
   uint32 h2 = 0;
 
-  for (; nx > 0; ptrStart++, nx--) {
+  for (; nx--; ptrStart++) {
     hashValue64(*ptrStart, &h1, &h2);
   }
 

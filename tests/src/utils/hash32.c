@@ -3,11 +3,11 @@
 // all functions are used to hash 32-bit valued arrays (int32, float)
 
 uint32
-hashArray(const uint32* arr, int nx, int sx)
+hashArray(const uint32* arr, size_t nx, int sx)
 {
   uint32 h = 0;
 
-  for (; nx > 0; arr += sx, nx--) {
+  for (; nx--; arr += sx) {
     hashValue(*arr, &h);
   }
 

@@ -58,7 +58,7 @@ when_Flush_expect_PaddedWordWrittenToStream(void **state)
   stream_write_bits(s, WORD2, PREV_BUFFER_BIT_COUNT);
   word *prevPtr = s->ptr;
 
-  uint padCount = stream_flush(s);
+  size_t padCount = stream_flush(s);
 
   assert_ptr_equal(s->ptr, prevPtr + 1);
   assert_int_equal(s->bits, 0);
@@ -74,7 +74,7 @@ given_EmptyBuffer_when_Flush_expect_NOP(void **state)
   uint prevBits = s->bits;
   word prevBuffer = s->buffer;
 
-  uint padCount = stream_flush(s);
+  size_t padCount = stream_flush(s);
 
   assert_ptr_equal(s->ptr, prevPtr);
   assert_int_equal(s->bits, prevBits);

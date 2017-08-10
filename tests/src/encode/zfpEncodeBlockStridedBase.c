@@ -246,7 +246,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_OnlyStridedE
   uint64 originalChecksum = hashBitstream(stream_data(s), stream_size(s));
 
   // zero bitstream's memory
-  uint writtenBits = stream_wtell(s);
+  size_t writtenBits = stream_wtell(s);
   stream_rewind(s);
   stream_pad(s, writtenBits);
   stream_rewind(s);
@@ -304,7 +304,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyS
   uint64 originalChecksum = hashBitstream(stream_data(s), stream_size(s));
 
   // zero bitstream's memory
-  uint writtenBits = stream_wtell(s);
+  size_t writtenBits = stream_wtell(s);
   stream_rewind(s);
   stream_pad(s, writtenBits);
   stream_rewind(s);
@@ -335,7 +335,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyE
   uint64 originalChecksum = hashBitstream(stream_data(s), stream_size(s));
 
   // zero bitstream's memory
-  uint writtenBits = stream_wtell(s);
+  size_t writtenBits = stream_wtell(s);
   stream_rewind(s);
   stream_pad(s, writtenBits);
   stream_rewind(s);

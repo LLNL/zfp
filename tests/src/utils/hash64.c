@@ -3,12 +3,12 @@
 // all functions are used to hash 64-bit valued arrays (int64, double)
 
 uint64
-hashArray(const uint64* arr, int nx, int sx)
+hashArray(const uint64* arr, size_t nx, int sx)
 {
   uint32 h1 = 0;
   uint32 h2 = 0;
 
-  for (; nx > 0; arr += sx, nx--) {
+  for (; nx--; arr += sx) {
     hashValue64(*arr, &h1, &h2);
   }
 
