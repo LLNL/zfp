@@ -1,51 +1,122 @@
 language:
   - c
 
-dist: trusty
+env:
+  - C_STANDARD=99 CXX_STANDARD=98
 
 matrix:
   include:
-    - compiler: clang-3.6
+    - os: linux
+      dist: trusty
+      compiler: clang-3.6
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty']
           packages: clang-3.6
 
-    - compiler: clang
+    - os: linux
+      dist: trusty
+      compiler: clang
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty']
           packages: clang-3.4
 
-    - compiler: gcc-4.4
+    - os: linux
+      dist: trusty
+      compiler: gcc-4.4
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
           packages: gcc-4.4
 
-    - compiler: gcc-4.7
+    - os: linux
+      dist: trusty
+      compiler: gcc-4.7
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
           packages: gcc-4.7
 
-    - compiler: gcc-4.8
+    - os: linux
+      dist: trusty
+      compiler: gcc-4.8
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
           packages: gcc-4.8
 
-    - compiler: gcc-4.9
+    - os: linux
+      dist: trusty
+      compiler: gcc-4.9
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
           packages: gcc-4.9
 
-    - compiler: gcc-5
+    - os: linux
+      dist: trusty
+      compiler: gcc-5
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
           packages: gcc-5
+
+    - os: linux
+      dist: trusty
+      compiler: gcc-6
+      addons:
+        apt:
+          sources: ubuntu-toolchain-r-test
+          packages: gcc-6
+      env:
+        - C_STANDARD=90
+
+    - os: linux
+      dist: trusty
+      compiler: gcc-6
+      addons:
+        apt:
+          sources: ubuntu-toolchain-r-test
+          packages: gcc-6
+      env:
+        - C_STANDARD=11
+
+    - os: linux
+      dist: trusty
+      compiler: gcc-6
+      addons:
+        apt:
+          sources: ubuntu-toolchain-r-test
+          packages: gcc-6
+      env:
+        - CXX_STANDARD=11
+
+    - os: linux
+      dist: trusty
+      compiler: gcc-6
+      addons:
+        apt:
+          sources: ubuntu-toolchain-r-test
+          packages: gcc-6
+      env:
+        - CXX_STANDARD=14
+
+    - os: linux
+      dist: trusty
+      compiler: gcc-6
+      addons:
+        apt:
+          sources: ubuntu-toolchain-r-test
+          packages: gcc-6
+
+    - os: osx
+      osx_image: xcode7.3
+      compiler: gcc
+
+    - os: osx
+      osx_image: xcode8.3
+      compiler: gcc
 
 script:
   - ./travis.sh

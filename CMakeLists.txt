@@ -56,8 +56,16 @@ if(MSVC)
 endif()
 
 # Suggest C99
-# Falls back to C89 if 99 is not supported
-set(CMAKE_C_STANDARD 99)
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+message(STATUS "Compiling with C standard: ${CMAKE_C_STANDARD}")
+
+# Suggest C++98
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 98)
+endif()
+message(STATUS "Compiling with C++ standard: ${CMAKE_CXX_STANDARD}")
 
 include(CMakeDependentOption)
 
