@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'zfp'
-copyright = u'2017, Peter Lindstrom'
+copyright = u'2017, LLNL-CODE-663824'
 author = u'Peter Lindstrom'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -54,7 +54,7 @@ author = u'Peter Lindstrom'
 # built documents.
 #
 # The short X.Y version.
-version = u'0.5.2'
+version = u'0.5'
 # The full version, including alpha/beta/rc tags.
 release = u'0.5.2'
 
@@ -82,7 +82,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'pyramid'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -100,15 +100,15 @@ html_static_path = ['_static']
 #
 # This is required for the alabaster theme
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'relations.html',  # needs 'show_related': True theme option to display
-        'searchbox.html',
-        'donate.html',
-    ]
-}
+#html_sidebars = {
+#    '**': [
+#        'about.html',
+#        'navigation.html',
+#        'relations.html',  # needs 'show_related': True theme option to display
+#        'searchbox.html',
+#        'donate.html',
+#    ]
+#}
 
 
 # -- Options for HTMLHelp output ------------------------------------------

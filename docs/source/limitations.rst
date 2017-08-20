@@ -9,8 +9,9 @@ Limitations
 production readiness.  However, the API and even the compression codec are
 still undergoing changes as new important features are added.
 
-Below is a list of known limitations and desirable features that may make
-it into future versions of |zfp|.
+Below is a list of known limitations of the current version of |zfp|.
+See the section on :ref:`directions` for a discussion of planned features
+that will address some of these limitations.
 
 - The current version of |zfp| allows for near lossless compression through
   suitable parameter choices, but no guarantees are made that bit-for-bit
@@ -54,3 +55,5 @@ it into future versions of |zfp|.
 - This version of |zfp| does not run on the GPU.  Some work has been done
   to port |zfp| to CUDA, and an
   `experimental version <https://github.com/mclarsen/cuzfp/>`_ is available.
+
+Several 

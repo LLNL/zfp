@@ -8,8 +8,8 @@ compressor.
 
 .. _ex-simple:
 
-Simple Example
---------------
+Simple Compressor
+-----------------
 
 The :file:`simple` program is a minimal example that shows how to call the
 compressor and decompressor on a double-precision 3D array.  Without
@@ -81,7 +81,8 @@ PGM Image Compression
 ---------------------
 
 The :file:`pgm` program illustrates how zfp can be used to compress grayscale
-images in the pgm format.  The usage is::
+images in the `pgm format <http://netpbm.sourceforge.net/doc/pgm.html>`_.
+The usage is::
 
     pgm <param> <input.pgm >output.pgm
 
@@ -112,3 +113,14 @@ stream.  The program takes one optional argument::
 which specifies the fixed-accuracy absolute tolerance to use during
 compression.  Please see :ref:`FAQ #19 <q-inplace>` for more on the
 limitations of in-place compression.
+
+.. _ex-iterators:
+
+Iterators
+---------
+
+The :file:`iterator` example illustrates how to use |zfp|'s
+compressed-array iterators and pointers for traversing arrays.  For
+instance, it gives an example of sorting a 1D compressed array
+using :cpp:func:`std::sort`.  This example takes no command-line
+arguments.
