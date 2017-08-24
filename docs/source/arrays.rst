@@ -152,6 +152,15 @@ class.
   Return :ref:`proxy reference <references>` to scalar stored at given flat
   index (mutator).  For a 3D array, :code:`index = x + nx * (y + ny * z)`.
 
+.. cpp:function:: iterator array::begin()
+
+  Return iterator to beginning of array.
+
+.. cpp:function:: iterator array::end()
+
+  Return iterator to end of array.  As with STL iterators, the end points
+  to a virtual element just past the last valid array element.
+
 
 1D, 2D, and 3D Arrays
 ^^^^^^^^^^^^^^^^^^^^^
@@ -209,6 +218,7 @@ provided.
   Return scalar stored at multi-dimensional index given by *i*, *j*, and *k*
   (inspector).
 
+.. _lvref:
 .. cpp:function:: reference array1::operator()(uint i)
 .. cpp:function:: reference array2::operator()(uint i, uint j)
 .. cpp:function:: reference array3::operator()(uint i, uint j, uint k)

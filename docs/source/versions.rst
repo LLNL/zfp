@@ -147,7 +147,7 @@ zfp 0.3.2, December 3, 2015
 zfp 0.3.1, May 6, 2015
 
   - Fixed rare bug caused by exponent underflow in blocks with no normal
-    and some denormal numbers.
+    and some subnormal numbers.
 
 
 zfp 0.3.0, March 3, 2015

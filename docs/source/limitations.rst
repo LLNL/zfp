@@ -55,5 +55,3 @@ that will address some of these limitations.
 - This version of |zfp| does not run on the GPU.  Some work has been done
   to port |zfp| to CUDA, and an
   `experimental version <https://github.com/mclarsen/cuzfp/>`_ is available.
-
-Several 

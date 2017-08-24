@@ -15,6 +15,7 @@
    modes
    high-level-api
    low-level-api
+   bit-stream
    arrays
    zfpcmd
    examples

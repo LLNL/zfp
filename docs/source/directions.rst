@@ -63,6 +63,15 @@ important features, including:
   for read-write access, where each thread has exclusive ownership of a
   portion of the array.
 
+- **Variable-rate arrays**.  |zfp| currently supports only fixed-rate
+  compressed arrays, which wastes bits in smooth regions with little
+  information content while too few bits may be allocated to accurately
+  preserve sharp features such as shocks and material interfaces, which
+  tend to drive the physics in numerical simulations.  Two candidate
+  solutions have been identified for read-only and read-write access
+  to variable-rate arrays with very modest storage overhead.  These
+  arrays will support both fixed precision and accuracy.
+
 - **Array operations**.  |zfp|'s compressed arrays currently support basic
   indexing and initialization, but lack essential features such as shallow
   and deep copies, slicing, views, etc.  Work is underway to address these

@@ -11,10 +11,10 @@ compressor.
 Simple Compressor
 -----------------
 
-The :file:`simple` program is a minimal example that shows how to call the
-compressor and decompressor on a double-precision 3D array.  Without
-the '-d' option, it will compress the array and write the compressed
-stream to standard output.  With the '-d' option, it will instead
+The :program:`simple` program is a minimal example that shows how to call
+the compressor and decompressor on a double-precision 3D array.  Without
+the :code:`-d` option, it will compress the array and write the compressed
+stream to standard output.  With the :code:`-d` option, it will instead
 read the compressed stream from standard input and decompress the
 array::
 
@@ -29,8 +29,8 @@ utility.
 Diffusion Solver
 ----------------
 
-The :file:`diffusion` example is a simple forward Euler solver for the heat
-equation on a 2D regular grid, and is intended to show how to declare
+The :program:`diffusion` example is a simple forward Euler solver for the
+heat equation on a 2D regular grid, and is intended to show how to declare
 and work with |zfp|'s compressed arrays, as well as give an idea of how
 changing the compression rate and cache size affects the error in the
 solution and solution time.  The usage is::
@@ -42,7 +42,7 @@ double-precision floating-point value (default = 64); *nx* and *ny*
 specify the grid size (default = 100 |times| 100); *nt* specifies the number
 of time steps to run (the default is to run until time *t* = 1); and *blocks*
 is the number of uncompressed blocks to cache (default = *nx* / 2).  The
-'-i' option enables array traversal via iterators instead of indices.
+:code:`-i` option enables array traversal via iterators instead of indices.
 
 Running diffusion with the following arguments::
 
@@ -59,14 +59,14 @@ should result in this output::
     rate=64 sum=0.998326 error=1.967957e-07
 
 For speed and quality comparison, the solver solves the same problem using
-uncompressed double-precision arrays when -r is ommitted.
+uncompressed double-precision arrays when :code:`-r` is omitted.
 
 .. _ex-speed:
 
 Speed Benchmark
 ---------------
 
-The :file:`speed` program takes two optional parameters::
+The :program:`speed` program takes two optional parameters::
 
     speed [rate] [blocks]
 
@@ -80,9 +80,9 @@ processed.
 PGM Image Compression
 ---------------------
 
-The :file:`pgm` program illustrates how zfp can be used to compress grayscale
-images in the `pgm format <http://netpbm.sourceforge.net/doc/pgm.html>`_.
-The usage is::
+The :program:`pgm` program illustrates how zfp can be used to compress
+grayscale images in the
+`pgm format <http://netpbm.sourceforge.net/doc/pgm.html>`_.  The usage is::
 
     pgm <param> <input.pgm >output.pgm
 
@@ -100,7 +100,7 @@ integer data with |zfp|.
 In-place Compression
 --------------------
 
-The :file:`inplace` example shows how one might use zfp to perform in-place
+The :program:`inplace` example shows how one might use zfp to perform in-place
 compression and decompression when memory is at a premium.  Here the
 floating-point array is overwritten with compressed data, which is later
 decompressed back in place.  This example also shows how to make use of
@@ -119,8 +119,8 @@ limitations of in-place compression.
 Iterators
 ---------
 
-The :file:`iterator` example illustrates how to use |zfp|'s
+The :program:`iterator` example illustrates how to use |zfp|'s
 compressed-array iterators and pointers for traversing arrays.  For
 instance, it gives an example of sorting a 1D compressed array
 using :cpp:func:`std::sort`.  This example takes no command-line
-arguments.
+options.

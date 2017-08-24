@@ -5,7 +5,7 @@ FAQ
 
 The following is a list of answers to frequently asked questions.  For
 questions not answered here or elsewhere in the documentation, please
-e-mail the author at pl@llnl.gov.
+e-mail `Peter Lindstrom <mailto:pl@llnl.gov>`__.
 
 Questions answered in this FAQ:
 

@@ -1,8 +1,8 @@
 .. include:: defs.rst
 
-.. _modes:
 .. index::
    single: Compression mode
+.. _modes:
 
 Compression Modes
 =================

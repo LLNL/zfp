@@ -53,7 +53,7 @@ implemented).  These proxy references can, however, safely be passed to
 functions and used where regular references can.
 
 zfp does not support special floating-point values like infinities and
-NaNs, although denormalized numbers are handled correctly.  Similarly,
+NaNs, although subnormal numbers are handled correctly.  Similarly,
 because the compressor assumes that the array values vary smoothly,
 using finite but large values like HUGE_VAL in place of infinities is
 not advised, as this will introduce large errors in smaller values

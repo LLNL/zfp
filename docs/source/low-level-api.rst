@@ -240,7 +240,7 @@ These functions convert 8- and 16-bit signed and unsigned integer data to
 (de)compressed by |zfp|'s :code:`int32` functions.  These conversion functions
 are preferred over simple casting since they eliminate the redundant leading
 zeros that would otherwise have to be compressed, and they apply the
-approprate bias for unsigned integer data.
+appropriate bias for unsigned integer data.
 
 .. c:function:: void zfp_promote_int8_to_int32(int32* oblock, const int8* iblock, uint dims)
 .. c:function:: void zfp_promote_uint8_to_int32(int32* oblock, const uint8* iblock, uint dims)

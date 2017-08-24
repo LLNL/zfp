@@ -100,7 +100,7 @@ General options
 
 .. option:: -q
 
-  Quiet mode; suppress diagonostic output.
+  Quiet mode; suppress diagnostic output.
 
 .. option:: -s
 

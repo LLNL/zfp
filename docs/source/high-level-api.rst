@@ -98,65 +98,61 @@ Types
 
 .. c:type:: zfp_stream
 
-The :c:type:`zfp_stream` struct encapsulates all information about the
-compressed stream for a single block or a collection of blocks that
-represent an array.  See the section on :ref:`compression modes <modes>`
-for a description of the members of this struct.
-::
+  The :c:type:`zfp_stream` struct encapsulates all information about the
+  compressed stream for a single block or a collection of blocks that
+  represent an array.  See the section on :ref:`compression modes <modes>`
+  for a description of the members of this struct.
+  ::
 
-  typedef struct {
-    uint minbits;      // minimum number of bits to store per block
-    uint maxbits;      // maximum number of bits to store per block
-    uint maxprec;      // maximum number of bit planes to store
-    int minexp;        // minimum floating point bit plane number to store
-    bitstream* stream; // compressed bit stream
-  } zfp_stream;
-
-----
+    typedef struct {
+      uint minbits;      // minimum number of bits to store per block
+      uint maxbits;      // maximum number of bits to store per block
+      uint maxprec;      // maximum number of bit planes to store
+      int minexp;        // minimum floating point bit plane number to store
+      bitstream* stream; // compressed bit stream
+    } zfp_stream;
 
 .. c:type:: zfp_type
 
-Enumerates the scalar types supported by the compressor, and is used to
-describe the uncompressed array.  The compressor and decompressor must use
-the same :c:type:`zfp_type`, e.g. one cannot compress doubles and decompress
-to floats or integers.
-::
+  Enumerates the scalar types supported by the compressor, and is used to
+  describe the uncompressed array.  The compressor and decompressor must use
+  the same :c:type:`zfp_type`, e.g. one cannot compress doubles and decompress
+  to floats or integers.
+  ::
 
-  typedef enum {
-    zfp_type_none   = 0, // unspecified type
-    zfp_type_int32  = 1, // 32-bit signed integer
-    zfp_type_int64  = 2, // 64-bit signed integer
-    zfp_type_float  = 3, // single precision floating point
-    zfp_type_double = 4  // double precision floating point
-  } zfp_type;
-
-----
+    typedef enum {
+      zfp_type_none   = 0, // unspecified type
+      zfp_type_int32  = 1, // 32-bit signed integer
+      zfp_type_int64  = 2, // 64-bit signed integer
+      zfp_type_float  = 3, // single precision floating point
+      zfp_type_double = 4  // double precision floating point
+    } zfp_type;
 
 .. c:type:: zfp_field
 
-The uncompressed array is described by the :c:type:`zfp_field` struct, which
-encodes the array's scalar type, dimensions, and memory layout.
-::
+  The uncompressed array is described by the :c:type:`zfp_field` struct, which
+  encodes the array's scalar type, dimensions, and memory layout.
+  ::
 
-  typedef struct {
-    zfp_type type;   // scalar type (e.g. int32, double)
-    uint nx, ny, nz; // sizes (zero for unused dimensions)
-    int sx, sy, sz;  // strides (zero for contiguous array a[nz][ny][nx])
-    void* data;      // pointer to array data
-  } zfp_field;
+    typedef struct {
+      zfp_type type;   // scalar type (e.g. int32, double)
+      uint nx, ny, nz; // sizes (zero for unused dimensions)
+      int sx, sy, sz;  // strides (zero for contiguous array a[nz][ny][nx])
+      void* data;      // pointer to array data
+    } zfp_field;
 
-For example, a static multidimensional C array declared as
-::
+  For example, a static multidimensional C array declared as
+  ::
 
-  double array[n1][n2][n3];
+    double array[n1][n2][n3];
 
-would be described by a :c:type:`zfp_field` with members
-::
+  would be described by a :c:type:`zfp_field` with members
+  ::
 
-  type = zfp_type_double;
-  nx = n3; ny = n2; nz = n1;
-  sx = 1; sy = n3; sz = n2 * n3;
-  data = &array[0][0][0];
+    type = zfp_type_double;
+    nx = n3; ny = n2; nz = n1;
+    sx = 1; sy = n3; sz = n2 * n3;
+    data = &array[0][0][0];
 
 .. _hl-data:
 
@@ -219,7 +215,7 @@ Compressed Stream
   :c:macro:`ZFP_MODE_SHORT_BITS` (12 in the current version) suffice to
   encode the parameters.  Otherwise all 64 bits are needed, and the low
   :c:macro:`ZFP_MODE_SHORT_BITS` bits will be all ones.  Thus, this
-  variable-length encoding can be used to economically encode and deocde
+  variable-length encoding can be used to economically encode and decode
   the compression parameters, which is especially important if the parameters
   are to vary spatially over small regions.  Such spatially adaptive coding
   would have to be implemented via the low-level API.
@@ -311,20 +307,20 @@ Array Metadata
 
 .. c:function:: zfp_field* zfp_field_1d(void* pointer, zfp_type type, uint nx)
 
-  Allocate and return a field stuct that describes an existing 1D array,
+  Allocate and return a field struct that describes an existing 1D array,
   :code:`a[nx]`, of *nx* uncompressed scalars of given *type* stored at
   *pointer*, which may be :c:macro:`NULL` and specified later.
 
 .. c:function:: zfp_field* zfp_field_2d(void* pointer, zfp_type type, uint nx, uint ny)
 
-  Allocate and return a field stuct that describes an existing 2D array,
+  Allocate and return a field struct that describes an existing 2D array,
   :code:`a[ny][nx]`, of *nx* |times| *ny* uncompressed scalars of given
   *type* stored at *pointer*, which may be :c:macro:`NULL` and specified
   later.
 
 .. c:function:: zfp_field* zfp_field_3d(void* pointer, zfp_type type, uint nx, uint ny, uint nz)
 
-  Allocate and return a field stuct that describes an existing 3D array,
+  Allocate and return a field struct that describes an existing 3D array,
   :code:`a[nz][ny][nx]`, of *nx* |times| *ny* |times| *nz* uncompressed
   scalars of given *type* stored at *pointer*, which may be :c:macro:`NULL`
   and specified later.
@@ -417,15 +413,15 @@ Compression and Decompression
 .. c:function:: size_t zfp_compress(zfp_stream* stream, const zfp_field* field)
 
   Compress the whole array described by *field* using parameters given by
-  *stream*.  The number of bytes of compressed storage is returned, if
-  the stream were rewound before compression, and otherwise the current
-  byte offset within the bit stream.  Zero is returned if compression
+  *stream* and then flush the stream.  The number of bytes of compressed storage
+  is returned, if the stream were rewound before compression, and otherwise the
+  current byte offset within the bit stream.  Zero is returned if compression
   failed.
 
 .. c:function:: int zfp_decompress(zfp_stream* stream, zfp_field* field)
 
-  Decompress from *stream* to array described by *field*.  Nonzero is
-  returned upon success.
+  Decompress from *stream* to array described by *field* and align the stream on
+  the next word boundary.  Nonzero is returned upon success.
 
 .. c:function:: size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, uint mask)
 
