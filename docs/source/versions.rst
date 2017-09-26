@@ -3,7 +3,7 @@
 Release Notes
 =============
 
-zfp 0.5.2, coming soon
+zfp 0.5.2, September 26, 2017
 
   - Added iterators and proxy objects for pointers and references.
 
@@ -16,10 +16,14 @@ zfp 0.5.2, coming soon
   - Modified 64-bit integer typedefs to avoid the C89 non-compliant long long
     and allow for user-supplied types and literal suffixes.
 
+  - Renamed compile-time macros that did not have a ZFP prefix.
+
   - Fixed issue with setting stream word type via CMake.
 
   - Rewrote documentation in reStructuredText and added complete
     documentation of all public functions, classes, types, and macros.
+    Removed ASCII documentation.
+
 
 zfp 0.5.1, March 28, 2017
 

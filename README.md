@@ -45,10 +45,11 @@ For questions, comments, requests, and bug reports, please contact
 DOCUMENTATION
 -------------
 
-Full, searchable [documentation](http://zfp.readthedocs.io) is available
-online via Read the Docs.
-A [PDF](http://readthedocs.org/projects/zfp/downloads/pdf/latest/) version
-is also available.
+Full
+[documentation](http://zfp.readthedocs.io/en/release0.5.2/)
+is available online via Read the Docs.  A
+[PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release0.5.2/)
+version is also available.
 
 
 INSTALLATION

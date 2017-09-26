@@ -187,8 +187,8 @@ public:
     // typedefs for STL compatibility
     typedef Scalar value_type;
     typedef ptrdiff_t difference_type;
-    typedef array2::reference reference;
-    typedef array2::pointer pointer;
+    typedef typename array2::reference reference;
+    typedef typename array2::pointer pointer;
     typedef std::forward_iterator_tag iterator_category;
 
     iterator() : ref(0, 0, 0) {}

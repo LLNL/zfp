@@ -19,6 +19,7 @@ zfp 0.5.2, September 26, 2017
     documentation of all public functions, classes, types, and macros.
     Removed ASCII documentation.
 
+
 zfp 0.5.1, March 28, 2017
 
   - This release primarily fixes a few minor issues but also includes
