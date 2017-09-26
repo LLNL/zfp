@@ -28,7 +28,7 @@ instructions on GNU and CMake builds.
 
 **NOTE: zfp requires 64-bit compiler and operating system support**.
 
-GNU builds 
+GNU Builds 
 ----------
 
 To compile |zfp| using `gcc <https://gcc.gnu.org>`_, type::
@@ -55,7 +55,7 @@ bit-for-bit across platforms.  If most tests succeed and the failures
 result in byte sizes and error values reasonably close to the expected
 values, then it is likely that the compressor is working correctly.
 
-CMake builds
+CMake Builds
 ------------
 
 To build |zfp| using `CMake <https://cmake.org>`_ on Linux or macOS, start
@@ -87,7 +87,7 @@ Linux on how to change the cmake line to also build the example programs.
    single: Configuration
 .. _config:
 
-Compile-time macros
+Compile-Time Macros
 -------------------
 
 The behavior of |zfp| can be configured at compile time via a set of macros.

@@ -1,3 +1,5 @@
 *.a
 *.o
+bin
+build
 lib

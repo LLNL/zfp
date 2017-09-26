@@ -7,6 +7,8 @@ typedef unsigned int uint;
 
 #if __STDC_VERSION__ >= 199901L
   #include <stdint.h>
+  #define INT64C(x) INT64_C(x)
+  #define UINT64C(x) UINT64_C(x)
   typedef int8_t int8;
   typedef uint8_t uint8;
   typedef int16_t int16;
@@ -23,8 +25,22 @@ typedef unsigned int uint;
   typedef unsigned short uint16;
   typedef signed int int32;
   typedef unsigned int uint32;
-  typedef signed long long int64; /* not ANSI C89 compliant */
-  typedef unsigned long long uint64; /* not ANSI C89 compliant */
+  #define _zfp_cat_(x, y) x ## y
+  #define _zfp_cat(x, y) _zfp_cat_(x, y)
+  #if defined(ZFP_INT64) && defined(ZFP_INT64_SUFFIX)
+    #define INT64C(x) _zfp_cat(x, ZFP_INT64_SUFFIX)
+    typedef ZFP_INT64 int64;
+  #else
+    #define INT64C(x) x ## l
+    typedef signed long int64;
+  #endif
+  #if defined(ZFP_UINT64) && defined(ZFP_UINT64_SUFFIX)
+    #define UINT64C(x) _zfp_cat(x, ZFP_UINT64_SUFFIX)
+    typedef ZFP_UINT64 uint64;
+  #else
+    #define UINT64C(x) x ## ul
+    typedef unsigned long uint64;
+  #endif
 #endif
 
 #endif

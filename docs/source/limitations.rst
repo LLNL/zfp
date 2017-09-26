@@ -24,9 +24,21 @@ that will address some of these limitations.
   extensions to other floating-point formats should be possible with
   minor effort.
 
-- Although the current version of |zfp| supports iterators, pointers, and
-  references to array elements, 'const' versions of these accessors are
-  not yet available for read-only access.
+- Conventional pointers and references to individual array elements are
+  not available.  That is, constructions like :code:`double* ptr = &a[i];`
+  are not possible when :code:`a` is a |zfp| array.  However, as of
+  |zfp| 0.5.2, :ref:`proxy pointers <pointers>` are available that act much
+  like pointers to uncompressed data.  Similarly, operators :code:`[]`
+  and :code:`()` do not return regular C++ references.  Instead, a
+  :ref:`proxy reference <references>` class is used (similar to how STL bit
+  vectors are implemented).  These proxy references and pointers can,
+  however, safely be passed to functions and used where regular references
+  and pointers can.
+
+- Although the current version of |zfp| supports :ref:`iterators <iterators>`,
+  :ref:`pointers <pointers>`, and :ref:`references <references>` to array
+  elements, 'const' versions of these accessors are not yet available for
+  read-only access.
 
 - There currently is no way to make a complete copy of a compressed
   array, i.e. a = b; does not work for arrays a and b.  Copy constructors

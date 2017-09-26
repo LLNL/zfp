@@ -1,7 +1,7 @@
 set(zfp_defs)
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
-  list(APPEND zfp_defs BIT_STREAM_WORD_TYPE=${ZFP_BIT_STREAM_WORD_SIZE})
+  list(APPEND zfp_defs BIT_STREAM_WORD_TYPE=uint${ZFP_BIT_STREAM_WORD_SIZE})
 endif()
 
 if(ZFP_WITH_BIT_STREAM_STRIDED)
@@ -9,19 +9,19 @@ if(ZFP_WITH_BIT_STREAM_STRIDED)
 endif()
 
 if(ZFP_WITH_ALIGNED_ALLOC)
-  list(APPEND zfp_defs ALIGNED_ALLOC)
+  list(APPEND zfp_defs ZFP_ALIGNED_ALLOC)
 endif()
 
 if(ZFP_WITH_CACHE_TWOWAY)
-  list(APPEND zfp_defs CACHE_TWOWAY)
+  list(APPEND zfp_defs ZFP_CACHE_TWOWAY)
 endif()
 
 if(ZFP_WITH_CACHE_FASH_HASH)
-  list(APPEND zfp_defs CACHE_FAST_HASH)
+  list(APPEND zfp_defs ZFP_CACHE_FAST_HASH)
 endif()
 
-if(ZFP_WITH_CACHE_PROFILING)
-  list(APPEND zfp_defs CACHE_PROFILING)
+if(ZFP_WITH_CACHE_PROFILE)
+  list(APPEND zfp_defs ZFP_CACHE_PROFILE)
 endif()
 
 set(zfp_source

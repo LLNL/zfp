@@ -5,12 +5,12 @@
 Troubleshooting
 ===============
 
-This document is intended for trouble shooting problems with |zfp|, in case
+This section is intended for troubleshooting problems with |zfp|, in case
 any arise, and primarily focuses on how to correctly make use of |zfp|.  If
 the decompressed data looks nothing like the original data, or if the
 compression ratios obtained seem not so impressive, then it is very likely
 that array dimensions or compression parameters have not been set correctly,
-in which case this trouble shooting guide could help.
+in which case this troubleshooting guide could help.
 
 The problems addressed in this section include:
 
@@ -34,7 +34,7 @@ The problems addressed in this section include:
 
 P1: *Is the data dimensionality correct?*
 
-This is one of the most common problems.  First, make sure that zfp is given
+This is one of the most common problems.  First, make sure that |zfp| is given
 the correct dimensionality of the data.  For instance, an audio stream is a
 1D array, an image is a 2D array, and a volume grid is a 3D array.  Sometimes
 a data set is a discrete collection of lower-dimensional objects.  For
@@ -45,37 +45,37 @@ in C as a 3D array::
 
 but since in this case the images are unrelated, no correlation would be
 expected along the third dimension--the underlying dimensionality of the data
-is in this case two.  In this case, the images could be compressed one at a
-time, or they could be compressed together by treating the array dimensions
-as::
+is here two.  In this case, the images could be compressed one at a time, or
+they could be compressed together by treating the array dimensions as::
 
   imstack[count * ny][nx]
 
-Note that zfp partitions d-dimensional arrays into blocks of |4powd| values.
-If above ny is not a multiple of four, then some blocks of |4by4| pixels will
-contain pixels from different images, which could hurt compression and/or
-quality.  Still, this way of creating a single image by stacking multiple
+Note that |zfp| partitions *d*-dimensional arrays into blocks of |4powd|
+values.  If *ny* above is not a multiple of four, then some blocks of |4by4|
+pixels will contain pixels from different images, which could hurt compression
+and/or quality.  Still, this way of creating a single image by stacking multiple
 images is far preferable over linearizing each image into a 1D signal, and
 then compressing the images as::
 
   imstack[count][ny * nx]
 
-This loses the correlation along the y dimension, and further introduces
-discontinuities unless nx is a multiple of four.
+This loses the correlation along the *y* dimension, and further introduces
+discontinuities unless *nx* is a multiple of four.
 
-Similarly to the example above, a 2D vector field::
+Similarly to the example above, a 2D vector field
+::
 
   vfield[ny][nx][2]
 
-could be declared as a 3D array, but the x- and y-components of the 2D
-vectors are likely entirely unrelated.  In this case, each component
+could be declared as a 3D array, but the *x*- and *y*-components of the
+2D vectors are likely entirely unrelated.  In this case, each component
 needs to be compressed independently, either by rearranging the data
 as two scalar fields::
 
   vfield[2][ny][nx]
 
 or by using strides (see also :ref:`FAQ #1 <q-vfields>`).  Note that in all
-these cases zfp will still compress the data, but if the dimensionality is
+these cases |zfp| will still compress the data, but if the dimensionality is
 not correct then the compression ratio will suffer.
 
 -------------------------------------------------------------------------------
@@ -88,19 +88,19 @@ Consider compressing a 3D array::
 
   double a[1][1][100]
 
-with :code:`nx = 100, ny = 1, nz = 1`, then decompressing the result to a 1D
+with *nx* = 100, *ny* = 1, *nz* = 1, then decompressing the result to a 1D
 array::
 
   double b[100]
 
-with :code:`nx = 100`.  Although the arrays a and b occupy the same amount of
-memory and are in C laid out similarly, these arrays are not equivalent to zfp
-because their dimensionalities differ.  zfp uses different CODECs to
-(de)compress 1D, 2D, and 3D arrays, and the 1D decompressor expects a
+with *nx* = 100.  Although the arrays *a* and *b* occupy the same amount of
+memory and are in C laid out similarly, these arrays are not equivalent to
+|zfp| because their dimensionalities differ.  |zfp| uses different CODECs
+to (de)compress 1D, 2D, and 3D arrays, and the 1D decompressor expects a
 compressed bit stream that corresponds to a 1D array.
 
-What happens in practice in this case is that the array a is compressed using
-|zfp|'s 3D CODEC, which first pads the array to
+What happens in practice in this case is that the array *a* is compressed
+using |zfp|'s 3D CODEC, which first pads the array to
 ::
 
   double padded[4][4][100]
@@ -163,15 +163,15 @@ order.  For instance, if the data (in C notation) is organized as::
   field[d1][d2][d3]
 
 then the data is organized in memory (or on disk) with the d3 dimension varying
-fastest, and hence nx = d3, ny = d2, nz = d1 using the |zfp| naming conventions
-for the dimensions, e.g. the :ref:`zfp executable <zfpcmd>` should be invoked
-with::
+fastest, and hence *nx* = *d3*, *ny* = *d2*, *nz* = *d1* using the |zfp| naming
+conventions for the dimensions, e.g. the :ref:`zfp executable <zfpcmd>` should
+be invoked with::
 
   zfp -3 d3 d2 d1
 
-in this case.  Things will go horribly wrong if zfp in this case is called with
-nx = d1, ny = d2, nz = d3.  The entire data set will still compress and
-decompress, but compression ratio and quality will suffer greatly.
+in this case.  Things will go horribly wrong if |zfp| in this case is called
+with *nx* = *d1*, *ny* = *d2*, *nz* = *d3*.  The entire data set will still
+compress and decompress, but compression ratio and quality will suffer greatly.
 
 -------------------------------------------------------------------------------
 
@@ -179,9 +179,9 @@ decompress, but compression ratio and quality will suffer greatly.
 
 P5: *Are the array dimensions large enough?*
 
-|zfp| partitions d-dimensional data sets into blocks of |4powd| values, e.g.
+|zfp| partitions *d*-dimensional data sets into blocks of |4powd| values, e.g.
 in 3D a block consists of |4by4by4| values.  If the dimensions are not
-multiples of four, then zfp will "pad" the array to the next larger multiple
+multiples of four, then |zfp| will "pad" the array to the next larger multiple
 of four.  Such padding can hurt compression.  In particular, if one or more of
 the array dimensions are small, then the overhead of such padding could be
 significant.
@@ -213,23 +213,23 @@ structured array of pixels, and it assumes that values vary reasonably smoothly
 on average, just like natural images tend to contain large regions of uniform
 color or smooth color gradients, like a blue sky, smoothly varying skin tones
 of a human's face, etc.  Many data sets are not represented on a regular grid.
-For instance, an array of particle xyz positions::
+For instance, an array of particle *xyz* positions::
 
   points[count][3]
 
 is a 2D array, but does not vary smoothly in either dimension.  Furthermore,
 such unstructured data sets need not be organized in any particular order;
 the particles could be listed in any arbitrary order.  One could attempt to
-sort the particles, for example by the x coordinate, to promote smoothness,
+sort the particles, for example by the *x* coordinate, to promote smoothness,
 but this would still leave the other two dimensions non-smooth.
 
 Sometimes the underlying dimensions are not even known, and only the total
 number of floating-point values is known.  For example, suppose we only knew
-that the data set contained n = count * 3 values.  One might be tempted to
+that the data set contained *n* = *count* * 3 values.  One might be tempted to
 compress this using |zfp|'s 1-dimensional compressor, but once again this would
 not work well.  Such abuse of |zfp| is much akin to trying to compress an image
-using an audio compressor like mp3, or like compressing an n-sample piece of
-music as an n-by-one sized image using an image compressor like JPEG.  The
+using an audio compressor like mp3, or like compressing an *n*-sample piece of
+music as an *n*-by-one sized image using an image compressor like JPEG.  The
 results would likely not be very good.
 
 Some data sets are logically structured but geometrically irregular.  Examples
@@ -259,7 +259,7 @@ outside the Earth is unspecified.
 
 In this case, |zfp| does best by initializing the "background field" to all
 zeros.  In |zfp|'s :ref:`fixed-accuracy mode <mode-fixed-accuracy>`, any
-"empty" blocks that consist of all zeros are represented using a single bit,
+"empty" block that consists of all zeros is represented using a single bit,
 and therefore the overhead of representing empty space can be kept low.
 
 -------------------------------------------------------------------------------
@@ -313,7 +313,7 @@ Linux and macOS, 8-byte doubles can be byte swapped using::
 
   objcopy -I binary -O binary --reverse-bytes=8 big.bin little.bin
 
-See also :ref:`FAQ #11 <q-portability>` for more discussion of byte order.
+See also FAQ :ref:`#11 <q-portability>` for more discussion of byte order.
 
 -------------------------------------------------------------------------------
 
@@ -323,8 +323,9 @@ P10: *Is the floating-point precision correct?*
 
 Another obvious problem: Please make sure that |zfp| is told whether the data
 to compress is an array of single- (32-bit) or double-precision (64-bit)
-values, e.g. by specifying the -f or -d options to the zfp executable or by
-passing the appropriate :c:type:`zfp_type` to the C functions.
+values, e.g. by specifying the :option:`-f` or :option:`-d` options to the
+:program:`zfp` executable or by passing the appropriate :c:type:`zfp_type`
+to the C functions.
 
 -------------------------------------------------------------------------------
 
@@ -337,8 +338,8 @@ integers (e.g., bytes, shorts) can be compressed but must first be promoted
 to one of the longer types.  This should always be done using |zfp|'s functions
 for :ref:`promotion and demotion <ll-utilities>`, which both perform bit
 shifting and biasing to handle both signed and unsigned types.  It is not
-sufficient to simply cast short integers to longer integers.  See also
-:ref:`FAQs #8 and #9 <q-integer>`.
+sufficient to simply cast short integers to longer integers.  See also FAQs
+:ref:`#8 <q-integer>` and :ref:`#9 <q-int32>`.
 
 -------------------------------------------------------------------------------
 
@@ -359,11 +360,11 @@ metadata may be embedded in the file.
 
 P13: *Has the appropriate compression mode been set?*
 
-zfp provides three different
+|zfp| provides three different
 :ref:`modes of compression <modes>` that trade storage and accuracy.  In
 fixed-rate mode, the user specifies the exact number of bits (often in
 increments of a fraction of a bit) of compressed storage per value (but see
-:ref:`FAQ #18 <q-rate>` for caveats).  From the user's perspective, this
+FAQ :ref:`#18 <q-rate>` for caveats).  From the user's perspective, this
 seems a very desirable feature, since it provides for a direct mechanism for
 specifying how much storage to use.  However, there is often a large quality
 penalty associated with the fixed-rate mode, because each block of |4powd|
@@ -390,7 +391,7 @@ the precision requested is only an upper bound, though typically at least one
 value within a block has the requested precision.
 
 Finally, |zfp| supports a fixed-accuracy mode, which except in rare
-circumstances (see :ref:`FAQ #17 <q-tolerance>`) ensures that the absolute
+circumstances (see FAQ :ref:`#17 <q-tolerance>`) ensures that the absolute
 error is bounded, i.e. the difference between any decompressed and original
 value is at most the tolerance specified by the user (but usually several
 times smaller).  Whenever possible, we recommend using this compression mode,

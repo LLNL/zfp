@@ -38,7 +38,8 @@ Questions answered in this FAQ:
 
 Q1: *Can zfp compress vector fields?*
 
-I have a 2D vector field::
+I have a 2D vector field
+::
 
   double velocity[ny][nx][2];
 
@@ -602,24 +603,25 @@ a block-floating-point representation, in which all values within a block
 are represented in relation to a single common exponent.  For a high enough
 dynamic range within a block there may simply not be enough precision
 available to guard against loss.  For instance, a block containing the values
-2^0 = 1 and 2^-n would require a precision of n + 3 bits to represent
+2^0 = 1 and 2^-*n* would require a precision of *n* + 3 bits to represent
 losslessly, and |zfp| uses at most 64-bit integers to represent values.  Thus,
-if n >= 62, then 2^-n is replaced with 0, which is a 100% relative error.
-Note that such loss also occurs when, for instance, 2^0 and 2^-n are added
-using floating-point arithmetic (see also :ref:`Q17 <q-tolerance>`).
+if *n* |geq| 62, then 2^-*n* is replaced with 0, which is a 100% relative
+error.  Note that such loss also occurs when, for instance, 2^0 and 2^-*n*
+are added using floating-point arithmetic (see also :ref:`Q17 <q-tolerance>`).
 
 It is, however, possible to bound the error relative to the largest (in
-magnitude) value, fmax, within a block, which if the magnitude of values
+magnitude) value, *fmax*, within a block, which if the magnitude of values
 does not change too rapidly may serve as a reasonable proxy for point-wise
 relative errors.
 
-One might then ask if using |zfp|'s fixed-precision mode with p bits of
-precision ensures that the block-wise relative error is at most 2^-p * fmax.
-This is, unfortunately, not the case, because the requested precision, p,
-is ensured only for the transform coefficients.  During the inverse transform
-of these quantized coefficients the quantization error may amplify.  That
-being said, it is possible to derive a bound on the error in terms of p that
-would allow choosing an appropriate precision.  Such a bound is derived below.
+One might then ask if using |zfp|'s fixed-precision mode with *p* bits of
+precision ensures that the block-wise relative error is at most
+2^-*p* * *fmax*.  This is, unfortunately, not the case, because the requested
+precision, *p*, is ensured only for the transform coefficients.  During the
+inverse transform of these quantized coefficients the quantization error may
+amplify.  That being said, it is possible to derive a bound on the error in
+terms of *p* that would allow choosing an appropriate precision.  Such a
+bound is derived below.
 
 Let
 ::
@@ -627,12 +629,12 @@ Let
   emax = floor(log2(fmax))
 
 be the largest base-2 exponent within a block.  For transform coefficient
-precision, p, one can show that the maximum absolute error, err, is bounded
-by::
+precision, *p*, one can show that the maximum absolute error, *err*, is
+bounded by::
 
   err <= k(d) * (2^emax / 2^p) <= k(d) * (fmax / 2^p)
 
-Here k(d) is a constant that depends on the data dimensionality d::
+Here *k*(*d*) is a constant that depends on the data dimensionality *d*::
 
   k(d) = 20 * (15/4)^(d-1)
 
@@ -642,8 +644,8 @@ so that in 1D, 2D, and 3D we have::
   k(2) = 125
   k(3) = 1125/4
 
-Thus, to guarantee n bits of accuracy in the decompressed data, we need
-to choose a higher precision, p, for the transform coefficients::
+Thus, to guarantee *n* bits of accuracy in the decompressed data, we need
+to choose a higher precision, *p*, for the transform coefficients::
 
   p(n, d) = n + ceil(log2(k(d))) = n + 2 * d + 3
 
@@ -654,12 +656,13 @@ so that
   p(n, 2) = n + 7
   p(n, 3) = n + 9
 
-This p value should be used in the call to :c:func:`zfp_stream_set_precision`.
+This *p* value should be used in the call to
+:c:func:`zfp_stream_set_precision`.
 
 Note, again, that some values in the block may have leading zeros when
 expressed relative to 2\ :sup:`emax`, and these leading zeros are counted
-toward the n-bit precision.  Using decimal to illustrate this, suppose we
-used 4-digit precision for a 1D block containing these four values::
+toward the *n*-bit precision.  Using decimal to illustrate this, suppose
+we used 4-digit precision for a 1D block containing these four values::
 
   -1.41421e+1 ~ -1.414e+1 = -1414 * (10^1 / 1000)
   +2.71828e-1 ~ +0.027e+1 =   +27 * (10^1 / 1000)
@@ -678,25 +681,26 @@ are leading zeros.
 Q21: *Does zfp support lossless compression?*
 
 Yes, and no.  For integer data, |zfp| can with few exceptions ensure lossless
-compression.  For a given n-bit integer type (n = 32 or n = 64), consider
-compressing p-bit signed integer data, with the sign bit counting toward the
+compression.  For a given *n*-bit integer type (*n* = 32 or *n* = 64), consider
+compressing *p*-bit signed integer data, with the sign bit counting toward the
 precision.  In other words, there are exactly 2\ :sup:`p` possible signed
 integers.  If the integers are unsigned, then subtract 2\ :sup:`p-1` first so
 that they range from -2\ :sup:`p-1` to 2\ :sup:`p-1` - 1.
 
-Lossless compression is achieved by first promoting the p-bit integers to
-n - 1 bits (see :ref:`Q8 <q-integer>`) such that all integer values fall
-[-2\ :sup:`30`, +2\ :sup:`30`), when n = 32, or in
-[-2\ :sup:`62`, +2\ :sup:`62`), when n = 64.  In other words, the p-bit
-integers first need to be shifted left by n - p - 1 bits.  After promotion,
+Lossless compression is achieved by first promoting the *p*-bit integers to
+*n* - 1 bits (see :ref:`Q8 <q-integer>`) such that all integer values fall in
+[-2\ :sup:`30`, +2\ :sup:`30`), when *n* = 32, or in
+[-2\ :sup:`62`, +2\ :sup:`62`), when *n* = 64.  In other words, the *p*-bit
+integers first need to be shifted left by *n* - *p* - 1 bits.  After promotion,
 the data should be compressed in zfp's fixed-precision mode using::
 
   q = p + 4 * d + 1
 
-bits of precision to ensure no loss, where d is the data dimensionality
-(1 <= d <= 3).  Consequently, the p-bit data can be losslessly compressed
-as long as p <= n - 4 * d - 1.  The table below lists the maximum precision
-p that can be losslessly compressed using 32- and 64-bit integer types.
+bits of precision to ensure no loss, where *d* is the data dimensionality
+(1 |leq| d |leq| 3).  Consequently, the *p*-bit data can be losslessly
+compressed as long as *p* |leq| *n* - 4 * *d* - 1.  The table below lists the
+maximum precision *p* that can be losslessly compressed using 32- and 64-bit
+integer types.
 
   = ==== ====
   d n=32 n=64
@@ -713,15 +717,15 @@ compression via |zfp| not competitive with compressors designed for lossless
 compression.  Lossy integer compression with zfp can, on the other hand, work
 fairly well by using fewer than q bits of precision.
 
-Furthermore, the minimum precision, q, given above is often larger than what
+Furthermore, the minimum precision, *q*, given above is often larger than what
 is necessary in practice.  There are worst-case inputs that do require such
-large q values, but they are quite rare.
+large *q* values, but they are quite rare.
 
-The reason for expanded precision, i.e., why q > p, is that |zfp|'s
+The reason for expanded precision, i.e., why *q* > *p*, is that |zfp|'s
 decorrelating transform computes averages of integers, and this transform is
-applied d times in d dimensions.  Each average of two p-bit numbers requires
-p + 1 bits to avoid loss, and each transform can be thought of involving up
-to four such averaging operations.
+applied *d* times in *d* dimensions.  Each average of two *p*-bit numbers
+requires *p* + 1 bits to avoid loss, and each transform can be thought of
+involving up to four such averaging operations.
 
 For floating-point data, fully lossless compression with |zfp| is unlikely,
 albeit possible.  If the dynamic range is low or varies slowly such that values
@@ -730,11 +734,11 @@ precision gained by discarding the 8 or 11 bis of the common floating-point
 exponents can offset the precision lost in the decorrelating transform.  For
 instance, if all values in a block have the same exponent, then lossless
 compression is obtained using
-q = 26 + 4 * d <= 32 bits of precision for single-precision data and
-q = 55 + 4 * d <= 64 bits of precision for double-precision data.  Of course,
-the constraint imposed by the available integer precision n implies that
-lossless compression of such data is possible only in 1D for single-precision
-data and only in 1D and 2D for double-precision data.
+*q* = 26 + 4 * *d* |leq| 32 bits of precision for single-precision data and
+*q* = 55 + 4 * *d* |leq| 64 bits of precision for double-precision data.  Of
+course, the constraint imposed by the available integer precision *n* implies
+that lossless compression of such data is possible only in 1D for
+single-precision data and only in 1D and 2D for double-precision data.
 
 -------------------------------------------------------------------------------
 

@@ -58,6 +58,7 @@ Macros
   of doubles, is given by :c:macro:`ZFP_MAX_BITS`.  See also
   :c:type:`zfp_stream`.
 
+.. _header-macros:
 .. c:macro:: ZFP_HEADER_MAGIC
 .. c:macro:: ZFP_HEADER_META
 .. c:macro:: ZFP_HEADER_MODE
@@ -364,6 +365,8 @@ Array Metadata
 .. c:function:: uint64 zfp_field_metadata(const zfp_field* field)
 
   Return 52-bit compact encoding of the scalar type and array dimensions.
+
+.. _zfp_field_set:
 
 .. c:function:: void zfp_field_set_pointer(zfp_field* field, void* pointer)
 

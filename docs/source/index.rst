@@ -17,6 +17,7 @@
    low-level-api
    bit-stream
    arrays
+   tutorial
    zfpcmd
    examples
    testing

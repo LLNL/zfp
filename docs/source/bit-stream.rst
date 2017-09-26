@@ -6,15 +6,16 @@ Bit Stream API
 ==============
 
 |zfp| relies on low-level functions for bit stream I/O, e.g. for
-reading/writing single bits or groups of bits up to 64.  |zfp|'s
-bit streams support random access (with some caveats) and, optionally,
-strided access.  The functions read from and write to main memory
-allocated by the user.  Buffer overruns are for performance reasons not
-guarded against.
+reading/writing single bits or groups of bits.  |zfp|'s bit streams
+support random access (with some caveats) and, optionally, strided
+access.  The functions read from and write to main memory allocated
+by the user.  Buffer overruns are for performance reasons not guarded
+against.
 
 From an implementation standpoint, bit streams are read from and written
-to in increments of *words* of bits.  The constant power-of-two word
-size is configured at compile time, and is limited to 8 to 64 bits.
+to memory in increments of *words* of bits.  The constant power-of-two
+word size is configured at compile time, and is limited to 8, 16, 32, or
+64 bits.
 
 The bit stream API is publicly exposed and may be used to write additional
 information such as metadata into the |zfp| compressed stream, as well as
@@ -69,7 +70,8 @@ Types
 
   Bits are buffered and read/written in units of words.  By default, the
   bit stream word type is 64 bits, but may be set to 8, 16, or 32 bits
-  by defining the macro :c:macro:`BIT_STREAM_WORD_TYPE`.  Larger words
+  by setting the macro :c:macro:`BIT_STREAM_WORD_TYPE` to :c:type:`uint8`,
+  :c:type:`uint16`, or :c:type:`uint32`, respectively.  Larger words
   tend to give higher throughput, while 8-bit words are needed to ensure
   endian independence (see FAQ :ref:`#11 <q-portability>`).
 
@@ -81,7 +83,7 @@ Types
   ::
 
     struct bitstream {
-      uint bits;       // number of buffered bits (0 <= bits < wsize)
+      uint bits;       // number of buffered bits (0 <= bits < word size)
       word buffer;     // buffer for incoming/outgoing bits (buffer < 2^bits)
       word* ptr;       // pointer to next word to be read/written
       word* begin;     // beginning of stream

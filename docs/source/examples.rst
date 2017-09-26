@@ -21,8 +21,8 @@ array::
     simple > compressed.zfp
     simple -d < compressed.zfp
 
-For a more elaborate use of the compressor, see the ':ref:`zfp <zfpcmd>`'
-utility.
+For a more elaborate use of the compressor, see the
+:ref:`zfp utility <zfpcmd>`.
 
 .. _ex-diffusion:
 
@@ -40,7 +40,7 @@ solution and solution time.  The usage is::
 where *rate* specifies the exact number of compressed bits to store per
 double-precision floating-point value (default = 64); *nx* and *ny*
 specify the grid size (default = 100 |times| 100); *nt* specifies the number
-of time steps to run (the default is to run until time *t* = 1); and *blocks*
+of time steps to take (the default is to run until time *t* = 1); and *blocks*
 is the number of uncompressed blocks to cache (default = *nx* / 2).  The
 :code:`-i` option enables array traversal via iterators instead of indices.
 
@@ -93,7 +93,9 @@ If :code:`param` is negative, then fixed-precision mode is used with precision
 :code:`-param`, which tends to give higher quality for the same rate.  This
 use of |zfp| is not intended to compete with existing texture and image
 compression formats, but exists merely to demonstrate how to compress 8-bit
-integer data with |zfp|.
+integer data with |zfp|.  See FAQs :ref:`#20 <q-relerr>` and
+:ref:`#21 <q-lossless>` for information on the effects of setting the
+precision.
 
 .. _ex-inplace:
 

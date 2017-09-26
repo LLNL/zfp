@@ -11,7 +11,7 @@ single- and multi-dimensional floating-point arrays whose storage size,
 specified in number of bits per array element, is set by the user.
 Such arbitrary storage is achieved via
 |zfp|'s lossy :ref:`fixed-rate compression <mode-fixed-rate>` mode, by
-partitioning each d-dimensional array into blocks of |4powd| values
+partitioning each *d*-dimensional array into blocks of |4powd| values
 and compressing each block to a fixed number of bits.  The more smoothly
 the array values vary along each dimension, the more accurately |zfp| can
 represent them.  In other words, these arrays are not suitable for

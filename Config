@@ -2,12 +2,17 @@
 
 CC = gcc
 CXX = g++
-FLAGS = -O3 -fPIC -Wall -I../include $(DEFS)
+FLAGS = -O3 -fPIC -Wall -pedantic -I../include $(DEFS)
 # CFLAGS = -std=c89 -Wno-unused-function $(FLAGS)
 CFLAGS = -std=c99 $(FLAGS)
 CXXFLAGS = -std=c++98 $(FLAGS)
+# CXXFLAGS = -std=c++11 $(FLAGS)
 
 # optional compiler macros ----------------------------------------------------
+
+# use long long for 64-bit types
+# DEFS += -DZFP_INT64='long long' -DZFP_INT64_SUFFIX='ll'
+# DEFS += -DZFP_UINT64='unsigned long long' -DZFP_UINT64_SUFFIX='ull'
 
 # use smaller bit stream word type for finer rate granularity
 # DEFS += -DBIT_STREAM_WORD_TYPE=uint8
@@ -19,13 +24,13 @@ CXXFLAGS = -std=c++98 $(FLAGS)
 # DEFS += -DBIT_STREAM_STRIDED
 
 # use aligned memory allocation
-# DEFS += -DALIGNED_ALLOC
+# DEFS += -DZFP_WITH_ALIGNED_ALLOC
 
 # use two-way skew-associative cache
-# DEFS += -DCACHE_TWOWAY
+# DEFS += -DZFP_WITH_CACHE_TWOWAY
 
 # use faster but more collision prone hash function
-# DEFS += -DCACHE_FAST_HASH
+# DEFS += -DZFP_WITH_CACHE_FAST_HASH
 
 # count cache misses
-# DEFS += -DCACHE_PROFILE
+# DEFS += -DZFP_WITH_CACHE_PROFILE

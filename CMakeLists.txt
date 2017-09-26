@@ -19,7 +19,7 @@ string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MAJOR[ \t]+([0-9]+).*"
      "\\1" ZFP_VERSION_MAJOR ${_zfp_h_contents})
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MINOR[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_MINOR ${_zfp_h_contents})
-string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_RELEASE[ \t]+([0-9]+).*"
+string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_PATCH[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_PATCH ${_zfp_h_contents})
 set(ZFP_VERSION
   "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}")
@@ -106,7 +106,7 @@ option(ZFP_WITH_CACHE_TWOWAY "Use two-way skew-associative cache" OFF)
 option(ZFP_WITH_CACHE_FASH_HASH
   "Use a faster but more collision prone hash function" OFF)
 
-option(ZFP_WITH_CACHE_PROFILING "Count cache misses" OFF)
+option(ZFP_WITH_CACHE_PROFILE "Count cache misses" OFF)
 
 #------------------------------------------------------------------------------#
 # Add source code
