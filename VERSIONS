@@ -1,4 +1,4 @@
-zfp 0.5.2, September 26, 2017
+zfp 0.5.2, September 28, 2017
 
   - Added iterators and proxy objects for pointers and references.
 
