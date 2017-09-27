@@ -5,7 +5,7 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
 
    introduction
    overview
@@ -27,9 +27,3 @@
    directions
    contributors
    versions
-   genindex
-
-..
-   * :ref:`genindex`
-   * :ref:`search`
-   tutorial after arrays

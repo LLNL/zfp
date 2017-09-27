@@ -76,7 +76,7 @@ purposes):
      whether this is the highest set bit of *x*, and the result of this test
      is output as a single bit.  If not, then the procedure repeats until all
      *m* of *x*'s value bits have been output, where
-     2\ :sup:`m-1` |leq| x < 2\ :sup:`m`.  This can be thought of as a
+     2\ :sup:`m-1` |leq| *x* < 2\ :sup:`m`.  This can be thought of as a
      run-length encoding of the zeros of *x*, where the run lengths are
      expressed in unary.  The total number of value bits, *n*, in this bit
      plane is then incremented by *m* before being passed to the next bit

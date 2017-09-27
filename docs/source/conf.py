@@ -135,6 +135,9 @@ latex_elements = {
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
+
+    'inputenc' : '\\usepackage[utf8x]{inputenc}',
+    'utf8extra': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples

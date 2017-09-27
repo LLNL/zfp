@@ -194,8 +194,9 @@ Consider compressing a collection of 1000 small 3D arrays::
 
   field[1000][8][16][4]
 
-which is (8*16*4) / (5*14*2) ~ 3.66 times larger.  Although such padding often
-compresses well, this still represents a significant overhead.
+which is (8 |times| 16 |times| 4) / (5 |times| 14 |times| 2) ~ 3.66 times
+larger.  Although such padding often compresses well, this still represents
+a significant overhead.
 
 If a large array has been partitioned into smaller pieces, it may be best to
 reassemble the larger array.  Or, when possible, ensure that the sub-arrays
@@ -225,12 +226,12 @@ but this would still leave the other two dimensions non-smooth.
 
 Sometimes the underlying dimensions are not even known, and only the total
 number of floating-point values is known.  For example, suppose we only knew
-that the data set contained *n* = *count* * 3 values.  One might be tempted to
-compress this using |zfp|'s 1-dimensional compressor, but once again this would
-not work well.  Such abuse of |zfp| is much akin to trying to compress an image
-using an audio compressor like mp3, or like compressing an *n*-sample piece of
-music as an *n*-by-one sized image using an image compressor like JPEG.  The
-results would likely not be very good.
+that the data set contained *n* = *count* |times| 3 values.  One might be
+tempted to compress this using |zfp|'s 1-dimensional compressor, but once
+again this would not work well.  Such abuse of |zfp| is much akin to trying
+to compress an image using an audio compressor like mp3, or like compressing
+an *n*-sample piece of music as an *n*-by-one sized image using an image
+compressor like JPEG.  The results would likely not be very good.
 
 Some data sets are logically structured but geometrically irregular.  Examples
 include fields stored on Lagrangian meshes that have been warped, or on

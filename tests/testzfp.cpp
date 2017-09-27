@@ -755,6 +755,32 @@ int main(int argc, char* argv[])
   std::cout << zfp_version_string << std::endl;
   std::cout << "library version " << zfp_library_version << std::endl;
   std::cout << "CODEC version " << zfp_codec_version << std::endl;
+  std::cout << "data model ";
+  size_t model = ((sizeof(uint64) - 1) << 12) +
+                 ((sizeof(void*) - 1) << 8) +
+                 ((sizeof(unsigned long int) - 1) << 4) +
+                 ((sizeof(unsigned int) - 1) << 0);
+  switch (model) {
+    case 0x7331u:
+      std::cout << "LP32";
+      break;
+    case 0x7333u:
+      std::cout << "ILP32";
+      break;
+    case 0x7733u:
+      std::cout << "LLP64";
+      break;
+    case 0x7773u:
+      std::cout << "LP64";
+      break;
+    case 0x7777u:
+      std::cout << "ILP64";
+      break;
+    default:
+      std::cout << "unknown (0x" << std::hex << model << ")";
+      break;
+  }
+  std::cout << std::endl;
   std::cout << std::endl;
 
   uint sizes = 0;

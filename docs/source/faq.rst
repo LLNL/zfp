@@ -43,15 +43,15 @@ I have a 2D vector field
 
   double velocity[ny][nx][2];
 
-of dimensions nx * ny.  Can I use a 3D |zfp| array to store this as::
+of dimensions *nx* |times| *ny*.  Can I use a 3D |zfp| array to store this as::
 
   array3d velocity(2, nx, ny, rate);
 
 A: Although this could be done, zfp assumes that consecutive values are
-related.  The two velocity components :code:`(vx, vy)` are almost suredly
+related.  The two velocity components (*vx*, *vy*) are almost suredly
 independent and would not be correlated.  This will severely hurt the
-compression rate or quality.  Instead, consider storing vx and vy as two
-separate 2D scalar arrays::
+compression rate or quality.  Instead, consider storing *vx* and *vy* as
+two separate 2D scalar arrays::
 
   array2d vx(nx, ny, rate);
   array2d vy(nx, ny, rate);
@@ -67,15 +67,18 @@ or as
 
 Q2: *Should I declare a 2D array as zfp::array1d a(nx * ny, rate)?*
 
-I have a 2D scalar field of dimensions nx * ny that I allocate as::
+I have a 2D scalar field of dimensions *nx* |times| *ny* that I allocate as
+::
 
   double* a = new double[nx * ny];
 
-and index as::
+and index as
+::
 
   a[x + nx * y]
 
-Should I use a corresponding zfp array::
+Should I use a corresponding zfp array
+::
 
   array1d a(nx * ny, rate);
 
@@ -128,12 +131,12 @@ floating-point value at a time and copy it into the array::
 Note, however, that if the array cache is not large enough, then this may
 compress blocks before they have been completely filled.  Therefore it is
 recommended that the cache holds at least one complete layer of blocks,
-i.e. :code:`(nx / 4) * (ny / 4)` blocks in the example above.
+i.e. (*nx* / 4) |times| (*ny* / 4) blocks in the example above.
 
 To avoid inadvertent evictions of partially initialized blocks, it is better
-to buffer four layers of :code:`nx * ny` values each at a time, when practical,
-and to completely initialize one block after another, which is facilitated
-using |zfp|'s iterators::
+to buffer four layers of *nx* |times| *ny* values each at a time, when
+practical, and to completely initialize one block after another, which is
+facilitated using |zfp|'s iterators::
 
   double* buffer = new double[nx * ny * 4];
   int zmin = -4;
@@ -217,7 +220,7 @@ digital elevation models?
 
 A: Yes (as of version 0.4.0), but the data has to be promoted to 32-bit signed
 integers first.  This should be done one block at a time using an appropriate
-:c:func:`zfp_promote_*_to_int32` function call (see :code:`zfp.h`).  Future
+:c:func:`zfp_promote_*_to_int32` function call (see :file:`zfp.h`).  Future
 versions of |zfp| may provide a high-level interface that automatically
 performs promotion and demotion.
 
@@ -241,10 +244,11 @@ I have some 32-bit integer data.  Can I compress it using |zfp|'s 32-bit
 integer support?
 
 A: Maybe.  zfp compression of 32-bit and 64-bit integers requires that each
-integer f have magnitude \|f\| < 2\ :sup:`30` and \|f\| < 2\ :sup:`62`,
-respectively.  To handle signed integers that span the entire range
--2\ :sup:`31` <= x < 2\ :sup:`31`, or unsigned
-integers 0 <= x < 2\ :sup:`32`, the data has to be promoted to 64 bits first.
+integer *f* have magnitude \|\ *f*\ \| < 2\ :sup:`30` and
+\|\ *f*\ \| < 2\ :sup:`62`, respectively.  To handle signed integers that
+span the entire range |minus|\ 2\ :sup:`31` |leq| x < 2\ :sup:`31`, or
+unsigned integers 0 |leq| *x* < 2\ :sup:`32`, the data has to be promoted to
+64 bits first.
 
 As with floating-point data, the integers should ideally represent a
 quantized continuous function rather than, say, categorical data or set of
@@ -291,12 +295,12 @@ which is achieved by compiling |zfp| with an 8-bit (single-byte) word size::
 
   -DBIT_STREAM_WORD_TYPE=uint8
 
-See the Config file.  Note that on little endian processors (e.g. Intel
-x86-64 and AMD64), the word size does not affect the bit stream produced,
-and thus the default word size may be used.  By default, |zfp| uses a word
-size of 64 bits, which results in the coarsest rate granularity but fastest
-(de)compression.  If cross-platform portability is not needed, then the
-maximum word size is recommended (but see also :ref:`Q12 <q-granularity>`).
+See :c:macro:`BIT_STREAM_WORD_TYPE`.  Note that on little endian processors
+(e.g. Intel x86-64 and AMD64), the word size does not affect the bit stream
+produced, and thus the default word size may be used.  By default, |zfp| uses
+a word size of 64 bits, which results in the coarsest rate granularity but
+fastest (de)compression.  If cross-platform portability is not needed, then
+the maximum word size is recommended (but see also :ref:`Q12 <q-granularity>`).
 
 When using 8-bit words, |zfp| produces a compressed stream that is byte order
 independent, i.e. the exact same compressed sequence of bytes is generated
@@ -315,7 +319,7 @@ Issues may arise on architectures that do not support IEEE floating point.
 
 Q12: *How can I achieve finer rate granularity?*
 
-A: For d-dimensional arrays, |zfp| supports a granularity of 8 / |4powd|
+A: For *d*-dimensional arrays, |zfp| supports a granularity of 8 / |4powd|
 bits, i.e. the rate can be specified in increments of a fraction of a bit for
 2D and 3D arrays.  Such fine rate selection is always available for sequential
 compression (e.g. when calling :c:func:`zfp_compress`).
@@ -323,7 +327,7 @@ compression (e.g. when calling :c:func:`zfp_compress`).
 Unlike in sequential compression, |zfp|'s compressed arrays require random
 access writes, which are supported only at the granularity of whole words.
 By default, a word is 64 bits, which gives a rate granularity of
-64 / |4powd| in d dimensions, i.e. 16 bits in 1D, 4 bits in 2D, and 1 bit
+64 / |4powd| in *d* dimensions, i.e. 16 bits in 1D, 4 bits in 2D, and 1 bit
 in 3D.
 
 To achieve finer granularity, recompile |zfp| with a smaller (but as large as
@@ -332,7 +336,7 @@ possible) stream word size, e.g.::
   -DBIT_STREAM_WORD_TYPE=uint8
 
 gives the finest possible granularity, but at the expense of (de)compression
-speed.  See the Config file.
+speed.  See :c:macro:`BIT_STREAM_WORD_TYPE`.
 
 -------------------------------------------------------------------------------
 
@@ -357,13 +361,13 @@ To enable interleaving of blocks, |zfp| must first be compiled with::
   -DBIT_STREAM_STRIDED
 
 to enable strided bit stream access.  In the example above, if the stream
-word size is 64 bits and there are n blocks, then::
+word size is 64 bits and there are *n* blocks, then::
 
   stream_set_stride(stream, m, n);
 
-implies that after every m 64-bit words have been decoded, the bit stream
-is advanced by m * n words to the next set of m 64-bit words associated
-with the block.
+implies that after every *m* 64-bit words have been decoded, the bit stream
+is advanced by *m* |times| *n* words to the next set of m 64-bit words
+associated with the block.
 
 -------------------------------------------------------------------------------
 
@@ -425,14 +429,14 @@ A: No.  For instance, a 2D vector field::
 
   float in[ny][nx][2];
 
-could be compressed as two scalar fields with strides
-:code:`sx = 2, sy = 2 * nx`, and with pointers :code:`&in[0][0][0]` and
+could be compressed as two scalar fields with strides *sx* = 2,
+*sy* = 2 |times| *nx*, and with pointers :code:`&in[0][0][0]` and
 :code:`&in[0][0][1]` to the first value of each scalar field.  These two
 scalar fields can later be decompressed as non-interleaved fields::
 
   float out[2][ny][nx];
 
-using strides :code:`sx = 1, sy = nx` and pointers :code:`&out[0][0][0]`
+using strides *sx* = 1, *sy* = *nx* and pointers :code:`&out[0][0][0]`
 and :code:`&out[1][0][0]`.
 
 -------------------------------------------------------------------------------
@@ -515,28 +519,28 @@ value of :c:func:`zfp_stream_set_rate`, which gives the actual rate.
 
 There are several reasons why the requested rate may not be honored.  First,
 the rate is specified in bits/value, while |zfp| always represents a block
-of |4powd| values in d dimensions, i.e. using N = |4powd| * rate bits.
-N must be an integer number of bits, which constrains the actual rate to be
-a multiple of 1 / |4powd|.  The actual rate is computed by rounding
-|4powd| times the desired rate.
+of |4powd| values in *d* dimensions, i.e. using
+*N* = |4powd| |times| *rate* bits.  *N* must be an integer number of bits,
+which constrains the actual rate to be a multiple of 1 / |4powd|.  The actual
+rate is computed by rounding |4powd| times the desired rate.
 
 Second, if the array dimensions are not multiples of four, then |zfp| pads the
 dimensions to the next higher multiple of four.  Thus, the total number of
-bits for a 2D array of dimensions nx * ny is computed in terms of the number
-of blocks bx * by::
+bits for a 2D array of dimensions *nx* |times| *ny* is computed in terms of
+the number of blocks *bx* |times| *by*::
 
   bitsize = (4 * bx) * (4 * by) * rate
 
-where :code:`nx <= 4 * bx < nx + 4` and :code:`ny <= 4 * by < ny + 4`.
-When amortizing bitsize over the nx * ny values, a slightly higher rate than
-requested may result.
+where *nx* |leq| 4 |times| bx < *nx* + 4 and
+*ny* |leq| 4 |times| *by* < *ny* + 4.  When amortizing bitsize over the
+*nx* |times| *ny* values, a slightly higher rate than requested may result.
 
 Third, to support updating compressed blocks, as is needed by |zfp|'s
 compressed array classes, the user may request write random access to the
 fixed-rate stream.  To support this, each block must be aligned on a stream
 word boundary (see :ref:`Q12 <q-granularity>`), and therefore the rate when
-write random access is requested must be a multiple of wordsize / |4powd|
-bits.  By default wordsize = 64 bits.
+write random access is requested must be a multiple of *wordsize* / |4powd|
+bits.  By default *wordsize* = 64 bits.
 
 Fourth, for floating-point data, each block must hold at least the common
 exponent and one additional bit, which places a lower bound on the rate.
@@ -571,8 +575,8 @@ compression, but with several caveats and restrictions:
      This is usually easily accomplished in fixed-rate mode, although the
      expert interface also allows guarding against this in all modes using the
      :c:member:`zfp_stream.maxbits` parameter.  This parameter should be set to
-     :code:`maxbits = 4^d * 8 * sizeof(type)`, where d is the array
-     dimensionality (1, 2, or 3) and where 'type' is the scalar type of the
+     :code:`maxbits = 4^d * 8 * sizeof(type)`, where *d* is the array
+     dimensionality (1, 2, or 3) and where *type* is the scalar type of the
      uncompressed data.
 
   4. No header information may be stored in the compressed stream.
@@ -603,11 +607,12 @@ a block-floating-point representation, in which all values within a block
 are represented in relation to a single common exponent.  For a high enough
 dynamic range within a block there may simply not be enough precision
 available to guard against loss.  For instance, a block containing the values
-2^0 = 1 and 2^-*n* would require a precision of *n* + 3 bits to represent
-losslessly, and |zfp| uses at most 64-bit integers to represent values.  Thus,
-if *n* |geq| 62, then 2^-*n* is replaced with 0, which is a 100% relative
-error.  Note that such loss also occurs when, for instance, 2^0 and 2^-*n*
-are added using floating-point arithmetic (see also :ref:`Q17 <q-tolerance>`).
+2\ :sup:`0` = 1 and 2\ :sup:`-n` would require a precision of *n* + 3 bits to
+represent losslessly, and |zfp| uses at most 64-bit integers to represent
+values.  Thus, if *n* |geq| 62, then 2\ :sup:`-n` is replaced with 0, which
+is a 100% relative error.  Note that such loss also occurs when, for instance,
+2\ :sup:`0` and 2\ :sup:`-n` are added using floating-point arithmetic (see
+also :ref:`Q17 <q-tolerance>`).
 
 It is, however, possible to bound the error relative to the largest (in
 magnitude) value, *fmax*, within a block, which if the magnitude of values
@@ -616,12 +621,12 @@ relative errors.
 
 One might then ask if using |zfp|'s fixed-precision mode with *p* bits of
 precision ensures that the block-wise relative error is at most
-2^-*p* * *fmax*.  This is, unfortunately, not the case, because the requested
-precision, *p*, is ensured only for the transform coefficients.  During the
-inverse transform of these quantized coefficients the quantization error may
-amplify.  That being said, it is possible to derive a bound on the error in
-terms of *p* that would allow choosing an appropriate precision.  Such a
-bound is derived below.
+2\ :sup:`-p` |times| *fmax*.  This is, unfortunately, not the case, because
+the requested precision, *p*, is ensured only for the transform coefficients.
+During the inverse transform of these quantized coefficients the quantization
+error may amplify.  That being said, it is possible to derive a bound on the
+error in terms of *p* that would allow choosing an appropriate precision.
+Such a bound is derived below.
 
 Let
 ::
@@ -634,7 +639,7 @@ bounded by::
 
   err <= k(d) * (2^emax / 2^p) <= k(d) * (fmax / 2^p)
 
-Here *k*(*d*) is a constant that depends on the data dimensionality *d*::
+Here *k*\ (*d*) is a constant that depends on the data dimensionality *d*::
 
   k(d) = 20 * (15/4)^(d-1)
 
@@ -685,22 +690,22 @@ compression.  For a given *n*-bit integer type (*n* = 32 or *n* = 64), consider
 compressing *p*-bit signed integer data, with the sign bit counting toward the
 precision.  In other words, there are exactly 2\ :sup:`p` possible signed
 integers.  If the integers are unsigned, then subtract 2\ :sup:`p-1` first so
-that they range from -2\ :sup:`p-1` to 2\ :sup:`p-1` - 1.
+that they range from |minus|\ 2\ :sup:`p-1` to 2\ :sup:`p-1` - 1.
 
 Lossless compression is achieved by first promoting the *p*-bit integers to
 *n* - 1 bits (see :ref:`Q8 <q-integer>`) such that all integer values fall in
-[-2\ :sup:`30`, +2\ :sup:`30`), when *n* = 32, or in
-[-2\ :sup:`62`, +2\ :sup:`62`), when *n* = 64.  In other words, the *p*-bit
-integers first need to be shifted left by *n* - *p* - 1 bits.  After promotion,
-the data should be compressed in zfp's fixed-precision mode using::
+[|minus|\ 2\ :sup:`30`, +2\ :sup:`30`), when *n* = 32, or in
+[|minus|\ 2\ :sup:`62`, +2\ :sup:`62`), when *n* = 64.  In other words, the
+*p*-bit integers first need to be shifted left by *n* - *p* - 1 bits.  After
+promotion, the data should be compressed in zfp's fixed-precision mode using::
 
   q = p + 4 * d + 1
 
 bits of precision to ensure no loss, where *d* is the data dimensionality
 (1 |leq| d |leq| 3).  Consequently, the *p*-bit data can be losslessly
-compressed as long as *p* |leq| *n* - 4 * *d* - 1.  The table below lists the
-maximum precision *p* that can be losslessly compressed using 32- and 64-bit
-integer types.
+compressed as long as *p* |leq| *n* - 4 |times| *d* - 1.  The table below
+lists the maximum precision *p* that can be losslessly compressed using 32-
+and 64-bit integer types.
 
   = ==== ====
   d n=32 n=64
@@ -730,14 +735,14 @@ involving up to four such averaging operations.
 For floating-point data, fully lossless compression with |zfp| is unlikely,
 albeit possible.  If the dynamic range is low or varies slowly such that values
 within a |4powd| block have the same or similar exponent, then the
-precision gained by discarding the 8 or 11 bis of the common floating-point
+precision gained by discarding the 8 or 11 bits of the common floating-point
 exponents can offset the precision lost in the decorrelating transform.  For
 instance, if all values in a block have the same exponent, then lossless
 compression is obtained using
-*q* = 26 + 4 * *d* |leq| 32 bits of precision for single-precision data and
-*q* = 55 + 4 * *d* |leq| 64 bits of precision for double-precision data.  Of
-course, the constraint imposed by the available integer precision *n* implies
-that lossless compression of such data is possible only in 1D for
+*q* = 26 + 4 |times| *d* |leq| 32 bits of precision for single-precision data
+and *q* = 55 + 4 |times| *d* |leq| 64 bits of precision for double-precision
+data.  Of course, the constraint imposed by the available integer precision
+*n* implies that lossless compression of such data is possible only in 1D for
 single-precision data and only in 1D and 2D for double-precision data.
 
 -------------------------------------------------------------------------------
@@ -759,10 +764,10 @@ Second, the quantized coefficients are then put through an inverse transform.
 This linear transform will combine signed quantization errors that, in the
 worst case, may cause them to add up and increase the error, even though the
 average (RMS) error remains the same, i.e. some errors cancel while others
-compound.  For d-dimensional data, d such inverse transforms are applied,
+compound.  For *d*-dimensional data, *d* such inverse transforms are applied,
 with the possibility of errors cascading across transforms.  To account for
 the worst possible case, zfp has to conservatively lower its internal error
-tolerance further, once for each of the d transform passes.
+tolerance further, once for each of the *d* transform passes.
 
 Unless the data is highly oscillatory or noisy, the error is not likely to
 be magnified much, leaving an observed error in the decompressed data that
