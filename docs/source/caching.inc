@@ -31,6 +31,7 @@ byte size of the cache, use :cpp:func:`array::cache_size`.
 
 By default a direct-mapped cache is used with a hash function that maps
 block indices to cache lines.  A faster but more collision prone hash
-can be enabled by defining the preprocessor macro :c:macro:`CACHE_FAST_HASH`.
+can be enabled by defining the preprocessor macro
+:c:macro:`ZFP_WITH_CACHE_FAST_HASH`.
 A two-way skew-associative cache is enabled by defining the preprocessor
-macro :c:macro:`CACHE_TWOWAY`.
+macro :c:macro:`ZFP_WITH_CACHE_TWOWAY`.

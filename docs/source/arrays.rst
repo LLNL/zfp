@@ -117,7 +117,8 @@ class.
 
 .. cpp:function:: size_t array::size() const
 
-  Total number of elements in array, e.g. :code:`nx * ny * nz` for 3D arrays.
+  Total number of elements in array, e.g. *nx* |times| *ny* |times| *nz* for
+  3D arrays.
 
 .. cpp:function:: size_t array::cache_size() const
 
@@ -134,7 +135,7 @@ class.
   Decompress entire array and store at *p*, for which sufficient storage must
   have been allocated.  The uncompressed array is assumed to be contiguous
   (with default strides) and stored in the usual "row-major" order, i.e. with
-  x varying faster than y and y varying faster than z.
+  *x* varying faster than *y* and *y* varying faster than *z*.
 
 .. cpp:function:: void array::set(const Scalar* p)
 

@@ -69,7 +69,7 @@ instructions on GNU and CMake builds.
 zfp has successfully been built and tested using these compilers:
 
     gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.2, 5.4.1, 6.3.0
-    icc versions 12.0.5, 12.1.5, 15.0.4, 16.0.1
+    icc versions 12.0.5, 12.1.5, 15.0.4, 16.0.1, 17.0.0, 18.0.0
     clang version 3.6.0
     xlc version 12.1
     MinGW version 5.3.0
