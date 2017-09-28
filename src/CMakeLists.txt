@@ -1,34 +1,7 @@
-set(zfp_defs)
-
-if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
-  list(APPEND zfp_defs BIT_STREAM_WORD_TYPE=uint${ZFP_BIT_STREAM_WORD_SIZE})
-endif()
-
-if(ZFP_WITH_BIT_STREAM_STRIDED)
-  list(APPEND zfp_defs BIT_STREAM_STRIDED)
-endif()
-
-if(ZFP_WITH_ALIGNED_ALLOC)
-  list(APPEND zfp_defs ZFP_ALIGNED_ALLOC)
-endif()
-
-if(ZFP_WITH_CACHE_TWOWAY)
-  list(APPEND zfp_defs ZFP_CACHE_TWOWAY)
-endif()
-
-if(ZFP_WITH_CACHE_FASH_HASH)
-  list(APPEND zfp_defs ZFP_CACHE_FAST_HASH)
-endif()
-
-if(ZFP_WITH_CACHE_PROFILE)
-  list(APPEND zfp_defs ZFP_CACHE_PROFILE)
-endif()
-
 set(zfp_source
   zfp.c
   bitstream.c
   traitsf.h traitsd.h block1.h block2.h block3.h
-
   encode1f.c encode1d.c encode1i.c encode1l.c
   decode1f.c decode1d.c decode1i.c decode1l.c
   encode2f.c encode2d.c encode2i.c encode2l.c
