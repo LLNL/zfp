@@ -59,6 +59,11 @@ endif()
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
+
+if(MSVC OR MINGW)
+  set(CMAKE_C_STANDARD 90)
+endif()
+
 message(STATUS "Compiling with C standard: ${CMAKE_C_STANDARD}")
 
 # Suggest C++98
