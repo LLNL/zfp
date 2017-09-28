@@ -102,7 +102,8 @@ builds, use the :code:`-D` option on the cmake line as in the example above.
   64-bit signed and unsigned integer types and their literal suffixes.
   Platforms on which :code:`long int` is 32 bits wide may require
   :code:`long long int` as type and :code:`ll` as suffix.  These macros
-  are primarily relevant when compiling in C89 mode.
+  are relevant **only** when compiling in C89 mode.  When compiling in
+  C99 mode, integer types are taken from :file:`stdint.h`.
   Defaults: :code:`long int`, :code:`l`, :code:`unsigned long int`, and
   :code:`ul`, respectively.
 
