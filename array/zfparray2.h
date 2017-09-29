@@ -1,9 +1,11 @@
 #ifndef ZFP_ARRAY2_H
 #define ZFP_ARRAY2_H
 
+#include <cstddef>
+#include <iterator>
 #include "zfparray.h"
 #include "zfpcodec.h"
-#include "cache.h"
+#include "zfp/cache.h"
 
 namespace zfp {
 
@@ -108,6 +110,8 @@ public:
     cache.clear();
   }
 
+  class pointer;
+
   // reference to a single array value
   class reference {
   public:
@@ -118,11 +122,105 @@ public:
     reference operator-=(Scalar val) { array->sub(i, j, val); return *this; }
     reference operator*=(Scalar val) { array->mul(i, j, val); return *this; }
     reference operator/=(Scalar val) { array->div(i, j, val); return *this; }
+    pointer operator&() const { return pointer(*this); }
+    // swap two array elements via proxy references
+    friend void swap(reference a, reference b)
+    {
+      Scalar x = a.operator Scalar();
+      Scalar y = b.operator Scalar();
+      b.operator=(x);
+      a.operator=(y);
+    }
   protected:
     friend class array2;
-    reference(array2* array, uint i, uint j) : array(array), i(i), j(j) {}
+    friend class iterator;
+    explicit reference(array2* array, uint i, uint j) : array(array), i(i), j(j) {}
     array2* array;
     uint i, j;
+  };
+
+  // pointer to a single value in flattened array
+  class pointer {
+  public:
+    pointer() : ref(0, 0, 0) {}
+    pointer operator=(const pointer& p) { ref.array = p.ref.array; ref.i = p.ref.i; ref.j = p.ref.j; return *this; }
+    reference operator*() const { return ref; }
+    reference operator[](ptrdiff_t d) const { return *operator+(d); }
+    pointer& operator++() { increment(); return *this; }
+    pointer& operator--() { decrement(); return *this; }
+    pointer operator++(int) { pointer p = *this; increment(); return p; }
+    pointer operator--(int) { pointer p = *this; decrement(); return p; }
+    pointer operator+=(ptrdiff_t d) { set(index() + d); return *this; }
+    pointer operator-=(ptrdiff_t d) { set(index() - d); return *this; }
+    pointer operator+(ptrdiff_t d) const { pointer p = *this; p += d; return p; }
+    pointer operator-(ptrdiff_t d) const { pointer p = *this; p -= d; return p; }
+    ptrdiff_t operator-(const pointer& p) const { return index() - p.index(); }
+    bool operator==(const pointer& p) const { return ref.array == p.ref.array && ref.i == p.ref.i && ref.j == p.ref.j; }
+    bool operator!=(const pointer& p) const { return !operator==(p); }
+  protected:
+    friend class array2;
+    friend class reference;
+    explicit pointer(reference r) : ref(r) {}
+    explicit pointer(array2* array, uint i, uint j) : ref(array, i, j) {}
+    ptrdiff_t index() const { return ref.i + ref.array->nx * ref.j; }
+    void set(ptrdiff_t index) { ref.array->ij(ref.i, ref.j, index); }
+    void increment()
+    {
+      if (++ref.i == ref.array->nx) {
+        ref.i = 0;
+        ref.j++;
+      }
+    }
+    void decrement()
+    {
+      if (!ref.i--) {
+        ref.i = ref.array->nx - 1;
+        ref.j--;
+      }
+    }
+    reference ref;
+  };
+
+  // forward iterator that visits array block by block
+  class iterator {
+  public:
+    // typedefs for STL compatibility
+    typedef Scalar value_type;
+    typedef ptrdiff_t difference_type;
+    typedef typename array2::reference reference;
+    typedef typename array2::pointer pointer;
+    typedef std::forward_iterator_tag iterator_category;
+
+    iterator() : ref(0, 0, 0) {}
+    iterator operator=(const iterator& it) { ref.array = it.ref.array; ref.i = it.ref.i; ref.j = it.ref.j; return *this; }
+    reference operator*() const { return ref; }
+    iterator& operator++() { increment(); return *this; }
+    iterator operator++(int) { iterator it = *this; increment(); return it; }
+    bool operator==(const iterator& it) const { return ref.array == it.ref.array && ref.i == it.ref.i && ref.j == it.ref.j; }
+    bool operator!=(const iterator& it) const { return !operator==(it); }
+    uint i() const { return ref.i; }
+    uint j() const { return ref.j; }
+  protected:
+    friend class array2;
+    explicit iterator(array2* array, uint i, uint j) : ref(array, i, j) {}
+    void increment()
+    {
+      ref.i++;
+      if (!(ref.i & 3u) || ref.i == ref.array->nx) {
+        ref.i = (ref.i - 1) & ~3u;
+        ref.j++;
+        if (!(ref.j & 3u) || ref.j == ref.array->ny) {
+          ref.j = (ref.j - 1) & ~3u;
+          // done with block; advance to next
+          if ((ref.i += 4) >= ref.array->nx) {
+            ref.i = 0;
+            if ((ref.j += 4) >= ref.array->ny)
+              ref.j = ref.array->ny;
+          }
+        }
+      }
+    }
+    reference ref;
   };
 
   // (i, j) accessors
@@ -142,6 +240,10 @@ public:
     ij(i, j, index);
     return reference(this, i, j);
   }
+
+  // sequential iterators
+  iterator begin() { return iterator(this, 0, 0); }
+  iterator end() { return iterator(this, 0, ny); }
 
 protected:
   // cache line representing one block of decompressed values

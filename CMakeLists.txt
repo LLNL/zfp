@@ -19,7 +19,7 @@ string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MAJOR[ \t]+([0-9]+).*"
      "\\1" ZFP_VERSION_MAJOR ${_zfp_h_contents})
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MINOR[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_MINOR ${_zfp_h_contents})
-string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_RELEASE[ \t]+([0-9]+).*"
+string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_PATCH[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_PATCH ${_zfp_h_contents})
 set(ZFP_VERSION
   "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}")
@@ -59,6 +59,11 @@ endif()
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
+
+if(MSVC OR MINGW)
+  set(CMAKE_C_STANDARD 90)
+endif()
+
 message(STATUS "Compiling with C standard: ${CMAKE_C_STANDARD}")
 
 # Suggest C++98
@@ -82,7 +87,7 @@ cmake_dependent_option(BUILD_SHARED_LIBS
   "SHARED_LIBS_SUPPORTED" OFF)
 
 # PIC is always on for shared libs.  This allows it to be selectable for
-# static libs
+# static libs.
 if(SHARED_LIBS_SUPPORTED)
   cmake_dependent_option(ZFP_ENABLE_PIC
     "Build with Position Independent Code" ON
@@ -103,10 +108,46 @@ option(ZFP_WITH_ALIGNED_ALLOC "Enabled aligned memory allocation" OFF)
 
 option(ZFP_WITH_CACHE_TWOWAY "Use two-way skew-associative cache" OFF)
 
-option(ZFP_WITH_CACHE_FASH_HASH
+option(ZFP_WITH_CACHE_FAST_HASH
   "Use a faster but more collision prone hash function" OFF)
 
-option(ZFP_WITH_CACHE_PROFILING "Count cache misses" OFF)
+option(ZFP_WITH_CACHE_PROFILE "Count cache misses" OFF)
+
+# Handle compile-time macros
+
+if((DEFINED ZFP_INT64) AND (DEFINED ZFP_INT64_SUFFIX))
+  list(APPEND zfp_defs ZFP_INT64=${ZFP_INT64})
+  list(APPEND zfp_defs ZFP_INT64_SUFFIX=${ZFP_INT64_SUFFIX})
+endif()
+
+if((DEFINED ZFP_UINT64) AND (DEFINED ZFP_UINT64_SUFFIX))
+  list(APPEND zfp_defs ZFP_UINT64=${ZFP_UINT64})
+  list(APPEND zfp_defs ZFP_UINT64_SUFFIX=${ZFP_UINT64_SUFFIX})
+endif()
+
+if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
+  list(APPEND zfp_defs BIT_STREAM_WORD_TYPE=uint${ZFP_BIT_STREAM_WORD_SIZE})
+endif()
+
+if(ZFP_WITH_BIT_STREAM_STRIDED)
+  list(APPEND zfp_defs BIT_STREAM_STRIDED)
+endif()
+
+if(ZFP_WITH_ALIGNED_ALLOC)
+  list(APPEND zfp_defs ZFP_ALIGNED_ALLOC)
+endif()
+
+if(ZFP_WITH_CACHE_TWOWAY)
+  list(APPEND zfp_defs ZFP_CACHE_TWOWAY)
+endif()
+
+if(ZFP_WITH_CACHE_FAST_HASH)
+  list(APPEND zfp_defs ZFP_CACHE_FAST_HASH)
+endif()
+
+if(ZFP_WITH_CACHE_PROFILE)
+  list(APPEND zfp_defs ZFP_CACHE_PROFILE)
+endif()
 
 #------------------------------------------------------------------------------#
 # Add source code

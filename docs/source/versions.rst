@@ -1,3 +1,8 @@
+.. include:: defs.rst
+
+Release Notes
+=============
+
 zfp 0.5.2, September 28, 2017
 
   - Added iterators and proxy objects for pointers and references.
@@ -146,7 +151,7 @@ zfp 0.3.2, December 3, 2015
 zfp 0.3.1, May 6, 2015
 
   - Fixed rare bug caused by exponent underflow in blocks with no normal
-    and some denormal numbers.
+    and some subnormal numbers.
 
 
 zfp 0.3.0, March 3, 2015
@@ -201,28 +206,28 @@ zfp 0.2.0, December 2, 2014
 
   - Several utility functions were added to simplify libzfp usage:
 
-    o Functions for setting the rate, precision, and accuracy.
+    * Functions for setting the rate, precision, and accuracy.
       Corresponding functions were also added to the Codec class.
 
-    o A function for estimating the buffer size needed for compression.
+    * A function for estimating the buffer size needed for compression.
 
   - The Array class functionality was expanded:
 
-    o Support for accessing the compressed bit stream stored with an
+    * Support for accessing the compressed bit stream stored with an
       array, e.g. for offline compressed storage and for initializing
       an already compressed array.
 
-    o Functions for dynamically specifying the cache size.
+    * Functions for dynamically specifying the cache size.
 
-    o The default cache is now direct-mapped instead of two-way
+    * The default cache is now direct-mapped instead of two-way
       associative.
 
   - Minor bug fixes:
 
-    o Corrected the value of the lowest possible bit plane to account for
+    * Corrected the value of the lowest possible bit plane to account for
       both the smallest exponent and the number of bits in the significand.
 
-    o Corrected inconsistent use of rate and precision.  The rate refers
+    * Corrected inconsistent use of rate and precision.  The rate refers
       to the number of compressed bits per floating-point value, while
       the precision refers to the number of uncompressed bits.  The Array
       API was changed accordingly.

@@ -127,7 +127,7 @@ struct bitstream {
   word* begin; /* beginning of stream */
   word* end;   /* end of stream (currently unused) */
 #ifdef BIT_STREAM_STRIDED
-  size_t mask;     /* one less the block size in number of words  */
+  size_t mask;     /* one less the block size in number of words */
   ptrdiff_t delta; /* number of words between consecutive blocks */
 #endif
 };
@@ -270,7 +270,7 @@ inline_ uint64
 stream_write_bits(bitstream* s, uint64 value, uint n)
 {
   /* append bit string to buffer */
-  s->buffer += value << s->bits;
+  s->buffer += (word)(value << s->bits);
   s->bits += n;
   /* is buffer full? */
   if (s->bits >= wsize) {
@@ -284,7 +284,7 @@ stream_write_bits(bitstream* s, uint64 value, uint n)
       /* assert: 0 <= s->bits <= n */
       stream_write_word(s, s->buffer);
       /* assert: 0 <= n - s->bits < 64 */
-      s->buffer = value >> (n - s->bits);
+      s->buffer = (word)(value >> (n - s->bits));
     } while (sizeof(s->buffer) < sizeof(value) && s->bits >= wsize);
   }
   /* assert: 0 <= s->bits < wsize */
@@ -371,7 +371,7 @@ stream_pad(bitstream* s, uint n)
 inline_ size_t
 stream_align(bitstream* s)
 {
-  size_t bits = s->bits;
+  uint bits = s->bits;
   if (bits)
     stream_skip(s, bits);
   return bits;
@@ -381,7 +381,7 @@ stream_align(bitstream* s)
 inline_ size_t
 stream_flush(bitstream* s)
 {
-  size_t bits = (wsize - s->bits) % wsize;
+  uint bits = (wsize - s->bits) % wsize;
   if (bits)
     stream_pad(s, bits);
   return bits;
