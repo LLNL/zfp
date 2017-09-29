@@ -105,7 +105,7 @@ inline uint
 test_rate(zfp_stream* stream, const zfp_field* input, double rate, Scalar tolerance, bool timings = false)
 {
   uint failures = 0;
-  uint n = zfp_field_size(input, NULL);
+  size_t n = zfp_field_size(input, NULL);
   uint dims = zfp_field_dimensionality(input);
   zfp_type type = zfp_field_type(input);
 
@@ -188,7 +188,7 @@ inline uint
 test_precision(zfp_stream* stream, const zfp_field* input, uint precision, size_t bytes)
 {
   uint failures = 0;
-  uint n = zfp_field_size(input, NULL);
+  size_t n = zfp_field_size(input, NULL);
 
   // allocate memory for compressed data
   zfp_stream_set_precision(stream, precision);
@@ -244,7 +244,7 @@ inline uint
 test_accuracy(zfp_stream* stream, const zfp_field* input, Scalar tolerance, size_t bytes)
 {
   uint failures = 0;
-  uint n = zfp_field_size(input, NULL);
+  size_t n = zfp_field_size(input, NULL);
 
   // allocate memory for compressed data
   tolerance = static_cast<Scalar>(zfp_stream_set_accuracy(stream, tolerance));
@@ -714,6 +714,23 @@ common_tests()
     std::cout << "library header and binary version mismatch" << std::endl;
     failures++;
   }
+  // ensure integer type sizes are correct
+  if (sizeof(int8) != 1u || sizeof(uint8) != 1u) {
+    std::cout << "8-bit integer type is not one byte wide" << std::endl;
+    failures++;
+  }
+  if (sizeof(int16) != 2u || sizeof(uint16) != 2u) {
+    std::cout << "16-bit integer type is not two bytes wide" << std::endl;
+    failures++;
+  }
+  if (sizeof(int32) != 4u || sizeof(uint32) != 4u) {
+    std::cout << "32-bit integer type is not four bytes wide" << std::endl;
+    failures++;
+  }
+  if (sizeof(int64) != 8u || sizeof(uint64) != 8u) {
+    std::cout << "64-bit integer type is not eight bytes wide" << std::endl;
+    failures++;
+  }
   // ensure signed right shifts are arithmetic
   int32 x32 = -2;
   if ((x32 >> 1) != -1 || (x32 >> 2) != -1) {
@@ -721,7 +738,7 @@ common_tests()
     failures++;
   }
   int64 x64 = -2;
-  if ((x64 >> 1) != -1ll || (x64 >> 2) != -1ll) {
+  if ((x64 >> 1) != INT64C(-1) || (x64 >> 2) != INT64C(-1)) {
     std::cout << "64-bit arithmetic right shift not supported" << std::endl;
     failures++;
   }
@@ -738,6 +755,32 @@ int main(int argc, char* argv[])
   std::cout << zfp_version_string << std::endl;
   std::cout << "library version " << zfp_library_version << std::endl;
   std::cout << "CODEC version " << zfp_codec_version << std::endl;
+  std::cout << "data model ";
+  size_t model = ((sizeof(uint64) - 1) << 12) +
+                 ((sizeof(void*) - 1) << 8) +
+                 ((sizeof(unsigned long int) - 1) << 4) +
+                 ((sizeof(unsigned int) - 1) << 0);
+  switch (model) {
+    case 0x7331u:
+      std::cout << "LP32";
+      break;
+    case 0x7333u:
+      std::cout << "ILP32";
+      break;
+    case 0x7733u:
+      std::cout << "LLP64";
+      break;
+    case 0x7773u:
+      std::cout << "LP64";
+      break;
+    case 0x7777u:
+      std::cout << "ILP64";
+      break;
+    default:
+      std::cout << "unknown (0x" << std::hex << model << ")";
+      break;
+  }
+  std::cout << std::endl;
   std::cout << std::endl;
 
   uint sizes = 0;

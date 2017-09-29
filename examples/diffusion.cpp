@@ -6,102 +6,203 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include "zfparray2.h"
+#include "array2d.h"
 
-#ifdef WITHOUT_COMPRESSION
-  #include "array2d.h"
-#else
-  #include "zfparray2.h"
-  using namespace zfp;
-#endif
+// constants used in the solution
+class Constants {
+public:
+  Constants(int nx, int ny, int nt) :
+    nx(nx),
+    ny(ny),
+    nt(nt),
+    x0((nx - 1) / 2),
+    y0((ny - 1) / 2),
+    k(0.04),
+    dx(2.0 / (std::max(nx, ny) - 1)),
+    dy(2.0 / (std::max(nx, ny) - 1)),
+    dt(0.5 * (dx * dx + dy * dy) / (8 * k)),
+    tfinal(nt ? nt * dt : 1.0),
+    pi(3.14159265358979323846)
+  {}
+
+  int nx;        // grid points in x
+  int ny;        // grid points in y
+  int nt;        // number of time steps (0 for default)
+  int x0;        // x location of heat source
+  int y0;        // y location of heat source
+  double k;      // diffusion constant
+  double dx;     // grid spacing in x
+  double dy;     // grid spacing in y
+  double dt;     // time step
+  double tfinal; // minimum time to run solution to
+  double pi;     // 3.141...
+};
+
+// advance solution using integer array indices
+template <class array2d>
+inline void
+time_step_indexed(array2d& u, const Constants& c)
+{
+  // compute du/dt
+  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
+  for (int y = 1; y < c.ny - 1; y++) {
+    for (int x = 1; x < c.nx - 1; x++) {
+      double uxx = (u(x - 1, y) - 2 * u(x, y) + u(x + 1, y)) / (c.dx * c.dx);
+      double uyy = (u(x, y - 1) - 2 * u(x, y) + u(x, y + 1)) / (c.dy * c.dy);
+      du(x, y) = c.dt * c.k * (uxx + uyy);
+    }
+  }
+  // take forward Euler step
+  for (uint i = 0; i < u.size(); i++)
+    u[i] += du[i];
+}
+
+// advance solution using array iterators
+template <class array2d>
+inline void
+time_step_iterated(array2d& u, const Constants& c)
+{
+  // compute du/dt
+  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
+  for (typename array2d::iterator p = du.begin(); p != du.end(); p++) {
+    int x = p.i();
+    int y = p.j();
+    if (1 <= x && x <= c.nx - 2 &&
+        1 <= y && y <= c.ny - 2) {
+      double uxx = (u(x - 1, y) - 2 * u(x, y) + u(x + 1, y)) / (c.dx * c.dx);
+      double uyy = (u(x, y - 1) - 2 * u(x, y) + u(x, y + 1)) / (c.dy * c.dy);
+      *p = c.dt * c.k * (uxx + uyy);
+    }
+  }
+  // take forward Euler step
+  for (typename array2d::iterator p = u.begin(), q = du.begin(); p != u.end(); p++, q++)
+    *p += *q;
+}
+
+// solve heat equation using 
+template <class array2d>
+inline double
+solve(array2d& u, const Constants& c, bool iterator)
+{
+  // initialize u with point heat source (u is assumed to be zero initialized)
+  u(c.x0, c.y0) = 1;
+
+  // iterate until final time
+  double t;
+  for (t = 0; t < c.tfinal; t += c.dt) {
+    std::cerr << "t=" << std::setprecision(6) << std::fixed << t << std::endl;
+    if (iterator)
+      time_step_iterated(u, c);
+    else
+      time_step_indexed(u, c);
+  }
+
+  return t;
+}
+
+// compute sum of array values
+template <class array2d>
+inline double
+total(const array2d& u)
+{
+  double s = 0;
+  const int nx = u.size_x();
+  const int ny = u.size_y();
+  for (int y = 1; y < ny - 1; y++)
+    for (int x = 1; x < nx - 1; x++)
+      s += u(x, y);
+  return s;
+}
+
+// compute root mean square error with respect to exact solution
+template <class array2d>
+inline double
+error(const array2d& u, const Constants& c, double t)
+{
+  double e = 0;
+  for (int y = 1; y < c.ny - 1; y++) {
+    double py = c.dy * (y - c.y0);
+    for (int x = 1; x < c.nx - 1; x++) {
+      double px = c.dx * (x - c.x0);
+      double f = u(x, y);
+      double g = c.dx * c.dy * std::exp(-(px * px + py * py) / (4 * c.k * t)) / (4 * c.pi * c.k * t);
+      e += (f - g) * (f - g);
+    }
+  }
+  return std::sqrt(e / ((c.nx - 2) * (c.ny - 2)));
+}
+
+inline int
+usage()
+{
+  std::cerr << "Usage: diffusion [options]" << std::endl;
+  std::cerr << "Options:" << std::endl;
+  std::cerr << "-i : traverse arrays using iterators" << std::endl;
+  std::cerr << "-n <nx> <ny> : number of grid points" << std::endl;
+  std::cerr << "-t <nt> : number of time steps" << std::endl;
+  std::cerr << "-r <rate> : use compressed arrays with 'rate' bits/value" << std::endl;
+  std::cerr << "-c <blocks> : use 'blocks' 4x4 blocks of cache" << std::endl;
+  return EXIT_FAILURE;
+}
 
 int main(int argc, char* argv[])
 {
-  int nx = 0;
-  int ny = 0;
+  int nx = 100;
+  int ny = 100;
   int nt = 0;
   double rate = 64;
+  bool iterator = false;
+  bool compression = false;
+  int cache = 0;
 
-  // parse arguments
-  switch (argc) {
-    case 5:
-      if (sscanf(argv[4], "%d", &nt) != 1)
-        goto usage;
-      // FALLTHROUGH
-    case 4:
-      if (sscanf(argv[2], "%d", &nx) != 1 ||
-          sscanf(argv[3], "%d", &ny) != 1)
-        goto usage;
-      // FALLTHROUGH
-    case 2:
-      if (sscanf(argv[1], "%lf", &rate) != 1)
-        goto usage;
-      // FALLTHROUGH
-    case 1:
-      break;
-    default:
-    usage:
-      std::cerr << "Usage: diffusion [rate] [nx] [ny] [nt]" << std::endl;
-      return EXIT_FAILURE;
-  }
-
-  // grid dimensions
-  if (nx == 0)
-    nx = 100;
-  if (ny == 0)
-    ny = nx;
-
-  // location of point heat source
-  int x0 = (nx - 1) / 2;
-  int y0 = (ny - 1) / 2;
-
-  // constants used in the solution
-  const double k = 0.04;
-  const double dx = 2.0 / (std::max(nx, ny) - 1);
-  const double dy = 2.0 / (std::max(nx, ny) - 1);
-  const double dt = 0.5 * (dx * dx + dy * dy) / (8 * k);
-  const double tfinal = nt ? nt * dt : 1;
-  const double pi = 3.14159265358979323846;
-
-  // initialize u (constructor zero-initializes)
-  array2d u(nx, ny, rate);
-  rate = u.rate();
-  u(x0, y0) = 1;
-
-  // iterate until final time
-  std::cerr.precision(6);
-  double t;
-  for (t = 0; t < tfinal; t += dt) {
-    std::cerr << "t=" << std::fixed << t << std::endl;
-    // compute du/dt
-    array2d du(nx, ny, rate);
-    for (int y = 1; y < ny - 1; y++) {
-      for (int x = 1; x < nx - 1; x++) {
-        double uxx = (u(x - 1, y) - 2 * u(x, y) + u(x + 1, y)) / (dx * dx);
-        double uyy = (u(x, y - 1) - 2 * u(x, y) + u(x, y + 1)) / (dy * dy);
-        du(x, y) = dt * k * (uxx + uyy);
-      }
+  // parse command-line options
+  for (int i = 1; i < argc; i++)
+    if (std::string(argv[i]) == "-i")
+      iterator = true;
+    else if (std::string(argv[i]) == "-n") {
+      if (++i == argc || sscanf(argv[i], "%i", &nx) != 1 ||
+          ++i == argc || sscanf(argv[i], "%i", &ny) != 1)
+        return usage();
     }
-    // take forward Euler step
-    for (uint i = 0; i < u.size(); i++)
-      u[i] += du[i];
+    else if (std::string(argv[i]) == "-t") {
+      if (++i == argc || sscanf(argv[i], "%i", &nt) != 1)
+        return usage();
+    }
+    else if (std::string(argv[i]) == "-r") {
+      if (++i == argc || sscanf(argv[i], "%lf", &rate) != 1)
+        return usage();
+      compression = true;
+    }
+    else if (std::string(argv[i]) == "-c") {
+      if (++i == argc || sscanf(argv[i], "%i", &cache) != 1)
+        return usage();
+    }
+    else
+      return usage();
+
+  Constants c(nx, ny, nt);
+
+  double sum;
+  double err;
+  if (compression) {
+    // solve problem using compressed arrays
+    zfp::array2d u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
+    rate = u.rate();
+    double t = solve(u, c, iterator);
+    sum = total(u);
+    err = error(u, c, t);
+  }
+  else {
+    // solve problem using uncompressed arrays
+    raw::array2d u(nx, ny);
+    double t = solve(u, c, iterator);
+    sum = total(u);
+    err = error(u, c, t);
   }
 
-  // compute root mean square error with respect to exact solution
-  double e = 0;
-  double sum = 0;
-  for (int y = 1; y < ny - 1; y++) {
-    double py = dy * (y - y0);
-    for (int x = 1; x < nx - 1; x++) {
-      double px = dx * (x - x0);
-      double f = u(x, y);
-      double g = dx * dy * std::exp(-(px * px + py * py) / (4 * k * t)) / (4 * pi * k * t);
-      e += (f - g) * (f - g);
-      sum += f;
-    }
-  }
-  e = std::sqrt(e / ((nx - 2) * (ny - 2)));
   std::cerr.unsetf(std::ios::fixed);
-  std::cerr << "rate=" << rate << " sum=" << std::fixed << sum << " error=" << std::setprecision(6) << std::scientific << e << std::endl;
+  std::cerr << "rate=" << rate << " sum=" << std::fixed << sum << " error=" << std::setprecision(6) << std::scientific << err << std::endl;
 
   return 0;
 }

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <climits>
 #include "zfp.h"
-#include "memory.h"
+#include "zfp/memory.h"
 
 namespace zfp {
 

@@ -1,5 +1,5 @@
-#ifndef MEMORY_H
-#define MEMORY_H
+#ifndef ZFP_MEMORY_H
+#define ZFP_MEMORY_H
 
 #include <cstdlib>
 #include "zfp/types.h"
@@ -7,7 +7,7 @@
 inline void*
 allocate(size_t size, size_t alignment = 0)
 {
-#if defined(__USE_XOPEN2K) && defined(ALIGNED_ALLOC)
+#if defined(__USE_XOPEN2K) && defined(ZFP_WITH_ALIGNED_ALLOC)
   void* ptr;
   if (alignment > 1)
     posix_memalign(&ptr, alignment, size);
@@ -23,7 +23,7 @@ template <typename T>
 inline void
 deallocate(T* ptr)
 {
-#if defined(__USE_XOPEN2K) && defined(ALIGNED_ALLOC)
+#if defined(__USE_XOPEN2K) && defined(ZFP_WITH_ALIGNED_ALLOC)
   if (ptr)
     free(ptr);
 #else

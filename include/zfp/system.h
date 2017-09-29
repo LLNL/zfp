@@ -34,11 +34,12 @@
 #endif
 
 #ifdef __GNUC__
-  #ifndef CACHE_LINE_SIZE
-    #define CACHE_LINE_SIZE 0x100
+  /* L1 cache line size for alignment purposes */
+  #ifndef ZFP_CACHE_LINE_SIZE
+    #define ZFP_CACHE_LINE_SIZE 0x100
   #endif
   #define align_(n) __attribute__((aligned(n)))
-  #define cache_align_(x) x align_(CACHE_LINE_SIZE)
+  #define cache_align_(x) x align_(ZFP_CACHE_LINE_SIZE)
 #else
   #define cache_align_(x) x
 #endif

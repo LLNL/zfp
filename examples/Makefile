@@ -1,9 +1,9 @@
 include ../Config
 
 BINDIR = ../bin
-TARGETS = $(BINDIR)/diffusion-raw\
-	  $(BINDIR)/diffusion-zfp\
+TARGETS = $(BINDIR)/diffusion\
 	  $(BINDIR)/inplace\
+	  $(BINDIR)/iterator\
 	  $(BINDIR)/pgm\
 	  $(BINDIR)/simple\
 	  $(BINDIR)/speed
@@ -12,14 +12,14 @@ CXXLIBS = -L../lib -lzfp
 
 all: $(TARGETS)
 
-$(BINDIR)/diffusion-raw: diffusion.cpp ../lib/libzfp.a
-	$(CXX) $(CXXFLAGS) -DWITHOUT_COMPRESSION -I../array diffusion.cpp $(CXXLIBS) -o $@
-
-$(BINDIR)/diffusion-zfp: diffusion.cpp ../lib/libzfp.a
+$(BINDIR)/diffusion: diffusion.cpp ../lib/libzfp.a
 	$(CXX) $(CXXFLAGS) -I../array diffusion.cpp $(CXXLIBS) -o $@
 
 $(BINDIR)/inplace: inplace.c ../lib/libzfp.a
 	$(CC) $(CFLAGS) inplace.c $(CLIBS) -o $@
+
+$(BINDIR)/iterator: iterator.cpp ../lib/libzfp.a
+	$(CXX) $(CXXFLAGS) -I../array iterator.cpp $(CXXLIBS) -o $@
 
 $(BINDIR)/pgm: pgm.c ../lib/libzfp.a
 	$(CC) $(CFLAGS) pgm.c $(CLIBS) -o $@

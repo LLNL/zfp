@@ -32,7 +32,7 @@
 
 export_ const uint zfp_codec_version = ZFP_CODEC;
 export_ const uint zfp_library_version = ZFP_VERSION;
-export_ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (March 28, 2017)";
+export_ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (September 28, 2017)";
 
 /* private functions ------------------------------------------------------- */
 
@@ -296,16 +296,16 @@ zfp_field_set_metadata(zfp_field* field, uint64 meta)
   switch (dims) {
     case 1:
       /* currently dimensions are limited to 2^32 - 1 */
-      field->nx = (meta & 0x0000ffffffffull) + 1; meta >>= 48;
+      field->nx = (meta & UINT64C(0x0000ffffffff)) + 1; meta >>= 48;
       break;
     case 2:
-      field->nx = (meta & 0xffffffull) + 1; meta >>= 24;
-      field->ny = (meta & 0xffffffull) + 1; meta >>= 24;
+      field->nx = (meta & UINT64C(0xffffff)) + 1; meta >>= 24;
+      field->ny = (meta & UINT64C(0xffffff)) + 1; meta >>= 24;
       break;
     case 3:
-      field->nx = (meta & 0xffffull) + 1; meta >>= 16;
-      field->ny = (meta & 0xffffull) + 1; meta >>= 16;
-      field->nz = (meta & 0xffffull) + 1; meta >>= 16;
+      field->nx = (meta & UINT64C(0xffff)) + 1; meta >>= 16;
+      field->ny = (meta & UINT64C(0xffff)) + 1; meta >>= 16;
+      field->nz = (meta & UINT64C(0xffff)) + 1; meta >>= 16;
       break;
   }
   field->sx = field->sy = field->sz = 0;
@@ -457,7 +457,7 @@ zfp_stream_set_rate(zfp_stream* zfp, double rate, zfp_type type, uint dims, int 
   }
   if (wra) {
     /* for write random access, round up to next multiple of stream word size */
-    bits += stream_word_bits - 1;
+    bits += (uint)stream_word_bits - 1;
     bits &= ~(stream_word_bits - 1);
   }
   zfp->minbits = bits;
