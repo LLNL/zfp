@@ -58,8 +58,8 @@
 ** advertising or product endorsement purposes.
 */
 
-#ifndef ZFP_H
-#define ZFP_H
+#ifndef ZFP_V5_H
+#define ZFP_V5_H
 
 #include "zfp/types.h"
 #include "zfp/system.h"
@@ -72,45 +72,51 @@
 #define _zfp_str(x) _zfp_str_(x)
 
 /* library version information */
-#define ZFP_VERSION_MAJOR 0 /* library major version number */
-#define ZFP_VERSION_MINOR 5 /* library minor version number */
-#define ZFP_VERSION_PATCH 2 /* library patch version number */
-#define ZFP_VERSION_RELEASE ZFP_VERSION_PATCH
+#define ZFP_V5_VERSION_MAJOR 0 /* library major version number */
+#define ZFP_V5_VERSION_MINOR 5 /* library minor version number */
+#define ZFP_V5_VERSION_PATCH 2 /* library patch version number */
+#define ZFP_V5_VERSION_RELEASE ZFP_V5_VERSION_PATCH
 
 /* codec version number (see also zfp_codec_version) */
-#define ZFP_CODEC 5
+#define ZFP_V5_CODEC 5
 
 /* library version number (see also zfp_library_version) */
-#define ZFP_VERSION \
-  ((ZFP_VERSION_MAJOR << 8) + \
-   (ZFP_VERSION_MINOR << 4) + \
-   (ZFP_VERSION_PATCH << 0))
+#define ZFP_V5_VERSION \
+  ((ZFP_V5_VERSION_MAJOR << 8) + \
+   (ZFP_V5_VERSION_MINOR << 4) + \
+   (ZFP_V5_VERSION_PATCH << 0))
 
 /* library version string (see also zfp_version_string) */
-#define ZFP_VERSION_STRING \
-  _zfp_str(ZFP_VERSION_MAJOR) "." \
-  _zfp_str(ZFP_VERSION_MINOR) "." \
-  _zfp_str(ZFP_VERSION_PATCH)
+#define ZFP_V5_VERSION_STRING \
+  _zfp_str(ZFP_V5_VERSION_MAJOR) "." \
+  _zfp_str(ZFP_V5_VERSION_MINOR) "." \
+  _zfp_str(ZFP_V5_VERSION_PATCH)
 
 /* default compression parameters */
-#define ZFP_MIN_BITS     0 /* minimum number of bits per block */
-#define ZFP_MAX_BITS  4171 /* maximum number of bits per block */
-#define ZFP_MAX_PREC    64 /* maximum precision supported */
-#define ZFP_MIN_EXP  -1074 /* minimum floating-point base-2 exponent */
+#define ZFP_V5_MIN_BITS     0 /* minimum number of bits per block */
+#define ZFP_V5_MAX_BITS  4171 /* maximum number of bits per block */
+#define ZFP_V5_MAX_PREC    64 /* maximum precision supported */
+#define ZFP_V5_MIN_EXP  -1074 /* minimum floating-point base-2 exponent */
 
 /* header masks (enable via bitwise or; reader must use same mask) */
-#define ZFP_HEADER_MAGIC  0x1u /* embed 64-bit magic */
-#define ZFP_HEADER_META   0x2u /* embed 52-bit field metadata */
-#define ZFP_HEADER_MODE   0x4u /* embed 12- or 64-bit compression mode */
-#define ZFP_HEADER_FULL   0x7u /* embed all of the above */
+#define ZFP_V5_HEADER_MAGIC  0x1u /* embed 64-bit magic */
+#define ZFP_V5_HEADER_META   0x2u /* embed 52-bit field metadata */
+#define ZFP_V5_HEADER_MODE   0x4u /* embed 12- or 64-bit compression mode */
+#define ZFP_V5_HEADER_FULL   0x7u /* embed all of the above */
 
 /* number of bits per header entry */
-#define ZFP_MAGIC_BITS       32 /* number of magic word bits */
-#define ZFP_META_BITS        52 /* number of field metadata bits */
-#define ZFP_MODE_SHORT_BITS  12 /* number of mode bits in short format */
-#define ZFP_MODE_LONG_BITS   64 /* number of mode bits in long format */
-#define ZFP_HEADER_MAX_BITS 148 /* max number of header bits */
-#define ZFP_MODE_SHORT_MAX  ((1u << ZFP_MODE_SHORT_BITS) - 2)
+#define ZFP_V5_MAGIC_BITS       32 /* number of magic word bits */
+#define ZFP_V5_META_BITS        52 /* number of field metadata bits */
+#define ZFP_V5_MODE_SHORT_BITS  12 /* number of mode bits in short format */
+#define ZFP_V5_MODE_LONG_BITS   64 /* number of mode bits in long format */
+#define ZFP_V5_HEADER_MAX_BITS 148 /* max number of header bits */
+#define ZFP_V5_MODE_SHORT_MAX  ((1u << ZFP_V5_MODE_SHORT_BITS) - 2)
+
+#include "versioning/defUnprefixedConstants.h"
+
+#ifdef ZFP_VERSION_PREFIX
+  #include "versioning/prefix.h"
+#endif
 
 /* types ------------------------------------------------------------------- */
 

@@ -15,11 +15,11 @@ endif()
 # Parse version number from zfp.h
 #------------------------------------------------------------------------------#
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/include/zfp.h _zfp_h_contents)
-string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MAJOR[ \t]+([0-9]+).*"
+string(REGEX REPLACE ".*#define[ \t]+ZFP_V[0-9]+_VERSION_MAJOR[ \t]+([0-9]+).*"
      "\\1" ZFP_VERSION_MAJOR ${_zfp_h_contents})
-string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MINOR[ \t]+([0-9]+).*"
+string(REGEX REPLACE ".*#define[ \t]+ZFP_V[0-9]+_VERSION_MINOR[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_MINOR ${_zfp_h_contents})
-string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_PATCH[ \t]+([0-9]+).*"
+string(REGEX REPLACE ".*#define[ \t]+ZFP_V[0-9]+_VERSION_PATCH[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_PATCH ${_zfp_h_contents})
 set(ZFP_VERSION
   "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}")
@@ -113,6 +113,8 @@ option(ZFP_WITH_CACHE_FAST_HASH
 
 option(ZFP_WITH_CACHE_PROFILE "Count cache misses" OFF)
 
+option(ZFP_WITH_VERSION_PREFIX "Compile library with versioned prefixes" OFF)
+
 # Handle compile-time macros
 
 if((DEFINED ZFP_INT64) AND (DEFINED ZFP_INT64_SUFFIX))
@@ -147,6 +149,10 @@ endif()
 
 if(ZFP_WITH_CACHE_PROFILE)
   list(APPEND zfp_defs ZFP_CACHE_PROFILE)
+endif()
+
+if(ZFP_WITH_VERSION_PREFIX)
+  list(APPEND zfp_public_defs ZFP_VERSION_PREFIX)
 endif()
 
 #------------------------------------------------------------------------------#

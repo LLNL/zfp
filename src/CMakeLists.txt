@@ -19,7 +19,9 @@ if(WIN32)
   list(APPEND zfp_defs ZFP_SOURCE)
 endif()
 
-target_compile_definitions(zfp PRIVATE ${zfp_defs})
+target_compile_definitions(zfp
+  PUBLIC ${zfp_public_defs}
+  PRIVATE ${zfp_defs})
 
 target_include_directories(zfp
   PUBLIC    ${ZFP_SOURCE_DIR}/include
