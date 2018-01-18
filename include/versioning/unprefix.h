@@ -26,6 +26,7 @@
 #undef zfp_stream_bit_stream
 #undef zfp_stream_mode
 #undef zfp_stream_params
+#undef zfp_stream_codec_version
 #undef zfp_stream_compressed_size
 #undef zfp_stream_maximum_size
 
@@ -35,6 +36,7 @@
 #undef zfp_stream_set_accuracy
 #undef zfp_stream_set_mode
 #undef zfp_stream_set_params
+#undef zfp_stream_set_codec_version
 
 #undef zfp_field_alloc
 #undef zfp_field_1d

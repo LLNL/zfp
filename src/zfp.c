@@ -324,6 +324,7 @@ zfp_stream_open(bitstream* stream)
     zfp->maxbits = ZFP_MAX_BITS;
     zfp->maxprec = ZFP_MAX_PREC;
     zfp->minexp = ZFP_MIN_EXP;
+    zfp->codec_version = zfp_codec_version;
   }
   return zfp;
 }
@@ -395,6 +396,12 @@ zfp_stream_params(const zfp_stream* zfp, uint* minbits, uint* maxbits, uint* max
     *maxprec = zfp->maxprec;
   if (minexp)
     *minexp = zfp->minexp;
+}
+
+uint
+zfp_stream_codec_version(const zfp_stream* zfp)
+{
+  return zfp->codec_version;
 }
 
 size_t
@@ -541,6 +548,12 @@ zfp_stream_set_params(zfp_stream* zfp, uint minbits, uint maxbits, uint maxprec,
   zfp->maxprec = maxprec;
   zfp->minexp = minexp;
   return 1;
+}
+
+void
+zfp_stream_set_codec_version(zfp_stream* zfp, uint codec_version)
+{
+  zfp->codec_version = codec_version;
 }
 
 size_t
@@ -756,5 +769,8 @@ zfp_read_header(zfp_stream* zfp, zfp_field* field, uint mask)
     if (!zfp_stream_set_mode(zfp, mode))
       return 0;
   }
+
+  zfp->codec_version = zfp_codec_version;
+
   return bits;
 }

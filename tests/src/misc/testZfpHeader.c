@@ -544,6 +544,23 @@ given_customCompressParamsAndProperHeader_when_zfpReadHeaderMode_expect_streamPa
   assertReadHeaderPreservesCompressParams(state);
 }
 
+static void
+given_properHeader_when_zfpReadHeader_expect_codecVersionFieldSet(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+
+  zfp_write_header(stream, bundle->field, ZFP_HEADER_MAGIC);
+  zfp_stream_flush(stream);
+  zfp_stream_rewind(stream);
+
+  zfp_stream_set_codec_version(stream, 0);
+
+  zfp_read_header(stream, NULL, ZFP_HEADER_MAGIC);
+
+  assert_int_equal(zfp_codec_version, zfp_stream_codec_version(stream));
+}
+
 int main()
 {
   const struct CMUnitTest tests[] = {
@@ -591,6 +608,7 @@ int main()
     cmocka_unit_test_setup_teardown(given_properHeaderFixedAccuracy_when_zfpReadHeaderMode_expect_streamParamsSet, setup, teardown),
     cmocka_unit_test_setup_teardown(given_customCompressParamsSet_when_zfpReadHeaderMode_expect_properNumBitsRead, setup, teardown),
     cmocka_unit_test_setup_teardown(given_customCompressParamsAndProperHeader_when_zfpReadHeaderMode_expect_streamParamsSet, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_properHeader_when_zfpReadHeader_expect_codecVersionFieldSet, setup, teardown),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

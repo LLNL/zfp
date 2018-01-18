@@ -27,6 +27,7 @@
 #define zfp_stream_bit_stream(x) zfp_v5_stream_bit_stream(x)
 #define zfp_stream_mode(x) zfp_v5_stream_mode(x)
 #define zfp_stream_params(x, a, b, c, d) zfp_v5_stream_params(x, a, b, c, d)
+#define zfp_stream_codec_version(x) zfp_v5_stream_codec_version(x)
 #define zfp_stream_compressed_size(x) zfp_v5_stream_compressed_size(x)
 #define zfp_stream_maximum_size(x, y) zfp_v5_stream_maximum_size(x, y)
 
@@ -36,6 +37,7 @@
 #define zfp_stream_set_accuracy(x, a) zfp_v5_stream_set_accuracy(x, a)
 #define zfp_stream_set_mode(x, a) zfp_v5_stream_set_mode(x, a)
 #define zfp_stream_set_params(x, a, b, c, d) zfp_v5_stream_set_params(x, a, b, c, d)
+#define zfp_stream_set_codec_version(x, a) zfp_v5_stream_set_codec_version(x, a)
 
 #define zfp_field_alloc() zfp_v5_field_alloc()
 #define zfp_field_1d(x, a, b) zfp_v5_field_1d(x, a, b)

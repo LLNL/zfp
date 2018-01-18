@@ -1,8 +1,8 @@
 #ifndef ZFP_LEGACY_ADAPTER_H
 #define ZFP_LEGACY_ADAPTER_H
 
-/* this file is not intended to be included because
- * it is lacking its own #include statements */
+/* #include statements were carefully performed in zfpApi.h
+ * this file is not intended to be included, except in zfpApi.h */
 
 /* Each function converts latest struct to
  * an older version struct, or vice-versa

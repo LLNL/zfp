@@ -6,6 +6,8 @@
 int
 zfp_stream_latest_to_v4(const zfp_stream *zfp, zfp_v4_stream *zfp_v4)
 {
+  zfp_v4_stream_set_codec_version(zfp_v4, zfp_stream_codec_version(zfp));
+
   uint64 params = zfp_stream_mode(zfp);
   return zfp_v4_stream_set_mode(zfp_v4, params);
 }
@@ -13,6 +15,8 @@ zfp_stream_latest_to_v4(const zfp_stream *zfp, zfp_v4_stream *zfp_v4)
 int
 zfp_stream_v4_to_latest(const zfp_v4_stream *zfp_v4, zfp_stream *zfp)
 {
+  zfp_stream_set_codec_version(zfp, zfp_v4_stream_codec_version(zfp_v4));
+
   uint64 params = zfp_v4_stream_mode(zfp_v4);
   return zfp_stream_set_mode(zfp, params);
 }

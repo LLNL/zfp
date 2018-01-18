@@ -122,11 +122,13 @@
 
 /* compressed stream; use accessors to get/set members */
 typedef struct {
-  uint minbits;      /* minimum number of bits to store per block */
-  uint maxbits;      /* maximum number of bits to store per block */
-  uint maxprec;      /* maximum number of bit planes to store */
-  int minexp;        /* minimum floating point bit plane number to store */
-  bitstream* stream; /* compressed bit stream */
+  uint minbits;       /* minimum number of bits to store per block */
+  uint maxbits;       /* maximum number of bits to store per block */
+  uint maxprec;       /* maximum number of bit planes to store */
+  int minexp;         /* minimum floating point bit plane number to store */
+  bitstream* stream;  /* compressed bit stream */
+  uint codec_version; /* active codec version (used when multiple zfp codecs
+                         compiled together) */
 } zfp_stream;
 
 /* scalar type */
@@ -201,6 +203,12 @@ zfp_stream_params(
   int* minexp               /* minimum base-2 exponent; error <= 2^minexp */
 );
 
+/* get active codec version */
+uint                       /* codec version number */
+zfp_stream_codec_version(
+  const zfp_stream* stream /* compressed stream */
+);
+
 /* byte size of sequentially compressed stream (call after compression) */
 size_t                     /* actual number of bytes of compressed storage */
 zfp_stream_compressed_size(
@@ -262,6 +270,13 @@ zfp_stream_set_params(
   uint maxbits,       /* maximum number of bits per 4^d block */
   uint maxprec,       /* maximum precision (# bit planes coded) */
   int minexp          /* minimum base-2 exponent; error <= 2^minexp */
+);
+
+/* set active codec version */
+void
+zfp_stream_set_codec_version(
+  zfp_stream* stream, /* compressed stream */
+  uint codec_version  /* active codec version */
 );
 
 /* high-level API: uncompressed array construction/destruction ------------- */
