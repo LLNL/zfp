@@ -156,22 +156,53 @@ if(ZFP_WITH_VERSION_PREFIX)
 endif()
 
 #------------------------------------------------------------------------------#
+# Compile older versions (without parent)
+#------------------------------------------------------------------------------#
+# If any older version specified, use this as parent, compile older as prefixed
+if(ZFP_V4_DIR)
+  set(ZFP_MULTIPLE_VERSIONS_PARENT ON)
+  set(ZFP_WITH_VERSION_PREFIX ON)
+
+  include(ExternalProject)
+
+  list(APPEND zfp_public_defs ZFP_VERSION_PREFIX)
+
+  set(ZFP_CHILD_PUBLIC_DEFS "-DZFP_WITH_VERSION_PREFIX=ON;-DZFP_MULTIPLE_VERSIONS_CHILD=ON")
+endif()
+
+if(ZFP_V4_DIR)
+  message(STATUS "Will compile zfpV4 at ${ZFP_V4_DIR}")
+
+  set(ZFP_V4_BINARY_DIR ${CMAKE_BINARY_DIR}/zfp_v4-build)
+
+  ExternalProject_Add(zfp_v4-proj
+    SOURCE_DIR ${ZFP_V4_DIR}
+    BINARY_DIR ${ZFP_V4_BINARY_DIR}
+    CMAKE_ARGS ${ZFP_CHILD_PUBLIC_DEFS}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build .
+    INSTALL_COMMAND ""
+  )
+
+  list(APPEND zfp_public_defs "ZFP_V4_DIR=${ZFP_V4_DIR}")
+endif()
+
+#------------------------------------------------------------------------------#
 # Add source code
 #------------------------------------------------------------------------------#
 add_subdirectory(src)
 
 option(BUILD_UTILITIES "Build command line utilities for zfp" ON)
-if(BUILD_UTILITIES)
+if(BUILD_UTILITIES AND NOT ZFP_MULTIPLE_VERSIONS_CHILD)
   add_subdirectory(utils)
 endif()
 
 option(BUILD_EXAMPLES "Build Examples" OFF)
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES AND NOT ZFP_MULTIPLE_VERSIONS_CHILD)
   add_subdirectory(examples)
 endif()
 
 include(CTest)
-if(BUILD_TESTING)
+if(BUILD_TESTING AND NOT ZFP_MULTIPLE_VERSIONS_CHILD)
   enable_testing()
   add_subdirectory(tests)
 endif()
