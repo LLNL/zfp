@@ -71,6 +71,10 @@ install:
   - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
 
 build_script:
+  # copy/create "older codec" project at ../zfpV4
+  - C:\cygwin\bin\bash -c "./copyScript.sh"
+
+  # build/test plain lib
   - mkdir build
   - cd build
   - if "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" ..
@@ -81,3 +85,20 @@ build_script:
 
   - ctest -V -C "%BUILD_TYPE%"
 
+  # build/test prefixed lib
+  - if "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DZFP_WITH_VERSION_PREFIX=ON ..
+  - if not "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_VERSION_PREFIX=ON ..
+
+  - if "%COMPILER%"=="msvc" cmake --build . --config "%BUILD_TYPE%"
+  - if not "%COMPILER%"=="msvc" cmake --build .
+
+  - ctest -V -C "%BUILD_TYPE%"
+
+  # build/test combined (2 versions) lib
+  - if "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DZFP_V4_DIR="../../zfpV4" ..
+  - if not "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_V4_DIR="../../zfpV4" ..
+
+  - if "%COMPILER%"=="msvc" cmake --build . --config "%BUILD_TYPE%"
+  - if not "%COMPILER%"=="msvc" cmake --build .
+
+  - ctest -V -C "%BUILD_TYPE%"
