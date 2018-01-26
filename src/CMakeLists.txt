@@ -12,43 +12,40 @@ set(zfp_source
 if(ZFP_MULTIPLE_VERSIONS_PARENT)
   list(APPEND zfp_source versioning/zfpApi.c)
 
-  SET(ZFP_V4_OBJ_PREFIX "${ZFP_V4_BINARY_DIR}/src/CMakeFiles/zfpV4.dir")
-  SET(ZFP_V4_OBJS
-    ${ZFP_V4_OBJ_PREFIX}/zfp.c.o
-    ${ZFP_V4_OBJ_PREFIX}/bitstream.c.o
+  if (ZFP_V4_DIR)
+    # construct paths to compiled zfpV4 object files
+    SET(ZFP_V4_SRC_FILES
+      zfp.c
+      bitstream.c
+      encode1f.c encode1d.c encode1i.c encode1l.c
+      decode1f.c decode1d.c decode1i.c decode1l.c
+      encode2f.c encode2d.c encode2i.c encode2l.c
+      decode2f.c decode2d.c decode2i.c decode2l.c
+      encode3f.c encode3d.c encode3i.c encode3l.c
+      decode3f.c decode3d.c decode3i.c decode3l.c)
 
-    ${ZFP_V4_OBJ_PREFIX}/encode1f.c.o
-    ${ZFP_V4_OBJ_PREFIX}/encode1d.c.o
-    ${ZFP_V4_OBJ_PREFIX}/encode1i.c.o
-    ${ZFP_V4_OBJ_PREFIX}/encode1l.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode1f.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode1d.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode1i.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode1l.c.o
+    if(MSVC)
+      SET(ZFP_V4_OBJ_PREFIX "${ZFP_V4_BINARY_DIR}/src/zfpV4.dir/${CMAKE_BUILD_TYPE}")
+    else()
+      SET(ZFP_V4_OBJ_PREFIX "${ZFP_V4_BINARY_DIR}/src/CMakeFiles/zfpV4.dir")
+    endif()
 
-    ${ZFP_V4_OBJ_PREFIX}/encode2f.c.o
-    ${ZFP_V4_OBJ_PREFIX}/encode2d.c.o
-    ${ZFP_V4_OBJ_PREFIX}/encode2i.c.o
-    ${ZFP_V4_OBJ_PREFIX}/encode2l.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode2f.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode2d.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode2i.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode2l.c.o
+    SET(ZFP_V4_OBJS "")
+    foreach(ZFP_V4_SRC_FILE ${ZFP_V4_SRC_FILES})
+      # MSVC object files are of form: zfp.obj (remove .c)
+      if(MSVC)
+        string(REPLACE "\.c" "" ZFP_V4_SRC_FILE ${ZFP_V4_SRC_FILE})
+      endif()
 
-    ${ZFP_V4_OBJ_PREFIX}/encode3f.c.o
-    ${ZFP_V4_OBJ_PREFIX}/encode3d.c.o
-    ${ZFP_V4_OBJ_PREFIX}/encode3i.c.o
-    ${ZFP_V4_OBJ_PREFIX}/encode3l.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode3f.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode3d.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode3i.c.o
-    ${ZFP_V4_OBJ_PREFIX}/decode3l.c.o)
+      LIST(APPEND ZFP_V4_OBJS "${ZFP_V4_OBJ_PREFIX}/${ZFP_V4_SRC_FILE}${CMAKE_C_OUTPUT_EXTENSION}")
+    endforeach()
 
-  set_source_files_properties(
-    ${ZFP_V4_OBJS}
-    PROPERTIES
-    EXTERNAL_OBJECT TRUE
-    GENERATED TRUE)
+    set_source_files_properties(
+      ${ZFP_V4_OBJS}
+      PROPERTIES
+      EXTERNAL_OBJECT TRUE
+      GENERATED TRUE)
+  endif()
 endif()
 
 # externally viewed, final library name is always zfp
