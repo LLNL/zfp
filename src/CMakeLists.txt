@@ -66,6 +66,11 @@ if(ZFP_MULTIPLE_VERSIONS_CHILD)
 else()
   add_library(zfp STATIC ${zfp_source} ${ZFP_V4_OBJS})
 
+  # ensure children are built first, so their object files exist
+  if(ZFP_V4_DIR)
+    add_dependencies(zfp zfp_v4-proj)
+  endif()
+
   if(UNIX)
     target_link_libraries(zfp PUBLIC m)
   endif()
