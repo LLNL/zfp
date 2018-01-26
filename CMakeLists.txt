@@ -43,6 +43,14 @@ if(NOT CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
 endif()
 
 #------------------------------------------------------------------------------#
+# Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel
+#------------------------------------------------------------------------------#
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of CMake build" FORCE)
+endif()
+
+#------------------------------------------------------------------------------#
 # Top level options
 #------------------------------------------------------------------------------#
 
@@ -167,7 +175,16 @@ if(ZFP_V4_DIR)
 
   list(APPEND zfp_public_defs ZFP_VERSION_PREFIX)
 
-  set(ZFP_CHILD_PUBLIC_DEFS "-DZFP_WITH_VERSION_PREFIX=ON;-DZFP_MULTIPLE_VERSIONS_CHILD=ON")
+  # identify external build as a child with prefixes
+  set(ZFP_CHILD_ARGS "-DZFP_WITH_VERSION_PREFIX=ON;-DZFP_MULTIPLE_VERSIONS_CHILD=ON")
+
+  # ensure child build settings match
+  set(ZFP_CHILD_ARGS "${ZFP_CHILD_ARGS};-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
+
+  # some platform specific args/flags
+  if(MINGW)
+    set(ZFP_CHILD_ARGS "${ZFP_CHILD_ARGS};-DCMAKE_SH=CMAKE_SH-NOTFOUND")
+  endif()
 endif()
 
 if(ZFP_V4_DIR)
@@ -178,8 +195,8 @@ if(ZFP_V4_DIR)
   ExternalProject_Add(zfp_v4-proj
     SOURCE_DIR ${ZFP_V4_DIR}
     BINARY_DIR ${ZFP_V4_BINARY_DIR}
-    CMAKE_ARGS ${ZFP_CHILD_PUBLIC_DEFS}
-    BUILD_COMMAND ${CMAKE_COMMAND} --build .
+    CMAKE_ARGS -G ${CMAKE_GENERATOR} ${ZFP_CHILD_ARGS}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE}
     INSTALL_COMMAND ""
   )
 
@@ -213,11 +230,3 @@ endif()
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-#------------------------------------------------------------------------------#
-# Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel
-#------------------------------------------------------------------------------#
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of CMake build" FORCE)
-endif()
