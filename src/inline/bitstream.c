@@ -126,10 +126,8 @@ struct bitstream {
   word* ptr;   /* pointer to next word to be read/written */
   word* begin; /* beginning of stream */
   word* end;   /* end of stream (currently unused) */
-#ifdef BIT_STREAM_STRIDED
   size_t mask;     /* one less the block size in number of words */
   ptrdiff_t delta; /* number of words between consecutive blocks */
-#endif
 };
 
 /* private functions ------------------------------------------------------- */
