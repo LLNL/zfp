@@ -25,6 +25,14 @@
 #define ZFP_CODEC_WILDCARD 0
 #include "versioning/zfpLegacyAdapter.h"
 
+#undef zfp_stream_maximum_size
+/* call proper prefixed zfp_stream_maximum_size() depending on stream->codec_version */
+size_t                   /* maximum number of bytes of compressed storage */
+zfp_stream_maximum_size(
+  const zfp_stream* stream, /* compressed stream */
+  const zfp_field* field /* array to compress */
+);
+
 #undef zfp_compress
 /* call proper prefixed zfp_compress() depending on stream->codec_version */
 size_t                   /* actual number of bytes of compressed storage */

@@ -208,6 +208,62 @@ given_WrittenLatestHeaderInBitstream_and_LatestCodecVersion_when_ZfpReadHeader_e
 }
 
 static void
+given_UnprefixedZfpStream_when_ZfpStreamMaximumSize_expect_LatestResult(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_field* field = bundle->field;
+  zfp_stream* zfp = bundle->zfp;
+
+  size_t result_v5 = zfp_v5_stream_maximum_size(zfp, field);
+  size_t result_unprefixed = zfp_stream_maximum_size(zfp, field);
+  assert_int_equal(result_v5, result_unprefixed);
+}
+
+/* ZFP_V4_HEADER_MAX_BITS was bumped up by 1 word in copyScript.sh
+ * zfp_stream_maximum_size() rounds up to next word */
+static void
+given_OlderZfpStreamCodecVersionField_when_ZfpStreamMaximumSize_expect_ResultDiffersFromUnprefixedResult(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_field* field = bundle->field;
+  zfp_stream* zfp = bundle->zfp;
+
+  assert_int_not_equal(zfp_v4_codec_version, zfp_stream_codec_version(zfp));
+  size_t result_unprefixed = zfp_stream_maximum_size(zfp, field);
+
+  zfp_stream_set_codec_version(zfp, zfp_v4_codec_version);
+  size_t result_older = zfp_stream_maximum_size(zfp, field);
+
+  assert_int_not_equal(result_unprefixed, result_older);
+}
+
+static void
+given_IncompatibleZfpStreamCodecVersionField_when_ZfpStreamMaximumSize_expect_ReturnsZero(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_field* field = bundle->field;
+  zfp_stream* zfp = bundle->zfp;
+
+  zfp_stream_set_codec_version(zfp, ZFP_INCOMPATIBLE_CODEC);
+
+  assert_int_equal(0, zfp_stream_maximum_size(zfp, field));
+}
+
+static void
+given_IncompatibleZfpFieldAcrossVersions_when_ZfpStreamMaximumSize_expect_ReturnsZero(void **state)
+{
+  zfp_stream* zfp = zfp_stream_open(NULL);
+  zfp_field* field = zfp_field_1d(NULL, zfp_type_float, 0);
+
+  zfp_stream_set_codec_version(zfp, zfp_v4_codec_version);
+
+  assert_int_equal(0, zfp_stream_maximum_size(zfp, field));
+
+  zfp_field_free(field);
+  zfp_stream_close(zfp);
+}
+
+static void
 given_WrittenLatestHeaderInBitstream_and_WildcardCodecVersion_when_ZfpReadHeader_expect_HeaderReadSuccessful(void **state)
 {
   zfp_stream* zfp = zfp_stream_open(NULL);
@@ -793,6 +849,11 @@ int main()
 {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(given_CompiledWithOlderLib_when_UnprefixedConstUsed_expect_MatchesLatestPrefixedResult),
+
+    cmocka_unit_test_setup_teardown(given_UnprefixedZfpStream_when_ZfpStreamMaximumSize_expect_LatestResult, setupFixedRate0, teardown),
+    cmocka_unit_test_setup_teardown(given_OlderZfpStreamCodecVersionField_when_ZfpStreamMaximumSize_expect_ResultDiffersFromUnprefixedResult, setupFixedRate0, teardown),
+    cmocka_unit_test_setup_teardown(given_IncompatibleZfpStreamCodecVersionField_when_ZfpStreamMaximumSize_expect_ReturnsZero, setupFixedRate0, teardown),
+    cmocka_unit_test_setup_teardown(given_IncompatibleZfpFieldAcrossVersions_when_ZfpStreamMaximumSize_expect_ReturnsZero, setupFixedRate0, teardown),
 
     cmocka_unit_test(given_WrittenLatestHeaderInBitstream_and_LatestCodecVersion_when_ZfpReadHeader_expect_HeaderReadSuccessful),
     cmocka_unit_test(given_WrittenLatestHeaderInBitstream_and_WildcardCodecVersion_when_ZfpReadHeader_expect_HeaderReadSuccessful),

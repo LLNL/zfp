@@ -19,6 +19,7 @@ grep -rl 'v5' ./include | xargs sed -i.bak 's/v5/v4/g'
 grep -rl 'define ZFP_V4_VERSION_MINOR' ./include | xargs sed -i.bak -- 's/define ZFP_V4_VERSION_MINOR 5/define ZFP_V4_VERSION_MINOR 4/g'
 grep -rl 'define ZFP_V4_VERSION_PATCH' ./include | xargs sed -i.bak -- 's/define ZFP_V4_VERSION_PATCH 2/define ZFP_V4_VERSION_PATCH 1/g'
 grep -rl 'define ZFP_V4_CODEC' ./include | xargs sed -i.bak -- 's/define ZFP_V4_CODEC 5/define ZFP_V4_CODEC 4/g'
+grep -rl 'define ZFP_V4_HEADER_MAX_BITS' ./include | xargs sed -i.bak -- 's/define ZFP_V4_HEADER_MAX_BITS 148/define ZFP_V4_HEADER_MAX_BITS (148+stream_word_bits)/g'
 
 # modify compressor/decompressor behavior (for 2d)
 perl -pe 's{const Scalar\* data = field->data;}{++$n == 3 ? "const Scalar\* data = field->data; stream_write_bit(stream->stream, 0);" : $&}ge' src/template/compress.c > src/template/compress2.c
