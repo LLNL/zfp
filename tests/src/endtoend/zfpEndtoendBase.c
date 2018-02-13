@@ -108,18 +108,19 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   zfp_field* decompressField;
+  uint sideLen = (uint)bundle->dataSideLen;
   switch(DIMS) {
     case 1:
-      field = zfp_field_1d(bundle->dataArr, type, bundle->dataSideLen);
-      decompressField = zfp_field_1d(bundle->decompressedArr, type, bundle->dataSideLen);
+      field = zfp_field_1d(bundle->dataArr, type, sideLen);
+      decompressField = zfp_field_1d(bundle->decompressedArr, type, sideLen);
       break;
     case 2:
-      field = zfp_field_2d(bundle->dataArr, type, bundle->dataSideLen, bundle->dataSideLen);
-      decompressField = zfp_field_2d(bundle->decompressedArr, type, bundle->dataSideLen, bundle->dataSideLen);
+      field = zfp_field_2d(bundle->dataArr, type, sideLen, sideLen);
+      decompressField = zfp_field_2d(bundle->decompressedArr, type, sideLen, sideLen);
       break;
     case 3:
-      field = zfp_field_3d(bundle->dataArr, type, bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen);
-      decompressField = zfp_field_3d(bundle->decompressedArr, type, bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen);
+      field = zfp_field_3d(bundle->dataArr, type, sideLen, sideLen, sideLen);
+      decompressField = zfp_field_3d(bundle->decompressedArr, type, sideLen, sideLen, sideLen);
       break;
   }
 

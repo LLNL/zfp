@@ -248,7 +248,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_OnlyStridedE
   // zero bitstream's memory
   size_t writtenBits = stream_wtell(s);
   stream_rewind(s);
-  stream_pad(s, writtenBits);
+  stream_pad(s, (uint)writtenBits);
   stream_rewind(s);
 
   // tweak non-strided (unused) entries
@@ -306,7 +306,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyS
   // zero bitstream's memory
   size_t writtenBits = stream_wtell(s);
   stream_rewind(s);
-  stream_pad(s, writtenBits);
+  stream_pad(s, (uint)writtenBits);
   stream_rewind(s);
 
   // tweak non-strided (unused) entries
@@ -337,7 +337,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyE
   // zero bitstream's memory
   size_t writtenBits = stream_wtell(s);
   stream_rewind(s);
-  stream_pad(s, writtenBits);
+  stream_pad(s, (uint)writtenBits);
   stream_rewind(s);
 
   // tweak block entries outside partial block subset
