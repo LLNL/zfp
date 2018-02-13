@@ -7,6 +7,11 @@ add_library(rand64Lib rand64.c rand64.h)
 
 # hashing
 add_library(hashBaseLib hashBase.c hashBase.h)
+if(NOT MSVC)
+  # this warning does not appear with MSVC
+  # and the flag syntax would be different
+  target_compile_options(hashBaseLib PUBLIC "-Wno-pointer-sign")
+endif()
 
 add_library(hash32Lib hash32.c hash32.h)
 target_link_libraries(hash32Lib hashBaseLib)

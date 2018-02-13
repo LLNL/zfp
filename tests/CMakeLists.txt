@@ -1,4 +1,12 @@
 # clone cmocka 1.1.0 into /build
+
+list(APPEND CMOCKA_ARGS "-DWITH_STATIC_LIB=ON;-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER};-DUNIT_TESTING=OFF")
+
+# CMAKE_SH-NOTFOUND needed for mingw builds
+if(MINGW)
+  list(APPEND CMOCKA_ARGS "-DCMAKE_SH=CMAKE_SH-NOTFOUND")
+endif()
+
 include(ExternalProject)
 ExternalProject_Add(
   cmocka_cloned
@@ -6,7 +14,7 @@ ExternalProject_Add(
   GIT_TAG           cmocka-1.1.0
   SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
   BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
-  CMAKE_ARGS        -DWITH_STATIC_LIB=ON -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_SH=CMAKE_SH-NOTFOUND -DUNIT_TESTING=OFF
+  CMAKE_ARGS        ${CMOCKA_ARGS}
   BUILD_COMMAND     ${CMAKE_COMMAND} --build . WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
   INSTALL_COMMAND   ""
 )

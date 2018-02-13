@@ -73,7 +73,8 @@ install:
 build_script:
   - mkdir build
   - cd build
-  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND ..
+  - if "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" ..
+  - if not "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND ..
 
   - if "%COMPILER%"=="msvc" cmake --build . --config "%BUILD_TYPE%"
   - if not "%COMPILER%"=="msvc" cmake --build .
