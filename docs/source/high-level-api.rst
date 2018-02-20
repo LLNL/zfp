@@ -106,11 +106,13 @@ Types
   ::
 
     typedef struct {
-      uint minbits;      // minimum number of bits to store per block
-      uint maxbits;      // maximum number of bits to store per block
-      uint maxprec;      // maximum number of bit planes to store
-      int minexp;        // minimum floating point bit plane number to store
-      bitstream* stream; // compressed bit stream
+      uint minbits;       // minimum number of bits to store per block
+      uint maxbits;       // maximum number of bits to store per block
+      uint maxprec;       // maximum number of bit planes to store
+      int minexp;         // minimum floating point bit plane number to store
+      bitstream* stream;  // compressed bit stream
+      uint codec_version; // active codec version (used when multiple zfp codecs
+                          // compiled together)
     } zfp_stream;
 
 .. c:type:: zfp_type
@@ -226,6 +228,10 @@ Compressed Stream
   Query :ref:`compression parameters <mode-expert>`.  For any parameter not
   needed, pass :c:macro:`NULL` for the corresponding pointer.
 
+.. c:function:: uint zfp_stream_codec_version(const zfp_stream* stream)
+
+  Return the active codec version on this stream (used when multiple zfp codecs compiled together)
+
 .. c:function:: size_t zfp_stream_compressed_size(const zfp_stream* stream)
 
   Number of bytes of compressed storage.  This function returns the
@@ -295,6 +301,10 @@ Compression Parameters
   Set all compression parameters directly.  See the section on
   :ref:`expert mode <mode-expert>` for a discussion of the parameters.
   The return value is nonzero upon success.
+
+.. c:function:: void zfp_stream_set_codec_version(zfp_stream* stream, uint codec_version)
+
+  Set the active codec version on this zfp_stream (used when multiple zfp codecs compiled together)
 
 .. _hl-func-field:
 

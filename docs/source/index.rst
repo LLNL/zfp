@@ -16,6 +16,7 @@
    high-level-api
    low-level-api
    bit-stream
+   versioning
    arrays
    tutorial
    zfpcmd

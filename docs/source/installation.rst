@@ -150,3 +150,16 @@ builds, use the :code:`-D` option on the cmake line as in the example above.
   Enable support for strided bit streams that allow for non-contiguous memory
   layouts, e.g., to enable progressive access.
   Default: undefined/off.
+
+.. c:macro:: ZFP_VX_DIR
+
+  Compile this zfp project with an older version (codec has digit X), whose
+  project directory is located at the value of this macro. All other
+  compile-time macros defined in this section are automatically passed to older
+  version builds.
+  Default: undefined/off.
+
+.. c:macro:: ZFP_WITH_VERSION_PREFIX
+
+  Compile the library with prefixes on all symbols, determined by the codec version.
+  Default: undefined/off.
