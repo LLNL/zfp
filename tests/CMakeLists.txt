@@ -69,6 +69,7 @@ endif()
 include_directories(${ZFP_SOURCE_DIR} ${ZFP_SOURCE_DIR}/include)
 
 add_subdirectory(src)
+add_subdirectory(array)
 
 
 add_executable(testzfp testzfp.cpp fields.c)
