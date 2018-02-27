@@ -30,13 +30,13 @@ public:
 class Array1dTest : public ::testing::TestWithParam<int> {
 protected:
   virtual void SetUp() {
-    bitstreamChecksums_[0] = CHECKSUM_FR_COMPRESSED_BITSTREAM_0;
-    bitstreamChecksums_[1] = CHECKSUM_FR_COMPRESSED_BITSTREAM_1;
-    bitstreamChecksums_[2] = CHECKSUM_FR_COMPRESSED_BITSTREAM_2;
+    bitstreamChecksums_[0] = CHECKSUM_FR_8_COMPRESSED_BITSTREAM;
+    bitstreamChecksums_[1] = CHECKSUM_FR_16_COMPRESSED_BITSTREAM;
+    bitstreamChecksums_[2] = CHECKSUM_FR_32_COMPRESSED_BITSTREAM;
 
-    decompressedChecksums_[0] = CHECKSUM_FR_DECOMPRESSED_ARRAY_0;
-    decompressedChecksums_[1] = CHECKSUM_FR_DECOMPRESSED_ARRAY_1;
-    decompressedChecksums_[2] = CHECKSUM_FR_DECOMPRESSED_ARRAY_2;
+    decompressedChecksums_[0] = CHECKSUM_FR_8_DECOMPRESSED_ARRAY;
+    decompressedChecksums_[1] = CHECKSUM_FR_16_DECOMPRESSED_ARRAY;
+    decompressedChecksums_[2] = CHECKSUM_FR_32_DECOMPRESSED_ARRAY;
   }
 
   double getRate() { return 1u << (GetParam() + 3); }
@@ -48,12 +48,43 @@ protected:
   uint64 bitstreamChecksums_[3], decompressedChecksums_[3];
 };
 
+TEST_F(Array1dTest, when_constructorCalled_then_rateSetWithWriteRandomAccess)
+{
+  double rate = ZFP_RATE_PARAM_BITS;
+  array1d arr(inputDataTotalLen, rate);
+  EXPECT_LT(rate, arr.rate());
+}
+
+TEST_F(Array1dTest, when_setRate_then_compressionRateChanged)
+{
+  double oldRate = ZFP_RATE_PARAM_BITS;
+  array1d arr(inputDataTotalLen, oldRate, inputDataArr);
+
+  double actualOldRate = arr.rate();
+  size_t oldCompressedSize = arr.compressed_size();
+  uint64 oldChecksum = hashBitstream((uint64*)arr.compressed_data(), oldCompressedSize);
+
+  double newRate = oldRate - 10;
+  EXPECT_LT(1, newRate);
+  arr.set_rate(newRate);
+  EXPECT_GT(actualOldRate, arr.rate());
+
+  arr.set(inputDataArr);
+  size_t newCompressedSize = arr.compressed_size();
+  uint64 checksum = hashBitstream((uint64*)arr.compressed_data(), newCompressedSize);
+
+  EXPECT_PRED_FORMAT2(ExpectNeqPrintHexPred, oldChecksum, checksum);
+
+  EXPECT_GT(oldCompressedSize, newCompressedSize);
+}
+
 TEST_F(Array1dTest, when_generateRandomData_then_checksumMatches)
 {
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, CHECKSUM_ORIGINAL_DATA_ARRAY, hashArray((uint64*)inputDataArr, inputDataTotalLen, 1));
 }
 
-INSTANTIATE_TEST_CASE_P(TestManyCompressionRates, Array1dTest, ::testing::Values(0, 1, 2));
+// with write random access in 1d, fixed-rate params rounded up to multiples of 16
+INSTANTIATE_TEST_CASE_P(TestManyCompressionRates, Array1dTest, ::testing::Values(1, 2));
 
 TEST_P(Array1dTest, given_dataset_when_set_then_underlyingBitstreamChecksumMatches)
 {

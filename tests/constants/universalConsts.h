@@ -1,0 +1,2 @@
+#define ZFP_RATE_PARAM_BITS 19
+#define ZFP_PREC_PARAM_BITS 22

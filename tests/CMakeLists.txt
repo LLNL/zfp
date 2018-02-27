@@ -67,7 +67,10 @@ endif()
 
 # include home dir so #include statements are clear in test files
 include_directories(${ZFP_SOURCE_DIR} ${ZFP_SOURCE_DIR}/include)
+# access to constants/ and utils/
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+add_subdirectory(utils)
 add_subdirectory(src)
 add_subdirectory(array)
 

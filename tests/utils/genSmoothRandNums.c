@@ -366,7 +366,7 @@ createPadded3dArray(int64* inputArr, size_t inputSideLen, int64* paddedArr)
 
 // Generate a larger array containing all the original array's points
 // plus entries in between adjacent points from the original array
-// 
+//
 // These new entries are computed as weighted sums from
 // its local neighborhood , plus some random noise
 static void
