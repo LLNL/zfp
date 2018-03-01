@@ -3,50 +3,22 @@ using namespace zfp;
 
 extern "C" {
   #include "constants/1dDouble.h"
-  #include "utils/genSmoothRandNums.h"
   #include "utils/hash64.h"
 };
 
 #include "gtest/gtest.h"
+#include "utils/gtestBaseEnv.h"
+#include "utils/gtestBaseFixture.h"
 #include "utils/predicates.h"
 
-#define MIN_TOTAL_ELEMENTS 1000000
-#define DIMS 1
-
-size_t inputDataSideLen, inputDataTotalLen;
-double* inputDataArr;
-
-class Array1dTestEnv : public ::testing::Environment {
+class Array1dTestEnv : public ArrayNdTestEnv {
 public:
   virtual void SetUp() {
-    generateSmoothRandDoubles(MIN_TOTAL_ELEMENTS, DIMS, (double**)&inputDataArr, &inputDataSideLen, &inputDataTotalLen);
-  }
-
-  virtual void TearDown() {
-    free(inputDataArr);
-  }
+    generateSmoothRandDoubles(MIN_TOTAL_ELEMENTS, 1, (double**)&inputDataArr, &inputDataSideLen, &inputDataTotalLen);
+  };
 };
 
-class Array1dTest : public ::testing::TestWithParam<int> {
-protected:
-  virtual void SetUp() {
-    bitstreamChecksums_[0] = CHECKSUM_FR_8_COMPRESSED_BITSTREAM;
-    bitstreamChecksums_[1] = CHECKSUM_FR_16_COMPRESSED_BITSTREAM;
-    bitstreamChecksums_[2] = CHECKSUM_FR_32_COMPRESSED_BITSTREAM;
-
-    decompressedChecksums_[0] = CHECKSUM_FR_8_DECOMPRESSED_ARRAY;
-    decompressedChecksums_[1] = CHECKSUM_FR_16_DECOMPRESSED_ARRAY;
-    decompressedChecksums_[2] = CHECKSUM_FR_32_DECOMPRESSED_ARRAY;
-  }
-
-  double getRate() { return 1u << (GetParam() + 3); }
-
-  uint64 getExpectedBitstreamChecksum() { return bitstreamChecksums_[GetParam()]; }
-
-  uint64 getExpectedDecompressedChecksum() { return decompressedChecksums_[GetParam()]; }
-
-  uint64 bitstreamChecksums_[3], decompressedChecksums_[3];
-};
+class Array1dTest : public ArrayNdTestFixture {};
 
 TEST_F(Array1dTest, when_constructorCalled_then_rateSetWithWriteRandomAccess)
 {
