@@ -1,8 +1,8 @@
-#include "array/zfparray1.h"
+#include "array/zfparray2.h"
 using namespace zfp;
 
 extern "C" {
-  #include "constants/1dDouble.h"
+  #include "constants/2dDouble.h"
   #include "utils/hash64.h"
 };
 
@@ -11,24 +11,24 @@ extern "C" {
 #include "utils/gtestBaseFixture.h"
 #include "utils/predicates.h"
 
-class Array1dTestEnv : public ArrayDoubleTestEnv {
+class Array2dTestEnv : public ArrayDoubleTestEnv {
 public:
-  virtual int getDims() { return 1; }
+  virtual int getDims() { return 2; }
 };
 
-class Array1dTest : public ArrayNdTestFixture {};
+class Array2dTest : public ArrayNdTestFixture {};
 
-TEST_F(Array1dTest, when_constructorCalled_then_rateSetWithWriteRandomAccess)
+TEST_F(Array2dTest, when_constructorCalled_then_rateSetWithWriteRandomAccess)
 {
   double rate = ZFP_RATE_PARAM_BITS;
-  array1d arr(inputDataTotalLen, rate);
+  array2d arr(inputDataSideLen, inputDataSideLen, rate);
   EXPECT_LT(rate, arr.rate());
 }
 
-TEST_F(Array1dTest, when_setRate_then_compressionRateChanged)
+TEST_F(Array2dTest, when_setRate_then_compressionRateChanged)
 {
   double oldRate = ZFP_RATE_PARAM_BITS;
-  array1d arr(inputDataTotalLen, oldRate, inputDataArr);
+  array2d arr(inputDataSideLen, inputDataSideLen, oldRate, inputDataArr);
 
   double actualOldRate = arr.rate();
   size_t oldCompressedSize = arr.compressed_size();
@@ -48,17 +48,16 @@ TEST_F(Array1dTest, when_setRate_then_compressionRateChanged)
   EXPECT_GT(oldCompressedSize, newCompressedSize);
 }
 
-TEST_F(Array1dTest, when_generateRandomData_then_checksumMatches)
+TEST_F(Array2dTest, when_generateRandomData_then_checksumMatches)
 {
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, CHECKSUM_ORIGINAL_DATA_ARRAY, hashArray((uint64*)inputDataArr, inputDataTotalLen, 1));
 }
 
-// with write random access in 1d, fixed-rate params rounded up to multiples of 16
-INSTANTIATE_TEST_CASE_P(TestManyCompressionRates, Array1dTest, ::testing::Values(1, 2));
+INSTANTIATE_TEST_CASE_P(TestManyCompressionRates, Array2dTest, ::testing::Values(0, 1, 2));
 
-TEST_P(Array1dTest, given_dataset_when_set_then_underlyingBitstreamChecksumMatches)
+TEST_P(Array2dTest, given_dataset_when_set_then_underlyingBitstreamChecksumMatches)
 {
-  array1d arr(inputDataTotalLen, getRate());
+  array2d arr(inputDataSideLen, inputDataSideLen, getRate());
 
   uint64 expectedChecksum = getExpectedBitstreamChecksum();
   uint64 checksum = hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size());
@@ -70,9 +69,10 @@ TEST_P(Array1dTest, given_dataset_when_set_then_underlyingBitstreamChecksumMatch
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, expectedChecksum, checksum);
 }
 
-TEST_P(Array1dTest, given_setArray1d_when_get_then_decompressedValsReturned)
+TEST_P(Array2dTest, given_setArray2d_when_get_then_decompressedValsReturned)
 {
-  array1d arr(inputDataTotalLen, getRate(), inputDataArr);
+  array2d arr(inputDataSideLen, inputDataSideLen, getRate());
+  arr.set(inputDataArr);
 
   double* decompressedArr = new double[inputDataTotalLen];
   arr.get(decompressedArr);
@@ -84,21 +84,21 @@ TEST_P(Array1dTest, given_setArray1d_when_get_then_decompressedValsReturned)
   delete[] decompressedArr;
 }
 
-TEST_P(Array1dTest, given_populatedCompressedArray_when_resizeWithClear_then_bitstreamZeroed)
+TEST_P(Array2dTest, given_populatedCompressedArray_when_resizeWithClear_then_bitstreamZeroed)
 {
-  array1d arr(inputDataTotalLen, getRate());
+  array2d arr(inputDataSideLen, inputDataSideLen, getRate());
   arr.set(inputDataArr);
   EXPECT_NE(0, hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size()));
 
-  arr.resize(inputDataTotalLen + 1, true);
+  arr.resize(inputDataSideLen + 1, inputDataSideLen - 1, true);
 
   EXPECT_EQ(0, hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size()));
 }
 
-TEST_P(Array1dTest, when_configureCompressedArrayFromDefaultConstructor_then_bitstreamChecksumMatches)
+TEST_P(Array2dTest, when_configureCompressedArrayFromDefaultConstructor_then_bitstreamChecksumMatches)
 {
-  array1d arr;
-  arr.resize(inputDataTotalLen, false);
+  array2d arr;
+  arr.resize(inputDataSideLen, inputDataSideLen, false);
   arr.set_rate(getRate());
   arr.set(inputDataArr);
 
@@ -109,6 +109,6 @@ TEST_P(Array1dTest, when_configureCompressedArrayFromDefaultConstructor_then_bit
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
-  ::testing::Environment* const foo_env = ::testing::AddGlobalTestEnvironment(new Array1dTestEnv);
+  ::testing::Environment* const foo_env = ::testing::AddGlobalTestEnvironment(new Array2dTestEnv);
   return RUN_ALL_TESTS();
 }
