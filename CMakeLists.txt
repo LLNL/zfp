@@ -74,6 +74,18 @@ message(STATUS "Compiling with C++ standard: ${CMAKE_CXX_STANDARD}")
 
 include(CMakeDependentOption)
 
+#------------------------------------------------------------------------------#
+# Enable OpenMP if available
+#------------------------------------------------------------------------------#
+if(NOT (DEFINED ZFP_WITHOUT_OPENMP))
+  find_package(OpenMP)
+  if(OPENMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  endif()
+endif()
+
 # Typically you'd always be able to enable shared libraries but default
 # configurations with the Cray toolchain will explicitly disable shared lib
 # support and only allow static libs.  Making this a cmake_dependent_option
@@ -125,6 +137,10 @@ if((DEFINED ZFP_UINT64) AND (DEFINED ZFP_UINT64_SUFFIX))
   list(APPEND zfp_defs ZFP_UINT64_SUFFIX=${ZFP_UINT64_SUFFIX})
 endif()
 
+if(DEFINED ZFP_CHUNK_SIZE_OMP)
+  list(APPEND zfp_defs ZFP_CHUNK_SIZE_OMP=${ZFP_CHUNK_SIZE_OMP})
+endif()
+
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
   list(APPEND zfp_defs BIT_STREAM_WORD_TYPE=uint${ZFP_BIT_STREAM_WORD_SIZE})
 endif()
@@ -173,14 +189,12 @@ endif()
 #------------------------------------------------------------------------------#
 # Header install
 #------------------------------------------------------------------------------#
-
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 #------------------------------------------------------------------------------#
 # Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel
 #------------------------------------------------------------------------------#
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of CMake build" FORCE)
 endif()

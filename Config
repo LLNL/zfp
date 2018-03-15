@@ -3,6 +3,12 @@
 CC = gcc
 CXX = g++
 FLAGS = -O3 -fPIC -Wall -pedantic -I../include $(DEFS)
+
+# enable OpenMP parallel compression
+# FLAGS += -fopenmp
+
+# language standard -----------------------------------------------------------
+
 # CFLAGS = -std=c89 -Wno-unused-function $(FLAGS)
 CFLAGS = -std=c99 $(FLAGS)
 CXXFLAGS = -std=c++98 $(FLAGS)
@@ -22,6 +28,9 @@ CXXFLAGS = -std=c++98 $(FLAGS)
 
 # enable strided access for progressive zfp streams
 # DEFS += -DBIT_STREAM_STRIDED
+
+# default number of 1D blocks per OpenMP chunk
+# DEFS += -DZFP_CHUNK_SIZE_OMP=0x100u
 
 # use aligned memory allocation
 # DEFS += -DZFP_WITH_ALIGNED_ALLOC

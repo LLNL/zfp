@@ -387,6 +387,21 @@ stream_flush(bitstream* s)
   return bits;
 }
 
+/* copy n bits from one bit stream to another */
+inline_ void
+stream_copy(bitstream* dst, bitstream* src, size_t n)
+{
+  while (n > wsize) {
+    word w = stream_read_bits(src, wsize);
+    stream_write_bits(dst, w, wsize);
+    n -= wsize;
+  }
+  if (n) {
+    word w = stream_read_bits(src, n);
+    stream_write_bits(dst, w, n);
+  }
+}
+
 #ifdef BIT_STREAM_STRIDED
 /* set block size in number of words and spacing in number of blocks */
 inline_ int
