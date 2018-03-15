@@ -10,7 +10,7 @@
 static int
 thread_count_omp(const zfp_stream* stream)
 {
-  int count = stream->exec_param.omp.threads;
+  int count = stream->exec.params.omp.threads;
   if (!count)
     count = omp_get_max_threads();
   return count;
@@ -20,7 +20,7 @@ thread_count_omp(const zfp_stream* stream)
 static uint
 chunk_size_omp(const zfp_stream* stream)
 {
-  uint chunk_size = stream->exec_param.omp.chunk_size;
+  uint chunk_size = stream->exec.params.omp.chunk_size;
   if (!chunk_size)
     chunk_size = ZFP_CHUNK_SIZE_OMP;
   return chunk_size;

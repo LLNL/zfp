@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
   char* zfppath = 0;
   char* outpath = 0;
   char mode = 0;
-  zfp_execution exec = zfp_execution_serial;
+  zfp_exec_policy exec = zfp_exec_serial;
   uint threads = 0;
   uint chunk_size = 0;
 
@@ -261,15 +261,15 @@ int main(int argc, char* argv[])
         if (++i == argc)
           usage();
         if (!strcmp(argv[i], "serial"))
-          exec = zfp_execution_serial;
+          exec = zfp_exec_serial;
         else if (sscanf(argv[i], "omp=%u,%u", &threads, &chunk_size) == 2)
-          exec = zfp_execution_omp;
+          exec = zfp_exec_omp;
         else if (sscanf(argv[i], "omp=%u", &threads) == 1) {
-          exec = zfp_execution_omp;
+          exec = zfp_exec_omp;
           chunk_size = 0;
         }
         else if (!strcmp(argv[i], "omp")) {
-          exec = zfp_execution_omp;
+          exec = zfp_exec_omp;
           threads = 0;
           chunk_size = 0;
         }
@@ -445,7 +445,7 @@ int main(int argc, char* argv[])
 
     /* specify execution policy */
     switch (exec) {
-      case zfp_execution_omp:
+      case zfp_exec_omp:
         if (!zfp_stream_set_execution(zfp, exec) ||
             !zfp_stream_set_omp_threads(zfp, threads) ||
             !zfp_stream_set_omp_chunk_size(zfp, chunk_size)) {
@@ -453,7 +453,7 @@ int main(int argc, char* argv[])
           return EXIT_FAILURE;
         }
         break;
-      case zfp_execution_serial:
+      case zfp_exec_serial:
       default:
         if (!zfp_stream_set_execution(zfp, exec)) {
           fprintf(stderr, "serial execution not available\n");

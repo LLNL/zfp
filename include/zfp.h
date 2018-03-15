@@ -116,30 +116,34 @@
 
 /* execution policy (for compression only) */
 typedef enum {
-  zfp_execution_serial = 0, /* serial execution (default) */
-  zfp_execution_omp    = 1  /* OpenMP multi-threaded execution */
-} zfp_execution;
+  zfp_exec_serial = 0, /* serial execution (default) */
+  zfp_exec_omp    = 1  /* OpenMP multi-threaded execution */
+} zfp_exec_policy;
 
 /* OpenMP execution parameters */
 typedef struct {
-  uint threads;    /* number of threads */
-  uint chunk_size; /* number of 1D blocks per chunk */
-} zfp_exec_param_omp;
+  uint threads;    /* number of requested threads */
+  uint chunk_size; /* number of blocks per chunk (1D only) */
+} zfp_exec_params_omp;
 
-/* execution parameters (for compression only) */
+/* execution parameters */
 typedef union {
-  zfp_exec_param_omp omp; /* OpenMP parameters */
-} zfp_exec_param;
+  zfp_exec_params_omp omp; /* OpenMP parameters */
+} zfp_exec_params;
+
+typedef struct {
+  zfp_exec_policy policy; /* execution policy (serial, omp, ...) */
+  zfp_exec_params params; /* execution parameters */
+} zfp_execution;
 
 /* compressed stream; use accessors to get/set members */
 typedef struct {
-  uint minbits;              /* minimum number of bits to store per block */
-  uint maxbits;              /* maximum number of bits to store per block */
-  uint maxprec;              /* maximum number of bit planes to store */
-  int minexp;                /* minimum bit plane number to store */
-  bitstream* stream;         /* compressed bit stream */
-  zfp_execution exec;        /* execution policy */
-  zfp_exec_param exec_param; /* execution parameters */
+  uint minbits;       /* minimum number of bits to store per block */
+  uint maxbits;       /* maximum number of bits to store per block */
+  uint maxprec;       /* maximum number of bit planes to store */
+  int minexp;         /* minimum bit plane number to store */
+  bitstream* stream;  /* compressed bit stream */
+  zfp_execution exec; /* execution policy and parameters */
 } zfp_stream;
 
 /* scalar type */
@@ -280,16 +284,28 @@ zfp_stream_set_params(
 /* high-level API: execution policy ---------------------------------------- */
 
 /* current execution policy */
-zfp_execution
+zfp_exec_policy
 zfp_stream_execution(
   const zfp_stream* stream /* compressed stream */
 );
 
+/* number of OpenMP threads to use */
+uint                       /* number of threads (0 for default) */
+zfp_stream_omp_threads(
+  const zfp_stream* stream /* compressed stream */
+);
+
+/* number of blocks per OpenMP chunk (1D only) */
+uint                       /* number of blocks per chunk (0 for default) */
+zfp_stream_omp_chunk_size(
+  const zfp_stream* stream /* compressed stream */
+);
+
 /* set execution policy */
-int                   /* nonzero upon success */
+int                      /* nonzero upon success */
 zfp_stream_set_execution(
-  zfp_stream* stream, /* compressed stream */
-  zfp_execution exec  /* execution policy */
+  zfp_stream* stream,    /* compressed stream */
+  zfp_exec_policy policy /* execution policy */
 );
 
 /* set OpenMP execution policy and number of threads */
@@ -299,11 +315,11 @@ zfp_stream_set_omp_threads(
   uint threads        /* number of OpenMP threads to use (0 for default) */
 );
 
-/* set OpenMP execution policy and number of 1D blocks per chunk */
+/* set OpenMP execution policy and number of blocks per chunk (1D only) */
 int                   /* nonzero upon success */
 zfp_stream_set_omp_chunk_size(
   zfp_stream* stream, /* compressed stream */
-  uint chunk_size     /* number of 1D blocks per chunk (0 for default) */
+  uint chunk_size     /* number of blocks per chunk (0 for default) */
 );
 
 /* high-level API: uncompressed array construction/destruction ------------- */

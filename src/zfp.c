@@ -333,7 +333,7 @@ zfp_stream_open(bitstream* stream)
     zfp->maxbits = ZFP_MAX_BITS;
     zfp->maxprec = ZFP_MAX_PREC;
     zfp->minexp = ZFP_MIN_EXP;
-    zfp->exec = zfp_execution_serial;
+    zfp->exec.policy = zfp_exec_serial;
   }
   return zfp;
 }
@@ -573,23 +573,35 @@ zfp_stream_rewind(zfp_stream* zfp)
 
 /* public functions: execution policy -------------------------------------- */
 
-zfp_execution
+zfp_exec_policy
 zfp_stream_execution(const zfp_stream* zfp)
 {
-  return zfp->exec;
+  return zfp->exec.policy;
+}
+
+uint
+zfp_stream_omp_threads(const zfp_stream* zfp)
+{
+  return zfp->exec.params.omp.threads;
+}
+
+uint
+zfp_stream_omp_chunk_size(const zfp_stream* zfp)
+{
+  return zfp->exec.params.omp.chunk_size;
 }
 
 int
-zfp_stream_set_execution(zfp_stream* zfp, zfp_execution exec)
+zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
 {
-  switch (exec) {
-    case zfp_execution_serial:
+  switch (policy) {
+    case zfp_exec_serial:
       break;
-    case zfp_execution_omp:
+    case zfp_exec_omp:
 #ifdef _OPENMP
-      if (zfp->exec != exec) {
-        zfp->exec_param.omp.threads = 0;
-        zfp->exec_param.omp.chunk_size = 0;
+      if (zfp->exec.policy != policy) {
+        zfp->exec.params.omp.threads = 0;
+        zfp->exec.params.omp.chunk_size = 0;
       }
       break;
 #else
@@ -598,25 +610,25 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_execution exec)
     default:
       return 0;
   }
-  zfp->exec = exec;
+  zfp->exec.policy = policy;
   return 1;
 }
 
 int
 zfp_stream_set_omp_threads(zfp_stream* zfp, uint threads)
 {
-  if (!zfp_stream_set_execution(zfp, zfp_execution_omp))
+  if (!zfp_stream_set_execution(zfp, zfp_exec_omp))
     return 0;
-  zfp->exec_param.omp.threads = threads;
+  zfp->exec.params.omp.threads = threads;
   return 1;
 }
 
 int
 zfp_stream_set_omp_chunk_size(zfp_stream* zfp, uint chunk_size)
 {
-  if (!zfp_stream_set_execution(zfp, zfp_execution_omp))
+  if (!zfp_stream_set_execution(zfp, zfp_exec_omp))
     return 0;
-  zfp->exec_param.omp.chunk_size = chunk_size;
+  zfp->exec.params.omp.chunk_size = chunk_size;
   return 1;
 }
 
@@ -716,7 +728,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
       { compress_strided_omp_int32_3, compress_strided_omp_int64_3, compress_strided_omp_float_3, compress_strided_omp_double_3 }}},
 #endif
   };
-  uint execution = zfp->exec;
+  uint exec = zfp->exec.policy;
   uint strided = zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
@@ -731,7 +743,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
       return 0;
   }
 
-  compress[execution][strided][dims - 1][type - zfp_type_int32](zfp, field);
+  compress[exec][strided][dims - 1][type - zfp_type_int32](zfp, field);
   stream_flush(zfp->stream);
 
   return stream_size(zfp->stream);
