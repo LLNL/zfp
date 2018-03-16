@@ -672,7 +672,7 @@ zfp_demote_int32_to_int8(int8* oblock, const int32* iblock, uint dims)
   uint count = 1u << (2 * dims);
   while (count--) {
     int32 i = *iblock++ >> 23;
-    *oblock++ = MAX(-0x80, MIN(i, 0x7f));
+    *oblock++ = (int8)MAX(-0x80, MIN(i, 0x7f));
   }
 }
 
@@ -682,7 +682,7 @@ zfp_demote_int32_to_uint8(uint8* oblock, const int32* iblock, uint dims)
   uint count = 1u << (2 * dims);
   while (count--) {
     int32 i = (*iblock++ >> 23) + 0x80;
-    *oblock++ = MAX(0x00, MIN(i, 0xff));
+    *oblock++ = (uint8)MAX(0x00, MIN(i, 0xff));
   }
 }
 
@@ -692,7 +692,7 @@ zfp_demote_int32_to_int16(int16* oblock, const int32* iblock, uint dims)
   uint count = 1u << (2 * dims);
   while (count--) {
     int32 i = *iblock++ >> 15;
-    *oblock++ = MAX(-0x8000, MIN(i, 0x7fff));
+    *oblock++ = (int16)MAX(-0x8000, MIN(i, 0x7fff));
   }
 }
 
@@ -702,7 +702,7 @@ zfp_demote_int32_to_uint16(uint16* oblock, const int32* iblock, uint dims)
   uint count = 1u << (2 * dims);
   while (count--) {
     int32 i = (*iblock++ >> 15) + 0x8000;
-    *oblock++ = MAX(0x0000, MIN(i, 0xffff));
+    *oblock++ = (uint16)MAX(0x0000, MIN(i, 0xffff));
   }
 }
 

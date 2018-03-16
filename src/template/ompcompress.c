@@ -12,7 +12,7 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
   int threads = thread_count_omp(stream);
   uint blocks_per_chunk = chunk_size_omp(stream);
   uint chunks = mx / (4 * blocks_per_chunk);
-  int i, j;
+  int i;
 
   /* allocate per-thread streams */
   zfp_field _field = *field;
@@ -21,13 +21,14 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 
   /* compress chunks in parallel */
 #ifdef ZFP_OMP_INTERLEAVE
-  #pragma omp parallel for num_threads(threads) private(i, j) schedule(static, 1)
+  #pragma omp parallel for num_threads(threads) schedule(static, 1)
 #else
-  #pragma omp parallel for num_threads(threads) private(i, j)
+  #pragma omp parallel for num_threads(threads)
 #endif
-  for (i = 0; i < chunks; i++) {
+  for (i = 0; i < (int)chunks; i++) {
     const Scalar* _data = data + 4 * blocks_per_chunk * i;
     zfp_stream _stream = *stream;
+    uint j;
     zfp_stream_set_bit_stream(&_stream, bs[i]);
     for (j = 0; j < blocks_per_chunk; j++, _data += 4)
       _t2(zfp_encode_block, Scalar, 1)(&_stream, _data);
@@ -56,7 +57,7 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
   int threads = thread_count_omp(stream);
   uint blocks_per_chunk = chunk_size_omp(stream);
   uint chunks = mx / (4 * blocks_per_chunk);
-  int i, j;
+  int i;
 
   /* allocate per-thread streams */
   zfp_field _field = *field;
@@ -65,13 +66,14 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 
   /* compress chunks in parallel */
 #ifdef ZFP_OMP_INTERLEAVE
-  #pragma omp parallel for num_threads(threads) private(i, j) schedule(static, 1)
+  #pragma omp parallel for num_threads(threads) schedule(static, 1)
 #else
-  #pragma omp parallel for num_threads(threads) private(i, j)
+  #pragma omp parallel for num_threads(threads)
 #endif
-  for (i = 0; i < chunks; i++) {
+  for (i = 0; i < (int)chunks; i++) {
     const Scalar* _data = data + 4 * blocks_per_chunk * sx * i;
     zfp_stream _stream = *stream;
+    uint j;
     zfp_stream_set_bit_stream(&_stream, bs[i]);
     for (j = 0; j < blocks_per_chunk; j++, _data += 4 * sx)
       _t2(zfp_encode_block_strided, Scalar, 1)(&_stream, _data, sx);
@@ -112,11 +114,11 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
 
   /* compress rows of blocks in parallel */
 #ifdef ZFP_OMP_INTERLEAVE
-  #pragma omp parallel for num_threads(threads) private(x, i) schedule(static, 1)
+  #pragma omp parallel for num_threads(threads) private(x) schedule(static, 1)
 #else
-  #pragma omp parallel for num_threads(threads) private(x, i)
+  #pragma omp parallel for num_threads(threads) private(x)
 #endif
-  for (i = 0; i < chunks; i++) {
+  for (i = 0; i < (int)chunks; i++) {
     const Scalar* _data = data + 4 * sy * i;
     zfp_stream _stream = *stream;
     zfp_stream_set_bit_stream(&_stream, bs[i]);
@@ -169,11 +171,11 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
 
   /* compress layers of blocks in parallel */
 #ifdef ZFP_OMP_INTERLEAVE
-  #pragma omp parallel for num_threads(threads) private(x, y, i) schedule(static, 1)
+  #pragma omp parallel for num_threads(threads) private(x, y) schedule(static, 1)
 #else
-  #pragma omp parallel for num_threads(threads) private(x, y, i)
+  #pragma omp parallel for num_threads(threads) private(x, y)
 #endif
-  for (i = 0; i < chunks; i++) {
+  for (i = 0; i < (int)chunks; i++) {
     const Scalar* _data = data + 4 * sz * i;
     zfp_stream _stream = *stream;
     zfp_stream_set_bit_stream(&_stream, bs[i]);

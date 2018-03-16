@@ -392,13 +392,13 @@ inline_ void
 stream_copy(bitstream* dst, bitstream* src, size_t n)
 {
   while (n > wsize) {
-    word w = stream_read_bits(src, wsize);
+    word w = (word)stream_read_bits(src, wsize);
     stream_write_bits(dst, w, wsize);
     n -= wsize;
   }
   if (n) {
-    word w = stream_read_bits(src, n);
-    stream_write_bits(dst, w, n);
+    word w = (word)stream_read_bits(src, (uint)n);
+    stream_write_bits(dst, w, (uint)n);
   }
 }
 
