@@ -16,6 +16,7 @@ int main()
     cmocka_unit_test_setup_teardown(given_3dInt32Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches, setupFixedPrec2, teardown),
     cmocka_unit_test_setup_teardown(given_3dInt32Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches, setupFixedPrec2, teardown),
 
+    cmocka_unit_test(given_3dInt32ZfpStream_when_SetRateWithWriteRandomAccess_expect_RateRoundedUpProperly),
     cmocka_unit_test_setup_teardown(given_3dInt32Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches, setupFixedRate0, teardown),
     cmocka_unit_test_setup_teardown(given_3dInt32Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches, setupFixedRate0, teardown),
     cmocka_unit_test_setup_teardown(given_3dInt32Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate, setupFixedRate0, teardown),

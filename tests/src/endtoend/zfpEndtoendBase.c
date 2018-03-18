@@ -138,13 +138,13 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
       zfp_stream_set_precision(stream, bundle->precParam);
       printf("\t\tFixed precision param: %u\n", bundle->precParam);
 
-      bundle->compressedChecksums[0] = CHECKSUM_FP_COMPRESSED_BITSTREAM_0;
-      bundle->compressedChecksums[1] = CHECKSUM_FP_COMPRESSED_BITSTREAM_1;
-      bundle->compressedChecksums[2] = CHECKSUM_FP_COMPRESSED_BITSTREAM_2;
+      bundle->compressedChecksums[0] = CHECKSUM_FP_8_COMPRESSED_BITSTREAM;
+      bundle->compressedChecksums[1] = CHECKSUM_FP_16_COMPRESSED_BITSTREAM;
+      bundle->compressedChecksums[2] = CHECKSUM_FP_32_COMPRESSED_BITSTREAM;
 
-      bundle->decompressedChecksums[0] = CHECKSUM_FP_DECOMPRESSED_ARRAY_0;
-      bundle->decompressedChecksums[1] = CHECKSUM_FP_DECOMPRESSED_ARRAY_1;
-      bundle->decompressedChecksums[2] = CHECKSUM_FP_DECOMPRESSED_ARRAY_2;
+      bundle->decompressedChecksums[0] = CHECKSUM_FP_8_DECOMPRESSED_ARRAY;
+      bundle->decompressedChecksums[1] = CHECKSUM_FP_16_DECOMPRESSED_ARRAY;
+      bundle->decompressedChecksums[2] = CHECKSUM_FP_32_DECOMPRESSED_ARRAY;
 
       break;
 
@@ -153,13 +153,13 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
       zfp_stream_set_rate(stream, bundle->rateParam, type, DIMS, 0);
       printf("\t\tFixed rate param: %lf\n", bundle->rateParam);
 
-      bundle->compressedChecksums[0] = CHECKSUM_FR_COMPRESSED_BITSTREAM_0;
-      bundle->compressedChecksums[1] = CHECKSUM_FR_COMPRESSED_BITSTREAM_1;
-      bundle->compressedChecksums[2] = CHECKSUM_FR_COMPRESSED_BITSTREAM_2;
+      bundle->compressedChecksums[0] = CHECKSUM_FR_8_COMPRESSED_BITSTREAM;
+      bundle->compressedChecksums[1] = CHECKSUM_FR_16_COMPRESSED_BITSTREAM;
+      bundle->compressedChecksums[2] = CHECKSUM_FR_32_COMPRESSED_BITSTREAM;
 
-      bundle->decompressedChecksums[0] = CHECKSUM_FR_DECOMPRESSED_ARRAY_0;
-      bundle->decompressedChecksums[1] = CHECKSUM_FR_DECOMPRESSED_ARRAY_1;
-      bundle->decompressedChecksums[2] = CHECKSUM_FR_DECOMPRESSED_ARRAY_2;
+      bundle->decompressedChecksums[0] = CHECKSUM_FR_8_DECOMPRESSED_ARRAY;
+      bundle->decompressedChecksums[1] = CHECKSUM_FR_16_DECOMPRESSED_ARRAY;
+      bundle->decompressedChecksums[2] = CHECKSUM_FR_32_DECOMPRESSED_ARRAY;
 
       break;
 
@@ -169,13 +169,13 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
       zfp_stream_set_accuracy(stream, bundle->accParam);
       printf("\t\tFixed accuracy param: %lf\n", bundle->accParam);
 
-      bundle->compressedChecksums[0] = CHECKSUM_FA_COMPRESSED_BITSTREAM_0;
-      bundle->compressedChecksums[1] = CHECKSUM_FA_COMPRESSED_BITSTREAM_1;
-      bundle->compressedChecksums[2] = CHECKSUM_FA_COMPRESSED_BITSTREAM_2;
+      bundle->compressedChecksums[0] = CHECKSUM_FA_0p5_COMPRESSED_BITSTREAM;
+      bundle->compressedChecksums[1] = CHECKSUM_FA_0p25_COMPRESSED_BITSTREAM;
+      bundle->compressedChecksums[2] = CHECKSUM_FA_0p0625_COMPRESSED_BITSTREAM;
 
-      bundle->decompressedChecksums[0] = CHECKSUM_FA_DECOMPRESSED_ARRAY_0;
-      bundle->decompressedChecksums[1] = CHECKSUM_FA_DECOMPRESSED_ARRAY_1;
-      bundle->decompressedChecksums[2] = CHECKSUM_FA_DECOMPRESSED_ARRAY_2;
+      bundle->decompressedChecksums[0] = CHECKSUM_FA_0p5_DECOMPRESSED_ARRAY;
+      bundle->decompressedChecksums[1] = CHECKSUM_FA_0p25_DECOMPRESSED_ARRAY;
+      bundle->decompressedChecksums[2] = CHECKSUM_FA_0p0625_DECOMPRESSED_ARRAY;
 
       break;
 #endif
@@ -305,6 +305,24 @@ assertZfpCompressBitstreamChecksumMatches(void **state)
   uint64 expectedChecksum = bundle->compressedChecksums[bundle->paramNum];
 
   assert_int_equal(checksum, expectedChecksum);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, ZfpStream_when_SetRateWithWriteRandomAccess_expect_RateRoundedUpProperly)(void **state)
+{
+  zfp_stream* zfp = zfp_stream_open(NULL);
+
+  // wra currently requires blocks to start at the beginning of a word
+  // rate will be rounded up such that a block fills the rest of the word
+  // (would be wasted space otherwise, padded with zeros)
+  double rateWithoutWra = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 0);
+  double rateWithWra = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 1);
+  assert_true(rateWithWra >= rateWithoutWra);
+
+  uint bitsPerBlock = (uint)floor(rateWithWra * intPow(4, DIMS) + 0.5);
+  assert_int_equal(0, bitsPerBlock % stream_word_bits);
+
+  zfp_stream_close(zfp);
 }
 
 static void

@@ -1,11 +1,11 @@
-# clone cmocka 1.1.0 into /build
-
-list(APPEND CMOCKA_ARGS "-DWITH_STATIC_LIB=ON;-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER};-DUNIT_TESTING=OFF")
-
 # CMAKE_SH-NOTFOUND needed for mingw builds
 if(MINGW)
   list(APPEND CMOCKA_ARGS "-DCMAKE_SH=CMAKE_SH-NOTFOUND")
+  list(APPEND GTEST_ARGS "-DCMAKE_SH=CMAKE_SH-NOTFOUND")
 endif()
+
+# clone cmocka 1.1.0 into /build
+list(APPEND CMOCKA_ARGS "-DWITH_STATIC_LIB=ON;-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER};-DUNIT_TESTING=OFF")
 
 include(ExternalProject)
 ExternalProject_Add(
@@ -37,10 +37,47 @@ set_property(TARGET cmocka
 add_dependencies(cmocka cmocka_cloned)
 include_directories(${source_dir}/include)
 
+
 # include home dir so #include statements are clear in test files
 include_directories(${ZFP_SOURCE_DIR} ${ZFP_SOURCE_DIR}/include)
+# access to constants/ and utils/
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+add_subdirectory(utils)
 add_subdirectory(src)
+
+# TODO: spend time getting googletest to compile on windows
+if(NOT MSVC AND NOT MINGW)
+  # clone googletest 1.8.0 into /build
+  configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+  execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${GTEST_ARGS} .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests/googletest-download
+  )
+  if(result)
+    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+  endif()
+  # build gtest
+  execute_process(COMMAND ${CMAKE_COMMAND} --build .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests/googletest-download
+  )
+  if(result)
+    message(FATAL_ERROR "Build step for googletest failed: ${result}")
+  endif()
+
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+  add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
+    ${CMAKE_BINARY_DIR}/googletest-build
+  )
+
+  if(CMAKE_VERSION VERSION_LESS 2.8.11)
+    include_directories("${gtest_SOURCE_DIR}/include")
+  endif()
+
+  add_subdirectory(array)
+endif()
 
 
 add_executable(testzfp testzfp.cpp fields.c)
