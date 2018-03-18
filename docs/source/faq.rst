@@ -31,6 +31,7 @@ Questions answered in this FAQ:
   #. :ref:`How should I set the precision to bound the relative error? <q-relerr>`
   #. :ref:`Does zfp support lossless compression? <q-lossless>`
   #. :ref:`Why is my actual, measured error so much smaller than the tolerance? <q-abserr>`
+  #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
 
 -------------------------------------------------------------------------------
 
@@ -781,3 +782,33 @@ conservative tolerance and successively doubling it.  The distribution of
 errors produced by |zfp| is approximately Gaussian, so even if the maximum
 error may seem large at an individual grid point, most errors tend to be
 much smaller and tightly clustered around zero.
+
+-------------------------------------------------------------------------------
+
+.. _q-omp-perf:
+
+Q23: *Why does parallel compression performance not match my expectations?*
+
+|zfp| partitions arrays into chunks and assigns each chunk to an OpenMP
+thread.  A chunk is a sequence of consecutive *d*-dimensional blocks, each
+composed of |4powd| values.  If there are fewer chunks than threads, then
+full processor utilization will not be achieved.
+
+For 2D and 3D arrays, the number of chunks is given by the number of blocks
+along the outermost (slowest varying) dimension, e.g. *ny* / 4 for 2D
+arrays :code:`a[ny][nx]` and *nz* / 4 for 3D arrays :code:`a[nz][ny][nx]`.
+If the array is "skinny" along the outer dimension but "fat" along the
+inner dimension(s), then consider transposing the array to increase the
+level of available parallelism.
+
+For 1D arrays, the default chunk size of |chunksize| blocks can be
+modified by the user via :c:func:`zfp_stream_set_omp_chunk_size` or
+:c:macro:`ZFP_OMP_CHUNK_SIZE`.  Experimentation with this setting may
+improve performance.
+
+Other reasons for poor parallel performance include compressing arrays
+that are too small to offset the overhead of thread creation and
+synchronization, as well as poor load balancing.  If compression ratios
+vary significantly across an array, then the default scheduling may lead
+to load imbalance.  In this case, consider using an interleaved chunk
+assignment via the :c:macro:`ZFP_OMP_INTERLEAVE` compile-time macro.

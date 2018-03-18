@@ -1,18 +1,25 @@
-# default compiler settings ---------------------------------------------------
+# compiler executables --------------------------------------------------------
 
-CC = gcc
-CXX = g++
-FLAGS = -O3 -fPIC -Wall -pedantic -I../include $(DEFS)
-
-# enable OpenMP parallel compression
-# FLAGS += -fopenmp
+#CC = gcc
+#CXX = g++
+CC = /opt/local/bin/gcc-mp-5
+CXX = /opt/local/bin/g++-mp-5
 
 # language standard -----------------------------------------------------------
 
-# CFLAGS = -std=c89 -Wno-unused-function $(FLAGS)
-CFLAGS = -std=c99 $(FLAGS)
-CXXFLAGS = -std=c++98 $(FLAGS)
-# CXXFLAGS = -std=c++11 $(FLAGS)
+# CSTD = -std=c89 -Wno-unused-function
+  CSTD = -std=c99
+  CXXSTD = -std=c++98
+# CXXSTD = -std=c++11
+
+# common compiler options -----------------------------------------------------
+
+FLAGS = -O3 -fPIC -Wall -pedantic -I../include
+
+# OpenMP compiler options -----------------------------------------------------
+
+# do not uncomment; use "make ZFP_WITH_OPENMP=0" to disable OpenMP
+OMPFLAGS = -fopenmp
 
 # optional compiler macros ----------------------------------------------------
 
@@ -30,7 +37,10 @@ CXXFLAGS = -std=c++98 $(FLAGS)
 # DEFS += -DBIT_STREAM_STRIDED
 
 # default number of 1D blocks per OpenMP chunk
-# DEFS += -DZFP_CHUNK_SIZE_OMP=0x100u
+# DEFS += -DZFP_OMP_CHUNK_SIZE=0x100u
+
+# interleave OpenMP chunks among threads
+# DEFS += -DZFP_OMP_INTERLEAVE
 
 # use aligned memory allocation
 # DEFS += -DZFP_WITH_ALIGNED_ALLOC
@@ -43,3 +53,18 @@ CXXFLAGS = -std=c++98 $(FLAGS)
 
 # count cache misses
 # DEFS += -DZFP_WITH_CACHE_PROFILE
+
+# conditionals ----------------------------------------------------------------
+
+ifdef ZFP_WITH_OPENMP
+  ifneq ($(ZFP_WITH_OPENMP),0)
+    ifneq ($(ZFP_WITH_OPENMP),OFF)
+      FLAGS += $(OMPFLAGS)
+    endif
+  endif
+endif
+
+# compiler options ------------------------------------------------------------
+
+CFLAGS = $(CSTD) $(FLAGS) $(DEFS)
+CXXFLAGS = $(CXXSTD) $(FLAGS) $(DEFS)

@@ -2,8 +2,8 @@
 #include <omp.h>
 
 /* number of 1D blocks to compress at a time */
-#ifndef ZFP_CHUNK_SIZE_OMP
-  #define ZFP_CHUNK_SIZE_OMP 0x100u
+#ifndef ZFP_OMP_CHUNK_SIZE
+  #define ZFP_OMP_CHUNK_SIZE 0x100u
 #endif
 
 /* number of omp threads to use */
@@ -22,7 +22,7 @@ chunk_size_omp(const zfp_stream* stream)
 {
   uint chunk_size = stream->exec.params.omp.chunk_size;
   if (!chunk_size)
-    chunk_size = ZFP_CHUNK_SIZE_OMP;
+    chunk_size = ZFP_OMP_CHUNK_SIZE;
   return chunk_size;
 }
 

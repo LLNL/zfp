@@ -74,7 +74,7 @@
 /* library version information */
 #define ZFP_VERSION_MAJOR 0 /* library major version number */
 #define ZFP_VERSION_MINOR 5 /* library minor version number */
-#define ZFP_VERSION_PATCH 3 /* library patch version number */
+#define ZFP_VERSION_PATCH 2 /* library patch version number */
 #define ZFP_VERSION_RELEASE ZFP_VERSION_PATCH
 
 /* codec version number (see also zfp_codec_version) */
@@ -141,7 +141,7 @@ typedef struct {
   uint minbits;       /* minimum number of bits to store per block */
   uint maxbits;       /* maximum number of bits to store per block */
   uint maxprec;       /* maximum number of bit planes to store */
-  int minexp;         /* minimum bit plane number to store */
+  int minexp;         /* minimum floating point bit plane number to store */
   bitstream* stream;  /* compressed bit stream */
   zfp_execution exec; /* execution policy and parameters */
 } zfp_stream;

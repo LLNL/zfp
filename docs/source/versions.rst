@@ -9,6 +9,13 @@ feature/deep-copy
 
   - Added virtual destructors to enable inheritance from zfp arrays.
 
+feature/omp
+
+  - Added support for OpenMP multithreaded compression (but not decompression).
+
+  - Changed return value of zfp_decompress to indicate the number of compressed
+    bytes processed so far (now returns same value as zfp_compress on success).
+
 
 zfp 0.5.2, September 28, 2017
 

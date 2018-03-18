@@ -169,10 +169,10 @@ further details.
 
   Decode 1D complete block to strided array with stride *sx*.
 
-.. c:function:: uint zfp_decode_partial_block_strided_int32_1(zfp_stream* stream, int32* p, uint nx, int sx);
-.. c:function:: uint zfp_decode_partial_block_strided_int64_1(zfp_stream* stream, int64* p, uint nx, int sx);
-.. c:function:: uint zfp_decode_partial_block_strided_float_1(zfp_stream* stream, float* p, uint nx, int sx);
-.. c:function:: uint zfp_decode_partial_block_strided_double_1(zfp_stream* stream, double* p, uint nx, int sx);
+.. c:function:: uint zfp_decode_partial_block_strided_int32_1(zfp_stream* stream, int32* p, uint nx, int sx)
+.. c:function:: uint zfp_decode_partial_block_strided_int64_1(zfp_stream* stream, int64* p, uint nx, int sx)
+.. c:function:: uint zfp_decode_partial_block_strided_float_1(zfp_stream* stream, float* p, uint nx, int sx)
+.. c:function:: uint zfp_decode_partial_block_strided_double_1(zfp_stream* stream, double* p, uint nx, int sx)
 
   Decode 1D partial block of size *nx* to strided array with stride *sx*.
 
@@ -181,24 +181,24 @@ further details.
 2D Data
 ^^^^^^^
 
-.. c:function:: uint zfp_decode_block_int32_2(zfp_stream* stream, int32* block);
-.. c:function:: uint zfp_decode_block_int64_2(zfp_stream* stream, int64* block);
-.. c:function:: uint zfp_decode_block_float_2(zfp_stream* stream, float* block);
+.. c:function:: uint zfp_decode_block_int32_2(zfp_stream* stream, int32* block)
+.. c:function:: uint zfp_decode_block_int64_2(zfp_stream* stream, int64* block)
+.. c:function:: uint zfp_decode_block_float_2(zfp_stream* stream, float* block)
 .. c:function:: uint zfp_decode_block_double_2(zfp_stream* stream, double* block)
 
   Decode 2D contiguous block of |4by4| values.
 
-.. c:function:: uint zfp_decode_block_strided_int32_2(zfp_stream* stream, int32* p, int sx, int sy);
-.. c:function:: uint zfp_decode_block_strided_int64_2(zfp_stream* stream, int64* p, int sx, int sy);
-.. c:function:: uint zfp_decode_block_strided_float_2(zfp_stream* stream, float* p, int sx, int sy);
-.. c:function:: uint zfp_decode_block_strided_double_2(zfp_stream* stream, double* p, int sx, int sy);
+.. c:function:: uint zfp_decode_block_strided_int32_2(zfp_stream* stream, int32* p, int sx, int sy)
+.. c:function:: uint zfp_decode_block_strided_int64_2(zfp_stream* stream, int64* p, int sx, int sy)
+.. c:function:: uint zfp_decode_block_strided_float_2(zfp_stream* stream, float* p, int sx, int sy)
+.. c:function:: uint zfp_decode_block_strided_double_2(zfp_stream* stream, double* p, int sx, int sy)
 
   Decode 2D complete block to strided array with strides *sx* and *sy*.
 
-.. c:function:: uint zfp_decode_partial_block_strided_int32_2(zfp_stream* stream, int32* p, uint nx, uint ny, int sx, int sy);
-.. c:function:: uint zfp_decode_partial_block_strided_int64_2(zfp_stream* stream, int64* p, uint nx, uint ny, int sx, int sy);
-.. c:function:: uint zfp_decode_partial_block_strided_float_2(zfp_stream* stream, float* p, uint nx, uint ny, int sx, int sy);
-.. c:function:: uint zfp_decode_partial_block_strided_double_2(zfp_stream* stream, double* p, uint nx, uint ny, int sx, int sy);
+.. c:function:: uint zfp_decode_partial_block_strided_int32_2(zfp_stream* stream, int32* p, uint nx, uint ny, int sx, int sy)
+.. c:function:: uint zfp_decode_partial_block_strided_int64_2(zfp_stream* stream, int64* p, uint nx, uint ny, int sx, int sy)
+.. c:function:: uint zfp_decode_partial_block_strided_float_2(zfp_stream* stream, float* p, uint nx, uint ny, int sx, int sy)
+.. c:function:: uint zfp_decode_partial_block_strided_double_2(zfp_stream* stream, double* p, uint nx, uint ny, int sx, int sy)
 
   Decode 2D partial block of size *nx* |times| *ny* to strided array with
   strides *sx* and *sy*.
