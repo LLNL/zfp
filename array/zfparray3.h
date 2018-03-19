@@ -13,7 +13,8 @@ namespace zfp {
 template < typename Scalar, class Codec = zfp::codec<Scalar> >
 class array3 : public array {
 public:
-  array3() : array(3, Codec::type), cache(0) {}
+  // default constructor
+  array3() : array(3, Codec::type) {}
 
   // constructor of nx * ny * nz array using rate bits per value, at least
   // csize bytes of cache, and optionally initialized from flat array p
@@ -25,6 +26,23 @@ public:
     resize(nx, ny, nz, p == 0);
     if (p)
       set(p);
+  }
+
+  // copy constructor--performs a deep copy
+  array3(const array3& a)
+  {
+    deep_copy(a);
+  }
+
+  // virtual destructor
+  virtual ~array3() {}
+
+  // assignment operator--performs a deep copy
+  array3& operator=(const array3& a)
+  {
+    if (this != &a)
+      deep_copy(a);
+    return *this;
   }
 
   // total number of elements in array
@@ -301,6 +319,15 @@ protected:
     static uint index(uint i, uint j, uint k) { return (i & 3u) + 4 * ((j & 3u) + 4 * (k & 3u)); }
     Scalar a[64];
   };
+
+  // perform a deep copy
+  void deep_copy(const array3& a)
+  {
+    // copy base class members
+    array::deep_copy(a);
+    // copy cache
+    cache = a.cache;
+  }
 
   // inspector
   const Scalar& get(uint i, uint j, uint k) const

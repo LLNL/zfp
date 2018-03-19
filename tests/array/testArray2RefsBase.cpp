@@ -16,8 +16,40 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_resize_then_sizeChanges)
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_getIndexWithParentheses_then_refReturned)
 {
   uint i = 1, j = 1;
+  arr(i, j) = VAL;
+
+  EXPECT_EQ(VAL, arr(i, j));
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_indexWithBracketsAlongsideParentheses_then_indexedProperly)
+{
+  uint i = 1, j = 1;
+  uint absIndex = j * arr.size_x() + i;
+
+  arr[absIndex] = VAL;
+  EXPECT_EQ(VAL, arr(i, j));
+
+  arr(i, j) /= VAL;
+  EXPECT_EQ(1, arr[absIndex]);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, given_constCompressedArray_when_getIndexWithBrackets_then_valReturned)
+{
+  uint i = 1;
+  arr[i] = VAL;
+
+  const array2<SCALAR> arrConst = arr;
+
+  EXPECT_EQ(VAL, arrConst[i]);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, given_constCompressedArray_when_getIndexWithParentheses_then_valReturned)
+{
+  uint i = 1, j = 1;
   uint absIndex = j * arr.size_x() + i;
   arr[absIndex] = VAL;
 
-  EXPECT_EQ(VAL, arr(i, j));
+  const array2<SCALAR> arrConst = arr;
+
+  EXPECT_EQ(VAL, arrConst(i, j));
 }

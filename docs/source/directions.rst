@@ -74,7 +74,7 @@ important features, including:
 
 - **Array operations**.  |zfp|'s compressed arrays currently support basic
   indexing and initialization, but lack essential features such as shallow
-  and deep copies, slicing, views, etc.  Work is underway to address these
+  copies, slicing, views, etc.  Work is underway to address these
   deficiencies.
 
 - **Language bindings**.  The main compression codec is written in C89 to

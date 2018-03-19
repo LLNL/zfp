@@ -61,19 +61,6 @@ Base Class
 
   Virtual base class for common array functionality.
 
-.. cpp:function:: array::array(const array& a)
-
-  Copy constructor.  Performs a deep copy.  **NOTE: Deep copies are not
-  yet fully implemented**.
-
-.. cpp:function:: array::~array()
-
-  Destructor.
-
-.. cpp:function:: array& array::operator=(const array& a)
-
-  Assignment operator--performs a deep copy of the whole array.
-
 .. cpp:function:: double array::rate() const
 
   Return rate in bits per value.
@@ -196,6 +183,24 @@ provided.
   *nx* |times| *ny* |times| *nz* (3D) using *rate* bits per value, at least
   *csize* bytes of cache, and optionally initialized from flat, uncompressed
   array *p*.  If *csize* is zero, a default cache size is chosen.
+
+.. cpp:function:: array1::array1(const array1& a)
+.. cpp:function:: array2::array2(const array2& a)
+.. cpp:function:: array3::array3(const array3& a)
+
+  Copy constructor.  Performs a deep copy.
+
+.. cpp:function:: virtual array1::~array1()
+.. cpp:function:: virtual array2::~array2()
+.. cpp:function:: virtual array3::~array3()
+
+  Virtual destructor (allows for inheriting from |zfp| arrays).
+
+.. cpp:function:: array1& array1::operator=(const array1& a)
+.. cpp:function:: array2& array2::operator=(const array2& a)
+.. cpp:function:: array3& array3::operator=(const array3& a)
+
+  Assignment operator.  Performs a deep copy.
 
 .. cpp:function:: uint array2::size_x() const
 .. cpp:function:: uint array2::size_y() const

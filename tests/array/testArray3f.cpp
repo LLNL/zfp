@@ -108,6 +108,86 @@ TEST_P(Array3fTest, when_configureCompressedArrayFromDefaultConstructor_then_bit
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, expectedChecksum, checksum);
 }
 
+void CheckMemberVarsCopied(array3f arr1, array3f arr2)
+{
+  double oldRate = arr1.rate();
+  size_t oldCompressedSize = arr1.compressed_size();
+  size_t oldSizeX = arr1.size_x();
+  size_t oldSizeY = arr1.size_y();
+  size_t oldSizeZ = arr1.size_z();
+  size_t oldSize = arr1.size();
+  size_t oldCacheSize = arr1.cache_size();
+
+  arr1.set_rate(oldRate + 10);
+  arr1.resize(oldSizeX - 10, oldSizeY - 10, oldSizeZ - 10);
+  arr1.set(inputDataArr);
+  arr1.set_cache_size(oldCacheSize + 10);
+
+  EXPECT_EQ(oldRate, arr2.rate());
+  EXPECT_EQ(oldCompressedSize, arr2.compressed_size());
+  EXPECT_EQ(oldSizeX, arr2.size_x());
+  EXPECT_EQ(oldSizeY, arr2.size_y());
+  EXPECT_EQ(oldSizeZ, arr2.size_z());
+  EXPECT_EQ(oldSize, arr2.size());
+  EXPECT_EQ(oldCacheSize, arr2.cache_size());
+}
+
+void CheckDeepCopyPerformed(array3f arr1, array3f arr2, uchar* arr1UnflushedBitstreamPtr)
+{
+  // flush arr2 first, to ensure arr1 remains unflushed
+  uint64 checksum = hashBitstream((uint64*)arr2.compressed_data(), arr2.compressed_size());
+  uint64 arr1UnflushedChecksum = hashBitstream((uint64*)arr1UnflushedBitstreamPtr, arr1.compressed_size());
+  EXPECT_PRED_FORMAT2(ExpectNeqPrintHexPred, arr1UnflushedChecksum, checksum);
+
+  // flush arr1, compute its checksum, clear its bitstream, re-compute arr2's checksum
+  uint64 expectedChecksum = hashBitstream((uint64*)arr1.compressed_data(), arr1.compressed_size());
+  arr1.resize(arr1.size_x(), arr1.size_y(), arr1.size_z());
+  checksum = hashBitstream((uint64*)arr2.compressed_data(), arr2.compressed_size());
+  EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, expectedChecksum, checksum);
+}
+
+TEST_P(Array3fTest, given_compressedArray_when_copyConstructor_then_memberVariablesCopied)
+{
+  array3f arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr, 128);
+
+  array3f arr2(arr);
+
+  CheckMemberVarsCopied(arr, arr2);
+}
+
+TEST_P(Array3fTest, given_compressedArray_when_copyConstructor_then_deepCopyPerformed)
+{
+  // create arr with dirty cache
+  array3f arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
+  uchar* arrUnflushedBitstreamPtr = arr.compressed_data();
+  arr[0] = 999;
+
+  array3f arr2(arr);
+
+  CheckDeepCopyPerformed(arr, arr2, arrUnflushedBitstreamPtr);
+}
+
+TEST_P(Array3fTest, given_compressedArray_when_setSecondArrayEqualToFirst_then_memberVariablesCopied)
+{
+  array3f arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr, 128);
+
+  array3f arr2 = arr;
+
+  CheckMemberVarsCopied(arr, arr2);
+}
+
+TEST_P(Array3fTest, given_compressedArray_when_setSecondArrayEqualToFirst_then_deepCopyPerformed)
+{
+  // create arr with dirty cache
+  array3f arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
+  uchar* arrUnflushedBitstreamPtr = arr.compressed_data();
+  arr[0] = 999;
+
+  array3f arr2 = arr;
+
+  CheckDeepCopyPerformed(arr, arr2, arrUnflushedBitstreamPtr);
+}
+
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   ::testing::Environment* const foo_env = ::testing::AddGlobalTestEnvironment(new Array3fTestEnv);

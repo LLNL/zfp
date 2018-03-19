@@ -346,11 +346,22 @@ floating-point array stored at *pointer* with an *x* stride of 1, *y*
 stride of *nx*, and *z* stride of *nx* |times| *ny*::
 
   // declare and initialize 3D array of doubles
-  zfp::array3d a(nx, ny, nz, precision, pointer, cache_size);
+  zfp::array3d a(nx, ny, nz, rate, pointer, cache_size);
 
 The optional *cache_size* argument specifies the minimum number of bytes
 to allocate for the cache of uncompressed blocks (see :ref:`tut-caching`
 below for more details).
+
+As of |zfp| 0.5.3, entire arrays may be copied via the copy constructor or
+assignment operator::
+
+  zfp::array3d b(a); // declare array b to be a copy of array a
+  zfp::array3d c; // declare empty array c
+  c = a; // copy a to c
+
+Copies are deep and have value (not reference) semantics.  In the above
+example, separate storage for *b* and *c* is allocated, and subsequent
+modifications to *b* and *c* will not modify *a*.
 
 If not already initialized, a function :cpp:func:`array::set` can be used
 to copy uncompressed data to the compressed array::

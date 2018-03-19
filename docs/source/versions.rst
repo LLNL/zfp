@@ -3,6 +3,13 @@
 Release Notes
 =============
 
+feature/deep-copy
+
+  - Added support for copy construction and assignment via deep copies.
+
+  - Added virtual destructors to enable inheritance from zfp arrays.
+
+
 zfp 0.5.2, September 28, 2017
 
   - Added iterators and proxy objects for pointers and references.
