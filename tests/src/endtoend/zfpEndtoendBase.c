@@ -299,7 +299,7 @@ assertZfpCompressBitstreamChecksumMatches(void **state)
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  zfp_compress(stream, field);
+  assert_int_not_equal(zfp_compress(stream, field), 0);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
   uint64 expectedChecksum = bundle->compressedChecksums[bundle->paramNum];
@@ -367,11 +367,14 @@ assertZfpCompressDecompressChecksumMatches(void **state)
   zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
 
-  zfp_compress(stream, field);
+  size_t compressedBytes = zfp_compress(stream, field);
+  assert_int_not_equal(compressedBytes, 0);
+
   zfp_stream_rewind(stream);
 
   // zfp_decompress() will write to bundle->decompressedArr
-  zfp_decompress(stream, bundle->decompressField);
+  // assert bitstream ends in same location
+  assert_int_equal(compressedBytes, zfp_decompress(stream, bundle->decompressField));
 
   UInt checksum = hashArray((Int*)bundle->decompressedArr, bundle->totalDataLen, 1);
   UInt expectedChecksum = bundle->decompressedChecksums[bundle->paramNum];
@@ -427,6 +430,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_Compressed
   bitstream* s = zfp_stream_bit_stream(stream);
 
   size_t compressedBytes = zfp_compress(stream, field);
+  assert_int_not_equal(compressedBytes, 0);
   double bitsPerValue = (double)compressedBytes * 8. / bundle->totalDataLen;
 
   // expect bitrate to scale wrt padded array length
@@ -452,11 +456,14 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_Compre
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  zfp_compress(stream, field);
+  size_t compressedBytes = zfp_compress(stream, field);
+  assert_int_not_equal(0, compressedBytes);
+
   zfp_stream_rewind(stream);
 
   // zfp_decompress() will write to bundle->decompressedArr
-  zfp_decompress(stream, bundle->decompressField);
+  // assert bitstream ends in same location
+  assert_int_equal(compressedBytes, zfp_decompress(stream, bundle->decompressField));
 
   float maxDiffF = 0;
   double maxDiffD = 0;

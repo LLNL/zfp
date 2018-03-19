@@ -46,6 +46,41 @@ teardown(void **state)
 }
 
 static void
+when_StreamCopy_expect_BitsCopiedToDestBitstream(void **state)
+{
+  const uint SRC_OFFSET = wsize - 6;
+  const uint DST_OFFSET = 5;
+  const uint COPY_BITS = wsize + 4;
+
+  const uint NUM_WORD2_BITS_WRITTEN_TO_WORD = DST_OFFSET + (wsize - SRC_OFFSET);
+  const word EXPECTED_WRITTEN_WORD = ((WORD1 >> SRC_OFFSET) << DST_OFFSET)
+                                     + (WORD2 << NUM_WORD2_BITS_WRITTEN_TO_WORD);
+  const uint EXPECTED_BITS = (DST_OFFSET + COPY_BITS) % wsize;
+  const word EXPECTED_BUFFER = (WORD2 >> (NUM_WORD2_BITS_WRITTEN_TO_WORD))
+                               & ((1u << EXPECTED_BITS) - 1);
+
+  bitstream* src = ((struct setupVars *)*state)->b;
+  stream_write_word(src, WORD1);
+  stream_write_word(src, WORD2);
+  stream_flush(src);
+  stream_rseek(src, SRC_OFFSET);
+
+  void* buffer = calloc(STREAM_WORD_CAPACITY, sizeof(word));
+  bitstream* dst = stream_open(buffer, STREAM_WORD_CAPACITY * sizeof(word));
+  stream_wseek(dst, DST_OFFSET);
+
+  stream_copy(dst, src, COPY_BITS);
+
+  assert_ptr_equal(dst->ptr, dst->begin + 1);
+  assert_int_equal(dst->bits, (DST_OFFSET + COPY_BITS) % wsize);
+  assert_int_equal(*dst->begin, EXPECTED_WRITTEN_WORD);
+  assert_int_equal(dst->buffer, EXPECTED_BUFFER);
+
+  stream_close(dst);
+  free(buffer);
+}
+
+static void
 when_Flush_expect_PaddedWordWrittenToStream(void **state)
 {
   const uint PREV_BUFFER_BIT_COUNT = 8;
@@ -623,6 +658,7 @@ int main()
     cmocka_unit_test_setup_teardown(when_Align_expect_BufferEmptyBitsZero, setup, teardown),
     cmocka_unit_test_setup_teardown(given_EmptyBuffer_when_Flush_expect_NOP, setup, teardown),
     cmocka_unit_test_setup_teardown(when_Flush_expect_PaddedWordWrittenToStream, setup, teardown),
+    cmocka_unit_test_setup_teardown(when_StreamCopy_expect_BitsCopiedToDestBitstream, setup, teardown),
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);
