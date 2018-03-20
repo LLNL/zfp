@@ -1,49 +1,103 @@
+# serial exec
 # int
-add_executable(testZfpEndtoend1dInt32 testZfpEndtoend1dInt32.c)
-target_link_libraries(testZfpEndtoend1dInt32 cmocka zfp hash32Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend1dInt32 COMMAND testZfpEndtoend1dInt32)
+add_executable(testZfpSerial1dInt32 testZfpSerial1dInt32.c)
+target_link_libraries(testZfpSerial1dInt32 cmocka zfp hash32Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial1dInt32 COMMAND testZfpSerial1dInt32)
 
-add_executable(testZfpEndtoend1dInt64 testZfpEndtoend1dInt64.c)
-target_link_libraries(testZfpEndtoend1dInt64 cmocka zfp hash64Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend1dInt64 COMMAND testZfpEndtoend1dInt64)
+add_executable(testZfpSerial1dInt64 testZfpSerial1dInt64.c)
+target_link_libraries(testZfpSerial1dInt64 cmocka zfp hash64Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial1dInt64 COMMAND testZfpSerial1dInt64)
 
-add_executable(testZfpEndtoend2dInt32 testZfpEndtoend2dInt32.c)
-target_link_libraries(testZfpEndtoend2dInt32 cmocka zfp hash32Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend2dInt32 COMMAND testZfpEndtoend2dInt32)
+add_executable(testZfpSerial2dInt32 testZfpSerial2dInt32.c)
+target_link_libraries(testZfpSerial2dInt32 cmocka zfp hash32Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial2dInt32 COMMAND testZfpSerial2dInt32)
 
-add_executable(testZfpEndtoend2dInt64 testZfpEndtoend2dInt64.c)
-target_link_libraries(testZfpEndtoend2dInt64 cmocka zfp hash64Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend2dInt64 COMMAND testZfpEndtoend2dInt64)
+add_executable(testZfpSerial2dInt64 testZfpSerial2dInt64.c)
+target_link_libraries(testZfpSerial2dInt64 cmocka zfp hash64Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial2dInt64 COMMAND testZfpSerial2dInt64)
 
-add_executable(testZfpEndtoend3dInt32 testZfpEndtoend3dInt32.c)
-target_link_libraries(testZfpEndtoend3dInt32 cmocka zfp hash32Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend3dInt32 COMMAND testZfpEndtoend3dInt32)
+add_executable(testZfpSerial3dInt32 testZfpSerial3dInt32.c)
+target_link_libraries(testZfpSerial3dInt32 cmocka zfp hash32Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial3dInt32 COMMAND testZfpSerial3dInt32)
 
-add_executable(testZfpEndtoend3dInt64 testZfpEndtoend3dInt64.c)
-target_link_libraries(testZfpEndtoend3dInt64 cmocka zfp hash64Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend3dInt64 COMMAND testZfpEndtoend3dInt64)
+add_executable(testZfpSerial3dInt64 testZfpSerial3dInt64.c)
+target_link_libraries(testZfpSerial3dInt64 cmocka zfp hash64Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial3dInt64 COMMAND testZfpSerial3dInt64)
 
 # floating point
-add_executable(testZfpEndtoend1dFloat testZfpEndtoend1dFloat.c)
-target_link_libraries(testZfpEndtoend1dFloat cmocka zfp hash32Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend1dFloat COMMAND testZfpEndtoend1dFloat)
+add_executable(testZfpSerial1dFloat testZfpSerial1dFloat.c)
+target_link_libraries(testZfpSerial1dFloat cmocka zfp hash32Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial1dFloat COMMAND testZfpSerial1dFloat)
 
-add_executable(testZfpEndtoend1dDouble testZfpEndtoend1dDouble.c)
-target_link_libraries(testZfpEndtoend1dDouble cmocka zfp hash64Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend1dDouble COMMAND testZfpEndtoend1dDouble)
+add_executable(testZfpSerial1dDouble testZfpSerial1dDouble.c)
+target_link_libraries(testZfpSerial1dDouble cmocka zfp hash64Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial1dDouble COMMAND testZfpSerial1dDouble)
 
-add_executable(testZfpEndtoend2dFloat testZfpEndtoend2dFloat.c)
-target_link_libraries(testZfpEndtoend2dFloat cmocka zfp hash32Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend2dFloat COMMAND testZfpEndtoend2dFloat)
+add_executable(testZfpSerial2dFloat testZfpSerial2dFloat.c)
+target_link_libraries(testZfpSerial2dFloat cmocka zfp hash32Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial2dFloat COMMAND testZfpSerial2dFloat)
 
-add_executable(testZfpEndtoend2dDouble testZfpEndtoend2dDouble.c)
-target_link_libraries(testZfpEndtoend2dDouble cmocka zfp hash64Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend2dDouble COMMAND testZfpEndtoend2dDouble)
+add_executable(testZfpSerial2dDouble testZfpSerial2dDouble.c)
+target_link_libraries(testZfpSerial2dDouble cmocka zfp hash64Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial2dDouble COMMAND testZfpSerial2dDouble)
 
-add_executable(testZfpEndtoend3dFloat testZfpEndtoend3dFloat.c)
-target_link_libraries(testZfpEndtoend3dFloat cmocka zfp hash32Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend3dFloat COMMAND testZfpEndtoend3dFloat)
+add_executable(testZfpSerial3dFloat testZfpSerial3dFloat.c)
+target_link_libraries(testZfpSerial3dFloat cmocka zfp hash32Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial3dFloat COMMAND testZfpSerial3dFloat)
 
-add_executable(testZfpEndtoend3dDouble testZfpEndtoend3dDouble.c)
-target_link_libraries(testZfpEndtoend3dDouble cmocka zfp hash64Lib genSmoothRandNumsLib)
-add_test(NAME testZfpEndtoend3dDouble COMMAND testZfpEndtoend3dDouble)
+add_executable(testZfpSerial3dDouble testZfpSerial3dDouble.c)
+target_link_libraries(testZfpSerial3dDouble cmocka zfp hash64Lib genSmoothRandNumsLib)
+add_test(NAME testZfpSerial3dDouble COMMAND testZfpSerial3dDouble)
+
+if (OPENMP_FOUND)
+  # omp exec
+  # int
+  add_executable(testZfpOmp1dInt32 testZfpOmp1dInt32.c)
+  target_link_libraries(testZfpOmp1dInt32 cmocka zfp hash32Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp1dInt32 COMMAND testZfpOmp1dInt32)
+
+  add_executable(testZfpOmp1dInt64 testZfpOmp1dInt64.c)
+  target_link_libraries(testZfpOmp1dInt64 cmocka zfp hash64Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp1dInt64 COMMAND testZfpOmp1dInt64)
+
+  add_executable(testZfpOmp2dInt32 testZfpOmp2dInt32.c)
+  target_link_libraries(testZfpOmp2dInt32 cmocka zfp hash32Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp2dInt32 COMMAND testZfpOmp2dInt32)
+
+  add_executable(testZfpOmp2dInt64 testZfpOmp2dInt64.c)
+  target_link_libraries(testZfpOmp2dInt64 cmocka zfp hash64Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp2dInt64 COMMAND testZfpOmp2dInt64)
+
+  add_executable(testZfpOmp3dInt32 testZfpOmp3dInt32.c)
+  target_link_libraries(testZfpOmp3dInt32 cmocka zfp hash32Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp3dInt32 COMMAND testZfpOmp3dInt32)
+
+  add_executable(testZfpOmp3dInt64 testZfpOmp3dInt64.c)
+  target_link_libraries(testZfpOmp3dInt64 cmocka zfp hash64Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp3dInt64 COMMAND testZfpOmp3dInt64)
+
+  # floating point
+  add_executable(testZfpOmp1dFloat testZfpOmp1dFloat.c)
+  target_link_libraries(testZfpOmp1dFloat cmocka zfp hash32Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp1dFloat COMMAND testZfpOmp1dFloat)
+
+  add_executable(testZfpOmp1dDouble testZfpOmp1dDouble.c)
+  target_link_libraries(testZfpOmp1dDouble cmocka zfp hash64Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp1dDouble COMMAND testZfpOmp1dDouble)
+
+  add_executable(testZfpOmp2dFloat testZfpOmp2dFloat.c)
+  target_link_libraries(testZfpOmp2dFloat cmocka zfp hash32Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp2dFloat COMMAND testZfpOmp2dFloat)
+
+  add_executable(testZfpOmp2dDouble testZfpOmp2dDouble.c)
+  target_link_libraries(testZfpOmp2dDouble cmocka zfp hash64Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp2dDouble COMMAND testZfpOmp2dDouble)
+
+  add_executable(testZfpOmp3dFloat testZfpOmp3dFloat.c)
+  target_link_libraries(testZfpOmp3dFloat cmocka zfp hash32Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp3dFloat COMMAND testZfpOmp3dFloat)
+
+  add_executable(testZfpOmp3dDouble testZfpOmp3dDouble.c)
+  target_link_libraries(testZfpOmp3dDouble cmocka zfp hash64Lib genSmoothRandNumsLib)
+  add_test(NAME testZfpOmp3dDouble COMMAND testZfpOmp3dDouble)
+endif()

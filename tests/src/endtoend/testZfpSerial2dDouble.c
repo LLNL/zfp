@@ -2,7 +2,7 @@
 
 #include "constants/2dDouble.h"
 #include "utils/hash64.h"
-#include "zfpEndtoendBase.c"
+#include "serialExecBase.c"
 
 int main()
 {

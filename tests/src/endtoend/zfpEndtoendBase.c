@@ -7,6 +7,12 @@
 #include <stdio.h>
 #include <math.h>
 
+#if defined(__linux__) || defined(_WIN32)
+  #include <time.h>
+#elif defined(__MACH__)
+  #include <mach/mach_time.h>
+#endif
+
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
 
@@ -204,71 +210,6 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
   return 0;
 }
 
-static int
-setupFixedPrec0(void **state)
-{
-  setupChosenZfpMode(state, FIXED_PRECISION, 0);
-  return 0;
-}
-
-static int
-setupFixedPrec1(void **state)
-{
-  setupChosenZfpMode(state, FIXED_PRECISION, 1);
-  return 0;
-}
-
-static int
-setupFixedPrec2(void **state)
-{
-  setupChosenZfpMode(state, FIXED_PRECISION, 2);
-  return 0;
-}
-
-static int
-setupFixedRate0(void **state)
-{
-  setupChosenZfpMode(state, FIXED_RATE, 0);
-  return 0;
-}
-
-static int
-setupFixedRate1(void **state)
-{
-  setupChosenZfpMode(state, FIXED_RATE, 1);
-  return 0;
-}
-
-static int
-setupFixedRate2(void **state)
-{
-  setupChosenZfpMode(state, FIXED_RATE, 2);
-  return 0;
-}
-
-#ifdef FL_PT_DATA
-static int
-setupFixedAccuracy0(void **state)
-{
-  setupChosenZfpMode(state, FIXED_ACCURACY, 0);
-  return 0;
-}
-
-static int
-setupFixedAccuracy1(void **state)
-{
-  setupChosenZfpMode(state, FIXED_ACCURACY, 1);
-  return 0;
-}
-
-static int
-setupFixedAccuracy2(void **state)
-{
-  setupChosenZfpMode(state, FIXED_ACCURACY, 2);
-  return 0;
-}
-#endif
-
 // dataArr and the struct itself are freed in teardownRandomData()
 static int
 teardown(void **state)
@@ -299,7 +240,42 @@ assertZfpCompressBitstreamChecksumMatches(void **state)
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  assert_int_not_equal(zfp_compress(stream, field), 0);
+  size_t result;
+  double time;
+
+  /* set up timer */
+#if defined(__linux__)
+  struct timespec timeStart, timeEnd;
+  clock_gettime(CLOCK_REALTIME, &timeStart);
+#elif defined(_WIN32)
+  clock_t timeStart, timeEnd;
+  timeStart = clock();
+#elif defined(__MACH__)
+  uint64_t timeStart, timeEnd;
+  timeStart = mach_absolute_time();
+#else
+  fail_msg("Unknown platform (none of linux, win, osx)");
+#endif
+
+  result = zfp_compress(stream, field);
+
+#if defined(__linux__)
+  clock_gettime(CLOCK_REALTIME, &timeEnd);
+  time = (timeEnd.tv_sec - timeStart.tv_sec) + (timeEnd.tv_nsec - timeStart.tv_nsec) / 1E9;
+#elif defined(_WIN32)
+  timeEnd = clock();
+  time = (double)(timeEnd - timeStart) / CLOCKS_PER_SEC;
+#elif defined(__MACH__)
+  timeEnd = mach_absolute_time();
+
+  mach_timebase_info_data_t tb = {0};
+  mach_timebase_info(&tb);
+  double timebase = tb.numer / tb.denom;
+  time = (timeEnd - timeStart) * timebase * (1E-9);
+#endif
+
+  assert_int_not_equal(result, 0);
+  printf("\t\tCompress time (s): %lf\n", time);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
   uint64 expectedChecksum = bundle->compressedChecksums[bundle->paramNum];
@@ -308,7 +284,7 @@ assertZfpCompressBitstreamChecksumMatches(void **state)
 }
 
 static void
-_catFunc3(given_, DIM_INT_STR, ZfpStream_when_SetRateWithWriteRandomAccess_expect_RateRoundedUpProperly)(void **state)
+_catFunc3(given_, DESCRIPTOR, ZfpStream_when_SetRateWithWriteRandomAccess_expect_RateRoundedUpProperly)(void **state)
 {
   zfp_stream* zfp = zfp_stream_open(NULL);
 
@@ -326,7 +302,7 @@ _catFunc3(given_, DIM_INT_STR, ZfpStream_when_SetRateWithWriteRandomAccess_expec
 }
 
 static void
-_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
   if (bundle->zfpMode != FIXED_PRECISION) {
@@ -337,7 +313,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedPrecision_expect_Bitst
 }
 
 static void
-_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
   if (bundle->zfpMode != FIXED_RATE) {
@@ -349,7 +325,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamC
 
 #ifdef FL_PT_DATA
 static void
-_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches)(void **state)
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
   if (bundle->zfpMode != FIXED_ACCURACY) {
@@ -383,7 +359,7 @@ assertZfpCompressDecompressChecksumMatches(void **state)
 }
 
 static void
-_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
   if (bundle->zfpMode != FIXED_PRECISION) {
@@ -394,7 +370,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedPrecision_expect_Arr
 }
 
 static void
-_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
   if (bundle->zfpMode != FIXED_RATE) {
@@ -406,7 +382,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChe
 
 #ifdef FL_PT_DATA
 static void
-_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches)(void **state)
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
   if (bundle->zfpMode != FIXED_ACCURACY) {
@@ -418,7 +394,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_Arra
 #endif
 
 static void
-_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate)(void **state)
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate)(void **state)
 {
   struct setupVars *bundle = *state;
   if (bundle->zfpMode != FIXED_RATE) {
@@ -445,7 +421,7 @@ _catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_Compressed
 
 #ifdef FL_PT_DATA
 static void
-_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy)(void **state)
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy)(void **state)
 {
   struct setupVars *bundle = *state;
   if (bundle->zfpMode != FIXED_ACCURACY) {
