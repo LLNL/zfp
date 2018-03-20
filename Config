@@ -1,9 +1,7 @@
 # compiler executables --------------------------------------------------------
 
-#CC = gcc
-#CXX = g++
-CC = /opt/local/bin/gcc-mp-5
-CXX = /opt/local/bin/g++-mp-5
+CC = gcc
+CXX = g++
 
 # language standard -----------------------------------------------------------
 
@@ -56,6 +54,7 @@ OMPFLAGS = -fopenmp
 
 # conditionals ----------------------------------------------------------------
 
+# enable OpenMP?
 ifdef ZFP_WITH_OPENMP
   ifneq ($(ZFP_WITH_OPENMP),0)
     ifneq ($(ZFP_WITH_OPENMP),OFF)
