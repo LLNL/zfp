@@ -10,7 +10,7 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
   uint x;
   bitstream** bs;
   int threads = thread_count_omp(stream);
-  uint blocks_per_chunk = chunk_size_omp(stream);
+  uint blocks_per_chunk = chunk_size_omp(stream, mx / 4);
   uint chunks = mx / (4 * blocks_per_chunk);
   int i;
 
@@ -55,7 +55,7 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
   uint x;
   bitstream** bs;
   int threads = thread_count_omp(stream);
-  uint blocks_per_chunk = chunk_size_omp(stream);
+  uint blocks_per_chunk = chunk_size_omp(stream, mx / 4);
   uint chunks = mx / (4 * blocks_per_chunk);
   int i;
 

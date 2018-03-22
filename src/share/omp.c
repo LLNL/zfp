@@ -18,12 +18,12 @@ thread_count_omp(const zfp_stream* stream)
 
 /* number of 1D blocks to compress at a time */
 static uint
-chunk_size_omp(const zfp_stream* stream)
+chunk_size_omp(const zfp_stream* stream, uint blocks)
 {
   uint chunk_size = stream->exec.params.omp.chunk_size;
   if (!chunk_size)
     chunk_size = ZFP_OMP_CHUNK_SIZE;
-  return chunk_size;
+  return MIN(chunk_size, blocks);
 }
 
 #endif
