@@ -22,7 +22,9 @@ of arrays should facilitate distributed parallel compression.
 
 This section describes the |zfp| parallel compression algorithm and explains
 how to configure |libzfp| and enable parallel compression at run time via
-its :ref:`high-level C API <hl-api>`.
+its :ref:`high-level C API <hl-api>`.  Parallel compression is not supported
+via the :ref:`low-level API <ll-api>`, and |zfp|'s compressed arrays are
+not yet :ref:`thread-safe <q-thread-safety>`.
 
 Execution Policies
 ------------------
@@ -42,6 +44,9 @@ pertains to a particular :c:type:`zfp_stream`.  Hence, each stream
 very small arrays are likely best compressed in serial, while parallel
 compression is best reserved for very large arrays that can take the
 most advantage of concurrent execution.
+
+As outlined in FAQ :ref:`#23 <q-parallel>`, the final compressed stream
+is independent of execution policy.
 
 Execution Parameters
 --------------------
@@ -137,6 +142,8 @@ than the number of threads, it may be beneficial to interleave chunks
 so that each thread processes chunks that are distributed over the whole
 array.  To enable such interleaved scheduling, define the compile-time
 macro :c:macro:`ZFP_OMP_INTERLEAVE`.
+
+.. _exec-mode:
 
 Fixed- vs. Variable-Rate Compression
 ------------------------------------
