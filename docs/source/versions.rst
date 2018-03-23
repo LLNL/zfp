@@ -3,18 +3,19 @@
 Release Notes
 =============
 
-feature/deep-copy
-
-  - Added support for copy construction and assignment via deep copies.
-
-  - Added virtual destructors to enable inheritance from zfp arrays.
-
-feature/omp
+zfp 0.5.3, March 28, 2018
 
   - Added support for OpenMP multithreaded compression (but not decompression).
 
+  - Added options for OpenMP execution to zfp command-line tool.
+
   - Changed return value of zfp_decompress to indicate the number of compressed
     bytes processed so far (now returns same value as zfp_compress on success).
+
+  - Added compressed array support for copy construction and assignment via
+    deep copies.
+
+  - Added virtual destructors to enable inheritance from zfp arrays.
 
 
 zfp 0.5.2, September 28, 2017

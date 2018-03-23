@@ -46,9 +46,9 @@ DOCUMENTATION
 -------------
 
 Full
-[documentation](http://zfp.readthedocs.io/en/release0.5.2/)
+[documentation](http://zfp.readthedocs.io/en/release0.5.3/)
 is available online via Read the Docs.  A
-[PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release0.5.2/)
+[PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release0.5.3/)
 version is also available.
 
 

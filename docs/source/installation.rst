@@ -127,7 +127,7 @@ builds, use the :code:`-D` option on the cmake line, e.g.
   0 or OFF to disable OpenMP support.  For GNU builds, OpenMP is disabled by
   default.  Set this macro to 1 or ON to enable OpenMP support.  See also
   OMPFLAGS in :file:`Config` in case the compiler does not recognize
-  :code:`-fopenmp`.
+  :code:`-fopenmp`.  NOTE: clang currently does not support OpenMP on macOS.
   CMake default: on.
   GNU make default: off.
 
