@@ -106,12 +106,59 @@ Types
   ::
 
     typedef struct {
-      uint minbits;      // minimum number of bits to store per block
-      uint maxbits;      // maximum number of bits to store per block
-      uint maxprec;      // maximum number of bit planes to store
-      int minexp;        // minimum floating point bit plane number to store
-      bitstream* stream; // compressed bit stream
+      uint minbits;       // minimum number of bits to store per block
+      uint maxbits;       // maximum number of bits to store per block
+      uint maxprec;       // maximum number of bit planes to store
+      int minexp;         // minimum floating point bit plane number to store
+      bitstream* stream;  // compressed bit stream
+      zfp_execution exec; // execution policy and parameters
     } zfp_stream;
+
+.. c:type:: zfp_execution
+
+  The :c:type:`zfp_stream` also stores information about how to execute
+  compression, e.g. sequentially or in parallel.  The execution is determined
+  by the policy and any policy-specific parameters such as number of
+  threads.
+  ::
+
+    typedef struct {
+      zfp_exec_policy policy; // execution policy (serial, omp, ...)
+      zfp_exec_params params; // execution parameters
+    } zfp_execution;
+
+.. c:type:: zfp_exec_policy
+
+  Currently two execution policies are available: serial and OpenMP parallel.
+  ::
+
+    typedef enum {
+      zfp_exec_serial = 0, // serial execution (default)
+      zfp_exec_omp    = 1  // OpenMP multi-threaded execution
+    } zfp_exec_policy;
+
+.. c:type:: zfp_exec_params
+
+  Execution parameters are shared among policies in a union.  Currently
+  the only parameters available are for OpenMP.
+  ::
+
+    typedef union {
+      zfp_exec_params_omp omp; // OpenMP parameters
+    } zfp_exec_params;
+
+.. c:type:: zfp_exec_params_omp
+
+  Execution parameters for OpenMP parallel compression.  These are
+  initialized to default values.  When nonzero, they indicate the number
+  of threads to request for parallel compression and the number of 1D
+  blocks to assign to each thread when compressing 1D arrays.
+  ::
+
+    typedef struct {
+      uint threads;    // number of requested threads
+      uint chunk_size; // number of blocks per chunk (1D only)
+    } zfp_exec_params_omp;
 
 .. c:type:: zfp_type
 
@@ -298,6 +345,44 @@ Compression Parameters
 
 .. _hl-func-field:
 
+Execution Policy
+^^^^^^^^^^^^^^^^
+
+.. c:function:: zfp_exec_policy zfp_stream_execution(const zfp_stream* stream)
+
+  Return current execution policy.
+
+.. c:function:: uint zfp_stream_omp_threads(const zfp_stream* stream)
+
+  Return number of OpenMP threads to request for compression.
+  See :c:func:`zfp_stream_set_omp_threads`.
+
+.. c:function:: uint zfp_stream_omp_chunk_size(const zfp_stream* stream)
+
+  Return number of 1D blocks to compress together per OpenMP thread.
+  See :c:func:`zfp_stream_set_omp_chunk_size`.
+
+.. c:function:: int zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)
+
+  Set execution policy.  If different from the previous policy, initialize
+  the execution parameters to their default values.  Nonzero is returned if
+  the execution policy is supported.
+
+.. c:function:: int zfp_stream_set_omp_threads(zfp_stream* stream, uint threads)
+
+  Set the number of OpenMP threads to use during compression.  If *threads*
+  is zero, then the number of threads is given by the value of the OpenMP
+  *nthreads-var* internal control variable when :c:func:`zfp_compress` is
+  called (usually the maximum number available).  This function also sets
+  the execution policy to OpenMP.  Upon success, nonzero is returned.
+
+.. c:function:: int zfp_stream_set_omp_chunk_size(zfp_stream* stream, uint chunk_size)
+
+  Set the number of consecutive 1D blocks to compress together per
+  OpenMP thread (applies to compression of 1D data only).  If zero, use
+  the default setting :c:macro:`ZFP_CHUNK_SIZE_OMP`.  This function also sets
+  the execution policy to OpenMP.  Upon success, nonzero is returned.
+
 Array Metadata
 ^^^^^^^^^^^^^^
 
@@ -421,10 +506,13 @@ Compression and Decompression
   current byte offset within the bit stream.  Zero is returned if compression
   failed.
 
-.. c:function:: int zfp_decompress(zfp_stream* stream, zfp_field* field)
+.. c:function:: size_t zfp_decompress(zfp_stream* stream, zfp_field* field)
 
-  Decompress from *stream* to array described by *field* and align the stream on
-  the next word boundary.  Nonzero is returned upon success.
+  Decompress from *stream* to array described by *field* and align the stream
+  on the next word boundary.  Upon success, the nonzero return value is the
+  same as would be returned by a corresponding :c:func:`zfp_compress` call,
+  i.e. the current byte offset or the number of compressed bytes consumed.
+  Zero is returned if decompression failed.
 
 .. c:function:: size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, uint mask)
 

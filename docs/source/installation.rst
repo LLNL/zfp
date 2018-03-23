@@ -31,18 +31,23 @@ instructions on GNU and CMake builds.
 GNU Builds 
 ----------
 
-To compile |zfp| using `gcc <https://gcc.gnu.org>`_, type::
+To compile |zfp| using `gcc <https://gcc.gnu.org>`_ without
+`OpenMP <http://www.openmp.org>`_, type::
 
     make
 
 from the |zfp| root directory.  This builds :file:`libzfp` as a static
-library as well as utilities and example programs.  To optionally create
-a shared library, type::
+library as well as utilities and example programs.  To enable OpenMP
+parallel compression, type::
+
+    make ZFP_WITH_OPENMP=1
+
+To optionally create a shared library, type::
 
     make shared
 
-and set :envvar:`LD_LIBRARY_PATH` to point to :file:`lib`.  To test the compressor,
-type::
+and set :envvar:`LD_LIBRARY_PATH` to point to :file:`lib`.  To test the
+compressor, type::
 
     make test
 
@@ -70,6 +75,11 @@ To also build the examples, replace the cmake line with::
 
     cmake -DBUILD_EXAMPLES=ON ..
 
+By default, CMake builds will attempt to locate and use
+`OpenMP <http://www.openmp.org>`_.  To disable OpenMP, type::
+
+    cmake -DZFP_WITH_OPENMP=OFF ..
+
 To build |zfp| using Visual Studio on Windows, start an
 `MSBuild shell <https://msdn.microsoft.com/en-us/library/ms164311.aspx>`_
 and type::
@@ -92,7 +102,10 @@ Compile-Time Macros
 
 The behavior of |zfp| can be configured at compile time via a set of macros.
 For GNU builds, these macros are set in the file :file:`Config`.  For CMake
-builds, use the :code:`-D` option on the cmake line as in the example above.
+builds, use the :code:`-D` option on the cmake line, e.g.
+::
+
+    cmake -DZFP_WITH_OPENMP=OFF ..
 
 .. c:macro:: ZFP_INT64
 .. c:macro:: ZFP_INT64_SUFFIX
@@ -106,6 +119,32 @@ builds, use the :code:`-D` option on the cmake line as in the example above.
   C99 mode, integer types are taken from :file:`stdint.h`.
   Defaults: :code:`long int`, :code:`l`, :code:`unsigned long int`, and
   :code:`ul`, respectively.
+
+.. c:macro:: ZFP_WITH_OPENMP
+
+  CMake and GNU make macro for enabling or disabling OpenMP support.  CMake
+  builds will by default enable OpenMP when available.  Set this macro to
+  0 or OFF to disable OpenMP support.  For GNU builds, OpenMP is disabled by
+  default.  Set this macro to 1 or ON to enable OpenMP support.  See also
+  OMPFLAGS in :file:`Config` in case the compiler does not recognize
+  :code:`-fopenmp`.
+  CMake default: on.
+  GNU make default: off.
+
+.. c:macro:: ZFP_OMP_CHUNK_SIZE
+
+  The default number of 1D blocks compressed together as a chunk using the
+  OpenMP execution policy.  Applies to 1D arrays only.  See also
+  :c:func:`zfp_stream_set_omp_chunk_size`.
+  Default: |chunksize|.
+
+.. c:macro:: ZFP_OMP_INTERLEAVE
+
+  Interleave OpenMP threads over chunks rather than assigning to each thread
+  a contiguous sequence of chunks.  This has the potential to improve load
+  balance if compression ratios vary a lot over the array, but may hurt cache
+  and NUMA performance.
+  Default: off.
 
 .. c:macro:: ZFP_WITH_ALIGNED_ALLOC
 

@@ -1,7 +1,7 @@
 .. include:: defs.rst
 
-|zfp| 0.5.2 documentation
-=========================
+|zfp| |release| documentation
+=============================
 
 .. toctree::
    :maxdepth: 2
@@ -13,6 +13,7 @@
    installation
    algorithm
    modes
+   execution
    high-level-api
    low-level-api
    bit-stream

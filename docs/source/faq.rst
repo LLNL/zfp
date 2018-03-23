@@ -31,6 +31,9 @@ Questions answered in this FAQ:
   #. :ref:`How should I set the precision to bound the relative error? <q-relerr>`
   #. :ref:`Does zfp support lossless compression? <q-lossless>`
   #. :ref:`Why is my actual, measured error so much smaller than the tolerance? <q-abserr>`
+  #. :ref:`Are parallel compressed streams identical to serial streams? <q-parallel>`
+  #. :ref:`Are zfp arrays and other data structures thread-safe? <q-thread-safety>`
+  #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
 
 -------------------------------------------------------------------------------
 
@@ -781,3 +784,64 @@ conservative tolerance and successively doubling it.  The distribution of
 errors produced by |zfp| is approximately Gaussian, so even if the maximum
 error may seem large at an individual grid point, most errors tend to be
 much smaller and tightly clustered around zero.
+
+-------------------------------------------------------------------------------
+
+.. _q-parallel:
+
+Q23: *Are parallel compressed streams identical to serial streams?*
+
+Yes, it matters not what execution policy is used; the final compressed stream
+produced by :c:func:`zfp_compress` depends only on the uncompressed data and
+compression settings.
+
+To support future parallel decompression, in particular variable-rate
+streams, it will be necessary to also store an index of where (e.g. at what
+bit offset) each compressed block is stored in the stream.  Extensions to the
+current |zfp| format are being considered to support parallel decompression.
+
+Regardless, the execution policy and parameters such as number of threads
+do not need to be the same for compression and decompression.
+
+-------------------------------------------------------------------------------
+
+.. _q-thread-safety:
+
+Q24: *Are zfp's compressed arrays and other data structures thread-safe?*
+
+No, but thread-safe arrays are under development.  Similarly, data structures
+like :c:type:`zfp_stream` are not thread-safe.  |zfp|'s parallel compressor
+assigns one :c:type:`zfp_stream` per thread, each of which uses its own
+private :c:type:`bitstream`.  Users who wish to make parallel calls to
+|zfp|'s :ref:`low-level functions <ll-api>` are advised to consult the
+source files :file:`ompcompress.c` and :file:`parallel.c`.
+
+-------------------------------------------------------------------------------
+
+.. _q-omp-perf:
+
+Q25: *Why does parallel compression performance not match my expectations?*
+
+|zfp| partitions arrays into chunks and assigns each chunk to an OpenMP
+thread.  A chunk is a sequence of consecutive *d*-dimensional blocks, each
+composed of |4powd| values.  If there are fewer chunks than threads, then
+full processor utilization will not be achieved.
+
+For 2D and 3D arrays, the number of chunks is given by the number of blocks
+along the outermost (slowest varying) dimension, e.g. *ny* / 4 for 2D
+arrays :code:`a[ny][nx]` and *nz* / 4 for 3D arrays :code:`a[nz][ny][nx]`.
+If the array is "skinny" along the outer dimension but "fat" along the
+inner dimension(s), then consider transposing the array to increase the
+level of available parallelism.
+
+For 1D arrays, the default chunk size of |chunksize| blocks can be
+modified by the user via :c:func:`zfp_stream_set_omp_chunk_size` or
+:c:macro:`ZFP_OMP_CHUNK_SIZE`.  Experimentation with this setting may
+improve performance.
+
+Other reasons for poor parallel performance include compressing arrays
+that are too small to offset the overhead of thread creation and
+synchronization, as well as poor load balancing.  If compression ratios
+vary significantly across an array, then the default scheduling may lead
+to load imbalance.  In this case, consider using an interleaved chunk
+assignment via the :c:macro:`ZFP_OMP_INTERLEAVE` compile-time macro.

@@ -197,6 +197,24 @@ The same parameters must be given when decompressing data (without
 compressing.  See the section on :ref:`compression modes <modes>` for a
 discussion of these parameters.
 
+Execution parameters
+^^^^^^^^^^^^^^^^^^^^
+
+.. option:: -x <policy>
+
+  Specify execution policy and parameters.  The default policy is
+  :code:`-x serial` for sequential execution.  To enable OpenMP parallel
+  compression, use the :code:`omp` policy.  Without parameters,
+  :code:`-x omp` selects OpenMP with default settings, which typically
+  implies maximum concurrency available.  Use :code:`-x omp=threads` to
+  request a specific number of threads (see also
+  :c:func:`zfp_stream_set_omp_threads`).  For 1D arrays, use
+  :code:`-x omp=threads,chunk_size` to specify the chunk size in number
+  of blocks (see also :c:func:`zfp_stream_set_omp_chunk_size`).
+
+Note that the execution policy currently applies only to compression.
+Future versions of |zfp| will support parallel decompression also.
+
 Examples
 ^^^^^^^^
 
@@ -212,3 +230,4 @@ Examples
   * :code:`-d -2 1000 1000 -p 32` : 32-bit precision compression of 1000 |times| 1000 doubles
   * :code:`-d -1 1000000 -a 1e-9` : compression of 1,000,000 doubles with < 10\ :sup:`-9` max error
   * :code:`-d -1 1000000 -c 64 64 0 -1074` : 4x fixed-rate compression of 1,000,000 doubles
+  * :code:`-x omp=16,256` : parallel compression with 16 threads, 256-block chunks

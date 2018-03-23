@@ -49,10 +49,11 @@ important features, including:
 - **Parallel compression**.  |zfp|'s data partitioning into blocks invites
   opportunities for data parallelism on multithreaded platforms by dividing
   the blocks among threads.  An OpenMP implementation of parallel
-  compression is under development that produces compressed streams that
-  are identical to serially compressed streams.  An experimental
+  compression is available that produces compressed streams that
+  are identical to serially compressed streams.  However, parallel
+  decompression is not yet supported.  In addition, an experimental
   `CUDA implementation <https://github.com/mclarsen/cuzfp/>`_ for parallel
-  compression and decompression on the GPU is also under development.
+  compression and decompression on the GPU is under development.
 
 - **Thread-safe arrays**.  |zfp|'s compressed arrays are not thread-safe,
   even when performing read accesses only.  The primary reason is that

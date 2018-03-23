@@ -7,8 +7,9 @@ TARGETS = $(BINDIR)/diffusion\
 	  $(BINDIR)/pgm\
 	  $(BINDIR)/simple\
 	  $(BINDIR)/speed
-CLIBS = -L../lib -lzfp -lm
-CXXLIBS = -L../lib -lzfp
+LIBS = -L../lib -lzfp
+CLIBS = $(LIBS) -lm
+CXXLIBS = $(LIBS)
 
 all: $(TARGETS)
 

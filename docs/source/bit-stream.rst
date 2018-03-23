@@ -14,8 +14,8 @@ against.
 
 From an implementation standpoint, bit streams are read from and written
 to memory in increments of *words* of bits.  The constant power-of-two
-word size is configured at compile time, and is limited to 8, 16, 32, or
-64 bits.
+word size is configured at :ref:`compile time <config>`, and is limited
+to 8, 16, 32, or 64 bits.
 
 The bit stream API is publicly exposed and may be used to write additional
 information such as metadata into the |zfp| compressed stream, as well as
@@ -187,11 +187,15 @@ Functions
 
   Write out any remaining buffered bits.
 
+.. c:function:: void stream_copy(bitstream* dst, bitstream* src, size_t n)
+
+  Copy *n* bits from *src* to *dst*, advancing both bit streams.
+
 .. c:function:: size_t stream_stride_block(const bitstream* stream)
 
   Return stream block size in number of words.  The block size is always
-  one word unless strided streams are enabled.  See
-  :ref:`bs-strides` for more information.
+  one word unless strided streams are enabled.  See :ref:`bs-strides`
+  for more information.
 
 .. c:function:: ptrdiff_t stream_stride_delta(const bitstream* stream)
 

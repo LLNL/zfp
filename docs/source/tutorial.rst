@@ -109,6 +109,16 @@ with a bit stream used by the compressor to read and write bits::
   bitstream* stream = stream_open(buffer, bufsize);
   zfp_stream_set_bit_stream(zfp, stream);
 
+Compression can be accelerated via OpenMP multithreading (since |zfp|
+|omprelease|).  To enable parallel compression, call::
+
+  if (!zfp_stream_set_execution(zfp, zfp_exec_omp)) {
+    // OpenMP not available; handle error
+  }
+
+See the section :ref:`execution` for further details on how to configure
+|zfp| and its run-time parameters for parallel compression.
+
 Finally, the array is compressed as follows::
 
   // compress entire array
@@ -140,7 +150,7 @@ the beginning (before reading the header and decompressing the data)::
 
   // rewind compressed stream and decompress array
   zfp_stream_rewind(zfp);
-  int success = zfp_decompress(zfp, field);
+  size_t size = zfp_decompress(zfp, field);
 
 The return value is zero if the decompressor failed.
 

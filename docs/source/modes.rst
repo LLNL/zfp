@@ -151,8 +151,8 @@ or need random access to blocks**.
 .. index::
    single: Compression mode; Fixed-precision mode
 
-Fixed Precision
----------------
+Fixed-Precision Mode
+--------------------
 
 In fixed-precision mode, the number of bits used to encode a block may
 vary, but the number of bit planes (i.e. the precision) encoded for the
@@ -175,8 +175,8 @@ errors matter.
 .. index::
    single: Compression mode; Fixed-accuracy mode
 
-Fixed Accuracy
---------------
+Fixed-Accuracy Mode
+-------------------
 
 In fixed-accuracy mode, all transform coefficient bit planes up to a
 minimum bit plane number are encoded.  (The actual minimum bit plane

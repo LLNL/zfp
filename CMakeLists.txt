@@ -97,14 +97,20 @@ if(ZFP_ENABLE_PIC)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
+# Compile-time options.
+
 set(ZFP_BIT_STREAM_WORD_SIZE 64 CACHE STRING
   "Use smaller bit stream word type for finer rate granularity")
 set_property(CACHE ZFP_BIT_STREAM_WORD_SIZE PROPERTY STRINGS "8;16;32;64")
 
+option(ZFP_WITH_OPENMP "Enable OpenMP parallel compression" ON)
+
+option(ZFP_OMP_INTERLEAVE "Interleave OpenMP chunks to promote load balancing" OFF)
+
 option(ZFP_WITH_BIT_STREAM_STRIDED
   "Enable strided access for progressive zfp streams" OFF)
 
-option(ZFP_WITH_ALIGNED_ALLOC "Enabled aligned memory allocation" OFF)
+option(ZFP_WITH_ALIGNED_ALLOC "Enable aligned memory allocation" OFF)
 
 option(ZFP_WITH_CACHE_TWOWAY "Use two-way skew-associative cache" OFF)
 
@@ -123,6 +129,19 @@ endif()
 if((DEFINED ZFP_UINT64) AND (DEFINED ZFP_UINT64_SUFFIX))
   list(APPEND zfp_defs ZFP_UINT64=${ZFP_UINT64})
   list(APPEND zfp_defs ZFP_UINT64_SUFFIX=${ZFP_UINT64_SUFFIX})
+endif()
+
+if(ZFP_WITH_OPENMP)
+  find_package(OpenMP)
+  if(OPENMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  endif()
+endif()
+
+if(DEFINED ZFP_OMP_CHUNK_SIZE)
+  list(APPEND zfp_defs ZFP_OMP_CHUNK_SIZE=${ZFP_OMP_CHUNK_SIZE})
 endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
@@ -173,14 +192,12 @@ endif()
 #------------------------------------------------------------------------------#
 # Header install
 #------------------------------------------------------------------------------#
-
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 #------------------------------------------------------------------------------#
 # Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel
 #------------------------------------------------------------------------------#
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of CMake build" FORCE)
 endif()
