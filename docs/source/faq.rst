@@ -32,7 +32,7 @@ Questions answered in this FAQ:
   #. :ref:`Does zfp support lossless compression? <q-lossless>`
   #. :ref:`Why is my actual, measured error so much smaller than the tolerance? <q-abserr>`
   #. :ref:`Are parallel compressed streams identical to serial streams? <q-parallel>`
-  #. :ref:`Are |zfp| arrays and other data structures thread-safe? <q-thread-safety>`
+  #. :ref:`Are zfp arrays and other data structures thread-safe? <q-thread-safety>`
   #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
 
 -------------------------------------------------------------------------------
@@ -807,14 +807,14 @@ do not need to be the same for compression and decompression.
 
 .. _q-thread-safety:
 
-Q24: *Are |zfp|'s compressed arrays and other data structures thread-safe?*
+Q24: *Are zfp's compressed arrays and other data structures thread-safe?*
 
 No, but thread-safe arrays are under development.  Similarly, data structures
-like :c:type:`zfp_stream` are not thread-safe.  The current OpenMP parallel
-compressor assigns one :c:type:`zfp_stream` per thread, each of which uses
-its own :c:type:`bitstream` (see :ref:`bs-api`).  Depending on the
-:ref:`compression mode <exec-mode>`, |zfp| may have to concatenate each such
-substream following parallel compression.
+like :c:type:`zfp_stream` are not thread-safe.  |zfp|'s parallel compressor
+assigns one :c:type:`zfp_stream` per thread, each of which uses its own
+private :c:type:`bitstream`.  Users who wish to make parallel calls to
+|zfp|'s :ref:`low-level functions <ll-api>` are advised to consult the
+source files :file:`ompcompress.c` and :file:`parallel.c`.
 
 -------------------------------------------------------------------------------
 
