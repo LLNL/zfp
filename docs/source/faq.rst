@@ -796,7 +796,7 @@ produced by :c:func:`zfp_compress` depends only on the uncompressed data and
 compression settings.
 
 To support future parallel decompression, in particular variable-rate
-streams, it will be necessary to also store an index of where (e.g. at what
+streams, it will be necessary to also store an index of where (at what
 bit offset) each compressed block is stored in the stream.  Extensions to the
 current |zfp| format are being considered to support parallel decompression.
 
@@ -827,21 +827,25 @@ thread.  A chunk is a sequence of consecutive *d*-dimensional blocks, each
 composed of |4powd| values.  If there are fewer chunks than threads, then
 full processor utilization will not be achieved.
 
-For 2D and 3D arrays, the number of chunks is given by the number of blocks
-along the outermost (slowest varying) dimension, e.g. *ny* / 4 for 2D
-arrays :code:`a[ny][nx]` and *nz* / 4 for 3D arrays :code:`a[nz][ny][nx]`.
-If the array is "skinny" along the outer dimension but "fat" along the
-inner dimension(s), then consider transposing the array to increase the
-level of available parallelism.
+The number of chunks is by default set to the number of threads, but can
+be modified by the user via :c:func:`zfp_stream_set_omp_chunk_size`.
+One reason for using more chunks than threads is to provide for better
+load balance.  If compression ratios vary significantly across the array,
+then threads that process easy-to-compress blocks may finish well ahead
+of threads in charge of difficult-to-compress blocks.  By breaking chunks
+into smaller units, OpenMP is given the opportunity to balance the load
+better (though the effect of using smaller chunks depends on OpenMP
+thread scheduling).  If chunks are too small, however, then the overhead
+of allocating and initializing chunks and assigning threads to them may
+dominate.  Experimentation with chunk size may improve performance, though
+chunks ought to be at least several hundred blocks each.
 
-For 1D arrays, the default chunk size of |chunksize| blocks can be
-modified by the user via :c:func:`zfp_stream_set_omp_chunk_size` or
-:c:macro:`ZFP_OMP_CHUNK_SIZE`.  Experimentation with this setting may
-improve performance.
+In variable-rate mode, compressed chunk sizes are not known ahead of time.
+Therefore the compressed chunks must be concatenated into a single stream
+following compression.  This task is performed sequentially on a single
+thread, and will inevitably limit parallel efficiency.
 
 Other reasons for poor parallel performance include compressing arrays
 that are too small to offset the overhead of thread creation and
-synchronization, as well as poor load balancing.  If compression ratios
-vary significantly across an array, then the default scheduling may lead
-to load imbalance.  In this case, consider using an interleaved chunk
-assignment via the :c:macro:`ZFP_OMP_INTERLEAVE` compile-time macro.
+synchronization.  Arrays should ideally consist of thousands of blocks
+to offset the overhead of setting up parallel compression.

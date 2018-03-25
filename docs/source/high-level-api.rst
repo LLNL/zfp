@@ -359,7 +359,7 @@ Execution Policy
 
 .. c:function:: uint zfp_stream_omp_chunk_size(const zfp_stream* stream)
 
-  Return number of 1D blocks to compress together per OpenMP thread.
+  Return number of blocks to compress together per OpenMP thread.
   See :c:func:`zfp_stream_set_omp_chunk_size`.
 
 .. c:function:: int zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)
@@ -378,10 +378,9 @@ Execution Policy
 
 .. c:function:: int zfp_stream_set_omp_chunk_size(zfp_stream* stream, uint chunk_size)
 
-  Set the number of consecutive 1D blocks to compress together per
-  OpenMP thread (applies to compression of 1D data only).  If zero, use
-  the default setting :c:macro:`ZFP_CHUNK_SIZE_OMP`.  This function also sets
-  the execution policy to OpenMP.  Upon success, nonzero is returned.
+  Set the number of consecutive blocks to compress together per OpenMP thread.
+  If zero, use one chunk per thread.  This function also sets the execution
+  policy to OpenMP.  Upon success, nonzero is returned.
 
 Array Metadata
 ^^^^^^^^^^^^^^

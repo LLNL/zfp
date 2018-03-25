@@ -34,12 +34,6 @@ OMPFLAGS = -fopenmp
 # enable strided access for progressive zfp streams
 # DEFS += -DBIT_STREAM_STRIDED
 
-# default number of 1D blocks per OpenMP chunk
-# DEFS += -DZFP_OMP_CHUNK_SIZE=0x100u
-
-# interleave OpenMP chunks among threads
-# DEFS += -DZFP_OMP_INTERLEAVE
-
 # use aligned memory allocation
 # DEFS += -DZFP_WITH_ALIGNED_ALLOC
 
