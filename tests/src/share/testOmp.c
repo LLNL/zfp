@@ -48,67 +48,37 @@ given_zfpStreamOmpThreadsZero_when_threadCountOmp_expect_returnsOmpMaxThreadCoun
 }
 
 static void
-given_zfpStreamOmpChunkSizeZero_when_chunkSizeOmpWithBlocksLessThanZfpDefaultChunkSize_expect_returnsBlockCount(void **state)
+given_zfpStreamOmpChunkSizeZero_when_chunkCountOmp_expect_returnsOneChunkPerThread(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
+  uint threads = 3;
+  assert_int_equal(zfp_stream_set_omp_threads(stream, threads), 1);
 
-  uint blocks = 5;
-  assert_int_equal(MIN(ZFP_OMP_CHUNK_SIZE, blocks), blocks);
-  assert_int_equal(zfp_stream_set_omp_chunk_size(stream, 0), 1);
-
-  assert_int_equal(chunk_size_omp(stream, blocks), blocks);
+  uint blocks = 50;
+  assert_int_equal(chunk_count_omp(stream, blocks, threads), threads);
 }
 
 static void
-given_zfpStreamOmpChunkSizeZero_when_chunkSizeOmpWithBlocksGreaterThanZfpDefaultChunkSize_expect_returnsZfpDefaultChunkSize(void **state)
+given_zfpStreamOmpChunkSizeNonzero_when_chunkCountOmp_expect_returnsNumChunks(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
 
-  uint blocks = ZFP_OMP_CHUNK_SIZE + 1;
-  assert_int_equal(MIN(ZFP_OMP_CHUNK_SIZE, blocks), ZFP_OMP_CHUNK_SIZE);
-  assert_int_equal(zfp_stream_set_omp_chunk_size(stream, 0), 1);
-
-  assert_int_equal(chunk_size_omp(stream, blocks), ZFP_OMP_CHUNK_SIZE);
-}
-
-static void
-given_zfpStreamOmpChunkSizeNonzero_when_chunkSizeOmpWithBlocksLessThanOmpChunkSize_expect_returnsBlockCount(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_stream* stream = bundle->stream;
-
-  uint blocks = 5;
-  uint chunkSize = blocks + 1;
-  assert_int_equal(MIN(chunkSize, blocks), blocks);
+  uint blocks = 51;
+  uint chunkSize = 3;
   assert_int_equal(zfp_stream_set_omp_chunk_size(stream, chunkSize), 1);
 
-  assert_int_equal(chunk_size_omp(stream, blocks), blocks);
-}
-
-static void
-given_zfpStreamOmpChunkSizeNonzero_when_chunkSizeOmpWithBlocksGreaterThanOmpChunkSize_expect_returnsOmpChunkSize(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_stream* stream = bundle->stream;
-
-  uint chunkSize = 5;
-  uint blocks = chunkSize + 1;
-  assert_int_equal(MIN(chunkSize, blocks), chunkSize);
-  assert_int_equal(zfp_stream_set_omp_chunk_size(stream, chunkSize), 1);
-
-  assert_int_equal(chunk_size_omp(stream, blocks), chunkSize);
+  // the MIN(chunks, blocks) will always return chunks
+  assert_int_equal(chunk_count_omp(stream, blocks, thread_count_omp(stream)), (blocks + chunkSize - 1) / chunkSize);
 }
 
 int main()
 {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test_setup_teardown(given_zfpStreamOmpThreadsZero_when_threadCountOmp_expect_returnsOmpMaxThreadCount, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_zfpStreamOmpChunkSizeZero_when_chunkSizeOmpWithBlocksLessThanZfpDefaultChunkSize_expect_returnsBlockCount, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_zfpStreamOmpChunkSizeZero_when_chunkSizeOmpWithBlocksGreaterThanZfpDefaultChunkSize_expect_returnsZfpDefaultChunkSize, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_zfpStreamOmpChunkSizeNonzero_when_chunkSizeOmpWithBlocksLessThanOmpChunkSize_expect_returnsBlockCount, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_zfpStreamOmpChunkSizeNonzero_when_chunkSizeOmpWithBlocksGreaterThanOmpChunkSize_expect_returnsOmpChunkSize, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_zfpStreamOmpChunkSizeZero_when_chunkCountOmp_expect_returnsOneChunkPerThread, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_zfpStreamOmpChunkSizeNonzero_when_chunkCountOmp_expect_returnsNumChunks, setup, teardown),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }
