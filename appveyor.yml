@@ -1,4 +1,4 @@
-version: 0.5.1-{build}
+version: 0.5.3-{build}
 
 environment:
   matrix:
@@ -73,7 +73,21 @@ install:
 build_script:
   - mkdir build
   - cd build
-  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND ..
+
+  # build/test without OpenMP
+  - if "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DZFP_WITH_OPENMP=OFF ..
+  - if not "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_OPENMP=OFF ..
+
+  - if "%COMPILER%"=="msvc" cmake --build . --config "%BUILD_TYPE%"
+  - if not "%COMPILER%"=="msvc" cmake --build .
+
+  - ctest -V -C "%BUILD_TYPE%"
+
+  - rm -rf ./*
+
+  # build/test with OpenMP
+  - if "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" ..
+  - if not "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND ..
 
   - if "%COMPILER%"=="msvc" cmake --build . --config "%BUILD_TYPE%"
   - if not "%COMPILER%"=="msvc" cmake --build .

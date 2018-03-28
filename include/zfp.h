@@ -1,7 +1,7 @@
 /*
-** Copyright (c) 2014-2017, Lawrence Livermore National Security, LLC.
+** Copyright (c) 2014-2018, Lawrence Livermore National Security, LLC.
 ** Produced at the Lawrence Livermore National Laboratory.
-** Written by Peter Lindstrom.
+** Authors: Peter Lindstrom (original developer), Markus Salasoo.
 ** LLNL-CODE-663824.
 ** All rights reserved.
 **
@@ -74,7 +74,7 @@
 /* library version information */
 #define ZFP_VERSION_MAJOR 0 /* library major version number */
 #define ZFP_VERSION_MINOR 5 /* library minor version number */
-#define ZFP_VERSION_PATCH 2 /* library patch version number */
+#define ZFP_VERSION_PATCH 3 /* library patch version number */
 #define ZFP_VERSION_RELEASE ZFP_VERSION_PATCH
 
 /* codec version number (see also zfp_codec_version) */
@@ -114,13 +114,36 @@
 
 /* types ------------------------------------------------------------------- */
 
+/* execution policy (for compression only) */
+typedef enum {
+  zfp_exec_serial = 0, /* serial execution (default) */
+  zfp_exec_omp    = 1  /* OpenMP multi-threaded execution */
+} zfp_exec_policy;
+
+/* OpenMP execution parameters */
+typedef struct {
+  uint threads;    /* number of requested threads */
+  uint chunk_size; /* number of blocks per chunk (1D only) */
+} zfp_exec_params_omp;
+
+/* execution parameters */
+typedef union {
+  zfp_exec_params_omp omp; /* OpenMP parameters */
+} zfp_exec_params;
+
+typedef struct {
+  zfp_exec_policy policy; /* execution policy (serial, omp, ...) */
+  zfp_exec_params params; /* execution parameters */
+} zfp_execution;
+
 /* compressed stream; use accessors to get/set members */
 typedef struct {
-  uint minbits;      /* minimum number of bits to store per block */
-  uint maxbits;      /* maximum number of bits to store per block */
-  uint maxprec;      /* maximum number of bit planes to store */
-  int minexp;        /* minimum floating point bit plane number to store */
-  bitstream* stream; /* compressed bit stream */
+  uint minbits;       /* minimum number of bits to store per block */
+  uint maxbits;       /* maximum number of bits to store per block */
+  uint maxprec;       /* maximum number of bit planes to store */
+  int minexp;         /* minimum floating point bit plane number to store */
+  bitstream* stream;  /* compressed bit stream */
+  zfp_execution exec; /* execution policy and parameters */
 } zfp_stream;
 
 /* scalar type */
@@ -256,6 +279,47 @@ zfp_stream_set_params(
   uint maxbits,       /* maximum number of bits per 4^d block */
   uint maxprec,       /* maximum precision (# bit planes coded) */
   int minexp          /* minimum base-2 exponent; error <= 2^minexp */
+);
+
+/* high-level API: execution policy ---------------------------------------- */
+
+/* current execution policy */
+zfp_exec_policy
+zfp_stream_execution(
+  const zfp_stream* stream /* compressed stream */
+);
+
+/* number of OpenMP threads to use */
+uint                       /* number of threads (0 for default) */
+zfp_stream_omp_threads(
+  const zfp_stream* stream /* compressed stream */
+);
+
+/* number of blocks per OpenMP chunk (1D only) */
+uint                       /* number of blocks per chunk (0 for default) */
+zfp_stream_omp_chunk_size(
+  const zfp_stream* stream /* compressed stream */
+);
+
+/* set execution policy */
+int                      /* nonzero upon success */
+zfp_stream_set_execution(
+  zfp_stream* stream,    /* compressed stream */
+  zfp_exec_policy policy /* execution policy */
+);
+
+/* set OpenMP execution policy and number of threads */
+int                   /* nonzero upon success */
+zfp_stream_set_omp_threads(
+  zfp_stream* stream, /* compressed stream */
+  uint threads        /* number of OpenMP threads to use (0 for default) */
+);
+
+/* set OpenMP execution policy and number of blocks per chunk (1D only) */
+int                   /* nonzero upon success */
+zfp_stream_set_omp_chunk_size(
+  zfp_stream* stream, /* compressed stream */
+  uint chunk_size     /* number of blocks per chunk (0 for default) */
 );
 
 /* high-level API: uncompressed array construction/destruction ------------- */
@@ -417,14 +481,14 @@ zfp_field_set_metadata(
 /* high-level API: compression and decompression --------------------------- */
 
 /* compress entire field (nonzero return value upon success) */
-size_t                   /* actual number of bytes of compressed storage */
+size_t                   /* cumulative number of bytes of compressed storage */
 zfp_compress(
   zfp_stream* stream,    /* compressed stream */
   const zfp_field* field /* field metadata */
 );
 
 /* decompress entire field (nonzero return value upon success) */
-int                   /* nonzero upon success */
+size_t                /* cumulative number of bytes of compressed storage */
 zfp_decompress(
   zfp_stream* stream, /* compressed stream */
   zfp_field* field    /* field metadata */

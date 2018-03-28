@@ -108,6 +108,9 @@ usage()
   fprintf(stderr, "      maxbits : max # bits per 4^d values in d dimensions (0 for unlimited)\n");
   fprintf(stderr, "      maxprec : max # bits of precision per value (0 for full)\n");
   fprintf(stderr, "      minexp : min bit plane # coded (-1074 for all bit planes)\n");
+  fprintf(stderr, "Execution parameters:\n");
+  fprintf(stderr, "  -x serial : serial compression (default)\n");
+  fprintf(stderr, "  -x omp[=threads[,chunk_size]] : OpenMP parallel compression\n");
   fprintf(stderr, "Examples:\n");
   fprintf(stderr, "  -i file : read uncompressed file and compress to memory\n");
   fprintf(stderr, "  -z file : read compressed file and decompress to memory\n");
@@ -121,6 +124,7 @@ usage()
   fprintf(stderr, "  -d -2 1000 1000 -p 32 : 32-bit precision compression of 1000x1000 doubles\n");
   fprintf(stderr, "  -d -1 1000000 -a 1e-9 : compression of 1M doubles with < 1e-9 max error\n");
   fprintf(stderr, "  -d -1 1000000 -c 64 64 0 -1074 : 4x fixed-rate compression of 1M doubles\n");
+  fprintf(stderr, "  -x omp=16,256 : parallel compression with 16 threads, 256-block chunks\n");
   exit(EXIT_FAILURE);
 }
 
@@ -147,6 +151,9 @@ int main(int argc, char* argv[])
   char* zfppath = 0;
   char* outpath = 0;
   char mode = 0;
+  zfp_exec_policy exec = zfp_exec_serial;
+  uint threads = 0;
+  uint chunk_size = 0;
 
   /* local variables */
   int i;
@@ -247,6 +254,25 @@ int main(int argc, char* argv[])
           type = zfp_type_float;
         else if (!strcmp(argv[i], "f64"))
           type = zfp_type_double;
+        else
+          usage();
+        break;
+      case 'x':
+        if (++i == argc)
+          usage();
+        if (!strcmp(argv[i], "serial"))
+          exec = zfp_exec_serial;
+        else if (sscanf(argv[i], "omp=%u,%u", &threads, &chunk_size) == 2)
+          exec = zfp_exec_omp;
+        else if (sscanf(argv[i], "omp=%u", &threads) == 1) {
+          exec = zfp_exec_omp;
+          chunk_size = 0;
+        }
+        else if (!strcmp(argv[i], "omp")) {
+          exec = zfp_exec_omp;
+          threads = 0;
+          chunk_size = 0;
+        }
         else
           usage();
         break;
@@ -416,6 +442,25 @@ int main(int argc, char* argv[])
       return EXIT_FAILURE;
     }
     zfp_stream_set_bit_stream(zfp, stream);
+
+    /* specify execution policy */
+    switch (exec) {
+      case zfp_exec_omp:
+        if (!zfp_stream_set_execution(zfp, exec) ||
+            !zfp_stream_set_omp_threads(zfp, threads) ||
+            !zfp_stream_set_omp_chunk_size(zfp, chunk_size)) {
+          fprintf(stderr, "OpenMP execution not available\n");
+          return EXIT_FAILURE;
+        }
+        break;
+      case zfp_exec_serial:
+      default:
+        if (!zfp_stream_set_execution(zfp, exec)) {
+          fprintf(stderr, "serial execution not available\n");
+          return EXIT_FAILURE;
+        }
+        break;
+    }
 
     /* optionally write header */
     if (header && !zfp_write_header(zfp, field, ZFP_HEADER_FULL)) {

@@ -8,9 +8,20 @@
 
 namespace zfp {
 
-// base class for compressed array of scalars
+// abstract base class for compressed array of scalars
 class array {
 protected:
+  // default constructor
+  array() :
+    dims(0), type(zfp_type_none),
+    nx(0), ny(0), nz(0),
+    bx(0), by(0), bz(0),
+    blocks(0), blkvals(0), blkbits(0), blksize(0),
+    bytes(0), data(0),
+    stream(0),
+    shape(0)
+  {}
+
   // generic array with 'dims' dimensions and scalar type 'type'
   array(uint dims, zfp_type type) :
     dims(dims), type(type),
@@ -28,10 +39,10 @@ protected:
     stream(0),
     shape(0)
   {
-    copy(a);
+    deep_copy(a);
   }
 
-  // destructor
+  // protected destructor (cannot delete array through base class pointer)
   ~array()
   {
     free();
@@ -41,7 +52,7 @@ protected:
   // assignment operator--performs a deep copy
   array& operator=(const array& a)
   {
-    copy(a);
+    deep_copy(a);
     return *this;
   }
  
@@ -105,17 +116,8 @@ protected:
   }
 
   // perform a deep copy
-  void copy(const array& a)
+  void deep_copy(const array& a)
   {
-    // free any already allocated space
-    deallocate(data);
-    data = 0;
-    if (stream)
-      zfp_stream_close(stream);
-    stream = 0;
-    deallocate(shape);
-    shape = 0;
-
     // copy metadata
     dims = a.dims;
     type = a.type;
@@ -132,13 +134,16 @@ protected:
     bytes = a.bytes;
 
     // copy dynamically allocated data
-    data = (uchar*)allocate(bytes, 0x100u);
-    std::copy(a.data, a.data + bytes, data);
-    stream = zfp_stream_open(stream_open(data, bytes));
-    if (a.shape) {
-      shape = (uchar*)allocate(blocks);
-      std::copy(a.shape, a.shape + blocks, shape);
+    clone(data, a.data, bytes, 0x100u);
+    if (stream) {
+      if (stream->stream)
+        stream_close(stream->stream);
+      zfp_stream_close(stream);
     }
+    stream = zfp_stream_open(0);
+    *stream = *a.stream;
+    zfp_stream_set_bit_stream(stream, stream_open(data, bytes));
+    clone(shape, a.shape, blocks);
   }
 
   uint dims;           // array dimensionality (1, 2, or 3)

@@ -1,12 +1,23 @@
-# default compiler settings ---------------------------------------------------
+# compiler executables --------------------------------------------------------
 
 CC = gcc
 CXX = g++
-FLAGS = -O3 -fPIC -Wall -pedantic -I../include $(DEFS)
-# CFLAGS = -std=c89 -Wno-unused-function $(FLAGS)
-CFLAGS = -std=c99 $(FLAGS)
-CXXFLAGS = -std=c++98 $(FLAGS)
-# CXXFLAGS = -std=c++11 $(FLAGS)
+
+# language standard -----------------------------------------------------------
+
+# CSTD = -std=c89 -Wno-unused-function
+  CSTD = -std=c99
+  CXXSTD = -std=c++98
+# CXXSTD = -std=c++11
+
+# common compiler options -----------------------------------------------------
+
+FLAGS = -O3 -fPIC -Wall -pedantic -I../include
+
+# OpenMP compiler options -----------------------------------------------------
+
+# do not uncomment; use "make ZFP_WITH_OPENMP=0" to disable OpenMP
+OMPFLAGS = -fopenmp
 
 # optional compiler macros ----------------------------------------------------
 
@@ -34,3 +45,19 @@ CXXFLAGS = -std=c++98 $(FLAGS)
 
 # count cache misses
 # DEFS += -DZFP_WITH_CACHE_PROFILE
+
+# conditionals ----------------------------------------------------------------
+
+# enable OpenMP?
+ifdef ZFP_WITH_OPENMP
+  ifneq ($(ZFP_WITH_OPENMP),0)
+    ifneq ($(ZFP_WITH_OPENMP),OFF)
+      FLAGS += $(OMPFLAGS)
+    endif
+  endif
+endif
+
+# compiler options ------------------------------------------------------------
+
+CFLAGS = $(CSTD) $(FLAGS) $(DEFS)
+CXXFLAGS = $(CXXSTD) $(FLAGS) $(DEFS)
