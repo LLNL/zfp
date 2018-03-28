@@ -208,9 +208,11 @@ Execution parameters
   :code:`-x omp` selects OpenMP with default settings, which typically
   implies maximum concurrency available.  Use :code:`-x omp=threads` to
   request a specific number of threads (see also
-  :c:func:`zfp_stream_set_omp_threads`).  For 1D arrays, use
+  :c:func:`zfp_stream_set_omp_threads`).  A thread count of zero is
+  ignored and results in the default number of threads.  Use
   :code:`-x omp=threads,chunk_size` to specify the chunk size in number
-  of blocks (see also :c:func:`zfp_stream_set_omp_chunk_size`).
+  of blocks (see also :c:func:`zfp_stream_set_omp_chunk_size`).  A
+  chunk size of zero is ignored and results in the default size.
 
 Note that the execution policy currently applies only to compression.
 Future versions of |zfp| will support parallel decompression also.

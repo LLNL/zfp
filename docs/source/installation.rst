@@ -131,21 +131,6 @@ builds, use the :code:`-D` option on the cmake line, e.g.
   CMake default: on.
   GNU make default: off.
 
-.. c:macro:: ZFP_OMP_CHUNK_SIZE
-
-  The default number of 1D blocks compressed together as a chunk using the
-  OpenMP execution policy.  Applies to 1D arrays only.  See also
-  :c:func:`zfp_stream_set_omp_chunk_size`.
-  Default: |chunksize|.
-
-.. c:macro:: ZFP_OMP_INTERLEAVE
-
-  Interleave OpenMP threads over chunks rather than assigning to each thread
-  a contiguous sequence of chunks.  This has the potential to improve load
-  balance if compression ratios vary a lot over the array, but may hurt cache
-  and NUMA performance.
-  Default: off.
-
 .. c:macro:: ZFP_WITH_ALIGNED_ALLOC
 
   Use aligned memory allocation in an attempt to align compressed blocks

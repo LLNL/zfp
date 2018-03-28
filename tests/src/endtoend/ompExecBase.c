@@ -9,9 +9,31 @@
 
 #include "zfpEndtoendBase.c"
 
+static uint
+computeTotalBlocks(zfp_field* field)
+{
+  uint bx = 1;
+  uint by = 1;
+  uint bz = 1;
+  switch(zfp_field_dimensionality(field)) {
+    case 3:
+      bz = (field->nz + 3) / 4;
+    case 2:
+      by = (field->ny + 3) / 4;
+    case 1:
+      bx = (field->nx + 3) / 4;
+      return bx * by * bz;
+
+    default:
+      fail_msg("ERROR: Unsupported dimensionality\n");
+  }
+
+  return 0;
+}
+
 /* returns actual chunk size (in blocks), not the parameter stored (zero implies failure) */
 static uint
-set1dChunkSize(void **state, int param)
+setChunkSize(void **state, uint threadCount, int param)
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
@@ -19,8 +41,8 @@ set1dChunkSize(void **state, int param)
   uint chunk_size = 0;
   switch (param) {
     case 2:
-      // largest chunk size: total num blocks (ignoring partial block performed last in serial)
-      chunk_size = bundle->field->nx / 4;
+      // largest chunk size: total num blocks
+      chunk_size = computeTotalBlocks(bundle->field);
       assert_int_equal(zfp_stream_set_omp_chunk_size(stream, chunk_size), 1);
       break;
 
@@ -31,27 +53,31 @@ set1dChunkSize(void **state, int param)
       break;
 
     case 0:
-      // default chunk size (0 implies 256 blocks)
-      chunk_size = 256u;
+      // default chunk size (0 implies 1 chunk per thread)
+      chunk_size = (computeTotalBlocks(bundle->field) + threadCount - 1) / threadCount;
       assert_int_equal(zfp_stream_set_omp_chunk_size(stream, 0u), 1);
       break;
 
     default:
-      fail_msg("ERROR: Unsupported 1D chunkParam\n");
+      fail_msg("ERROR: Unsupported chunkParam\n");
   }
 
   return chunk_size;
 }
 
-static int
+static uint
 setThreadCount(void **state, int param)
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
 
   uint threadParam = (uint)param;
-  printf("\t\tThread count: %u\n", threadParam ? threadParam : omp_get_max_threads());
-  return zfp_stream_set_omp_threads(stream, threadParam);
+  uint actualThreadCount = threadParam ? threadParam : omp_get_max_threads();
+
+  assert_int_equal(zfp_stream_set_omp_threads(stream, threadParam), 1);
+  printf("\t\tThread count: %u\n", actualThreadCount);
+
+  return actualThreadCount;
 }
 
 static int
@@ -60,27 +86,9 @@ setupZfpOmp(void **state, uint threadParam, uint chunkParam)
   struct setupVars *bundle = *state;
 
   assert_int_equal(zfp_stream_set_execution(bundle->stream, zfp_exec_omp), 1);
-  assert_int_equal(setThreadCount(state, threadParam), 1);
 
-  zfp_field* field = bundle->field;
-  uint chunk_size;
-  switch(zfp_field_dimensionality(field)) {
-    case 3:
-      chunk_size = ((field->nx + 3) / 4) * ((field->ny + 3) / 4);
-      break;
-
-    case 2:
-      chunk_size = (field->nx + 3) / 4;
-      break;
-
-    case 1:
-      /* chunkParam only used in 1D (cannot set chunk size through API in 2/3D) */
-      chunk_size = set1dChunkSize(state, chunkParam);
-      break;
-
-    default:
-      fail_msg("ERROR: Unsupported dimensionality\n");
-  }
+  uint threadCount = setThreadCount(state, threadParam);
+  uint chunk_size = setChunkSize(state, threadCount, chunkParam);
 
   printf("\t\tChunk size (blocks): %u\n", chunk_size);
 

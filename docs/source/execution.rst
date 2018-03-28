@@ -15,7 +15,7 @@ can be exploited.  In principle, concurrency is limited only by the number
 of blocks that make up an array, though in practice each thread is
 responsible for compressing a *chunk* of several contiguous blocks.
 
-NOTE: |zfp| parallel compression is confined to shared memory on a single
+Note: |zfp| parallel compression is confined to shared memory on a single
 compute node.  No effort is made to coordinate compression across distributed
 memory on networked compute nodes, although |zfp|'s fine-grained partitioning
 of arrays should facilitate distributed parallel compression.
@@ -51,10 +51,10 @@ is independent of execution policy.
 Execution Parameters
 --------------------
 
-Each execution policy allows tailoring the execution via the setting of
-its associated *execution parameters*.  Examples include number of threads,
-chunk size, scheduling, etc.  The :code:`serial` policy has no parameters.
-The subsections below discuss the :code:`omp` parameters.
+Each execution policy allows tailoring the execution via its associated
+*execution parameters*.  Examples include number of threads, chunk size,
+scheduling, etc.  The :code:`serial` policy has no parameters.  The
+subsections below discuss the :code:`omp` parameters.
 
 Whenever the execution policy is changed via
 :c:func:`zfp_stream_set_execution`, its parameters (if any) are initialized
@@ -79,12 +79,13 @@ behavior rather than make direct OpenMP calls.  For instance, use
 :code:`omp_set_num_threads()`.  To indicate that the current OpenMP
 settings should be used, for instance as determined by the global
 OpenMP environment variable :envvar:`OMP_NUM_THREADS`, pass a thread
-count of zero to :c:func:`zfp_stream_set_omp_threads`.
+count of zero (the default setting) to :c:func:`zfp_stream_set_omp_threads`.
 
 Note that |zfp| does not modify *nthreads-var* or other control variables
 but uses a :code:`num_threads` clause on the OpenMP :code:`#pragma` line.
 Hence, no OpenMP state is changed and any subsequent OpenMP code is not
 impacted by |zfp|'s parallel compression.
+
 
 .. index::
    single: Chunks
@@ -96,52 +97,22 @@ OpenMP Chunk Size
 The *d*-dimensional array is partitioned into *chunks*, with each chunk
 representing a contiguous sequence of :ref:`blocks <algorithm>` of |4powd|
 array elements each.  Chunks represent the unit of parallel work assigned
-to a thread, although in practice a thread often processes more than one
-chunk.  The chunk size, in number of |zfp| blocks, varies depending on *d*,
-and can be directly selected by the user only for 1D arrays.
-
-For 2D arrays of dimensions *nx* |times| *ny*, each chunk corresponds
-to 4 |times| *nx* values.  There are, thus, *ny* / 4 total chunks and
-work for at most that many threads.  Hence, it is important that *ny* is
-large enough to engage the requested number of threads.  If *ny* is small
-but *nx* is large, then it may make sense to transpose the array before
-compressing it.
-
-For 3D arrays of dimensions *nx* |times| *ny* |times| *nz*, a similar
-strategy is employed whereby the array is partitioned into *nz* / 4
-layers of blocks.  As with 2D arrays, it is important that *nz* is
-large enough to expose enough parallelism.
-
-A generalization of the above work partitioning scheme to 1D would yield
-one block per chunk (and thread), which not only introduces a large
-thread creation overhead but also a significant storage overhead, as
-in most instances memory is allocated independently for each chunk
-(see below for exceptions).  The compressed chunks must then be
-concatenated into a single stream, which adds additional overhead.
-
-For these reasons, 1D compression makes explicit use of a user-selected
-chunk size.  By default, this chunk size is |chunksize| blocks (1024
-scalars), which can be overridden either at compile time by setting the
-:c:macro:`ZFP_OMP_CHUNK_SIZE` macro or at run time by calling
-:c:func:`zfp_stream_set_omp_chunk_size`.
+to a thread.  By default, the array is partitioned so that each thread
+processes one chunk.  However, the user may override this behavior by
+setting the chunk size (in number of |zfp| blocks) via
+:c:func:`zfp_stream_set_omp_chunk_size`.  See FAQ :ref:`#25 <q-omp-perf>`
+for a discussion of chunk sizes and parallel performance.
 
 OpenMP Scheduling
 ^^^^^^^^^^^^^^^^^
 
-|zfp| uses static OpenMP scheduling.  By default, each thread is assigned
-consecutive chunks and, therefore, a single contiguous portion of the array
-being compressed.  This promotes good cache reuse and reduces NUMA traffic.
-On the other hand, since compression throughput is determined almost solely
-by compression ratio, such work scheduling may lead to load imbalance and
-poor parallel efficiency if the compression ratio varies significantly over
-the array, leaving threads idle once their consecutive chunks have been
-processed.
+|zfp| does not specify how to schedule chunk processing.  The schedule
+used is given by the OpenMP *def-sched-var* internal control variable.
+If load balance is poor, it may be improved by using smaller chunks,
+which may or may not impact performance depending on the OpenMP schedule
+in use.  Future versions of |zfp| may allow specifying how threads are
+mapped to chunks, whether to use static or dynamic scheduling, etc.
 
-When this is the case and the number of chunks is significantly larger
-than the number of threads, it may be beneficial to interleave chunks
-so that each thread processes chunks that are distributed over the whole
-array.  To enable such interleaved scheduling, define the compile-time
-macro :c:macro:`ZFP_OMP_INTERLEAVE`.
 
 .. _exec-mode:
 
@@ -150,7 +121,7 @@ Fixed- vs. Variable-Rate Compression
 
 Following partitioning into chunks, |zfp| assigns each chunk to a thread.
 If there are more chunks than threads supported, chunks are processed in
-round robin fashion.
+unspecified order.
 
 In :ref:`variable-rate mode <modes>`, there is no way to predict the exact
 number of bits that each chunk compresses to.  Therefore, |zfp| allocates
