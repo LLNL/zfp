@@ -1,7 +1,7 @@
 /*
 ** Copyright (c) 2014-2018, Lawrence Livermore National Security, LLC.
 ** Produced at the Lawrence Livermore National Laboratory.
-** Written by Peter Lindstrom.
+** Authors: Peter Lindstrom (original developer), Markus Salasoo.
 ** LLNL-CODE-663824.
 ** All rights reserved.
 **
@@ -74,7 +74,7 @@
 /* library version information */
 #define ZFP_VERSION_MAJOR 0 /* library major version number */
 #define ZFP_VERSION_MINOR 5 /* library minor version number */
-#define ZFP_VERSION_PATCH 2 /* library patch version number */
+#define ZFP_VERSION_PATCH 3 /* library patch version number */
 #define ZFP_VERSION_RELEASE ZFP_VERSION_PATCH
 
 /* codec version number (see also zfp_codec_version) */
