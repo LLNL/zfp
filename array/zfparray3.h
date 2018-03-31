@@ -10,7 +10,7 @@
 namespace zfp {
 
 // compressed 3D array of scalars
-template < typename Scalar, class Codec = zfp::codec<Scalar> >
+template < typename Scalar, class Codec = codec<Scalar> >
 class array3 : public array {
 public:
   // default constructor
@@ -261,12 +261,159 @@ public:
     reference ref;
   };
 
+  // view into a rectangular subset of an array (base class)
+  class view {
+  public:
+    // construction and assignment--perform shallow copy of (sub)array
+    view(array3* array) : array(array), x(0), y(0), z(0), nx(array->nx), ny(array->ny), nz(array->nz) {}
+    view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : array(array), x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {}
+    view& operator=(array3* a)
+    {
+      array = a;
+      x = y = z = 0;
+      nx = a->nx;
+      ny = a->ny;
+      nz = a->nz;
+      return *this;
+    }
+
+    // dimensions of (sub)array
+    size_t size() const { return size_t(nx) * size_t(ny) * size_t(nz); }
+    uint size_x() const { return nx; }
+    uint size_y() const { return ny; }
+    uint size_z() const { return nz; }
+
+    // (i, j, k) accessors
+    Scalar operator()(uint i, uint j, uint k) const { return array->get(x + i, y + j, z + k); }
+    reference operator()(uint i, uint j, uint k) { return reference(array, x + i, y + j, z + k); }
+
+  protected:
+    friend class array3;
+    array3* array;
+    uint x, y, z;
+    uint nx, ny, nz;
+  };
+
+  // construction from view--perform deep copy of (sub)array
+  array3(const view& v) :
+    array(3, Codec::type),
+    cache(0)
+  {
+    set_rate(v.array->rate());
+    resize(v.nx, v.ny, v.nz, false);
+    // initialize array in its preferred order
+    for (iterator it = begin(); it != end(); ++it)
+      *it = v(it.i(), it.j(), it.k());
+  }
+
+  // flat view of 3D array (operator[] returns scalar)
+  class flat_view : public view {
+    using view::array;
+    using view::x;
+    using view::y;
+    using view::z;
+    using view::nx;
+    using view::ny;
+    using view::nz;
+  public:
+    // construction and assignment--perform shallow copy of (sub)array
+    flat_view(array3* array) : view(array) {}
+    flat_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : view(array, x, y, z, nx, ny, nz) {}
+
+    // convert (i, j, k) index to flat index
+    uint index(uint i, uint j, uint k) const { return i + nx * (j + ny * k); }
+
+    // convert flat index to (i, j, k) index
+    void ijk(uint& i, uint& j, uint& k, uint index) const
+    {
+      i = index % nx; index /= nx;
+      j = index % ny; index /= ny;
+      k = index;
+    }
+
+    // flat index accessors
+    Scalar operator[](uint index) const
+    {
+      uint i, j, k;
+      ijk(i, j, k, index);
+      return array->get(x + i, y + j, z + k);
+    }
+    reference operator[](uint index)
+    {
+      uint i, j, k;
+      ijk(i, j, k, index);
+      return reference(array, x + i, y + j, z + k);
+    }
+  };
+
+  // forward declaration of friends
+  class nested_view1;
+  class nested_view2;
+  class nested_view3;
+
+  // nested view into a 1D rectangular subset of a 3D array
+  class nested_view1 : public view {
+    using view::array;
+    using view::x;
+    using view::y;
+    using view::z;
+    using view::nx;
+    using view::ny;
+    using view::nz;
+  public:
+    Scalar operator[](uint index) const { return array->get(x + index, y, z); }
+  protected:
+    // construction--perform shallow copy of (sub)array
+    friend class array3::nested_view2;
+    explicit nested_view1(array3* array) : view(array) {}
+    explicit nested_view1(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : view(array, x, y, z, nx, ny, nz) {}
+  };
+
+  // nested view into a 2D rectangular subset of a 3D array
+  class nested_view2 : public view {
+    using view::array;
+    using view::x;
+    using view::y;
+    using view::z;
+    using view::nx;
+    using view::ny;
+    using view::nz;
+  public:
+    nested_view1 operator[](uint index) const { return nested_view1(array, x, y + index, z, nx, 1, 1); }
+  protected:
+    // construction--perform shallow copy of (sub)array
+    friend class array3::nested_view3;
+    explicit nested_view2(array3* array) : view(array) {}
+    explicit nested_view2(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : view(array, x, y, z, nx, ny, nz) {}
+  };
+
+  // nested view into a 3D rectangular subset of a 3D array
+  class nested_view3 : public view {
+    using view::array;
+    using view::x;
+    using view::y;
+    using view::z;
+    using view::nx;
+    using view::ny;
+    using view::nz;
+  public:
+    // construction and assignment--perform shallow copy of (sub)array
+    nested_view3(array3* array) : view(array) {}
+    nested_view3(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : view(array, x, y, z, nx, ny, nz) {}
+    nested_view2 operator[](uint index) const { return nested_view2(array, x, y, z + index, nx, ny, 1); }
+  };
+
+  typedef nested_view3 nested_view;
+
   // (i, j, k) accessors
-  const Scalar& operator()(uint i, uint j, uint k) const { return get(i, j, k); }
+  Scalar operator()(uint i, uint j, uint k) const { return get(i, j, k); }
   reference operator()(uint i, uint j, uint k) { return reference(this, i, j, k); }
 
+  // flat index corresponding to (i, j, k)
+  uint index(uint i, uint j, uint k) const { return i + nx * (j + ny * k); }
+
   // flat index accessors
-  const Scalar& operator[](uint index) const
+  Scalar operator[](uint index) const
   {
     uint i, j, k;
     ijk(i, j, k, index);
@@ -288,7 +435,7 @@ protected:
   class CacheLine {
   public:
     friend class array3;
-    const Scalar& operator()(uint i, uint j, uint k) const { return a[index(i, j, k)]; }
+    Scalar operator()(uint i, uint j, uint k) const { return a[index(i, j, k)]; }
     Scalar& operator()(uint i, uint j, uint k) { return a[index(i, j, k)]; }
     // copy cache line
     void get(Scalar* p, int sx, int sy, int sz) const
@@ -330,7 +477,7 @@ protected:
   }
 
   // inspector
-  const Scalar& get(uint i, uint j, uint k) const
+  Scalar get(uint i, uint j, uint k) const
   {
     CacheLine* p = line(i, j, k, false);
     return (*p)(i, j, k);
