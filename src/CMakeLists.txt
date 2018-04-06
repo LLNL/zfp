@@ -10,6 +10,9 @@ set(zfp_source
   decode3f.c decode3d.c decode3i.c decode3l.c)
 
 add_library(zfp ${zfp_source})
+if(ZFP_WITH_OPENMP)
+  target_link_libraries(zfp PRIVATE OpenMP::OpenMP_C)
+endif()
 if(UNIX)
   target_link_libraries(zfp PUBLIC m)
 endif()
