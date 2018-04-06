@@ -88,14 +88,17 @@ cmake_dependent_option(BUILD_SHARED_LIBS
 
 # PIC is always on for shared libs.  This allows it to be selectable for
 # static libs.
-if(SHARED_LIBS_SUPPORTED)
-  cmake_dependent_option(ZFP_ENABLE_PIC
-    "Build with Position Independent Code" ON
-    "NOT BUILD_SHARED_LIBS" ON)
+if(DEFINED ZFP_ENABLE_PIC)
+  set(ZFP_ENABLE_PIC_DEFAULT ${ZFP_ENABLE_PIC})
+elseif(DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
+  set(ZFP_ENABLE_PIC_DEFAULT ${CMAKE_POSITION_INDEPENDENT_CODE})
+else()
+  set(ZFP_ENABLE_PIC_DEFAULT ${SHARED_LIBS_SUPPORTED})
 endif()
-if(ZFP_ENABLE_PIC)
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
+cmake_dependent_option(ZFP_ENABLE_PIC
+  "Build with Position Independent Code" ${ZFP_ENABLE_PIC_DEFAULT}
+  "SHARED_LIBS_SUPPORTED" OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ${ZFP_ENABLE_PIC})
 
 # Compile-time options.
 
@@ -192,6 +195,6 @@ install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 #------------------------------------------------------------------------------#
 # Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel
 #------------------------------------------------------------------------------#
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of CMake build" FORCE)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY VALUE Release)
 endif()
