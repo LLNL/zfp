@@ -26,6 +26,11 @@ enum ScalarType {
   Double = 1  // 64-bit double precision
 };
 
+enum ExecutionPolicy {
+  Serial = 1,
+  OpenMP = 2
+};
+
 static const int width = 72; // characters per line
 
 inline uint
@@ -439,7 +444,7 @@ test_array(Array& a, const Scalar* f, uint n, double tolerance, double dfmax)
 // test small, medium, or large d-dimensional arrays of type Scalar
 template <typename Scalar>
 inline uint
-test(uint dims, ArraySize array_size)
+test(uint dims, ArraySize array_size, int num_threads)
 {
   uint failures = 0;
   uint m = test_size(array_size);
@@ -496,6 +501,11 @@ test(uint dims, ArraySize array_size)
 
   // open compressed stream
   zfp_stream* stream = zfp_stream_open(0);
+  if(num_threads != 0)
+  {
+    zfp_stream_set_execution(stream, zfp_exec_omp);
+    zfp_stream_set_omp_threads(stream, num_threads == -1 ? 0 : num_threads);
+  }
 
   // test fixed rate
   for (uint rate = 2u >> t, i = 0; rate <= 32 * (t + 1); rate *= 4, i++) {
@@ -786,6 +796,7 @@ int main(int argc, char* argv[])
   uint sizes = 0;
   uint types = 0;
   uint dims = 0;
+  uint exec= 0;
 
   for (int i = 1; i < argc; i++)
     if (std::string(argv[i]) == "small")
@@ -804,13 +815,18 @@ int main(int argc, char* argv[])
       dims |= mask(2);
     else if (std::string(argv[i]) == "3d")
       dims |= mask(3);
+    else if (std::string(argv[i]) == "serial")
+      exec |= mask(Serial);
+    else if (std::string(argv[i]) == "omp")
+      exec |= mask(OpenMP);
     else if (std::string(argv[i]) == "all") {
       sizes |= mask(Small) | mask(Medium) | mask(Large);
       types |= mask(Float) | mask(Double);
       dims |= mask(1) | mask(2) | mask(3);
+      exec |= mask(Serial) | mask(OpenMP);
     }
     else {
-      std::cerr << "Usage: testzfp [all] [small|medium|large] [fp32|fp64|float|double] [1d|2d|3d]" << std::endl;
+      std::cerr << "Usage: testzfp [all] [small|medium|large] [fp32|fp64|float|double] [1d|2d|3d] [serial|omp]" << std::endl;
       return EXIT_FAILURE;
     }
 
@@ -821,6 +837,8 @@ int main(int argc, char* argv[])
     types = mask(Float) | mask(Double);
   if (!dims)
     dims = mask(1) | mask(2) | mask(3);
+  if (!exec)
+    exec = mask(Serial);
 
   // test library and compiler
   uint failures = common_tests();
@@ -833,9 +851,15 @@ int main(int argc, char* argv[])
       for (uint d = 1; d <= 3; d++)
         if (dims & mask(d)) {
           if (types & mask(Float))
-            failures += test<float>(d, ArraySize(size));
+            if (exec & mask(Serial))
+              failures += test<float>(d, ArraySize(size), 0);
+            if (exec & mask(OpenMP))
+              failures += test<float>(d, ArraySize(size), -1);
           if (types & mask(Double))
-            failures += test<double>(d, ArraySize(size));
+            if (exec & mask(Serial))
+              failures += test<double>(d, ArraySize(size), 0);
+            if (exec & mask(OpenMP))
+              failures += test<double>(d, ArraySize(size), -1);
        }
     }
 

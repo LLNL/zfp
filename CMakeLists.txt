@@ -30,6 +30,8 @@ project(ZFP VERSION ${ZFP_VERSION})
 # Some boilerplate to setup nice output directories
 #------------------------------------------------------------------------------#
 include(GNUInstallDirs)
+set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/zfp
+  CACHE STRING "Installation CMake subdirectory")
 
 list(INSERT CMAKE_MODULE_PATH 0 "${ZFP_SOURCE_DIR}/cmake")
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
@@ -88,22 +90,23 @@ cmake_dependent_option(BUILD_SHARED_LIBS
 
 # PIC is always on for shared libs.  This allows it to be selectable for
 # static libs.
-if(SHARED_LIBS_SUPPORTED)
-  cmake_dependent_option(ZFP_ENABLE_PIC
-    "Build with Position Independent Code" ON
-    "NOT BUILD_SHARED_LIBS" ON)
+if(DEFINED ZFP_ENABLE_PIC)
+  set(ZFP_ENABLE_PIC_DEFAULT ${ZFP_ENABLE_PIC})
+elseif(DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
+  set(ZFP_ENABLE_PIC_DEFAULT ${CMAKE_POSITION_INDEPENDENT_CODE})
+else()
+  set(ZFP_ENABLE_PIC_DEFAULT ${SHARED_LIBS_SUPPORTED})
 endif()
-if(ZFP_ENABLE_PIC)
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
+cmake_dependent_option(ZFP_ENABLE_PIC
+  "Build with Position Independent Code" ${ZFP_ENABLE_PIC_DEFAULT}
+  "SHARED_LIBS_SUPPORTED" OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ${ZFP_ENABLE_PIC})
 
 # Compile-time options.
 
 set(ZFP_BIT_STREAM_WORD_SIZE 64 CACHE STRING
   "Use smaller bit stream word type for finer rate granularity")
 set_property(CACHE ZFP_BIT_STREAM_WORD_SIZE PROPERTY STRINGS "8;16;32;64")
-
-option(ZFP_WITH_OPENMP "Enable OpenMP parallel compression" ON)
 
 option(ZFP_WITH_BIT_STREAM_STRIDED
   "Enable strided access for progressive zfp streams" OFF)
@@ -129,13 +132,17 @@ if((DEFINED ZFP_UINT64) AND (DEFINED ZFP_UINT64_SUFFIX))
   list(APPEND zfp_defs ZFP_UINT64_SUFFIX=${ZFP_UINT64_SUFFIX})
 endif()
 
-if(ZFP_WITH_OPENMP)
-  find_package(OpenMP)
-  if(OPENMP_FOUND)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+# This odd cmake pattern here let's the OpenMP feature be either auto-detected,
+# explicitly enabled, or explicitly disabled, instead of just on or off.
+if(DEFINED ZFP_WITH_OPENMP)
+  option(ZFP_WITH_OPENMP "Enable OpenMP parallel compression"
+    ${ZFP_WITH_OPENMP})
+  if(ZFP_WITH_OPENMP)
+    find_package(OpenMP COMPONENTS C REQUIRED)
   endif()
+else()
+  find_package(OpenMP COMPONENTS C)
+  option(ZFP_WITH_OPENMP "Enable OpenMP parallel compression" ${OpenMP_FOUND})
 endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
@@ -165,6 +172,10 @@ endif()
 #------------------------------------------------------------------------------#
 # Add source code
 #------------------------------------------------------------------------------#
+set(ZFP_LIBRARY_PREFIX "" CACHE STRING
+  "Prefix to prepend to the output library name")
+mark_as_advanced(ZFP_LIBRARY_PREFIX)
+
 add_subdirectory(src)
 
 option(BUILD_UTILITIES "Build command line utilities for zfp" ON)
@@ -194,4 +205,30 @@ install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 #------------------------------------------------------------------------------#
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of CMake build" FORCE)
+endif()
+
+#------------------------------------------------------------------------------#
+# Packaging
+#------------------------------------------------------------------------------#
+
+# Because of changes to FindOpenMP, only CMake 3.9 or greater is supported for
+# package exports with OpenMP enabled
+if((NOT ZFP_WITH_OPENMP) OR (NOT (CMAKE_VERSION VERSION_LESS "3.9")))
+  # Add all targets to the build-tree export set
+  export(TARGETS zfp NAMESPACE zfp::
+    FILE "${PROJECT_BINARY_DIR}/zfp-targets.cmake")
+  configure_file(zfp-config.cmake.in
+    "${PROJECT_BINARY_DIR}/zfp-config.cmake" @ONLY)
+  configure_file(zfp-config-version.cmake.in
+    "${PROJECT_BINARY_DIR}/zfp-config-version.cmake" @ONLY)
+
+  # Install the zfp-config.cmake and zfp-config-version.cmake
+  install(FILES
+    "${PROJECT_BINARY_DIR}/zfp-config.cmake"
+    "${PROJECT_BINARY_DIR}/zfp-config-version.cmake"
+    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+
+  # Install the export set for use with the install-tree
+  install(EXPORT zfp-targets NAMESPACE zfp::
+    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 endif()
