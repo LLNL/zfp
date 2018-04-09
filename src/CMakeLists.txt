@@ -41,7 +41,8 @@ target_include_directories(zfp
     $<BUILD_INTERFACE:${ZFP_SOURCE_DIR}/array>)
 
 set_property(TARGET zfp PROPERTY VERSION ${ZFP_VERSION})
-set_property(TARGET zfp PROPERTY SOVERSION 0)
+set_property(TARGET zfp PROPERTY SOVERSION ${ZFP_VERSION_MAJOR})
+set_property(TARGET zfp PROPERTY OUTPUT_NAME ${ZFP_LIBRARY_PREFIX}zfp)
 
 install(TARGETS zfp EXPORT zfp-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
