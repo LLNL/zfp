@@ -13,7 +13,16 @@ add_library(zfp ${zfp_source})
 if(ZFP_WITH_OPENMP)
   target_link_libraries(zfp PRIVATE OpenMP::OpenMP_C)
 endif()
-if(UNIX)
+
+# Link libm only if necessary
+include(CheckFunctionExists)
+check_function_exists(sqrt HAVE_SQRT)
+if(NOT HAVE_SQRT)
+  include(CheckLibraryExists)
+  check_library_exists(m sqrt "" HAVE_LIBM_SQRT)
+  if(NOT HAVE_LIBM_SQRT)
+    message(FATAL_ERROR "Unable to use C math library functions (with or without -lm)")
+  endif()
   target_link_libraries(zfp PUBLIC m)
 endif()
 
