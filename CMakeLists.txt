@@ -30,6 +30,8 @@ project(ZFP VERSION ${ZFP_VERSION})
 # Some boilerplate to setup nice output directories
 #------------------------------------------------------------------------------#
 include(GNUInstallDirs)
+set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/zfp
+  CACHE STRING "Installation CMake subdirectory")
 
 list(INSERT CMAKE_MODULE_PATH 0 "${ZFP_SOURCE_DIR}/cmake")
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
@@ -223,3 +225,25 @@ install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY VALUE Release)
 endif()
+
+#------------------------------------------------------------------------------#
+# Packaging
+#------------------------------------------------------------------------------#
+
+# Add all targets to the build-tree export set
+export(TARGETS zfp NAMESPACE zfp::
+  FILE "${PROJECT_BINARY_DIR}/zfp-targets.cmake")
+configure_file(zfp-config.cmake.in
+  "${PROJECT_BINARY_DIR}/zfp-config.cmake" @ONLY)
+configure_file(zfp-config-version.cmake.in
+  "${PROJECT_BINARY_DIR}/zfp-config-version.cmake" @ONLY)
+
+# Install the zfp-config.cmake and zfp-config-version.cmake
+install(FILES
+  "${PROJECT_BINARY_DIR}/zfp-config.cmake"
+  "${PROJECT_BINARY_DIR}/zfp-config-version.cmake"
+  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+
+# Install the export set for use with the install-tree
+install(EXPORT zfp-targets NAMESPACE zfp::
+  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
