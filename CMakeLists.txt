@@ -189,6 +189,10 @@ endif()
 #------------------------------------------------------------------------------#
 # Add source code
 #------------------------------------------------------------------------------#
+set(ZFP_LIBRARY_PREFIX "" CACHE STRING
+  "Prefix to prepend to the output library name")
+mark_as_advanced(ZFP_LIBRARY_PREFIX)
+
 add_subdirectory(src)
 
 option(BUILD_UTILITIES "Build command line utilities for zfp" ON)
