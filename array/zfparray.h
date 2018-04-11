@@ -86,6 +86,12 @@ public:
     return data;
   }
 
+  // dimensionality
+  uint dimensionality() const { return dims; }
+
+  // underlying scalar type
+  zfp_type scalar_type() const { return type; }
+
 protected:
   // number of values per block
   uint block_size() const { return 1u << (2 * dims); }
