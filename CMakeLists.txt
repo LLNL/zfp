@@ -175,6 +175,17 @@ if(ZFP_WITH_CACHE_PROFILE)
   list(APPEND zfp_defs ZFP_CACHE_PROFILE)
 endif()
 
+# Link libm only if necessary
+include(CheckFunctionExists)
+check_function_exists(sqrt HAVE_MATH)
+if(NOT HAVE_MATH)
+  include(CheckLibraryExists)
+  check_library_exists(m sqrt "" HAVE_LIBM_MATH)
+  if(NOT HAVE_LIBM_MATH)
+    message(FATAL_ERROR "Unable to use C math library functions (with or without -lm)")
+  endif()
+endif()
+
 #------------------------------------------------------------------------------#
 # Add source code
 #------------------------------------------------------------------------------#

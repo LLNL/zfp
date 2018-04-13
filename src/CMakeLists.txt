@@ -15,8 +15,8 @@ if(ZFP_WITH_OPENMP)
   target_link_libraries(zfp PRIVATE ${OpenMP_C_LIBRARIES})
 endif()
 
-if(UNIX)
-  target_link_libraries(zfp PUBLIC m)
+if(HAVE_LIBM_MATH)
+  target_link_libraries(zfp PRIVATE m)
 endif()
 
 if(WIN32)

@@ -3,6 +3,9 @@ function(zfp_add_test dims type bits)
   add_executable(${serial_test_name} ${serial_test_name}.c)
   target_link_libraries(${serial_test_name}
     cmocka zfp hash${bits}Lib genSmoothRandNumsLib)
+  if(HAVE_LIBM_MATH)
+    target_link_libraries(${serial_test_name} m)
+  endif()
   add_test(NAME ${serial_test_name} COMMAND ${serial_test_name})
 
   if(ZFP_WITH_OPENMP)
@@ -12,6 +15,9 @@ function(zfp_add_test dims type bits)
     target_link_libraries(${omp_test_name}
       cmocka zfp hash${bits}Lib genSmoothRandNumsLib
       ${OpenMP_C_LIBRARIES})
+    if(HAVE_LIBM_MATH)
+      target_link_libraries(${serial_test_name} m)
+    endif()
     add_test(NAME ${omp_test_name} COMMAND ${omp_test_name})
     set_property(TEST ${omp_test_name} PROPERTY RUN_SERIAL TRUE)
   endif()
