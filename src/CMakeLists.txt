@@ -10,7 +10,7 @@ set(zfp_source
   decode3f.c decode3d.c decode3i.c decode3l.c)
 
 add_library(zfp ${zfp_source})
-adD_library(zfp::zfp ALIAS zfp)
+add_library(zfp::zfp ALIAS zfp)
 if(ZFP_WITH_OPENMP)
   target_compile_options(zfp PRIVATE ${OpenMP_C_FLAGS})
   target_link_libraries(zfp PRIVATE ${OpenMP_C_LIBRARIES})
