@@ -24,4 +24,10 @@ add_library(fixedpoint96Lib fixedpoint96.c fixedpoint96.h)
 
 # [seeded] random correlated array generator
 add_library(genSmoothRandNumsLib genSmoothRandNums.c genSmoothRandNums.h)
-target_link_libraries(genSmoothRandNumsLib rand64Lib fixedpoint96Lib)
+target_link_libraries(genSmoothRandNumsLib PRIVATE rand64Lib fixedpoint96Lib)
+
+if(HAVE_LIBM_MATH)
+  target_link_libraries(rand32Lib PRIVATE m)
+  target_link_libraries(rand64Lib PRIVATE m)
+  target_link_libraries(genSmoothRandNumsLib PRIVATE m)
+endif()

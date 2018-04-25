@@ -2,7 +2,11 @@ add_executable(testZfpHeader testZfpHeader.c)
 target_link_libraries(testZfpHeader cmocka zfp)
 add_test(NAME testZfpHeader COMMAND testZfpHeader)
 
-# preprocessor has different tests if compiled with[out] OpenMP
 add_executable(testOmpParams testOmpParams.c)
 target_link_libraries(testOmpParams cmocka zfp)
 add_test(NAME testOmpParams COMMAND testOmpParams)
+if(ZFP_WITH_OPENMP)
+  target_compile_options(testOmpParams PRIVATE ${OpenMP_C_FLAGS})
+  target_link_libraries(testOmpParams ${OpenMP_C_LIBRARIES})
+  set_property(TEST testOmpParams PROPERTY RUN_SERIAL TRUE)
+endif()

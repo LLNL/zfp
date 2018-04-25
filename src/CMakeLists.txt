@@ -10,8 +10,14 @@ set(zfp_source
   decode3f.c decode3d.c decode3i.c decode3l.c)
 
 add_library(zfp ${zfp_source})
-if(UNIX)
-  target_link_libraries(zfp PUBLIC m)
+add_library(zfp::zfp ALIAS zfp)
+if(ZFP_WITH_OPENMP)
+  target_compile_options(zfp PRIVATE ${OpenMP_C_FLAGS})
+  target_link_libraries(zfp PRIVATE ${OpenMP_C_LIBRARIES})
+endif()
+
+if(HAVE_LIBM_MATH)
+  target_link_libraries(zfp PRIVATE m)
 endif()
 
 if(WIN32)
@@ -22,13 +28,17 @@ endif()
 target_compile_definitions(zfp PRIVATE ${zfp_defs})
 
 target_include_directories(zfp
-  PUBLIC    ${ZFP_SOURCE_DIR}/include
-  INTERFACE ${ZFP_SOURCE_DIR}/array)
+  PUBLIC
+    $<BUILD_INTERFACE:${ZFP_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  INTERFACE
+    $<BUILD_INTERFACE:${ZFP_SOURCE_DIR}/array>)
 
 set_property(TARGET zfp PROPERTY VERSION ${ZFP_VERSION})
-set_property(TARGET zfp PROPERTY SOVERSION 0)
+set_property(TARGET zfp PROPERTY SOVERSION ${ZFP_VERSION_MAJOR})
+set_property(TARGET zfp PROPERTY OUTPUT_NAME ${ZFP_LIBRARY_PREFIX}zfp)
 
-install(TARGETS zfp
+install(TARGETS zfp EXPORT zfp-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
