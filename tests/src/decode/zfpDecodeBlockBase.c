@@ -110,7 +110,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatche
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
-  (void)zfp_stream_bit_stream(stream);
 
   _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
   zfp_stream_flush(stream);

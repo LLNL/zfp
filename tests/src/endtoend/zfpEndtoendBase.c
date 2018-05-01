@@ -403,7 +403,6 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedB
 
   zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
-  (void)zfp_stream_bit_stream(stream);
 
   size_t compressedBytes = zfp_compress(stream, field);
   assert_int_not_equal(compressedBytes, 0);
@@ -430,7 +429,6 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
 
   zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
-  (void)zfp_stream_bit_stream(stream);
 
   size_t compressedBytes = zfp_compress(stream, field);
   assert_int_not_equal(0, compressedBytes);
