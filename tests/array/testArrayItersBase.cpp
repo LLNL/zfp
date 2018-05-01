@@ -9,7 +9,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_constructedIteratorWithBegin_then_init
 {
   iter = arr.begin();
 
-  EXPECT_EQ(0, ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(iter));
+  EXPECT_EQ(0u, ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(iter));
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_dereferenceIterator_then_returnsReference)
@@ -28,7 +28,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_postIncrementIterator_then_advancedAft
   SCALAR d = *iter++;
 
   EXPECT_EQ(VAL, d);
-  EXPECT_EQ(1, ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(iter));
+  EXPECT_EQ(1u, ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(iter));
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_constructedIteratorWithEnd_then_initializedAfterLastEntry)
@@ -45,7 +45,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preIncrementIterator_then_advancedBefo
   iter = arr.begin();
 
   EXPECT_EQ(0, *++iter);
-  EXPECT_EQ(1, ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(iter));
+  EXPECT_EQ(1u, ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(iter));
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, given_iterator_when_setAnotherIteratorEqualToThat_then_newIterPointsToSame)
