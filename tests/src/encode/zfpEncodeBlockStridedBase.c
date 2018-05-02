@@ -207,13 +207,13 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
   UInt checksum;
   switch (DIMS) {
     case 1:
-      checksum = hashArray((Int*)bundle->dataArr, BLOCK_SIZE, SX);
+      checksum = hashArray((const UInt*)bundle->dataArr, BLOCK_SIZE, SX);
       break;
     case 2:
-      checksum = hash2dStridedBlock((Int*)bundle->dataArr, SX, SY);
+      checksum = hash2dStridedBlock((const UInt*)bundle->dataArr, SX, SY);
       break;
     case 3:
-      checksum = hash3dStridedBlock((Int*)bundle->dataArr, SX, SY, SZ);
+      checksum = hash3dStridedBlock((const UInt*)bundle->dataArr, SX, SY, SZ);
       break;
   }
 

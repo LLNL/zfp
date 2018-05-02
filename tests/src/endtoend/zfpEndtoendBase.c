@@ -229,7 +229,7 @@ static void
 when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashArray((Int*)bundle->dataArr, bundle->totalDataLen, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
+  assert_int_equal(hashArray((const UInt*)bundle->dataArr, bundle->totalDataLen, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
 }
 
 static void
@@ -352,7 +352,7 @@ assertZfpCompressDecompressChecksumMatches(void **state)
   // assert bitstream ends in same location
   assert_int_equal(compressedBytes, zfp_decompress(stream, bundle->decompressField));
 
-  UInt checksum = hashArray((Int*)bundle->decompressedArr, bundle->totalDataLen, 1);
+  UInt checksum = hashArray((const UInt*)bundle->decompressedArr, bundle->totalDataLen, 1);
   UInt expectedChecksum = bundle->decompressedChecksums[bundle->paramNum];
 
   assert_int_equal(checksum, expectedChecksum);

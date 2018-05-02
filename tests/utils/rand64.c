@@ -4,8 +4,8 @@
 #define SEED 5
 
 // https://nuclear.llnl.gov/CNP/rng/rngman/node4.html
-#define MULTIPLIER 2862933555777941757
-#define INCREMENT 3037000493
+#define MULTIPLIER (2862933555777941757uLL)
+#define INCREMENT (3037000493uLL)
 
 #define MAX_RAND_63 (0x7fffffffffffffffuLL)
 
