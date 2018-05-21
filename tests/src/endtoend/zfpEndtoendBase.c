@@ -283,6 +283,7 @@ assertZfpCompressBitstreamChecksumMatches(void **state)
   assert_int_equal(checksum, expectedChecksum);
 }
 
+#ifdef ZFP_TEST_SERIAL
 static void
 _catFunc3(given_, DESCRIPTOR, ZfpStream_when_SetRateWithWriteRandomAccess_expect_RateRoundedUpProperly)(void **state)
 {
@@ -300,6 +301,7 @@ _catFunc3(given_, DESCRIPTOR, ZfpStream_when_SetRateWithWriteRandomAccess_expect
 
   zfp_stream_close(zfp);
 }
+#endif
 
 static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)

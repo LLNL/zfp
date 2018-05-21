@@ -7,6 +7,7 @@
 #define DESCRIPTOR_INTERMEDIATE(x) PREPEND_OPENMP(x)
 #define DESCRIPTOR DESCRIPTOR_INTERMEDIATE(DIM_INT_STR)
 
+#define ZFP_TEST_OMP
 #include "zfpEndtoendBase.c"
 
 static uint
