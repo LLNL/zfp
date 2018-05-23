@@ -89,11 +89,11 @@ TEST_P(Array1fTest, given_populatedCompressedArray_when_resizeWithClear_then_bit
 {
   array1f arr(inputDataTotalLen, getRate());
   arr.set(inputDataArr);
-  EXPECT_NE(0, hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size()));
+  EXPECT_NE(0u, hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size()));
 
   arr.resize(inputDataTotalLen + 1, true);
 
-  EXPECT_EQ(0, hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size()));
+  EXPECT_EQ(0u, hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size()));
 }
 
 TEST_P(Array1fTest, when_configureCompressedArrayFromDefaultConstructor_then_bitstreamChecksumMatches)
@@ -184,6 +184,6 @@ TEST_P(Array1fTest, given_compressedArray_when_setSecondArrayEqualToFirst_then_d
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
-  ::testing::Environment* const foo_env = ::testing::AddGlobalTestEnvironment(new Array1fTestEnv);
+  static_cast<void>(::testing::AddGlobalTestEnvironment(new Array1fTestEnv));
   return RUN_ALL_TESTS();
 }

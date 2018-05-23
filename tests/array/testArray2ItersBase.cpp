@@ -1,8 +1,8 @@
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, given_partialBlocks_when_incrementIterator_then_positionTraversesCorrectly)
 {
   // force partial block traversal
-  EXPECT_NE(0, arr.size_x() % BLOCK_SIDE_LEN);
-  EXPECT_NE(0, arr.size_y() % BLOCK_SIDE_LEN);
+  EXPECT_NE(0u, arr.size_x() % BLOCK_SIDE_LEN);
+  EXPECT_NE(0u, arr.size_y() % BLOCK_SIDE_LEN);
 
   uint totalBlocksX = (arr.size_x() + 3) / 4;
   uint totalBlocksY = (arr.size_y() + 3) / 4;

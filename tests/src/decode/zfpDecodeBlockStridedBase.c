@@ -183,13 +183,13 @@ hashStridedArray(Scalar* dataArr)
   UInt checksum = 0;
   switch (DIMS) {
     case 1:
-      checksum = hashArray((Int*)dataArr, BLOCK_SIZE, SX);
+      checksum = hashArray((const UInt*)dataArr, BLOCK_SIZE, SX);
       break;
     case 2:
-      checksum = hash2dStridedBlock((Int*)dataArr, SX, SY);
+      checksum = hash2dStridedBlock((const UInt*)dataArr, SX, SY);
       break;
     case 3:
-      checksum = hash3dStridedBlock((Int*)dataArr, SX, SY, SZ);
+      checksum = hash3dStridedBlock((const UInt*)dataArr, SX, SY, SZ);
       break;
   }
 
@@ -398,7 +398,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlockStrided_expect_OnlyStridedE
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
 
   encodeBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
@@ -413,7 +412,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlockStrided_expect_ArrayChecksu
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
 
   encodeBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
@@ -445,11 +443,10 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_NonSt
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
 
   encodePartialBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
-  stream_rewind(s);
+  zfp_stream_rewind(stream);
   decodePartialBlockStrided(stream, bundle->decodedDataArr);
 
   assertNonStridedEntriesZero(bundle->decodedDataArr);
@@ -460,11 +457,10 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_Entri
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
 
   encodePartialBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);
-  stream_rewind(s);
+  zfp_stream_rewind(stream);
   decodePartialBlockStrided(stream, bundle->decodedDataArr);
 
   assertEntriesOutsidePartialBlockBoundsZero(bundle->decodedDataArr);
@@ -475,7 +471,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_Array
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
 
   encodePartialBlockStrided(stream, bundle->dataArr);
   zfp_stream_flush(stream);

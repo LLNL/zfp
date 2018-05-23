@@ -86,7 +86,7 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashArray((Int*)bundle->dataArr, BLOCK_SIZE, 1), CHECKSUM_ORIGINAL_DATA_BLOCK);
+  assert_int_equal(hashArray((const UInt*)bundle->dataArr, BLOCK_SIZE, 1), CHECKSUM_ORIGINAL_DATA_BLOCK);
 }
 
 static void
@@ -110,7 +110,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatche
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
 
   _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
   zfp_stream_flush(stream);
@@ -120,7 +119,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatche
   assert_non_null(decodedDataArr);
   _t2(zfp_decode_block, Scalar, DIMS)(stream, decodedDataArr);
 
-  UInt checksum = hashArray((Int*)decodedDataArr, BLOCK_SIZE, 1);
+  UInt checksum = hashArray((const UInt*)decodedDataArr, BLOCK_SIZE, 1);
   free(decodedDataArr);
 
   assert_int_equal(checksum, CHECKSUM_DECODED_BLOCK);

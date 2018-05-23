@@ -229,7 +229,7 @@ static void
 when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashArray((Int*)bundle->dataArr, bundle->totalDataLen, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
+  assert_int_equal(hashArray((const UInt*)bundle->dataArr, bundle->totalDataLen, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
 }
 
 static void
@@ -283,6 +283,7 @@ assertZfpCompressBitstreamChecksumMatches(void **state)
   assert_int_equal(checksum, expectedChecksum);
 }
 
+#ifdef ZFP_TEST_SERIAL
 static void
 _catFunc3(given_, DESCRIPTOR, ZfpStream_when_SetRateWithWriteRandomAccess_expect_RateRoundedUpProperly)(void **state)
 {
@@ -300,6 +301,7 @@ _catFunc3(given_, DESCRIPTOR, ZfpStream_when_SetRateWithWriteRandomAccess_expect
 
   zfp_stream_close(zfp);
 }
+#endif
 
 static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
@@ -352,7 +354,7 @@ assertZfpCompressDecompressChecksumMatches(void **state)
   // assert bitstream ends in same location
   assert_int_equal(compressedBytes, zfp_decompress(stream, bundle->decompressField));
 
-  UInt checksum = hashArray((Int*)bundle->decompressedArr, bundle->totalDataLen, 1);
+  UInt checksum = hashArray((const UInt*)bundle->decompressedArr, bundle->totalDataLen, 1);
   UInt expectedChecksum = bundle->decompressedChecksums[bundle->paramNum];
 
   assert_int_equal(checksum, expectedChecksum);
@@ -403,7 +405,6 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedB
 
   zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
 
   size_t compressedBytes = zfp_compress(stream, field);
   assert_int_not_equal(compressedBytes, 0);
@@ -430,7 +431,6 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
 
   zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
 
   size_t compressedBytes = zfp_compress(stream, field);
   assert_int_not_equal(0, compressedBytes);

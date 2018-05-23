@@ -247,7 +247,7 @@ static void
 given_fixedRateModeVal_when_zfpStreamSetModeCalled_expect_correctCompressParamsSet(void **state)
 {
   struct setupVars *bundle = *state;
-  // setup uses fixed-rate
+  zfp_stream_set_rate(bundle->stream, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 0);
 
   assertCompressParamsPreservedThroughMode(state);
 }
@@ -277,27 +277,6 @@ given_customCompressParamsModeVal_when_zfpStreamSetModeCalled_expect_correctComp
   zfp_stream_set_params(bundle->stream, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP);
 
   assertCompressParamsPreservedThroughMode(state);
-}
-
-static void
-when_zfpStreamModeCalled_expect_LSBBits5To53EncodeArrayDimensions(void **state)
-{
-  uint MASK_24_BITS = 0xffffffu;
-  uint64 MASK_48_BITS = 0xffffffffffffu;
-
-  struct setupVars *bundle = *state;
-  zfp_field* field = bundle->field;
-
-  uint64 metadata = zfp_field_metadata(field);
-
-  // setup uses a 2d field
-  uint64 metadataEncodedDims = (metadata >> 4) & MASK_48_BITS;
-  uint nx = (metadataEncodedDims & MASK_24_BITS) + 1;
-  metadataEncodedDims >>= 24;
-  uint ny = (metadataEncodedDims & MASK_24_BITS) + 1;
-
-  assert_int_equal(nx, FIELD_X_LEN);
-  assert_int_equal(ny, FIELD_Y_LEN);
 }
 
 static void
@@ -498,13 +477,13 @@ assertReadHeaderPreservesCompressParams(void **state)
   int minExp;
   zfp_stream_params(stream, &minBits, &maxBits, &maxPrec, &minExp);
 
-  zfp_write_header(stream, bundle->field, ZFP_HEADER_MODE);
+  zfp_write_header(stream, field, ZFP_HEADER_MODE);
   zfp_stream_flush(stream);
   zfp_stream_rewind(stream);
 
   zfp_stream_set_params(stream, 0, 0, 0, 0);
 
-  zfp_read_header(stream, bundle->field, ZFP_HEADER_MODE);
+  zfp_read_header(stream, field, ZFP_HEADER_MODE);
   assert_int_equal(stream->minbits, minBits);
   assert_int_equal(stream->maxbits, maxBits);
   assert_int_equal(stream->maxprec, maxPrec);

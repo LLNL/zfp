@@ -547,8 +547,8 @@ generateNRandInts(int64* inputArr, size_t inputSideLen, size_t minTotalElements,
   size_t currSideLen = inputSideLen;
   size_t currTotalLen = intPow(inputSideLen, numDims);
 
-  int64* nextArr;
-  size_t nextSideLen, nextTotalLen;
+  int64* nextArr = NULL;
+  size_t nextSideLen = 0, nextTotalLen = 0;
 
   while(currTotalLen < minTotalElements) {
     nextSideLen = 2*currSideLen - 1;

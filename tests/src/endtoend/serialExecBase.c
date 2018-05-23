@@ -1,4 +1,5 @@
 #define DESCRIPTOR DIM_INT_STR
+#define ZFP_TEST_SERIAL
 #include "zfpEndtoendBase.c"
 
 static int

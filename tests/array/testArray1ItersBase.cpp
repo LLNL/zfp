@@ -16,7 +16,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_postDecrementIterator_then_advancedAft
   SCALAR d = *iter--;
 
   EXPECT_EQ(VAL, d);
-  EXPECT_EQ(0, iter.i());
+  EXPECT_EQ(0u, iter.i());
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preDecrementIterator_then_advancedBeforeEval)
@@ -26,7 +26,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preDecrementIterator_then_advancedBefo
   iter++;
 
   EXPECT_EQ(0, *--iter);
-  EXPECT_EQ(0, iter.i());
+  EXPECT_EQ(0u, iter.i());
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_iteratorPlusEquals_then_iterAdvanced)
@@ -56,7 +56,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_iteratorMinusEquals_then_iterAdvanced)
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_incrementIterator_then_positionTraversesCorrectly)
 {
   // force partial block
-  EXPECT_NE(0, arr.size() % BLOCK_SIDE_LEN);
+  EXPECT_NE(0u, arr.size() % BLOCK_SIDE_LEN);
 
   iter = arr.begin();
   uint totalBlocks = (arr.size() + 3) / 4;
@@ -80,7 +80,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_incrementIterator_then_positionTravers
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_decrementIterator_then_positionTraversesCorrectly)
 {
   // force partial block
-  EXPECT_NE(0, arr.size() % BLOCK_SIDE_LEN);
+  EXPECT_NE(0u, arr.size() % BLOCK_SIDE_LEN);
 
   iter = arr.end();
   uint totalBlocks = (arr.size() + 3) / 4;
