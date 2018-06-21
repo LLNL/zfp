@@ -46,6 +46,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory(utils)
 add_subdirectory(src)
 
+if(BUILD_CFP)
+  add_subdirectory(cfp)
+endif()
+
 # needed to compile gtest on MSVC
 if(MSVC)
   list(APPEND GTEST_ARGS "/D:_SILENCE_TR1_DEPRECATION_NAMESPACE_WARNING=1")
