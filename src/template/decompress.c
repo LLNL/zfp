@@ -2,7 +2,7 @@
 static void
 _t2(decompress, Scalar, 1)(zfp_stream* stream, zfp_field* field)
 {
-  Scalar* data = field->data;
+  Scalar* data = (Scalar*)field->data;
   uint nx = field->nx;
   uint mx = nx & ~3u;
   uint x;
@@ -19,7 +19,7 @@ _t2(decompress, Scalar, 1)(zfp_stream* stream, zfp_field* field)
 static void
 _t2(decompress_strided, Scalar, 1)(zfp_stream* stream, zfp_field* field)
 {
-  Scalar* data = field->data;
+  Scalar* data = (Scalar*)field->data;
   uint nx = field->nx;
   uint mx = nx & ~3u;
   int sx = field->sx ? field->sx : 1;
@@ -56,7 +56,7 @@ _t2(decompress_strided, Scalar, 1)(zfp_stream* stream, zfp_field* field)
 static void
 _t2(decompress_strided, Scalar, 2)(zfp_stream* stream, zfp_field* field)
 {
-  Scalar* data = field->data;
+  Scalar* data = (Scalar*)field->data;
   uint nx = field->nx;
   uint ny = field->ny;
   int sx = field->sx ? field->sx : 1;
@@ -78,7 +78,7 @@ _t2(decompress_strided, Scalar, 2)(zfp_stream* stream, zfp_field* field)
 static void
 _t2(decompress_strided, Scalar, 3)(zfp_stream* stream, zfp_field* field)
 {
-  Scalar* data = field->data;
+  Scalar* data = (Scalar*)field->data;
   uint nx = field->nx;
   uint ny = field->ny;
   uint nz = field->nz;

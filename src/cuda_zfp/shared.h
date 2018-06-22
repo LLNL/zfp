@@ -1,8 +1,12 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+typedef unsigned long long Word;
+#define Wsize ((uint)(CHAR_BIT * sizeof(Word)))
+
 #include "type_info.cuh"
-#include "zfp_structs.h"
+//#include "zfp_structs.h"
+#include "zfp.h"
 #include <stdio.h>
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))

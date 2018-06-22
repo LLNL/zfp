@@ -1,6 +1,6 @@
 #include <assert.h>
-#include "cuZFP.h"
 
+#include "cuZFP.h"
 #include "encode1.cuh"
 #include "encode2.cuh"
 #include "encode3.cuh"
@@ -15,8 +15,15 @@
 #include "pointers.cuh"
 #include "type_info.cuh"
 #include <iostream>
+#include <assert.h>
 
-namespace cuZFP {
+// we need to know about bitstream, but we don't 
+// want duplicate symbols.
+#ifndef inline_
+  #define inline_ inline
+#endif
+
+#include "../inline/bitstream.c"
 namespace internal {
 
 //
@@ -42,19 +49,19 @@ size_t encode(uint dims[3], int bits_per_block, T *d_data, Word *d_stream)
   if(d == 1)
   {
     int dim = dims[0];
-    ConstantSetup::setup_1d();
+    cuZFP::ConstantSetup::setup_1d();
     stream_size = cuZFP::encode1<T>(dim, d_data, d_stream, bits_per_block); 
   }
   else if(d == 2)
   {
     uint2 ndims = make_uint2(dims[0], dims[1]);
-    ConstantSetup::setup_2d();
+    cuZFP::ConstantSetup::setup_2d();
     stream_size = cuZFP::encode2<T>(ndims, d_data, d_stream, bits_per_block); 
   }
   else if(d == 3)
   {
     uint3 ndims = make_uint3(dims[0], dims[1], dims[2]);
-    ConstantSetup::setup_3d();
+    cuZFP::ConstantSetup::setup_3d();
     stream_size = cuZFP::encode<T>(ndims, d_data, d_stream, bits_per_block); 
   }
 
@@ -80,13 +87,13 @@ void decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
   if(d == 3)
   {
     uint3 dims = make_uint3(ndims[0], ndims[1], ndims[2]);
-    ConstantSetup::setup_3d();
+    cuZFP::ConstantSetup::setup_3d();
     cuZFP::decode3<T>(dims, stream, out, bits_per_block); 
   }
   else if(d == 1)
   {
     uint dim = ndims[0];
-    ConstantSetup::setup_1d();
+    cuZFP::ConstantSetup::setup_1d();
     cuZFP::decode1<T>(dim, stream, out, bits_per_block); 
 
   }
@@ -95,7 +102,7 @@ void decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
     uint2 dims;
     dims.x = ndims[0];
     dims.y = ndims[1];
-    ConstantSetup::setup_2d();
+    cuZFP::ConstantSetup::setup_2d();
     cuZFP::decode2<T>(dims, stream, out, bits_per_block); 
 
   }
@@ -103,26 +110,27 @@ void decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
   
 }
 
-Word *setup_device_stream(zfp_stream *stream, zfp_field *field)
+Word *setup_device_stream(zfp_stream *stream,const zfp_field *field)
 {
-  bool stream_device = is_gpu_ptr(stream->stream);
+  bool stream_device = cuZFP::is_gpu_ptr(stream->stream->begin);
+  assert(sizeof(word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
 
   if(stream_device)
   {
-    return stream->stream;
-  }
+    return (Word*) stream->stream->begin;
+  } 
 
   Word *d_stream = NULL;
   // TODO: we we have a real stream we can just ask it how big it is
   size_t max_size = zfp_stream_maximum_size(stream, field);
   cudaMalloc(&d_stream, max_size);
-  cudaMemcpy(d_stream, stream->stream, max_size, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_stream, stream->stream->begin, max_size, cudaMemcpyHostToDevice);
   return d_stream;
 }
 
-void *setup_device_field(zfp_field *field)
+void *setup_device_field(const zfp_field *field)
 {
-  bool field_device = is_gpu_ptr(field->data);
+  bool field_device = cuZFP::is_gpu_ptr(field->data);
 
   if(field_device)
   {
@@ -155,7 +163,7 @@ void *setup_device_field(zfp_field *field)
 
 void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes)
 {
-  bool device = is_gpu_ptr(orig_ptr);
+  bool device = cuZFP::is_gpu_ptr(orig_ptr);
   if(device)
   {
     return;
@@ -170,8 +178,8 @@ void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes)
 
 } // namespace internal
 
-size_t
-compress(zfp_stream *stream, zfp_field *field)
+void
+cuda_compress(zfp_stream *stream, const zfp_field *field)
 {
   uint dims[3];
   dims[0] = field->nx;
@@ -203,13 +211,21 @@ compress(zfp_stream *stream, zfp_field *field)
     stream_bytes = internal::encode<long long int>(dims, (int)stream->maxbits, data, d_stream);
   }
 
-  internal::cleanup_device_ptr(stream->stream, d_stream, stream_bytes);
+  internal::cleanup_device_ptr(stream->stream->begin, d_stream, stream_bytes);
   internal::cleanup_device_ptr(field->data, d_data, 0);
-  return stream_bytes;
+
+  // zfp wants to flush the stream.
+  // set bits to wsize becuase we already did that.
+  size_t compressed_size = stream_bytes / sizeof(Word);
+  stream->stream->bits = wsize;
+  // set stream pointer to end of stream
+  stream->stream->ptr = stream->stream->begin + compressed_size;
+
+  //return stream_bytes;
 }
   
 void 
-decompress(zfp_stream *stream, zfp_field *field)
+cuda_decompress(zfp_stream *stream, zfp_field *field)
 {
   uint dims[3];
   dims[0] = field->nx;
@@ -265,7 +281,7 @@ decompress(zfp_stream *stream, zfp_field *field)
   internal::cleanup_device_ptr(stream->stream, d_stream,0);
   internal::cleanup_device_ptr(field->data, d_data, bytes);
   
+  // this is how zfp determins if this was a success
+  stream->stream->ptr = stream->stream->begin + 1;
 }
-
-} // namespace cuZFP
 

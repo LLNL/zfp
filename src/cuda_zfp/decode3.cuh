@@ -14,7 +14,7 @@ read_bit(unsigned char &offset, uint &bits, Word &buffer, const Word *begin)
   uint bit;
   if (!bits) {
     buffer = begin[offset++];
-    bits = wsize;
+    bits = Wsize;
   }
   bits--;
   bit = (uint)buffer & 1u;
@@ -50,7 +50,7 @@ read_bits(uint n, unsigned char &offset, uint &bits, Word &buffer, const Word *b
       buffer = begin[offset++];//*ptr++;
       value += buffer << bits;
       buffer >>= n - bits;
-      bits += wsize;
+      bits += Wsize;
     }
     else
     {

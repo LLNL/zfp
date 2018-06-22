@@ -5,7 +5,7 @@ static void
 _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
-  const Scalar* data = field->data;
+  const Scalar* data = (const Scalar*)field->data;
   uint nx = field->nx;
 
   /* number of omp threads, blocks, and chunks */
@@ -50,7 +50,7 @@ static void
 _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
-  const Scalar* data = field->data;
+  const Scalar* data = (const Scalar*)field->data;
   uint nx = field->nx;
   int sx = field->sx ? field->sx : 1;
 
@@ -96,7 +96,7 @@ static void
 _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
-  const Scalar* data = field->data;
+  const Scalar* data = (const Scalar*)field->data;
   uint nx = field->nx;
   uint ny = field->ny;
   int sx = field->sx ? field->sx : 1;
@@ -149,7 +149,7 @@ static void
 _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
-  const Scalar* data = field->data;
+  const Scalar* data = (const Scalar*)field->data;
   uint nx = field->nx;
   uint ny = field->ny;
   uint nz = field->nz;
