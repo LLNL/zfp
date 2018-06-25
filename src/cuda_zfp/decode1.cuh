@@ -141,7 +141,7 @@ void decode1launch(uint dim,
   float rate = (float(dim) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;
-  printf("Decode rate: %.2f (MB / sec)\n", rate);
+  printf("# decode1 rate: %.2f (MB / sec) %d\n", rate, maxbits);
 }
 
 template<class Scalar>

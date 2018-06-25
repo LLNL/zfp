@@ -521,7 +521,7 @@ size_t encode1launch(uint dim,
   printf("size of %d\n", (int)sizeof(Scalar));
   float mb = (float(dim) * float(sizeof(Scalar))) / (1024.f * 1024.f);
   float rate = mb / seconds;
-  printf("Encode rate: %.2f (MB / sec)\n", rate);
+  printf("# encode1 rate: %.2f (MB / sec) %d\n", rate, maxbits);
   return stream_bytes;
 }
 

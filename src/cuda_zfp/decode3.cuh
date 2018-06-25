@@ -259,7 +259,7 @@ void decode3launch(uint3 dims,
   float rate = (float(dims.x * dims.y * dims.z) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;
-  printf("Decode rate: %.2f (MB / sec)\n", rate);
+  printf("# decode3 rate: %.2f (MB / sec) %d\n", rate, maxbits);
 }
 
 template<class Scalar>

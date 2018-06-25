@@ -489,7 +489,7 @@ size_t encode3launch(uint3 dims,
   float rate = (float(dims.x * dims.y * dims.z) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;
-  printf("Encode rate: %.2f (MB / sec)\n", rate);
+  printf("# encode3 rate: %.2f (MB / sec) %d\n", rate, bits_per_block);
   return stream_bytes;
 }
 

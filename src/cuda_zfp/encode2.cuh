@@ -484,8 +484,6 @@ size_t encode2launch(uint2 dims,
   size_t total_blocks = block_pad + zfp_pad.x * zfp_pad.y;
   dim3 grid_size = calculate_grid_size(total_blocks, CUDA_BLK_SIZE_2D);
 
-  grid_size.x /= block_size.x; 
-
   size_t stream_bytes = calc_device_mem2d(dims, maxbits);
   // ensure we have zeros
   cudaMemset(stream, 0, stream_bytes);
@@ -519,7 +517,7 @@ size_t encode2launch(uint2 dims,
   printf("size of %d\n", (int)sizeof(Scalar));
   float mb = (float(dims.x * dims.y) * sizeof(Scalar)) / (1024.f * 1024.f);
   float rate = mb / seconds;
-  printf("Encode rate: %.2f (MB / sec)\n", rate);
+  printf("# encode2 rate: %.2f (MB / sec) %d\n", rate, maxbits);
   return stream_bytes;
 }
 
