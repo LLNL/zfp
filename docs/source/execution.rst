@@ -203,3 +203,56 @@ store such information, parallel decompression is not yet supported.
 Future versions of |zfp| will allow efficient encoding of block sizes and/or
 offsets to allow each thread to quickly locate the blocks it is responsible
 for decompressing.
+
+Enabling CUDA Support
+---------------------
+
+CUDA support currently exists on a feature branch of zfp located 
+`here <https://github.com/LLNL/zfp/tree/feature/cuda_support>`_.
+zfp currently supports only fixed rate compression and decompression with cuda. 
+Other compression modes will be support in the future.
+The CUDA version supports 32 and 64 bit integers and floating point types.
+
+Currently, CUDA support can only be used if zfp is built using CMake. To enable 
+CUDA set the CMake flag :code:`ZFP_WITH_CUDA=ON`. If a CUDA installation is in your
+path, it will be automatically found. Alternatively, the CUDA binary directory 
+can be specified using the :code:`CUDA_BIN_DIR` environmental variable.
+
+Supported compilers
+^^^^^^^^^^^^^^^^^^^
+CUDA support requires an installation of CUDA and a compatible host compiler. 
+For a full list of compatible compilers, please consult the NVIDIA documentation.
+
+Device Memory Management
+^^^^^^^^^^^^^^^^^^^^^^^^
+The CUDA version of zfp supports both host and device memory. If device memory 
+is allocated for fields or streams, this is automatically detected and handled in 
+a consistent manner. For example with compression, if host memory pointers are 
+provided for both the field and compressed stream, then device memory will transparently
+be allocate, the memory will be copied the the GPU. Once compression is finished, the 
+memory is copied back to the host and device memory is deallocated. If both pointers
+are device pointers, then no copies are made. Additionally, mixing host and device 
+pointers is supported.
+
+Setting the Execution Policy
+----------------------------
+
+Enabling CUDA parallel fixed rate compression and decompression at run time is handled 
+using the function calling :c:func:`zfp_stream_set_execution`
+::
+
+    if (zfp_stream_set_execution(stream, zfp_exec_cuda)) {
+      // use CUDA parallel compression
+      ...
+      zfpsize = zfp_compress(stream, field);
+    }
+
+before calling :c:func:`zfp_compress`.  If CUDA is disabled or not
+supported, then the return value of functions setting the :code:`cuda`
+execution policy and parameters will indicate failure.  Execution
+parameters are optional and may be set using the functions discussed
+above.
+
+The source code for the |zfpcmd| command-line tool includes further examples
+on how to set the execution policy.  To use parallel compression in this
+tool, see the :option:`-x` command-line option.
