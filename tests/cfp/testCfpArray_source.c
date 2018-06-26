@@ -15,6 +15,9 @@
 #include "utils/testMacros.h"
 
 #define SIZE_X 20
+#define SIZE_Y 31
+#define SIZE_Z 22
+
 #define VAL 4.4
 
 #define MIN_TOTAL_ELEMENTS 1000000
@@ -112,11 +115,20 @@ setupCfpArrMinimal(void** state)
 }
 
 static int
-setupCfpArrSizeRate(void** state, uint sizeX)
+setupCfpArrSizeRate(void** state, uint sizeX, uint sizeY, uint sizeZ)
 {
   struct setupVars *bundle = *state;
 
+#if DIMS == 1
   bundle->cfpArr = cfp_api.SUB_NAMESPACE.ctor(sizeX, bundle->rate, 0, 0);
+#elif DIMS == 2
+  bundle->cfpArr = cfp_api.SUB_NAMESPACE.ctor(sizeX, sizeY, bundle->rate, 0, 0);
+#elif DIMS == 3
+  bundle->cfpArr = cfp_api.SUB_NAMESPACE.ctor(sizeX, sizeY, sizeZ, bundle->rate, 0, 0);
+#else
+  fail_msg("unexpected value for macro DIMS");
+#endif
+
   assert_non_null(bundle->cfpArr);
 
   return 0;
@@ -127,7 +139,16 @@ setupCfpArrLargeComplete(void **state)
 {
   struct setupVars *bundle = *state;
 
+#if DIMS == 1
   bundle->cfpArr = cfp_api.SUB_NAMESPACE.ctor(bundle->dataSideLen, bundle->rate, bundle->dataArr, bundle->csize);
+#elif DIMS == 2
+  bundle->cfpArr = cfp_api.SUB_NAMESPACE.ctor(bundle->dataSideLen, bundle->dataSideLen, bundle->rate, bundle->dataArr, bundle->csize);
+#elif DIMS == 3
+  bundle->cfpArr = cfp_api.SUB_NAMESPACE.ctor(bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen, bundle->rate, bundle->dataArr, bundle->csize);
+#else
+  fail_msg("unexpected value for macro DIMS");
+#endif
+
   assert_non_null(bundle->cfpArr);
 
   return 0;
@@ -137,13 +158,13 @@ static int
 setupCfpArrLarge(void** state)
 {
   struct setupVars *bundle = *state;
-  return setupCfpArrSizeRate(state, bundle->totalDataLen);
+  return setupCfpArrSizeRate(state, bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen);
 }
 
 static int
 setupCfpArrSmall(void** state)
 {
-  return setupCfpArrSizeRate(state, SIZE_X);
+  return setupCfpArrSizeRate(state, SIZE_X, SIZE_Y, SIZE_Z);
 }
 
 static int
@@ -306,15 +327,14 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_setCacheSize_expect_cacheSizeSet)(void **state)
 {
   struct setupVars *bundle = *state;
-
-  size_t csize = 300;
   CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
 
-  assert_true(cfp_api.SUB_NAMESPACE.cache_size(cfpArr) < csize);
+  size_t oldCsize = cfp_api.SUB_NAMESPACE.cache_size(cfpArr);
+  size_t newCsize = oldCsize + 999;
 
   // set_cache_size() accepts a minimum cache size
-  cfp_api.SUB_NAMESPACE.set_cache_size(cfpArr, csize);
-  assert_true(cfp_api.SUB_NAMESPACE.cache_size(cfpArr) >= csize);
+  cfp_api.SUB_NAMESPACE.set_cache_size(cfpArr, newCsize);
+  assert_true(cfp_api.SUB_NAMESPACE.cache_size(cfpArr) >= newCsize);
 }
 
 static void
