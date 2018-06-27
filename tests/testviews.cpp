@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include "zfparray2.h"
 #include "zfparray3.h"
 
 #define EPSILON 1e-3
@@ -91,27 +92,27 @@ int main(int argc, char* argv[])
   for (uint z = 0; z < v.size_z(); z++)
     for (uint y = 0; y < v.size_y(); y++)
       for (uint x = 0; x < v.size_x(); x++) {
-        printf("%u %u %u: %g %g\n", x, y, z, (double)a(x, y, z), nv[z][y][x]);
+        printf("%u %u %u: %g %g\n", x, y, z, (double)a(x, y, z), (double)nv[z][y][x]);
         verify(a(x, y, z), nv[z][y][x]);
       }
 
   // 2D slice of a
   printf("\n2D slice\n");
   uint z = rand(0, nv.size_z());
-  zfp::array3<double>::nested_view2 slice2 = nv[z];
+  zfp::array3<double>::nested_view2 slice2(nv[z]);
   for (uint y = 0; y < slice2.size_y(); y++)
     for (uint x = 0; x < slice2.size_x(); x++) {
-      printf("%u %u %u: %g %g\n", x, y, z, (double)a(x, y, z), slice2[y][x]);
+      printf("%u %u %u: %g %g\n", x, y, z, (double)a(x, y, z), (double)slice2[y][x]);
       verify(a(x, y, z), slice2[y][x]);
     }
 
-  // 3D array constructed from 2D slice (exercises deep copy via iterator)
+  // 2D array constructed from 2D slice (exercises deep copy via iterator)
   printf("\n3D array from 2D slice\n");
-  zfp::array3<double> b(slice2);
+  zfp::array2<double> b(slice2);
   for (uint y = 0; y < b.size_y(); y++)
     for (uint x = 0; x < b.size_x(); x++) {
-      printf("%u %u: %g %g\n", x, y, (double)b(x, y, 0), slice2[y][x]);
-      verify(b(x, y, 0), slice2[y][x]);
+      printf("%u %u: %g %g\n", x, y, (double)b(x, y), (double)slice2[y][x]);
+      verify(b(x, y), slice2[y][x]);
     }
 
   // 1D slice of a
@@ -119,9 +120,18 @@ int main(int argc, char* argv[])
   uint y = rand(0, slice2.size_y());
   zfp::array3<double>::nested_view1 slice1 = slice2[y];
   for (uint x = 0; x < slice1.size_x(); x++) {
-    printf("%u %u %u: %g %g\n", x, y, z, (double)a(x, y, z), slice1[x]);
+    printf("%u %u %u: %g %g\n", x, y, z, (double)a(x, y, z), (double)slice1[x]);
     verify(a(x, y, z), slice1[x]);
   }
+
+  // 2D array constructed from 2D slice of 3D array (exercises deep copy via iterator)
+  printf("\n2D array from 2D slice of 3D array\n");
+  zfp::array2<double> c(slice2);
+  for (uint y = 0; y < c.size_y(); y++)
+    for (uint x = 0; x < c.size_x(); x++) {
+      printf("%u %u: %g %g\n", x, y, (double)c(x, y), (double)slice2[y][x]);
+      verify(c(x, y), slice2[y][x]);
+    }
 
   printf("\nall tests passed\n");
 

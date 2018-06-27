@@ -10,9 +10,19 @@
 namespace zfp {
 
 // compressed 3D array of scalars
-template < typename Scalar, class Codec = codec<Scalar> >
+template < typename Scalar, class Codec = zfp::codec<Scalar> >
 class array3 : public array {
 public:
+  // forward declarations
+  class reference;
+  class pointer;
+  class iterator;
+  class view;
+  #include "zfp/reference3.h"
+  #include "zfp/pointer3.h"
+  #include "zfp/iterator3.h"
+  #include "zfp/view3.h"
+
   // default constructor
   array3() : array(3, Codec::type) {}
 
@@ -32,6 +42,19 @@ public:
   array3(const array3& a)
   {
     deep_copy(a);
+  }
+
+  // construction from view--perform deep copy of (sub)array
+  template <class View>
+  array3(const View& v) :
+    array(3, Codec::type),
+    cache(0)
+  {
+    set_rate(v.rate());
+    resize(v.size_x(), v.size_y(), v.size_z(), false);
+    // initialize array in its preferred order
+    for (iterator it = begin(); it != end(); ++it)
+      *it = v(it.i(), it.j(), it.k());
   }
 
   // virtual destructor
@@ -133,277 +156,6 @@ public:
           encode(b, p, 1, nx, nx * ny);
     cache.clear();
   }
-
-  class pointer;
-
-  // reference to a single array value
-  class reference {
-  public:
-    operator Scalar() const { return array->get(i, j, k); }
-    reference operator=(const reference& r) { array->set(i, j, k, r.operator Scalar()); return *this; }
-    reference operator=(Scalar val) { array->set(i, j, k, val); return *this; }
-    reference operator+=(Scalar val) { array->add(i, j, k, val); return *this; }
-    reference operator-=(Scalar val) { array->sub(i, j, k, val); return *this; }
-    reference operator*=(Scalar val) { array->mul(i, j, k, val); return *this; }
-    reference operator/=(Scalar val) { array->div(i, j, k, val); return *this; }
-    pointer operator&() const { return pointer(*this); }
-    // swap two array elements via proxy references
-    friend void swap(reference a, reference b)
-    {
-      Scalar x = a.operator Scalar();
-      Scalar y = b.operator Scalar();
-      b.operator=(x);
-      a.operator=(y);
-    }
-  protected:
-    friend class array3;
-    friend class iterator;
-    explicit reference(array3* array, uint i, uint j, uint k) : array(array), i(i), j(j), k(k) {}
-    array3* array;
-    uint i, j, k;
-  };
-
-  // pointer to a single value in flattened array
-  class pointer {
-  public:
-    pointer() : ref(0, 0, 0, 0) {}
-    pointer operator=(const pointer& p) { ref.array = p.ref.array; ref.i = p.ref.i; ref.j = p.ref.j; ref.k = p.ref.k; return *this; }
-    reference operator*() const { return ref; }
-    reference operator[](ptrdiff_t d) const { return *operator+(d); }
-    pointer& operator++() { increment(); return *this; }
-    pointer& operator--() { decrement(); return *this; }
-    pointer operator++(int) { pointer p = *this; increment(); return p; }
-    pointer operator--(int) { pointer p = *this; decrement(); return p; }
-    pointer operator+=(ptrdiff_t d) { set(index() + d); return *this; }
-    pointer operator-=(ptrdiff_t d) { set(index() - d); return *this; }
-    pointer operator+(ptrdiff_t d) const { pointer p = *this; p += d; return p; }
-    pointer operator-(ptrdiff_t d) const { pointer p = *this; p -= d; return p; }
-    ptrdiff_t operator-(const pointer& p) const { return index() - p.index(); }
-    bool operator==(const pointer& p) const { return ref.array == p.ref.array && ref.i == p.ref.i && ref.j == p.ref.j && ref.k == p.ref.k; }
-    bool operator!=(const pointer& p) const { return !operator==(p); }
-  protected:
-    friend class array3;
-    friend class reference;
-    explicit pointer(reference r) : ref(r) {}
-    explicit pointer(array3* array, uint i, uint j, uint k) : ref(array, i, j, k) {}
-    ptrdiff_t index() const { return ref.i + ref.array->nx * (ref.j + ref.array->ny * ref.k); }
-    void set(ptrdiff_t index) { ref.array->ijk(ref.i, ref.j, ref.k, index); }
-    void increment()
-    {
-      if (++ref.i == ref.array->nx) {
-        ref.i = 0;
-        if (++ref.j == ref.array->ny) {
-          ref.j = 0;
-          ref.k++;
-        }
-      }
-    }
-    void decrement()
-    {
-      if (!ref.i--) {
-        ref.i = ref.array->nx - 1;
-        if (!ref.j--) {
-          ref.j = ref.array->ny - 1;
-          ref.k--;
-        }
-      }
-    }
-    reference ref;
-  };
-
-  // forward iterator that visits array block by block
-  class iterator {
-  public:
-    // typedefs for STL compatibility
-    typedef Scalar value_type;
-    typedef ptrdiff_t difference_type;
-    typedef typename array3::reference reference;
-    typedef typename array3::pointer pointer;
-    typedef std::forward_iterator_tag iterator_category;
-
-    iterator() : ref(0, 0, 0, 0) {}
-    iterator operator=(const iterator& it) { ref.array = it.ref.array; ref.i = it.ref.i; ref.j = it.ref.j; ref.k = it.ref.k; return *this; }
-    reference operator*() const { return ref; }
-    iterator& operator++() { increment(); return *this; }
-    iterator operator++(int) { iterator it = *this; increment(); return it; }
-    bool operator==(const iterator& it) const { return ref.array == it.ref.array && ref.i == it.ref.i && ref.j == it.ref.j && ref.k == it.ref.k; }
-    bool operator!=(const iterator& it) const { return !operator==(it); }
-    uint i() const { return ref.i; }
-    uint j() const { return ref.j; }
-    uint k() const { return ref.k; }
-  protected:
-    friend class array3;
-    explicit iterator(array3* array, uint i, uint j, uint k) : ref(array, i, j, k) {}
-    void increment()
-    {
-      ref.i++;
-      if (!(ref.i & 3u) || ref.i == ref.array->nx) {
-        ref.i = (ref.i - 1) & ~3u;
-        ref.j++;
-        if (!(ref.j & 3u) || ref.j == ref.array->ny) {
-          ref.j = (ref.j - 1) & ~3u;
-          ref.k++;
-          if (!(ref.k & 3u) || ref.k == ref.array->nz) {
-            ref.k = (ref.k - 1) & ~3u;
-            // done with block; advance to next
-            if ((ref.i += 4) >= ref.array->nx) {
-              ref.i = 0;
-              if ((ref.j += 4) >= ref.array->ny) {
-                ref.j = 0;
-                if ((ref.k += 4) >= ref.array->nz)
-                  ref.k = ref.array->nz;
-              }
-            }
-          }
-        }
-      }
-    }
-    reference ref;
-  };
-
-  // view into a rectangular subset of an array (base class)
-  class view {
-  public:
-    // construction and assignment--perform shallow copy of (sub)array
-    view(array3* array) : array(array), x(0), y(0), z(0), nx(array->nx), ny(array->ny), nz(array->nz) {}
-    view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : array(array), x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {}
-    view& operator=(array3* a)
-    {
-      array = a;
-      x = y = z = 0;
-      nx = a->nx;
-      ny = a->ny;
-      nz = a->nz;
-      return *this;
-    }
-
-    // dimensions of (sub)array
-    size_t size() const { return size_t(nx) * size_t(ny) * size_t(nz); }
-    uint size_x() const { return nx; }
-    uint size_y() const { return ny; }
-    uint size_z() const { return nz; }
-
-    // (i, j, k) accessors
-    Scalar operator()(uint i, uint j, uint k) const { return array->get(x + i, y + j, z + k); }
-    reference operator()(uint i, uint j, uint k) { return reference(array, x + i, y + j, z + k); }
-
-  protected:
-    friend class array3;
-    array3* array;
-    uint x, y, z;
-    uint nx, ny, nz;
-  };
-
-  // construction from view--perform deep copy of (sub)array
-  array3(const view& v) :
-    array(3, Codec::type),
-    cache(0)
-  {
-    set_rate(v.array->rate());
-    resize(v.nx, v.ny, v.nz, false);
-    // initialize array in its preferred order
-    for (iterator it = begin(); it != end(); ++it)
-      *it = v(it.i(), it.j(), it.k());
-  }
-
-  // flat view of 3D array (operator[] returns scalar)
-  class flat_view : public view {
-    using view::array;
-    using view::x;
-    using view::y;
-    using view::z;
-    using view::nx;
-    using view::ny;
-    using view::nz;
-  public:
-    // construction and assignment--perform shallow copy of (sub)array
-    flat_view(array3* array) : view(array) {}
-    flat_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : view(array, x, y, z, nx, ny, nz) {}
-
-    // convert (i, j, k) index to flat index
-    uint index(uint i, uint j, uint k) const { return i + nx * (j + ny * k); }
-
-    // convert flat index to (i, j, k) index
-    void ijk(uint& i, uint& j, uint& k, uint index) const
-    {
-      i = index % nx; index /= nx;
-      j = index % ny; index /= ny;
-      k = index;
-    }
-
-    // flat index accessors
-    Scalar operator[](uint index) const
-    {
-      uint i, j, k;
-      ijk(i, j, k, index);
-      return array->get(x + i, y + j, z + k);
-    }
-    reference operator[](uint index)
-    {
-      uint i, j, k;
-      ijk(i, j, k, index);
-      return reference(array, x + i, y + j, z + k);
-    }
-  };
-
-  // forward declaration of friends
-  class nested_view1;
-  class nested_view2;
-  class nested_view3;
-
-  // nested view into a 1D rectangular subset of a 3D array
-  class nested_view1 : public view {
-    using view::array;
-    using view::x;
-    using view::y;
-    using view::z;
-    using view::nx;
-    using view::ny;
-    using view::nz;
-  public:
-    Scalar operator[](uint index) const { return array->get(x + index, y, z); }
-  protected:
-    // construction--perform shallow copy of (sub)array
-    friend class array3::nested_view2;
-    explicit nested_view1(array3* array) : view(array) {}
-    explicit nested_view1(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : view(array, x, y, z, nx, ny, nz) {}
-  };
-
-  // nested view into a 2D rectangular subset of a 3D array
-  class nested_view2 : public view {
-    using view::array;
-    using view::x;
-    using view::y;
-    using view::z;
-    using view::nx;
-    using view::ny;
-    using view::nz;
-  public:
-    nested_view1 operator[](uint index) const { return nested_view1(array, x, y + index, z, nx, 1, 1); }
-  protected:
-    // construction--perform shallow copy of (sub)array
-    friend class array3::nested_view3;
-    explicit nested_view2(array3* array) : view(array) {}
-    explicit nested_view2(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : view(array, x, y, z, nx, ny, nz) {}
-  };
-
-  // nested view into a 3D rectangular subset of a 3D array
-  class nested_view3 : public view {
-    using view::array;
-    using view::x;
-    using view::y;
-    using view::z;
-    using view::nx;
-    using view::ny;
-    using view::nz;
-  public:
-    // construction and assignment--perform shallow copy of (sub)array
-    nested_view3(array3* array) : view(array) {}
-    nested_view3(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : view(array, x, y, z, nx, ny, nz) {}
-    nested_view2 operator[](uint index) const { return nested_view2(array, x, y, z + index, nx, ny, 1); }
-  };
-
-  typedef nested_view3 nested_view;
 
   // (i, j, k) accessors
   Scalar operator()(uint i, uint j, uint k) const { return get(i, j, k); }

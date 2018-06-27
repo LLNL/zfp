@@ -13,6 +13,16 @@ namespace zfp {
 template < typename Scalar, class Codec = zfp::codec<Scalar> >
 class array1 : public array {
 public:
+  // forward declarations
+  class reference;
+  class pointer;
+  class iterator;
+  class view;
+  #include "zfp/reference1.h"
+  #include "zfp/pointer1.h"
+  #include "zfp/iterator1.h"
+  #include "zfp/view1.h"
+
   // default constructor
   array1() : array(1, Codec::type) {}
 
@@ -32,6 +42,19 @@ public:
   array1(const array1& a)
   {
     deep_copy(a);
+  }
+
+  // construction from view--perform deep copy of (sub)array
+  template <class View>
+  array1(const View& v) :
+    array(1, Codec::type),
+    cache(0)
+  {
+    set_rate(v.rate());
+    resize(v.size_x(), false);
+    // initialize array in its preferred order
+    for (iterator it = begin(); it != end(); ++it)
+      *it = v(it.i());
   }
 
   // virtual destructor
@@ -118,103 +141,6 @@ public:
       encode(b, p, 1);
     cache.clear();
   }
-
-  class pointer;
-
-  // reference to a single array value
-  class reference {
-  public:
-    operator Scalar() const { return array->get(i); }
-    reference operator=(const reference& r) { array->set(i, r.operator Scalar()); return *this; }
-    reference operator=(Scalar val) { array->set(i, val); return *this; }
-    reference operator+=(Scalar val) { array->add(i, val); return *this; }
-    reference operator-=(Scalar val) { array->sub(i, val); return *this; }
-    reference operator*=(Scalar val) { array->mul(i, val); return *this; }
-    reference operator/=(Scalar val) { array->div(i, val); return *this; }
-    pointer operator&() const { return pointer(*this); }
-    // swap two array elements via proxy references
-    friend void swap(reference a, reference b)
-    {
-      Scalar x = a.operator Scalar();
-      Scalar y = b.operator Scalar();
-      b.operator=(x);
-      a.operator=(y);
-    }
-  protected:
-    friend class array1;
-    friend class iterator;
-    explicit reference(array1* array, uint i) : array(array), i(i) {}
-    array1* array;
-    uint i;
-  };
-
-  // pointer to a single array value
-  class pointer {
-  public:
-    pointer() : ref(0, 0) {}
-    pointer operator=(const pointer& p) { ref.array = p.ref.array; ref.i = p.ref.i; return *this; }
-    reference operator*() const { return ref; }
-    reference operator[](ptrdiff_t d) const { return *operator+(d); }
-    pointer& operator++() { increment(); return *this; }
-    pointer& operator--() { decrement(); return *this; }
-    pointer operator++(int) { pointer p = *this; increment(); return p; }
-    pointer operator--(int) { pointer p = *this; decrement(); return p; }
-    pointer operator+=(ptrdiff_t d) { ref.i += d; return *this; }
-    pointer operator-=(ptrdiff_t d) { ref.i -= d; return *this; }
-    pointer operator+(ptrdiff_t d) const { pointer p = *this; p += d; return p; }
-    pointer operator-(ptrdiff_t d) const { pointer p = *this; p -= d; return p; }
-    ptrdiff_t operator-(const pointer& p) const { return index() - p.index(); }
-    bool operator==(const pointer& p) const { return ref.array == p.ref.array && ref.i == p.ref.i; }
-    bool operator!=(const pointer& p) const { return !operator==(p); }
-  protected:
-    friend class array1;
-    friend class reference;
-    explicit pointer(reference r) : ref(r) {}
-    explicit pointer(array1* array, uint i) : ref(array, i) {}
-    ptrdiff_t index() const { return ref.i; }
-    void set(ptrdiff_t index) { ref.i = index; }
-    void increment() { ref.i++; }
-    void decrement() { ref.i--; }
-    reference ref;
-  };
-
-  // random access iterator that visits array block by block
-  class iterator {
-  public:
-    // typedefs for STL compatibility
-    typedef Scalar value_type;
-    typedef ptrdiff_t difference_type;
-    typedef typename array1::reference reference;
-    typedef typename array1::pointer pointer;
-    typedef std::random_access_iterator_tag iterator_category;
-
-    iterator() : ref(0, 0) {}
-    iterator operator=(const iterator& it) { ref.array = it.ref.array; ref.i = it.ref.i; return *this; }
-    reference operator*() const { return ref; }
-    reference operator[](difference_type d) const { return *operator+(d); }
-    iterator& operator++() { increment(); return *this; }
-    iterator& operator--() { decrement(); return *this; }
-    iterator operator++(int) { iterator it = *this; increment(); return it; }
-    iterator operator--(int) { iterator it = *this; decrement(); return it; }
-    iterator operator+=(difference_type d) { ref.i += d; return *this; }
-    iterator operator-=(difference_type d) { ref.i -= d; return *this; }
-    iterator operator+(difference_type d) const { return iterator(ref.array, ref.i + d); }
-    iterator operator-(difference_type d) const { return iterator(ref.array, ref.i - d); }
-    difference_type operator-(const iterator& it) const { return static_cast<difference_type>(ref.i) - static_cast<difference_type>(it.ref.i); }
-    bool operator==(const iterator& it) const { return ref.array == it.ref.array && ref.i == it.ref.i; }
-    bool operator!=(const iterator& it) const { return !operator==(it); }
-    bool operator<=(const iterator& it) const { return ref.array == it.ref.array && ref.i <= it.ref.i; }
-    bool operator>=(const iterator& it) const { return ref.array == it.ref.array && ref.i >= it.ref.i; }
-    bool operator<(const iterator& it) const { return !operator>=(it); }
-    bool operator>(const iterator& it) const { return !operator<=(it); }
-    uint i() const { return ref.i; }
-  protected:
-    friend class array1;
-    explicit iterator(array1* array, uint i) : ref(array, i) {}
-    void increment() { ref.i++; }
-    void decrement() { ref.i--; }
-    reference ref;
-  };
 
   // (i) accessors
   const Scalar& operator()(uint i) const { return get(i); }
