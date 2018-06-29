@@ -9,6 +9,10 @@ public:
   // dimensions of (sub)array
   size_t size() const { return size_t(nx) * size_t(ny); }
 
+  // local to global array indices
+  uint global_x(uint i) const { return x + i; }
+  uint global_y(uint j) const { return y + j; }
+
 protected:
   // construction and assignment--perform shallow copy of (sub)array
   explicit preview(array2* array) : array(array), x(0), y(0), nx(array->nx), ny(array->ny) {}
@@ -351,7 +355,7 @@ protected:
   {
     CacheLine* p = 0;
     uint b = array->block(i, j);
-    typename Cache<CacheLine>::Tag t = cache.access(p, b + 1, false);
+    typename Cache<CacheLine>::Tag t = cache.access(p, b + 1, write);
     uint c = t.index() - 1;
     if (c != b) {
       // write back occupied cache line if it is dirty

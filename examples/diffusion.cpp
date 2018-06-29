@@ -53,22 +53,32 @@ inline void
 time_step_parallel(zfp::array2d& u, const Constants& c)
 {
 #ifdef _OPENMP
-  // compute du/dt
+  // flush shared cache to ensure cache consistency across threads
+  u.flush_cache();
+  // compute du/dt in parallel
   zfp::array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
-//  #pragma omp parallel
+  #pragma omp parallel
   {
-    // create read-only view of u, read-write view into subset of du
+    // create read-only private view of u
     zfp::array2d::private_const_view myu(&u);
-//    zfp::array2d::private_view mydu(&du, omp_get_thread_num(), omp_get_num_threads());
-    zfp::array2d::private_view mydu(&du, 0, 1);
+    // create read-write private view into rectangular subset of du
+    zfp::array2d::private_view mydu(&du, omp_get_thread_num(), omp_get_num_threads());
+//printf("thread %d owns [%u, %u) x [%u, %u)\n", omp_get_thread_num(), mydu.global_x(0), mydu.global_x(0) + mydu.size_x(), mydu.global_y(0), mydu.global_y(0) + mydu.size_y());
+//    zfp::array2d::private_view mydu(&du, 0, 1);
     // process rectangular region owned by this thread
-    for (uint y = 0; y < mydu.size_y(); y++)
-      for (uint x = 0; x < mydu.size_x(); x++) {
-        double uxx = (myu(x - 1, y) - 2 * myu(x, y) + myu(x + 1, y)) / (c.dx * c.dx);
-        double uyy = (myu(x, y - 1) - 2 * myu(x, y) + myu(x, y + 1)) / (c.dy * c.dy);
-        mydu(x, y) = c.dt * c.k * (uxx + uyy);
-      }
-    // compress all cached blocks to shared storage
+    for (uint j = 0; j < mydu.size_y(); j++) {
+      int y = mydu.global_y(j);
+      if (1 <= y && y <= c.ny - 2)
+        for (uint i = 0; i < mydu.size_x(); i++) {
+          int x = mydu.global_x(i);
+          if (1 <= x && x <= c.nx - 2) {
+            double uxx = (myu(x - 1, y) - 2 * myu(x, y) + myu(x + 1, y)) / (c.dx * c.dx);
+            double uyy = (myu(x, y - 1) - 2 * myu(x, y) + myu(x, y + 1)) / (c.dy * c.dy);
+            mydu(i, j) = c.dt * c.k * (uxx + uyy);
+          }
+        }
+    }
+    // compress all private cached blocks to shared storage
     mydu.flush_cache();
   }
   // take forward Euler step in serial
@@ -77,6 +87,7 @@ time_step_parallel(zfp::array2d& u, const Constants& c)
 #endif
 }
 
+// dummy template instantiation; never executed
 template <>
 inline void
 time_step_parallel(raw::array2d& u, const Constants& c)
