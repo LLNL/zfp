@@ -30,6 +30,7 @@ protected:
 
 // generic read-only view into a rectangular subset of a 3D array
 class const_view : public preview {
+protected:
   using preview::array;
   using preview::x;
   using preview::y;
@@ -53,6 +54,7 @@ public:
 
 // generic read-write view into a rectangular subset of a 3D array (base class)
 class view : public const_view {
+protected:
   using preview::array;
   using preview::x;
   using preview::y;
@@ -76,6 +78,7 @@ public:
 
 // flat view of 3D array (operator[] returns scalar)
 class flat_view : public view {
+protected:
   using preview::array;
   using preview::x;
   using preview::y;
@@ -121,6 +124,7 @@ class nested_view3;
 
 // nested view into a 1D rectangular subset of a 3D array
 class nested_view1 : public preview {
+protected:
   using preview::array;
   using preview::x;
   using preview::y;
@@ -149,6 +153,7 @@ protected:
 
 // nested view into a 2D rectangular subset of a 3D array
 class nested_view2 : public preview {
+protected:
   using preview::array;
   using preview::x;
   using preview::y;
@@ -177,6 +182,7 @@ protected:
 
 // nested view into a 3D rectangular subset of a 3D array
 class nested_view3 : public preview {
+protected:
   using preview::array;
   using preview::x;
   using preview::y;

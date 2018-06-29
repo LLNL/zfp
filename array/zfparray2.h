@@ -219,7 +219,7 @@ protected:
   // inspector
   const Scalar& get(uint i, uint j) const
   {
-    CacheLine* p = line(i, j, false);
+    const CacheLine* p = line(i, j, false);
     return (*p)(i, j);
   }
 
@@ -256,31 +256,31 @@ protected:
   // encode block with given index
   void encode(uint index, const Scalar* block) const
   {
-    stream_wseek(stream->stream, index * blkbits);
-    Codec::encode_block_2(stream, block, shape ? shape[index] : 0);
-    stream_flush(stream->stream);
+    stream_wseek(zfp->stream, index * blkbits);
+    Codec::encode_block_2(zfp, block, shape ? shape[index] : 0);
+    stream_flush(zfp->stream);
   }
 
   // encode block with given index from strided array
   void encode(uint index, const Scalar* p, int sx, int sy) const
   {
-    stream_wseek(stream->stream, index * blkbits);
-    Codec::encode_block_strided_2(stream, p, shape ? shape[index] : 0, sx, sy);
-    stream_flush(stream->stream);
+    stream_wseek(zfp->stream, index * blkbits);
+    Codec::encode_block_strided_2(zfp, p, shape ? shape[index] : 0, sx, sy);
+    stream_flush(zfp->stream);
   }
 
   // decode block with given index
   void decode(uint index, Scalar* block) const
   {
-    stream_rseek(stream->stream, index * blkbits);
-    Codec::decode_block_2(stream, block, shape ? shape[index] : 0);
+    stream_rseek(zfp->stream, index * blkbits);
+    Codec::decode_block_2(zfp, block, shape ? shape[index] : 0);
   }
 
   // decode block with given index to strided array
   void decode(uint index, Scalar* p, int sx, int sy) const
   {
-    stream_rseek(stream->stream, index * blkbits);
-    Codec::decode_block_strided_2(stream, p, shape ? shape[index] : 0, sx, sy);
+    stream_rseek(zfp->stream, index * blkbits);
+    Codec::decode_block_strided_2(zfp, p, shape ? shape[index] : 0, sx, sy);
   }
 
   // block index for (i, j)

@@ -133,6 +133,14 @@ int main(int argc, char* argv[])
       verify(c(x, y), slice2[y][x]);
     }
 
+  // 2D thread-safe view of c
+  zfp::array2<double>::private_const_view d(&c);
+  for (uint y = 0; y < c.size_y(); y++)
+    for (uint x = 0; x < c.size_x(); x++) {
+      printf("%u %u: %g %g\n", x, y, (double)c(x, y), (double)d(x, y));
+      verify(c(x, y), d(x, y));
+    }
+
   printf("\nall tests passed\n");
 
   return 0;

@@ -28,6 +28,7 @@ protected:
 
 // generic read-only view into a rectangular subset of a 1D array
 class const_view : public preview {
+protected:
   using preview::array;
   using preview::x;
   using preview::nx;
@@ -48,6 +49,7 @@ public:
 
 // generic read-write view into a rectangular subset of a 1D array
 class view : public const_view {
+protected:
   using preview::array;
   using preview::x;
   using preview::nx;
