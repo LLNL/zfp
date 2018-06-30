@@ -71,6 +71,9 @@ public:
   // total number of elements in array
   size_t size() const { return size_t(nx); }
 
+  // array dimensions
+  uint size_x() const { return nx; }
+
   // resize the array (all previously stored data will be lost)
   void resize(uint n, bool clear = true)
   {
@@ -114,7 +117,7 @@ public:
     for (typename Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
       if (p->tag.dirty()) {
         uint b = p->tag.index() - 1;
-        encode(b, p->line->a);
+        encode(b, p->line->data());
       }
       cache.flush(p->line);
     }
@@ -143,11 +146,11 @@ public:
   }
 
   // (i) accessors
-  const Scalar& operator()(uint i) const { return get(i); }
+  Scalar operator()(uint i) const { return get(i); }
   reference operator()(uint i) { return reference(this, i); }
 
   // flat index accessors
-  const Scalar& operator[](uint index) const { return get(index); }
+  Scalar operator[](uint index) const { return get(index); }
   reference operator[](uint index) { return reference(this, index); }
 
   // random access iterators
@@ -158,9 +161,10 @@ protected:
   // cache line representing one block of decompressed values
   class CacheLine {
   public:
-    friend class array1;
-    const Scalar& operator()(uint i) const { return a[index(i)]; }
+    Scalar operator()(uint i) const { return a[index(i)]; }
     Scalar& operator()(uint i) { return a[index(i)]; }
+    const Scalar* data() const { return a; }
+    Scalar* data() { return a; }
     // copy cache line
     void get(Scalar* p, int sx) const
     {
@@ -195,7 +199,7 @@ protected:
   }
 
   // inspector
-  const Scalar& get(uint i) const
+  Scalar get(uint i) const
   {
     const CacheLine* p = line(i, false);
     return (*p)(i);
@@ -224,9 +228,9 @@ protected:
     if (c != b) {
       // write back occupied cache line if it is dirty
       if (t.dirty())
-        encode(c, p->a);
+        encode(c, p->data());
       // fetch cache line
-      decode(b, p->a);
+      decode(b, p->data());
     }
     return p;
   }

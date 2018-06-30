@@ -220,6 +220,7 @@ protected:
   public:
     const Scalar& operator()(uint i, uint j) const { return a[index(i, j)]; }
     Scalar& operator()(uint i, uint j) { return a[index(i, j)]; }
+    const Scalar* data() const { return a; }
     Scalar* data() { return a; }
   protected:
     static uint index(uint i, uint j) { return (i & 3u) + 4 * (j & 3u); }
@@ -284,12 +285,12 @@ public:
   // construction--perform shallow copy of (sub)array
   private_view(array2* array) : private_const_view(array) {}
   private_view(array2* array, uint x, uint y, uint nx, uint ny) : private_const_view(array, x, y, nx, ny) {}
-  private_view(array2* array, uint thread, uint threads) :
-    private_const_view(array)
+
+  // partition view into independent blocks
+  void partition(uint index, uint count)
   {
-    // determine blocks owned by this thread
-    uint ymin = 4 * (ny * (thread + 0) / (4 * threads));
-    uint ymax = 4 * (ny * (thread + 1) / (4 * threads));
+    uint ymin = 4 * (ny * (index + 0) / (4 * count));
+    uint ymax = 4 * (ny * (index + 1) / (4 * count));
     ymax = std::min(ymax, ny);
     y = ymin;
     ny = ymax - ymin;
@@ -320,7 +321,6 @@ protected:
     view_reference operator-=(Scalar val) { view->sub(i, j, val); return *this; }
     view_reference operator*=(Scalar val) { view->mul(i, j, val); return *this; }
     view_reference operator/=(Scalar val) { view->div(i, j, val); return *this; }
-//    pointer operator&() const { return pointer(*this); }
     // swap two array elements via proxy references
     friend void swap(view_reference a, view_reference b)
     {

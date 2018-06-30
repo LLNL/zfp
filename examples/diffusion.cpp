@@ -59,12 +59,11 @@ time_step_parallel(zfp::array2d& u, const Constants& c)
   zfp::array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
   #pragma omp parallel
   {
-    // create read-only private view of u
+    // create read-only private view of entire array u
     zfp::array2d::private_const_view myu(&u);
     // create read-write private view into rectangular subset of du
-    zfp::array2d::private_view mydu(&du, omp_get_thread_num(), omp_get_num_threads());
-//printf("thread %d owns [%u, %u) x [%u, %u)\n", omp_get_thread_num(), mydu.global_x(0), mydu.global_x(0) + mydu.size_x(), mydu.global_y(0), mydu.global_y(0) + mydu.size_y());
-//    zfp::array2d::private_view mydu(&du, 0, 1);
+    zfp::array2d::private_view mydu(&du);
+    mydu.partition(omp_get_thread_num(), omp_get_num_threads());
     // process rectangular region owned by this thread
     for (uint j = 0; j < mydu.size_y(); j++) {
       int y = mydu.global_y(j);
