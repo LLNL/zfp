@@ -66,6 +66,64 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
   EXPECT_GT(oldCompressedSize, newCompressedSize);
 }
 
+void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, uint chosenSizeY, uint chosenSizeZ, double chosenRate)
+{
+  // verify valid header (manually through C API)
+  bitstream* stream = stream_open((zfp::array::header*)&h, ZFP_HEADER_SIZE_BYTES);
+
+  zfp_field* field = zfp_field_alloc();
+  zfp_stream* zfp = zfp_stream_open(stream);
+  EXPECT_EQ(ZFP_HEADER_SIZE_BITS, zfp_read_header(zfp, field, ZFP_HEADER_FULL));
+
+  // verify header contents
+  EXPECT_EQ(chosenSizeX, field->nx);
+  EXPECT_EQ(chosenSizeY, field->ny);
+  EXPECT_EQ(chosenSizeZ, field->nz);
+
+  EXPECT_EQ(ZFP_TYPE, field->type);
+
+  // to verify rate, we can only compare the 4 compression-param basis
+  zfp_stream* expectedZfpStream = zfp_stream_open(0);
+  zfp_stream_set_rate(expectedZfpStream, chosenRate, ZFP_TYPE, testEnv->getDims(), 1);
+  EXPECT_EQ(expectedZfpStream->minbits, zfp->minbits);
+  EXPECT_EQ(expectedZfpStream->maxbits, zfp->maxbits);
+  EXPECT_EQ(expectedZfpStream->maxprec, zfp->maxprec);
+  EXPECT_EQ(expectedZfpStream->minexp, zfp->minexp);
+
+  zfp_stream_close(expectedZfpStream);
+  zfp_stream_close(zfp);
+  zfp_field_free(field);
+  stream_close(stream);
+}
+
+TEST_F(TEST_FIXTURE, when_writeHeader_then_cCompatibleHeaderWritten)
+{
+  double chosenRate = ZFP_RATE_PARAM_BITS;
+
+  uint chosenSizeX, chosenSizeY, chosenSizeZ;
+#if DIMS == 1
+  chosenSizeX = 55;
+  chosenSizeY = 0;
+  chosenSizeZ = 0;
+  ZFP_ARRAY_TYPE arr(chosenSizeX, chosenRate);
+#elif DIMS == 2
+  chosenSizeX = 55;
+  chosenSizeY = 23;
+  chosenSizeZ = 0;
+  ZFP_ARRAY_TYPE arr(chosenSizeX, chosenSizeY, chosenRate);
+#elif DIMS == 3
+  chosenSizeX = 55;
+  chosenSizeY = 23;
+  chosenSizeZ = 31;
+  ZFP_ARRAY_TYPE arr(chosenSizeX, chosenSizeY, chosenSizeZ, chosenRate);
+#endif
+
+  zfp::array::header h;
+  arr.write_header(h);
+
+  VerifyProperHeaderWritten(h, chosenSizeX, chosenSizeY, chosenSizeZ, chosenRate);
+}
+
 TEST_F(TEST_FIXTURE, when_generateRandomData_then_checksumMatches)
 {
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, getChecksumOriginalDataArray(DIMS, ZFP_TYPE), _catFunc2(hashArray, SCALAR_BITS)((UINT*)inputDataArr, inputDataTotalLen, 1));

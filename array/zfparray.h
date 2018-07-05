@@ -6,10 +6,18 @@
 #include "zfp.h"
 #include "zfp/memory.h"
 
+#define ZFP_HEADER_SIZE_BITS (ZFP_MAGIC_BITS + ZFP_META_BITS + ZFP_MODE_SHORT_BITS)
+#define ZFP_HEADER_SIZE_BYTES ((ZFP_HEADER_SIZE_BITS + CHAR_BIT - 1) / CHAR_BIT)
+
 namespace zfp {
 
 // abstract base class for compressed array of scalars
 class array {
+public:
+  typedef struct {
+    uchar buffer[ZFP_HEADER_SIZE_BYTES];
+  } header;
+
 protected:
   // default constructor
   array() :
@@ -91,6 +99,29 @@ public:
 
   // underlying scalar type
   zfp_type scalar_type() const { return type; }
+
+  // write header with latest metadata
+  void write_header(zfp::array::header& h) const
+  {
+    // instead of creating new zfp_stream, temporarily
+    // swap its bitstream, to write to header
+    bitstream* newBs = stream_open(h.buffer, ZFP_HEADER_SIZE_BYTES);
+    stream_rewind(newBs);
+
+    bitstream* oldBs = zfp_stream_bit_stream(zfp);
+    zfp_stream_set_bit_stream(zfp, newBs);
+
+    zfp_field* field = zfp_field_3d(0, type, nx, ny, nz);
+
+    // write header
+    zfp_write_header(zfp, field, ZFP_HEADER_FULL);
+    stream_flush(zfp->stream);
+
+    // free
+    zfp_field_free(field);
+    zfp_stream_set_bit_stream(zfp, oldBs);
+    stream_close(newBs);
+  }
 
 protected:
   // number of values per block
