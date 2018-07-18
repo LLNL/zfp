@@ -150,27 +150,57 @@ public:
   // write header with latest metadata
   void write_header(zfp::array::header& h) const
   {
-    // instead of creating new zfp_stream, temporarily
-    // swap its bitstream, to write to header
-    bitstream* newBs = stream_open(h.buffer, ZFP_HEADER_SIZE_BYTES);
-    stream_rewind(newBs);
-
-    bitstream* oldBs = zfp_stream_bit_stream(zfp);
-    zfp_stream_set_bit_stream(zfp, newBs);
-
-    zfp_field* field = zfp_field_3d(0, type, nx, ny, nz);
+    DualBitstreamHandle dbh(zfp, &h, ZFP_HEADER_SIZE_BYTES);
+    ZfpFieldHandle zfh(type, nx, ny, nz);
 
     // write header
-    zfp_write_header(zfp, field, ZFP_HEADER_FULL);
+    zfp_write_header(zfp, zfh.field, ZFP_HEADER_FULL);
     stream_flush(zfp->stream);
-
-    // free
-    zfp_field_free(field);
-    zfp_stream_set_bit_stream(zfp, oldBs);
-    stream_close(newBs);
   }
 
 protected:
+  // "Handle" classes useful when throwing exceptions in read_header()
+
+  // redirect zfp_stream->bitstream to header while object remains in scope
+  class DualBitstreamHandle {
+    public:
+      bitstream* oldBs;
+      bitstream* newBs;
+      zfp_stream* zfp;
+
+      DualBitstreamHandle(zfp_stream* zfp, zfp::array::header* h, size_t headerSizeBytes) :
+        zfp(zfp)
+      {
+        oldBs = zfp_stream_bit_stream(zfp);
+        newBs = stream_open(h->buffer, headerSizeBytes);
+
+        stream_rewind(newBs);
+        zfp_stream_set_bit_stream(zfp, newBs);
+      }
+
+      ~DualBitstreamHandle() {
+        zfp_stream_set_bit_stream(zfp, oldBs);
+        stream_close(newBs);
+      }
+  };
+
+  class ZfpFieldHandle {
+    public:
+      zfp_field* field;
+
+      ZfpFieldHandle() {
+        field = zfp_field_alloc();
+      }
+
+      ZfpFieldHandle(zfp_type type, int nx, int ny, int nz) {
+        field = zfp_field_3d(0, type, nx, ny, nz);
+      }
+
+      ~ZfpFieldHandle() {
+        zfp_field_free(field);
+      }
+  };
+
   // number of values per block
   uint block_size() const { return 1u << (2 * dims); }
 
@@ -253,31 +283,20 @@ protected:
   // and verify header contents (throws exceptions upon failure)
   void read_header(const zfp::array::header& h)
   {
-    // instead of creating new zfp_stream, temporarily
-    // swap its bitstream, to read from zfp_header
-    // (we only perform reads, but bitstream cannot accept const)
-    bitstream* newBs = stream_open((zfp::array::header*)&(h.buffer), ZFP_HEADER_SIZE_BITS);
-    stream_rewind(newBs);
-
-    bitstream* oldBs = zfp_stream_bit_stream(zfp);
-    zfp_stream_set_bit_stream(zfp, newBs);
-
-    zfp_field* field = zfp_field_alloc();
+    // cast off const to satisfy bitstream constructor (we only perform reads anyway)
+    DualBitstreamHandle dbh(zfp, (zfp::array::header*)&h, ZFP_HEADER_SIZE_BYTES);
+    ZfpFieldHandle zfh;
 
     // read header to populate member variables associated with zfp_stream
-    if (zfp_read_header(zfp, field, ZFP_HEADER_FULL) != ZFP_HEADER_SIZE_BITS) {
-      zfp_field_free(field);
-      zfp_stream_set_bit_stream(zfp, oldBs);
-      stream_close(newBs);
+    if (zfp_read_header(zfp, zfh.field, ZFP_HEADER_FULL) != ZFP_HEADER_SIZE_BITS)
       throw std::invalid_argument("Invalid ZFP header.");
-    }
 
     // verify read-header contents
     std::string errMsg = "";
-    if (type != field->type)
+    if (type != zfh.field->type)
       errMsg += "ZFP header specified an underlying scalar type different than that for this object.";
 
-    if (!is_valid_dims(field->nx, field->ny, field->nz)) {
+    if (!is_valid_dims(zfh.field->nx, zfh.field->ny, zfh.field->nz)) {
       if (!errMsg.empty())
         errMsg += " ";
       errMsg += "ZFP header specified a dimensionality different than that for this object.";
@@ -289,23 +308,14 @@ protected:
       errMsg += "ZFP header specified a non fixed-rate mode, unsupported by this object.";
     }
 
-    if (!errMsg.empty()) {
-      zfp_field_free(field);
-      zfp_stream_set_bit_stream(zfp, oldBs);
-      stream_close(newBs);
-
+    if (!errMsg.empty())
       throw std::invalid_argument(errMsg);
-    }
 
-    nx = field->nx;
-    ny = field->ny;
-    nz = field->nz;
-    type = field->type;
-
-    // free, restore bitstream
-    zfp_field_free(field);
-    zfp_stream_set_bit_stream(zfp, oldBs);
-    stream_close(newBs);
+    // set class variables
+    nx = zfh.field->nx;
+    ny = zfh.field->ny;
+    nz = zfh.field->nz;
+    type = zfh.field->type;
   }
 
   uint dims;           // array dimensionality (1, 2, or 3)
