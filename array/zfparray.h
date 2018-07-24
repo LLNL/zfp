@@ -100,7 +100,7 @@ protected:
   void alloc(bool clear = true)
   {
     bytes = blocks * blkbits / CHAR_BIT;
-    reallocate_aligned(data, bytes, 0x100u);
+    zfp::reallocate_aligned(data, bytes, 0x100u);
     if (clear)
       std::fill(data, data + bytes, 0);
     stream_close(zfp->stream);
@@ -117,9 +117,9 @@ protected:
     stream_close(zfp->stream);
     zfp_stream_set_bit_stream(zfp, 0);
     bytes = 0;
-    deallocate_aligned(data);
+    zfp::deallocate_aligned(data);
     data = 0;
-    deallocate(shape);
+    zfp::deallocate(shape);
     shape = 0;
   }
 
@@ -140,7 +140,7 @@ protected:
     bytes = a.bytes;
 
     // copy dynamically allocated data
-    clone_aligned(data, a.data, bytes, 0x100u);
+    zfp::clone_aligned(data, a.data, bytes, 0x100u);
     if (zfp) {
       if (zfp->stream)
         stream_close(zfp->stream);
@@ -149,7 +149,7 @@ protected:
     zfp = zfp_stream_open(0);
     *zfp = *a.zfp;
     zfp_stream_set_bit_stream(zfp, stream_open(data, bytes));
-    clone(shape, a.shape, blocks);
+    zfp::clone(shape, a.shape, blocks);
   }
 
   uint dims;           // array dimensionality (1, 2, or 3)

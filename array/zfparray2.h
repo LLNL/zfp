@@ -89,9 +89,9 @@ public:
       alloc(clear);
 
       // precompute block dimensions
-      deallocate(shape);
+      zfp::deallocate(shape);
       if ((nx | ny) & 3u) {
-        shape = (uchar*)allocate(blocks);
+        shape = (uchar*)zfp::allocate(blocks);
         uchar* p = shape;
         for (uint j = 0; j < by; j++)
           for (uint i = 0; i < bx; i++)
@@ -118,7 +118,7 @@ public:
   // flush cache by compressing all modified cached blocks
   void flush_cache() const
   {
-    for (typename Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
+    for (typename zfp::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
       if (p->tag.dirty()) {
         uint b = p->tag.index() - 1;
         encode(b, p->line->data());
@@ -242,7 +242,7 @@ protected:
   {
     CacheLine* p = 0;
     uint b = block(i, j);
-    typename Cache<CacheLine>::Tag t = cache.access(p, b + 1, write);
+    typename zfp::Cache<CacheLine>::Tag t = cache.access(p, b + 1, write);
     uint c = t.index() - 1;
     if (c != b) {
       // write back occupied cache line if it is dirty
@@ -302,7 +302,7 @@ protected:
     return std::max(n, 1u);
   }
 
-  mutable Cache<CacheLine> cache; // cache of decompressed blocks
+  mutable zfp::Cache<CacheLine> cache; // cache of decompressed blocks
 };
 
 typedef array2<float> array2f;
