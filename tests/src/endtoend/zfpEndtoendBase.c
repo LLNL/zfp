@@ -627,6 +627,39 @@ _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedPrecision_expec
 }
 
 static void
+_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != REVERSED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(state);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != INTERLEAVED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(state);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != PERMUTED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(state);
+}
+
+static void
 assertZfpCompressDecompressChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
@@ -769,6 +802,39 @@ _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpDecompressFixedPrecision_exp
   }
 
   _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(state);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != REVERSED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(state);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != INTERLEAVED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(state);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != PERMUTED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(state);
 }
 
 static void
