@@ -27,11 +27,18 @@ function(zfp_add_cpp_tests dims type bits)
     gtest gtest_main zfp)
   add_test(NAME ${test_name} COMMAND ${test_name})
 
+  # test class's views
+  set(test_name testArray${dims}${type}Views)
+  add_executable(${test_name} ${test_name}.cpp)
+  target_link_libraries(${test_name}
+    gtest gtest_main zfp)
+  add_test(NAME ${test_name} COMMAND ${test_name})
+
 endfunction()
 
 zfp_add_cpp_tests(1 f 32)
-zfp_add_cpp_tests(2 f 32)
-zfp_add_cpp_tests(3 f 32)
+#zfp_add_cpp_tests(2 f 32)
+#zfp_add_cpp_tests(3 f 32)
 zfp_add_cpp_tests(1 d 64)
-zfp_add_cpp_tests(2 d 64)
-zfp_add_cpp_tests(3 d 64)
+#zfp_add_cpp_tests(2 d 64)
+#zfp_add_cpp_tests(3 d 64)
