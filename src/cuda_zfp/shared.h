@@ -53,12 +53,11 @@ dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
   {
     dims = 3;
   }
-
   dim3 grid_size;
   grid_size.x = 1;
   grid_size.y = 1;
   grid_size.z = 1;
-
+ 
   if(dims == 1)
   {
     grid_size.x = grids; 
@@ -146,19 +145,32 @@ unsigned int int2uint(const int x)
 }
 
 template<class Scalar>
-__host__ __device__
+__device__
 static int
 exponent(Scalar x)
 {
   if (x > 0) {
     int e;
-    FREXP(x, &e);
+    frexp(x, &e);
     // clamp exponent in case x is denormalized
-    return MAX(e, 1 - get_ebias<Scalar>());
+    return max(e, 1 - get_ebias<Scalar>());
   }
   return -get_ebias<Scalar>();
 }
 
+template<class Scalar, int BlockSize>
+__device__
+static int
+max_exponent(const Scalar* p)
+{
+  Scalar max_val = 0;
+  for(int i = 0; i < BlockSize; ++i)
+  {
+    Scalar f = fabs(p[i]);
+    max_val = max(max_val,f);
+  }
+  return exponent<Scalar>(max_val);
+}
 
 // lifting transform of 4-vector
 template <class Int, uint s>
@@ -443,6 +455,7 @@ struct BlockReader
   Word m_buffer;
   bool m_valid_block;
   int m_block_idx;
+
   __device__ BlockReader(Word *b, const int &maxbits, const int &block_idx, const int &num_blocks)
     :  m_maxbits(maxbits), m_valid_block(true)
   {
@@ -541,6 +554,122 @@ void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
   } 
 }
 
+template<int block_size>
+struct BlockWriter2
+{
+
+  uint m_word_index;
+  uint m_start_bit;
+  uint m_current_bit;
+  const int m_maxbits; 
+  Word *m_stream;
+   uint di;
+
+  __device__ BlockWriter2(Word *stream, const int &maxbits, const uint &block_idx)
+   :  m_current_bit(0),
+      m_maxbits(maxbits),
+      m_stream(stream)
+  {
+    m_word_index = (block_idx * maxbits)  / (sizeof(Word) * 8); 
+    di = m_word_index;
+    m_start_bit = uint((block_idx * maxbits) % (sizeof(Word) * 8)); 
+  }
+
+  template<typename T>
+  __device__
+  void print_bits(T bits)
+  {
+    const int bit_size = sizeof(T) * 8;
+    for(int i = bit_size - 1; i >=0; --i)
+    {
+      T one = 1;
+      T mask = one << i;
+      int val = (bits & mask) >> i;
+      printf("%d", val);
+    }
+    printf("\n");
+  }
+  __device__
+  void print()
+  {
+    //vtkm::Int64 v = Portal.Add(debug_index,0);
+    //std::cout<<"current bit "<<m_current_bit<<" debug_index "<<debug_index<<" ";
+    //print_bits(*reinterpret_cast<vtkm::UInt64*>(&v));
+    print_bits(m_stream[di]);
+  }
+  __device__
+  void print(int index)
+  {
+    //vtkm::Int64 v = Portal.Add(index,0);
+    print_bits(m_stream[index]);
+  }
+
+
+  __device__
+  long long unsigned int
+  write_bits(const long long unsigned int &bits, const uint &n_bits)
+  {
+    const uint wbits = sizeof(Word) * 8;
+    //if(bits == 0) { printf("no\n"); return;}
+    //uint seg_start = (m_start_bit + bit_offset) % wbits;
+    //int write_index = m_word_index + (m_start_bit + bit_offset) / wbits;
+    uint seg_start = (m_start_bit + m_current_bit) % wbits;
+    uint write_index = m_word_index + uint((m_start_bit + m_current_bit) / wbits);
+    di = write_index;
+    uint seg_end = seg_start + n_bits - 1;
+    //int write_index = m_word_index;
+    uint shift = seg_start; 
+    // we may be asked to write less bits than exist in 'bits'
+    // so we have to make sure that anything after n is zero.
+    // If this does not happen, then we may write into a zfp
+    // block not at the specified index
+    // uint zero_shift = sizeof(Word) * 8 - n_bits;
+    Word left = (bits >> n_bits) << n_bits;
+    
+    Word b = bits - left;
+    Word add = b << shift;
+    atomicAdd(&m_stream[write_index], add); 
+    // n_bits straddles the word boundary
+    bool straddle = seg_start < sizeof(Word) * 8 && seg_end >= sizeof(Word) * 8;
+    if(straddle)
+    {
+      Word rem = b >> (sizeof(Word) * 8 - shift);
+      atomicAdd(&m_stream[write_index + 1], rem); 
+      di = write_index+1;
+    }
+    m_current_bit += n_bits;
+    return bits >> (Word)n_bits;
+  }
+
+  // TODO: optimize
+  __device__
+  uint write_bit(const unsigned int &bit)
+  {
+    //bool print = m_word_index == 0  && m_start_bit == 0;
+    const uint wbits = sizeof(Word) * 8;
+    //if(bits == 0) { printf("no\n"); return;}
+    //uint seg_start = (m_start_bit + bit_offset) % wbits;
+    //int write_index = m_word_index + (m_start_bit + bit_offset) / wbits;
+    uint seg_start = (m_start_bit + m_current_bit) % wbits;
+    uint write_index = m_word_index + uint((m_start_bit + m_current_bit) / wbits);
+    di = write_index;
+    //uint seg_end = seg_start;
+    //int write_index = m_word_index;
+    uint shift = seg_start; 
+    // we may be asked to write less bits than exist in 'bits'
+    // so we have to make sure that anything after n is zero.
+    // If this does not happen, then we may write into a zfp
+    // block not at the specified index
+    // uint zero_shift = sizeof(Word) * 8 - n_bits;
+    
+    Word add = (Word)bit << shift;
+    atomicAdd(&m_stream[write_index], add); 
+    m_current_bit += 1;
+
+    return bit;
+  }
+
+};
 
 } // namespace cuZFP
 #endif

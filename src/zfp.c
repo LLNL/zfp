@@ -896,7 +896,10 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
 
   /* compress field and align bit stream on word boundary */
   compress(zfp, field);
-  stream_flush(zfp->stream);
+  size_t flush = stream_flush(zfp->stream);
+  printf("FLUSH %zu\n",flush);
+  size_t ssize = stream_size(zfp->stream);
+  printf("STREAM SIZE %zu\n",ssize);
 
   return stream_size(zfp->stream);
 }

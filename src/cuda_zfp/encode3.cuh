@@ -9,7 +9,29 @@
 #include "debug_utils.cuh"
 #include "type_info.cuh"
 
+#define ZFP_3D_BLOCK_SIZE 64
 namespace cuZFP{
+
+template<typename Scalar> 
+__device__ __host__ inline 
+void gather3(Scalar* q, const Scalar* p, int sx, int sy, int sz)
+{
+  uint x, y, z;
+  for (z = 0; z < 4; z++, p += sz - 4 * sy)
+    for (y = 0; y < 4; y++, p += sy - 4 * sx)
+      for (x = 0; x < 4; x++, p += sx)
+        *q++ = *p;
+}
+
+template<typename Scalar, typename Int, int BlockSize>
+void __device__ fwd_cast(Int *iblock, const Scalar *fblock, int emax)
+{
+	Scalar s = quantize_factor(emax, Scalar());
+  for(int i = 0; i < BlockSize; ++i)
+  {
+    iblock[i] = (Int) (s * fblock[i]);
+  }
+}
 
 // forward decorrelating transform
 template<class Int>
@@ -48,6 +70,169 @@ fwd_xform(Int* p)
 	__syncthreads();
 	fwd_xform_yx(p);
 }
+
+template<int BlockSize>
+struct transform;
+
+template<>
+struct transform<64>
+{
+  template<typename Int>
+  __device__ void fwd_xform(Int *p)
+  {
+
+    uint x, y, z;
+    /* transform along x */
+    for (z = 0; z < 4; z++)
+      for (y = 0; y < 4; y++)
+        fwd_lift<Int,1>(p + 4 * y + 16 * z);
+    /* transform along y */
+    for (x = 0; x < 4; x++)
+      for (z = 0; z < 4; z++)
+        fwd_lift<Int,4>(p + 16 * z + 1 * x);
+    /* transform along z */
+    for (y = 0; y < 4; y++)
+      for (x = 0; x < 4; x++)
+        fwd_lift<Int,16>(p + 1 * x + 4 * y);
+
+   }
+
+};
+
+template<int BlockSize>
+__device__
+unsigned char* get_perm();
+
+template<>
+__device__
+unsigned char* get_perm<64>()
+{
+  return c_perm;
+}
+
+template<>
+__device__
+unsigned char* get_perm<16>()
+{
+  return c_perm_2;
+}
+
+template<>
+__device__
+unsigned char* get_perm<4>()
+{
+  return c_perm_1;
+}
+
+
+template<typename Int, typename UInt, int BlockSize>
+__device__ void fwd_order(UInt *ublock, const Int *iblock)
+{
+  unsigned char *perm = get_perm<BlockSize>();
+  for(int i = 0; i < BlockSize; ++i)
+  {
+    ublock[i] = int2uint(iblock[perm[i]]);
+  }
+}
+
+template<typename Int, int DIMS>
+__device__ void fwd_xform(Int* p);
+
+template<typename Int, int BlockSize> 
+void inline __device__ encode_block(BlockWriter2<BlockSize> &stream,
+                                    int maxbits,
+                                    int maxprec,
+                                    Int *iblock)
+{
+  transform<BlockSize> tform;
+  tform.fwd_xform(iblock);
+
+  typedef typename zfp_traits<Int>::UInt UInt;
+  UInt ublock[BlockSize]; 
+  fwd_order<Int, UInt, BlockSize>(ublock, iblock);
+
+  uint intprec = CHAR_BIT * (uint)sizeof(UInt);
+  uint kmin = intprec > maxprec ? intprec - maxprec : 0;
+  uint bits = maxbits;
+  uint i, k, m, n;
+  uint64 x;
+  //for(int p = 0; p < BlockSize; ++p) printf(" %llu \n", ublock[p]);
+
+  for (k = intprec, n = 0; bits && k-- > kmin;) {
+    /* step 1: extract bit plane #k to x */
+    x = 0;
+    for (i = 0; i < BlockSize; i++)
+    {
+      x += (uint64)((ublock[i] >> k) & 1u) << i;
+    }
+    //printf("plane %llu\n", x);
+    //print_bits(x);
+    /* step 2: encode first n bits of bit plane */
+    m = min(n, bits);
+    uint temp  = bits;
+    bits -= m;
+    x = stream.write_bits(x, m);
+    
+    //printf("rem plane %llu\n", x);
+    /* step 3: unary run-length encode remainder of bit plane */
+    for (; n < BlockSize && bits && (bits--, stream.write_bit(!!x)); x >>= 1, n++)
+    {
+      for (; n < BlockSize - 1 && bits && (bits--, !stream.write_bit(x & 1u)); x >>= 1, n++)
+      {  
+      }
+    }
+    //stream.print();
+    //temp = temp - bits;
+    //printf(" rem buts %d intprec %d k %d encoded_bits %d\n", (int)bits, (int)intprec, (int)k,(int)temp); 
+  }
+  
+}
+                                   
+template<typename Scalar, int BlockSize>
+void inline __device__ zfp_encode_block(Scalar *fblock,
+                                        const int maxbits,
+                                        const uint block_idx,
+                                        Word *stream)
+{
+  BlockWriter2<BlockSize> block_writer(stream, maxbits, block_idx);
+  int emax = max_exponent<Scalar, BlockSize>(fblock);
+  int maxprec = precision(emax, get_precision<Scalar>(), get_min_exp<Scalar>());
+  uint e = maxprec ? emax + get_ebias<Scalar>() : 0;
+  if(e)
+  {
+    const uint ebits = get_ebits<Scalar>()+1;
+    block_writer.write_bits(2 * e + 1, ebits);
+    typedef typename zfp_traits<Scalar>::Int Int;
+    Int iblock[BlockSize];
+    fwd_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);
+
+
+    encode_block<Int, BlockSize>(block_writer, maxbits - ebits, maxprec, iblock);
+  }
+}
+
+template<>
+void inline __device__ zfp_encode_block<int, 64>(int *fblock,
+                                             const int maxbits,
+                                             const uint block_idx,
+                                             Word *stream)
+{
+  BlockWriter2<64> block_writer(stream, maxbits, block_idx);
+  const int intprec = get_precision<int>();
+  encode_block<int, 64>(block_writer, maxbits, intprec, fblock);
+}
+
+template<>
+void inline __device__ zfp_encode_block<long long int, 64>(long long int *fblock,
+                                                       const int maxbits,
+                                                       const uint block_idx,
+                                                       Word *stream)
+{
+  BlockWriter2<64> block_writer(stream, maxbits, block_idx);
+  const int intprec = get_precision<long long int>();
+  encode_block<long long int, 64>(block_writer, maxbits, intprec, fblock);
+}
+
 
 template<typename Scalar, typename Int>
 void 
@@ -363,48 +548,66 @@ encode (Scalar *sh_data,
 
 template<class Scalar>
 __global__
-void __launch_bounds__(64,5)
-cudaEncode(const uint  bits_per_block,
-           const Scalar* data,
-           Word *blocks,
-           const uint3 dims)
+void 
+cudaEncode(const uint maxbits,
+           const Scalar* scalars,
+           Word *stream,
+           const uint3 dims,
+           const uint3 padded_dims,
+           const uint tot_blocks)
 {
-  extern __shared__ unsigned char smem[];
-	__shared__ Scalar *sh_data;
-	unsigned char *new_smem;
 
-	sh_data = (Scalar*)&smem[0];
-	new_smem = (unsigned char*)&sh_data[64];
+  typedef unsigned long long int ull;
+  const ull blockId = blockIdx.x +
+                      blockIdx.y * gridDim.x +
+                      gridDim.x * gridDim.y * blockIdx.z;
 
-  uint tid = threadIdx.x + threadIdx.y * blockDim.x + threadIdx.z *blockDim.x*blockDim.y;
-  uint idx = (blockIdx.x + blockIdx.y * gridDim.x + blockIdx.z * gridDim.y * gridDim.x);
+  // each thread gets a block so the block index is 
+  // the global thread index
+  const uint block_idx = blockId * blockDim.x + threadIdx.x;
 
-  //
-  //  The number of threads launched can be larger than total size of
-  //  the array in cases where it cannot be devided into perfect block
-  //  sizes. To account for this, we will clamp the values in each block
-  //  to the bounds of the data set. 
-  //
+  if(block_idx >= tot_blocks)
+  {
+    // we can't launch the exact number of blocks
+    // so just exit if this isn't real
+    return;
+  }
 
-  const uint x_coord = min(threadIdx.x + blockIdx.x * 4, dims.x - 1);
-  const uint y_coord = min(threadIdx.y + blockIdx.y * 4, dims.y - 1);
-  const uint z_coord = min(threadIdx.z + blockIdx.z * 4, dims.z - 1);
-      
-	uint id = z_coord * dims.x * dims.y
-          + y_coord * dims.x
-          + x_coord;
-  
-  // TODO: this will chane when we allow any rate.
-  uint block_index = (idx * bits_per_block / 64);
-	sh_data[tid] = data[id];
-	__syncthreads();
-	encode< Scalar>(sh_data,
-                  bits_per_block, 
-                  new_smem,
-                  block_index,
-                  blocks);
+  uint3 block_dims;
+  block_dims.x = padded_dims.x >> 2; 
+  block_dims.y = padded_dims.y >> 2; 
+  block_dims.z = padded_dims.z >> 2; 
 
-  __syncthreads();
+  // logical pos in 3d array
+  uint3 block;
+  block.x = (block_idx % block_dims.x) * 4; 
+  block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
+  block.z = (block_idx/ (block_dims.x * block_dims.y)) * 4; 
+  // default strides
+  int sx = 1;
+  int sy = dims.x;
+  int sz = dims.x * dims.y;
+  //if(block_idx != 1) return;
+  //uint offset = (logicalStart[2]*PaddedDims[1] + logicalStart[1])*PaddedDims[0] + logicalStart[0]; 
+  uint offset = block.x * sx + block.y * sy + block.z * sz; 
+  //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
+  //printf("OFFSET %d\n", (int)offset); 
+  Scalar fblock[ZFP_3D_BLOCK_SIZE]; 
+  // TODO: gather partail
+  gather3(fblock, scalars + offset, sx, sy, sz);
+  //if(block_idx == 0)
+  //for(int z = 0; z < 4; ++z)
+  //{
+  //  for(int y = 0; y < 4; ++y)
+  //  {
+  //    for(int x = 0; x < 4; ++x)
+  //    {
+  //      printf("%f ", fblock[z * 8 + y * 4 + x]);
+  //    }
+  //    printf("\n");
+  //  }
+  //}
+  zfp_encode_block<Scalar, ZFP_3D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
 
 }
 
@@ -429,54 +632,49 @@ size_t encode3launch(uint3 dims,
                      Word *stream,
                      const int bits_per_block)
 {
-  dim3 block_size, grid_size;
-  block_size = dim3(4, 4, 4);
-  grid_size = dim3(dims.x, dims.y, dims.z);
 
-  grid_size.x /= block_size.x; 
-  grid_size.y /= block_size.y;  
-  grid_size.z /= block_size.z;
+  const int cuda_block_size = 128;
+  dim3 block_size = dim3(cuda_block_size, 1, 1);
 
-  // Check to see if we need to increase the block sizes
-  // in the case where dim[x] is not a multiple of 4
+  uint3 zfp_pad(dims); 
+  if(zfp_pad.x % 4 != 0) zfp_pad.x += 4 - dims.x % 4;
+  if(zfp_pad.y % 4 != 0) zfp_pad.y += 4 - dims.y % 4;
+  if(zfp_pad.z % 4 != 0) zfp_pad.z += 4 - dims.z % 4;
 
-  uint3 encoded_dims = dims;
+  const uint zfp_blocks = (zfp_pad.x * zfp_pad.y * zfp_pad.z) / 64; 
 
-  if(dims.x % 4 != 0) 
+  //
+  // we need to ensure that we launch a multiple of the 
+  // cuda block size
+  //
+  int block_pad = 0; 
+  if(zfp_blocks % cuda_block_size != 0)
   {
-    grid_size.x++;
-    encoded_dims.x = grid_size.x * 4;
-  }
-  if(dims.y % 4 != 0) 
-  {
-    grid_size.y++;
-    encoded_dims.y = grid_size.y * 4;
-  }
-  if(dims.z % 4 != 0)
-  {
-    grid_size.z++;
-    encoded_dims.z = grid_size.z * 4;
+    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
   }
 
-  size_t stream_bytes = calc_device_mem3d(encoded_dims, bits_per_block);
+  size_t total_blocks = block_pad + zfp_blocks;
+
+  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
+
+  size_t stream_bytes = calc_device_mem3d(zfp_pad, bits_per_block);
   //ensure we start with 0s
   cudaMemset(stream, 0, stream_bytes);
-
-  std::size_t shared_mem_size = sizeof(Scalar) * 64 +  sizeof(Bitter) * 64 + sizeof(unsigned char) * 64
-                                + sizeof(unsigned int) * 128 + 2 * sizeof(int);
-
-	cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
-
+  std::cout<<"Total blocks "<<zfp_blocks<<"\n";
+  std::cout<<"Grid "<<grid_size.x<<" "<<grid_size.y<<" "<<grid_size.z<<"\n";
+  std::cout<<"Block "<<block_size.x<<" "<<block_size.y<<" "<<block_size.z<<"\n";
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
   cudaEventRecord(start);
-	cudaEncode<Scalar> << <grid_size, block_size, shared_mem_size>> >
+	cudaEncode<Scalar> << <grid_size, block_size>> >
     (bits_per_block,
      d_data,
      stream,
-     dims);
+     dims,
+     zfp_pad,
+     zfp_blocks);
 
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);

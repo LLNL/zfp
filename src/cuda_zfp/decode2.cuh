@@ -131,6 +131,8 @@ void decode2launch(uint2 dims,
 {
   const int cuda_block_size = 128;
   dim3 block_size;
+  block_size = dim3(cuda_block_size, 1, 1);
+
   uint2 zfp_pad(dims); 
   // ensure that we have block sizes
   // that are a multiple of 4
@@ -139,7 +141,6 @@ void decode2launch(uint2 dims,
 
   const int zfp_blocks = (zfp_pad.x * zfp_pad.y) / 16; 
 
-  block_size = dim3(cuda_block_size, 1, 1);
   
   //
   // we need to ensure that we launch a multiple of the 

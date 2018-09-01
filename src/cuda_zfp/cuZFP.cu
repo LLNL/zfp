@@ -66,6 +66,7 @@ size_t encode(uint dims[3], int bits_per_block, T *d_data, Word *d_stream)
   }
 
   errors.chk("Encode");
+  
   return stream_size; 
 }
 
@@ -178,7 +179,7 @@ void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes)
 
 } // namespace internal
 
-void
+size_t
 cuda_compress(zfp_stream *stream, const zfp_field *field)
 {
   uint dims[3];
@@ -221,7 +222,7 @@ cuda_compress(zfp_stream *stream, const zfp_field *field)
   // set stream pointer to end of stream
   stream->stream->ptr = stream->stream->begin + compressed_size;
 
-  //return stream_bytes;
+  return stream_bytes;
 }
   
 void 
