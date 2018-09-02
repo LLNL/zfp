@@ -53,6 +53,7 @@ dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
   {
     dims = 3;
   }
+
   dim3 grid_size;
   grid_size.x = 1;
   grid_size.y = 1;
