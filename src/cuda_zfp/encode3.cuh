@@ -14,6 +14,25 @@ namespace cuZFP{
 
 template<typename Scalar> 
 __device__ __host__ inline 
+void gather_partial3(Scalar* q, const Scalar* p, int nx, int ny, int nz, int sx, int sy, int sz)
+{
+  uint x, y, z;
+  for (z = 0; z < nz; z++, p += sz - ny * sy) {
+    for (y = 0; y < ny; y++, p += sy - nx * sx) {
+      for (x = 0; x < nx; x++, p += sx)
+        q[16 * z + 4 * y + x] = *p; 
+        pad_block(q + 16 * z + 4 * y, nx, 1);
+    }
+    for (x = 0; x < 4; x++)
+      pad_block(q + 16 * z + x, ny, 4);
+  }
+  for (y = 0; y < 4; y++)
+    for (x = 0; x < 4; x++)
+      pad_block(q + 4 * y + x, nz, 16);
+}
+
+template<typename Scalar> 
+__device__ __host__ inline 
 void gather3(Scalar* q, const Scalar* p, int sx, int sy, int sz)
 {
   uint x, y, z;
@@ -583,6 +602,7 @@ cudaEncode(const uint maxbits,
   block.x = (block_idx % block_dims.x) * 4; 
   block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
   block.z = (block_idx/ (block_dims.x * block_dims.y)) * 4; 
+
   // default strides
   int sx = 1;
   int sy = dims.x;
@@ -593,8 +613,25 @@ cudaEncode(const uint maxbits,
   //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
   //printf("OFFSET %d\n", (int)offset); 
   Scalar fblock[ZFP_3D_BLOCK_SIZE]; 
-  // TODO: gather partail
-  gather3(fblock, scalars + offset, sx, sy, sz);
+
+  bool partial = false;
+  if(block.x + 4 > dims.x) partial = true;
+  if(block.y + 4 > dims.y) partial = true;
+  if(block.z + 4 > dims.z) partial = true;
+ 
+  if(partial) 
+  {
+    //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
+    uint rm_x = dims.x - block.x;
+    uint rm_y = dims.y - block.y;
+    uint rm_z = dims.z - block.z;
+    gather_partial3(fblock, scalars + offset, rm_x, rm_y, rm_z, sx, sy, sz);
+
+  }
+  else
+  {
+    gather3(fblock, scalars + offset, sx, sy, sz);
+  }
   //if(block_idx == 0)
   //for(int z = 0; z < 4; ++z)
   //{
