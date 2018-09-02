@@ -13,13 +13,11 @@ set(cuZFP_sources
     encode2.cuh
     encode3.cuh
     pointers.cuh
-    type_info.cuh
-    WriteBitter.cuh)
+    type_info.cuh)
 
 set(cuZFP_headers
     constant_setup.cuh
     shared.h
-    ull128.h
     cuZFP.h
     zfp_structs.h
     ErrorCheck.h)

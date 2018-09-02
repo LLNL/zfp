@@ -1,8 +1,6 @@
 #ifndef CUZFP_ENCODE3_CUH
 #define CUZFP_ENCODE3_CUH
 
-#include "ull128.h"
-#include "WriteBitter.cuh"
 #include "shared.h"
 
 #include "cuZFP.h"
@@ -144,7 +142,7 @@ template<class Scalar>
 size_t encode3launch(uint3 dims, 
                      const Scalar *d_data,
                      Word *stream,
-                     const int bits_per_block)
+                     const int maxbits)
 {
 
   const int cuda_block_size = 128;
@@ -171,7 +169,7 @@ size_t encode3launch(uint3 dims,
 
   dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
 
-  size_t stream_bytes = calc_device_mem3d(zfp_pad, bits_per_block);
+  size_t stream_bytes = calc_device_mem3d(zfp_pad, maxbits);
   //ensure we start with 0s
   cudaMemset(stream, 0, stream_bytes);
   std::cout<<"Total blocks "<<zfp_blocks<<"\n";
@@ -183,7 +181,7 @@ size_t encode3launch(uint3 dims,
 
   cudaEventRecord(start);
 	cudaEncode<Scalar> << <grid_size, block_size>> >
-    (bits_per_block,
+    (maxbits,
      d_data,
      stream,
      dims,
@@ -202,7 +200,7 @@ size_t encode3launch(uint3 dims,
   rate /= 1024.f;
   rate /= 1024.f;
   rate /= 1024.f;
-  printf("# encode3 rate: %.2f (GB / sec) %d\n", rate, bits_per_block);
+  printf("# encode3 rate: %.2f (GB / sec) \n", rate);
   return stream_bytes;
 }
 

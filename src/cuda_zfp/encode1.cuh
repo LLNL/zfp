@@ -2,16 +2,13 @@
 #define CUZFP_ENCODE1_CUH
 
 #include "shared.h"
-#include "ull128.h"
-#include "WriteBitter.cuh"
 #include "shared.h"
-#include <thrust/functional.h>
-#include <thrust/device_vector.h>
 
 #include "cuZFP.h"
 #include "debug_utils.cuh"
 #include "type_info.cuh"
 
+#include <iostream>
 #define CUDA_BLK_SIZE_1D 128
 #define ZFP_BLK_PER_BLK_1D 32 
 

@@ -1,5 +1,6 @@
 #ifndef ERRORCHECK_H
 #define ERRORCHECK_H
+#include <iostream>
 #include <string>
 #include <sstream>
 

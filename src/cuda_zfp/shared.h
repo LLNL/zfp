@@ -239,7 +239,7 @@ void pad_block(Scalar *p, uint n, uint s)
 }
 
 // maximum number of bit planes to encode
-__device__ __host__
+__device__ 
 static int
 precision(int maxexp, int maxprec, int minexp)
 {
@@ -247,14 +247,14 @@ precision(int maxexp, int maxprec, int minexp)
 }
 
 // map two's complement signed integer to negabinary unsigned integer
-inline __device__ __host__
+inline __device__ 
 unsigned long long int int2uint(const long long int x)
 {
     return (x + (unsigned long long int)0xaaaaaaaaaaaaaaaaull) ^ 
                 (unsigned long long int)0xaaaaaaaaaaaaaaaaull;
 }
 
-inline __device__ __host__
+inline __device__ 
 unsigned int int2uint(const int x)
 {
     return (x + (unsigned int)0xaaaaaaaau) ^ 
@@ -291,7 +291,7 @@ max_exponent(const Scalar* p)
 
 // lifting transform of 4-vector
 template <class Int, uint s>
-__device__ __host__
+__device__ 
 static void
 fwd_lift(Int* p)
 {
@@ -377,7 +377,7 @@ dequantize<long long int, long long int>(const long long int &x, const int &e)
 
 /* inverse lifting transform of 4-vector */
 template<class Int, uint s>
-__host__ __device__
+__device__
 static void
 inv_lift(Int* p)
 {
@@ -441,6 +441,35 @@ struct transform<64>
         fwd_lift<Int,16>(p + 1 * x + 4 * y);
 
    }
+
+};
+
+template<>
+struct transform<16>
+{
+  template<typename Int>
+  __device__ void fwd_xform(Int *p)
+  {
+
+    uint x, y;
+    /* transform along x */
+    for (y = 0; y < 4; y++)
+     fwd_lift<Int,1>(p + 4 * y);
+    /* transform along y */
+    for (x = 0; x < 4; x++)
+      fwd_lift<Int,4>(p + 1 * x);
+    }
+
+};
+
+template<>
+struct transform<4>
+{
+  template<typename Int>
+  __device__ void fwd_xform(Int *p)
+  {
+    fwd_lift<Int,1>(p);
+  }
 
 };
 
@@ -514,7 +543,7 @@ void inline __device__ encode_block(BlockWriter2<BlockSize> &stream,
     //print_bits(x);
     /* step 2: encode first n bits of bit plane */
     m = min(n, bits);
-    uint temp  = bits;
+    //uint temp  = bits;
     bits -= m;
     x = stream.write_bits(x, m);
     
@@ -532,7 +561,7 @@ void inline __device__ encode_block(BlockWriter2<BlockSize> &stream,
   }
   
 }
-                                   
+
 template<typename Scalar, int BlockSize>
 void inline __device__ zfp_encode_block(Scalar *fblock,
                                         const int maxbits,
@@ -578,6 +607,50 @@ void inline __device__ zfp_encode_block<long long int, 64>(long long int *fblock
   encode_block<long long int, 64>(block_writer, maxbits, intprec, fblock);
 }
 
+template<>
+void inline __device__ zfp_encode_block<int, 16>(int *fblock,
+                                             const int maxbits,
+                                             const uint block_idx,
+                                             Word *stream)
+{
+  BlockWriter2<16> block_writer(stream, maxbits, block_idx);
+  const int intprec = get_precision<int>();
+  encode_block<int, 16>(block_writer, maxbits, intprec, fblock);
+}
+
+template<>
+void inline __device__ zfp_encode_block<long long int, 16>(long long int *fblock,
+                                                       const int maxbits,
+                                                       const uint block_idx,
+                                                       Word *stream)
+{
+  BlockWriter2<16> block_writer(stream, maxbits, block_idx);
+  const int intprec = get_precision<long long int>();
+  encode_block<long long int, 16>(block_writer, maxbits, intprec, fblock);
+}
+
+template<>
+void inline __device__ zfp_encode_block<int, 4>(int *fblock,
+                                             const int maxbits,
+                                             const uint block_idx,
+                                             Word *stream)
+{
+  BlockWriter2<4> block_writer(stream, maxbits, block_idx);
+  const int intprec = get_precision<int>();
+  encode_block<int, 4>(block_writer, maxbits, intprec, fblock);
+}
+
+template<>
+void inline __device__ zfp_encode_block<long long int, 4>(long long int *fblock,
+                                                       const int maxbits,
+                                                       const uint block_idx,
+                                                       Word *stream)
+{
+  BlockWriter2<4> block_writer(stream, maxbits, block_idx);
+  const int intprec = get_precision<long long int>();
+  encode_block<long long int, 4>(block_writer, maxbits, intprec, fblock);
+}
+
 /* transform along z */
 template<class Int>
  __device__
@@ -621,13 +694,13 @@ inv_xform(Int* p)
 }
 
 /* map two's complement signed integer to negabinary unsigned integer */
-inline __host__ __device__
+inline __device__
 long long int uint2int(unsigned long long int x)
 {
 	return (x ^0xaaaaaaaaaaaaaaaaull) - 0xaaaaaaaaaaaaaaaaull;
 }
 
-inline __host__ __device__
+inline __device__
 int uint2int(unsigned int x)
 {
 	return (x ^0xaaaaaaaau) - 0xaaaaaaaau;
