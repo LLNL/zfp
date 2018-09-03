@@ -117,21 +117,6 @@ cudaEncode2(const uint maxbits,
 
 }
 
-size_t calc_device_mem2d(const uint2 dims, 
-                         const int maxbits)
-{
-  
-  const size_t vals_per_block = 16;
-  size_t total_blocks = (dims.x * dims.y) / vals_per_block; 
-  if((dims.x * dims.y) % vals_per_block != 0) total_blocks++;
-  const size_t bits_per_block = maxbits;
-  const size_t bits_per_word = sizeof(Word) * 8;
-  const size_t total_bits = bits_per_block * total_blocks;
-  size_t alloc_size = total_bits / bits_per_word;
-  if(total_bits % bits_per_word != 0) alloc_size++;
-  return alloc_size * sizeof(Word);
-}
-
 //
 // Launch the encode kernel
 //

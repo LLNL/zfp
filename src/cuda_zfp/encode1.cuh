@@ -33,25 +33,6 @@ void gather1(Scalar* q, const Scalar* p, int sx)
     *q++ = *p;
 }
 
-size_t calc_device_mem1d(const int dim, 
-                         const int maxbits)
-{
-  
-  const size_t vals_per_block = 4;
-  size_t total_blocks = dim / vals_per_block; 
-  if(dim % vals_per_block != 0) 
-  {
-    total_blocks++;
-  }
-  const size_t bits_per_block = maxbits;
-  const size_t bits_per_word = sizeof(Word) * 8;
-  const size_t total_bits = bits_per_block * total_blocks;
-  size_t alloc_size = total_bits / bits_per_word;
-  if(total_bits % bits_per_word != 0) alloc_size++;
-  // ensure we have zeros
-  return alloc_size * sizeof(Word);
-}
-
 template<class Scalar>
 __global__
 void 

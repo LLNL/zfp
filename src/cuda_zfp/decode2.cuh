@@ -89,15 +89,15 @@ cudaDecode2(Word *blocks,
 }
 
 template<class Scalar>
-void decode2launch(uint2 dims, 
-                   Word *stream,
-                   Scalar *d_data,
-                   uint maxbits)
+size_t decode2launch(uint2 dims, 
+                     Word *stream,
+                     Scalar *d_data,
+                     uint maxbits)
 {
   const int cuda_block_size = 128;
   dim3 block_size;
   block_size = dim3(cuda_block_size, 1, 1);
-
+  
   uint2 zfp_pad(dims); 
   // ensure that we have block sizes
   // that are a multiple of 4
@@ -117,6 +117,8 @@ void decode2launch(uint2 dims,
     block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
   }
 
+
+  size_t stream_bytes = calc_device_mem2d(zfp_pad, maxbits);
   size_t total_blocks = block_pad + zfp_blocks;
   dim3 grid_size = calculate_grid_size(total_blocks, CUDA_BLK_SIZE_2D);
 
@@ -145,16 +147,18 @@ void decode2launch(uint2 dims,
   float rate = (float(dims.x * dims.y) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;
-  printf("# decode2 rate: %.2f (MB / sec) %d\n", rate, maxbits);
+  rate /= 1024.f;
+  printf("# decode2 rate: %.2f (GB / sec) %d\n", rate, maxbits);
+  return stream_bytes;
 }
 
 template<class Scalar>
-void decode2(uint2 dims, 
+size_t decode2(uint2 dims, 
              Word *stream,
              Scalar *d_data,
              uint maxbits)
 {
-	decode2launch<Scalar>(dims, stream, d_data, maxbits);
+	return decode2launch<Scalar>(dims, stream, d_data, maxbits);
 }
 
 } // namespace cuZFP

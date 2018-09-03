@@ -97,10 +97,10 @@ cudaEncode(const uint maxbits,
  
   if(partial) 
   {
-    //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
     const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
     const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
     const uint nz = block.z + 4 > dims.z ? dims.z - block.z : 4;
+    //printf("partial blk_idx %d block coords %d %d %d nx %d ny %d nz %d\n", block_idx, block.x, block.y, block.z, nx, ny, nz);
     gather_partial3(fblock, scalars + offset, nx, ny, nz, sx, sy, sz);
 
   }
@@ -122,18 +122,6 @@ cudaEncode(const uint maxbits,
   //}
   zfp_encode_block<Scalar, ZFP_3D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
 
-}
-
-size_t calc_device_mem3d(const uint3 encoded_dims, 
-                         const int bits_per_block)
-{
-  const size_t vals_per_block = 64;
-  const size_t size = encoded_dims.x * encoded_dims.y * encoded_dims.z; 
-  size_t total_blocks = size / vals_per_block; 
-  const size_t bits_per_word = sizeof(Word) * 8;
-  const size_t total_bits = bits_per_block * total_blocks;
-  const size_t alloc_size = total_bits / bits_per_word;
-  return alloc_size * sizeof(Word);
 }
 
 //

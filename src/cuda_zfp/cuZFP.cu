@@ -1,15 +1,16 @@
 #include <assert.h>
 
 #include "cuZFP.h"
+
 #include "encode1.cuh"
 #include "encode2.cuh"
 #include "encode3.cuh"
 
-#include "ErrorCheck.h"
-
 #include "decode1.cuh"
 #include "decode2.cuh"
 #include "decode3.cuh"
+
+#include "ErrorCheck.h"
 
 #include "constant_setup.cuh"
 #include "pointers.cuh"
@@ -71,11 +72,12 @@ size_t encode(uint dims[3], int bits_per_block, T *d_data, Word *d_stream)
 }
 
 template<typename T>
-void decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
+size_t decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
 {
 
   int d = 0;
   size_t out_size = 1;
+  size_t stream_bytes = 0;
   for(int i = 0; i < 3; ++i)
   {
     if(ndims[i] != 0)
@@ -89,13 +91,13 @@ void decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
   {
     uint3 dims = make_uint3(ndims[0], ndims[1], ndims[2]);
     cuZFP::ConstantSetup::setup_3d();
-    cuZFP::decode3<T>(dims, stream, out, bits_per_block); 
+    stream_bytes = cuZFP::decode3<T>(dims, stream, out, bits_per_block); 
   }
   else if(d == 1)
   {
     uint dim = ndims[0];
     cuZFP::ConstantSetup::setup_1d();
-    cuZFP::decode1<T>(dim, stream, out, bits_per_block); 
+    stream_bytes = cuZFP::decode1<T>(dim, stream, out, bits_per_block); 
 
   }
   else if(d == 2)
@@ -104,11 +106,11 @@ void decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
     dims.x = ndims[0];
     dims.y = ndims[1];
     cuZFP::ConstantSetup::setup_2d();
-    cuZFP::decode2<T>(dims, stream, out, bits_per_block); 
-
+    stream_bytes = cuZFP::decode2<T>(dims, stream, out, bits_per_block); 
   }
   else std::cerr<<" d ==  "<<d<<" not implemented\n";
-  
+ 
+  return stream_bytes;
 }
 
 Word *setup_device_stream(zfp_stream *stream,const zfp_field *field)
@@ -218,6 +220,7 @@ cuda_compress(zfp_stream *stream, const zfp_field *field)
   // zfp wants to flush the stream.
   // set bits to wsize becuase we already did that.
   size_t compressed_size = stream_bytes / sizeof(Word);
+  std::cout<<"Compressed words words "<<compressed_size<<"\n";
   stream->stream->bits = wsize;
   // set stream pointer to end of stream
   stream->stream->ptr = stream->stream->begin + compressed_size;
@@ -232,7 +235,8 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   dims[0] = field->nx;
   dims[1] = field->ny;
   dims[2] = field->nz;
-    
+   
+  size_t decoded_bytes = 0;
 
   void *d_data = internal::setup_device_field(field);
   Word *d_stream = internal::setup_device_stream(stream, field);
@@ -240,25 +244,25 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   if(field->type == zfp_type_float)
   {
     float *data = (float*) d_data;
-    internal::decode(dims, (int)stream->maxbits, d_stream, data);
+    decoded_bytes = internal::decode(dims, (int)stream->maxbits, d_stream, data);
     d_data = (void*) data;
   }
   else if(field->type == zfp_type_double)
   {
     double *data = (double*) d_data;
-    internal::decode(dims, (int)stream->maxbits, d_stream, data);
+    decoded_bytes = internal::decode(dims, (int)stream->maxbits, d_stream, data);
     d_data = (void*) data;
   }
   else if(field->type == zfp_type_int32)
   {
     int *data = (int*) d_data;
-    internal::decode(dims, (int)stream->maxbits, d_stream, data);
+    decoded_bytes = internal::decode(dims, (int)stream->maxbits, d_stream, data);
     d_data = (void*) data;
   }
   else if(field->type == zfp_type_int64)
   {
     long long int *data = (long long int*) d_data;
-    internal::decode(dims, (int)stream->maxbits, d_stream, data);
+    decoded_bytes = internal::decode(dims, (int)stream->maxbits, d_stream, data);
     d_data = (void*) data;
   }
   else
@@ -283,6 +287,12 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   internal::cleanup_device_ptr(field->data, d_data, bytes);
   
   // this is how zfp determins if this was a success
-  stream->stream->ptr = stream->stream->begin + 1;
+  size_t words_read = decoded_bytes / sizeof(Word);
+  std::cout<<"Decode words "<<words_read<<"\n";
+  stream->stream->bits = wsize;
+  // set stream pointer to end of stream
+  stream->stream->ptr = stream->stream->begin + words_read;
+
+  //stream->stream->ptr = stream->stream->begin + 1;
 }
 

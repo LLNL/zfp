@@ -45,7 +45,6 @@ cudaDecode3(Word *blocks,
   const ull blockId = blockIdx.x +
                       blockIdx.y * gridDim.x +
                       gridDim.x * gridDim.y * blockIdx.z;
-
   // each thread gets a block so the block index is 
   // the global thread index
   const ull block_idx = blockId * blockDim.x + threadIdx.x;
@@ -62,7 +61,7 @@ cudaDecode3(Word *blocks,
   Scalar result[BlockSize];
   memset(result, 0, sizeof(Scalar) * BlockSize);
 
-  zfp_decode(reader, result, maxbits);
+  zfp_decode<Scalar,BlockSize>(reader, result, maxbits);
 
   // logical block dims
   uint3 block_dims;
@@ -79,7 +78,7 @@ cudaDecode3(Word *blocks,
   int sx = 1;
   int sy = dims.x;
   int sz = dims.x * dims.y;
-  uint offset = block.x * sx + block.y * sy + block.z * sz; 
+  const uint offset = block.x * sx + block.y * sy + block.z * sz; 
 
   bool partial = false;
   if(block.x + 4 > dims.x) partial = true;
@@ -87,9 +86,10 @@ cudaDecode3(Word *blocks,
   if(block.z + 4 > dims.z) partial = true;
   if(partial)
   {
-    const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
-    const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
-    const uint nz = block.z + 4 > dims.z ? dims.z - block.z : 4;
+    const uint nx = block.x + 4u > dims.x ? dims.x - block.x : 4;
+    const uint ny = block.y + 4u > dims.y ? dims.y - block.y : 4;
+    const uint nz = block.z + 4u > dims.z ? dims.z - block.z : 4;
+    //if(block_idx == 26) printf("partial blk_idx %d block coords %d %d %d nx %d ny %d nz %d\n", block_idx, block.x, block.y, block.z, nx, ny, nz);
     scatter_partial3(result, out + offset, nx, ny, nz, sx, sy, sz);
   }
   else
@@ -98,10 +98,10 @@ cudaDecode3(Word *blocks,
   }
 }
 template<class Scalar>
-void decode3launch(uint3 dims, 
-                  Word *stream,
-                  Scalar *d_data,
-                  uint maxbits)
+size_t decode3launch(uint3 dims, 
+                     Word *stream,
+                     Scalar *d_data,
+                     uint maxbits)
 {
   const int cuda_block_size = 128;
   dim3 block_size;
@@ -128,6 +128,8 @@ void decode3launch(uint3 dims,
   }
 
   size_t total_blocks = block_pad + zfp_blocks;
+  size_t stream_bytes = calc_device_mem3d(zfp_pad, maxbits);
+
   dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
 
   // setup some timing code
@@ -158,15 +160,16 @@ void decode3launch(uint3 dims,
   rate /= 1024.f;
   printf("# decode3 rate: %.2f (GB / sec) %d\n", rate, maxbits);
 
+  return stream_bytes;
 }
 
 template<class Scalar>
-void decode3(uint3 dims, 
-             Word  *stream,
-             Scalar *d_data,
-             uint maxbits)
+size_t decode3(uint3 dims, 
+               Word  *stream,
+               Scalar *d_data,
+               uint maxbits)
 {
-	decode3launch<Scalar>(dims, stream, d_data, maxbits);
+	return decode3launch<Scalar>(dims, stream, d_data, maxbits);
 }
 
 } // namespace cuZFP

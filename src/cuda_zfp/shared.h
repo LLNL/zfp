@@ -26,6 +26,52 @@ __constant__ unsigned char c_perm[64];
 namespace cuZFP
 {
 
+size_t calc_device_mem1d(const int dim, 
+                         const int maxbits)
+{
+  
+  const size_t vals_per_block = 4;
+  size_t total_blocks = dim / vals_per_block; 
+  if(dim % vals_per_block != 0) 
+  {
+    total_blocks++;
+  }
+  const size_t bits_per_block = maxbits;
+  const size_t bits_per_word = sizeof(Word) * 8;
+  const size_t total_bits = bits_per_block * total_blocks;
+  size_t alloc_size = total_bits / bits_per_word;
+  if(total_bits % bits_per_word != 0) alloc_size++;
+  // ensure we have zeros
+  return alloc_size * sizeof(Word);
+}
+
+size_t calc_device_mem2d(const uint2 dims, 
+                         const int maxbits)
+{
+  
+  const size_t vals_per_block = 16;
+  size_t total_blocks = (dims.x * dims.y) / vals_per_block; 
+  if((dims.x * dims.y) % vals_per_block != 0) total_blocks++;
+  const size_t bits_per_block = maxbits;
+  const size_t bits_per_word = sizeof(Word) * 8;
+  const size_t total_bits = bits_per_block * total_blocks;
+  size_t alloc_size = total_bits / bits_per_word;
+  if(total_bits % bits_per_word != 0) alloc_size++;
+  return alloc_size * sizeof(Word);
+}
+
+size_t calc_device_mem3d(const uint3 encoded_dims, 
+                         const int bits_per_block)
+{
+  const size_t vals_per_block = 64;
+  const size_t size = encoded_dims.x * encoded_dims.y * encoded_dims.z; 
+  size_t total_blocks = size / vals_per_block; 
+  const size_t bits_per_word = sizeof(Word) * 8;
+  const size_t total_bits = bits_per_block * total_blocks;
+  const size_t alloc_size = total_bits / bits_per_word;
+  return alloc_size * sizeof(Word);
+}
+
 dim3 get_max_grid_dims()
 {
   cudaDeviceProp prop; 
@@ -392,9 +438,9 @@ struct BlockReader
 
   // note this assumes that n_bits is <= 64
   inline __device__ 
-  uint read_bits(const int &n_bits)
+  uint64 read_bits(const uint &n_bits)
   {
-    uint bits; 
+    uint64 bits; 
     // rem bits will always be positive
     int rem_bits = sizeof(Word) * 8 - m_current_bit;
      
@@ -436,7 +482,7 @@ void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
 {
   const int intprec = get_precision<Scalar>();
   memset(data, 0, sizeof(UInt) * Size);
-  unsigned int x; 
+  uint64 x; 
   // maxprec = 64;
   const uint kmin = 0; //= intprec > maxprec ? intprec - maxprec : 0;
   int bits = max_bits;
@@ -558,7 +604,7 @@ __device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint 
 
     decode_ints<Scalar, BlockSize, UInt>(reader, maxbits, ublock);
 
-    Int iblock[4];
+    Int iblock[BlockSize];
     unsigned char *perm = get_perm<BlockSize>();
     #pragma unroll BlockSize 
     for(int i = 0; i < BlockSize; ++i)
