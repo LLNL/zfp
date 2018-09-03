@@ -465,5 +465,127 @@ void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
 }
 
 
+template<int BlockSize>
+struct inv_transform;
+
+template<>
+struct inv_transform<64>
+{
+  template<typename Int>
+  __device__ void inv_xform(Int *p)
+  {
+    uint x, y, z;
+    /* transform along z */
+    for (y = 0; y < 4; y++)
+      for (x = 0; x < 4; x++)
+        inv_lift<Int,16>(p + 1 * x + 4 * y);
+    /* transform along y */
+    for (x = 0; x < 4; x++)
+      for (z = 0; z < 4; z++)
+        inv_lift<Int,4>(p + 16 * z + 1 * x);
+    /* transform along x */
+    for (z = 0; z < 4; z++)
+      for (y = 0; y < 4; y++)
+        inv_lift<Int,1>(p + 4 * y + 16 * z); 
+  }
+
+};
+
+template<>
+struct inv_transform<16>
+{
+  template<typename Int>
+  __device__ void inv_xform(Int *p)
+  {
+
+    for(int x = 0; x < 4; ++x)
+    {
+      inv_lift<Int,4>(p + 1 * x);
+    }
+    for(int y = 0; y < 4; ++y)
+    {
+      inv_lift<Int,1>(p + 4 * y);
+    }
+  }
+
+};
+
+template<>
+struct inv_transform<4>
+{
+  template<typename Int>
+  __device__ void inv_xform(Int *p)
+  {
+    inv_lift<Int,1>(p);
+  }
+
+};
+
+template<typename Scalar, int BlockSize>
+__device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint maxbits)
+{
+  typedef typename zfp_traits<Scalar>::UInt UInt;
+  typedef typename zfp_traits<Scalar>::Int Int;
+
+  uint s_cont = 1;
+  //
+  // there is no skip path for integers so just continue
+  //
+  if(!is_int<Scalar>())
+  {
+    s_cont = reader.read_bit();
+  }
+
+  if(s_cont)
+  {
+    uint ebits = get_ebits<Scalar>() + 1;
+
+    uint emax;
+    if(!is_int<Scalar>())
+    {
+      // read in the shared exponent
+      emax = reader.read_bits(ebits - 1) - get_ebias<Scalar>();
+    }
+    else
+    {
+      // no exponent bits
+      ebits = 0;
+    }
+
+	  maxbits -= ebits;
+    
+    UInt ublock[BlockSize];
+
+    decode_ints<Scalar, BlockSize, UInt>(reader, maxbits, ublock);
+
+    Int iblock[4];
+    unsigned char *perm = get_perm<BlockSize>();
+    #pragma unroll BlockSize 
+    for(int i = 0; i < BlockSize; ++i)
+    {
+		  iblock[perm[i]] = uint2int(ublock[i]);
+    }
+    
+    inv_transform<BlockSize> trans;
+    trans.inv_xform(iblock);
+
+    //for(int i = 0; i < 4; ++i)
+    //{
+    //  printf("iblock %d %lld\n", i, iblock[i]);
+    //}
+
+		Scalar inv_w = dequantize<Int, Scalar>(1, emax);
+    //if(inv_w == 0.) printf("ZERO\n");
+    //printf("inv fact %a emax %d\n", inv_w, emax); 
+    #pragma unroll BlockSize
+    for(int i = 0; i < BlockSize; ++i)
+    {
+		  fblock[i] = inv_w * (Scalar)iblock[i];
+    }
+     
+  }
+}
+
+
 } // namespace cuZFP
 #endif

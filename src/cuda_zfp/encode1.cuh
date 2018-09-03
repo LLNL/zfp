@@ -100,7 +100,6 @@ cudaEncode1(const uint maxbits,
   if(partial) 
   {
     uint nx = 4 - (padded_dim - dim);
-    printf("encode nx %u\n", nx);
     gather_partial1(fblock, scalars + offset, nx, sx);
   }
   else
@@ -158,7 +157,7 @@ size_t encode1launch(uint dim,
   std::cout<<"Block "<<block_size.x<<" "<<block_size.y<<" "<<block_size.z<<"\n";
 
   //
-  size_t stream_bytes = calc_device_mem1d(dim, maxbits);
+  size_t stream_bytes = calc_device_mem1d(zfp_pad, maxbits);
   // ensure we have zeros
   cudaMemset(stream, 0, stream_bytes);
 

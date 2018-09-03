@@ -44,7 +44,7 @@ cudaDecode1(Word *blocks,
 
   const ull blockId = blockIdx.x +
                       blockIdx.y * gridDim.x +
-                      gridDim.x * gridDim.y * blockIdx.z;
+                      gridDim.x  * gridDim.y * blockIdx.z;
 
   // each thread gets a block so the block index is 
   // the global thread index
@@ -55,73 +55,13 @@ cudaDecode1(Word *blocks,
   BlockReader<4> reader(blocks, maxbits, block_idx, total_blocks);
   Scalar result[4] = {0,0,0,0};
 
-  uint s_cont = 1;
-  //
-  // there is no skip path for integers so just continue
-  //
-  if(!is_int<Scalar>())
-  {
-    s_cont = reader.read_bit();
-  }
-
-  if(s_cont)
-  {
-    uint ebits = get_ebits<Scalar>() + 1;
-
-    uint emax;
-    if(!is_int<Scalar>())
-    {
-      // read in the shared exponent
-      emax = reader.read_bits(ebits - 1) - get_ebias<Scalar>();
-    }
-    else
-    {
-      // no exponent bits
-      ebits = 0;
-    }
-
-    const uint vals_per_block = 4;
-	  maxbits -= ebits;
-    
-    UInt ublock[vals_per_block];
-
-    decode_ints<Scalar, 4, UInt>(reader, maxbits, ublock);
-
-    Int iblock[4];
-    #pragma unroll 4
-    for(int i = 0; i < 4; ++i)
-    {
-		  iblock[i] = uint2int(ublock[i]);
-    }
-
-    inv_lift<Int,1>(iblock);
-
-    //for(int i = 0; i < 4; ++i)
-    //{
-    //  printf("iblock %d %lld\n", i, iblock[i]);
-    //}
-
-		Scalar inv_w = dequantize<Int, Scalar>(1, emax);
-    //if(inv_w == 0.) printf("ZERO\n");
-    //printf("inv fact %a emax %d\n", inv_w, emax); 
-    #pragma unroll 4
-    for(int i = 0; i < 4; ++i)
-    {
-		  result[i] = inv_w * (Scalar)iblock[i];
-    }
-     
-  }
+  zfp_decode(reader, result, maxbits);
 
   uint block;
   block = block_idx * 4ull; 
   uint sx = 1;
   uint offset = block * sx; 
   
-  for(int i = 0; i < 4; ++i)
-  {
-    printf("%d result %f\n", i, result[i]);
-  }
-  printf("Outputblock offset %d index %d\n", offset, (int) block_idx);
   bool partial = false;
   if(block + 4 > dim) partial = true;
   if(partial)
@@ -134,6 +74,7 @@ cudaDecode1(Word *blocks,
     scatter1(result, out + offset, sx);
   }
 }
+
 template<class Scalar>
 void decode1launch(uint dim, 
                    Word *stream,

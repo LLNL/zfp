@@ -98,10 +98,10 @@ cudaEncode(const uint maxbits,
   if(partial) 
   {
     //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
-    uint rm_x = dims.x - block.x;
-    uint rm_y = dims.y - block.y;
-    uint rm_z = dims.z - block.z;
-    gather_partial3(fblock, scalars + offset, rm_x, rm_y, rm_z, sx, sy, sz);
+    const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
+    const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
+    const uint nz = block.z + 4 > dims.z ? dims.z - block.z : 4;
+    gather_partial3(fblock, scalars + offset, nx, ny, nz, sx, sy, sz);
 
   }
   else

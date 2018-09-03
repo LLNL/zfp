@@ -160,8 +160,6 @@ __device__ void fwd_order(UInt *ublock, const Int *iblock)
   }
 }
 
-
-
 template<int block_size>
 struct BlockWriter
 {

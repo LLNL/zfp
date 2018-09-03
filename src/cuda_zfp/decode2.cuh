@@ -6,22 +6,37 @@
 
 namespace cuZFP {
 
+template<typename Scalar> 
+__device__ __host__ inline 
+void scatter_partial2(const Scalar* q, Scalar* p, int nx, int ny, int sx, int sy)
+{
+  uint x, y;
+  for (y = 0; y < ny; y++, p += sy - nx * sx, q += 4 - nx)
+    for (x = 0; x < nx; x++, p += sx, q++)
+      *p = *q;
+}
+
+template<typename Scalar> 
+__device__ __host__ inline 
+void scatter2(const Scalar* q, Scalar* p, int sx, int sy)
+{
+  uint x, y;
+  for (y = 0; y < 4; y++, p += sy - 4 * sx)
+    for (x = 0; x < 4; x++, p += sx)
+      *p = *q++;
+}
 
 
-
-template<class Scalar, int Size>
+template<class Scalar, int BlockSize>
 __global__
 void
 cudaDecode2(Word *blocks,
             Scalar *out,
             const uint2 dims,
+            const uint2 padded_dims,
             uint maxbits)
 {
   typedef unsigned long long int ull;
-  typedef typename zfp_traits<Scalar>::UInt UInt;
-  typedef typename zfp_traits<Scalar>::Int Int;
-  const int intprec = get_precision<Scalar>();
-
   const ull blockId = blockIdx.x +
                       blockIdx.y * gridDim.x +
                       gridDim.x * gridDim.y * blockIdx.z;
@@ -30,96 +45,46 @@ cudaDecode2(Word *blocks,
   // the global thread index
   const ull block_idx = blockId * blockDim.x + threadIdx.x;
   
-  uint2 zfp_pad(dims);
-  if(zfp_pad.x % 4 != 0) zfp_pad.x += 4 - dims.x % 4;
-  if(zfp_pad.y % 4 != 0) zfp_pad.y += 4 - dims.y % 4;
-
-  const int total_blocks = (zfp_pad.x * zfp_pad.y) / 16; 
+  const int total_blocks = (padded_dims.x * padded_dims.y) / 16; 
   
   if(block_idx >= total_blocks) 
   {
     return;
   }
 
-  BlockReader<Size> reader(blocks, maxbits, block_idx, total_blocks);
+  BlockReader<BlockSize> reader(blocks, maxbits, block_idx, total_blocks);
  
-  Scalar result[Size];
-  memset(result, 0, sizeof(Scalar) * Size);
-  uint s_cont = 1;
-  //
-  // there is no skip path for integers so just continue
-  //
-  if(!is_int<Scalar>())
+  Scalar result[BlockSize];
+  memset(result, 0, sizeof(Scalar) * BlockSize);
+
+  zfp_decode(reader, result, maxbits);
+
+  // logical block dims
+  uint2 block_dims;
+  block_dims.x = padded_dims.x >> 2; 
+  block_dims.y = padded_dims.y >> 2; 
+  // logical pos in 3d array
+  uint2 block;
+  block.x = (block_idx % block_dims.x) * 4; 
+  block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
+  
+  // default strides
+  int sx = 1;
+  int sy = dims.x;
+  uint offset = block.x * sx + block.y * sy; 
+
+  bool partial = false;
+  if(block.x + 4 > dims.x) partial = true;
+  if(block.y + 4 > dims.y) partial = true;
+  if(partial)
   {
-    s_cont = reader.read_bit();
+    const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
+    const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
+    scatter_partial2(result, out + offset, nx, ny, sx, sy);
   }
-
-  if(s_cont)
+  else
   {
-    uint ebits = get_ebits<Scalar>() + 1;
-
-    uint emax;
-    if(!is_int<Scalar>())
-    {
-      // read in the shared exponent
-      emax = reader.read_bits(ebits - 1) - get_ebias<Scalar>();
-    }
-    else
-    {
-      // no exponent bits
-      ebits = 0;
-    }
-
-	  maxbits -= ebits;
-    UInt data[Size];
-    decode_ints<Scalar, Size, UInt>(reader, maxbits, data);
-    Int iblock[Size];
-
-    #pragma unroll Size
-    for(int i = 0; i < Size; ++i)
-    {
-		  iblock[c_perm_2[i]] = uint2int(data[i]);
-    }
-    
-
-    for(int x = 0; x < 4; ++x)
-    {
-      inv_lift<Int,4>(iblock + 1 * x);
-    }
-    for(int y = 0; y < 4; ++y)
-    {
-      inv_lift<Int,1>(iblock + 4 * y);
-    }
-
-		Scalar inv_w = dequantize<Int, Scalar>(1, emax);
-    
-    #pragma unroll Size
-    for(int i = 0; i < Size; ++i)
-    {
-		  result[i] = inv_w * (Scalar)iblock[i];
-    }
-     
-  }
-  // TODO dim could end in the middle of this block
-  // block logical coords
-  int xdim = zfp_pad.x / 4;
-  int px = block_idx % xdim;
-  int py = block_idx / xdim; 
-  // lower left corner of the 2d data array
-  px *= 4;
-  py *= 4;
-  int i = 0; 
-  for(int y = 0; y < 4; ++y)
-  {
-    const int offset = (y + py) * dims.x;
-    if(y + py >= dims.y) break;
-    for(int x = 0; x < 4; ++x)
-    {
-      //TODO: check to see if we are outside dims
-      if(x + px >= dims.x) break;
-      out[offset + x + px] = result[i]; 
-      i++;
-    }
+    scatter2(result, out + offset, sx, sy);
   }
 }
 
@@ -166,6 +131,7 @@ void decode2launch(uint2 dims,
     (stream,
 		 d_data,
      dims,
+     zfp_pad,
      maxbits);
 
   cudaEventRecord(stop);

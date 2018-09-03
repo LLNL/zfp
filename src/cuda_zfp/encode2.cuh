@@ -92,9 +92,9 @@ cudaEncode2(const uint maxbits,
   if(partial) 
   {
     //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
-    uint rm_x = dims.x - block.x;
-    uint rm_y = dims.y - block.y;
-    gather_partial2(fblock, scalars + offset, rm_x, rm_y, sx, sy);
+    const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
+    const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
+    gather_partial2(fblock, scalars + offset, nx, ny, sx, sy);
 
   }
   else
@@ -165,7 +165,7 @@ size_t encode2launch(uint2 dims,
   dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
 
   //
-  size_t stream_bytes = calc_device_mem2d(dims, maxbits);
+  size_t stream_bytes = calc_device_mem2d(zfp_pad, maxbits);
   // ensure we have zeros
   cudaMemset(stream, 0, stream_bytes);
 
