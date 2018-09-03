@@ -9,6 +9,7 @@ set(cuZFP_sources
     decode1.cuh
     decode2.cuh
     decode3.cuh
+    encode.cuh
     encode1.cuh
     encode2.cuh
     encode3.cuh

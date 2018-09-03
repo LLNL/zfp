@@ -7,12 +7,33 @@
 namespace cuZFP {
 
 
+template<typename Scalar> 
+__device__ __host__ inline 
+void scatter_partial1(const Scalar* q, Scalar* p, int nx, int sx)
+{
+  printf("scatter partial %d\n", nx);
+  uint x;
+  for (x = 0; x < nx; x++, p += sx)
+   *p = *q++;
+}
+
+template<typename Scalar> 
+__device__ __host__ inline 
+void scatter1(const Scalar* q, Scalar* p, int sx)
+{
+  uint x;
+  for (x = 0; x < 4; x++, p += sx)
+    *p = *q++;
+}
+
 template<class Scalar>
 __global__
 void
 cudaDecode1(Word *blocks,
             Scalar *out,
             const uint dim,
+            const uint padded_dim,
+            const uint total_blocks,
             uint maxbits)
 {
   typedef unsigned long long int ull;
@@ -29,10 +50,8 @@ cudaDecode1(Word *blocks,
   // the global thread index
   const ull block_idx = blockId * blockDim.x + threadIdx.x;
 
-  uint total_blocks = (dim + (4 - dim % 4)) / 4;
-  if(dim % 4 != 0) total_blocks = (dim + (4 - dim % 4)) / 4;
   if(block_idx >= total_blocks) return;
-
+  printf("total blocks %d\n", (int) total_blocks);
   BlockReader<4> reader(blocks, maxbits, block_idx, total_blocks);
   Scalar result[4] = {0,0,0,0};
 
@@ -64,20 +83,27 @@ cudaDecode1(Word *blocks,
     const uint vals_per_block = 4;
 	  maxbits -= ebits;
     
-    UInt data[vals_per_block];
+    UInt ublock[vals_per_block];
 
-    decode_ints<Scalar, 4, UInt>(reader, maxbits, data);
+    decode_ints<Scalar, 4, UInt>(reader, maxbits, ublock);
+
     Int iblock[4];
     #pragma unroll 4
     for(int i = 0; i < 4; ++i)
     {
-		  iblock[i] = uint2int(data[i]);
+		  iblock[i] = uint2int(ublock[i]);
     }
 
     inv_lift<Int,1>(iblock);
 
+    //for(int i = 0; i < 4; ++i)
+    //{
+    //  printf("iblock %d %lld\n", i, iblock[i]);
+    //}
+
 		Scalar inv_w = dequantize<Int, Scalar>(1, emax);
-    
+    //if(inv_w == 0.) printf("ZERO\n");
+    //printf("inv fact %a emax %d\n", inv_w, emax); 
     #pragma unroll 4
     for(int i = 0; i < 4; ++i)
     {
@@ -86,17 +112,27 @@ cudaDecode1(Word *blocks,
      
   }
 
-  // TODO dim could end in the middle of this block
-  if(block_idx < total_blocks)
+  uint block;
+  block = block_idx * 4ull; 
+  uint sx = 1;
+  uint offset = block * sx; 
+  
+  for(int i = 0; i < 4; ++i)
   {
-
-    const int offset = block_idx * 4;
-    out[offset + 0] = result[0];
-    out[offset + 1] = result[1];
-    out[offset + 2] = result[2];
-    out[offset + 3] = result[3];
+    printf("%d result %f\n", i, result[i]);
   }
-  // write out data
+  printf("Outputblock offset %d index %d\n", offset, (int) block_idx);
+  bool partial = false;
+  if(block + 4 > dim) partial = true;
+  if(partial)
+  {
+    const uint nx = 4u - (padded_dim - dim);
+    scatter_partial1(result, out + offset, nx, sx);
+  }
+  else
+  {
+    scatter1(result, out + offset, sx);
+  }
 }
 template<class Scalar>
 void decode1launch(uint dim, 
@@ -104,18 +140,26 @@ void decode1launch(uint dim,
                    Scalar *d_data,
                    uint maxbits)
 {
-  const int block_size_dim = 128;
-  int zfp_blocks = dim / 4;
+  const int cuda_block_size = 128;
+
+  uint zfp_pad(dim); 
+  if(zfp_pad % 4 != 0) zfp_pad += 4 - dim % 4;
+
+  uint zfp_blocks = (zfp_pad) / 4; 
+
   if(dim % 4 != 0)  zfp_blocks = (dim + (4 - dim % 4)) / 4;
 
   int block_pad = 0;
-  if(zfp_blocks % block_size_dim != 0) block_pad = block_size_dim - zfp_blocks % block_size_dim; 
+  if(zfp_blocks % cuda_block_size != 0) 
+  {
+    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
+  }
 
-  dim3 block_size = dim3(block_size_dim, 1, 1);
+  dim3 block_size = dim3(cuda_block_size, 1, 1);
 
   size_t total_blocks = block_pad + zfp_blocks;
 
-  dim3 grid_size = calculate_grid_size(total_blocks, CUDA_BLK_SIZE_1D);
+  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
 
   // setup some timing code
   cudaEvent_t start, stop;
@@ -128,6 +172,8 @@ void decode1launch(uint dim,
     (stream,
 		 d_data,
      dim,
+     zfp_pad,
+     zfp_blocks, // total blocks to decode
      maxbits);
 
   cudaEventRecord(stop);

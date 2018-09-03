@@ -1,16 +1,14 @@
 #ifndef CUZFP_ENCODE1_CUH
 #define CUZFP_ENCODE1_CUH
 
-#include "shared.h"
-#include "shared.h"
-
 #include "cuZFP.h"
+#include "shared.h"
+#include "encode.cuh"
+
 #include "debug_utils.cuh"
 #include "type_info.cuh"
 
 #include <iostream>
-#define CUDA_BLK_SIZE_1D 128
-#define ZFP_BLK_PER_BLK_1D 32 
 #define ZFP_1D_BLOCK_SIZE 4 
 
 namespace cuZFP
@@ -101,8 +99,9 @@ cudaEncode1(const uint maxbits,
  
   if(partial) 
   {
-    uint rm_x = dim - block;
-    gather_partial1(fblock, scalars + offset, rm_x, sx);
+    uint nx = 4 - (padded_dim - dim);
+    printf("encode nx %u\n", nx);
+    gather_partial1(fblock, scalars + offset, nx, sx);
   }
   else
   {

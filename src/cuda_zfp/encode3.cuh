@@ -1,9 +1,10 @@
 #ifndef CUZFP_ENCODE3_CUH
 #define CUZFP_ENCODE3_CUH
 
-#include "shared.h"
-
 #include "cuZFP.h"
+#include "shared.h"
+#include "encode.cuh"
+
 #include "debug_utils.cuh"
 #include "type_info.cuh"
 
