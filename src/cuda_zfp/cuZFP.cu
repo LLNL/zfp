@@ -218,9 +218,8 @@ cuda_compress(zfp_stream *stream, const zfp_field *field)
   internal::cleanup_device_ptr(field->data, d_data, 0);
 
   // zfp wants to flush the stream.
-  // set bits to wsize becuase we already did that.
+  // set bits to wsize because we already did that.
   size_t compressed_size = stream_bytes / sizeof(Word);
-  std::cout<<"Compressed words words "<<compressed_size<<"\n";
   stream->stream->bits = wsize;
   // set stream pointer to end of stream
   stream->stream->ptr = stream->stream->begin + compressed_size;
@@ -288,11 +287,9 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   
   // this is how zfp determins if this was a success
   size_t words_read = decoded_bytes / sizeof(Word);
-  std::cout<<"Decode words "<<words_read<<"\n";
   stream->stream->bits = wsize;
   // set stream pointer to end of stream
   stream->stream->ptr = stream->stream->begin + words_read;
 
-  //stream->stream->ptr = stream->stream->begin + 1;
 }
 

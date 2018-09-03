@@ -2,6 +2,7 @@
 #define CUZFP_DECODE1_CUH
 
 #include "shared.h"
+#include "decode.cuh"
 #include "type_info.cuh"
 
 namespace cuZFP {
