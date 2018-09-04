@@ -9,13 +9,13 @@
 static int
 setupPermuted(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_PRECISION, 0, PERMUTED);
+  return setupChosenZfpMode(state, zfp_mode_fixed_precision, 0, PERMUTED);
 }
 
 static int
 setupInterleaved(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_PRECISION, 0, INTERLEAVED);
+  return setupChosenZfpMode(state, zfp_mode_fixed_precision, 0, INTERLEAVED);
 }
 
 /* non-strided functions always use stride=AS_IS */
@@ -25,38 +25,38 @@ setupInterleaved(void **state)
 static int
 setupFixedPrec0(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_PRECISION, 0, AS_IS);
+  return setupChosenZfpMode(state, zfp_mode_fixed_precision, 0, AS_IS);
 }
 
 static int
 setupFixedPrec1(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_PRECISION, 1, AS_IS);
+  return setupChosenZfpMode(state, zfp_mode_fixed_precision, 1, AS_IS);
 }
 
 static int
 setupFixedPrec2(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_PRECISION, 2, AS_IS);
+  return setupChosenZfpMode(state, zfp_mode_fixed_precision, 2, AS_IS);
 }
 
 /* fixed-rate */
 static int
 setupFixedRate0(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_RATE, 0, AS_IS);
+  return setupChosenZfpMode(state, zfp_mode_fixed_rate, 0, AS_IS);
 }
 
 static int
 setupFixedRate1(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_RATE, 1, AS_IS);
+  return setupChosenZfpMode(state, zfp_mode_fixed_rate, 1, AS_IS);
 }
 
 static int
 setupFixedRate2(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_RATE, 2, AS_IS);
+  return setupChosenZfpMode(state, zfp_mode_fixed_rate, 2, AS_IS);
 }
 
 #ifdef FL_PT_DATA
@@ -64,18 +64,18 @@ setupFixedRate2(void **state)
 static int
 setupFixedAccuracy0(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_ACCURACY, 0, AS_IS);
+  return setupChosenZfpMode(state, zfp_mode_fixed_accuracy, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy1(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_ACCURACY, 1, AS_IS);
+  return setupChosenZfpMode(state, zfp_mode_fixed_accuracy, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy2(void **state)
 {
-  return setupChosenZfpMode(state, FIXED_ACCURACY, 2, AS_IS);
+  return setupChosenZfpMode(state, zfp_mode_fixed_accuracy, 2, AS_IS);
 }
 #endif

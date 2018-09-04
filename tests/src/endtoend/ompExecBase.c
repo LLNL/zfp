@@ -110,110 +110,110 @@ setupOmpConfig(void **state, zfp_mode zfpMode, int compressParamNum, int threadP
 static int
 setupPermuted0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 0, 0, PERMUTED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 0, PERMUTED);
 }
 
 static int
 setupInterleaved0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 0, 0, INTERLEAVED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 0, INTERLEAVED);
 }
 
 static int
 setupPermuted0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 0, 1, PERMUTED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 1, PERMUTED);
 }
 
 static int
 setupInterleaved0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 0, 1, INTERLEAVED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 1, INTERLEAVED);
 }
 
 
 static int
 setupPermuted0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 0, 2, PERMUTED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 2, PERMUTED);
 }
 
 static int
 setupInterleaved0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 0, 2, INTERLEAVED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 2, INTERLEAVED);
 }
 
 static int
 setupPermuted1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 1, 0, PERMUTED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 0, PERMUTED);
 }
 
 static int
 setupInterleaved1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 1, 0, INTERLEAVED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 0, INTERLEAVED);
 }
 
 static int
 setupPermuted1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 1, 1, PERMUTED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, PERMUTED);
 }
 
 static int
 setupInterleaved1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 1, 1, INTERLEAVED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, INTERLEAVED);
 }
 
 static int
 setupPermuted1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 1, 2, PERMUTED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 2, PERMUTED);
 }
 
 static int
 setupInterleaved1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 1, 2, INTERLEAVED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 2, INTERLEAVED);
 }
 
 static int
 setupPermuted2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 2, 0, PERMUTED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, PERMUTED);
 }
 
 static int
 setupInterleaved2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 2, 0, INTERLEAVED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, INTERLEAVED);
 }
 
 static int
 setupPermuted2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 2, 1, PERMUTED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 1, PERMUTED);
 }
 
 static int
 setupInterleaved2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 2, 1, INTERLEAVED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 1, INTERLEAVED);
 }
 
 static int
 setupPermuted2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 2, 2, PERMUTED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, PERMUTED);
 }
 
 static int
 setupInterleaved2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 2, 2, INTERLEAVED);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, INTERLEAVED);
 }
 
 /* non-strided functions always use stride=AS_IS */
@@ -223,326 +223,326 @@ setupInterleaved2Thread2Chunk(void **state)
 static int
 setupFixedPrec0Param0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 0, 0, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 0, 0, AS_IS);
 }
 
 static int
 setupFixedPrec0Param0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 0, 0, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 0, 1, AS_IS);
 }
 
 static int
 setupFixedPrec0Param0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 0, 0, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 0, 2, AS_IS);
 }
 
 static int
 setupFixedPrec0Param1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 0, 1, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 1, 0, AS_IS);
 }
 
 static int
 setupFixedPrec0Param1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 0, 1, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 1, 1, AS_IS);
 }
 
 static int
 setupFixedPrec0Param1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 0, 1, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 1, 2, AS_IS);
 }
 
 static int
 setupFixedPrec0Param2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 0, 2, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 2, 0, AS_IS);
 }
 
 static int
 setupFixedPrec0Param2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 0, 2, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 2, 1, AS_IS);
 }
 
 static int
 setupFixedPrec0Param2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 0, 2, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 2, 2, AS_IS);
 }
 
 static int
 setupFixedPrec1Param0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 0, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 0, AS_IS);
 }
 
 static int
 setupFixedPrec1Param0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 0, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 1, AS_IS);
 }
 
 static int
 setupFixedPrec1Param0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 0, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 2, AS_IS);
 }
 
 static int
 setupFixedPrec1Param1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 1, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 0, AS_IS);
 }
 
 static int
 setupFixedPrec1Param1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 1, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, AS_IS);
 }
 
 static int
 setupFixedPrec1Param1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 1, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 2, AS_IS);
 }
 
 static int
 setupFixedPrec1Param2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 2, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, AS_IS);
 }
 
 static int
 setupFixedPrec1Param2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 2, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 1, AS_IS);
 }
 
 static int
 setupFixedPrec1Param2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 1, 2, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, AS_IS);
 }
 
 static int
 setupFixedPrec2Param0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 2, 0, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 0, 0, AS_IS);
 }
 
 static int
 setupFixedPrec2Param0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 2, 0, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 0, 1, AS_IS);
 }
 
 static int
 setupFixedPrec2Param0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 2, 0, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 0, 2, AS_IS);
 }
 
 static int
 setupFixedPrec2Param1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 2, 1, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 1, 0, AS_IS);
 }
 
 static int
 setupFixedPrec2Param1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 2, 1, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 1, 1, AS_IS);
 }
 
 static int
 setupFixedPrec2Param1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 2, 1, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 1, 2, AS_IS);
 }
 
 static int
 setupFixedPrec2Param2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 2, 2, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 2, 0, AS_IS);
 }
 
 static int
 setupFixedPrec2Param2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 2, 2, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 2, 1, AS_IS);
 }
 
 static int
 setupFixedPrec2Param2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_PRECISION, 2, 2, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 2, 2, AS_IS);
 }
 
 /* fixed-rate */
 static int
 setupFixedRate0Param0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 0, 0, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 0, 0, AS_IS);
 }
 
 static int
 setupFixedRate0Param0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 0, 0, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 0, 1, AS_IS);
 }
 
 static int
 setupFixedRate0Param0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 0, 0, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 0, 2, AS_IS);
 }
 
 static int
 setupFixedRate0Param1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 0, 1, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 1, 0, AS_IS);
 }
 
 static int
 setupFixedRate0Param1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 0, 1, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 1, 1, AS_IS);
 }
 
 static int
 setupFixedRate0Param1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 0, 1, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 1, 2, AS_IS);
 }
 
 static int
 setupFixedRate0Param2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 0, 2, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 2, 0, AS_IS);
 }
 
 static int
 setupFixedRate0Param2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 0, 2, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 2, 1, AS_IS);
 }
 
 static int
 setupFixedRate0Param2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 0, 2, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 2, 2, AS_IS);
 }
 
 static int
 setupFixedRate1Param0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 1, 0, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 0, 0, AS_IS);
 }
 
 static int
 setupFixedRate1Param0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 1, 0, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 0, 1, AS_IS);
 }
 
 static int
 setupFixedRate1Param0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 1, 0, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 0, 2, AS_IS);
 }
 
 static int
 setupFixedRate1Param1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 1, 1, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 1, 0, AS_IS);
 }
 
 static int
 setupFixedRate1Param1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 1, 1, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 1, 1, AS_IS);
 }
 
 static int
 setupFixedRate1Param1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 1, 1, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 1, 2, AS_IS);
 }
 
 static int
 setupFixedRate1Param2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 1, 2, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 2, 0, AS_IS);
 }
 
 static int
 setupFixedRate1Param2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 1, 2, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 2, 1, AS_IS);
 }
 
 static int
 setupFixedRate1Param2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 1, 2, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 2, 2, AS_IS);
 }
 
 static int
 setupFixedRate2Param0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 2, 0, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 0, 0, AS_IS);
 }
 
 static int
 setupFixedRate2Param0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 2, 0, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 0, 1, AS_IS);
 }
 
 static int
 setupFixedRate2Param0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 2, 0, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 0, 2, AS_IS);
 }
 
 static int
 setupFixedRate2Param1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 2, 1, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 1, 0, AS_IS);
 }
 
 static int
 setupFixedRate2Param1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 2, 1, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 1, 1, AS_IS);
 }
 
 static int
 setupFixedRate2Param1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 2, 1, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 1, 2, AS_IS);
 }
 
 static int
 setupFixedRate2Param2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 2, 2, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 2, 0, AS_IS);
 }
 
 static int
 setupFixedRate2Param2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 2, 2, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 2, 1, AS_IS);
 }
 
 static int
 setupFixedRate2Param2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_RATE, 2, 2, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 2, 2, AS_IS);
 }
 
 #ifdef FL_PT_DATA
@@ -550,162 +550,162 @@ setupFixedRate2Param2Thread2Chunk(void **state)
 static int
 setupFixedAccuracy0Param0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 0, 0, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 0, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy0Param0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 0, 0, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 0, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy0Param0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 0, 0, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 0, 2, AS_IS);
 }
 
 static int
 setupFixedAccuracy0Param1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 0, 1, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 1, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy0Param1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 0, 1, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 1, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy0Param1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 0, 1, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 1, 2, AS_IS);
 }
 
 static int
 setupFixedAccuracy0Param2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 0, 2, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 2, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy0Param2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 0, 2, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 2, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy0Param2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 0, 2, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 2, 2, AS_IS);
 }
 static int
 setupFixedAccuracy1Param0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 1, 0, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 0, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy1Param0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 1, 0, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 0, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy1Param0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 1, 0, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 0, 2, AS_IS);
 }
 
 static int
 setupFixedAccuracy1Param1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 1, 1, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 1, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy1Param1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 1, 1, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 1, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy1Param1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 1, 1, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 1, 2, AS_IS);
 }
 
 static int
 setupFixedAccuracy1Param2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 1, 2, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 2, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy1Param2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 1, 2, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 2, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy1Param2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 1, 2, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 2, 2, AS_IS);
 }
 
 static int
 setupFixedAccuracy2Param0Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 2, 0, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 0, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy2Param0Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 2, 0, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 0, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy2Param0Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 2, 0, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 0, 2, AS_IS);
 }
 
 static int
 setupFixedAccuracy2Param1Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 2, 1, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 1, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy2Param1Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 2, 1, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 1, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy2Param1Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 2, 1, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 1, 2, AS_IS);
 }
 
 static int
 setupFixedAccuracy2Param2Thread0Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 2, 2, 0, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 2, 0, AS_IS);
 }
 
 static int
 setupFixedAccuracy2Param2Thread1Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 2, 2, 1, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 2, 1, AS_IS);
 }
 
 static int
 setupFixedAccuracy2Param2Thread2Chunk(void **state)
 {
-  return setupOmpConfig(state, FIXED_ACCURACY, 2, 2, 2, AS_IS);
+  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 2, 2, AS_IS);
 }
 
 #endif

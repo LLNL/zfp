@@ -350,6 +350,12 @@ zfp_stream_bit_stream(const zfp_stream* zfp)
   return zfp->stream;
 }
 
+zfp_mode
+zfp_stream_compression_mode(const zfp_stream* zfp)
+{
+  return zfp_mode_null;
+}
+
 uint64
 zfp_stream_mode(const zfp_stream* zfp)
 {
