@@ -48,6 +48,7 @@ cudaEncode(const uint maxbits,
            const Scalar* scalars,
            Word *stream,
            const uint3 dims,
+           const int3 stride,
            const uint3 padded_dims,
            const uint tot_blocks)
 {
@@ -80,12 +81,9 @@ cudaEncode(const uint maxbits,
   block.z = (block_idx/ (block_dims.x * block_dims.y)) * 4; 
 
   // default strides
-  int sx = 1;
-  int sy = dims.x;
-  int sz = dims.x * dims.y;
   //if(block_idx != 1) return;
   //uint offset = (logicalStart[2]*PaddedDims[1] + logicalStart[1])*PaddedDims[0] + logicalStart[0]; 
-  uint offset = block.x * sx + block.y * sy + block.z * sz; 
+  uint offset = block.x * stride.x + block.y * stride.y + block.z * stride.z; 
   //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
   //printf("OFFSET %d\n", (int)offset); 
   Scalar fblock[ZFP_3D_BLOCK_SIZE]; 
@@ -101,12 +99,12 @@ cudaEncode(const uint maxbits,
     const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
     const uint nz = block.z + 4 > dims.z ? dims.z - block.z : 4;
     //printf("partial blk_idx %d block coords %d %d %d nx %d ny %d nz %d\n", block_idx, block.x, block.y, block.z, nx, ny, nz);
-    gather_partial3(fblock, scalars + offset, nx, ny, nz, sx, sy, sz);
+    gather_partial3(fblock, scalars + offset, nx, ny, nz, stride.x, stride.y, stride.z);
 
   }
   else
   {
-    gather3(fblock, scalars + offset, sx, sy, sz);
+    gather3(fblock, scalars + offset, stride.x, stride.y, stride.z);
   }
   //if(block_idx == 0)
   //for(int z = 0; z < 4; ++z)
@@ -129,6 +127,7 @@ cudaEncode(const uint maxbits,
 //
 template<class Scalar>
 size_t encode3launch(uint3 dims, 
+                     int3 stride,
                      const Scalar *d_data,
                      Word *stream,
                      const int maxbits)
@@ -174,6 +173,7 @@ size_t encode3launch(uint3 dims,
      d_data,
      stream,
      dims,
+     stride,
      zfp_pad,
      zfp_blocks);
 
@@ -198,11 +198,12 @@ size_t encode3launch(uint3 dims,
 //
 template<class Scalar>
 size_t encode(uint3 dims, 
+              int3 stride,
               Scalar *d_data,
               Word *stream,
               const int bits_per_block)
 {
-  return encode3launch<Scalar>(dims, d_data, stream, bits_per_block);
+  return encode3launch<Scalar>(dims, stride, d_data, stream, bits_per_block);
 }
 
 }

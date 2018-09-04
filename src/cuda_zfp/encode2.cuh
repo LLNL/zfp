@@ -47,6 +47,7 @@ cudaEncode2(const uint maxbits,
            const Scalar* scalars,
            Word *stream,
            const uint2 dims,
+           const int2 stride,
            const uint2 padded_dims,
            const uint tot_blocks)
 {
@@ -76,11 +77,8 @@ cudaEncode2(const uint maxbits,
   block.x = (block_idx % block_dims.x) * 4; 
   block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
 
-  // default strides
-  int sx = 1;
-  int sy = dims.x;
   //if(block_idx != 1) return;
-  uint offset = block.x * sx + block.y * sy; 
+  uint offset = block.x * stride.x + block.y * stride.y; 
   //printf("blk_idx %d block coords %d %d \n", block_idx, block.x, block.y);
   //printf("OFFSET %d\n", (int)offset); 
   Scalar fblock[ZFP_2D_BLOCK_SIZE]; 
@@ -94,12 +92,12 @@ cudaEncode2(const uint maxbits,
     //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
     const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
     const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
-    gather_partial2(fblock, scalars + offset, nx, ny, sx, sy);
+    gather_partial2(fblock, scalars + offset, nx, ny, stride.x, stride.y);
 
   }
   else
   {
-    gather2(fblock, scalars + offset, sx, sy);
+    gather2(fblock, scalars + offset, stride.x, stride.y);
   }
   //if(block_idx == 0)
   //for(int z = 0; z < 4; ++z)
@@ -122,6 +120,7 @@ cudaEncode2(const uint maxbits,
 //
 template<class Scalar>
 size_t encode2launch(uint2 dims, 
+                     int2 stride,
                      const Scalar *d_data,
                      Word *stream,
                      const int maxbits)
@@ -169,6 +168,7 @@ size_t encode2launch(uint2 dims,
      d_data,
      stream,
      dims,
+     stride,
      zfp_pad,
      zfp_blocks);
 
@@ -191,11 +191,12 @@ size_t encode2launch(uint2 dims,
 
 template<class Scalar>
 size_t encode2(uint2 dims,
+               int2 stride,
                Scalar *d_data,
                Word *stream,
                const int maxbits)
 {
-  return encode2launch<Scalar>(dims, d_data, stream, maxbits);
+  return encode2launch<Scalar>(dims, stride, d_data, stream, maxbits);
 }
 
 }

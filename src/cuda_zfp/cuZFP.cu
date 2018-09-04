@@ -31,7 +31,7 @@ namespace internal {
 // encode expects device pointers
 //
 template<typename T>
-size_t encode(uint dims[3], int bits_per_block, T *d_data, Word *d_stream)
+size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_stream)
 {
 
   int d = 0;
@@ -50,20 +50,28 @@ size_t encode(uint dims[3], int bits_per_block, T *d_data, Word *d_stream)
   if(d == 1)
   {
     int dim = dims[0];
+    int sx = stride.x;
     cuZFP::ConstantSetup::setup_1d();
-    stream_size = cuZFP::encode1<T>(dim, d_data, d_stream, bits_per_block); 
+    stream_size = cuZFP::encode1<T>(dim, sx, d_data, d_stream, bits_per_block); 
   }
   else if(d == 2)
   {
     uint2 ndims = make_uint2(dims[0], dims[1]);
+    int2 s;
+    s.x = stride.x; 
+    s.y = stride.y; 
     cuZFP::ConstantSetup::setup_2d();
-    stream_size = cuZFP::encode2<T>(ndims, d_data, d_stream, bits_per_block); 
+    stream_size = cuZFP::encode2<T>(ndims, s, d_data, d_stream, bits_per_block); 
   }
   else if(d == 3)
   {
+    int3 s;
+    s.x = stride.x; 
+    s.y = stride.y; 
+    s.z = stride.z; 
     uint3 ndims = make_uint3(dims[0], dims[1], dims[2]);
     cuZFP::ConstantSetup::setup_3d();
-    stream_size = cuZFP::encode<T>(ndims, d_data, d_stream, bits_per_block); 
+    stream_size = cuZFP::encode<T>(ndims, s, d_data, d_stream, bits_per_block); 
   }
 
   errors.chk("Encode");
@@ -72,7 +80,7 @@ size_t encode(uint dims[3], int bits_per_block, T *d_data, Word *d_stream)
 }
 
 template<typename T>
-size_t decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
+size_t decode(uint ndims[3], int3 stride, int bits_per_block, Word *stream, T *out)
 {
 
   int d = 0;
@@ -90,14 +98,22 @@ size_t decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
   if(d == 3)
   {
     uint3 dims = make_uint3(ndims[0], ndims[1], ndims[2]);
+
+    int3 s;
+    s.x = stride.x; 
+    s.y = stride.y; 
+    s.z = stride.z; 
+
     cuZFP::ConstantSetup::setup_3d();
-    stream_bytes = cuZFP::decode3<T>(dims, stream, out, bits_per_block); 
+    stream_bytes = cuZFP::decode3<T>(dims, s, stream, out, bits_per_block); 
   }
   else if(d == 1)
   {
     uint dim = ndims[0];
+    int sx = stride.x;
+
     cuZFP::ConstantSetup::setup_1d();
-    stream_bytes = cuZFP::decode1<T>(dim, stream, out, bits_per_block); 
+    stream_bytes = cuZFP::decode1<T>(dim, sx, stream, out, bits_per_block); 
 
   }
   else if(d == 2)
@@ -105,8 +121,13 @@ size_t decode(uint ndims[3], int bits_per_block, Word *stream, T *out)
     uint2 dims;
     dims.x = ndims[0];
     dims.y = ndims[1];
+
+    int2 s;
+    s.x = stride.x; 
+    s.y = stride.y; 
+
     cuZFP::ConstantSetup::setup_2d();
-    stream_bytes = cuZFP::decode2<T>(dims, stream, out, bits_per_block); 
+    stream_bytes = cuZFP::decode2<T>(dims, s, stream, out, bits_per_block); 
   }
   else std::cerr<<" d ==  "<<d<<" not implemented\n";
  
@@ -188,6 +209,12 @@ cuda_compress(zfp_stream *stream, const zfp_field *field)
   dims[0] = field->nx;
   dims[1] = field->ny;
   dims[2] = field->nz;
+
+  int3 stride;  
+  stride.x = field->sx ? field->sx : 1;
+  stride.y = field->sy ? field->sy : field->nx;
+  stride.z = field->sz ? field->sz : field->nx * field->ny;
+
   size_t stream_bytes = 0;
   
   void *d_data = internal::setup_device_field(field);
@@ -196,22 +223,22 @@ cuda_compress(zfp_stream *stream, const zfp_field *field)
   if(field->type == zfp_type_float)
   {
     float* data = (float*) d_data;
-    stream_bytes = internal::encode<float>(dims, (int)stream->maxbits, data, d_stream);
+    stream_bytes = internal::encode<float>(dims, stride, (int)stream->maxbits, data, d_stream);
   }
   else if(field->type == zfp_type_double)
   {
     double* data = (double*) d_data;
-    stream_bytes = internal::encode<double>(dims, (int)stream->maxbits, data, d_stream);
+    stream_bytes = internal::encode<double>(dims, stride, (int)stream->maxbits, data, d_stream);
   }
   else if(field->type == zfp_type_int32)
   {
     int * data = (int*) d_data;
-    stream_bytes = internal::encode<int>(dims, (int)stream->maxbits, data, d_stream);
+    stream_bytes = internal::encode<int>(dims, stride, (int)stream->maxbits, data, d_stream);
   }
   else if(field->type == zfp_type_int64)
   {
     long long int * data = (long long int*) d_data;
-    stream_bytes = internal::encode<long long int>(dims, (int)stream->maxbits, data, d_stream);
+    stream_bytes = internal::encode<long long int>(dims, stride, (int)stream->maxbits, data, d_stream);
   }
 
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, stream_bytes);
@@ -235,6 +262,11 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   dims[1] = field->ny;
   dims[2] = field->nz;
    
+  int3 stride;  
+  stride.x = field->sx ? field->sx : 1;
+  stride.y = field->sy ? field->sy : field->nx;
+  stride.z = field->sz ? field->sz : field->nx * field->ny;
+
   size_t decoded_bytes = 0;
 
   void *d_data = internal::setup_device_field(field);
@@ -243,25 +275,25 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   if(field->type == zfp_type_float)
   {
     float *data = (float*) d_data;
-    decoded_bytes = internal::decode(dims, (int)stream->maxbits, d_stream, data);
+    decoded_bytes = internal::decode(dims, stride, (int)stream->maxbits, d_stream, data);
     d_data = (void*) data;
   }
   else if(field->type == zfp_type_double)
   {
     double *data = (double*) d_data;
-    decoded_bytes = internal::decode(dims, (int)stream->maxbits, d_stream, data);
+    decoded_bytes = internal::decode(dims, stride, (int)stream->maxbits, d_stream, data);
     d_data = (void*) data;
   }
   else if(field->type == zfp_type_int32)
   {
     int *data = (int*) d_data;
-    decoded_bytes = internal::decode(dims, (int)stream->maxbits, d_stream, data);
+    decoded_bytes = internal::decode(dims, stride, (int)stream->maxbits, d_stream, data);
     d_data = (void*) data;
   }
   else if(field->type == zfp_type_int64)
   {
     long long int *data = (long long int*) d_data;
-    decoded_bytes = internal::decode(dims, (int)stream->maxbits, d_stream, data);
+    decoded_bytes = internal::decode(dims, stride, (int)stream->maxbits, d_stream, data);
     d_data = (void*) data;
   }
   else

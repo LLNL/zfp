@@ -33,6 +33,7 @@ void
 cudaDecode1(Word *blocks,
             Scalar *out,
             const uint dim,
+            const int stride,
             const uint padded_dim,
             const uint total_blocks,
             uint maxbits)
@@ -60,27 +61,27 @@ cudaDecode1(Word *blocks,
 
   uint block;
   block = block_idx * 4ull; 
-  uint sx = 1;
-  uint offset = block * sx; 
+  uint offset = block * stride; 
   
   bool partial = false;
   if(block + 4 > dim) partial = true;
   if(partial)
   {
     const uint nx = 4u - (padded_dim - dim);
-    scatter_partial1(result, out + offset, nx, sx);
+    scatter_partial1(result, out + offset, nx, stride);
   }
   else
   {
-    scatter1(result, out + offset, sx);
+    scatter1(result, out + offset, stride);
   }
 }
 
 template<class Scalar>
 size_t decode1launch(uint dim, 
-                   Word *stream,
-                   Scalar *d_data,
-                   uint maxbits)
+                     int stride,
+                     Word *stream,
+                     Scalar *d_data,
+                     uint maxbits)
 {
   const int cuda_block_size = 128;
 
@@ -115,6 +116,7 @@ size_t decode1launch(uint dim,
     (stream,
 		 d_data,
      dim,
+     stride,
      zfp_pad,
      zfp_blocks, // total blocks to decode
      maxbits);
@@ -137,11 +139,12 @@ size_t decode1launch(uint dim,
 
 template<class Scalar>
 size_t decode1(int dim, 
+               int stride,
                Word *stream,
                Scalar *d_data,
                uint maxbits)
 {
-	return decode1launch<Scalar>(dim, stream, d_data, maxbits);
+	return decode1launch<Scalar>(dim, stride, stream, d_data, maxbits);
 }
 
 } // namespace cuZFP

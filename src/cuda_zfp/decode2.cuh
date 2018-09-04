@@ -34,6 +34,7 @@ void
 cudaDecode2(Word *blocks,
             Scalar *out,
             const uint2 dims,
+            const int2 stride,
             const uint2 padded_dims,
             uint maxbits)
 {
@@ -69,10 +70,7 @@ cudaDecode2(Word *blocks,
   block.x = (block_idx % block_dims.x) * 4; 
   block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
   
-  // default strides
-  int sx = 1;
-  int sy = dims.x;
-  uint offset = block.x * sx + block.y * sy; 
+  uint offset = block.x * stride.x + block.y * stride.y; 
 
   bool partial = false;
   if(block.x + 4 > dims.x) partial = true;
@@ -81,16 +79,17 @@ cudaDecode2(Word *blocks,
   {
     const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
     const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
-    scatter_partial2(result, out + offset, nx, ny, sx, sy);
+    scatter_partial2(result, out + offset, nx, ny, stride.x, stride.y);
   }
   else
   {
-    scatter2(result, out + offset, sx, sy);
+    scatter2(result, out + offset, stride.x, stride.y);
   }
 }
 
 template<class Scalar>
 size_t decode2launch(uint2 dims, 
+                     int2 stride,
                      Word *stream,
                      Scalar *d_data,
                      uint maxbits)
@@ -134,6 +133,7 @@ size_t decode2launch(uint2 dims,
     (stream,
 		 d_data,
      dims,
+     stride,
      zfp_pad,
      maxbits);
 
@@ -155,11 +155,12 @@ size_t decode2launch(uint2 dims,
 
 template<class Scalar>
 size_t decode2(uint2 dims, 
-             Word *stream,
-             Scalar *d_data,
-             uint maxbits)
+               int2 stride,
+               Word *stream,
+               Scalar *d_data,
+               uint maxbits)
 {
-	return decode2launch<Scalar>(dims, stream, d_data, maxbits);
+	return decode2launch<Scalar>(dims, stride, stream, d_data, maxbits);
 }
 
 } // namespace cuZFP

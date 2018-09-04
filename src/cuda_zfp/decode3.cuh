@@ -37,6 +37,7 @@ void
 cudaDecode3(Word *blocks,
             Scalar *out,
             const uint3 dims,
+            const int3 stride,
             const uint3 padded_dims,
             uint maxbits)
 {
@@ -76,10 +77,7 @@ cudaDecode3(Word *blocks,
   block.z = (block_idx/ (block_dims.x * block_dims.y)) * 4; 
   
   // default strides
-  int sx = 1;
-  int sy = dims.x;
-  int sz = dims.x * dims.y;
-  const uint offset = block.x * sx + block.y * sy + block.z * sz; 
+  const uint offset = block.x * stride.x + block.y * stride.y + block.z * stride.z; 
 
   bool partial = false;
   if(block.x + 4 > dims.x) partial = true;
@@ -91,15 +89,16 @@ cudaDecode3(Word *blocks,
     const uint ny = block.y + 4u > dims.y ? dims.y - block.y : 4;
     const uint nz = block.z + 4u > dims.z ? dims.z - block.z : 4;
     //if(block_idx == 26) printf("partial blk_idx %d block coords %d %d %d nx %d ny %d nz %d\n", block_idx, block.x, block.y, block.z, nx, ny, nz);
-    scatter_partial3(result, out + offset, nx, ny, nz, sx, sy, sz);
+    scatter_partial3(result, out + offset, nx, ny, nz, stride.x, stride.y, stride.z);
   }
   else
   {
-    scatter3(result, out + offset, sx, sy, sz);
+    scatter3(result, out + offset, stride.x, stride.y, stride.z);
   }
 }
 template<class Scalar>
 size_t decode3launch(uint3 dims, 
+                     int3 stride,
                      Word *stream,
                      Scalar *d_data,
                      uint maxbits)
@@ -144,6 +143,7 @@ size_t decode3launch(uint3 dims,
     (stream,
 		 d_data,
      dims,
+     stride,
      zfp_pad,
      maxbits);
 
@@ -166,11 +166,12 @@ size_t decode3launch(uint3 dims,
 
 template<class Scalar>
 size_t decode3(uint3 dims, 
+               int3 stride,
                Word  *stream,
                Scalar *d_data,
                uint maxbits)
 {
-	return decode3launch<Scalar>(dims, stream, d_data, maxbits);
+	return decode3launch<Scalar>(dims, stride, stream, d_data, maxbits);
 }
 
 } // namespace cuZFP

@@ -40,6 +40,7 @@ cudaEncode1(const uint maxbits,
            const Scalar* scalars,
            Word *stream,
            const uint dim,
+           const int sx,
            const uint padded_dim,
            const uint tot_blocks)
 {
@@ -67,8 +68,6 @@ cudaEncode1(const uint maxbits,
   uint block;
   block = (block_idx % block_dim) * 4; 
 
-  // default strides
-  int sx = 1;
   //if(block_idx != 1) return;
   uint offset = block * sx; 
   //printf("blk_idx %d block coords %d %d \n", block_idx, block.x, block.y);
@@ -107,6 +106,7 @@ cudaEncode1(const uint maxbits,
 //
 template<class Scalar>
 size_t encode1launch(uint dim, 
+                     int sx,
                      const Scalar *d_data,
                      Word *stream,
                      const int maxbits)
@@ -153,6 +153,7 @@ size_t encode1launch(uint dim,
      d_data,
      stream,
      dim,
+     sx,
      zfp_pad,
      zfp_blocks);
 
@@ -176,11 +177,12 @@ size_t encode1launch(uint dim,
 //
 template<class Scalar>
 size_t encode1(int dim,
+               int sx,
                Scalar *d_data,
                Word *stream,
                const int maxbits)
 {
-  return encode1launch<Scalar>(dim, d_data, stream, maxbits);
+  return encode1launch<Scalar>(dim, sx, d_data, stream, maxbits);
 }
 
 }
