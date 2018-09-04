@@ -353,7 +353,38 @@ zfp_stream_bit_stream(const zfp_stream* zfp)
 zfp_mode
 zfp_stream_compression_mode(const zfp_stream* zfp)
 {
-  return zfp_mode_null;
+  if (zfp->minbits > zfp->maxbits || !(0 < zfp->maxprec && zfp->maxprec <= 64))
+    return zfp_mode_null;
+
+  /* default values are considered expert mode */
+  if (zfp->minbits == ZFP_MIN_BITS &&
+      zfp->maxbits == ZFP_MAX_BITS &&
+      zfp->maxprec == ZFP_MAX_PREC &&
+      zfp->minexp == ZFP_MIN_EXP)
+    return zfp_mode_expert;
+
+  /* fixed rate? */
+  if (zfp->minbits == zfp->maxbits &&
+      1 <= zfp->maxbits && zfp->maxbits <= 2048 &&
+      zfp->maxprec >= ZFP_MAX_PREC &&
+      zfp->minexp <= ZFP_MIN_EXP)
+    return zfp_mode_fixed_rate;
+
+  /* fixed precision? */
+  if (zfp->minbits <= ZFP_MIN_BITS &&
+      zfp->maxbits >= ZFP_MAX_BITS &&
+      1 <= zfp->maxprec && zfp->maxprec <= 128 &&
+      zfp->minexp <= ZFP_MIN_EXP)
+    return zfp_mode_fixed_precision;
+
+  /* fixed accuracy? */
+  if (zfp->minbits <= ZFP_MIN_BITS &&
+      zfp->maxbits >= ZFP_MAX_BITS &&
+      zfp->maxprec >= ZFP_MAX_PREC &&
+      -1074 <= zfp->minexp && zfp->minexp <= 843)
+    return zfp_mode_fixed_accuracy;
+
+  return zfp_mode_expert;
 }
 
 uint64
@@ -365,26 +396,19 @@ zfp_stream_mode(const zfp_stream* zfp)
   uint maxprec;
   uint minexp;
 
-  /* fixed rate? */
-  if (zfp->minbits == zfp->maxbits &&
-      1 <= zfp->maxbits && zfp->maxbits <= 2048 &&
-      zfp->maxprec >= ZFP_MAX_PREC &&
-      zfp->minexp <= ZFP_MIN_EXP)
-    return zfp->maxbits - 1;
+  switch(zfp_stream_compression_mode(zfp)) {
+    case zfp_mode_fixed_rate:
+      return zfp->maxbits - 1;
 
-  /* fixed precision? */
-  if (zfp->minbits <= ZFP_MIN_BITS &&
-      zfp->maxbits >= ZFP_MAX_BITS &&
-      1 <= zfp->maxprec && zfp->maxprec <= 128 &&
-      zfp->minexp <= ZFP_MIN_EXP)
-    return zfp->maxprec + 2047;
+    case zfp_mode_fixed_precision:
+      return zfp->maxprec + 2047;
 
-  /* fixed accuracy? */
-  if (zfp->minbits <= ZFP_MIN_BITS &&
-      zfp->maxbits >= ZFP_MAX_BITS &&
-      zfp->maxprec >= ZFP_MAX_PREC &&
-      -1074 <= zfp->minexp && zfp->minexp <= 843)
-    return zfp->minexp + 3251;
+    case zfp_mode_fixed_accuracy:
+      return zfp->minexp + 3251;
+
+    default:
+      break;
+  }
 
   /* encode each parameter separately */
   minbits = MAX(1, MIN(zfp->minbits, 0x8000u)) - 1;
