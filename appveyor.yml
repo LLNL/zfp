@@ -92,5 +92,6 @@ build_script:
   - if "%COMPILER%"=="msvc" cmake --build . --config "%BUILD_TYPE%"
   - if not "%COMPILER%"=="msvc" cmake --build .
 
-  - ctest -V -C "%BUILD_TYPE%"
+  # only run OpenMP tests due to appveyor time limit (1 hour)
+  - ctest -V -C "%BUILD_TYPE%" -R ".*Omp.*"
 

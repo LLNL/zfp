@@ -46,9 +46,14 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory(utils)
 add_subdirectory(src)
 
-# TODO: spend time getting googletest to compile on windows
-if(NOT MSVC AND NOT MINGW)
-  # clone googletest 1.8.0 into /build
+# needed to compile gtest on MSVC
+if(MSVC)
+  list(APPEND GTEST_ARGS "/D:_SILENCE_TR1_DEPRECATION_NAMESPACE_WARNING=1")
+endif()
+
+# TODO: spend time getting googletest to compile on MinGW
+if(NOT MINGW)
+  # clone googletest into build/
   configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${GTEST_ARGS} .
     RESULT_VARIABLE result
@@ -74,6 +79,11 @@ if(NOT MSVC AND NOT MINGW)
 
   if(CMAKE_VERSION VERSION_LESS 2.8.11)
     include_directories("${gtest_SOURCE_DIR}/include")
+  endif()
+
+  # needed to compile zfp tests with gtest on MSVC
+  if(MSVC)
+    target_compile_definitions(gtest_main INTERFACE GTEST_LINKED_AS_SHARED_LIBRARY=1)
   endif()
 
   add_subdirectory(array)
