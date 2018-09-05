@@ -534,41 +534,47 @@ zfp_stream_set_accuracy(zfp_stream* zfp, double tolerance)
   return tolerance > 0 ? ldexp(1.0, emin) : 0;
 }
 
-int
+zfp_mode
 zfp_stream_set_mode(zfp_stream* zfp, uint64 mode)
 {
+  uint minbits, maxbits, maxprec;
+  int minexp;
+
   if (mode <= ZFP_MODE_SHORT_MAX) {
     /* 12-bit encoding of one of three modes */
     if (mode < 2048) {
       /* fixed rate */
-      zfp->minbits = zfp->maxbits = (uint)mode + 1;
-      zfp->maxprec = ZFP_MAX_PREC;
-      zfp->minexp = ZFP_MIN_EXP;
+      minbits = maxbits = (uint)mode + 1;
+      maxprec = ZFP_MAX_PREC;
+      minexp = ZFP_MIN_EXP;
     }
     else if (mode < 2176) {
       /* fixed precision */
-      zfp->minbits = ZFP_MIN_BITS;
-      zfp->maxbits = ZFP_MAX_BITS;
-      zfp->maxprec = (uint)mode - 2047;
-      zfp->minexp = ZFP_MIN_EXP;
+      minbits = ZFP_MIN_BITS;
+      maxbits = ZFP_MAX_BITS;
+      maxprec = (uint)mode - 2047;
+      minexp = ZFP_MIN_EXP;
     }
     else {
       /* fixed accuracy */
-      zfp->minbits = ZFP_MIN_BITS;
-      zfp->maxbits = ZFP_MAX_BITS;
-      zfp->maxprec = ZFP_MAX_PREC;
-      zfp->minexp = (uint)mode - 3251;
+      minbits = ZFP_MIN_BITS;
+      maxbits = ZFP_MAX_BITS;
+      maxprec = ZFP_MAX_PREC;
+      minexp = (uint)mode - 3251;
     }
   }
   else {
     /* 64-bit encoding */
-    mode >>= 12; zfp->minbits = ((uint)mode & 0x7fffu) + 1;
-    mode >>= 15; zfp->maxbits = ((uint)mode & 0x7fffu) + 1;
-    mode >>= 15; zfp->maxprec = ((uint)mode & 0x007fu) + 1;
-    mode >>=  7; zfp->minexp  = ((uint)mode & 0x7fffu) - 16495;
+    mode >>= 12; minbits = ((uint)mode & 0x7fffu) + 1;
+    mode >>= 15; maxbits = ((uint)mode & 0x7fffu) + 1;
+    mode >>= 15; maxprec = ((uint)mode & 0x007fu) + 1;
+    mode >>=  7; minexp  = ((uint)mode & 0x7fffu) - 16495;
   }
 
-  return 1;
+  if (!zfp_stream_set_params(zfp, minbits, maxbits, maxprec, minexp))
+    return zfp_mode_null;
+
+  return zfp_stream_compression_mode(zfp);
 }
 
 int
@@ -865,7 +871,7 @@ zfp_read_header(zfp_stream* zfp, zfp_field* field, uint mask)
       mode += stream_read_bits(zfp->stream, size) << ZFP_MODE_SHORT_BITS;
       bits += size;
     }
-    if (!zfp_stream_set_mode(zfp, mode))
+    if (zfp_stream_set_mode(zfp, mode) == zfp_mode_null)
       return 0;
   }
   return bits;

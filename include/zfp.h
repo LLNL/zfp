@@ -279,8 +279,9 @@ zfp_stream_set_accuracy(
   double tolerance    /* desired error tolerance */
 );
 
-/* set all compression parameters from compact representation (expert mode) */
-int                   /* nonzero upon success */
+/* set all compression parameters from compact representation */
+/* compression params are only set on stream upon success */
+zfp_mode              /* non (zfp_mode_null) upon success */
 zfp_stream_set_mode(
   zfp_stream* stream, /* compressed stream */
   uint64 mode         /* 12- or 64-bit encoding of parameters */
