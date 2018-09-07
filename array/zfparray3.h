@@ -309,8 +309,8 @@ protected:
         uint ny = 4 - (shape & 3u); shape >>= 2;
         uint nz = 4 - (shape & 3u); shape >>= 2;
         const Scalar* q = a;
-        for (uint z = 0; z < nz; z++, p += sz - ny * sy, q += 16 - 4 * ny)
-          for (uint y = 0; y < ny; y++, p += sy - nx * sx, q += 4 - nx)
+        for (uint z = 0; z < nz; z++, p += sz - (ptrdiff_t)ny * sy, q += 16 - 4 * ny)
+          for (uint y = 0; y < ny; y++, p += sy - (ptrdiff_t)nx * sx, q += 4 - nx)
             for (uint x = 0; x < nx; x++, p += sx, q++)
               *p = *q;
       }
