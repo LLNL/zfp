@@ -30,6 +30,7 @@ teardown(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_stream_close(bundle->stream);
+  free(bundle);
 
   return 0;
 }

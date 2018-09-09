@@ -97,9 +97,9 @@ setupZfpOmp(void **state, uint threadParam, uint chunkParam)
 }
 
 static int
-setupOmpConfig(void **state, zfp_mode zfpMode, int paramNum, int threadParam, int chunkParam)
+setupOmpConfig(void **state, zfp_mode zfpMode, int compressParamNum, int threadParam, int chunkParam)
 {
-  int result = setupChosenZfpMode(state, zfpMode, paramNum);
+  int result = setupChosenZfpMode(state, zfpMode, compressParamNum);
   return result | setupZfpOmp(state, threadParam, chunkParam);
 }
 

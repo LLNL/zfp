@@ -32,9 +32,9 @@ typedef enum {
 struct setupVars {
   zfp_mode zfpMode;
 
-  size_t dataSideLen;
-  size_t totalDataLen;
-  Scalar* dataArr;
+  size_t randomGenArrSideLen;
+  size_t totalRandomGenArrLen;
+  Scalar* randomGenArr;
   Scalar* decompressedArr;
 
   void* buffer;
@@ -42,16 +42,25 @@ struct setupVars {
   zfp_field* decompressField;
   zfp_stream* stream;
 
-  // paramNum is 0, 1, or 2
+  // compressParamNum is 0, 1, or 2
   //   used to compute fixed mode param
   //   and to select proper checksum to compare against
-  int paramNum;
+  int compressParamNum;
   double rateParam;
   int precParam;
   double accParam;
 
-  uint64 compressedChecksums[3];
-  UInt decompressedChecksums[3];
+  uint64 compressedChecksum;
+  UInt decompressedChecksum;
+
+  // timer
+#if defined(__linux__)
+  struct timespec timeStart, timeEnd;
+#elif defined(_WIN32)
+  clock_t timeStart, timeEnd;
+#elif defined(__MACH__)
+  uint64_t timeStart, timeEnd;
+#endif
 };
 
 // run this once per (datatype, DIM) combination for performance
@@ -65,27 +74,27 @@ setupRandomData(void** state)
 
 #ifdef FL_PT_DATA
     case zfp_type_float:
-      generateSmoothRandFloats(MIN_TOTAL_ELEMENTS, DIMS, (float**)&bundle->dataArr, &bundle->dataSideLen, &bundle->totalDataLen);
+      generateSmoothRandFloats(MIN_TOTAL_ELEMENTS, DIMS, (float**)&bundle->randomGenArr, &bundle->randomGenArrSideLen, &bundle->totalRandomGenArrLen);
       break;
 
     case zfp_type_double:
-      generateSmoothRandDoubles(MIN_TOTAL_ELEMENTS, DIMS, (double**)&bundle->dataArr, &bundle->dataSideLen, &bundle->totalDataLen);
+      generateSmoothRandDoubles(MIN_TOTAL_ELEMENTS, DIMS, (double**)&bundle->randomGenArr, &bundle->randomGenArrSideLen, &bundle->totalRandomGenArrLen);
       break;
 #else
     case zfp_type_int32:
-      generateSmoothRandInts32(MIN_TOTAL_ELEMENTS, DIMS, 32 - 2, (int32**)&bundle->dataArr, &bundle->dataSideLen, &bundle->totalDataLen);
+      generateSmoothRandInts32(MIN_TOTAL_ELEMENTS, DIMS, 32 - 2, (int32**)&bundle->randomGenArr, &bundle->randomGenArrSideLen, &bundle->totalRandomGenArrLen);
       break;
 
     case zfp_type_int64:
-      generateSmoothRandInts64(MIN_TOTAL_ELEMENTS, DIMS, 64 - 2, (int64**)&bundle->dataArr, &bundle->dataSideLen, &bundle->totalDataLen);
+      generateSmoothRandInts64(MIN_TOTAL_ELEMENTS, DIMS, 64 - 2, (int64**)&bundle->randomGenArr, &bundle->randomGenArrSideLen, &bundle->totalRandomGenArrLen);
       break;
 #endif
 
     default:
-      fail_msg("Invalid zfp_type during setupChosenZfpMode()");
+      fail_msg("Invalid zfp_type during setupRandomData()");
       break;
   }
-  assert_non_null(bundle->dataArr);
+  assert_non_null(bundle->randomGenArr);
 
   *state = bundle;
 
@@ -96,7 +105,7 @@ static int
 teardownRandomData(void** state)
 {
   struct setupVars *bundle = *state;
-  free(bundle->dataArr);
+  free(bundle->randomGenArr);
   free(bundle);
 
   return 0;
@@ -104,84 +113,115 @@ teardownRandomData(void** state)
 
 // assumes setupRandomData() already run (having set some setupVars members)
 static int
-setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
+setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum)
 {
   struct setupVars *bundle = *state;
 
-  bundle->decompressedArr = malloc(sizeof(Scalar) * bundle->totalDataLen);
+  bundle->decompressedArr = malloc(sizeof(Scalar) * bundle->totalRandomGenArrLen);
   assert_non_null(bundle->decompressedArr);
 
+  // setup zfp_fields: source/destination arrays for compression/decompression
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   zfp_field* decompressField;
-  uint sideLen = (uint)bundle->dataSideLen;
+  uint sideLen = (uint)bundle->randomGenArrSideLen;
   switch(DIMS) {
     case 1:
-      field = zfp_field_1d(bundle->dataArr, type, sideLen);
+      field = zfp_field_1d(bundle->randomGenArr, type, sideLen);
       decompressField = zfp_field_1d(bundle->decompressedArr, type, sideLen);
       break;
     case 2:
-      field = zfp_field_2d(bundle->dataArr, type, sideLen, sideLen);
+      field = zfp_field_2d(bundle->randomGenArr, type, sideLen, sideLen);
       decompressField = zfp_field_2d(bundle->decompressedArr, type, sideLen, sideLen);
       break;
     case 3:
-      field = zfp_field_3d(bundle->dataArr, type, sideLen, sideLen, sideLen);
+      field = zfp_field_3d(bundle->randomGenArr, type, sideLen, sideLen, sideLen);
       decompressField = zfp_field_3d(bundle->decompressedArr, type, sideLen, sideLen, sideLen);
       break;
   }
 
+  // setup zfp_stream (compression settings)
   zfp_stream* stream = zfp_stream_open(NULL);
 
-  bundle->paramNum = paramNum;
-  if (bundle->paramNum > 2 || bundle->paramNum < 0) {
-    fail_msg("Unknown paramNum during setupChosenZfpMode()");
+// grab checksums for this compressParamNum
+  if (compressParamNum > 2 || compressParamNum < 0) {
+    fail_msg("Unknown compressParamNum during setupChosenZfpMode()");
   }
+  bundle->compressParamNum = compressParamNum;
 
+  // (and set compressor settings on zfp_stream)
   bundle->zfpMode = zfpMode;
   switch(bundle->zfpMode) {
     case FIXED_PRECISION:
-      bundle->precParam = 1u << (bundle->paramNum + 3);
+      bundle->precParam = 1u << (bundle->compressParamNum + 3);
       zfp_stream_set_precision(stream, bundle->precParam);
       printf("\t\tFixed precision param: %u\n", bundle->precParam);
 
-      bundle->compressedChecksums[0] = CHECKSUM_FP_8_COMPRESSED_BITSTREAM;
-      bundle->compressedChecksums[1] = CHECKSUM_FP_16_COMPRESSED_BITSTREAM;
-      bundle->compressedChecksums[2] = CHECKSUM_FP_32_COMPRESSED_BITSTREAM;
+      switch(compressParamNum) {
+        case 0:
+          bundle->compressedChecksum = CHECKSUM_FP_8_COMPRESSED_BITSTREAM;
+          bundle->decompressedChecksum = CHECKSUM_FP_8_DECOMPRESSED_ARRAY;
+          break;
 
-      bundle->decompressedChecksums[0] = CHECKSUM_FP_8_DECOMPRESSED_ARRAY;
-      bundle->decompressedChecksums[1] = CHECKSUM_FP_16_DECOMPRESSED_ARRAY;
-      bundle->decompressedChecksums[2] = CHECKSUM_FP_32_DECOMPRESSED_ARRAY;
+        case 1:
+          bundle->compressedChecksum = CHECKSUM_FP_16_COMPRESSED_BITSTREAM;
+          bundle->decompressedChecksum = CHECKSUM_FP_16_DECOMPRESSED_ARRAY;
+          break;
+
+        case 2:
+          bundle->compressedChecksum = CHECKSUM_FP_32_COMPRESSED_BITSTREAM;
+          bundle->decompressedChecksum = CHECKSUM_FP_32_DECOMPRESSED_ARRAY;
+          break;
+      }
 
       break;
 
     case FIXED_RATE:
-      bundle->rateParam = (double)(1u << (bundle->paramNum + 3));
+      bundle->rateParam = (double)(1u << (bundle->compressParamNum + 3));
       zfp_stream_set_rate(stream, bundle->rateParam, type, DIMS, 0);
       printf("\t\tFixed rate param: %lf\n", bundle->rateParam);
 
-      bundle->compressedChecksums[0] = CHECKSUM_FR_8_COMPRESSED_BITSTREAM;
-      bundle->compressedChecksums[1] = CHECKSUM_FR_16_COMPRESSED_BITSTREAM;
-      bundle->compressedChecksums[2] = CHECKSUM_FR_32_COMPRESSED_BITSTREAM;
+      switch(compressParamNum) {
+        case 0:
+          bundle->compressedChecksum = CHECKSUM_FR_8_COMPRESSED_BITSTREAM;
+          bundle->decompressedChecksum = CHECKSUM_FR_8_DECOMPRESSED_ARRAY;
+          break;
 
-      bundle->decompressedChecksums[0] = CHECKSUM_FR_8_DECOMPRESSED_ARRAY;
-      bundle->decompressedChecksums[1] = CHECKSUM_FR_16_DECOMPRESSED_ARRAY;
-      bundle->decompressedChecksums[2] = CHECKSUM_FR_32_DECOMPRESSED_ARRAY;
+        case 1:
+          bundle->compressedChecksum = CHECKSUM_FR_16_COMPRESSED_BITSTREAM;
+          bundle->decompressedChecksum = CHECKSUM_FR_16_DECOMPRESSED_ARRAY;
+          break;
+
+        case 2:
+          bundle->compressedChecksum = CHECKSUM_FR_32_COMPRESSED_BITSTREAM;
+          bundle->decompressedChecksum = CHECKSUM_FR_32_DECOMPRESSED_ARRAY;
+          break;
+      }
 
       break;
 
 #ifdef FL_PT_DATA
     case FIXED_ACCURACY:
-      bundle->accParam = ldexp(1.0, -(1u << bundle->paramNum));
+      bundle->accParam = ldexp(1.0, -(1u << bundle->compressParamNum));
       zfp_stream_set_accuracy(stream, bundle->accParam);
       printf("\t\tFixed accuracy param: %lf\n", bundle->accParam);
 
-      bundle->compressedChecksums[0] = CHECKSUM_FA_0p5_COMPRESSED_BITSTREAM;
-      bundle->compressedChecksums[1] = CHECKSUM_FA_0p25_COMPRESSED_BITSTREAM;
-      bundle->compressedChecksums[2] = CHECKSUM_FA_0p0625_COMPRESSED_BITSTREAM;
+      switch(compressParamNum) {
+        case 0:
+          bundle->compressedChecksum = CHECKSUM_FA_0p5_COMPRESSED_BITSTREAM;
+          bundle->decompressedChecksum = CHECKSUM_FA_0p5_DECOMPRESSED_ARRAY;
+          break;
 
-      bundle->decompressedChecksums[0] = CHECKSUM_FA_0p5_DECOMPRESSED_ARRAY;
-      bundle->decompressedChecksums[1] = CHECKSUM_FA_0p25_DECOMPRESSED_ARRAY;
-      bundle->decompressedChecksums[2] = CHECKSUM_FA_0p0625_DECOMPRESSED_ARRAY;
+        case 1:
+          bundle->compressedChecksum = CHECKSUM_FA_0p25_COMPRESSED_BITSTREAM;
+          bundle->decompressedChecksum = CHECKSUM_FA_0p25_DECOMPRESSED_ARRAY;
+          break;
+
+        case 2:
+          bundle->compressedChecksum = CHECKSUM_FA_0p0625_COMPRESSED_BITSTREAM;
+          bundle->decompressedChecksum = CHECKSUM_FA_0p0625_DECOMPRESSED_ARRAY;
+          break;
+      }
 
       break;
 #endif
@@ -210,7 +250,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int paramNum)
   return 0;
 }
 
-// dataArr and the struct itself are freed in teardownRandomData()
+// randomGenArr and the struct itself are freed in teardownRandomData()
 static int
 teardown(void **state)
 {
@@ -229,7 +269,49 @@ static void
 when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashArray((const UInt*)bundle->dataArr, bundle->totalDataLen, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
+  assert_int_equal(hashArray((const UInt*)bundle->randomGenArr, bundle->totalRandomGenArrLen, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
+}
+
+static void
+startTimer(void **state)
+{
+  struct setupVars *bundle = *state;
+
+  // set up timer
+#if defined(__linux__)
+  clock_gettime(CLOCK_REALTIME, &(bundle->timeStart));
+#elif defined(_WIN32)
+  bundle->timeStart = clock();
+#elif defined(__MACH__)
+  bundle->timeStart = mach_absolute_time();
+#else
+  fail_msg("Unknown platform (none of linux, win, osx)");
+#endif
+}
+
+static double
+stopTimer(void **state)
+{
+  struct setupVars *bundle = *state;
+  double time;
+
+  // stop timer, compute elapsed time
+#if defined(__linux__)
+  clock_gettime(CLOCK_REALTIME, &(bundle->timeEnd));
+  time = ((bundle->timeEnd.tv_sec) - (bundle->timeStart.tv_sec)) + ((bundle->timeEnd.tv_nsec) - (bundle->timeStart.tv_nsec)) / 1E9;
+#elif defined(_WIN32)
+  bundle->timeEnd = clock();
+  time = (double)((bundle->timeEnd) - (bundle->timeStart)) / CLOCKS_PER_SEC;
+#elif defined(__MACH__)
+  bundle->timeEnd = mach_absolute_time();
+
+  mach_timebase_info_data_t tb = {0};
+  mach_timebase_info(&tb);
+  double timebase = tb.numer / tb.denom;
+  time = ((bundle->timeEnd) - (bundle->timeStart)) * timebase * (1E-9);
+#endif
+
+  return time;
 }
 
 static void
@@ -240,47 +322,15 @@ assertZfpCompressBitstreamChecksumMatches(void **state)
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  size_t result;
-  double time;
-
-  /* set up timer */
-#if defined(__linux__)
-  struct timespec timeStart, timeEnd;
-  clock_gettime(CLOCK_REALTIME, &timeStart);
-#elif defined(_WIN32)
-  clock_t timeStart, timeEnd;
-  timeStart = clock();
-#elif defined(__MACH__)
-  uint64_t timeStart, timeEnd;
-  timeStart = mach_absolute_time();
-#else
-  fail_msg("Unknown platform (none of linux, win, osx)");
-#endif
-
-  result = zfp_compress(stream, field);
-
-#if defined(__linux__)
-  clock_gettime(CLOCK_REALTIME, &timeEnd);
-  time = (timeEnd.tv_sec - timeStart.tv_sec) + (timeEnd.tv_nsec - timeStart.tv_nsec) / 1E9;
-#elif defined(_WIN32)
-  timeEnd = clock();
-  time = (double)(timeEnd - timeStart) / CLOCKS_PER_SEC;
-#elif defined(__MACH__)
-  timeEnd = mach_absolute_time();
-
-  mach_timebase_info_data_t tb = {0};
-  mach_timebase_info(&tb);
-  double timebase = tb.numer / tb.denom;
-  time = (timeEnd - timeStart) * timebase * (1E-9);
-#endif
-
-  assert_int_not_equal(result, 0);
+  // perform compression and time it
+  startTimer(state);
+  size_t result = zfp_compress(stream, field);
+  double time = stopTimer(state);
   printf("\t\tCompress time (s): %lf\n", time);
+  assert_int_not_equal(result, 0);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  uint64 expectedChecksum = bundle->compressedChecksums[bundle->paramNum];
-
-  assert_int_equal(checksum, expectedChecksum);
+  assert_int_equal(checksum, bundle->compressedChecksum);
 }
 
 #ifdef ZFP_TEST_SERIAL
@@ -294,7 +344,9 @@ _catFunc3(given_, DESCRIPTOR, ZfpStream_when_SetRateWithWriteRandomAccess_expect
   // (would be wasted space otherwise, padded with zeros)
   double rateWithoutWra = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 0);
   double rateWithWra = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 1);
-  assert_true(rateWithWra >= rateWithoutWra);
+  if (!(rateWithWra >= rateWithoutWra)) {
+    fail_msg("rateWithWra (%lf) >= rateWithoutWra (%lf) failed\n", rateWithWra, rateWithoutWra);
+  }
 
   uint bitsPerBlock = (uint)floor(rateWithWra * intPow(4, DIMS) + 0.5);
   assert_int_equal(0, bitsPerBlock % stream_word_bits);
@@ -352,12 +404,14 @@ assertZfpCompressDecompressChecksumMatches(void **state)
 
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location
-  assert_int_equal(compressedBytes, zfp_decompress(stream, bundle->decompressField));
+  startTimer(state);
+  size_t result = zfp_decompress(stream, bundle->decompressField);
+  double time = stopTimer(state);
+  printf("\t\tDecompress time (s): %lf\n", time);
+  assert_int_equal(compressedBytes, result);
 
-  UInt checksum = hashArray((const UInt*)bundle->decompressedArr, bundle->totalDataLen, 1);
-  UInt expectedChecksum = bundle->decompressedChecksums[bundle->paramNum];
-
-  assert_int_equal(checksum, expectedChecksum);
+  UInt checksum = hashArray((const UInt*)bundle->decompressedArr, bundle->totalRandomGenArrLen, 1);
+  assert_int_equal(checksum, bundle->decompressedChecksum);
 }
 
 static void
@@ -408,16 +462,16 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedB
 
   size_t compressedBytes = zfp_compress(stream, field);
   assert_int_not_equal(compressedBytes, 0);
-  double bitsPerValue = (double)compressedBytes * 8. / bundle->totalDataLen;
+  double bitsPerValue = (double)compressedBytes * 8. / bundle->totalRandomGenArrLen;
 
   // expect bitrate to scale wrt padded array length
-  size_t paddedArraySideLen = (bundle->dataSideLen + 3) & ~0x3;
+  size_t paddedArraySideLen = (bundle->randomGenArrSideLen + 3) & ~0x3;
   size_t paddedArrayLen = intPow(paddedArraySideLen, DIMS);
-  double scaleFactor = (double)paddedArrayLen / bundle->totalDataLen;
+  double scaleFactor = (double)paddedArrayLen / bundle->totalRandomGenArrLen;
   double expectedBitsPerValue = bundle->rateParam * scaleFactor;
 
-  printf("\t\t(Compressed bitrate, Expected bitrate): (%lf, %lf)\n", bitsPerValue, expectedBitsPerValue);
-  assert_true(bitsPerValue <= expectedBitsPerValue + RATE_TOL);
+  if(!(bitsPerValue <= expectedBitsPerValue + RATE_TOL))
+    fail_msg("bitsPerValue (%lf) <= expectedBitsPerValue (%lf) + RATE_TOL (%lf) failed", bitsPerValue, expectedBitsPerValue, RATE_TOL);
 }
 
 #ifdef FL_PT_DATA
@@ -435,22 +489,21 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
   size_t compressedBytes = zfp_compress(stream, field);
   assert_int_not_equal(0, compressedBytes);
 
-  zfp_stream_rewind(stream);
-
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location
+  zfp_stream_rewind(stream);
   assert_int_equal(compressedBytes, zfp_decompress(stream, bundle->decompressField));
 
   float maxDiffF = 0;
   double maxDiffD = 0;
   size_t i;
-  for (i = 0; i < bundle->totalDataLen; i++) {
+  for (i = 0; i < bundle->totalRandomGenArrLen; i++) {
     float absDiffF;
     double absDiffD;
 
     switch(ZFP_TYPE) {
       case zfp_type_float:
-        absDiffF = fabsf((float)(bundle->decompressedArr[i] - bundle->dataArr[i]));
+        absDiffF = fabsf(bundle->decompressedArr[i] - bundle->randomGenArr[i]);
         assert_true(absDiffF < bundle->accParam);
 
         if (absDiffF > maxDiffF) {
@@ -460,8 +513,8 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
         break;
 
       case zfp_type_double:
-        absDiffD = fabs(bundle->decompressedArr[i] - bundle->dataArr[i]);
-	assert_true(absDiffD < bundle->accParam);
+        absDiffD = fabs(bundle->decompressedArr[i] - bundle->randomGenArr[i]);
+        assert_true(absDiffD < bundle->accParam);
 
         if (absDiffD > maxDiffD) {
           maxDiffD = absDiffD;
