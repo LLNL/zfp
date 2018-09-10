@@ -17,7 +17,12 @@
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
 
-#define MIN_TOTAL_ELEMENTS 1000000
+#ifdef FL_PT_DATA
+  #define MIN_TOTAL_ELEMENTS 1000000
+#else
+  #define MIN_TOTAL_ELEMENTS 4096
+#endif
+
 #define RATE_TOL 1e-3
 
 typedef enum {
