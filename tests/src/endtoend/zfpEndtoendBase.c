@@ -520,6 +520,28 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Bitstre
 #endif
 
 static void
+_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != INTERLEAVED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(state);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != PERMUTED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(state);
+}
+
+static void
 assertZfpCompressDecompressChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
@@ -604,6 +626,28 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedAccuracy_expect_Array
   assertZfpCompressDecompressChecksumMatches(state);
 }
 #endif
+
+static void
+_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != INTERLEAVED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(state);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != PERMUTED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(state);
+}
 
 static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate)(void **state)
