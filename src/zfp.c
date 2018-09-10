@@ -89,8 +89,8 @@ zfp_field_alloc()
   zfp_field* field = malloc(sizeof(zfp_field));
   if (field) {
     field->type = zfp_type_none;
-    field->nx = field->ny = field->nz = 0;
-    field->sx = field->sy = field->sz = 0;
+    field->nx = field->ny = field->nz = field->nw = 0;
+    field->sx = field->sy = field->sz = field->sw = 0;
     field->data = 0;
   }
   return field;
@@ -135,6 +135,21 @@ zfp_field_3d(void* data, zfp_type type, uint nx, uint ny, uint nz)
   return field;
 }
 
+zfp_field*
+zfp_field_4d(void* data, zfp_type type, uint nx, uint ny, uint nz, uint nw)
+{
+  zfp_field* field = zfp_field_alloc();
+  if (field) {
+    field->type = type;
+    field->nx = nx;
+    field->ny = ny;
+    field->nz = nz;
+    field->nw = nw;
+    field->data = data;
+  }
+  return field;
+}
+
 void
 zfp_field_free(zfp_field* field)
 {
@@ -162,7 +177,7 @@ zfp_field_precision(const zfp_field* field)
 uint
 zfp_field_dimensionality(const zfp_field* field)
 {
-  return field->nx ? field->ny ? field->nz ? 3 : 2 : 1 : 0;
+  return field->nx ? field->ny ? field->nz ? field->nw ? 4 : 3 : 2 : 1 : 0;
 }
 
 size_t
@@ -170,6 +185,9 @@ zfp_field_size(const zfp_field* field, uint* size)
 {
   if (size)
     switch (zfp_field_dimensionality(field)) {
+      case 4:
+        size[3] = field->nw;
+        /* FALLTHROUGH */
       case 3:
         size[2] = field->nz;
         /* FALLTHROUGH */
@@ -180,7 +198,7 @@ zfp_field_size(const zfp_field* field, uint* size)
         size[0] = field->nx;
         break;
     }
-  return (size_t)MAX(field->nx, 1u) * (size_t)MAX(field->ny, 1u) * (size_t)MAX(field->nz, 1u);
+  return (size_t)MAX(field->nx, 1u) * (size_t)MAX(field->ny, 1u) * (size_t)MAX(field->nz, 1u) * (size_t)MAX(field->nw, 1u);
 }
 
 int
@@ -188,6 +206,9 @@ zfp_field_stride(const zfp_field* field, int* stride)
 {
   if (stride)
     switch (zfp_field_dimensionality(field)) {
+      case 4:
+        stride[3] = field->sw ? field->sw : field->nx * field->ny * field->nz;
+        /* FALLTHROUGH */
       case 3:
         stride[2] = field->sz ? field->sz : field->nx * field->ny;
         /* FALLTHROUGH */
@@ -198,7 +219,7 @@ zfp_field_stride(const zfp_field* field, int* stride)
         stride[0] = field->sx ? field->sx : 1;
         break;
     }
-  return field->sx || field->sy || field->sz;
+  return field->sx || field->sy || field->sz || field->sw;
 }
 
 uint64
@@ -218,6 +239,12 @@ zfp_field_metadata(const zfp_field* field)
       meta <<= 16; meta += field->nz - 1;
       meta <<= 16; meta += field->ny - 1;
       meta <<= 16; meta += field->nx - 1;
+      break;
+    case 4:
+      meta <<= 12; meta += field->nw - 1;
+      meta <<= 12; meta += field->nz - 1;
+      meta <<= 12; meta += field->ny - 1;
+      meta <<= 12; meta += field->nx - 1;
       break;
   }
   /* 2 bits for dimensionality (1D, 2D, 3D, 4D) */
@@ -273,6 +300,15 @@ zfp_field_set_size_3d(zfp_field* field, uint nx, uint ny, uint nz)
 }
 
 void
+zfp_field_set_size_4d(zfp_field* field, uint nx, uint ny, uint nz, uint nw)
+{
+  field->nx = nx;
+  field->ny = ny;
+  field->nz = nz;
+  field->nw = nw;
+}
+
+void
 zfp_field_set_stride_1d(zfp_field* field, int sx)
 {
   field->sx = sx;
@@ -296,6 +332,15 @@ zfp_field_set_stride_3d(zfp_field* field, int sx, int sy, int sz)
   field->sz = sz;
 }
 
+void
+zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw)
+{
+  field->sx = sx;
+  field->sy = sy;
+  field->sz = sz;
+  field->sw = sw;
+}
+
 int
 zfp_field_set_metadata(zfp_field* field, uint64 meta)
 {
@@ -316,8 +361,14 @@ zfp_field_set_metadata(zfp_field* field, uint64 meta)
       field->ny = (meta & UINT64C(0xffff)) + 1; meta >>= 16;
       field->nz = (meta & UINT64C(0xffff)) + 1; meta >>= 16;
       break;
+    case 4:
+      field->nx = (meta & UINT64C(0xfff)) + 1; meta >>= 12;
+      field->ny = (meta & UINT64C(0xfff)) + 1; meta >>= 12;
+      field->nz = (meta & UINT64C(0xfff)) + 1; meta >>= 12;
+      field->nw = (meta & UINT64C(0xfff)) + 1; meta >>= 12;
+      break;
   }
-  field->sx = field->sy = field->sz = 0;
+  field->sx = field->sy = field->sz = field->sw = 0;
   return 1;
 }
 
@@ -465,7 +516,8 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
   uint mx = (MAX(field->nx, 1u) + 3) / 4;
   uint my = (MAX(field->ny, 1u) + 3) / 4;
   uint mz = (MAX(field->nz, 1u) + 3) / 4;
-  size_t blocks = (size_t)mx * (size_t)my * (size_t)mz;
+  uint mw = (MAX(field->nw, 1u) + 3) / 4;
+  size_t blocks = (size_t)mx * (size_t)my * (size_t)mz * (size_t)mw;
   uint values = 1u << (2 * dims);
   uint maxbits = 1;
 
@@ -483,6 +535,8 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
     default:
       break;
   }
+#warning "how does maxbits and therefore max size change with 4D?"
+/* and how does a change of maxbits affect meta data encoding? */
   maxbits += values - 1 + values * MIN(zfp->maxprec, type_precision(field->type));
   maxbits = MIN(maxbits, zfp->maxbits);
   maxbits = MAX(maxbits, zfp->minbits);
@@ -763,22 +817,26 @@ size_t
 zfp_compress(zfp_stream* zfp, const zfp_field* field)
 {
   /* function table [execution][strided][dimensionality][scalar type] */
-  void (*ftable[2][2][3][4])(zfp_stream*, const zfp_field*) = {
+  void (*ftable[2][2][4][4])(zfp_stream*, const zfp_field*) = {
     /* serial */
     {{{ compress_int32_1,         compress_int64_1,         compress_float_1,         compress_double_1 },
       { compress_strided_int32_2, compress_strided_int64_2, compress_strided_float_2, compress_strided_double_2 },
-      { compress_strided_int32_3, compress_strided_int64_3, compress_strided_float_3, compress_strided_double_3 }},
+      { compress_strided_int32_3, compress_strided_int64_3, compress_strided_float_3, compress_strided_double_3 },
+      { compress_strided_int32_4, compress_strided_int64_4, compress_strided_float_4, compress_strided_double_4 }},
      {{ compress_strided_int32_1, compress_strided_int64_1, compress_strided_float_1, compress_strided_double_1 },
       { compress_strided_int32_2, compress_strided_int64_2, compress_strided_float_2, compress_strided_double_2 },
-      { compress_strided_int32_3, compress_strided_int64_3, compress_strided_float_3, compress_strided_double_3 }}},
+      { compress_strided_int32_3, compress_strided_int64_3, compress_strided_float_3, compress_strided_double_3 },
+      { compress_strided_int32_4, compress_strided_int64_4, compress_strided_float_4, compress_strided_double_4 }}},
     /* OpenMP */
 #ifdef _OPENMP
     {{{ compress_omp_int32_1,         compress_omp_int64_1,         compress_omp_float_1,         compress_omp_double_1 },
       { compress_strided_omp_int32_2, compress_strided_omp_int64_2, compress_strided_omp_float_2, compress_strided_omp_double_2 },
-      { compress_strided_omp_int32_3, compress_strided_omp_int64_3, compress_strided_omp_float_3, compress_strided_omp_double_3 }},
+      { compress_strided_omp_int32_3, compress_strided_omp_int64_3, compress_strided_omp_float_3, compress_strided_omp_double_3 },
+      { compress_strided_omp_int32_4, compress_strided_omp_int64_4, compress_strided_omp_float_4, compress_strided_omp_double_4 }},
      {{ compress_strided_omp_int32_1, compress_strided_omp_int64_1, compress_strided_omp_float_1, compress_strided_omp_double_1 },
       { compress_strided_omp_int32_2, compress_strided_omp_int64_2, compress_strided_omp_float_2, compress_strided_omp_double_2 },
-      { compress_strided_omp_int32_3, compress_strided_omp_int64_3, compress_strided_omp_float_3, compress_strided_omp_double_3 }}},
+      { compress_strided_omp_int32_3, compress_strided_omp_int64_3, compress_strided_omp_float_3, compress_strided_omp_double_3 },
+      { compress_strided_omp_int32_4, compress_strided_omp_int64_4, compress_strided_omp_float_4, compress_strided_omp_double_4 }}},
 #else
     {{{ NULL }}},
 #endif
@@ -814,14 +872,17 @@ size_t
 zfp_decompress(zfp_stream* zfp, zfp_field* field)
 {
   /* function table [execution][strided][dimensionality][scalar type] */
-  void (*ftable[2][2][3][4])(zfp_stream*, zfp_field*) = {
+  void (*ftable[2][2][4][4])(zfp_stream*, zfp_field*) = {
     /* serial */
     {{{ decompress_int32_1,         decompress_int64_1,         decompress_float_1,         decompress_double_1 },
       { decompress_strided_int32_2, decompress_strided_int64_2, decompress_strided_float_2, decompress_strided_double_2 },
-      { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 }},
+      { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 },
+      { decompress_strided_int32_4, decompress_strided_int64_4, decompress_strided_float_4, decompress_strided_double_4 }},
      {{ decompress_strided_int32_1, decompress_strided_int64_1, decompress_strided_float_1, decompress_strided_double_1 },
       { decompress_strided_int32_2, decompress_strided_int64_2, decompress_strided_float_2, decompress_strided_double_2 },
-      { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 }}},
+      { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 },
+      { decompress_strided_int32_4, decompress_strided_int64_4, decompress_strided_float_4, decompress_strided_double_4 }}},
+
     /* OpenMP; not yet supported */
     {{{ NULL }}},
   };
@@ -830,6 +891,7 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
 
+#warning "add CUDA support"
   switch (type) {
     case zfp_type_int32:
     case zfp_type_int64:
