@@ -23,7 +23,7 @@
   #define MIN_TOTAL_ELEMENTS 4096
 #endif
 
-#define RATE_TOL 1e-3
+#define RATE_TOL (1e-3)
 
 typedef enum {
   FIXED_PRECISION = 1,
@@ -65,7 +65,7 @@ struct setupVars {
   //   used to compute fixed mode param
   //   and to select proper checksum to compare against
   int compressParamNum;
-  double rateParam;
+  size_t rateParam;
   int precParam;
   double accParam;
 
@@ -319,9 +319,9 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
       break;
 
     case FIXED_RATE:
-      bundle->rateParam = (double)(1u << (bundle->compressParamNum + 3));
-      zfp_stream_set_rate(stream, bundle->rateParam, type, DIMS, 0);
-      printf("\t\tFixed rate param: %lf\n", bundle->rateParam);
+      bundle->rateParam = intPow(2, bundle->compressParamNum + 3);
+      zfp_stream_set_rate(stream, (double)bundle->rateParam, type, DIMS, 0);
+      printf("\t\tFixed rate param: %zu\n", bundle->rateParam);
 
       switch(compressParamNum) {
         case 0:
@@ -665,18 +665,20 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedB
   zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
 
+  // integer arithemetic allows exact comparison
   size_t compressedBytes = zfp_compress(stream, field);
   assert_int_not_equal(compressedBytes, 0);
-  double bitsPerValue = (double)compressedBytes * 8. / bundle->totalEntireDataLen;
+  size_t compressedBits = compressedBytes * 8;
 
   // expect bitrate to scale wrt padded array length
   size_t paddedArraySideLen = (bundle->randomGenArrSideLen + 3) & ~0x3;
   size_t paddedArrayLen = intPow(paddedArraySideLen, DIMS);
-  double scaleFactor = (double)paddedArrayLen / bundle->totalEntireDataLen;
-  double expectedBitsPerValue = bundle->rateParam * scaleFactor;
+  size_t expectedTotalBits = bundle->rateParam * paddedArrayLen;
+  // account for zfp_compress() ending with stream_flush()
+  expectedTotalBits = (expectedTotalBits + stream_word_bits - 1) & ~(stream_word_bits - 1);
 
-  if(!(bitsPerValue <= expectedBitsPerValue + RATE_TOL))
-    fail_msg("bitsPerValue (%lf) <= expectedBitsPerValue (%lf) + RATE_TOL (%lf) failed", bitsPerValue, expectedBitsPerValue, RATE_TOL);
+  if(compressedBits != expectedTotalBits)
+    fail_msg("compressedBits (%zu) == expectedTotalBits (%zu) failed", compressedBits, expectedTotalBits);
 }
 
 #ifdef FL_PT_DATA
