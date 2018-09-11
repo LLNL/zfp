@@ -28,7 +28,7 @@ The 7 major tasks to be accomplished are:
 
 /* compute and print reconstruction error */
 static void
-print_error(const void* fin, const void* fout, zfp_type type, uint n)
+print_error(const void* fin, const void* fout, zfp_type type, size_t n)
 {
   const int32* i32i = fin;
   const int64* i64i = fin;
@@ -44,7 +44,7 @@ print_error(const void* fin, const void* fout, zfp_type type, uint n)
   double ermsn = 0;
   double emax = 0;
   double psnr = 0;
-  uint i;
+  size_t i;
 
   for (i = 0; i < n; i++) {
     double d, val;
@@ -137,6 +137,7 @@ int main(int argc, char* argv[])
   uint nx = 0;
   uint ny = 0;
   uint nz = 0;
+  size_t count = 0;
   double rate = 0;
   uint precision = 0;
   double tolerance = 0;
@@ -288,6 +289,13 @@ int main(int argc, char* argv[])
   }
 
   typesize = zfp_type_size(type);
+  count = (size_t)nx * (size_t)ny * (size_t)nz;
+
+  /* make sure one of the array dimensions is not zero */
+  if (!count) {
+    fprintf(stderr, "array size must be nonzero\n");
+    return EXIT_FAILURE;
+  }
 
   /* make sure we have an input file */
   if (!inpath && !zfppath) {
@@ -336,13 +344,13 @@ int main(int argc, char* argv[])
       fprintf(stderr, "cannot open input file\n");
       return EXIT_FAILURE;
     }
-    rawsize = typesize * nx * ny * nz;
+    rawsize = typesize * count;
     fi = malloc(rawsize);
     if (!fi) {
       fprintf(stderr, "cannot allocate memory\n");
       return EXIT_FAILURE;
     }
-    if (fread(fi, typesize, nx * ny * nz, file) != nx * ny * nz) {
+    if (fread(fi, typesize, count, file) != count) {
       fprintf(stderr, "cannot read input file\n");
       return EXIT_FAILURE;
     }
@@ -517,7 +525,7 @@ int main(int argc, char* argv[])
     }
 
     /* allocate memory for decompressed data */
-    rawsize = typesize * nx * ny * nz;
+    rawsize = typesize * count;
     fo = malloc(rawsize);
     if (!fo) {
       fprintf(stderr, "cannot allocate memory\n");
@@ -538,7 +546,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "cannot create output file\n");
         return EXIT_FAILURE;
       }
-      if (fwrite(fo, typesize, nx * ny * nz, file) != nx * ny * nz) {
+      if (fwrite(fo, typesize, count, file) != count) {
         fprintf(stderr, "cannot write output file\n");
         return EXIT_FAILURE;
       }
@@ -550,9 +558,9 @@ int main(int argc, char* argv[])
   if (!quiet) {
     const char* type_name[] = { "int32", "int64", "float", "double" };
     fprintf(stderr, "type=%s nx=%u ny=%u nz=%u", type_name[type - zfp_type_int32], nx, ny, nz);
-    fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / (nx * ny * nz));
+    fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / count);
     if (stats)
-      print_error(fi, fo, type, nx * ny * nz);
+      print_error(fi, fo, type, count);
     fprintf(stderr, "\n");
   }
 
