@@ -9,6 +9,11 @@ int main()
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(when_seededRandomSmoothDataGenerated_expect_ChecksumMatches),
 
+    cmocka_unit_test_setup_teardown(given_2dInt32InterleavedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches, setupInterleaved, teardown),
+    cmocka_unit_test_setup_teardown(given_2dInt32InterleavedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches, setupInterleaved, teardown),
+    cmocka_unit_test_setup_teardown(given_2dInt32PermutedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches, setupPermuted, teardown),
+    cmocka_unit_test_setup_teardown(given_2dInt32PermutedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches, setupPermuted, teardown),
+
     cmocka_unit_test_setup_teardown(given_2dInt32Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches, setupFixedPrec0, teardown),
     cmocka_unit_test_setup_teardown(given_2dInt32Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches, setupFixedPrec0, teardown),
     cmocka_unit_test_setup_teardown(given_2dInt32Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches, setupFixedPrec1, teardown),

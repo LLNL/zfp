@@ -42,7 +42,7 @@ _t2(decompress_strided, Scalar, 2)(zfp_stream* stream, zfp_field* field)
   int sy = field->sy ? field->sy : nx;
   uint x, y;
 
-  for (y = 0; y < my; y += 4, data += 4 * sy - mx * sx) {
+  for (y = 0; y < my; y += 4, data += 4 * sy - (ptrdiff_t)mx * sx) {
     for (x = 0; x < mx; x += 4, data += 4 * sx)
       _t2(zfp_decode_block_strided, Scalar, 2)(stream, data, sx, sy);
     if (x < nx)
@@ -72,8 +72,8 @@ _t2(decompress_strided, Scalar, 3)(zfp_stream* stream, zfp_field* field)
   int sz = field->sz ? field->sz : nx * ny;
   uint x, y, z;
 
-  for (z = 0; z < mz; z += 4, data += 4 * sz - my * sy) {
-    for (y = 0; y < my; y += 4, data += 4 * sy - mx * sx) {
+  for (z = 0; z < mz; z += 4, data += 4 * sz - (ptrdiff_t)my * sy) {
+    for (y = 0; y < my; y += 4, data += 4 * sy - (ptrdiff_t)mx * sx) {
       for (x = 0; x < mx; x += 4, data += 4 * sx)
         _t2(zfp_decode_block_strided, Scalar, 3)(stream, data, sx, sy, sz);
       if (x < nx)
@@ -84,11 +84,11 @@ _t2(decompress_strided, Scalar, 3)(zfp_stream* stream, zfp_field* field)
         _t2(zfp_decode_partial_block_strided, Scalar, 3)(stream, data, 4, ny - y, 4, sx, sy, sz);
       if (x < nx)
         _t2(zfp_decode_partial_block_strided, Scalar, 3)(stream, data, nx - x, ny - y, 4, sx, sy, sz);
-      data -= mx * sx;
+      data -= (ptrdiff_t)mx * sx;
     }
   }
   if (z < nz) {
-    for (y = 0; y < my; y += 4, data += 4 * sy - mx * sx) {
+    for (y = 0; y < my; y += 4, data += 4 * sy - (ptrdiff_t)mx * sx) {
       for (x = 0; x < mx; x += 4, data += 4 * sx)
         _t2(zfp_decode_partial_block_strided, Scalar, 3)(stream, data, 4, 4, nz - z, sx, sy, sz);
       if (x < nx)

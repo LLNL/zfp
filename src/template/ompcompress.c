@@ -78,7 +78,7 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
       /* determine block origin x within array */
       const Scalar* p = data;
       uint x = 4 * block;
-      p += sx * x;
+      p += sx * (ptrdiff_t)x;
       /* compress partial or full block */
       if (nx - x < 4)
         _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, MIN(nx - x, 4u), sx);
@@ -131,7 +131,7 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
       uint x, y;
       x = 4 * (b % bx); b /= bx;
       y = 4 * b;
-      p += sx * x + sy * y;
+      p += sx * (ptrdiff_t)x + sy * (ptrdiff_t)y;
       /* compress partial or full block */
       if (nx - x < 4 || ny - y < 4)
         _t2(zfp_encode_partial_block_strided, Scalar, 2)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), sx, sy);
@@ -188,7 +188,7 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
       x = 4 * (b % bx); b /= bx;
       y = 4 * (b % by); b /= by;
       z = 4 * b;
-      p += sx * x + sy * y + sz * z;
+      p += sx * (ptrdiff_t)x + sy * (ptrdiff_t)y + sz * (ptrdiff_t)z;
       /* compress partial or full block */
       if (nx - x < 4 || ny - y < 4 || nz - z < 4)
         _t2(zfp_encode_partial_block_strided, Scalar, 3)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), sx, sy, sz);

@@ -287,7 +287,7 @@ protected:
         uint nx = 4 - (shape & 3u); shape >>= 2;
         uint ny = 4 - (shape & 3u); shape >>= 2;
         const Scalar* q = a;
-        for (uint y = 0; y < ny; y++, p += sy - nx * sx, q += 4 - nx)
+        for (uint y = 0; y < ny; y++, p += sy - (ptrdiff_t)nx * sx, q += 4 - nx)
           for (uint x = 0; x < nx; x++, p += sx, q++)
             *p = *q;
       }
