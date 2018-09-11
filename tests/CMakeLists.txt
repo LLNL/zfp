@@ -52,7 +52,7 @@ if(MSVC)
 endif()
 
 # TODO: spend time getting googletest to compile on MinGW
-if(NOT MINGW)
+if((NOT MINGW) AND (NOT DEFINED ZFP_ENDTOEND_TESTS_ONLY))
   # clone googletest into build/
   configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${GTEST_ARGS} .
