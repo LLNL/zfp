@@ -69,5 +69,19 @@ setupFixedRate2Param(void **state)
   return setupCudaConfig(state, zfp_mode_fixed_rate, 2, AS_IS);
 }
 
+/* unsupported zfp modes use a single compressParam=1 */
+
+static int
+setupFixedPrec1Param(void **state)
+{
+  return setupCudaConfig(state, zfp_mode_fixed_precision, 1, AS_IS);
+}
+
+static int
+setupFixedAcc1Param(void **state)
+{
+  return setupCudaConfig(state, zfp_mode_fixed_accuracy, 1, AS_IS);
+}
+
 // end #ifdef ZFP_ENABLE_CUDA
 #endif

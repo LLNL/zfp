@@ -951,3 +951,73 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
   }
 }
 #endif
+
+static void
+assertZfpCompressIsNoop(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_field* field = bundle->field;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  // grab bitstream member vars
+  uint bits = s->bits;
+  word buffer = s->buffer;
+  word* ptr = s->ptr;
+  size_t streamSize = stream_size(s);
+
+  // perform compression, expect bitstream not to advance
+  assert_int_equal(zfp_compress(stream, field), streamSize);
+
+  // expect bitstream untouched
+  assert_int_equal(s->bits, bits);
+  assert_int_equal(s->buffer, buffer);
+  assert_ptr_equal(s->ptr, ptr);
+  assert_int_equal(*s->ptr, *ptr);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (zfp_stream_compression_mode(bundle->stream) == zfp_mode_fixed_rate) {
+    fail_msg("Invalid zfp mode during test");
+  }
+
+  assertZfpCompressIsNoop(state);
+}
+
+static void
+assertZfpDecompressIsNoop(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_field* field = bundle->field;
+  zfp_stream* stream = bundle->stream;
+  bitstream* s = zfp_stream_bit_stream(stream);
+
+  // grab bitstream member vars
+  uint bits = s->bits;
+  word buffer = s->buffer;
+  word* ptr = s->ptr;
+  size_t streamSize = stream_size(s);
+
+  // perform decompression, expect bitstream not to advance
+  assert_int_equal(zfp_decompress(stream, field), streamSize);
+
+  // expect bitstream untouched
+  assert_int_equal(s->bits, bits);
+  assert_int_equal(s->buffer, buffer);
+  assert_ptr_equal(s->ptr, ptr);
+  assert_int_equal(*s->ptr, *ptr);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (zfp_stream_compression_mode(bundle->stream) == zfp_mode_fixed_rate) {
+    fail_msg("Invalid zfp mode during test");
+  }
+
+  assertZfpDecompressIsNoop(state);
+}

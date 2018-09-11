@@ -26,6 +26,13 @@ int main()
 
     cmocka_unit_test_setup_teardown(given_Cuda_3dDoubleArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches, setupFixedRate2Param, teardown),
     cmocka_unit_test_setup_teardown(given_Cuda_3dDoubleArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches, setupFixedRate2Param, teardown),
+
+    /* non fixed-rate */
+    cmocka_unit_test_setup_teardown(given_Cuda_3dDoubleArray_when_ZfpCompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero, setupFixedPrec1Param, teardown),
+    cmocka_unit_test_setup_teardown(given_Cuda_3dDoubleArray_when_ZfpDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero, setupFixedPrec1Param, teardown),
+
+    cmocka_unit_test_setup_teardown(given_Cuda_3dDoubleArray_when_ZfpCompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero, setupFixedAcc1Param, teardown),
+    cmocka_unit_test_setup_teardown(given_Cuda_3dDoubleArray_when_ZfpDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero, setupFixedAcc1Param, teardown),
   };
 
   return cmocka_run_group_tests(tests, setupRandomData, teardownRandomData);
