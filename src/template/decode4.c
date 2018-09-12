@@ -19,7 +19,7 @@ _t2(scatter_partial, Scalar, 4)(const Scalar* q, Scalar* p, uint nx, uint ny, ui
   uint x, y, z, w;
   for (w = 0; w < nw; w++, p += sw - (ptrdiff_t)nz * sz, q += 16 * (4 - nz))
     for (z = 0; z < nz; z++, p += sz - (ptrdiff_t)ny * sy, q += 4 * (4 - ny))
-      for (y = 0; y < ny; y++, p += sy - (ptrdiff_t)nx * sx, q += 4 - nx)
+      for (y = 0; y < ny; y++, p += sy - (ptrdiff_t)nx * sx, q += 1 * (4 - nx))
         for (x = 0; x < nx; x++, p += sx, q++)
           *p = *q;
 }

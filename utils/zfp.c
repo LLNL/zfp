@@ -99,6 +99,7 @@ usage()
   fprintf(stderr, "  -1 <nx> : dimensions for 1D array a[nx]\n");
   fprintf(stderr, "  -2 <nx> <ny> : dimensions for 2D array a[ny][nx]\n");
   fprintf(stderr, "  -3 <nx> <ny> <nz> : dimensions for 3D array a[nz][ny][nx]\n");
+  fprintf(stderr, "  -4 <nx> <ny> <nz> <nw> : dimensions for 4D array a[nw][nz][ny][nx]\n");
   fprintf(stderr, "Compression parameters (needed with -i):\n");
   fprintf(stderr, "  -r <rate> : fixed rate (# compressed bits per floating-point value)\n");
   fprintf(stderr, "  -p <precision> : fixed precision (# uncompressed bits per value)\n");
@@ -137,6 +138,7 @@ int main(int argc, char* argv[])
   uint nx = 0;
   uint ny = 0;
   uint nz = 0;
+  uint nw = 0;
   size_t count = 0;
   double rate = 0;
   uint precision = 0;
@@ -179,14 +181,14 @@ int main(int argc, char* argv[])
       case '1':
         if (++i == argc || sscanf(argv[i], "%u", &nx) != 1)
           usage();
-        ny = nz = 1;
+        ny = nz = nw = 1;
         dims = 1;
         break;
       case '2':
         if (++i == argc || sscanf(argv[i], "%u", &nx) != 1 ||
             ++i == argc || sscanf(argv[i], "%u", &ny) != 1)
           usage();
-        nz = 1;
+        nz = nw = 1;
         dims = 2;
         break;
       case '3':
@@ -194,7 +196,16 @@ int main(int argc, char* argv[])
             ++i == argc || sscanf(argv[i], "%u", &ny) != 1 ||
             ++i == argc || sscanf(argv[i], "%u", &nz) != 1)
           usage();
+        nw = 1;
         dims = 3;
+        break;
+      case '4':
+        if (++i == argc || sscanf(argv[i], "%u", &nx) != 1 ||
+            ++i == argc || sscanf(argv[i], "%u", &ny) != 1 ||
+            ++i == argc || sscanf(argv[i], "%u", &nz) != 1 ||
+            ++i == argc || sscanf(argv[i], "%u", &nw) != 1)
+          usage();
+        dims = 4;
         break;
       case 'a':
         if (++i == argc || sscanf(argv[i], "%lf", &tolerance) != 1)
@@ -289,7 +300,7 @@ int main(int argc, char* argv[])
   }
 
   typesize = zfp_type_size(type);
-  count = (size_t)nx * (size_t)ny * (size_t)nz;
+  count = (size_t)nx * (size_t)ny * (size_t)nz * (size_t)nw;
 
   /* make sure one of the array dimensions is not zero */
   if (!count) {
@@ -402,6 +413,9 @@ int main(int argc, char* argv[])
         break;
       case 3:
         zfp_field_set_size_3d(field, nx, ny, nz);
+        break;
+      case 4:
+        zfp_field_set_size_4d(field, nx, ny, nz, nw);
         break;
     }
 
@@ -522,6 +536,7 @@ int main(int argc, char* argv[])
       nx = MAX(field->nx, 1u);
       ny = MAX(field->ny, 1u);
       nz = MAX(field->nz, 1u);
+      nw = MAX(field->nw, 1u);
     }
 
     /* allocate memory for decompressed data */
@@ -566,7 +581,7 @@ int main(int argc, char* argv[])
   /* print compression and error statistics */
   if (!quiet) {
     const char* type_name[] = { "int32", "int64", "float", "double" };
-    fprintf(stderr, "type=%s nx=%u ny=%u nz=%u", type_name[type - zfp_type_int32], nx, ny, nz);
+    fprintf(stderr, "type=%s nx=%u ny=%u nz=%u nw=%u", type_name[type - zfp_type_int32], nx, ny, nz, nw);
     fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / count);
     if (stats)
       print_error(fi, fo, type, count);
