@@ -146,6 +146,15 @@ typedef struct {
   zfp_execution exec; /* execution policy and parameters */
 } zfp_stream;
 
+/* compression mode */
+typedef enum {
+  zfp_mode_null            = 0, /* an invalid configuration of the 4 params */
+  zfp_mode_expert          = 1, /* expert mode (4 params set manually) */
+  zfp_mode_fixed_rate      = 2, /* fixed rate mode */
+  zfp_mode_fixed_precision = 3, /* fixed precision mode */
+  zfp_mode_fixed_accuracy  = 4  /* fixed accuracy mode */
+} zfp_mode;
+
 /* scalar type */
 typedef enum {
   zfp_type_none   = 0, /* unspecified type */
@@ -200,6 +209,12 @@ zfp_stream_close(
 bitstream*                 /* bit stream associated with compressed stream */
 zfp_stream_bit_stream(
   const zfp_stream* stream /* compressed stream */
+);
+
+/* returns enum of compression mode */
+zfp_mode                     /* enum for compression mode */
+zfp_stream_compression_mode(
+  const zfp_stream* zfp      /* compressed stream */
 );
 
 /* get all compression parameters in a compact representation */
@@ -264,8 +279,9 @@ zfp_stream_set_accuracy(
   double tolerance    /* desired error tolerance */
 );
 
-/* set all compression parameters from compact representation (expert mode) */
-int                   /* nonzero upon success */
+/* set all compression parameters from compact representation */
+/* compression params are only set on stream upon success */
+zfp_mode              /* non (zfp_mode_null) upon success */
 zfp_stream_set_mode(
   zfp_stream* stream, /* compressed stream */
   uint64 mode         /* 12- or 64-bit encoding of parameters */

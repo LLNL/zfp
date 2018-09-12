@@ -24,8 +24,10 @@ compressed storage.
 The :c:type:`zfp_stream` struct encapsulates the compression parameters and
 other information about the compressed stream.  Its members should not be
 manipulated directly.  Instead, use the access functions (see the
-:ref:`C API <hl-api>` section) for setting and querying them.  The members
-that govern the compression parameters are described below.
+:ref:`C API <hl-api>` section) for setting and querying them.  One can
+verify the active compression mode on a :c:type:`zfp_stream` through
+:c:func:`zfp_stream_compression_mode`.  The members that govern the
+compression parameters are described below.
 
 .. _mode-expert:
 .. index::

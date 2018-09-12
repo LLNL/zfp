@@ -26,24 +26,12 @@
 #define RATE_TOL (1e-3)
 
 typedef enum {
-  FIXED_PRECISION = 1,
-  FIXED_RATE = 2,
-
-#ifdef FL_PT_DATA
-  FIXED_ACCURACY = 3
-#endif
-
-} zfp_mode;
-
-typedef enum {
   AS_IS = 0,
   PERMUTED = 1,
   INTERLEAVED = 2,
 } stride_config;
 
 struct setupVars {
-  zfp_mode zfpMode;
-
   // randomly generated array
   //   this entire dataset eventually gets compressed
   //   its data gets copied and possibly rearranged, into compressedArr
@@ -291,10 +279,8 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
   }
   bundle->compressParamNum = compressParamNum;
 
-  // (and set compressor settings on zfp_stream)
-  bundle->zfpMode = zfpMode;
-  switch(bundle->zfpMode) {
-    case FIXED_PRECISION:
+  switch(zfpMode) {
+    case zfp_mode_fixed_precision:
       bundle->precParam = 1u << (bundle->compressParamNum + 3);
       zfp_stream_set_precision(stream, bundle->precParam);
       printf("\t\tFixed precision param: %u\n", bundle->precParam);
@@ -318,7 +304,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
 
       break;
 
-    case FIXED_RATE:
+    case zfp_mode_fixed_rate:
       bundle->rateParam = intPow(2, bundle->compressParamNum + 3);
       zfp_stream_set_rate(stream, (double)bundle->rateParam, type, DIMS, 0);
       printf("\t\tFixed rate param: %zu\n", bundle->rateParam);
@@ -343,7 +329,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
       break;
 
 #ifdef FL_PT_DATA
-    case FIXED_ACCURACY:
+    case zfp_mode_fixed_accuracy:
       bundle->accParam = ldexp(1.0, -(1u << bundle->compressParamNum));
       zfp_stream_set_accuracy(stream, bundle->accParam);
       printf("\t\tFixed accuracy param: %lf\n", bundle->accParam);
@@ -493,7 +479,7 @@ static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
-  if (bundle->zfpMode != FIXED_PRECISION) {
+  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_precision) {
     fail_msg("Invalid zfp mode during test");
   }
 
@@ -504,7 +490,7 @@ static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
-  if (bundle->zfpMode != FIXED_RATE) {
+  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
     fail_msg("Invalid zfp mode during test");
   }
 
@@ -516,7 +502,7 @@ static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
-  if (bundle->zfpMode != FIXED_ACCURACY) {
+  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_accuracy) {
     fail_msg("Invalid zfp mode during test");
   }
 
@@ -601,7 +587,7 @@ static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
-  if (bundle->zfpMode != FIXED_PRECISION) {
+  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_precision) {
     fail_msg("Invalid zfp mode during test");
   }
 
@@ -612,7 +598,7 @@ static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
-  if (bundle->zfpMode != FIXED_RATE) {
+  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
     fail_msg("Invalid zfp mode during test");
   }
 
@@ -624,7 +610,7 @@ static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
-  if (bundle->zfpMode != FIXED_ACCURACY) {
+  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_accuracy) {
     fail_msg("Invalid zfp mode during test");
   }
 
@@ -658,7 +644,7 @@ static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate)(void **state)
 {
   struct setupVars *bundle = *state;
-  if (bundle->zfpMode != FIXED_RATE) {
+  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
     fail_msg("Test requires fixed rate mode");
   }
 
@@ -686,7 +672,7 @@ static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy)(void **state)
 {
   struct setupVars *bundle = *state;
-  if (bundle->zfpMode != FIXED_ACCURACY) {
+  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_accuracy) {
     fail_msg("Test requires fixed accuracy mode");
   }
 

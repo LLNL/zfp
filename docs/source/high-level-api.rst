@@ -160,6 +160,19 @@ Types
       uint chunk_size; // number of blocks per chunk (1D only)
     } zfp_exec_params_omp;
 
+.. c:type:: zfp_mode
+
+  Enumerates the compression modes.
+  ::
+
+    typedef enum {
+      zfp_mode_null            = 0, // an invalid configuration of the 4 params
+      zfp_mode_expert          = 1, // expert mode (4 params set manually)
+      zfp_mode_fixed_rate      = 2, // fixed rate mode
+      zfp_mode_fixed_precision = 3, // fixed precision mode
+      zfp_mode_fixed_accuracy  = 4  // fixed accuracy mode
+    } zfp_mode;
+
 .. c:type:: zfp_type
 
   Enumerates the scalar types supported by the compressor, and is used to
@@ -256,6 +269,11 @@ Compressed Stream
 
   Return bit stream associated with compressed stream.
 
+.. c:function:: zfp_mode zfp_stream_compression_mode(const zfp_stream* zfp)
+
+  Return compression mode associated with compression parameters. Returns
+  :code:`zfp_mode_null` when compression parameters are invalid.
+
 .. c:function:: uint64 zfp_stream_mode(const zfp_stream* zfp)
 
   Return compact encoding of compression parameters.  If the return value
@@ -331,11 +349,13 @@ Compression Parameters
   :ref:`FAQ #17 <q-tolerance>`).  This compression mode should be used only
   with floating-point (not integer) data.
 
-.. c:function:: int zfp_stream_set_mode(zfp_stream* stream, uint64 mode)
+.. c:function:: zfp_mode zfp_stream_set_mode(zfp_stream* stream, uint64 mode)
 
   Set all compression parameters from compact integer representation.
-  See :c:func:`zfp_stream_mode` for how to encode the parameters.  The
-  return value is nonzero upon success.
+  See :c:func:`zfp_stream_mode` for how to encode the parameters.  Returns
+  the mode associated with the newly-set compression parameters.  If the
+  decoded compression parameters are invalid, they are not set and the
+  function returns :code:`zfp_mode_null`.
 
 .. c:function:: int zfp_stream_set_params(zfp_stream* stream, uint minbits, uint maxbits, uint maxprec, int minexp)
 
