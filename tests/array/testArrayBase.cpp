@@ -15,6 +15,21 @@ TEST_F(TEST_FIXTURE, when_constructorCalled_then_rateSetWithWriteRandomAccess)
 #endif
 }
 
+TEST_F(TEST_FIXTURE, when_constructorCalledWithCacheSize_then_minCacheSizeEnforced)
+{
+  size_t cacheSize = 300;
+
+#if DIMS == 1
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, ZFP_RATE_PARAM_BITS, 0, cacheSize);
+#elif DIMS == 2
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS, 0, cacheSize);
+#elif DIMS == 3
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS, 0, cacheSize);
+#endif
+
+  EXPECT_LE(cacheSize, arr.cache_size());
+}
+
 TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
 {
   double oldRate = ZFP_RATE_PARAM_BITS;
