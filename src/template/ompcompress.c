@@ -222,7 +222,6 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
   uint by = (ny + 3) / 4;
   uint bz = (nz + 3) / 4;
   uint bw = (nw + 3) / 4;
-#warning "overflow here"
   uint blocks = bx * by * bz * bw;
   uint chunks = chunk_count_omp(stream, blocks, threads);
 

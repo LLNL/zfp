@@ -1,6 +1,5 @@
 #define index(i, j, k, l) ((i) + 4 * ((j) + 4 * ((k) + 4 * (l))))
 
-#warning "finalize coefficient ordering"
 /* order coefficients (i, j, k, l) by i + j + k + l, then i^2 + j^2 + k^2 + l^2 */
 cache_align_(static const uchar perm_4[256]) = {
   index(0, 0, 0, 0), /*   0 :  0 */

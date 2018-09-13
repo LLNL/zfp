@@ -535,8 +535,8 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
     default:
       break;
   }
-#warning "how does maxbits and therefore max size change with 4D?"
-/* and how does a change of maxbits affect meta data encoding? */
+/* Q: how does maxbits and therefore max size change with 4D? */
+/* Q: and how does a change of maxbits affect meta data encoding? */
   maxbits += values - 1 + values * MIN(zfp->maxprec, type_precision(field->type));
   maxbits = MIN(maxbits, zfp->maxbits);
   maxbits = MAX(maxbits, zfp->minbits);
@@ -891,7 +891,6 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
 
-#warning "add CUDA support"
   switch (type) {
     case zfp_type_int32:
     case zfp_type_int64:

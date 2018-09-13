@@ -135,8 +135,6 @@ _t1(encode_many_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxp
   return maxbits - bits;
 }
 
-#include <stdio.h>
-
 /* encode block of integers */
 static uint
 _t2(encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock)
@@ -145,25 +143,8 @@ _t2(encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int ma
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* perform decorrelating transform */
   _t2(fwd_xform, Int, DIMS)(iblock);
-#warning "debug"
-/*
-{
-int i;
-for (i = 0; i < BLOCK_SIZE; i++)
-fprintf(stderr, "%3d:i %20ld\n", i, (long)iblock[i]);
-fprintf(stderr, "\n");
-}
-*/
   /* reorder signed coefficients and convert to unsigned integer */
   _t1(fwd_order, Int)(ublock, iblock, PERM, BLOCK_SIZE);
-/*
-{
-int i;
-for (i = 0; i < BLOCK_SIZE; i++)
-fprintf(stderr, "%3d:u %20ld\n", i, (long)ublock[i]);
-fprintf(stderr, "\n");
-}
-*/
   /* encode integer coefficients */
   if (BLOCK_SIZE <= 64)
     bits = _t1(encode_ints, UInt)(stream, maxbits, maxprec, ublock, BLOCK_SIZE);
