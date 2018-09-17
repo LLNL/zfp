@@ -145,9 +145,24 @@ interleaveArray(Scalar* inputArr, Scalar* outputArr, size_t inputLen)
 static void
 permuteArray(Scalar* inputArr, Scalar* outputArr, size_t sideLen)
 {
-  size_t i, j, k;
+  size_t i, j, k, l;
 
   switch(DIMS) {
+    case 4:
+      // permute ijkl lkji
+      for (l = 0; l < sideLen; l++) {
+        for (k = 0; k < sideLen; k++) {
+          for (j = 0; j < sideLen; j++) {
+            for (i = 0; i < sideLen; i++) {
+              size_t index = l*sideLen*sideLen*sideLen + k*sideLen*sideLen + j*sideLen + i;
+              size_t transposedIndex = i*sideLen*sideLen*sideLen + j*sideLen*sideLen + k*sideLen + l;
+              outputArr[transposedIndex] = inputArr[index];
+            }
+          }
+        }
+      }
+      break;
+
     case 3:
       // permute ijk to kji
       for (k = 0; k < sideLen; k++) {
@@ -201,21 +216,29 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
   assert_non_null(bundle->decompressedArr);
 
   // identify strides and produce compressedArr
-  int sx, sy, sz;
+  int sx, sy, sz, sw;
   switch(bundle->stride) {
     case REVERSED:
-      if (DIMS == 3) {
+      if (DIMS == 4) {
         sx = -1;
         sy = sx * (int)bundle->randomGenArrSideLen;
         sz = sy * (int)bundle->randomGenArrSideLen;
+        sw = sz * (int)bundle->randomGenArrSideLen;
+      } else if (DIMS == 3) {
+        sx = -1;
+        sy = sx * (int)bundle->randomGenArrSideLen;
+        sz = sy * (int)bundle->randomGenArrSideLen;
+        sw = 0;
       } else if (DIMS == 2) {
         sx = -1;
         sy = sx * (int)bundle->randomGenArrSideLen;
         sz = 0;
+        sw = 0;
       } else {
         sx = -1;
         sy = 0;
         sz = 0;
+        sw = 0;
       }
       reverseArray(bundle->randomGenArr, bundle->compressedArr, bundle->totalRandomGenArrLen);
 
@@ -225,38 +248,53 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
       break;
 
     case INTERLEAVED:
-      if (DIMS == 3) {
+      if (DIMS == 4) {
         sx = 2;
         sy = sx * (int)bundle->randomGenArrSideLen;
         sz = sy * (int)bundle->randomGenArrSideLen;
+        sw = sz * (int)bundle->randomGenArrSideLen;
+      } else if (DIMS == 3) {
+        sx = 2;
+        sy = sx * (int)bundle->randomGenArrSideLen;
+        sz = sy * (int)bundle->randomGenArrSideLen;
+        sw = 0;
       } else if (DIMS == 2) {
         sx = 2;
         sy = sx * (int)bundle->randomGenArrSideLen;
         sz = 0;
+        sw = 0;
       } else {
         sx = 2;
         sy = 0;
         sz = 0;
+        sw = 0;
       }
       interleaveArray(bundle->randomGenArr, bundle->compressedArr, bundle->totalRandomGenArrLen);
       break;
 
     case PERMUTED:
-      if (DIMS == 3) {
+      if (DIMS == 4) {
+        sx = (int)intPow(bundle->randomGenArrSideLen, 3);
+        sy = (int)intPow(bundle->randomGenArrSideLen, 2);
+        sz = (int)bundle->randomGenArrSideLen;
+        sw = 1;
+      } else if (DIMS == 3) {
         sx = (int)intPow(bundle->randomGenArrSideLen, 2);
         sy = (int)bundle->randomGenArrSideLen;
         sz = 1;
+        sw = 0;
       } else if (DIMS == 2) {
         sx = (int)bundle->randomGenArrSideLen;
         sy = 1;
         sz = 0;
+        sw = 0;
       }
       permuteArray(bundle->randomGenArr, bundle->compressedArr, bundle->randomGenArrSideLen);
       break;
 
     case AS_IS:
       // no-op
-      sx = sy = sz = 0;
+      sx = sy = sz = sw = 0;
       memcpy(bundle->compressedArr, bundle->randomGenArr, bundle->totalRandomGenArrLen * sizeof(Scalar));
       break;
   }
@@ -289,6 +327,14 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
 
       decompressField = zfp_field_3d(bundle->decompressedArr, type, sideLen, sideLen, sideLen);
       zfp_field_set_stride_3d(decompressField, sx, sy, sz);
+      break;
+
+    case 4:
+      field = zfp_field_4d(bundle->compressedArr, type, sideLen, sideLen, sideLen, sideLen);
+      zfp_field_set_stride_4d(field, sx, sy, sz, sw);
+
+      decompressField = zfp_field_4d(bundle->decompressedArr, type, sideLen, sideLen, sideLen, sideLen);
+      zfp_field_set_stride_4d(decompressField, sx, sy, sz, sw);
       break;
   }
 
@@ -603,7 +649,7 @@ assertZfpCompressDecompressChecksumMatches(void **state)
   // hash decompressedArr
   const UInt* arr = (const UInt*)bundle->decompressedArr;
   size_t rSideLen = bundle->randomGenArrSideLen;
-  int strides[3];
+  int strides[4];
 
   UInt checksum;
   switch(bundle->stride) {
@@ -611,6 +657,10 @@ assertZfpCompressDecompressChecksumMatches(void **state)
       zfp_field_stride(field, strides);
       // arr already points to last element (so strided traverse is legal)
       switch(DIMS) {
+        case 4:
+          checksum = hash4dStridedArray(arr, rSideLen, rSideLen, rSideLen, rSideLen, strides[0], strides[1], strides[2], strides[3]);
+          break;
+
         case 3:
           checksum = hash3dStridedArray(arr, rSideLen, rSideLen, rSideLen, strides[0], strides[1], strides[2]);
           break;
@@ -632,6 +682,10 @@ assertZfpCompressDecompressChecksumMatches(void **state)
     case PERMUTED:
       zfp_field_stride(field, strides);
       switch(DIMS) {
+        case 4:
+          checksum = hash4dStridedArray(arr, rSideLen, rSideLen, rSideLen, rSideLen, strides[0], strides[1], strides[2], strides[3]);
+          break;
+
         case 3:
           checksum = hash3dStridedArray(arr, rSideLen, rSideLen, rSideLen, strides[0], strides[1], strides[2]);
           break;
@@ -764,17 +818,19 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
   zfp_stream_rewind(stream);
   assert_int_equal(compressedBytes, zfp_decompress(stream, bundle->decompressField));
 
-  int strides[3];
-  int sx, sy, sz;
+  int strides[4];
+  int sx, sy, sz, sw;
   if (!zfp_field_stride(field, strides)) {
     // contiguous
     sx = 1;
     sy = 1;
     sz = 1;
+    sw = 1;
   } else {
     sx = strides[0];
     sy = strides[1];
     sz = strides[2];
+    sw = strides[3];
   }
 
   // apply strides
@@ -783,38 +839,40 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
   float maxDiffF = 0;
   double maxDiffD = 0;
 
-  size_t i, j, k;
-  for (k = (DIMS == 3) ? sideLen : 1; k--; offset += sz - sideLen*sy) {
-    for (j = (DIMS >= 2) ? sideLen : 1; j--; offset += sy - sideLen*sx) {
-      for (i = sideLen; i--; offset += sx) {
-        float absDiffF;
-        double absDiffD;
+  size_t i, j, k, l;
+  for (l = (DIMS >= 4) ? sideLen : 1; l--; offset += sw - sideLen*sz) {
+    for (k = (DIMS >= 3) ? sideLen : 1; k--; offset += sz - sideLen*sy) {
+      for (j = (DIMS >= 2) ? sideLen : 1; j--; offset += sy - sideLen*sx) {
+        for (i = sideLen; i--; offset += sx) {
+          float absDiffF;
+          double absDiffD;
 
-        switch(ZFP_TYPE) {
-          case zfp_type_float:
-            absDiffF = fabsf(bundle->decompressedArr[offset] - bundle->compressedArr[offset]);
+          switch(ZFP_TYPE) {
+            case zfp_type_float:
+              absDiffF = fabsf(bundle->decompressedArr[offset] - bundle->compressedArr[offset]);
 
-            assert_true(absDiffF < bundle->accParam);
+              assert_true(absDiffF < bundle->accParam);
 
-            if (absDiffF > maxDiffF) {
-              maxDiffF = absDiffF;
-            }
+              if (absDiffF > maxDiffF) {
+                maxDiffF = absDiffF;
+              }
 
-            break;
+              break;
 
-          case zfp_type_double:
-            absDiffD = fabs(bundle->decompressedArr[offset] - bundle->compressedArr[offset]);
+            case zfp_type_double:
+              absDiffD = fabs(bundle->decompressedArr[offset] - bundle->compressedArr[offset]);
 
-            assert_true(absDiffD < bundle->accParam);
+              assert_true(absDiffD < bundle->accParam);
 
-            if (absDiffD > maxDiffD) {
-              maxDiffD = absDiffD;
-            }
+              if (absDiffD > maxDiffD) {
+                maxDiffD = absDiffD;
+              }
 
-            break;
+              break;
 
-          default:
-            fail_msg("Test requires zfp_type float or double");
+            default:
+              fail_msg("Test requires zfp_type float or double");
+          }
         }
       }
     }
