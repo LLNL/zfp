@@ -29,6 +29,7 @@ typedef enum {
   AS_IS = 0,
   PERMUTED = 1,
   INTERLEAVED = 2,
+  REVERSED = 3,
 } stride_config;
 
 struct setupVars {
@@ -120,6 +121,16 @@ teardownRandomData(void** state)
   return 0;
 }
 
+// reversed array ([inputLen - 1], [inputLen - 2], ..., [1], [0])
+static void
+reverseArray(Scalar* inputArr, Scalar* outputArr, size_t inputLen)
+{
+  size_t i;
+  for (i = 0; i < inputLen; i++) {
+    outputArr[i] = inputArr[inputLen - i - 1];
+  }
+}
+
 // interleaved array ([0], [0], [1], [1], [2], ...)
 static void
 interleaveArray(Scalar* inputArr, Scalar* outputArr, size_t inputLen)
@@ -182,12 +193,37 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
   if (stride == INTERLEAVED)
     bundle->totalEntireDataLen *= 2;
 
+  // allocate arrays which we directly compress or decompress into
   bundle->compressedArr = calloc(bundle->totalEntireDataLen, sizeof(Scalar));
   assert_non_null(bundle->compressedArr);
+
+  bundle->decompressedArr = malloc(sizeof(Scalar) * bundle->totalEntireDataLen);
+  assert_non_null(bundle->decompressedArr);
 
   // identify strides and produce compressedArr
   int sx, sy, sz;
   switch(bundle->stride) {
+    case REVERSED:
+      if (DIMS == 3) {
+        sx = -1;
+        sy = sx * (int)bundle->randomGenArrSideLen;
+        sz = sy * (int)bundle->randomGenArrSideLen;
+      } else if (DIMS == 2) {
+        sx = -1;
+        sy = sx * (int)bundle->randomGenArrSideLen;
+        sz = 0;
+      } else {
+        sx = -1;
+        sy = 0;
+        sz = 0;
+      }
+      reverseArray(bundle->randomGenArr, bundle->compressedArr, bundle->totalRandomGenArrLen);
+
+      // adjust pointer to last element, so strided traverse is valid
+      bundle->compressedArr += bundle->totalRandomGenArrLen - 1;
+      bundle->decompressedArr += bundle->totalRandomGenArrLen - 1;
+      break;
+
     case INTERLEAVED:
       if (DIMS == 3) {
         sx = 2;
@@ -224,10 +260,6 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
       memcpy(bundle->compressedArr, bundle->randomGenArr, bundle->totalRandomGenArrLen * sizeof(Scalar));
       break;
   }
-
-  // allocate destination array (decompressed into here)
-  bundle->decompressedArr = malloc(sizeof(Scalar) * bundle->totalEntireDataLen);
-  assert_non_null(bundle->decompressedArr);
 
   // setup zfp_fields: source/destination arrays for compression/decompression
   zfp_type type = ZFP_TYPE;
@@ -378,8 +410,13 @@ teardown(void **state)
   zfp_field_free(bundle->field);
   zfp_field_free(bundle->decompressField);
   free(bundle->buffer);
-  free(bundle->decompressedArr);
 
+  if (bundle->stride == REVERSED) {
+    // for convenience, we adjusted negative strided arrays to point to last element
+    bundle->compressedArr -= bundle->totalRandomGenArrLen - 1;
+    bundle->decompressedArr -= bundle->totalRandomGenArrLen - 1;
+  }
+  free(bundle->decompressedArr);
   free(bundle->compressedArr);
 
   return 0;
@@ -511,6 +548,17 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Bitstre
 #endif
 
 static void
+_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != REVERSED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(state);
+}
+
+static void
 _catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
@@ -559,6 +607,24 @@ assertZfpCompressDecompressChecksumMatches(void **state)
 
   UInt checksum;
   switch(bundle->stride) {
+    case REVERSED:
+      zfp_field_stride(field, strides);
+      // arr already points to last element (so strided traverse is legal)
+      switch(DIMS) {
+        case 3:
+          checksum = hash3dStridedArray(arr, rSideLen, rSideLen, rSideLen, strides[0], strides[1], strides[2]);
+          break;
+
+        case 2:
+          checksum = hash2dStridedArray(arr, rSideLen, rSideLen, strides[0], strides[1]);
+          break;
+
+        case 1:
+          checksum = hashArray(arr, rSideLen, strides[0]);
+          break;
+      }
+      break;
+
     case INTERLEAVED:
       checksum = hashArray(arr, bundle->totalRandomGenArrLen, 2);
       break;
@@ -617,6 +683,17 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedAccuracy_expect_Array
   assertZfpCompressDecompressChecksumMatches(state);
 }
 #endif
+
+static void
+_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != REVERSED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(state);
+}
 
 static void
 _catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)

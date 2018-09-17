@@ -18,6 +18,12 @@ setupInterleaved(void **state)
   return setupChosenZfpMode(state, zfp_mode_fixed_precision, 0, INTERLEAVED);
 }
 
+static int
+setupReversed(void **state)
+{
+  return setupChosenZfpMode(state, zfp_mode_fixed_precision, 0, REVERSED);
+}
+
 /* non-strided functions always use stride=AS_IS */
 /* with variation on compressParamNum */
 

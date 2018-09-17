@@ -106,7 +106,7 @@ setupOmpConfig(void **state, zfp_mode zfpMode, int compressParamNum, int threadP
 /* entry functions */
 
 /* strided always uses fixed-precision & compressParamNum=1 */
-/* with variation on threadcount, chunksize, and stride=PERMUTED or INTERLEAVED */
+/* with variation on threadcount, chunksize, and stride=PERMUTED, INTERLEAVED, or REVERSED */
 static int
 setupPermuted0Thread0Chunk(void **state)
 {
@@ -117,6 +117,12 @@ static int
 setupInterleaved0Thread0Chunk(void **state)
 {
   return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 0, INTERLEAVED);
+}
+
+static int
+setupReversed0Thread0Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 0, REVERSED);
 }
 
 static int
@@ -131,6 +137,11 @@ setupInterleaved0Thread1Chunk(void **state)
   return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 1, INTERLEAVED);
 }
 
+static int
+setupReversed0Thread1Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 1, REVERSED);
+}
 
 static int
 setupPermuted0Thread2Chunk(void **state)
@@ -142,6 +153,12 @@ static int
 setupInterleaved0Thread2Chunk(void **state)
 {
   return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 2, INTERLEAVED);
+}
+
+static int
+setupReversed0Thread2Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 2, REVERSED);
 }
 
 static int
@@ -157,6 +174,12 @@ setupInterleaved1Thread0Chunk(void **state)
 }
 
 static int
+setupReversed1Thread0Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 0, REVERSED);
+}
+
+static int
 setupPermuted1Thread1Chunk(void **state)
 {
   return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, PERMUTED);
@@ -166,6 +189,12 @@ static int
 setupInterleaved1Thread1Chunk(void **state)
 {
   return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, INTERLEAVED);
+}
+
+static int
+setupReversed1Thread1Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, REVERSED);
 }
 
 static int
@@ -181,6 +210,12 @@ setupInterleaved1Thread2Chunk(void **state)
 }
 
 static int
+setupReversed1Thread2Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 2, REVERSED);
+}
+
+static int
 setupPermuted2Thread0Chunk(void **state)
 {
   return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, PERMUTED);
@@ -190,6 +225,12 @@ static int
 setupInterleaved2Thread0Chunk(void **state)
 {
   return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, INTERLEAVED);
+}
+
+static int
+setupReversed2Thread0Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, REVERSED);
 }
 
 static int
@@ -205,6 +246,12 @@ setupInterleaved2Thread1Chunk(void **state)
 }
 
 static int
+setupReversed2Thread1Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 1, REVERSED);
+}
+
+static int
 setupPermuted2Thread2Chunk(void **state)
 {
   return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, PERMUTED);
@@ -214,6 +261,12 @@ static int
 setupInterleaved2Thread2Chunk(void **state)
 {
   return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, INTERLEAVED);
+}
+
+static int
+setupReversed2Thread2Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, REVERSED);
 }
 
 /* non-strided functions always use stride=AS_IS */
