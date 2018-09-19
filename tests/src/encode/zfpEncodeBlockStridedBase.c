@@ -7,11 +7,13 @@
 #include "utils/testMacros.h"
 
 #define SX 2
-#define SY (3 * 4*SX)
-#define SZ (2 * 4*SY)
+#define SY (3 * BLOCK_SIDE_LEN*SX)
+#define SZ (2 * BLOCK_SIDE_LEN*SY)
+#define SW (3 * BLOCK_SIDE_LEN*SZ)
 #define PX 1
 #define PY 2
 #define PZ 3
+#define PW 4
 
 #define DUMMY_VAL 99
 
@@ -25,13 +27,14 @@ struct setupVars {
 void
 initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
 {
-  int i, j, k, countX, countY, countZ;
-  // absolute entry (i,j,k)
-  //   0 <= i < countX, (same for j,countY and k,countZ)
-  // strided entry iff (i,j,k) % (countX/4, countY/4, countZ/4) == (0,0,0)
+  size_t i, j, k, l, countX, countY, countZ, countW;
+  // absolute entry (i,j,k,l)
+  //   0 <= i < countX, (same for j,countY and k,countZ and l,countW)
+  // strided entry iff
+  //   i % countX/BLOCK_SIDE_LEN == 0 (and so on for j,k,l)
   switch(DIMS) {
     case 1:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       *dataArrPtr = malloc(sizeof(Scalar) * countX);
       assert_non_null(*dataArrPtr);
 
@@ -50,20 +53,22 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
       break;
 
     case 2:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       countY = SY / SX;
       *dataArrPtr = malloc(sizeof(Scalar) * countX * countY);
       assert_non_null(*dataArrPtr);
 
       for (j = 0; j < countY; j++) {
         for (i = 0; i < countX; i++) {
-          if (i % (countX/4) || j % (countY/4)) {
-            (*dataArrPtr)[countX*j + i] = dummyVal;
+          size_t index = countX*j + i;
+          if (i % (countX/BLOCK_SIDE_LEN)
+              || j % (countY/BLOCK_SIDE_LEN)) {
+            (*dataArrPtr)[index] = dummyVal;
           } else {
 #ifdef FL_PT_DATA
-	    (*dataArrPtr)[countX*j + i] = nextSignedRandFlPt();
+	    (*dataArrPtr)[index] = nextSignedRandFlPt();
 #else
-	    (*dataArrPtr)[countX*j + i] = nextSignedRandInt();
+	    (*dataArrPtr)[index] = nextSignedRandInt();
 #endif
           }
         }
@@ -72,7 +77,7 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
       break;
 
     case 3:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       countY = SY / SX;
       countZ = SZ / SY;
       *dataArrPtr = malloc(sizeof(Scalar) * countX * countY * countZ);
@@ -81,14 +86,49 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
       for (k = 0; k < countZ; k++) {
         for (j = 0; j < countY; j++) {
           for (i = 0; i < countX; i++) {
-            if (i % (countX/4) || j % (countY/4) || k % (countZ/4)) {
-              (*dataArrPtr)[countX*countY*k + countX*j + i] = dummyVal;
+            size_t index = countX*countY*k + countX*j + i;
+            if (i % (countX/BLOCK_SIDE_LEN)
+                || j % (countY/BLOCK_SIDE_LEN)
+                || k % (countZ/BLOCK_SIDE_LEN)) {
+              (*dataArrPtr)[index] = dummyVal;
             } else {
 #ifdef FL_PT_DATA
-              (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandFlPt();
+              (*dataArrPtr)[index] = nextSignedRandFlPt();
 #else
-              (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandInt();
+              (*dataArrPtr)[index] = nextSignedRandInt();
 #endif
+            }
+          }
+        }
+      }
+
+      break;
+
+    case 4:
+      countX = BLOCK_SIDE_LEN * SX;
+      countY = SY / SX;
+      countZ = SZ / SY;
+      countW = SW / SZ;
+      *dataArrPtr = malloc(sizeof(Scalar) * countX * countY * countZ * countW);
+      assert_non_null(*dataArrPtr);
+
+      for (l = 0; l < countW; l++) {
+        for (k = 0; k < countZ; k++) {
+          for (j = 0; j < countY; j++) {
+            for (i = 0; i < countX; i++) {
+              size_t index = countX*countY*countZ*l + countX*countY*k + countX*j + i;
+              if (i % (countX/BLOCK_SIDE_LEN)
+                  || j % (countY/BLOCK_SIDE_LEN)
+                  || k % (countZ/BLOCK_SIDE_LEN)
+                  || l % (countW/BLOCK_SIDE_LEN)) {
+                (*dataArrPtr)[index] = dummyVal;
+              } else {
+#ifdef FL_PT_DATA
+                (*dataArrPtr)[index] = nextSignedRandFlPt();
+#else
+                (*dataArrPtr)[index] = nextSignedRandInt();
+#endif
+              }
             }
           }
         }
@@ -112,16 +152,20 @@ setup(void **state)
   zfp_field* field;
   switch(DIMS) {
     case 1:
-      field = zfp_field_1d(bundle->dataArr, type, 4);
+      field = zfp_field_1d(bundle->dataArr, type, BLOCK_SIDE_LEN);
       zfp_field_set_stride_1d(field, SX);
       break;
     case 2:
-      field = zfp_field_2d(bundle->dataArr, type, 4, 4);
+      field = zfp_field_2d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
       zfp_field_set_stride_2d(field, SX, SY);
       break;
     case 3:
-      field = zfp_field_3d(bundle->dataArr, type, 4, 4, 4);
+      field = zfp_field_3d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
       zfp_field_set_stride_3d(field, SX, SY, SZ);
+      break;
+    case 4:
+      field = zfp_field_4d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      zfp_field_set_stride_4d(field, SX, SY, SZ, SW);
       break;
   }
 
@@ -175,6 +219,9 @@ encodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
     case 3:
       numBitsWritten = _t2(zfp_encode_block_strided, Scalar, 3)(stream, dataArr, SX, SY, SZ);
       break;
+    case 4:
+      numBitsWritten = _t2(zfp_encode_block_strided, Scalar, 4)(stream, dataArr, SX, SY, SZ, SW);
+      break;
   }
 
   return numBitsWritten;
@@ -194,6 +241,9 @@ encodePartialBlockStrided(zfp_stream* stream, Scalar* dataArr)
     case 3:
       numBitsWritten = _t2(zfp_encode_partial_block_strided, Scalar, 3)(stream, dataArr, PX, PY, PZ, SX, SY, SZ);
       break;
+    case 4:
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Scalar, 4)(stream, dataArr, PX, PY, PZ, PW, SX, SY, SZ, SW);
+      break;
   }
 
   return numBitsWritten;
@@ -207,13 +257,16 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
   UInt checksum;
   switch (DIMS) {
     case 1:
-      checksum = hashArray((const UInt*)bundle->dataArr, BLOCK_SIZE, SX);
+      checksum = hashArray((const UInt*)bundle->dataArr, BLOCK_SIDE_LEN, SX);
       break;
     case 2:
       checksum = hash2dStridedBlock((const UInt*)bundle->dataArr, SX, SY);
       break;
     case 3:
       checksum = hash3dStridedBlock((const UInt*)bundle->dataArr, SX, SY, SZ);
+      break;
+    case 4:
+      checksum = hash4dStridedBlock((const UInt*)bundle->dataArr, SX, SY, SZ, SW);
       break;
   }
 
@@ -341,18 +394,18 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyE
   stream_rewind(s);
 
   // tweak block entries outside partial block subset
-  // block entry (i, j, k)
-  int i, j, k;
+  // block entry (i, j, k, l)
+  size_t i, j, k, l;
   switch(DIMS) {
     case 1:
-      for (i = PX; i < 4; i++) {
+      for (i = PX; i < BLOCK_SIDE_LEN; i++) {
         bundle->dataArr[SX*i] = DUMMY_VAL;
       }
       break;
 
     case 2:
-      for (j = 0; j < 4; j++) {
-        for (i = 0; i < 4; i++) {
+      for (j = 0; j < BLOCK_SIDE_LEN; j++) {
+        for (i = 0; i < BLOCK_SIDE_LEN; i++) {
           if (i >= PX || j >= PY) {
             bundle->dataArr[SY*j + SX*i] = DUMMY_VAL;
           }
@@ -361,11 +414,25 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyE
       break;
 
     case 3:
-      for (k = 0; k < 4; k++) {
-        for (j = 0; j < 4; j++) {
-          for (i = 0; i < 4; i++) {
+      for (k = 0; k < BLOCK_SIDE_LEN; k++) {
+        for (j = 0; j < BLOCK_SIDE_LEN; j++) {
+          for (i = 0; i < BLOCK_SIDE_LEN; i++) {
             if (i >= PX || j >= PY || k >= PZ) {
               bundle->dataArr[SZ*k + SY*j + SX*i] = DUMMY_VAL;
+            }
+          }
+        }
+      }
+      break;
+
+    case 4:
+      for (l = 0; l < BLOCK_SIDE_LEN; l++) {
+        for (k = 0; k < BLOCK_SIDE_LEN; k++) {
+          for (j = 0; j < BLOCK_SIDE_LEN; j++) {
+            for (i = 0; i < BLOCK_SIDE_LEN; i++) {
+              if (i >= PX || j >= PY || k >= PZ) {
+                bundle->dataArr[SW*l + SZ*k + SY*j + SX*i] = DUMMY_VAL;
+              }
             }
           }
         }
