@@ -1,99 +1,32 @@
-# int
-add_executable(testZfpEncodeBlock1dInt32 testZfpEncodeBlock1dInt32.c)
-target_link_libraries(testZfpEncodeBlock1dInt32 cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlock1dInt32 COMMAND testZfpEncodeBlock1dInt32)
+function(zfp_add_block_tests dims type bits)
+  set(block_test_name testZfpEncodeBlock${dims}d${type})
+  add_executable(${block_test_name} ${block_test_name}.c)
+  target_link_libraries(${block_test_name}
+    cmocka zfp rand${bits}Lib hash${bits}Lib)
+  if(HAVE_LIBM_MATH)
+    target_link_libraries(${block_test_name} m)
+  endif()
+  add_test(NAME ${block_test_name} COMMAND ${block_test_name})
 
-add_executable(testZfpEncodeBlock1dInt64 testZfpEncodeBlock1dInt64.c)
-target_link_libraries(testZfpEncodeBlock1dInt64 cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlock1dInt64 COMMAND testZfpEncodeBlock1dInt64)
+  set(strided_block_test_name testZfpEncodeBlockStrided${dims}d${type})
+  add_executable(${strided_block_test_name} ${strided_block_test_name}.c)
+  target_link_libraries(${strided_block_test_name}
+    cmocka zfp rand${bits}Lib hash${bits}Lib)
+  if(HAVE_LIBM_MATH)
+    target_link_libraries(${strided_block_test_name} m)
+  endif()
+  add_test(NAME ${strided_block_test_name} COMMAND ${strided_block_test_name})
+endfunction()
 
-add_executable(testZfpEncodeBlock2dInt32 testZfpEncodeBlock2dInt32.c)
-target_link_libraries(testZfpEncodeBlock2dInt32 cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlock2dInt32 COMMAND testZfpEncodeBlock2dInt32)
-
-add_executable(testZfpEncodeBlock2dInt64 testZfpEncodeBlock2dInt64.c)
-target_link_libraries(testZfpEncodeBlock2dInt64 cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlock2dInt64 COMMAND testZfpEncodeBlock2dInt64)
-
-add_executable(testZfpEncodeBlock3dInt32 testZfpEncodeBlock3dInt32.c)
-target_link_libraries(testZfpEncodeBlock3dInt32 cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlock3dInt32 COMMAND testZfpEncodeBlock3dInt32)
-
-add_executable(testZfpEncodeBlock3dInt64 testZfpEncodeBlock3dInt64.c)
-target_link_libraries(testZfpEncodeBlock3dInt64 cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlock3dInt64 COMMAND testZfpEncodeBlock3dInt64)
-
-# strided
-add_executable(testZfpEncodeBlockStrided1dInt32 testZfpEncodeBlockStrided1dInt32.c)
-target_link_libraries(testZfpEncodeBlockStrided1dInt32 cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlockStrided1dInt32 COMMAND testZfpEncodeBlockStrided1dInt32)
-
-add_executable(testZfpEncodeBlockStrided1dInt64 testZfpEncodeBlockStrided1dInt64.c)
-target_link_libraries(testZfpEncodeBlockStrided1dInt64 cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlockStrided1dInt64 COMMAND testZfpEncodeBlockStrided1dInt64)
-
-add_executable(testZfpEncodeBlockStrided2dInt32 testZfpEncodeBlockStrided2dInt32.c)
-target_link_libraries(testZfpEncodeBlockStrided2dInt32 cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlockStrided2dInt32 COMMAND testZfpEncodeBlockStrided2dInt32)
-
-add_executable(testZfpEncodeBlockStrided2dInt64 testZfpEncodeBlockStrided2dInt64.c)
-target_link_libraries(testZfpEncodeBlockStrided2dInt64 cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlockStrided2dInt64 COMMAND testZfpEncodeBlockStrided2dInt64)
-
-add_executable(testZfpEncodeBlockStrided3dInt32 testZfpEncodeBlockStrided3dInt32.c)
-target_link_libraries(testZfpEncodeBlockStrided3dInt32 cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlockStrided3dInt32 COMMAND testZfpEncodeBlockStrided3dInt32)
-
-add_executable(testZfpEncodeBlockStrided3dInt64 testZfpEncodeBlockStrided3dInt64.c)
-target_link_libraries(testZfpEncodeBlockStrided3dInt64 cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlockStrided3dInt64 COMMAND testZfpEncodeBlockStrided3dInt64)
-
-# floating point
-add_executable(testZfpEncodeBlock1dFloat testZfpEncodeBlock1dFloat.c)
-target_link_libraries(testZfpEncodeBlock1dFloat cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlock1dFloat COMMAND testZfpEncodeBlock1dFloat)
-
-add_executable(testZfpEncodeBlock1dDouble testZfpEncodeBlock1dDouble.c)
-target_link_libraries(testZfpEncodeBlock1dDouble cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlock1dDouble COMMAND testZfpEncodeBlock1dDouble)
-
-add_executable(testZfpEncodeBlock2dFloat testZfpEncodeBlock2dFloat.c)
-target_link_libraries(testZfpEncodeBlock2dFloat cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlock2dFloat COMMAND testZfpEncodeBlock2dFloat)
-
-add_executable(testZfpEncodeBlock2dDouble testZfpEncodeBlock2dDouble.c)
-target_link_libraries(testZfpEncodeBlock2dDouble cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlock2dDouble COMMAND testZfpEncodeBlock2dDouble)
-
-add_executable(testZfpEncodeBlock3dFloat testZfpEncodeBlock3dFloat.c)
-target_link_libraries(testZfpEncodeBlock3dFloat cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlock3dFloat COMMAND testZfpEncodeBlock3dFloat)
-
-add_executable(testZfpEncodeBlock3dDouble testZfpEncodeBlock3dDouble.c)
-target_link_libraries(testZfpEncodeBlock3dDouble cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlock3dDouble COMMAND testZfpEncodeBlock3dDouble)
-
-# strided
-add_executable(testZfpEncodeBlockStrided1dFloat testZfpEncodeBlockStrided1dFloat.c)
-target_link_libraries(testZfpEncodeBlockStrided1dFloat cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlockStrided1dFloat COMMAND testZfpEncodeBlockStrided1dFloat)
-
-add_executable(testZfpEncodeBlockStrided1dDouble testZfpEncodeBlockStrided1dDouble.c)
-target_link_libraries(testZfpEncodeBlockStrided1dDouble cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlockStrided1dDouble COMMAND testZfpEncodeBlockStrided1dDouble)
-
-add_executable(testZfpEncodeBlockStrided2dFloat testZfpEncodeBlockStrided2dFloat.c)
-target_link_libraries(testZfpEncodeBlockStrided2dFloat cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlockStrided2dFloat COMMAND testZfpEncodeBlockStrided2dFloat)
-
-add_executable(testZfpEncodeBlockStrided2dDouble testZfpEncodeBlockStrided2dDouble.c)
-target_link_libraries(testZfpEncodeBlockStrided2dDouble cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlockStrided2dDouble COMMAND testZfpEncodeBlockStrided2dDouble)
-
-add_executable(testZfpEncodeBlockStrided3dFloat testZfpEncodeBlockStrided3dFloat.c)
-target_link_libraries(testZfpEncodeBlockStrided3dFloat cmocka zfp rand32Lib hash32Lib)
-add_test(NAME testZfpEncodeBlockStrided3dFloat COMMAND testZfpEncodeBlockStrided3dFloat)
-
-add_executable(testZfpEncodeBlockStrided3dDouble testZfpEncodeBlockStrided3dDouble.c)
-target_link_libraries(testZfpEncodeBlockStrided3dDouble cmocka zfp rand64Lib hash64Lib)
-add_test(NAME testZfpEncodeBlockStrided3dDouble COMMAND testZfpEncodeBlockStrided3dDouble)
+zfp_add_block_tests(1 Int32 32)
+zfp_add_block_tests(1 Int64 64)
+zfp_add_block_tests(2 Int32 32)
+zfp_add_block_tests(2 Int64 64)
+zfp_add_block_tests(3 Int32 32)
+zfp_add_block_tests(3 Int64 64)
+zfp_add_block_tests(1 Float 32)
+zfp_add_block_tests(1 Double 64)
+zfp_add_block_tests(2 Float 32)
+zfp_add_block_tests(2 Double 64)
+zfp_add_block_tests(3 Float 32)
+zfp_add_block_tests(3 Double 64)
