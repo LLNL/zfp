@@ -748,13 +748,15 @@ size_t
 zfp_compress(zfp_stream* zfp, const zfp_field* field)
 {
   /* function table [execution][strided][dimensionality][scalar type] */
-  void (*compress[2][2][3][4])(zfp_stream*, const zfp_field*) = {
+  void (*ftable[2][2][3][4])(zfp_stream*, const zfp_field*) = {
+    /* serial */
     {{{ compress_int32_1,         compress_int64_1,         compress_float_1,         compress_double_1 },
       { compress_strided_int32_2, compress_strided_int64_2, compress_strided_float_2, compress_strided_double_2 },
       { compress_strided_int32_3, compress_strided_int64_3, compress_strided_float_3, compress_strided_double_3 }},
      {{ compress_strided_int32_1, compress_strided_int64_1, compress_strided_float_1, compress_strided_double_1 },
       { compress_strided_int32_2, compress_strided_int64_2, compress_strided_float_2, compress_strided_double_2 },
       { compress_strided_int32_3, compress_strided_int64_3, compress_strided_float_3, compress_strided_double_3 }}},
+    /* OpenMP */
 #ifdef _OPENMP
     {{{ compress_omp_int32_1,         compress_omp_int64_1,         compress_omp_float_1,         compress_omp_double_1 },
       { compress_strided_omp_int32_2, compress_strided_omp_int64_2, compress_strided_omp_float_2, compress_strided_omp_double_2 },
@@ -762,6 +764,8 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
      {{ compress_strided_omp_int32_1, compress_strided_omp_int64_1, compress_strided_omp_float_1, compress_strided_omp_double_1 },
       { compress_strided_omp_int32_2, compress_strided_omp_int64_2, compress_strided_omp_float_2, compress_strided_omp_double_2 },
       { compress_strided_omp_int32_3, compress_strided_omp_int64_3, compress_strided_omp_float_3, compress_strided_omp_double_3 }}},
+#else
+    {{{ NULL }}},
 #endif
   };
   uint exec = zfp->exec.policy;
@@ -779,7 +783,13 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
       return 0;
   }
 
-  compress[exec][strided][dims - 1][type - zfp_type_int32](zfp, field);
+  /* return 0 if compression mode is not supported */
+  void (*compress)(zfp_stream*, const zfp_field*) = ftable[exec][strided][dims - 1][type - zfp_type_int32];
+  if (!compress)
+    return 0;
+
+  /* compress field and align bit stream on word boundary */
+  compress(zfp, field);
   stream_flush(zfp->stream);
 
   return stream_size(zfp->stream);
@@ -788,15 +798,19 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
 size_t
 zfp_decompress(zfp_stream* zfp, zfp_field* field)
 {
-  /* function table [strided][dimensionality][scalar type] */
-  void (*decompress[2][3][4])(zfp_stream*, zfp_field*) = {
-    {{ decompress_int32_1,         decompress_int64_1,         decompress_float_1,         decompress_double_1 },
-     { decompress_strided_int32_2, decompress_strided_int64_2, decompress_strided_float_2, decompress_strided_double_2 },
-     { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 }},
-    {{ decompress_strided_int32_1, decompress_strided_int64_1, decompress_strided_float_1, decompress_strided_double_1 },
-     { decompress_strided_int32_2, decompress_strided_int64_2, decompress_strided_float_2, decompress_strided_double_2 },
-     { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 }},
+  /* function table [execution][strided][dimensionality][scalar type] */
+  void (*ftable[2][2][3][4])(zfp_stream*, zfp_field*) = {
+    /* serial */
+    {{{ decompress_int32_1,         decompress_int64_1,         decompress_float_1,         decompress_double_1 },
+      { decompress_strided_int32_2, decompress_strided_int64_2, decompress_strided_float_2, decompress_strided_double_2 },
+      { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 }},
+     {{ decompress_strided_int32_1, decompress_strided_int64_1, decompress_strided_float_1, decompress_strided_double_1 },
+      { decompress_strided_int32_2, decompress_strided_int64_2, decompress_strided_float_2, decompress_strided_double_2 },
+      { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 }}},
+    /* OpenMP; not yet supported */
+    {{{ NULL }}},
   };
+  uint exec = zfp->exec.policy;
   uint strided = zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
@@ -811,7 +825,13 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
       return 0;
   }
 
-  decompress[strided][dims - 1][type - zfp_type_int32](zfp, field);
+  /* return 0 if decompression mode is not supported */
+  void (*decompress)(zfp_stream*, zfp_field*) = ftable[exec][strided][dims - 1][type - zfp_type_int32];
+  if (!decompress)
+    return 0;
+
+  /* decompress field and align bit stream on word boundary */
+  decompress(zfp, field);
   stream_align(zfp->stream);
 
   return stream_size(zfp->stream);
