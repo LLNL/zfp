@@ -365,7 +365,7 @@ zfp_stream_compression_mode(const zfp_stream* zfp)
 
   /* fixed rate? */
   if (zfp->minbits == zfp->maxbits &&
-      1 <= zfp->maxbits && zfp->maxbits <= 2048 &&
+      1 <= zfp->maxbits && zfp->maxbits <= ZFP_MAX_BITS &&
       zfp->maxprec >= ZFP_MAX_PREC &&
       zfp->minexp <= ZFP_MIN_EXP)
     return zfp_mode_fixed_rate;
@@ -373,7 +373,7 @@ zfp_stream_compression_mode(const zfp_stream* zfp)
   /* fixed precision? */
   if (zfp->minbits <= ZFP_MIN_BITS &&
       zfp->maxbits >= ZFP_MAX_BITS &&
-      1 <= zfp->maxprec && zfp->maxprec <= 128 &&
+      zfp->maxprec >= 1 &&
       zfp->minexp <= ZFP_MIN_EXP)
     return zfp_mode_fixed_precision;
 
@@ -381,7 +381,7 @@ zfp_stream_compression_mode(const zfp_stream* zfp)
   if (zfp->minbits <= ZFP_MIN_BITS &&
       zfp->maxbits >= ZFP_MAX_BITS &&
       zfp->maxprec >= ZFP_MAX_PREC &&
-      -1074 <= zfp->minexp && zfp->minexp <= 843)
+      ZFP_MIN_EXP <= zfp->minexp)
     return zfp_mode_fixed_accuracy;
 
   return zfp_mode_expert;
@@ -396,15 +396,30 @@ zfp_stream_mode(const zfp_stream* zfp)
   uint maxprec;
   uint minexp;
 
+  /* common configurations mapped to short representation */
   switch(zfp_stream_compression_mode(zfp)) {
     case zfp_mode_fixed_rate:
-      return zfp->maxbits - 1;
+      if (zfp->maxbits <= 2048)
+        /* maxbits is [1, 2048] */
+        /* returns [0, 2047] */
+        return (zfp->maxbits - 1);
+      else
+        break;
 
     case zfp_mode_fixed_precision:
-      return zfp->maxprec + 2047;
+      if (zfp->maxprec <= 128)
+        /* maxprec is [1, 128] */
+        /* returns [2048, 2175] */
+        return (zfp->maxprec - 1) + (2048);
+      else
+        break;
 
     case zfp_mode_fixed_accuracy:
-      return zfp->minexp + 3251;
+      if (zfp->minexp <= 843)
+        /* minexp is [ZFP_MIN_EXP=-1074, 843] */
+        /* [2177, ZFP_MODE_SHORT_MAX=4094] */
+        /* +1 because skipped 2176 */
+        return (zfp->minexp - ZFP_MIN_EXP) + (2048 + 128 + 1);
 
     default:
       break;
@@ -541,18 +556,18 @@ zfp_stream_set_mode(zfp_stream* zfp, uint64 mode)
   int minexp;
 
   if (mode <= ZFP_MODE_SHORT_MAX) {
-    /* 12-bit encoding of one of three modes */
+    /* 12-bit (short) encoding of one of three modes */
     if (mode < 2048) {
       /* fixed rate */
       minbits = maxbits = (uint)mode + 1;
       maxprec = ZFP_MAX_PREC;
       minexp = ZFP_MIN_EXP;
     }
-    else if (mode < 2176) {
+    else if (mode < (2048 + 128)) {
       /* fixed precision */
       minbits = ZFP_MIN_BITS;
       maxbits = ZFP_MAX_BITS;
-      maxprec = (uint)mode - 2047;
+      maxprec = (uint)mode + 1 - (2048);
       minexp = ZFP_MIN_EXP;
     }
     else {
@@ -560,7 +575,7 @@ zfp_stream_set_mode(zfp_stream* zfp, uint64 mode)
       minbits = ZFP_MIN_BITS;
       maxbits = ZFP_MAX_BITS;
       maxprec = ZFP_MAX_PREC;
-      minexp = (uint)mode - 3251;
+      minexp = (uint)mode + ZFP_MIN_EXP - (2048 + 128 + 1);
     }
   }
   else {

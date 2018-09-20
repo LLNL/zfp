@@ -93,7 +93,7 @@
   _zfp_str(ZFP_VERSION_PATCH)
 
 /* default compression parameters */
-#define ZFP_MIN_BITS     0 /* minimum number of bits per block */
+#define ZFP_MIN_BITS     1 /* minimum number of bits per block */
 #define ZFP_MAX_BITS  4171 /* maximum number of bits per block */
 #define ZFP_MAX_PREC    64 /* maximum precision supported */
 #define ZFP_MIN_EXP  -1074 /* minimum floating-point base-2 exponent */
