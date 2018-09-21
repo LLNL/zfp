@@ -90,7 +90,7 @@ if((NOT MINGW) AND (NOT DEFINED ZFP_ENDTOEND_TESTS_ONLY))
 endif()
 
 
-add_executable(testzfp testzfp.cpp fields.c)
+add_executable(testzfp testzfp.cpp)
 target_link_libraries(testzfp zfp)
 target_compile_definitions(testzfp PRIVATE ${zfp_defs})
 

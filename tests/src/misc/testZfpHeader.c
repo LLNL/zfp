@@ -291,7 +291,7 @@ given_properHeader_when_zfpReadHeaderMetadata_expect_fieldArrayDimsSet(void **st
   zfp_field_set_size_3d(field, 0, 0, 0);
 
   assert_int_equal(zfp_read_header(stream, bundle->field, ZFP_HEADER_META), ZFP_META_BITS);
-//  assert_int_equal(field->nx, nx);
+  assert_int_equal(field->nx, nx);
   assert_int_equal(field->ny, ny);
   assert_int_equal(field->nz, nz);
 }
