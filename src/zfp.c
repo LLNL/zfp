@@ -281,6 +281,7 @@ zfp_field_set_size_1d(zfp_field* field, uint n)
   field->nx = n;
   field->ny = 0;
   field->nz = 0;
+  field->nw = 0;
 }
 
 void
@@ -289,6 +290,7 @@ zfp_field_set_size_2d(zfp_field* field, uint nx, uint ny)
   field->nx = nx;
   field->ny = ny;
   field->nz = 0;
+  field->nw = 0;
 }
 
 void
@@ -297,6 +299,7 @@ zfp_field_set_size_3d(zfp_field* field, uint nx, uint ny, uint nz)
   field->nx = nx;
   field->ny = ny;
   field->nz = nz;
+  field->nw = 0;
 }
 
 void
@@ -314,6 +317,7 @@ zfp_field_set_stride_1d(zfp_field* field, int sx)
   field->sx = sx;
   field->sy = 0;
   field->sz = 0;
+  field->sw = 0;
 }
 
 void
@@ -322,6 +326,7 @@ zfp_field_set_stride_2d(zfp_field* field, int sx, int sy)
   field->sx = sx;
   field->sy = sy;
   field->sz = 0;
+  field->sw = 0;
 }
 
 void
@@ -330,6 +335,7 @@ zfp_field_set_stride_3d(zfp_field* field, int sx, int sy, int sz)
   field->sx = sx;
   field->sy = sy;
   field->sz = sz;
+  field->sw = 0;
 }
 
 void
@@ -351,15 +357,21 @@ zfp_field_set_metadata(zfp_field* field, uint64 meta)
     case 1:
       /* currently dimensions are limited to 2^32 - 1 */
       field->nx = (meta & UINT64C(0x0000ffffffff)) + 1; meta >>= 48;
+      field->ny = 0;
+      field->nz = 0;
+      field->nw = 0;
       break;
     case 2:
       field->nx = (meta & UINT64C(0xffffff)) + 1; meta >>= 24;
       field->ny = (meta & UINT64C(0xffffff)) + 1; meta >>= 24;
+      field->nz = 0;
+      field->nw = 0;
       break;
     case 3:
       field->nx = (meta & UINT64C(0xffff)) + 1; meta >>= 16;
       field->ny = (meta & UINT64C(0xffff)) + 1; meta >>= 16;
       field->nz = (meta & UINT64C(0xffff)) + 1; meta >>= 16;
+      field->nw = 0;
       break;
     case 4:
       field->nx = (meta & UINT64C(0xfff)) + 1; meta >>= 12;
@@ -535,8 +547,6 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
     default:
       break;
   }
-/* Q: how does maxbits and therefore max size change with 4D? */
-/* Q: and how does a change of maxbits affect meta data encoding? */
   maxbits += values - 1 + values * MIN(zfp->maxprec, type_precision(field->type));
   maxbits = MIN(maxbits, zfp->maxbits);
   maxbits = MAX(maxbits, zfp->minbits);
