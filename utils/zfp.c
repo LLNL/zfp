@@ -429,6 +429,25 @@ int main(int argc, char* argv[])
     }
   }
 
+  /* specify execution policy */
+  switch (exec) {
+    case zfp_exec_omp:
+      if (!zfp_stream_set_execution(zfp, exec) ||
+          !zfp_stream_set_omp_threads(zfp, threads) ||
+          !zfp_stream_set_omp_chunk_size(zfp, chunk_size)) {
+        fprintf(stderr, "OpenMP execution not available\n");
+        return EXIT_FAILURE;
+      }
+      break;
+    case zfp_exec_serial:
+    default:
+      if (!zfp_stream_set_execution(zfp, exec)) {
+        fprintf(stderr, "serial execution not available\n");
+        return EXIT_FAILURE;
+      }
+      break;
+  }
+
   /* compress input file if provided */
   if (inpath) {
     /* allocate buffer for compressed data */
@@ -450,25 +469,6 @@ int main(int argc, char* argv[])
       return EXIT_FAILURE;
     }
     zfp_stream_set_bit_stream(zfp, stream);
-
-    /* specify execution policy */
-    switch (exec) {
-      case zfp_exec_omp:
-        if (!zfp_stream_set_execution(zfp, exec) ||
-            !zfp_stream_set_omp_threads(zfp, threads) ||
-            !zfp_stream_set_omp_chunk_size(zfp, chunk_size)) {
-          fprintf(stderr, "OpenMP execution not available\n");
-          return EXIT_FAILURE;
-        }
-        break;
-      case zfp_exec_serial:
-      default:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "serial execution not available\n");
-          return EXIT_FAILURE;
-        }
-        break;
-    }
 
     /* optionally write header */
     if (header && !zfp_write_header(zfp, field, ZFP_HEADER_FULL)) {
@@ -534,9 +534,18 @@ int main(int argc, char* argv[])
     zfp_field_set_pointer(field, fo);
 
     /* decompress data */
-    if (!zfp_decompress(zfp, field)) {
-      fprintf(stderr, "decompression failed\n");
-      return EXIT_FAILURE;
+    while (!zfp_decompress(zfp, field)) {
+      /* fall back on serial decompression if execution policy not supported */
+      if (inpath && zfp_stream_execution(zfp) != zfp_exec_serial) {
+        if (!zfp_stream_set_execution(zfp, zfp_exec_serial)) {
+          fprintf(stderr, "cannot change execution policy\n");
+          return EXIT_FAILURE;
+        }
+      }
+      else {
+        fprintf(stderr, "decompression failed\n");
+        return EXIT_FAILURE;
+      }
     }
 
     /* optionally write reconstructed data */
