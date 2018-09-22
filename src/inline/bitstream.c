@@ -420,9 +420,9 @@ stream_set_stride(bitstream* s, size_t block, ptrdiff_t delta)
 inline_ bitstream*
 stream_open(void* buffer, size_t bytes)
 {
-  bitstream* s = malloc(sizeof(bitstream));
+  bitstream* s = (bitstream*)malloc(sizeof(bitstream));
   if (s) {
-    s->begin = buffer;
+    s->begin = (word*)buffer;
     s->end = s->begin + bytes / sizeof(word);
 #ifdef BIT_STREAM_STRIDED
     stream_set_stride(s, 0, 0);
