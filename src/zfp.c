@@ -350,7 +350,7 @@ zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw)
 int
 zfp_field_set_metadata(zfp_field* field, uint64 meta)
 {
-  uint dims;
+  uint64 dims;
   field->type = (zfp_type)((meta & 0x3u) + 1); meta >>= 2;
   dims = (meta & 0x3u) + 1; meta >>= 2;
   switch (dims) {
