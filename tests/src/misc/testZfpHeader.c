@@ -149,162 +149,6 @@ when_zfpFieldSetMetadataCalled_expect_arrayDimensionsSet(void **state)
 }
 
 static void
-given_fixedRate_when_zfpStreamModeCalled_expect_returnsMaxbitsMinusOne(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_stream* stream = bundle->stream;
-
-  // setup uses fixed-rate
-  uint64 mode = zfp_stream_mode(stream);
-  assert_int_equal(mode, stream->maxbits - 1);
-}
-
-static void
-given_fixedPrecision_when_zfpStreamModeCalled_expect_returnsMaxPrecPlusConst(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_stream* stream = bundle->stream;
-  zfp_stream_set_precision(stream, PREC);
-
-  uint64 mode = zfp_stream_mode(stream);
-  assert_int_equal(mode, PREC + 2047);
-}
-
-static void
-given_fixedAccuracy_when_zfpStreamModeCalled_expect_returnsMinexpPlusConst(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_stream* stream = bundle->stream;
-
-  zfp_stream_set_accuracy(stream, ACC);
-  int minExp = stream->minexp;
-
-  uint64 mode = zfp_stream_mode(stream);
-  assert_int_equal(mode, minExp + 3251);
-}
-
-static void
-given_customCompressParamsSet_when_zfpStreamModeCalled_expect_allParamsEncodedInResult(void **state)
-{
-  uint64 MASK_7_BITS = 0x7fu;
-  uint64 MASK_12_BITS = 0xfffu;
-  uint64 MASK_15_BITS = 0x7fffu;
-
-  struct setupVars *bundle = *state;
-  zfp_stream* stream = bundle->stream;
-  assert_int_equal(zfp_stream_set_params(stream, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
-
-  uint64 mode = zfp_stream_mode(stream);
-
-  uint endingToken = (uint)(mode & MASK_12_BITS);
-  mode >>= 12;
-
-  uint minBits = (uint)(mode & MASK_15_BITS) + 1;
-  mode >>= 15;
-
-  uint maxBits = (uint)(mode & MASK_15_BITS) + 1;
-  mode >>= 15;
-
-  uint maxPrec = (uint)(mode & MASK_7_BITS) + 1;
-  mode >>= 7;
-
-  int minExp = (int)(mode & MASK_15_BITS) - 16495;
-
-  assert_int_equal(endingToken, 0xfffu);
-  assert_int_equal(minBits, MIN_BITS);
-  assert_int_equal(maxBits, MAX_BITS);
-  assert_int_equal(maxPrec, MAX_PREC);
-  assert_int_equal(minExp, MIN_EXP);
-}
-
-static void
-assertCompressParamsBehaviorThroughSetMode(void **state, zfp_mode expectedMode)
-{
-  struct setupVars *bundle = *state;
-  zfp_stream* stream = bundle->stream;
-
-  // grab existing values
-  uint minBits = stream->minbits;
-  uint maxBits = stream->maxbits;
-  uint maxPrec = stream->maxprec;
-  int minExp = stream->minexp;
-
-  uint64 mode = zfp_stream_mode(stream);
-
-  // reset params
-  assert_int_equal(zfp_stream_set_params(stream, ZFP_MIN_BITS, ZFP_MAX_BITS, ZFP_MAX_PREC, ZFP_MIN_EXP), 1);
-
-  assert_int_equal(zfp_stream_set_mode(stream, mode), expectedMode);
-
-  if (expectedMode == zfp_mode_null) {
-    assert_int_not_equal(stream->minbits, minBits);
-    assert_int_not_equal(stream->maxbits, maxBits);
-    assert_int_not_equal(stream->maxprec, maxPrec);
-    assert_int_not_equal(stream->minexp, minExp);
-  } else {
-    assert_int_equal(stream->minbits, minBits);
-    assert_int_equal(stream->maxbits, maxBits);
-    assert_int_equal(stream->maxprec, maxPrec);
-    assert_int_equal(stream->minexp, minExp);
-  }
-}
-
-static void
-given_fixedRateModeVal_when_zfpStreamSetModeCalled_expect_correctCompressParamsSet(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_stream_set_rate(bundle->stream, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 0);
-
-  assertCompressParamsBehaviorThroughSetMode(state, zfp_mode_fixed_rate);
-}
-
-static void
-given_fixedPrecisionModeVal_when_zfpStreamSetModeCalled_expect_correctCompressParamsSet(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_stream_set_precision(bundle->stream, PREC);
-
-  assertCompressParamsBehaviorThroughSetMode(state, zfp_mode_fixed_precision);
-}
-
-static void
-given_fixedAccuracyModeVal_when_zfpStreamSetModeCalled_expect_correctCompressParamsSet(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_stream_set_accuracy(bundle->stream, ACC);
-
-  assertCompressParamsBehaviorThroughSetMode(state, zfp_mode_fixed_accuracy);
-}
-
-static void
-given_customCompressParamsModeVal_when_zfpStreamSetModeCalled_expect_correctCompressParamsSet(void **state)
-{
-  struct setupVars *bundle = *state;
-  assert_int_equal(zfp_stream_set_params(bundle->stream, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
-
-  assertCompressParamsBehaviorThroughSetMode(state, zfp_mode_expert);
-}
-
-static void
-setInvalidCompressParams(zfp_stream* stream)
-{
-  assert_int_equal(zfp_stream_set_params(stream, MAX_BITS + 1, MAX_BITS, MAX_PREC, MIN_EXP), 0);
-  stream->minbits = MAX_BITS + 1;
-  stream->maxbits = MAX_BITS;
-  stream->maxprec = MAX_PREC;
-  stream->minexp = MIN_EXP;
-}
-
-static void
-given_invalidCompressParamsModeVal_when_zfpStreamSetModeCalled_expect_returnsNullModeAndParamsNotSet(void **state)
-{
-  struct setupVars *bundle = *state;
-  setInvalidCompressParams(bundle->stream);
-
-  assertCompressParamsBehaviorThroughSetMode(state, zfp_mode_null);
-}
-
-static void
 when_zfpWriteHeaderMagic_expect_numBitsWrittenEqualToZFP_MAGIC_BITS(void **state)
 {
   struct setupVars *bundle = *state;
@@ -486,6 +330,16 @@ given_customCompressParamsSet_when_zfpReadHeaderMode_expect_properNumBitsRead(vo
 }
 
 static void
+setInvalidCompressParams(zfp_stream* stream)
+{
+  assert_int_equal(zfp_stream_set_params(stream, MAX_BITS + 1, MAX_BITS, MAX_PREC, MIN_EXP), 0);
+  stream->minbits = MAX_BITS + 1;
+  stream->maxbits = MAX_BITS;
+  stream->maxprec = MAX_PREC;
+  stream->minexp = MIN_EXP;
+}
+
+static void
 given_invalidCompressParamsInHeader_when_zfpReadHeaderMode_expect_properNumBitsRead(void **state)
 {
   struct setupVars *bundle = *state;
@@ -572,24 +426,13 @@ given_invalidCompressParamsInHeader_when_zfpReadHeaderMode_expect_streamParamsNo
 int main()
 {
   const struct CMUnitTest tests[] = {
-    // functions involved in zfp header
+    // (non zfp_stream) functions involved in zfp header
     cmocka_unit_test_setup_teardown(when_zfpFieldMetadataCalled_expect_LSB2BitsEncodeScalarType, setup, teardown),
     cmocka_unit_test_setup_teardown(when_zfpFieldMetadataCalled_expect_LSBBits3To4EncodeDimensionality, setup, teardown),
     cmocka_unit_test_setup_teardown(when_zfpFieldMetadataCalled_expect_LSBBits5To53EncodeArrayDimensions, setup, teardown),
 
     cmocka_unit_test_setup_teardown(when_zfpFieldSetMetadataCalled_expect_scalarTypeSet, setup, teardown),
     cmocka_unit_test_setup_teardown(when_zfpFieldSetMetadataCalled_expect_arrayDimensionsSet, setup, teardown),
-
-    cmocka_unit_test_setup_teardown(given_fixedRate_when_zfpStreamModeCalled_expect_returnsMaxbitsMinusOne, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_fixedPrecision_when_zfpStreamModeCalled_expect_returnsMaxPrecPlusConst, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_fixedAccuracy_when_zfpStreamModeCalled_expect_returnsMinexpPlusConst, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_customCompressParamsSet_when_zfpStreamModeCalled_expect_allParamsEncodedInResult, setup, teardown),
-
-    cmocka_unit_test_setup_teardown(given_fixedRateModeVal_when_zfpStreamSetModeCalled_expect_correctCompressParamsSet, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_fixedPrecisionModeVal_when_zfpStreamSetModeCalled_expect_correctCompressParamsSet, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_fixedAccuracyModeVal_when_zfpStreamSetModeCalled_expect_correctCompressParamsSet, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_customCompressParamsModeVal_when_zfpStreamSetModeCalled_expect_correctCompressParamsSet, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_invalidCompressParamsModeVal_when_zfpStreamSetModeCalled_expect_returnsNullModeAndParamsNotSet, setup, teardown),
 
     // write header
     cmocka_unit_test_setup_teardown(when_zfpWriteHeaderMagic_expect_numBitsWrittenEqualToZFP_MAGIC_BITS, setup, teardown),
