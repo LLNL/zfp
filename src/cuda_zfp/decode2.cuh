@@ -39,6 +39,7 @@ cudaDecode2(Word *blocks,
             uint maxbits)
 {
   typedef unsigned long long int ull;
+  typedef long long int ll;
   const ull blockId = blockIdx.x +
                       blockIdx.y * gridDim.x +
                       gridDim.x * gridDim.y * blockIdx.z;
@@ -70,7 +71,7 @@ cudaDecode2(Word *blocks,
   block.x = (block_idx % block_dims.x) * 4; 
   block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
   
-  uint offset = block.x * stride.x + block.y * stride.y; 
+  const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y; 
 
   bool partial = false;
   if(block.x + 4 > dims.x) partial = true;
@@ -144,12 +145,14 @@ size_t decode2launch(uint2 dims,
   float miliseconds = 0;
   cudaEventElapsedTime(&miliseconds, start, stop);
   float seconds = miliseconds / 1000.f;
-  printf("Decode elapsed time: %.5f (s)\n", seconds);
   float rate = (float(dims.x * dims.y) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;
   rate /= 1024.f;
+#ifdef CUDA_ZFP_RATE_PRINT
+  printf("Decode elapsed time: %.5f (s)\n", seconds);
   printf("# decode2 rate: %.2f (GB / sec) %d\n", rate, maxbits);
+#endif
   return stream_bytes;
 }
 

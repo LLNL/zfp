@@ -54,6 +54,7 @@ cudaEncode(const uint maxbits,
 {
 
   typedef unsigned long long int ull;
+  typedef long long int ll;
   const ull blockId = blockIdx.x +
                       blockIdx.y * gridDim.x +
                       gridDim.x * gridDim.y * blockIdx.z;
@@ -83,7 +84,7 @@ cudaEncode(const uint maxbits,
   // default strides
   //if(block_idx != 1) return;
   //uint offset = (logicalStart[2]*PaddedDims[1] + logicalStart[1])*PaddedDims[0] + logicalStart[0]; 
-  uint offset = block.x * stride.x + block.y * stride.y + block.z * stride.z; 
+  ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y + (ll)block.z * stride.z; 
   //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
   //printf("OFFSET %d\n", (int)offset); 
   Scalar fblock[ZFP_3D_BLOCK_SIZE]; 
@@ -160,9 +161,7 @@ size_t encode3launch(uint3 dims,
   size_t stream_bytes = calc_device_mem3d(zfp_pad, maxbits);
   //ensure we start with 0s
   cudaMemset(stream, 0, stream_bytes);
-  std::cout<<"Total blocks "<<zfp_blocks<<"\n";
-  std::cout<<"Grid "<<grid_size.x<<" "<<grid_size.y<<" "<<grid_size.z<<"\n";
-  std::cout<<"Block "<<block_size.x<<" "<<block_size.y<<" "<<block_size.z<<"\n";
+
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
@@ -184,12 +183,14 @@ size_t encode3launch(uint3 dims,
   float miliseconds = 0;
   cudaEventElapsedTime(&miliseconds, start, stop);
   float seconds = miliseconds / 1000.f;
-  printf("Encode elapsed time: %.5f (s)\n", seconds);
   float rate = (float(dims.x * dims.y * dims.z) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;
   rate /= 1024.f;
+#ifdef CUDA_ZFP_RATE_PRINT
+  printf("Encode elapsed time: %.5f (s)\n", seconds);
   printf("# encode3 rate: %.2f (GB / sec) \n", rate);
+#endif
   return stream_bytes;
 }
 

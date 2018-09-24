@@ -1,6 +1,7 @@
-#ifndef SHARED_H
-#define SHARED_H
+#ifndef CUZFP_SHARED_H
+#define CUZFP_SHARED_H
 
+//#define CUDA_ZFP_RATE_PRINT 1
 typedef unsigned long long Word;
 #define Wsize ((uint)(CHAR_BIT * sizeof(Word)))
 

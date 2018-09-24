@@ -1,4 +1,4 @@
-#ifdef ZFP_ENABLE_CUDA
+#ifdef ZFP_WITH_CUDA
 
 #include <math.h>
 
@@ -83,5 +83,5 @@ setupFixedAcc1Param(void **state)
   return setupCudaConfig(state, zfp_mode_fixed_accuracy, 1, AS_IS);
 }
 
-// end #ifdef ZFP_ENABLE_CUDA
+// end #ifdef ZFP_WITH_CUDA
 #endif

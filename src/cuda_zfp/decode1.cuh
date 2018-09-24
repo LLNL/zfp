@@ -12,7 +12,6 @@ template<typename Scalar>
 __device__ __host__ inline 
 void scatter_partial1(const Scalar* q, Scalar* p, int nx, int sx)
 {
-  printf("scatter partial %d\n", nx);
   uint x;
   for (x = 0; x < nx; x++, p += sx)
    *p = *q++;
@@ -39,6 +38,7 @@ cudaDecode1(Word *blocks,
             uint maxbits)
 {
   typedef unsigned long long int ull;
+  typedef long long int ll;
   typedef typename zfp_traits<Scalar>::UInt UInt;
   typedef typename zfp_traits<Scalar>::Int Int;
 
@@ -61,7 +61,7 @@ cudaDecode1(Word *blocks,
 
   uint block;
   block = block_idx * 4ull; 
-  uint offset = block * stride; 
+  const ll offset = (ll)block * stride; 
   
   bool partial = false;
   if(block + 4 > dim) partial = true;
@@ -104,7 +104,6 @@ size_t decode1launch(uint dim,
   dim3 block_size = dim3(cuda_block_size, 1, 1);
   dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
 
-
   // setup some timing code
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
@@ -128,12 +127,14 @@ size_t decode1launch(uint dim,
   float miliseconds = 0;
   cudaEventElapsedTime(&miliseconds, start, stop);
   float seconds = miliseconds / 1000.f;
-  printf("Decode elapsed time: %.5f (s)\n", seconds);
   float rate = (float(dim) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;
   rate /= 1024.f;
+#ifdef CUDA_ZFP_RATE_PRINT
+  printf("Decode elapsed time: %.5f (s)\n", seconds);
   printf("# decode1 rate: %.2f (GB / sec) %d\n", rate, maxbits);
+#endif
   return stream_bytes;
 }
 

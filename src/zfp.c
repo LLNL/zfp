@@ -720,7 +720,7 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
   switch (policy) {
     case zfp_exec_serial:
       break;
-#ifdef ZFP_ENABLE_CUDA
+#ifdef ZFP_WITH_CUDA
     case zfp_exec_cuda:
       break;
 #endif

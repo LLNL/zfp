@@ -5,7 +5,7 @@ if(ZFP_WITH_CUDA)
   add_subdirectory(cuda_zfp)
   cuda_wrap_srcs(zfp OBJ zfp_cuda_backend_obj cuda_zfp/cuZFP.cu)
   SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_PREVIOUS})
-  add_definitions(-DZFP_ENABLE_CUDA)
+  add_definitions(-DZFP_WITH_CUDA)
 endif()
 
 

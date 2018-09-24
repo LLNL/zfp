@@ -53,6 +53,7 @@ cudaEncode2(const uint maxbits,
 {
 
   typedef unsigned long long int ull;
+  typedef long long int ll;
   const ull blockId = blockIdx.x +
                       blockIdx.y * gridDim.x +
                       gridDim.x * gridDim.y * blockIdx.z;
@@ -78,7 +79,7 @@ cudaEncode2(const uint maxbits,
   block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
 
   //if(block_idx != 1) return;
-  uint offset = block.x * stride.x + block.y * stride.y; 
+  const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y; 
   //printf("blk_idx %d block coords %d %d \n", block_idx, block.x, block.y);
   //printf("OFFSET %d\n", (int)offset); 
   Scalar fblock[ZFP_2D_BLOCK_SIZE]; 
@@ -153,10 +154,6 @@ size_t encode2launch(uint2 dims,
   // ensure we have zeros
   cudaMemset(stream, 0, stream_bytes);
 
-  std::cout<<"Total blocks "<<zfp_blocks<<"\n";
-  std::cout<<"Grid "<<grid_size.x<<" "<<grid_size.y<<" "<<grid_size.z<<"\n";
-  std::cout<<"Block "<<block_size.x<<" "<<block_size.y<<" "<<block_size.z<<"\n";
-
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
@@ -181,11 +178,12 @@ size_t encode2launch(uint2 dims,
   float miliseconds = 0.f;
   cudaEventElapsedTime(&miliseconds, start, stop);
   float seconds = miliseconds / 1000.f;
-  printf("Encode elapsed time: %.5f (s)\n", seconds);
-  printf("size of %d\n", (int)sizeof(Scalar));
   float mb = (float(dims.x * dims.y) * sizeof(Scalar)) / (1024.f * 1024.f *1024.f);
   float rate = mb / seconds;
+#ifdef CUDA_ZFP_RATE_PRINT
+  printf("Encode elapsed time: %.5f (s)\n", seconds);
   printf("# encode2 rate: %.2f (GB / sec) %d\n", rate, maxbits);
+#endif
   return stream_bytes;
 }
 

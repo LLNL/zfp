@@ -23,7 +23,7 @@ function(zfp_add_test dims type bits)
   endif()
 
   if(ZFP_WITH_CUDA AND (${dims} LESS 4))
-    add_definitions(-DZFP_ENABLE_CUDA)
+    add_definitions(-DZFP_WITH_CUDA)
 
     set(cuda_test_name testZfpCuda${dims}d${type})
     add_executable(${cuda_test_name} ${cuda_test_name}.c)

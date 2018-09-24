@@ -43,6 +43,7 @@ cudaDecode3(Word *blocks,
 {
   
   typedef unsigned long long int ull;
+  typedef long long int ll;
 
   const ull blockId = blockIdx.x +
                       blockIdx.y * gridDim.x +
@@ -77,7 +78,7 @@ cudaDecode3(Word *blocks,
   block.z = (block_idx/ (block_dims.x * block_dims.y)) * 4; 
   
   // default strides
-  const uint offset = block.x * stride.x + block.y * stride.y + block.z * stride.z; 
+  const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y + (ll)block.z * stride.z; 
 
   bool partial = false;
   if(block.x + 4 > dims.x) partial = true;
@@ -154,12 +155,14 @@ size_t decode3launch(uint3 dims,
   float miliseconds = 0;
   cudaEventElapsedTime(&miliseconds, start, stop);
   float seconds = miliseconds / 1000.f;
+  float rate = (float(dims.x * dims.y * dims.z) * sizeof(Scalar) ) / seconds;
+  rate /= 1024.f;
+  rate /= 1024.f;
+  rate /= 1024.f;
+#ifdef CUDA_ZFP_RATE_PRINT
   printf("Decode elapsed time: %.5f (s)\n", seconds);
-  float rate = (float(dims.x * dims.y) * sizeof(Scalar) ) / seconds;
-  rate /= 1024.f;
-  rate /= 1024.f;
-  rate /= 1024.f;
   printf("# decode3 rate: %.2f (GB / sec) %d\n", rate, maxbits);
+#endif
 
   return stream_bytes;
 }

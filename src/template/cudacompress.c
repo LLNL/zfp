@@ -3,8 +3,11 @@
 static void 
 _t2(compress_cuda, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 {
-#ifdef ZFP_ENABLE_CUDA
-  cuda_compress(stream, field);   
+#ifdef ZFP_WITH_CUDA
+  if(zfp_stream_compression_mode(stream) == zfp_mode_fixed_rate)
+  { 
+    cuda_compress(stream, field);   
+  }
 #endif
 }
 
@@ -12,8 +15,11 @@ _t2(compress_cuda, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 static void 
 _t2(compress_strided_cuda, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 {
-#ifdef ZFP_ENABLE_CUDA
-  cuda_compress(stream, field);   
+#ifdef ZFP_WITH_CUDA
+  if(zfp_stream_compression_mode(stream) == zfp_mode_fixed_rate)
+  {
+    cuda_compress(stream, field);   
+  }
 #endif
 }
 
@@ -21,8 +27,11 @@ _t2(compress_strided_cuda, Scalar, 1)(zfp_stream* stream, const zfp_field* field
 static void 
 _t2(compress_strided_cuda, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
 {
-#ifdef ZFP_ENABLE_CUDA
-  cuda_compress(stream, field);   
+#ifdef ZFP_WITH_CUDA
+  if(zfp_stream_compression_mode(stream) == zfp_mode_fixed_rate)
+  {
+    cuda_compress(stream, field);   
+  }
 #endif
 }
 
@@ -30,8 +39,11 @@ _t2(compress_strided_cuda, Scalar, 2)(zfp_stream* stream, const zfp_field* field
 static void
 _t2(compress_strided_cuda, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
 {
-#ifdef ZFP_ENABLE_CUDA
-  cuda_compress(stream, field);   
+#ifdef ZFP_WITH_CUDA
+  if(zfp_stream_compression_mode(stream) == zfp_mode_fixed_rate)
+  {
+    cuda_compress(stream, field);   
+  }
 #endif
 }
 

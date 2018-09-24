@@ -46,6 +46,7 @@ cudaEncode1(const uint maxbits,
 {
 
   typedef unsigned long long int ull;
+  typedef long long int ll;
   const ull blockId = blockIdx.x +
                       blockIdx.y * gridDim.x +
                       gridDim.x * gridDim.y * blockIdx.z;
@@ -69,7 +70,7 @@ cudaEncode1(const uint maxbits,
   block = (block_idx % block_dim) * 4; 
 
   //if(block_idx != 1) return;
-  uint offset = block * sx; 
+  const ll offset = (ll)block * sx; 
   //printf("blk_idx %d block coords %d %d \n", block_idx, block.x, block.y);
   //printf("OFFSET %d\n", (int)offset); 
   Scalar fblock[ZFP_1D_BLOCK_SIZE]; 
@@ -118,7 +119,6 @@ size_t encode1launch(uint dim,
   if(zfp_pad % 4 != 0) zfp_pad += 4 - dim % 4;
 
   const uint zfp_blocks = (zfp_pad) / 4; 
-
   //
   // we need to ensure that we launch a multiple of the 
   // cuda block size
@@ -132,10 +132,6 @@ size_t encode1launch(uint dim,
   size_t total_blocks = block_pad + zfp_blocks;
  
   dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
-
-  std::cout<<"Total blocks "<<zfp_blocks<<"\n";
-  std::cout<<"Grid "<<grid_size.x<<" "<<grid_size.y<<" "<<grid_size.z<<"\n";
-  std::cout<<"Block "<<block_size.x<<" "<<block_size.y<<" "<<block_size.z<<"\n";
 
   //
   size_t stream_bytes = calc_device_mem1d(zfp_pad, maxbits);
@@ -164,11 +160,12 @@ size_t encode1launch(uint dim,
   float miliseconds = 0.f;
   cudaEventElapsedTime(&miliseconds, start, stop);
   float seconds = miliseconds / 1000.f;
+  float gb = (float(dim) * float(sizeof(Scalar))) / (1024.f * 1024.f * 1024.f);
+  float rate = gb / seconds;
+#ifdef CUDA_ZFP_RATE_PRINT
   printf("Encode elapsed time: %.5f (s)\n", seconds);
-  printf("size of %d\n", (int)sizeof(Scalar));
-  float mb = (float(dim) * float(sizeof(Scalar))) / (1024.f * 1024.f);
-  float rate = mb / seconds;
-  printf("# encode1 rate: %.2f (MB / sec) %d\n", rate, maxbits);
+  printf("# encode1 rate: %.2f (GB / sec) %d\n", rate, maxbits);
+#endif
   return stream_bytes;
 }
 
