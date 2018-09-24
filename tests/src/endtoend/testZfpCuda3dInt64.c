@@ -12,10 +12,11 @@ int main()
     /* strided */
     cmocka_unit_test_setup_teardown(given_Cuda_3dInt64ReversedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches, setupReversed, teardown),
     cmocka_unit_test_setup_teardown(given_Cuda_3dInt64ReversedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches, setupReversed, teardown),
-    cmocka_unit_test_setup_teardown(given_Cuda_3dInt64InterleavedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches, setupInterleaved, teardown),
-    cmocka_unit_test_setup_teardown(given_Cuda_3dInt64InterleavedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches, setupInterleaved, teardown),
     cmocka_unit_test_setup_teardown(given_Cuda_3dInt64PermutedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches, setupPermuted, teardown),
     cmocka_unit_test_setup_teardown(given_Cuda_3dInt64PermutedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches, setupPermuted, teardown),
+
+    cmocka_unit_test_setup_teardown(given_Cuda_3dInt64InterleavedArray_when_ZfpCompressFixedRate_expect_BitstreamUntouchedAndReturnsZero, setupInterleaved, teardown),
+    cmocka_unit_test_setup_teardown(given_Cuda_3dInt64InterleavedArray_when_ZfpDecompressFixedRate_expect_BitstreamUntouchedAndReturnsZero, setupInterleaved, teardown),
 
     /* fixed-rate */
     cmocka_unit_test_setup_teardown(given_Cuda_3dInt64Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches, setupFixedRate0Param, teardown),

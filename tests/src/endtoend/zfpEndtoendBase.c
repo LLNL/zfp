@@ -952,6 +952,7 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
 }
 #endif
 
+#ifdef ZFP_TEST_CUDA
 static void
 assertZfpCompressIsNoop(void **state)
 {
@@ -981,6 +982,19 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressNonFixedRate_expect_Bitstrea
 {
   struct setupVars *bundle = *state;
   if (zfp_stream_compression_mode(bundle->stream) == zfp_mode_fixed_rate) {
+    fail_msg("Invalid zfp mode during test");
+  }
+
+  assertZfpCompressIsNoop(state);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != INTERLEAVED) {
+    fail_msg("Invalid stride during test");
+  } else if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
     fail_msg("Invalid zfp mode during test");
   }
 
@@ -1021,3 +1035,17 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressNonFixedRate_expect_Bitstr
 
   assertZfpDecompressIsNoop(state);
 }
+
+static void
+_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpDecompressFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != INTERLEAVED) {
+    fail_msg("Invalid stride during test");
+  } else if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
+    fail_msg("Invalid zfp mode during test");
+  }
+
+  assertZfpDecompressIsNoop(state);
+}
+#endif
