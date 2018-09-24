@@ -117,8 +117,6 @@ void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
   int bits = max_bits;
   for (uint k = intprec, n = 0; bits && k-- > kmin;)
   {
-    //printf("plane %d = ", k);
-    //reader.print();
     // read bit plane
     uint m = MIN(n, bits);
     bits -= m;
@@ -133,10 +131,6 @@ void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
       data[i] += (UInt)(x & 1u) << k;
     }
   } 
-  //for (int i = 0; i < Size; ++i)
-  //{
-  //  printf("id %d uint %llu\n", i, data[i]);
-  //}
 }
 
 
@@ -244,14 +238,8 @@ __device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint 
     inv_transform<BlockSize> trans;
     trans.inv_xform(iblock);
 
-    //for(int i = 0; i < 4; ++i)
-    //{
-    //  printf("iblock %d %lld\n", i, iblock[i]);
-    //}
-
 		Scalar inv_w = dequantize<Int, Scalar>(1, emax);
-    //if(inv_w == 0.) printf("ZERO\n");
-    //printf("inv fact %a emax %d\n", inv_w, emax); 
+
     #pragma unroll BlockSize
     for(int i = 0; i < BlockSize; ++i)
     {

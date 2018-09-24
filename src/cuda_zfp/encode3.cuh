@@ -82,11 +82,7 @@ cudaEncode(const uint maxbits,
   block.z = (block_idx/ (block_dims.x * block_dims.y)) * 4; 
 
   // default strides
-  //if(block_idx != 1) return;
-  //uint offset = (logicalStart[2]*PaddedDims[1] + logicalStart[1])*PaddedDims[0] + logicalStart[0]; 
   ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y + (ll)block.z * stride.z; 
-  //printf("blk_idx %d block coords %d %d %d\n", block_idx, block.x, block.y, block.z);
-  //printf("OFFSET %d\n", (int)offset); 
   Scalar fblock[ZFP_3D_BLOCK_SIZE]; 
 
   bool partial = false;
@@ -99,7 +95,6 @@ cudaEncode(const uint maxbits,
     const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
     const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
     const uint nz = block.z + 4 > dims.z ? dims.z - block.z : 4;
-    //printf("partial blk_idx %d block coords %d %d %d nx %d ny %d nz %d\n", block_idx, block.x, block.y, block.z, nx, ny, nz);
     gather_partial3(fblock, scalars + offset, nx, ny, nz, stride.x, stride.y, stride.z);
 
   }
@@ -107,18 +102,6 @@ cudaEncode(const uint maxbits,
   {
     gather3(fblock, scalars + offset, stride.x, stride.y, stride.z);
   }
-  //if(block_idx == 0)
-  //for(int z = 0; z < 4; ++z)
-  //{
-  //  for(int y = 0; y < 4; ++y)
-  //  {
-  //    for(int x = 0; x < 4; ++x)
-  //    {
-  //      printf("%f ", fblock[z * 8 + y * 4 + x]);
-  //    }
-  //    printf("\n");
-  //  }
-  //}
   zfp_encode_block<Scalar, ZFP_3D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
 
 }

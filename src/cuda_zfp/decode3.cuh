@@ -89,7 +89,7 @@ cudaDecode3(Word *blocks,
     const uint nx = block.x + 4u > dims.x ? dims.x - block.x : 4;
     const uint ny = block.y + 4u > dims.y ? dims.y - block.y : 4;
     const uint nz = block.z + 4u > dims.z ? dims.z - block.z : 4;
-    //if(block_idx == 26) printf("partial blk_idx %d block coords %d %d %d nx %d ny %d nz %d\n", block_idx, block.x, block.y, block.z, nx, ny, nz);
+
     scatter_partial3(result, out + offset, nx, ny, nz, stride.x, stride.y, stride.z);
   }
   else

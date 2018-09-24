@@ -442,7 +442,6 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   stream->stream->bits = wsize;
   // set stream pointer to end of stream
   stream->stream->ptr = stream->stream->begin + words_read;
-  std::cout<<"WORDS read "<<words_read<<"\n";
 
 }
 

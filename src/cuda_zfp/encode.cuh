@@ -200,7 +200,6 @@ struct BlockWriter
   uint m_current_bit;
   const int m_maxbits; 
   Word *m_stream;
-   uint di;
 
   __device__ BlockWriter(Word *stream, const int &maxbits, const uint &block_idx)
    :  m_current_bit(0),
@@ -208,7 +207,6 @@ struct BlockWriter
       m_stream(stream)
   {
     m_word_index = (block_idx * maxbits)  / (sizeof(Word) * 8); 
-    di = m_word_index;
     m_start_bit = uint((block_idx * maxbits) % (sizeof(Word) * 8)); 
   }
 
@@ -227,17 +225,8 @@ struct BlockWriter
     printf("\n");
   }
   __device__
-  void print()
-  {
-    //vtkm::Int64 v = Portal.Add(debug_index,0);
-    //std::cout<<"current bit "<<m_current_bit<<" debug_index "<<debug_index<<" ";
-    //print_bits(*reinterpret_cast<vtkm::UInt64*>(&v));
-    print_bits(m_stream[di]);
-  }
-  __device__
   void print(int index)
   {
-    //vtkm::Int64 v = Portal.Add(index,0);
     print_bits(m_stream[index]);
   }
 
@@ -247,14 +236,9 @@ struct BlockWriter
   write_bits(const long long unsigned int &bits, const uint &n_bits)
   {
     const uint wbits = sizeof(Word) * 8;
-    //if(bits == 0) { printf("no\n"); return;}
-    //uint seg_start = (m_start_bit + bit_offset) % wbits;
-    //int write_index = m_word_index + (m_start_bit + bit_offset) / wbits;
     uint seg_start = (m_start_bit + m_current_bit) % wbits;
     uint write_index = m_word_index + uint((m_start_bit + m_current_bit) / wbits);
-    di = write_index;
     uint seg_end = seg_start + n_bits - 1;
-    //int write_index = m_word_index;
     uint shift = seg_start; 
     // we may be asked to write less bits than exist in 'bits'
     // so we have to make sure that anything after n is zero.
@@ -272,26 +256,17 @@ struct BlockWriter
     {
       Word rem = b >> (sizeof(Word) * 8 - shift);
       atomicAdd(&m_stream[write_index + 1], rem); 
-      di = write_index+1;
     }
     m_current_bit += n_bits;
     return bits >> (Word)n_bits;
   }
 
-  // TODO: optimize
   __device__
   uint write_bit(const unsigned int &bit)
   {
-    //bool print = m_word_index == 0  && m_start_bit == 0;
     const uint wbits = sizeof(Word) * 8;
-    //if(bits == 0) { printf("no\n"); return;}
-    //uint seg_start = (m_start_bit + bit_offset) % wbits;
-    //int write_index = m_word_index + (m_start_bit + bit_offset) / wbits;
     uint seg_start = (m_start_bit + m_current_bit) % wbits;
     uint write_index = m_word_index + uint((m_start_bit + m_current_bit) / wbits);
-    di = write_index;
-    //uint seg_end = seg_start;
-    //int write_index = m_word_index;
     uint shift = seg_start; 
     // we may be asked to write less bits than exist in 'bits'
     // so we have to make sure that anything after n is zero.
@@ -326,7 +301,6 @@ void inline __device__ encode_block(BlockWriter<BlockSize> &stream,
   uint bits = maxbits;
   uint i, k, m, n;
   uint64 x;
-  //for(int p = 0; p < BlockSize; ++p) printf(" %llu \n", ublock[p]);
 
   for (k = intprec, n = 0; bits && k-- > kmin;) {
     /* step 1: extract bit plane #k to x */
@@ -335,15 +309,12 @@ void inline __device__ encode_block(BlockWriter<BlockSize> &stream,
     {
       x += (uint64)((ublock[i] >> k) & 1u) << i;
     }
-    //printf("plane %llu\n", x);
-    //print_bits(x);
     /* step 2: encode first n bits of bit plane */
     m = min(n, bits);
     //uint temp  = bits;
     bits -= m;
     x = stream.write_bits(x, m);
     
-    //printf("rem plane %llu\n", x);
     /* step 3: unary run-length encode remainder of bit plane */
     for (; n < BlockSize && bits && (bits--, stream.write_bit(!!x)); x >>= 1, n++)
     {
@@ -351,9 +322,6 @@ void inline __device__ encode_block(BlockWriter<BlockSize> &stream,
       {  
       }
     }
-    //stream.print();
-    //temp = temp - bits;
-    //printf(" rem buts %d intprec %d k %d encoded_bits %d\n", (int)bits, (int)intprec, (int)k,(int)temp); 
   }
   
 }

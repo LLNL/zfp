@@ -69,10 +69,8 @@ cudaEncode1(const uint maxbits,
   uint block;
   block = (block_idx % block_dim) * 4; 
 
-  //if(block_idx != 1) return;
   const ll offset = (ll)block * sx; 
-  //printf("blk_idx %d block coords %d %d \n", block_idx, block.x, block.y);
-  //printf("OFFSET %d\n", (int)offset); 
+
   Scalar fblock[ZFP_1D_BLOCK_SIZE]; 
 
   bool partial = false;
@@ -87,18 +85,7 @@ cudaEncode1(const uint maxbits,
   {
     gather1(fblock, scalars + offset, sx);
   }
-  //if(block_idx == 0)
-  //for(int z = 0; z < 4; ++z)
-  //{
-  //  for(int y = 0; y < 4; ++y)
-  //  {
-  //    for(int x = 0; x < 4; ++x)
-  //    {
-  //      printf("%f ", fblock[z * 8 + y * 4 + x]);
-  //    }
-  //    printf("\n");
-  //  }
-  //}
+
   zfp_encode_block<Scalar, ZFP_1D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
 
 }
