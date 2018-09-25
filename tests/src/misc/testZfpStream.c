@@ -94,7 +94,7 @@ given_zfpStreamSetWithFixedRate_when_zfpStreamCompressionMode_expect_returnsFixe
   int rate;
   int wra;
   for (zfpType = 1; zfpType <= 4; zfpType++) {
-    for (dims = 1; dims <= 3; dims++) {
+    for (dims = 1; dims <= 4; dims++) {
       for (rate = 1; rate <= ((zfpType % 2) ? 32 : 64); rate++) {
         for (wra = 0; wra <= 1; wra++) {
           setDefaultCompressionParams(stream);
@@ -220,7 +220,7 @@ given_zfpStreamSetRateModeVal_when_zfpStreamSetMode_expect_returnsFixedRate_and_
   int rate;
   int wra;
   for (zfpType = 1; zfpType <= 4; zfpType++) {
-    for (dims = 1; dims <= 3; dims++) {
+    for (dims = 1; dims <= 4; dims++) {
       for (rate = 1; rate <= ((zfpType % 2) ? 32 : 64); rate++) {
         for (wra = 0; wra <= 1; wra++) {
           /* set fixed-rate mode */
