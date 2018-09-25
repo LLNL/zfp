@@ -43,11 +43,12 @@ decompress the file, use :code:`-z file.zfp -o file.out`.  A single dash
 When reading uncompressed input, the floating-point precision (single or
 double) must be specified using either :option:`-f` (float) or
 :option:`-d` (double).  In addition, the array dimensions must be specified
-using :option:`-1` (for 1D arrays), :option:`-2` (for 2D arrays), or
-:option:`-3` (for 3D arrays).  For multidimensional arrays, *x* varies
-faster than *y*, which in turn varies faster than *z*.  That is, a 3D input
-file corresponding to a flattened C array :code:`a[nz][ny][nx]` is
-specified as :code:`-3 nx ny nz`.
+using :option:`-1` (for 1D arrays), :option:`-2` (for 2D arrays),
+:option:`-3` (for 3D arrays), or :option:`-4` (for 4D arrays).
+For multidimensional arrays, *x* varies faster than *y*, which in turn
+varies faster than *z*, and so on.  That is, a 4D input file corresponding
+to a flattened C array :code:`a[nw][nz][ny][nx]` is specified as
+:code:`-4 nx ny nz nw`.
 
 Note that :code:`-2 nx ny` is not equivalent to :code:`-3 nx ny 1`, even
 though the same number of values are compressed.  One invokes the 2D codec,
@@ -163,12 +164,16 @@ Array type and dimensions
 
   Dimensions of 3D C array :code:`a[nz][ny][nx]`.
 
+.. option:: -4 <nx> <ny> <nz> <nw>
+
+  Dimensions of 4D C array :code:`a[nw][nz][ny][nx]`.
+
 When :option:`-i` is used, the scalar type and array dimensions must be
 specified.  One of :option:`-f`, :option:`-d`, or :option:`-t` specifies
-the input scalar type.  :option:`-1`, :option:`-2`, or :option:`-3`
-specifies the array dimensions.  The same parameters must be given when
-decompressing data (without :option:`-i`), unless a header was stored
-using :option:`-h` during compression.
+the input scalar type.  :option:`-1`, :option:`-2`, :option:`-3`, or
+:option:`-4` specifies the array dimensions.  The same parameters must
+be given when decompressing data (without :option:`-i`), unless a header
+was stored using :option:`-h` during compression.
 
 Compression parameters
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -214,8 +219,12 @@ Execution parameters
   of blocks (see also :c:func:`zfp_stream_set_omp_chunk_size`).  A
   chunk size of zero is ignored and results in the default size.
 
-Note that the execution policy currently applies only to compression.
-Future versions of |zfp| will support parallel decompression also.
+As of |cudarelease|, the execution policy applies to both compression
+and decompression.  If the execution policy is not supported for
+decompression, then |zfp| will attempt to fall back on serial
+decompression.  This is done only when both compression and decompression
+are performed as part of a single execution, e.g., when specifying both
+:option:`-i` and :option:`-o`.
 
 Examples
 ^^^^^^^^

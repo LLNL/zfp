@@ -36,7 +36,8 @@ surfaces, etc.  Although |zfp| also provides a 1D array class that can be used
 for 1D signals such as audio, or even unstructured floating-point streams,
 the compression scheme has not been well optimized for this use case, and
 rate and quality may not be competitive with floating-point compressors
-designed specifically for 1D streams.
+designed specifically for 1D streams.  As of |4drelease|, |zfp| also
+supports compression of 4D arrays.
 
 |zfp| is freely available as open source under a :ref:`BSD license <license>`.
 For more information on |zfp| and comparisons with other compressors, please

@@ -36,13 +36,16 @@ setup(void **state)
   zfp_field* field;
   switch(DIMS) {
     case 1:
-      field = zfp_field_1d(bundle->dataArr, type, 4);
+      field = zfp_field_1d(bundle->dataArr, type, BLOCK_SIDE_LEN);
       break;
     case 2:
-      field = zfp_field_2d(bundle->dataArr, type, 4, 4);
+      field = zfp_field_2d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
       break;
     case 3:
-      field = zfp_field_3d(bundle->dataArr, type, 4, 4, 4);
+      field = zfp_field_3d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      break;
+    case 4:
+      field = zfp_field_4d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
       break;
   }
 

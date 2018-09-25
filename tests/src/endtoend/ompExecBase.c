@@ -16,14 +16,17 @@ computeTotalBlocks(zfp_field* field)
   uint bx = 1;
   uint by = 1;
   uint bz = 1;
+  uint bw = 1;
   switch(zfp_field_dimensionality(field)) {
+    case 4:
+      bw = (field->nw + 3) / 4;
     case 3:
       bz = (field->nz + 3) / 4;
     case 2:
       by = (field->ny + 3) / 4;
     case 1:
       bx = (field->nx + 3) / 4;
-      return bx * by * bz;
+      return bx * by * bz * bw;
 
     default:
       fail_msg("ERROR: Unsupported dimensionality\n");

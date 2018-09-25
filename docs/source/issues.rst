@@ -36,10 +36,10 @@ P1: *Is the data dimensionality correct?*
 
 This is one of the most common problems.  First, make sure that |zfp| is given
 the correct dimensionality of the data.  For instance, an audio stream is a
-1D array, an image is a 2D array, and a volume grid is a 3D array.  Sometimes
-a data set is a discrete collection of lower-dimensional objects.  For
-instance, a stack of unrelated images (of the same size) could be represented
-in C as a 3D array::
+1D array, an image is a 2D array, and a volume grid is a 3D array, and a
+time-varying volume is a 4D array.  Sometimes a data set is a discrete
+collection of lower-dimensional objects.  For instance, a stack of unrelated
+images (of the same size) could be represented in C as a 3D array::
 
   imstack[count][ny][nx]
 
@@ -59,7 +59,7 @@ then compressing the images as::
 
   imstack[count][ny * nx]
 
-This loses the correlation along the *y* dimension, and further introduces
+This loses the correlation along the *y* dimension and further introduces
 discontinuities unless *nx* is a multiple of four.
 
 Similarly to the example above, a 2D vector field
@@ -96,7 +96,7 @@ array::
 with *nx* = 100.  Although the arrays *a* and *b* occupy the same amount of
 memory and are in C laid out similarly, these arrays are not equivalent to
 |zfp| because their dimensionalities differ.  |zfp| uses different CODECs
-to (de)compress 1D, 2D, and 3D arrays, and the 1D decompressor expects a
+to (de)compress 1D, 2D, 3D, and 4D arrays, and the 1D decompressor expects a
 compressed bit stream that corresponds to a 1D array.
 
 What happens in practice in this case is that the array *a* is compressed
@@ -138,14 +138,16 @@ How about time-varying volumes, such as
 
   field[nt][nz][ny][nx]
 
-|zfp| currently supports only 1D, 2D, and 3D arrays, whereas a time-varying
-volume is 4D.  Here the data should ideally be organized by the three
-"smoothest" dimensions.  Given the organization above, this could be
-compressed as a 3D array::
+As of version |4drelease|, |zfp| supports compression of 4D arrays.  Since
+all dimensions in this example are likely to be correlated, the 4D array
+can be compressed directly.  Alternatively, the data could be organized by
+the three "smoothest" dimensions and compressed as a 3D array.  Given the
+organization above, the array could be treated as 3D::
 
   field[nt * nz][ny][nx]
 
-Again, do **not** compress this as a 3D array::
+Again, do **not** compress this as a 3D array with the *innermost*
+dimensions unfolded::
 
   field[nt][nz][ny * nx]
 
@@ -164,14 +166,15 @@ order.  For instance, if the data (in C notation) is organized as::
 
 then the data is organized in memory (or on disk) with the d3 dimension varying
 fastest, and hence *nx* = *d3*, *ny* = *d2*, *nz* = *d1* using the |zfp| naming
-conventions for the dimensions, e.g. the :ref:`zfp executable <zfpcmd>` should
+conventions for the dimensions, e.g., the :ref:`zfp executable <zfpcmd>` should
 be invoked with::
 
   zfp -3 d3 d2 d1
 
 in this case.  Things will go horribly wrong if |zfp| in this case is called
 with *nx* = *d1*, *ny* = *d2*, *nz* = *d3*.  The entire data set will still
-compress and decompress, but compression ratio and quality will suffer greatly.
+compress and decompress, but compression ratio and quality will likely suffer
+greatly.
 
 -------------------------------------------------------------------------------
 
@@ -179,7 +182,7 @@ compress and decompress, but compression ratio and quality will suffer greatly.
 
 P5: *Are the array dimensions large enough?*
 
-|zfp| partitions *d*-dimensional data sets into blocks of |4powd| values, e.g.
+|zfp| partitions *d*-dimensional data sets into blocks of |4powd| values, e.g.,
 in 3D a block consists of |4by4by4| values.  If the dimensions are not
 multiples of four, then |zfp| will "pad" the array to the next larger multiple
 of four.  Such padding can hurt compression.  In particular, if one or more of
@@ -324,7 +327,7 @@ P10: *Is the floating-point precision correct?*
 
 Another obvious problem: Please make sure that |zfp| is told whether the data
 to compress is an array of single- (32-bit) or double-precision (64-bit)
-values, e.g. by specifying the :option:`-f` or :option:`-d` options to the
+values, e.g., by specifying the :option:`-f` or :option:`-d` options to the
 :program:`zfp` executable or by passing the appropriate :c:type:`zfp_type`
 to the C functions.
 
@@ -349,7 +352,7 @@ sufficient to simply cast short integers to longer integers.  See also FAQs
 P12: *Is the data provided to the zfp executable a raw binary array?*
 
 |zfp| expects that the input file is a raw binary array of integers or
-floating-point values in the IEEE format, e.g. written to file using
+floating-point values in the IEEE format, e.g., written to file using
 :c:func:`fwrite`.  Do not hand |zfp| a text file containing ASCII
 floating-point numbers.  Strip the file of any header information.
 Languages like Fortran tend to store with the array its size.  No such

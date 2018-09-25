@@ -40,10 +40,6 @@ that will address some of these limitations.
   elements, 'const' versions of these accessors are not yet available for
   read-only access.
 
-- There currently is no way to make a complete copy of a compressed
-  array, i.e. a = b; does not work for arrays a and b.  Copy constructors
-  and assignment operators will be added in the near future.
-
 - |zfp| can potentially provide higher precision than conventional float
   and double arrays, but the interface currently does not expose this.
   For example, such added precision could be useful in finite difference
@@ -67,3 +63,7 @@ that will address some of these limitations.
 - This version of |zfp| does not run on the GPU.  Some work has been done
   to port |zfp| to CUDA, and an
   `experimental version <https://github.com/mclarsen/cuzfp/>`_ is available.
+
+- As of version |4drelease|, |zfp| supports compression and decompression
+  of 4D arrays.  However, |zfp| does not yet implement a 4D compressed
+  array C++ class.  This will be added in the near future.

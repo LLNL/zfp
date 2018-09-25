@@ -7,11 +7,13 @@
 #include "utils/testMacros.h"
 
 #define SX 2
-#define SY (3 * 4*SX)
-#define SZ (2 * 4*SY)
+#define SY (3 * BLOCK_SIDE_LEN*SX)
+#define SZ (2 * BLOCK_SIDE_LEN*SY)
+#define SW (3 * BLOCK_SIDE_LEN*SZ)
 #define PX 1
 #define PY 2
 #define PZ 3
+#define PW 4
 
 #define DUMMY_VAL 99
 
@@ -29,13 +31,14 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
 {
   size_t arrayLen;
 
-  int i, j, k, countX, countY, countZ;
-  // absolute entry (i,j,k)
-  //   0 <= i < countX, (same for j,countY and k,countZ)
-  // strided entry iff (i,j,k) % (countX/4, countY/4, countZ/4) == (0,0,0)
+  int i, j, k, l, countX, countY, countZ, countW;
+  // absolute entry (i,j,k,l)
+  //   0 <= i < countX, (same for j,countY and k,countZ and l,countW)
+  // strided entry iff
+  //   i % countX/BLOCK_SIDE_LEN == 0 (and so on for j, k, l)
   switch(DIMS) {
     case 1:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       arrayLen = countX;
 
       *dataArrPtr = malloc(sizeof(Scalar) * arrayLen);
@@ -56,7 +59,7 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
       break;
 
     case 2:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       countY = SY / SX;
       arrayLen = countX * countY;
 
@@ -65,13 +68,15 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
 
       for (j = 0; j < countY; j++) {
         for (i = 0; i < countX; i++) {
-          if (i % (countX/4) || j % (countY/4)) {
-            (*dataArrPtr)[countX*j + i] = dummyVal;
+          size_t index = countX*j + i;
+          if (i % (countX/BLOCK_SIDE_LEN)
+              || j % (countY/BLOCK_SIDE_LEN)) {
+            (*dataArrPtr)[index] = dummyVal;
           } else {
 #ifdef FL_PT_DATA
-            (*dataArrPtr)[countX*j + i] = nextSignedRandFlPt();
+            (*dataArrPtr)[index] = nextSignedRandFlPt();
 #else
-            (*dataArrPtr)[countX*j + i] = nextSignedRandInt();
+            (*dataArrPtr)[index] = nextSignedRandInt();
 #endif
           }
         }
@@ -80,7 +85,7 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
       break;
 
     case 3:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       countY = SY / SX;
       countZ = SZ / SY;
       arrayLen = countX * countY * countZ;
@@ -91,14 +96,51 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
       for (k = 0; k < countZ; k++) {
         for (j = 0; j < countY; j++) {
           for (i = 0; i < countX; i++) {
-            if (i % (countX/4) || j % (countY/4) || k % (countZ/4)) {
-              (*dataArrPtr)[countX*countY*k + countX*j + i] = dummyVal;
+            size_t index = countX*countY*k + countX*j + i;
+            if (i % (countX/BLOCK_SIDE_LEN)
+                || j % (countY/BLOCK_SIDE_LEN)
+                || k % (countZ/BLOCK_SIDE_LEN)) {
+              (*dataArrPtr)[index] = dummyVal;
             } else {
 #ifdef FL_PT_DATA
-              (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandFlPt();
+              (*dataArrPtr)[index] = nextSignedRandFlPt();
 #else
-              (*dataArrPtr)[countX*countY*k + countX*j + i] = nextSignedRandInt();
+              (*dataArrPtr)[index] = nextSignedRandInt();
 #endif
+            }
+          }
+        }
+      }
+
+      break;
+
+    case 4:
+      countX = BLOCK_SIDE_LEN * SX;
+      countY = SY / SX;
+      countZ = SZ / SY;
+      countW = SW / SZ;
+      arrayLen = countX * countY * countZ * countW;
+
+      *dataArrPtr = malloc(sizeof(Scalar) * arrayLen);
+      assert_non_null(*dataArrPtr);
+
+      for (l = 0; l < countW; l++) {
+        for (k = 0; k < countZ; k++) {
+          for (j = 0; j < countY; j++) {
+            for (i = 0; i < countX; i++) {
+              size_t index = countX*countY*countZ*l + countX*countY*k + countX*j + i;
+              if (i % (countX/BLOCK_SIDE_LEN)
+                  || j % (countY/BLOCK_SIDE_LEN)
+                  || k % (countZ/BLOCK_SIDE_LEN)
+                  || l % (countW/BLOCK_SIDE_LEN)) {
+                (*dataArrPtr)[index] = dummyVal;
+              } else {
+#ifdef FL_PT_DATA
+                (*dataArrPtr)[index] = nextSignedRandFlPt();
+#else
+                (*dataArrPtr)[index] = nextSignedRandInt();
+#endif
+              }
             }
           }
         }
@@ -127,16 +169,20 @@ setup(void **state)
   zfp_field* field;
   switch(DIMS) {
     case 1:
-      field = zfp_field_1d(bundle->dataArr, type, 4);
+      field = zfp_field_1d(bundle->dataArr, type, BLOCK_SIDE_LEN);
       zfp_field_set_stride_1d(field, SX);
       break;
     case 2:
-      field = zfp_field_2d(bundle->dataArr, type, 4, 4);
+      field = zfp_field_2d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
       zfp_field_set_stride_2d(field, SX, SY);
       break;
     case 3:
-      field = zfp_field_3d(bundle->dataArr, type, 4, 4, 4);
+      field = zfp_field_3d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
       zfp_field_set_stride_3d(field, SX, SY, SZ);
+      break;
+    case 4:
+      field = zfp_field_4d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      zfp_field_set_stride_4d(field, SX, SY, SZ, SW);
       break;
   }
 
@@ -191,6 +237,9 @@ hashStridedArray(Scalar* dataArr)
     case 3:
       checksum = hash3dStridedBlock((const UInt*)dataArr, SX, SY, SZ);
       break;
+    case 4:
+      checksum = hash4dStridedBlock((const UInt*)dataArr, SX, SY, SZ, SW);
+      break;
   }
 
   return checksum;
@@ -209,6 +258,9 @@ encodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
       break;
     case 3:
       numBitsWritten = _t2(zfp_encode_block_strided, Scalar, 3)(stream, dataArr, SX, SY, SZ);
+      break;
+    case 4:
+      numBitsWritten = _t2(zfp_encode_block_strided, Scalar, 4)(stream, dataArr, SX, SY, SZ, SW);
       break;
   }
 
@@ -229,6 +281,9 @@ encodePartialBlockStrided(zfp_stream* stream, Scalar* dataArr)
     case 3:
       numBitsWritten = _t2(zfp_encode_partial_block_strided, Scalar, 3)(stream, dataArr, PX, PY, PZ, SX, SY, SZ);
       break;
+    case 4:
+      numBitsWritten = _t2(zfp_encode_partial_block_strided, Scalar, 4)(stream, dataArr, PX, PY, PZ, PW, SX, SY, SZ, SW);
+      break;
   }
 
   return numBitsWritten;
@@ -247,6 +302,9 @@ decodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
       break;
     case 3:
       numBitsRead = _t2(zfp_decode_block_strided, Scalar, 3)(stream, dataArr, SX, SY, SZ);
+      break;
+    case 4:
+      numBitsRead = _t2(zfp_decode_block_strided, Scalar, 4)(stream, dataArr, SX, SY, SZ, SW);
       break;
   }
 
@@ -267,6 +325,9 @@ decodePartialBlockStrided(zfp_stream* stream, Scalar* dataArr)
     case 3:
       numBitsRead = _t2(zfp_decode_partial_block_strided, Scalar, 3)(stream, dataArr, PX, PY, PZ, SX, SY, SZ);
       break;
+    case 4:
+      numBitsRead = _t2(zfp_decode_partial_block_strided, Scalar, 4)(stream, dataArr, PX, PY, PZ, PW, SX, SY, SZ, SW);
+      break;
   }
 
   return numBitsRead;
@@ -275,10 +336,10 @@ decodePartialBlockStrided(zfp_stream* stream, Scalar* dataArr)
 void
 assertNonStridedEntriesZero(Scalar* data)
 {
-  int i, j, k, countX, countY, countZ;
+  size_t i, j, k, l, countX, countY, countZ, countW;
   switch(DIMS) {
     case 1:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
 
       for (i = 0; i < countX; i++) {
         if (i % SX) {
@@ -289,12 +350,13 @@ assertNonStridedEntriesZero(Scalar* data)
       break;
 
     case 2:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       countY = SY / SX;
 
       for (j = 0; j < countY; j++) {
         for (i = 0; i < countX; i++) {
-          if (i % (countX/4) || j % (countY/4)) {
+          if (i % (countX/BLOCK_SIDE_LEN)
+              || j % (countY/BLOCK_SIDE_LEN)) {
             assert_true(data[countX*j + i] == 0.);
           }
         }
@@ -303,15 +365,40 @@ assertNonStridedEntriesZero(Scalar* data)
       break;
 
     case 3:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       countY = SY / SX;
       countZ = SZ / SY;
 
       for (k = 0; k < countZ; k++) {
         for (j = 0; j < countY; j++) {
           for (i = 0; i < countX; i++) {
-            if (i % (countX/4) || j % (countY/4) || k % (countZ/4)) {
+            if (i % (countX/BLOCK_SIDE_LEN)
+                || j % (countY/BLOCK_SIDE_LEN)
+                || k % (countZ/BLOCK_SIDE_LEN)) {
               assert_true(data[countX*countY*k + countX*j + i] == 0.);
+            }
+          }
+        }
+      }
+
+      break;
+
+    case 4:
+      countX = BLOCK_SIDE_LEN * SX;
+      countY = SY / SX;
+      countZ = SZ / SY;
+      countW = SW / SZ;
+
+      for (l = 0; l < countW; l++) {
+        for (k = 0; k < countZ; k++) {
+          for (j = 0; j < countY; j++) {
+            for (i = 0; i < countX; i++) {
+              if (i % (countX/BLOCK_SIDE_LEN)
+                  || j % (countY/BLOCK_SIDE_LEN)
+                  || k % (countZ/BLOCK_SIDE_LEN)
+                  || l % (countW/BLOCK_SIDE_LEN)) {
+                assert_true(data[countX*countY*countZ*l + countX*countY*k + countX*j + i] == 0.);
+              }
             }
           }
         }
@@ -324,10 +411,10 @@ assertNonStridedEntriesZero(Scalar* data)
 void
 assertEntriesOutsidePartialBlockBoundsZero(Scalar* data)
 {
-  int i, j, k, countX, countY, countZ;
+  size_t i, j, k, l, countX, countY, countZ, countW;
   switch(DIMS) {
     case 1:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
 
       for (i = 0; i < countX; i++) {
         if (i/SX >= PX) {
@@ -338,12 +425,13 @@ assertEntriesOutsidePartialBlockBoundsZero(Scalar* data)
       break;
 
     case 2:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       countY = SY / SX;
 
       for (j = 0; j < countY; j++) {
         for (i = 0; i < countX; i++) {
-          if (i/(countX/4) >= PX || j/(countY/4) >= PY) {
+          if (i/(countX/BLOCK_SIDE_LEN) >= PX
+              || j/(countY/BLOCK_SIDE_LEN) >= PY) {
             assert_true(data[countX*j + i] == 0.);
           }
         }
@@ -352,15 +440,40 @@ assertEntriesOutsidePartialBlockBoundsZero(Scalar* data)
       break;
 
     case 3:
-      countX = 4 * SX;
+      countX = BLOCK_SIDE_LEN * SX;
       countY = SY / SX;
       countZ = SZ / SY;
 
       for (k = 0; k < countZ; k++) {
         for (j = 0; j < countY; j++) {
           for (i = 0; i < countX; i++) {
-            if (i/(countX/4) >= PX || j/(countY/4) >= PY || k/(countZ/4) >= PZ) {
+            if (i/(countX/BLOCK_SIDE_LEN) >= PX
+                || j/(countY/BLOCK_SIDE_LEN) >= PY
+                || k/(countZ/BLOCK_SIDE_LEN) >= PZ) {
               assert_true(data[countX*countY*k + countX*j + i] == 0.);
+            }
+          }
+        }
+      }
+
+      break;
+
+    case 4:
+      countX = BLOCK_SIDE_LEN * SX;
+      countY = SY / SX;
+      countZ = SZ / SY;
+      countW = SW / SZ;
+
+      for (l = 0; l < countW; l++) {
+        for (k = 0; k < countZ; k++) {
+          for (j = 0; j < countY; j++) {
+            for (i = 0; i < countX; i++) {
+              if (i/(countX/BLOCK_SIDE_LEN) >= PX
+                  || j/(countY/BLOCK_SIDE_LEN) >= PY
+                  || k/(countZ/BLOCK_SIDE_LEN) >= PZ
+                  || l/(countW/BLOCK_SIDE_LEN) >= PW) {
+                assert_true(data[countX*countY*countZ*l + countX*countY*k + countX*j + i] == 0.);
+              }
             }
           }
         }

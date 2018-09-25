@@ -31,6 +31,12 @@ compress_init_par(zfp_stream* stream, const zfp_field* field, uint chunks, uint 
       f.ny = 4;
       f.nz = 4 * (blocks + chunks - 1) / chunks;
       break;
+    case 4:
+      f.nx = 4;
+      f.ny = 4;
+      f.nz = 4;
+      f.nw = 4 * (blocks + chunks - 1) / chunks;
+      break;
     default:
       return 0;
   }

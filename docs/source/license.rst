@@ -5,7 +5,7 @@ License
 
 | Copyright (c) 2014-2018, Lawrence Livermore National Security, LLC.
 | Produced at the Lawrence Livermore National Laboratory.
-| Written by Peter Lindstrom.
+| Written by Peter Lindstrom, Markus Salasoo, and Matt Larsen.
 | LLNL-CODE-663824.
 | All rights reserved.
 

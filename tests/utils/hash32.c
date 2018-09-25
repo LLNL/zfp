@@ -47,6 +47,25 @@ hash3dStridedArray(const uint32* arr, size_t nx, size_t ny, size_t nz, int sx, i
 }
 
 uint32
+hash4dStridedArray(const uint32* arr, size_t nx, size_t ny, size_t nz, size_t nw, int sx, int sy, int sz, int sw)
+{
+  uint32 h = 0;
+
+  size_t i, j, k, l;
+  for (l = 0; l < nw; arr += (sw - nz*sz), l++) {
+    for (k = 0; k < nz; arr += (sz - ny*sy), k++) {
+      for (j = 0; j < ny; arr += (sy - nx*sx), j++) {
+        for (i = 0; i < nx; arr += sx, i++) {
+          hashValue(*arr, &h);
+        }
+      }
+    }
+  }
+
+  return hashFinish(h);
+}
+
+uint32
 hash2dStridedBlock(const uint32* arr, int sx, int sy)
 {
   uint32 h = 0;
@@ -71,6 +90,25 @@ hash3dStridedBlock(const uint32* arr, int sx, int sy, int sz)
     for (y = 0; y < 4; arr += (sy - 4*sx), y++) {
       for (x = 0; x < 4; arr += sx, x++) {
         hashValue(*arr, &h);
+      }
+    }
+  }
+
+  return hashFinish(h);
+}
+
+uint32
+hash4dStridedBlock(const uint32* arr, int sx, int sy, int sz, int sw)
+{
+  uint32 h = 0;
+
+  uint x, y, z, w;
+  for (w = 0; w < 4; arr += (sw - 4*sz), w++) {
+    for (z = 0; z < 4; arr += (sz - 4*sy), z++) {
+      for (y = 0; y < 4; arr += (sy - 4*sx), y++) {
+        for (x = 0; x < 4; arr += sx, x++) {
+          hashValue(*arr, &h);
+        }
       }
     }
   }
