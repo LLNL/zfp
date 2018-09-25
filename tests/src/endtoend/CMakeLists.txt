@@ -8,7 +8,7 @@ function(zfp_add_test dims type bits)
   endif()
   add_test(NAME ${serial_test_name} COMMAND ${serial_test_name})
 
-  if(ZFP_WITH_OPENMP AND NOT (dims EQUAL 4))
+  if(ZFP_WITH_OPENMP)
     set(omp_test_name testZfpOmp${dims}d${type})
     add_executable(${omp_test_name} ${omp_test_name}.c)
     target_compile_options(${omp_test_name} PRIVATE ${OpenMP_C_FLAGS})
