@@ -189,6 +189,8 @@ Types
       zfp_type_double = 4  // double precision floating point
     } zfp_type;
 
+.. index::
+   single: Strided Arrays
 .. c:type:: zfp_field
 
   The uncompressed array is described by the :c:type:`zfp_field` struct, which
@@ -196,24 +198,36 @@ Types
   ::
 
     typedef struct {
-      zfp_type type;   // scalar type (e.g. int32, double)
-      uint nx, ny, nz; // sizes (zero for unused dimensions)
-      int sx, sy, sz;  // strides (zero for contiguous array a[nz][ny][nx])
-      void* data;      // pointer to array data
+      zfp_type type;       // scalar type (e.g. int32, double)
+      uint nx, ny, nz, nw; // sizes (zero for unused dimensions)
+      int sx, sy, sz, sw;  // strides (zero for contiguous array a[nw][nz][ny][nx])
+      void* data;          // pointer to array data
     } zfp_field;
 
   For example, a static multidimensional C array declared as
   ::
 
-    double array[n1][n2][n3];
+    double array[n1][n2][n3][n4];
 
   would be described by a :c:type:`zfp_field` with members
   ::
 
     type = zfp_type_double;
-    nx = n3; ny = n2; nz = n1;
-    sx = 1; sy = n3; sz = n2 * n3;
-    data = &array[0][0][0];
+    nx = n4; ny = n3; nz = n2; nw = n1;
+    sx = 1; sy = n4; sz = n3 * n4; sw = n2 * n3 * n4;
+    data = &array[0][0][0][0];
+
+  The strides, when nonzero, specify how the array is laid out in memory.
+  Strides can be used in case multiple fields are stored interleaved via
+  "array of struct" (AoS) rather than "struct of array" (SoA) storage,
+  or if the dimensions should be transposed during (de)compression.
+  Given 4D array indices :code:`(x, y, z, w)`, the corresponding array
+  element is stored at
+  ::
+
+    data[x * sx + y * sy + z * sz + w * sw]
+
+  where :code:`data` is a pointer to the first array element.
 
 .. _hl-data:
 
@@ -430,6 +444,13 @@ Array Metadata
   scalars of given *type* stored at *pointer*, which may be :c:macro:`NULL`
   and specified later.
 
+.. c:function:: zfp_field* zfp_field_4d(void* pointer, zfp_type type, uint nx, uint ny, uint nz, uint nw)
+
+  Allocate and return a field struct that describes an existing 4D array,
+  :code:`a[nw][nz][ny][nx]`, of *nx* |times| *ny* |times| *nz* |times| *nw*
+  uncompressed scalars of given *type* stored at *pointer*, which may be
+  :c:macro:`NULL` and specified later.
+
 .. c:function:: void zfp_field_free(zfp_field* field)
 
   Free :c:type:`zfp_field` struct previously allocated by one of the functions
@@ -450,21 +471,24 @@ Array Metadata
 
 .. c:function:: uint zfp_field_dimensionality(const zfp_field* field)
 
-  Return array dimensionality (1, 2, or 3).
+  Return array dimensionality (1, 2, 3, or 4).
 
 .. c:function:: size_t zfp_field_size(const zfp_field* field, uint* size)
 
-  Return total number of scalars stored in the array, e.g.
+  Return total number of scalars stored in the array, e.g.,
   *nx* |times| *ny* |times| *nz* for a 3D array.  If *size* is not
   :c:macro:`NULL`, then store the number of scalars for each dimension,
-  e.g. :code:`size[0] = nx; size[1] = ny; size[2] = nz` for a 3D array.
+  e.g., :code:`size[0] = nx; size[1] = ny; size[2] = nz` for a 3D array.
 
 .. c:function:: int zfp_field_stride(const zfp_field* field, int* stride)
 
-  Return zero if array is stored contiguously; nonzero if it is strided.
+  Return zero if the array is stored contiguously as :code:`a[nx]`,
+  :code:`a[ny][nx]`, :code:`a[nz][ny][nx]`, or :code:`a[nw][nz][ny][nx]`
+  depending on dimensionality.  Return nonzero if the array is strided
+  and laid out differently in memory.
   If *stride* is not :c:macro:`NULL`, then store the stride for each
-  dimension, e.g. :code:`stride[0] = sx; stride[1] = sy; stride[2] = sz`
-  for a 3D array.  See below for more information on strides.
+  dimension, e.g., :code:`stride[0] = sx; stride[1] = sy; stride[2] = sz`
+  for a 3D array.  See :c:type:`zfp_field` for more information on strides.
 
 .. c:function:: uint64 zfp_field_metadata(const zfp_field* field)
 
@@ -492,6 +516,10 @@ Array Metadata
 
   Specify dimensions of 3D array :code:`a[nz][ny][nx]`.
 
+.. c:function:: void zfp_field_set_size_4d(zfp_field* field, uint nx, uint ny, uint nz, uint nw)
+
+  Specify dimensions of 4D array :code:`a[nw][nz][ny][nx]`.
+
 .. c:function:: void zfp_field_set_stride_1d(zfp_field* field, int sx)
 
   Specify stride for 1D array: :code:`sx = &a[1] - &a[0]`.
@@ -505,6 +533,14 @@ Array Metadata
 
   Specify strides for 3D array:
   :code:`sx = &a[0][0][1] - &a[0][0][0]; sy = &a[0][1][0] - &a[0][0][0]; sz = &a[1][0][0] - &a[0][0][0]`.
+
+.. c:function:: void zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw)
+
+  Specify strides for 4D array:
+  :code:`sx = &a[0][0][0][1] - &a[0][0][0][0];
+  sy = &a[0][0][1][0] - &a[0][0][0][0];
+  sz = &a[0][1][0][0] - &a[0][0][0][0];
+  sw = &a[1][0][0][0] - &a[0][0][0][0]`.
 
 .. c:function:: int zfp_field_set_metadata(zfp_field* field, uint64 meta)
 

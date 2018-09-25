@@ -14,8 +14,8 @@ they call the compression library, applications must link with
 :file:`libzfp`.
 
 On Linux, macOS, and MinGW, |zfp| is easiest compiled using gcc and gmake.
-CMake support is also available, e.g. for Windows builds.  See below for
-instructions on GNU and CMake builds.
+`CMake <https://cmake.org>`_ support is also available, e.g., for Windows
+builds.  See below for instructions on GNU and CMake builds.
 
 |zfp| has successfully been built and tested using these compilers:
 
@@ -80,18 +80,17 @@ By default, CMake builds will attempt to locate and use
 
     cmake -DZFP_WITH_OPENMP=OFF ..
 
-To build |zfp| using Visual Studio on Windows, start an
-`MSBuild shell <https://msdn.microsoft.com/en-us/library/ms164311.aspx>`_
-and type::
+To build |zfp| using Visual Studio on Windows, start a DOS shell,
+cd to the top-level |zfp| directory, and type::
 
     mkdir build
     cd build
     cmake ..
-    msbuild /p:Configuration=Release zfp.sln
-    msbuild /p:Configuration=Debug   zfp.sln
+    cmake --build . --config Release
 
-This builds |zfp| in both debug and release mode.  See the instructions for
-Linux on how to change the cmake line to also build the example programs.
+This builds |zfp| in release mode.  Replace 'Release' with 'Debug' to
+build |zfp| in debug mode.  See the instructions for Linux on how to
+change the cmake line to also build the example programs.
 
 .. index::
    single: Configuration

@@ -19,8 +19,8 @@ anything related to compression other than compression
 sections.
 
 All code examples below are for 3D arrays of doubles, but it should be
-clear how to modify the function calls for single precision and for 1D
-or 2D arrays.
+clear how to modify the function calls for single precision and for 1D,
+2D, or 4D arrays.
 
 .. _tut-hl:
 
@@ -32,7 +32,7 @@ use |zfp| as a black box that maps a possibly non-contiguous floating-point
 array to a compressed bit stream.  The intent of |libzfp| is to provide both
 a high- and low-level interface to the compressor that can be called from
 both C and C++ (and possibly other languages).  |libzfp| supports strided
-access, e.g. for compressing vector fields one scalar at a time, or for
+access, e.g., for compressing vector fields one scalar at a time, or for
 compressing arrays of structs.
 
 Consider compressing the 3D C/C++ array
@@ -56,8 +56,8 @@ the the high-level API also supports integer arrays (:code:`zfp_type_int32`
 and :code:`zfp_type_int64`).  See FAQs :ref:`#8 <q-integer>` and
 :ref:`#9 <q-int32>` regarding integer compression.
 
-Functions similar to :c:func:`zfp_field_3d` exist for declaring 1D and 2D
-arrays.  If the dimensionality of the array is unknown at this point, then
+Functions similar to :c:func:`zfp_field_3d` exist for declaring 1D, 2D, and
+4D arrays.  If the dimensionality of the array is unknown at this point, then
 a generic :c:func:`zfp_field_alloc` call can be made to just allocate a
 :c:type:`zfp_field` struct, which can be filled in later using the
 :ref:`set <zfp_field_set>` functions.  If the array is non-contiguous, then
@@ -124,7 +124,8 @@ Finally, the array is compressed as follows::
   // compress entire array
   size_t size = zfp_compress(zfp, field);
 
-The return value is the actual number of bytes of compressed storage,
+If the stream was rewound before calling :c:func:`zfp_compress`,
+the return value is the actual number of bytes of compressed storage,
 and as already mentioned, *size* |leq| *bufsize*.  If *size* = 0, then the
 compressor failed.  Since |zfp| 0.5.0, the compressor does not rewind the
 bit stream before compressing, which allows multiple fields to be compressed
@@ -194,13 +195,13 @@ Low-Level C Interface
 For applications that wish to compress or decompress portions of an array
 on demand, a low-level interface is available.  Since this API is useful
 primarily for supporting random access, the user also needs to manipulate
-the :ref:`bit stream <bs-api>`, e.g. to position the bit pointer to where
+the :ref:`bit stream <bs-api>`, e.g., to position the bit pointer to where
 data is to be read or written.  Please be advised that the bit stream
 functions have been optimized for speed, and do not check for buffer
 overruns or other types of programmer error.
 
 Like the high-level API, the low-level API also makes use of the
-:c:type:`zfp_stream` parameter object (see section above) to specify
+:c:type:`zfp_stream` parameter object (see previous section) to specify
 compression parameters and storage, but does not encapsulate array
 metadata in a :c:type:`zfp_field` object.  Functions exist for encoding
 and decoding complete or partial blocks, with or without strided access.
@@ -234,7 +235,7 @@ The block above could also have been compressed as follows using strides::
 
 The strides are measured in number of scalars, not in bytes.
 
-For partial blocks, e.g. near the boundaries of arrays whose dimensions
+For partial blocks, e.g., near the boundaries of arrays whose dimensions
 are not multiples of four, there are corresponding functions that accept
 parameters *nx*, *ny*, and *nz* to specify the actual block dimensions,
 with 1 |leq| *nx*, *ny*, *nz* |leq| 4.  Corresponding functions exist for
@@ -255,8 +256,8 @@ stream.  For writing (compression), a corresponding call exists::
 
 Note that it is possible to decompress fewer bits than are stored with a
 compressed block to quickly obtain an approximation.  This is done by
-setting :code:`zfp->maxbits` to fewer bits than used during compression,
-e.g. to decompress only the first 256 bits of each block::
+setting :code:`zfp->maxbits` to fewer bits than used during compression.
+For example, to decompress only the first 256 bits of each block::
 
   // modify decompression parameters to decode 256 bits per block
   uint maxbits;
@@ -276,10 +277,11 @@ Compressed C++ Arrays
 
 .. cpp:namespace:: zfp
 
-The |zfp| API has been designed to facilitate integration with existing
+The |zfp| compressed array API, which currently supports 1D, 2D, and 3D
+(but not 4D) arrays, has been designed to facilitate integration with existing
 applications.  After initial array declaration, a |zfp| array can often
-be used in place of a regular C/C++ array or STL vector, e.g. using flat
-indexing via :code:`a[index]` or using multidimensional indexing via
+be used in place of a regular C/C++ array or STL vector, e.g., using flat
+indexing via :code:`a[index]`, or using multidimensional indexing via
 :code:`a(i)`, :code:`a(i, j)`, or :code:`a(i, j, k)`.  There are,
 however, some important differences.  For instance, applications that
 rely on addresses or references to array elements may have to be
@@ -425,10 +427,10 @@ const-qualified accessor, a proxy reference may be returned even for read
 calls, e.g. in
 ::
 
-  a[i - 1] = a[i];
+  a[i] = a[i + 1];
 
 the array :code:`a` clearly must be mutable to allow assignment to
-:code:`a[i - 1]`, and therefore the read access :code:`a[i]` returns type
+:code:`a[i]`, and therefore the read access :code:`a[i + 1]` returns type
 :cpp:class:`array::reference`.  The value associated with the read access
 is obtained via an implicit conversion.
 

@@ -284,6 +284,8 @@ and the optional header.
 
 -------------------------------------------------------------------------------
 
+.. index::
+   single: Endianness
 .. _q-portability:
 
 Q11: *Are zfp compressed streams portable across platforms?*

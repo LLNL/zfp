@@ -49,11 +49,11 @@ to understand the
 its major components may help understand what to expect and how |zfp|'s
 parameters influence the result.
 
-|zfp| compresses *d*-dimensional (1D, 2D, and 3D) arrays of integer or
+|zfp| compresses *d*-dimensional (1D, 2D, 3D, and 4D) arrays of integer or
 floating-point values by partitioning the array into blocks of |4powd|
-values, i.e., 4, 16, or 64 values for 1D, 2D, and 3D arrays, respectively.
-Each such block is (de)compressed independently into a fixed- or
-variable-length bit string, and these bit strings are concatenated into a
+values, i.e., 4, 16, 64, or 256 values for 1D, 2D, 3D, and 4D arrays,
+respectively.  Each such block is (de)compressed independently into a fixed-
+or variable-length bit string, and these bit strings are concatenated into a
 single stream of bits.
 
 |zfp| usually truncates each bit string to a fixed number of bits to meet

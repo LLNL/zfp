@@ -8,13 +8,6 @@ Future Directions
 |zfp| is actively being developed and plans have been made to add a number of
 important features, including:
 
-- **Support for 4D arrays**, e.g., for compressing time-varying 3D fields.
-  Although the |zfp| compression algorithm trivially generalizes to higher
-  dimensions, *d*, the current implementation is hampered by the lack of
-  integer types large enough to hold |4powd| bits for *d* > 3.  For now,
-  higher-dimensional data should be compressed as collections of independent
-  3D fields.
-
 - **Tagging of missing values**.  |zfp| currently assumes that arrays are
   dense, i.e., each array element stores a valid numerical value.  In many
   science applications this is not the case.  For instance, in climate

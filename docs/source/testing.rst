@@ -3,13 +3,16 @@
 Regression Tests
 ================
 
-The :program:`testzfp` program in the :file:`tests` directory performs
-regression testing that exercises most of the functionality of :file:`libzfp`
-and the array classes.  The tests assume the default compiler settings,
-i.e. with none of the macros in :file:`Config` defined.  By default, small,
-pregenerated floating-point arrays are used in the test, since they tend to
-have the same binary representation across platforms, whereas it can be
-difficult to computationally generate bit-for-bit identical arrays.  To test
-larger arrays, use the :code:`medium` or :code:`large` options.
-When large arrays are used, the (de)compression throughput is also measured
-and reported in number of uncompressed bytes per second.
+The :program:`testzfp` program performs basic regression testing by exercising
+a small but important subset of :file:`libzfp` and the compressed array
+classes.  It serves as a sanity check that |zfp| has been built properly.
+These tests assume the default compiler settings, i.e., with none of the
+settings in :file:`Config` or :file:`CMakeLists.txt` modified.  By default,
+small, synthetic floating-point arrays are used in the test.  To test larger
+arrays, use the :code:`large` command-line option.  When large arrays are
+used, the (de)compression throughput is also measured and reported in number
+of uncompressed bytes per second.
+
+More extensive unit and functional tests are available on the |zfp| GitHub
+`develop <https://github.com/LLNL/zfp/tree/develop>`_ branch in the
+:file:`tests` directory.
