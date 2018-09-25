@@ -385,7 +385,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
     case zfp_mode_fixed_rate:
       bundle->rateParam = intPow(2, bundle->compressParamNum + 3);
       zfp_stream_set_rate(stream, (double)bundle->rateParam, type, DIMS, 0);
-      printf("\t\tFixed rate param: %zu\n", bundle->rateParam);
+      printf("\t\tFixed rate param: %lu\n", (unsigned long)bundle->rateParam);
 
       switch(compressParamNum) {
         case 0:
@@ -795,7 +795,7 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedB
   expectedTotalBits = (expectedTotalBits + stream_word_bits - 1) & ~(stream_word_bits - 1);
 
   if(compressedBits != expectedTotalBits)
-    fail_msg("compressedBits (%zu) == expectedTotalBits (%zu) failed", compressedBits, expectedTotalBits);
+    fail_msg("compressedBits (%lu) == expectedTotalBits (%lu) failed", (unsigned long)compressedBits, (unsigned long)expectedTotalBits);
 }
 
 #ifdef FL_PT_DATA
