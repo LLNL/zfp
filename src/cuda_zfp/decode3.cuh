@@ -1,7 +1,6 @@
 #ifndef CUZFP_DECODE3_CUH
 #define CUZFP_DECODE3_CUH
 
-//dealing with doubles
 #include "shared.h"
 #include "decode.cuh"
 #include "type_info.cuh"
@@ -133,12 +132,14 @@ size_t decode3launch(uint3 dims,
 
   dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
 
+#ifdef CUDA_ZFP_RATE_PRINT
   // setup some timing code
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
   cudaEventRecord(start);
+#endif
 
   cudaDecode3<Scalar, 64> << < grid_size, block_size >> >
     (stream,
@@ -148,6 +149,7 @@ size_t decode3launch(uint3 dims,
      zfp_pad,
      maxbits);
 
+#ifdef CUDA_ZFP_RATE_PRINT
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
 	cudaStreamSynchronize(0);
@@ -159,7 +161,6 @@ size_t decode3launch(uint3 dims,
   rate /= 1024.f;
   rate /= 1024.f;
   rate /= 1024.f;
-#ifdef CUDA_ZFP_RATE_PRINT
   printf("Decode elapsed time: %.5f (s)\n", seconds);
   printf("# decode3 rate: %.2f (GB / sec) %d\n", rate, maxbits);
 #endif

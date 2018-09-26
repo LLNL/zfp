@@ -2,7 +2,6 @@
 #define CUZFP_POINTERS_CUH
 
 #include "ErrorCheck.h"
-
 #include <iostream>
 
 

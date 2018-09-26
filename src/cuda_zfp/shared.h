@@ -6,7 +6,6 @@ typedef unsigned long long Word;
 #define Wsize ((uint)(CHAR_BIT * sizeof(Word)))
 
 #include "type_info.cuh"
-//#include "zfp_structs.h"
 #include "zfp.h"
 #include <stdio.h>
 

@@ -21,6 +21,5 @@ set(cuZFP_headers
     constant_setup.cuh
     shared.h
     cuZFP.h
-    zfp_structs.h
     ErrorCheck.h)
 

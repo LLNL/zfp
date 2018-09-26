@@ -4,8 +4,6 @@
 #include "cuZFP.h"
 #include "shared.h"
 #include "encode.cuh"
-
-#include "debug_utils.cuh"
 #include "type_info.cuh"
 
 #define ZFP_3D_BLOCK_SIZE 64
@@ -145,11 +143,13 @@ size_t encode3launch(uint3 dims,
   //ensure we start with 0s
   cudaMemset(stream, 0, stream_bytes);
 
+#ifdef CUDA_ZFP_RATE_PRINT
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
-
   cudaEventRecord(start);
+#endif
+
 	cudaEncode<Scalar> << <grid_size, block_size>> >
     (maxbits,
      d_data,
@@ -159,6 +159,7 @@ size_t encode3launch(uint3 dims,
      zfp_pad,
      zfp_blocks);
 
+#ifdef CUDA_ZFP_RATE_PRINT
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
   cudaStreamSynchronize(0);
@@ -170,7 +171,6 @@ size_t encode3launch(uint3 dims,
   rate /= 1024.f;
   rate /= 1024.f;
   rate /= 1024.f;
-#ifdef CUDA_ZFP_RATE_PRINT
   printf("Encode elapsed time: %.5f (s)\n", seconds);
   printf("# encode3 rate: %.2f (GB / sec) \n", rate);
 #endif

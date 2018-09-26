@@ -121,14 +121,15 @@ size_t decode2launch(uint2 dims,
 
   size_t stream_bytes = calc_device_mem2d(zfp_pad, maxbits);
   size_t total_blocks = block_pad + zfp_blocks;
-  dim3 grid_size = calculate_grid_size(total_blocks, CUDA_BLK_SIZE_2D);
+  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
 
+#ifdef CUDA_ZFP_RATE_PRINT
   // setup some timing code
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
-
   cudaEventRecord(start);
+#endif
 
   cudaDecode2<Scalar, 16> << < grid_size, block_size >> >
     (stream,
@@ -138,6 +139,7 @@ size_t decode2launch(uint2 dims,
      zfp_pad,
      maxbits);
 
+#ifdef CUDA_ZFP_RATE_PRINT
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
 	cudaStreamSynchronize(0);
@@ -149,7 +151,6 @@ size_t decode2launch(uint2 dims,
   rate /= 1024.f;
   rate /= 1024.f;
   rate /= 1024.f;
-#ifdef CUDA_ZFP_RATE_PRINT
   printf("Decode elapsed time: %.5f (s)\n", seconds);
   printf("# decode2 rate: %.2f (GB / sec) %d\n", rate, maxbits);
 #endif

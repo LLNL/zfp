@@ -5,12 +5,8 @@
 #include "shared.h"
 #include "encode.cuh"
 #include "ErrorCheck.h"
-
-#include "debug_utils.cuh"
 #include "type_info.cuh"
 
-#define CUDA_BLK_SIZE_2D 128
-#define ZFP_BLK_PER_BLK_2D 8 
 #define ZFP_2D_BLOCK_SIZE 16 
 
 namespace cuZFP
@@ -140,11 +136,12 @@ size_t encode2launch(uint2 dims,
   // ensure we have zeros
   cudaMemset(stream, 0, stream_bytes);
 
+#ifdef CUDA_ZFP_RATE_PRINT
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
-
   cudaEventRecord(start);
+#endif
 
 	cudaEncode2<Scalar> << <grid_size, block_size>> >
     (maxbits,
@@ -155,8 +152,8 @@ size_t encode2launch(uint2 dims,
      zfp_pad,
      zfp_blocks);
 
+#ifdef CUDA_ZFP_RATE_PRINT
   cudaDeviceSynchronize();
-
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
   cudaStreamSynchronize(0);
@@ -166,7 +163,6 @@ size_t encode2launch(uint2 dims,
   float seconds = miliseconds / 1000.f;
   float mb = (float(dims.x * dims.y) * sizeof(Scalar)) / (1024.f * 1024.f *1024.f);
   float rate = mb / seconds;
-#ifdef CUDA_ZFP_RATE_PRINT
   printf("Encode elapsed time: %.5f (s)\n", seconds);
   printf("# encode2 rate: %.2f (GB / sec) %d\n", rate, maxbits);
 #endif

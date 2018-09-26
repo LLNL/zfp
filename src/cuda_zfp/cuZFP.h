@@ -1,11 +1,8 @@
 #ifndef cuZFP_h
 #define cuZFP_h
 
-//#include "zfp_structs.h"
 #include "zfp.h"
 
-
-//namespace cuZFP {
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -14,8 +11,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-//} // namespace cuZFP
-
 
 #endif
