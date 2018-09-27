@@ -1,10 +1,25 @@
+/* preview */
+
+/* this also tests const_view */
+TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_previewFullConstructor1D_then_lengthAndOffsetSet)
+{
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size_x());
+
+  ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
+
+  EXPECT_EQ(viewLen, v.size());
+  EXPECT_EQ(offset, v.global_x(0));
+}
+
 /* const_view */
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_sizeX_then_viewXLenReturned)
 {
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size_x());
 
   ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
 
@@ -13,9 +28,9 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_sizeX_then_viewXLenRet
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorBrackets_then_correctEntriesReturned)
 {
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size_x());
 
   ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
 
@@ -26,9 +41,9 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorBrackets_then_
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorParens_then_correctEntriesReturned)
 {
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size_x());
 
   ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
 
@@ -37,13 +52,43 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorParens_then_co
   }
 }
 
+TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_constViewFullConstructor_then_isShallowCopyOfCompressedArray)
+{
+  ZFP_ARRAY_TYPE::const_view v(&arr, 1, 1);
+
+  /* indices of view and arr */
+  size_t vI = 2;
+  size_t aI = v.global_x(vI);
+
+  SCALAR oldVal = arr[aI];
+  EXPECT_EQ(oldVal, v(vI));
+
+  arr[aI] += 1;
+  SCALAR newVal = arr[aI];
+  EXPECT_NE(oldVal, newVal);
+
+  EXPECT_EQ(newVal, v(vI));
+}
+
 /* view */
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_lengthAndOffsetSet)
+{
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size());
+
+  ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
+
+  EXPECT_EQ(viewLen, v.size_x());
+  EXPECT_EQ(offset, v.global_x(0));
+}
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithBrackets_then_originalArrayUpdated)
 {
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size_x());
 
   ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
   uint i = 1;
@@ -55,13 +100,61 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithBrackets_then_o
   EXPECT_EQ(arr(offset + i), v(i));
 }
 
+TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_isShallowCopyOfCompressedArray)
+{
+  ZFP_ARRAY_TYPE::view v(&arr, 1, 1);
+
+  /* indices of view and arr */
+  size_t vI = 2;
+  size_t aI = v.global_x(vI);
+
+  SCALAR oldVal = arr[aI];
+  EXPECT_EQ(oldVal, v(vI));
+
+  arr[aI] += 1;
+  SCALAR newVal = arr[aI];
+  EXPECT_NE(oldVal, newVal);
+
+  EXPECT_EQ(newVal, v(vI));
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithParens_then_originalArrayUpdated)
+{
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size());
+
+  ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
+  uint i = 1;
+  SCALAR val = 3.14;
+
+  EXPECT_NE(val, arr(offset + i));
+  v(i) = val;
+
+  EXPECT_EQ(arr(offset + i), v(i));
+}
+
 /* private_const_view */
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateConstViewFullConstructor_then_lengthAndOffsetSet)
+{
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size());
+
+  ZFP_ARRAY_TYPE::private_const_view v(&arr, offset, viewLen);
+
+  EXPECT_EQ(viewLen, v.size());
+  EXPECT_EQ(viewLen, v.size_x());
+
+  EXPECT_EQ(offset, v.global_x(0));
+}
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateConstView_when_sizeX_then_viewLenReturned)
 {
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size_x());
 
   ZFP_ARRAY_TYPE::private_const_view v(&arr, offset, viewLen);
   EXPECT_EQ(viewLen, v.size_x());
@@ -69,14 +162,28 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateConstView_when_sizeX_then_view
 
 /* private_view */
 
+TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_lengthAndOffsetSet)
+{
+  uint offset = 5;
+  uint viewLen = 3;
+  EXPECT_LT(offset + viewLen, arr.size());
+
+  ZFP_ARRAY_TYPE::private_view v(&arr, offset, viewLen);
+
+  EXPECT_EQ(viewLen, v.size());
+  EXPECT_EQ(viewLen, v.size_x());
+
+  EXPECT_EQ(offset, v.global_x(0));
+}
+
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOnCount_then_setsUniqueBlockBounds)
 {
-  const uint count = 3;
+  uint count = 3;
   uint prevOffset, prevLen, offset, len;
 
   /* partition such that each gets at least 1 block */
-  const uint blockSideLen = 4;
-  uint arrBlockCount = (arr.size() + (blockSideLen - 1)) / blockSideLen;
+  uint blockSideLen = 4;
+  uint arrBlockCount = (arr.size_x() + (blockSideLen - 1)) / blockSideLen;
   EXPECT_LE(count, arrBlockCount);
 
   /* base case */
@@ -88,7 +195,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
   EXPECT_EQ(0, prevOffset);
 
   /* expect to have at least 1 block */
-  prevLen = v.size();
+  prevLen = v.size_x();
   EXPECT_LE(blockSideLen, prevLen);
 
   /* successive cases are compared to previous */
@@ -102,7 +209,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
     EXPECT_EQ(prevOffset + prevLen, offset);
 
     /* expect to have at least 1 block */
-    len = v2.size();
+    len = v2.size_x();
     EXPECT_LE(blockSideLen, len);
 
     prevOffset = offset;
@@ -118,9 +225,9 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
   EXPECT_EQ(prevOffset + prevLen, offset);
 
   /* last partition could hold a partial block */
-  len = v3.size();
+  len = v3.size_x();
   EXPECT_LT(0, len);
 
   /* expect to end on final index */
-  EXPECT_EQ(arr.size(), offset + len);
+  EXPECT_EQ(arr.size_x(), offset + len);
 }

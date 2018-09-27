@@ -17,21 +17,14 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_previewMinConstructor_then_spansEntire
   ZFP_ARRAY_TYPE::const_view v(&arr);
 
   EXPECT_EQ(arr.size(), v.size());
+
+  EXPECT_EQ(arr.size_x(), v.size_x());
   EXPECT_EQ(0, v.global_x(0));
-}
 
-TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_previewFullConstructor_then_lengthAndOffsetSet)
-{
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
-  ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
-
-  EXPECT_EQ(viewLen, v.size());
-  EXPECT_EQ(viewLen, v.size_x());
-
-  EXPECT_EQ(offset, v.global_x(0));
+#if DIMS >= 2
+  EXPECT_EQ(arr.size_y(), v.size_y());
+  EXPECT_EQ(0, v.global_y(0));
+#endif
 }
 
 /* const_view */
@@ -40,53 +33,47 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_constViewMinConstructor_then_spansEnti
 {
   ZFP_ARRAY_TYPE::const_view v(&arr);
 
-  EXPECT_EQ(arr.size(), v.size_x());
+  EXPECT_EQ(arr.size(), v.size());
+
+  EXPECT_EQ(arr.size_x(), v.size_x());
   EXPECT_EQ(0, v.global_x(0));
-}
 
-TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_constViewFullConstructor_then_lengthAndOffsetSet)
-{
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
-  ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
-
-  EXPECT_EQ(viewLen, v.size_x());
-  EXPECT_EQ(offset, v.global_x(0));
+#if DIMS >= 2
+  EXPECT_EQ(arr.size_y(), v.size_y());
+  EXPECT_EQ(0, v.global_y(0));
+#endif
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_constViewMinConstructor_then_isShallowCopyOfCompressedArray)
 {
   ZFP_ARRAY_TYPE::const_view v(&arr);
   uint i = 0;
+  SCALAR val;
+  size_t arrOffset;
 
-  SCALAR oldVal = arr[i];
-  EXPECT_EQ(oldVal, v[i]);
+#if DIMS == 1
+  val = v(i);
+  arrOffset = i;
+#elif DIMS == 2
+  uint j = 0;
+  val = v(i, j);
+  arrOffset = j*arr.size_x() + i;
+#endif
 
-  arr[i] += 1;
-  SCALAR newVal = arr[i];
+  SCALAR oldVal = arr[arrOffset];
+  EXPECT_EQ(oldVal, val);
+
+  arr[arrOffset] += 1;
+  SCALAR newVal = arr[arrOffset];
   EXPECT_NE(oldVal, newVal);
 
-  EXPECT_EQ(newVal, v[i]);
-}
+#if DIMS == 1
+  val = v(i);
+#elif DIMS == 2
+  val = v(i, j);
+#endif
 
-TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_constViewFullConstructor_then_isShallowCopyOfCompressedArray)
-{
-  ZFP_ARRAY_TYPE::const_view v(&arr, 1, 1);
-
-  /* indices of view and arr */
-  size_t vI = 2;
-  size_t aI = v.global_x(vI);
-
-  SCALAR oldVal = arr[aI];
-  EXPECT_EQ(oldVal, v[vI]);
-
-  arr[aI] += 1;
-  SCALAR newVal = arr[aI];
-  EXPECT_NE(oldVal, newVal);
-
-  EXPECT_EQ(newVal, v[vI]);
+  EXPECT_EQ(newVal, val);
 }
 
 /* view */
@@ -96,68 +83,45 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewMinConstructor_then_spansEntireArr
   ZFP_ARRAY_TYPE::view v(&arr);
 
   EXPECT_EQ(arr.size(), v.size());
+
+  EXPECT_EQ(arr.size_x(), v.size_x());
   EXPECT_EQ(0, v.global_x(0));
-}
 
-TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_lengthAndOffsetSet)
-{
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
-  ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
-
-  EXPECT_EQ(viewLen, v.size_x());
-  EXPECT_EQ(offset, v.global_x(0));
+#if DIMS >= 2
+  EXPECT_EQ(arr.size_y(), v.size_y());
+  EXPECT_EQ(0, v.global_y(0));
+#endif
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewMinConstructor_then_isShallowCopyOfCompressedArray)
 {
-  ZFP_ARRAY_TYPE::const_view v(&arr);
+  ZFP_ARRAY_TYPE::view v(&arr);
   uint i = 0;
+  SCALAR val;
+  size_t arrOffset;
 
-  SCALAR oldVal = arr[i];
-  EXPECT_EQ(oldVal, v[i]);
+#if DIMS == 1
+  val = v(i);
+  arrOffset = i;
+#elif DIMS == 2
+  uint j = 0;
+  val = v(i, j);
+  arrOffset = j*arr.size_x() + i;
+#endif
 
-  arr[i] += 1;
-  SCALAR newVal = arr[i];
+  SCALAR oldVal = arr[arrOffset];
+  EXPECT_EQ(oldVal, val);
+
+  arr[arrOffset] += 1;
+  SCALAR newVal = arr[arrOffset];
   EXPECT_NE(oldVal, newVal);
 
-  EXPECT_EQ(newVal, v[i]);
-}
-
-TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_isShallowCopyOfCompressedArray)
-{
-  ZFP_ARRAY_TYPE::const_view v(&arr, 1, 1);
-
-  /* indices of view and arr */
-  size_t vI = 2;
-  size_t aI = v.global_x(vI);
-
-  SCALAR oldVal = arr[aI];
-  EXPECT_EQ(oldVal, v[vI]);
-
-  arr[aI] += 1;
-  SCALAR newVal = arr[aI];
-  EXPECT_NE(oldVal, newVal);
-
-  EXPECT_EQ(newVal, v[vI]);
-}
-
-TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithParens_then_originalArrayUpdated)
-{
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
-  ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
-  uint i = 1;
-  SCALAR val = 3.14;
-
-  EXPECT_NE(val, arr(offset + i));
-  v(i) = val;
-
-  EXPECT_EQ(arr(offset + i), v(i));
+#if DIMS == 1
+  val = v(i);
+#elif DIMS == 2
+  val = v(i, j);
+#endif
+  EXPECT_EQ(newVal, val);
 }
 
 /* private_const_view */
@@ -167,23 +131,14 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateConstViewMinConstructor_then_sp
   ZFP_ARRAY_TYPE::private_const_view v(&arr);
 
   EXPECT_EQ(v.size(), arr.size());
-  EXPECT_EQ(v.size_x(), arr.size());
 
+  EXPECT_EQ(v.size_x(), arr.size_x());
   EXPECT_EQ(v.global_x(0), 0);
-}
 
-TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateConstViewFullConstructor_then_lengthAndOffsetSet)
-{
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
-  ZFP_ARRAY_TYPE::private_const_view v(&arr, offset, viewLen);
-
-  EXPECT_EQ(viewLen, v.size());
-  EXPECT_EQ(viewLen, v.size_x());
-
-  EXPECT_EQ(offset, v.global_x(0));
+#if DIMS >= 2
+  EXPECT_EQ(v.size_y(), arr.size_y());
+  EXPECT_EQ(0, v.global_y(0));
+#endif
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateConstViewMinConstructor_then_cacheSizeEqualToArrayCacheSize)
@@ -200,10 +155,19 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateConstViewFullConstructor_then_c
   arr.set_cache_size(999);
   size_t cacheSize = arr.cache_size();
 
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-  ZFP_ARRAY_TYPE::private_const_view v(&arr, offset, viewLen);
+  uint offsetX = 5, viewLenX = 3;
+  EXPECT_LT(offsetX + viewLenX, arr.size_x());
+#if DIMS >= 2
+  uint offsetY = 1, viewLenY = 3;
+  EXPECT_LT(offsetY + viewLenY, arr.size_y());
+#endif
+
+#if DIMS == 1
+  ZFP_ARRAY_TYPE::private_const_view v(&arr, offsetX, viewLenX);
+#elif DIMS == 2
+  ZFP_ARRAY_TYPE::private_const_view v(&arr, offsetX, offsetY, viewLenX, viewLenY);
+#endif
+
   EXPECT_EQ(cacheSize, v.cache_size());
 }
 
@@ -221,22 +185,45 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateConstViewWithDirtyCache_when_c
 {
   SCALAR val = 3.3;
   uint i = 2;
-  arr[i] = val;
+  size_t arrOffset = i;
+
+#if DIMS >= 2
+  uint j = 1;
+  arrOffset = j*arr.size_x() + i;
+#endif
+
+  arr[arrOffset] = val;
   arr.flush_cache();
 
   /* has its own cache */
   ZFP_ARRAY_TYPE::private_const_view v(&arr);
-  EXPECT_EQ(arr[i], v(i));
 
-  /* accessing v(i) fetched block into view-cache */
-  arr[i] = 0;
+#if DIMS == 1
+  val = v(i);
+#elif DIMS == 2
+  val = v(i, j);
+#endif
+  EXPECT_EQ(arr[arrOffset], val);
+
+  /* accessing v() fetched block into view-cache */
+  arr[arrOffset] = 0;
   arr.flush_cache();
   /* block already in view-cache, not fetched from mem */
-  EXPECT_NE(arr[i], v(i));
+#if DIMS == 1
+  val = v(i);
+#elif DIMS == 2
+  val = v(i, j);
+#endif
+  EXPECT_NE(arr[arrOffset], val);
 
   /* re-loading the block has updated value */
   v.clear_cache();
-  EXPECT_EQ(arr[i], v(i));
+#if DIMS == 1
+  val = v(i);
+#elif DIMS == 2
+  val = v(i, j);
+#endif
+  EXPECT_EQ(arr[arrOffset], val);
 }
 
 /* private_view */
@@ -246,23 +233,14 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewMinConstructor_then_spansEn
   ZFP_ARRAY_TYPE::private_view v(&arr);
 
   EXPECT_EQ(v.size(), arr.size());
-  EXPECT_EQ(v.size_x(), arr.size());
 
-  EXPECT_EQ(v.global_x(0), 0);
-}
+  EXPECT_EQ(v.size_x(), arr.size_x());
+  EXPECT_EQ(0, v.global_x(0));
 
-TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_lengthAndOffsetSet)
-{
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
-  ZFP_ARRAY_TYPE::private_view v(&arr, offset, viewLen);
-
-  EXPECT_EQ(viewLen, v.size());
-  EXPECT_EQ(viewLen, v.size_x());
-
-  EXPECT_EQ(offset, v.global_x(0));
+#if DIMS >= 2
+  EXPECT_EQ(v.size_y(), arr.size_y());
+  EXPECT_EQ(0, v.global_y(0));
+#endif
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewMinConstructor_then_cacheSizeEqualToArrayCacheSize)
@@ -279,32 +257,51 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_cacheS
   arr.set_cache_size(999);
   size_t cacheSize = arr.cache_size();
 
-  const uint offset = 5;
-  const uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-  ZFP_ARRAY_TYPE::private_view v(&arr, offset, viewLen);
+  uint offsetX = 5, viewLenX = 3;
+  EXPECT_LT(offsetX + viewLenX, arr.size_x());
+#if DIMS >= 2
+  uint offsetY = 1, viewLenY = 3;
+  EXPECT_LT(offsetY + viewLenY, arr.size_y());
+#endif
+
+#if DIMS == 1
+  ZFP_ARRAY_TYPE::private_view v(&arr, offsetX, viewLenX);
+#elif DIMS == 2
+  ZFP_ARRAY_TYPE::private_view v(&arr, offsetX, offsetY, viewLenX, viewLenY);
+#endif
+
   EXPECT_EQ(cacheSize, v.cache_size());
 }
 
 /* this also verifies underlying array is shallow copy */
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateViewWithDirtyCache_when_flushCache_thenValuesPersistedToArray)
 {
+  SCALAR val = 5.5;
+  const uint i = 3;
+  size_t arrOffset = i;
+
+#if DIMS >= 2
+  uint j = 1;
+  arrOffset = j*arr.size_x() + i;
+#endif
+
   /* has its own cache */
   ZFP_ARRAY_TYPE::private_view v(&arr);
-  const uint i = 3;
-  SCALAR val = 5.5;
 
+#if DIMS == 1
   v(i) = val;
-  EXPECT_EQ(val, v(i));
-  EXPECT_NE(val, arr[i]);
+#elif DIMS == 2
+  v(i, j) = val;
+#endif
+  EXPECT_NE(val, arr[arrOffset]);
 
-  /* setting and accessing v(i) and arr[i] fetched blocks into both caches */
+  /* setting and accessing v() and arr[] fetched blocks into both caches */
   v.flush_cache();
-  EXPECT_NE(val, arr[i]);
+  EXPECT_NE(val, arr[arrOffset]);
 
   /* force arr to re-decode block from mem */
   arr.clear_cache();
-  EXPECT_EQ(val, arr[i]);
+  EXPECT_EQ(val, arr[arrOffset]);
 }
 
 int main(int argc, char* argv[]) {
