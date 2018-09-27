@@ -286,14 +286,13 @@ public:
   private_view(array2* array) : private_const_view(array) {}
   private_view(array2* array, uint x, uint y, uint nx, uint ny) : private_const_view(array, x, y, nx, ny) {}
 
-  // partition view into independent blocks
+  // partition view into count block-aligned pieces, with 0 <= index < count
   void partition(uint index, uint count)
   {
-    uint ymin = 4 * (ny * (index + 0) / (4 * count));
-    uint ymax = 4 * (ny * (index + 1) / (4 * count));
-    ymax = std::min(ymax, ny);
-    y = ymin;
-    ny = ymax - ymin;
+    if (nx > ny)
+      partition(x, nx, index, count);
+    else
+      partition(y, ny, index, count);
   }
 
   // flush cache by compressing all modified cached blocks
@@ -336,6 +335,17 @@ protected:
     private_view* view;
     uint i, j;
   };
+
+  // block-aligned partition of [offset, offset + size): index out of count
+  static void partition(uint& offset, uint& size, uint index, uint count)
+  {
+    uint bmin = offset / 4;
+    uint bmax = (offset + size + 3) / 4;
+    uint xmin = std::max(offset +    0, 4 * (bmin + (bmax - bmin) * (index + 0) / count));
+    uint xmax = std::min(offset + size, 4 * (bmin + (bmax - bmin) * (index + 1) / count));
+    offset = xmin;
+    size = xmax - xmin;
+  }
 
   // mutator
   void set(uint i, uint j, Scalar val)
