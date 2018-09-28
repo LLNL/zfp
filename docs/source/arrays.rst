@@ -40,6 +40,17 @@ This section documents the public interface to the array classes, including
 base classes and member accessor classes like proxy references/pointers and
 iterators.
 
+The following sections are available:
+
+* :ref:`array_classes`
+* :ref:`caching`
+* :ref:`references`
+* :ref:`pointers`
+* :ref:`iterators`
+* :ref:`views`
+
+.. _array_classes:
+
 Array Classes
 -------------
 
@@ -130,7 +141,7 @@ class.
   uncompressed data is assumed to be stored as in the :cpp:func:`get`
   method.
 
-.. cpp:function:: const Scalar& array::operator[](uint index) const
+.. cpp:function:: Scalar array::operator[](uint index) const
 
   Return scalar stored at given flat index (inspector).  For a 3D array,
   :code:`index = x + nx * (y + ny * z)`.
@@ -217,9 +228,9 @@ provided.
   Resize the array (all previously stored data will be lost).  If *clear* is
   true, then the array elements are all initialized to zero.
 
-.. cpp:function:: const Scalar& array1::operator()(uint i) const
-.. cpp:function:: const Scalar& array2::operator()(uint i, uint j) const
-.. cpp:function:: const Scalar& array3::operator()(uint i, uint j, uint k) const
+.. cpp:function:: Scalar array1::operator()(uint i) const
+.. cpp:function:: Scalar array2::operator()(uint i, uint j) const
+.. cpp:function:: Scalar array3::operator()(uint i, uint j, uint k) const
 
   Return scalar stored at multi-dimensional index given by *i*, *j*, and *k*
   (inspector).
@@ -236,3 +247,4 @@ provided.
 .. include:: references.inc
 .. include:: pointers.inc
 .. include:: iterators.inc
+.. include:: views.inc

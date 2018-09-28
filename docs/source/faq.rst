@@ -34,6 +34,7 @@ Questions answered in this FAQ:
   #. :ref:`Are parallel compressed streams identical to serial streams? <q-parallel>`
   #. :ref:`Are zfp arrays and other data structures thread-safe? <q-thread-safety>`
   #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
+  #. :ref:`Do compressed arrays use reference counting? <q-ref-count>`
 
 -------------------------------------------------------------------------------
 
@@ -811,12 +812,24 @@ do not need to be the same for compression and decompression.
 
 Q24: *Are zfp's compressed arrays and other data structures thread-safe?*
 
-No, but thread-safe arrays are under development.  Similarly, data structures
-like :c:type:`zfp_stream` are not thread-safe.  |zfp|'s parallel compressor
-assigns one :c:type:`zfp_stream` per thread, each of which uses its own
-private :c:type:`bitstream`.  Users who wish to make parallel calls to
-|zfp|'s :ref:`low-level functions <ll-api>` are advised to consult the
-source files :file:`ompcompress.c` and :file:`parallel.c`.
+Yes, compressed arrays can be made thread-safe; no, data structures
+like :c:type:`zfp_stream` and :c:type:`bitstream` are not necessarily
+thread-safe.  As of |zfp| |viewsrelease|, thread-safe read and write access
+to compressed arrays is provided through the use of
+:ref:`private views <private_immutable_view>`, although these come with
+certain restrictions and requirements such as the need for the user to
+enforce cache coherence.  Please see the documentation on :ref:`views`
+for further details.
+
+As far as C objects, |zfp|'s parallel OpenMP compressor assigns one
+:c:type:`zfp_stream` per thread, each of which uses its own private
+:c:type:`bitstream`.  Users who wish to make parallel calls to |zfp|'s
+:ref:`low-level functions <ll-api>` are advised to consult the source
+files :file:`ompcompress.c` and :file:`parallel.c`.
+
+Finally, the |zfp| API is thread-safe as long as multiple threads do not
+simultaneously call API functions and pass the same :c:type:`zfp_stream`
+or :c:type:`bitstream` object.
 
 -------------------------------------------------------------------------------
 
@@ -851,3 +864,18 @@ Other reasons for poor parallel performance include compressing arrays
 that are too small to offset the overhead of thread creation and
 synchronization.  Arrays should ideally consist of thousands of blocks
 to offset the overhead of setting up parallel compression.
+
+-------------------------------------------------------------------------------
+
+.. _q-ref-count:
+
+Q26: *Do compressed arrays use reference counting?*
+
+It is possible to reference compressed  array elements via proxy
+:ref:`references <references>` and :ref:`pointers <pointers>`, through
+:ref:`iterators <iterators>`, and through :ref:`views <views>`.  Such
+indirect references are valid only during the lifetime of the underlying
+array.  No reference counting and garbage collection is used to keep the
+arrive alive if there are external references to it.  Such references
+become invalid once the array is destructed, and dereferencing them will
+likely lead to segmentation faults.

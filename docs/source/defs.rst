@@ -12,4 +12,5 @@
 .. |omprelease| replace:: 0.5.3
 .. |dcrelease| replace:: 0.5.3
 .. |4drelease| replace:: 0.5.4
+.. |viewsrelease| replace:: 0.5.4
 .. |cudarelease| replace:: 0.5.4
