@@ -6,10 +6,10 @@ Compressed Arrays
 
 .. cpp:namespace:: zfp
 
-|zfp|'s compressed arrays are C++ classes that implement random-accessible
-single- and multi-dimensional floating-point arrays whose storage size,
-specified in number of bits per array element, is set by the user.
-Such arbitrary storage is achieved via
+|zfp|'s compressed arrays are C++ classes, plus C wrappers around these
+classes, that implement random-accessible single- and multi-dimensional
+floating-point arrays whose storage size, specified in number of bits per
+array element, is set by the user.  Such arbitrary storage is achieved via
 |zfp|'s lossy :ref:`fixed-rate compression <mode-fixed-rate>` mode, by
 partitioning each *d*-dimensional array into blocks of |4powd| values
 and compressing each block to a fixed number of bits.  The more smoothly
@@ -48,6 +48,7 @@ The following sections are available:
 * :ref:`pointers`
 * :ref:`iterators`
 * :ref:`views`
+* :ref:`cfp`
 
 .. _array_classes:
 
@@ -164,14 +165,26 @@ class.
 1D, 2D, and 3D Arrays
 ^^^^^^^^^^^^^^^^^^^^^
 
-Below are classes and methods specific to each array dimensionality.  Since
-the classes and methods share obvious similarities regardless of
-dimensionality, only one generic description for all dimensionalities is
-provided.
+Below are classes and methods specific to each array dimensionality and
+template scalar type (:code:`float` or :code:`double`).  Since the classes
+and methods share obvious similarities regardless of dimensionality, only
+one generic description for all dimensionalities is provided.
 
-.. cpp:class:: template<typename Scalar> array1 : public array
-.. cpp:class:: template<typename Scalar> array2 : public array
-.. cpp:class:: template<typename Scalar> array3 : public array
+Note: Due to limitations of the otherwise excellent
+`Sphinx <http://www.sphinx-doc.org>`_ system used to generate this
+documentation, :code:`template <typename Scalar>` should precede the
+templated :cpp:class:`array1`, :cpp:class:`array2`, and
+:cpp:class:`array3` classes, but has been omitted below.
+
+..
+  Cross references to templated classes are broken
+  cpp:class:: template<typename Scalar> array1 : public array
+  cpp:class:: template<typename Scalar> array2 : public array
+  cpp:class:: template<typename Scalar> array3 : public array
+
+.. cpp:class:: array1 : public array
+.. cpp:class:: array2 : public array
+.. cpp:class:: array3 : public array
 
   This is a 1D/2D/3D array that inherits basic functionality from the generic
   :cpp:class:`array` base class.  The template argument, :cpp:type:`Scalar`,
@@ -248,3 +261,4 @@ provided.
 .. include:: pointers.inc
 .. include:: iterators.inc
 .. include:: views.inc
+.. include:: cfp.inc

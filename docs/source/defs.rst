@@ -3,6 +3,9 @@
 .. |leq| unicode:: 0x2264
 .. |geq| unicode:: 0x2265
 .. |zfp| replace:: zfp
+.. |cfp| replace:: cfp
+.. |zfpy| replace:: ZFPy
+.. |zforp| replace:: zFORp
 .. |libzfp| replace:: libzfp
 .. |zfpcmd| replace:: :program:`zfp`
 .. |4powd| replace:: 4\ :sup:`d`
@@ -14,3 +17,4 @@
 .. |4drelease| replace:: 0.5.4
 .. |viewsrelease| replace:: 0.5.4
 .. |cudarelease| replace:: 0.5.4
+.. |cfprelease| replace:: 0.5.4
