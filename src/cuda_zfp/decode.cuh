@@ -20,15 +20,22 @@ int uint2int(unsigned int x)
 }
 
 template<int block_size>
-struct BlockReader
+class BlockReader
 {
-  int m_current_bit;
+private:
   const int m_maxbits; 
+  int m_current_bit;
   Word *m_words;
   Word m_buffer;
   bool m_valid_block;
   int m_block_idx;
 
+  __device__ BlockReader()
+    : m_maxbits(0)
+  {
+  }
+
+public:
   __device__ BlockReader(Word *b, const int &maxbits, const int &block_idx, const int &num_blocks)
     :  m_maxbits(maxbits), m_valid_block(true)
   {
@@ -96,11 +103,6 @@ struct BlockReader
     m_buffer >>= next_read;
     m_current_bit += next_read; 
     return bits;
-  }
-
-  private:
-  __device__ BlockReader()
-  {
   }
 
 }; // block reader
@@ -229,7 +231,11 @@ __device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint 
 
     Int iblock[BlockSize];
     unsigned char *perm = get_perm<BlockSize>();
-    #pragma unroll BlockSize 
+#if (CUDART_VERSION < 8000)
+    #pragma unroll 
+#else
+    #pragma unroll BlockSize
+#endif
     for(int i = 0; i < BlockSize; ++i)
     {
 		  iblock[perm[i]] = uint2int(ublock[i]);
@@ -240,7 +246,11 @@ __device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint 
 
 		Scalar inv_w = dequantize<Int, Scalar>(1, emax);
 
+#if (CUDART_VERSION < 8000)
+    #pragma unroll 
+#else
     #pragma unroll BlockSize
+#endif
     for(int i = 0; i < BlockSize; ++i)
     {
 		  fblock[i] = inv_w * (Scalar)iblock[i];
