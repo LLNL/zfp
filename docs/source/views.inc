@@ -66,9 +66,15 @@ array or to a rectangular subset of an array.  Note that like
 references, pointers, and iterators, views are types nested within
 the arrays that they reference.
 
-.. cpp:class:: template<typename Scalar> array1::const_view
-.. cpp:class:: template<typename Scalar> array2::const_view
-.. cpp:class:: template<typename Scalar> array3::const_view
+..
+  Sphinx cross references to templated classes are broken
+  cpp:class:: template<typename Scalar> array1::const_view
+  cpp:class:: template<typename Scalar> array2::const_view
+  cpp:class:: template<typename Scalar> array3::const_view
+
+.. cpp:class:: array1::const_view
+.. cpp:class:: array2::const_view
+.. cpp:class:: array3::const_view
 
   Immutable view into 1D, 2D, and 3D array.
 
@@ -153,9 +159,15 @@ The basic mutable :code:`view` derives from the :code:`const_view` but
 adds operators for write-access.  Its constructors are similar to those
 for the :code:`const_view`.
 
-.. cpp:class:: template<typename Scalar> array1::view
-.. cpp:class:: template<typename Scalar> array2::view
-.. cpp:class:: template<typename Scalar> array3::view
+..
+  Sphinx cross references to templated classes are broken
+  cpp:class:: template<typename Scalar> array1::view
+  cpp:class:: template<typename Scalar> array2::view
+  cpp:class:: template<typename Scalar> array3::view
+
+.. cpp:class:: array1::view
+.. cpp:class:: array2::view
+.. cpp:class:: array3::view
 
   Mutable view into 1D, 2D, and 3D array.
 
@@ -204,8 +216,13 @@ Flat views are available only for 2D and 3D arrays.  The basic mutable
 view, :cpp:class:`array1::view`, for 1D arrays can be thought of as
 either a flat or a nested view.
 
-.. cpp:class:: template<typename Scalar> array2::flat_view
-.. cpp:class:: template<typename Scalar> array3::flat_view
+..
+  Sphinx cross references to templated classes are broken
+  cpp:class:: template<typename Scalar> array2::flat_view
+  cpp:class:: template<typename Scalar> array3::flat_view
+
+.. cpp:class:: array2::flat_view
+.. cpp:class:: array3::flat_view
 
   Flat, mutable views for 2D and 3D arrays.
 
@@ -259,6 +276,9 @@ Nested views are associated with a dimensionality.  For instance,
 if :code:`v` is a 3D nested view of a 3D array, then :code:`v[i]`
 is a 2D nested view (of a 3D array), :code:`v[i][j]` is a 1D nested
 view (of a 3D array), and :code:`v[i][j][k]` is a scalar array element.
+Note that the order of indices is reversed when using nested indexing
+compared to multidimensional indexing, e.g.,
+:code:`v(i, j, k) == v[k][j][i]`.
 
 Whereas :code:`operator[]` on an array object accesses an element
 through flat indexing, the same array can be accessed through a
@@ -386,6 +406,14 @@ Slicing adds the following array constructors.
 .. cpp:function:: template<class View> array1::array1(const View& v)
 .. cpp:function:: template<class View> array2::array2(const View& v)
 .. cpp:function:: template<class View> array3::array3(const View& v)
+
+  Construct array from a view via a deep copy.  The view, *v*, must support
+  multidimensional indexing (:cpp:func:`array1::const_view::operator()`).
+  The rate for the constructed rate is initialized to the rate of the arkray
+  associated with the view.  Note that the actual rate may differ if the
+  constructed array is a slice of a higher-dimensional array due to lower
+  rate granularity (see FAQ :ref:`#12 <q-granularity>`).  The cache size
+  of the constructed array is set to the default size.
 
 
 .. _private_immutable_view:

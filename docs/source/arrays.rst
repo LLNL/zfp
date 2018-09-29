@@ -177,7 +177,7 @@ templated :cpp:class:`array1`, :cpp:class:`array2`, and
 :cpp:class:`array3` classes, but has been omitted below.
 
 ..
-  Cross references to templated classes are broken
+  Sphinx cross references to templated classes are broken
   cpp:class:: template<typename Scalar> array1 : public array
   cpp:class:: template<typename Scalar> array2 : public array
   cpp:class:: template<typename Scalar> array3 : public array

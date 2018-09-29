@@ -325,8 +325,8 @@ Issues may arise on architectures that do not support IEEE floating point.
 
 Q12: *How can I achieve finer rate granularity?*
 
-A: For *d*-dimensional arrays, |zfp| supports a granularity of 8 / |4powd|
-bits, i.e. the rate can be specified in increments of a fraction of a bit for
+A: For *d*-dimensional arrays, |zfp| supports a rate granularity of 8 / |4powd|
+bits, i.e., the rate can be specified in increments of a fraction of a bit for
 2D and 3D arrays.  Such fine rate selection is always available for sequential
 compression (e.g. when calling :c:func:`zfp_compress`).
 
