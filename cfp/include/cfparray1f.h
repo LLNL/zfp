@@ -30,6 +30,6 @@ typedef struct {
   void (*set_array)(cfp_array1f* self, const float* p);
   float (*get)(const cfp_array1f* self, uint i);
   void (*set)(cfp_array1f* self, uint i, float val);
-} Cfp_array1f_api;
+} cfp_array1f_api;
 
 #endif

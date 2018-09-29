@@ -11,14 +11,18 @@
 #include "zfp/system.h"
 
 typedef struct {
-  Cfp_array1f_api array1f;
-  Cfp_array1d_api array1d;
-  Cfp_array2f_api array2f;
-  Cfp_array2d_api array2d;
-  Cfp_array3f_api array3f;
-  Cfp_array3d_api array3d;
-} Cfp_api;
+  cfp_array1f_api array1f;
+  cfp_array1d_api array1d;
+  cfp_array2f_api array2f;
+  cfp_array2d_api array2d;
+  cfp_array3f_api array3f;
+  cfp_array3d_api array3d;
+} cfp_api;
 
-extern_ const Cfp_api cfp_api;
+#ifndef CFP_NAMESPACE
+  #define CFP_NAMESPACE cfp
+#endif
+
+extern_ const cfp_api CFP_NAMESPACE;
 
 #endif

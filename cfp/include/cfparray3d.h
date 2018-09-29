@@ -35,6 +35,6 @@ typedef struct {
   double (*get_ijk)(const cfp_array3d* self, uint i, uint j, uint k);
   void (*set)(cfp_array3d* self, uint i, double val);
   void (*set_ijk)(cfp_array3d* self, uint i, uint j, uint k, double val);
-} Cfp_array3d_api;
+} cfp_array3d_api;
 
 #endif

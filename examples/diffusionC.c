@@ -6,7 +6,7 @@
 #include <math.h>
 
 #include "cfparrays.h"
-#define _ (cfp_api.array2d)
+#define _ (cfp.array2d)
 
 #define MAX(x, y) (((nx) > (ny)) ? (nx) : (ny))
 
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
     free(u);
   }
 
-  fprintf(stderr, "rate=%lf sum=%lf error=%.6e\n", rate, sum, err);
+  fprintf(stderr, "rate=%g sum=%g error=%.6e\n", rate, sum, err);
 
   free(c);
 

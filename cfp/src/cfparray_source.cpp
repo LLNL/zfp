@@ -104,6 +104,3 @@ _t1(CFP_ARRAY_TYPE, set)(CFP_ARRAY_TYPE * self, uint i, ZFP_SCALAR_TYPE val)
 {
   reinterpret_cast<ZFP_ARRAY_TYPE *>(self)->operator[](i) = val;
 }
-
-
-
