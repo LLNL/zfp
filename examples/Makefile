@@ -13,22 +13,22 @@ CXXLIBS = $(LIBS)
 
 all: $(TARGETS)
 
-$(BINDIR)/diffusion: diffusion.cpp ../lib/libzfp.a
+$(BINDIR)/diffusion: diffusion.cpp ../lib/$(LIBZFP)
 	$(CXX) $(CXXFLAGS) -I../array diffusion.cpp $(CXXLIBS) -o $@
 
-$(BINDIR)/inplace: inplace.c ../lib/libzfp.a
+$(BINDIR)/inplace: inplace.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) inplace.c $(CLIBS) -o $@
 
-$(BINDIR)/iterator: iterator.cpp ../lib/libzfp.a
+$(BINDIR)/iterator: iterator.cpp ../lib/$(LIBZFP)
 	$(CXX) $(CXXFLAGS) -I../array iterator.cpp $(CXXLIBS) -o $@
 
-$(BINDIR)/pgm: pgm.c ../lib/libzfp.a
+$(BINDIR)/pgm: pgm.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) pgm.c $(CLIBS) -o $@
 
-$(BINDIR)/simple: simple.c ../lib/libzfp.a
+$(BINDIR)/simple: simple.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) simple.c $(CLIBS) -o $@
 
-$(BINDIR)/speed: speed.c ../lib/libzfp.a
+$(BINDIR)/speed: speed.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) speed.c $(CLIBS) -o $@
 
 clean:

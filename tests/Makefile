@@ -6,7 +6,7 @@ CXXLIBS = -L../lib -lzfp
 
 all: $(TARGETS)
 
-$(BINDIR)/testzfp: testzfp.cpp ../lib/libzfp.a
+$(BINDIR)/testzfp: testzfp.cpp ../lib/$(LIBZFP)
 	$(CXX) $(CXXFLAGS) -I../array testzfp.cpp $(CXXLIBS) -o $@
 
 $(BINDIR)/testviews: testviews.cpp ../lib/libzfp.a
