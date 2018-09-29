@@ -61,6 +61,12 @@ public:
   view(array1* array) : const_view(array) {}
   view(array1* array, uint x, uint nx) : const_view(array, x, nx) {}
 
+  // [i] accessor from base class
+  using const_view::operator[];
+
+  // (i) accessor from base class
+  using const_view::operator();
+
   // [i] mutator
   reference operator[](uint index) { return reference(array, x + index); }
 
@@ -201,6 +207,9 @@ public:
       cache.flush(p->line);
     }
   }
+
+  // (i) accessor from base class
+  using private_const_view::operator();
 
   // (i) mutator
   view_reference operator()(uint i) { return view_reference(this, x + i); }

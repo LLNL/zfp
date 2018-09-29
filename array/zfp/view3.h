@@ -57,7 +57,7 @@ public:
   Scalar operator()(uint i, uint j, uint k) const { return array->get(x + i, y + j, z + k); }
 };
 
-// generic read-write view into a rectangular subset of a 3D array (base class)
+// generic read-write view into a rectangular subset of a 3D array
 class view : public const_view {
 protected:
   using preview::array;
@@ -72,10 +72,8 @@ public:
   view(array3* array) : const_view(array) {}
   view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : const_view(array, x, y, z, nx, ny, nz) {}
 
-  // dimensions of (sub)array
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
-  uint size_z() const { return nz; }
+  // (i, j, k) accessor from base class
+  using const_view::operator();
 
   // (i, j, k) mutator
   reference operator()(uint i, uint j, uint k) { return reference(array, x + i, y + j, z + k); }
@@ -363,6 +361,9 @@ public:
       cache.flush(p->line);
     }
   }
+
+  // (i, j, k) accessor from base class
+  using private_const_view::operator();
 
   // (i, j, k) mutator
   view_reference operator()(uint i, uint j, uint k) { return view_reference(this, x + i, y + j, z + k); }
