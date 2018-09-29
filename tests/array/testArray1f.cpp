@@ -26,6 +26,7 @@ class Array1fTest : public ArrayNdTestFixture {};
 #define SCALAR float
 #define DIMS 1
 #include "testArrayBase.cpp"
+#include "testArray1Base.cpp"
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
