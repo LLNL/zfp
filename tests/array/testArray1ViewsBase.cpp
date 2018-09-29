@@ -3,10 +3,6 @@
 /* this also tests const_view */
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_previewFullConstructor1D_then_lengthAndOffsetSet)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size_x());
-
   ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
 
   EXPECT_EQ(viewLen, v.size());
@@ -17,10 +13,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_previewFullConstructor1D_then_lengthAn
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_sizeX_then_viewXLenReturned)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size_x());
-
   ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
 
   EXPECT_EQ(viewLen, v.size_x());
@@ -28,10 +20,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_sizeX_then_viewXLenRet
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorBrackets_then_correctEntriesReturned)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size_x());
-
   ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
 
   for(uint i = 0; i < viewLen; i++) {
@@ -41,10 +29,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorBrackets_then_
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorParens_then_correctEntriesReturned)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size_x());
-
   ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
 
   for(uint i = 0; i < viewLen; i++) {
@@ -74,10 +58,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_constViewFullConstructor_then_isShallo
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_lengthAndOffsetSet)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
   ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
 
   EXPECT_EQ(viewLen, v.size_x());
@@ -86,10 +66,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_lengthAndOffs
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithBrackets_then_originalArrayUpdated)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size_x());
-
   ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
   uint i = 1;
   SCALAR val = 3.14;
@@ -120,10 +96,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_isShallowCopy
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithParens_then_originalArrayUpdated)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
   ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
   uint i = 1;
   SCALAR val = 3.14;
@@ -138,10 +110,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithParens_then_ori
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateConstViewFullConstructor_then_lengthAndOffsetSet)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
   ZFP_ARRAY_TYPE::private_const_view v(&arr, offset, viewLen);
 
   EXPECT_EQ(viewLen, v.size());
@@ -152,10 +120,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateConstViewFullConstructor_then_l
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateConstView_when_sizeX_then_viewLenReturned)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size_x());
-
   ZFP_ARRAY_TYPE::private_const_view v(&arr, offset, viewLen);
   EXPECT_EQ(viewLen, v.size_x());
 }
@@ -164,10 +128,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateConstView_when_sizeX_then_view
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_lengthAndOffsetSet)
 {
-  uint offset = 5;
-  uint viewLen = 3;
-  EXPECT_LT(offset + viewLen, arr.size());
-
   ZFP_ARRAY_TYPE::private_view v(&arr, offset, viewLen);
 
   EXPECT_EQ(viewLen, v.size());
