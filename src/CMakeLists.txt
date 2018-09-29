@@ -1,3 +1,14 @@
+if(ZFP_WITH_CUDA)
+  SET(CMAKE_CXX_FLAGS_PREVIOUS ${CMAKE_CXX_FLAGS})
+  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC" )
+
+  add_subdirectory(cuda_zfp)
+  cuda_wrap_srcs(zfp OBJ zfp_cuda_backend_obj cuda_zfp/cuZFP.cu)
+  SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_PREVIOUS})
+  add_definitions(-DZFP_WITH_CUDA)
+endif()
+
+
 set(zfp_source
   zfp.c
   bitstream.c
@@ -11,8 +22,10 @@ set(zfp_source
   encode4f.c encode4d.c encode4i.c encode4l.c
   decode4f.c decode4d.c decode4i.c decode4l.c)
 
-add_library(zfp ${zfp_source})
+add_library(zfp ${zfp_source}
+                ${zfp_cuda_backend_obj})
 add_library(zfp::zfp ALIAS zfp)
+
 if(ZFP_WITH_OPENMP)
   target_compile_options(zfp PRIVATE ${OpenMP_C_FLAGS})
   target_link_libraries(zfp PRIVATE ${OpenMP_C_LIBRARIES})
@@ -25,6 +38,10 @@ endif()
 if(WIN32)
   # Define ZFP_SOURCE when compiling libzfp to export symbols to Windows DLL
   list(APPEND zfp_defs ZFP_SOURCE)
+endif()
+
+if(ZFP_WITH_CUDA)
+  target_link_libraries(zfp PRIVATE ${CUDA_CUDART_LIBRARY} stdc++)
 endif()
 
 target_compile_definitions(zfp PRIVATE ${zfp_defs})

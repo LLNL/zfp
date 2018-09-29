@@ -48,7 +48,7 @@ compress_init_par(zfp_stream* stream, const zfp_field* field, uint chunks, uint 
   copy |= (stream_wtell(stream->stream) % stream_word_bits) != 0;
 
   /* set up buffer for each thread to compress to */
-  bs = malloc(chunks * sizeof(bitstream*));
+  bs = (bitstream**)malloc(chunks * sizeof(bitstream*));
   for (i = 0; i < chunks; i++) {
     uint block = chunk_offset(blocks, chunks, i);
     void* buffer = copy ? malloc(size) : (uchar*)stream_data(stream->stream) + stream_size(stream->stream) + block * stream->maxbits / CHAR_BIT;

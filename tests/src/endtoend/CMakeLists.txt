@@ -21,6 +21,21 @@ function(zfp_add_test dims type bits)
     add_test(NAME ${omp_test_name} COMMAND ${omp_test_name})
     set_property(TEST ${omp_test_name} PROPERTY RUN_SERIAL TRUE)
   endif()
+
+  if(ZFP_WITH_CUDA AND (${dims} LESS 4))
+    add_definitions(-DZFP_WITH_CUDA)
+
+    set(cuda_test_name testZfpCuda${dims}d${type})
+    add_executable(${cuda_test_name} ${cuda_test_name}.c)
+#    target_compile_options(${cuda_test_name} PRIVATE ${OpenMP_C_FLAGS})
+    target_link_libraries(${cuda_test_name}
+      cmocka zfp hash${bits}Lib genSmoothRandNumsLib)
+    if(HAVE_LIBM_MATH)
+      target_link_libraries(${serial_test_name} m)
+    endif()
+    add_test(NAME ${cuda_test_name} COMMAND ${cuda_test_name})
+    set_property(TEST ${cuda_test_name} PROPERTY RUN_SERIAL TRUE)
+  endif()
 endfunction()
 
 zfp_add_test(1 Int32 32)

@@ -108,6 +108,8 @@ set(ZFP_BIT_STREAM_WORD_SIZE 64 CACHE STRING
   "Use smaller bit stream word type for finer rate granularity")
 set_property(CACHE ZFP_BIT_STREAM_WORD_SIZE PROPERTY STRINGS "8;16;32;64")
 
+option(ZFP_WITH_CUDA "Enable CUDA parallel compression" OFF)
+
 option(ZFP_WITH_BIT_STREAM_STRIDED
   "Enable strided access for progressive zfp streams" OFF)
 
@@ -151,6 +153,18 @@ endif()
 # compiling and linking
 if(ZFP_WITH_OPENMP AND NOT OpenMP_C_LIBRARIES)
   set(OpenMP_C_LIBRARIES ${OpenMP_C_FLAGS})
+endif()
+
+if(ZFP_WITH_CUDA)
+  # use CUDA_BIN_DIR hint
+  set(ENV{CUDA_BIN_PATH} ${CUDA_BIN_DIR})
+  find_package(CUDA)
+  if(NOT CUDA_FOUND)
+    message(FATAL_ERROR "ZFP_WITH_CUDA is enabled, but a CUDA installation was not found.")
+  endif()
+  if(${CUDA_VERSION_MAJOR} LESS 7)
+        message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
+  endif()
 endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
