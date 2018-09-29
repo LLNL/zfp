@@ -183,6 +183,7 @@ protected:
   using private_const_view::zfp;
   using private_const_view::cache;
   using private_const_view::init;
+  using private_const_view::decode;
   class view_reference;
   typedef typename private_const_view::CacheLine CacheLine;
 public:
