@@ -48,10 +48,10 @@ public:
   template <class View>
   array1(const View& v) :
     array(1, Codec::type),
-    cache(0)
+    cache(lines(0, v.size_x()))
   {
     set_rate(v.rate());
-    resize(v.size_x(), false);
+    resize(v.size_x(), true);
     // initialize array in its preferred order
     for (iterator it = begin(); it != end(); ++it)
       *it = v(it.i());
