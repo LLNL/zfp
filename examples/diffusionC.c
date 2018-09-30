@@ -50,9 +50,9 @@ time_step_indexed_compressed(cfp_array2d* u, const constants* c)
   int x, y;
   for (y = 1; y < c->ny - 1; y++) {
     for (x = 1; x < c->nx - 1; x++) {
-      double uxx = (_.get_ij(u, x - 1, y) - 2 * _.get_ij(u, x, y) + _.get_ij(u, x + 1, y)) / (c->dx * c->dx);
-      double uyy = (_.get_ij(u, x, y - 1) - 2 * _.get_ij(u, x, y) + _.get_ij(u, x, y + 1)) / (c->dy * c->dy);
-      _.set_ij(du, x, y, c->dt * c->k * (uxx + uyy));
+      double uxx = (_.get(u, x - 1, y) - 2 * _.get(u, x, y) + _.get(u, x + 1, y)) / (c->dx * c->dx);
+      double uyy = (_.get(u, x, y - 1) - 2 * _.get(u, x, y) + _.get(u, x, y + 1)) / (c->dy * c->dy);
+      _.set(du, x, y, c->dt * c->k * (uxx + uyy));
     }
   }
   // take forward Euler step
@@ -95,7 +95,7 @@ static double
 solve_compressed(cfp_array2d* u, const constants* c)
 {
   // initialize u with point heat source (u is assumed to be zero initialized)
-  _.set_ij(u, c->x0, c->y0, 1);
+  _.set(u, c->x0, c->y0, 1);
 
   // iterate until final time
   double t;
@@ -133,7 +133,7 @@ total_compressed(const cfp_array2d* u)
   int x, y;
   for (y = 1; y < ny - 1; y++)
     for (x = 1; x < nx - 1; x++)
-      s += _.get_ij(u, x, y);
+      s += _.get(u, x, y);
   return s;
 }
 
@@ -159,7 +159,7 @@ error_compressed(const cfp_array2d* u, const constants* c, double t)
     double py = c->dy * (y - c->y0);
     for (x = 1; x < c->nx - 1; x++) {
       double px = c->dx * (x - c->x0);
-      double f = _.get_ij(u, x, y);
+      double f = _.get(u, x, y);
       double g = c->dx * c->dy * exp(-(px * px + py * py) / (4 * c->k * t)) / (4 * c->pi * c->k * t);
       e += (f - g) * (f - g);
     }

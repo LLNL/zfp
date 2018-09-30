@@ -50,7 +50,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_setIJ_expect_entryWrittenToCacheOnly)(vo
   uchar* oldMemory = malloc(compressedSize * sizeof(uchar));
   memcpy(oldMemory, compressedDataPtr, compressedSize);
 
-  CFP_NAMESPACE.SUB_NAMESPACE.set_ij(cfpArr, 1, 1, (SCALAR)VAL);
+  CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, 1, 1, (SCALAR)VAL);
 
   assert_memory_equal(compressedDataPtr, oldMemory, compressedSize);
   free(oldMemory);
@@ -62,8 +62,8 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getIJ_expect_entryReturned)(void **state
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
   uint i = 1, j = 2;
-  CFP_NAMESPACE.SUB_NAMESPACE.set_ij(cfpArr, i, j, (SCALAR)VAL);
+  CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, i, j, (SCALAR)VAL);
 
   // dirty cache doesn't immediately apply compression
-  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get_ij(cfpArr, i, j) == (SCALAR)VAL);
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get(cfpArr, i, j) == (SCALAR)VAL);
 }

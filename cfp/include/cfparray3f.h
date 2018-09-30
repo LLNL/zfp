@@ -33,8 +33,8 @@ typedef struct {
   void (*set_array)(cfp_array3f* self, const float* p);
   float (*get_flat)(const cfp_array3f* self, uint i);
   void (*set_flat)(cfp_array3f* self, uint i, float val);
-  float (*get_ijk)(const cfp_array3f* self, uint i, uint j, uint k);
-  void (*set_ijk)(cfp_array3f* self, uint i, uint j, uint k, float val);
+  float (*get)(const cfp_array3f* self, uint i, uint j, uint k);
+  void (*set)(cfp_array3f* self, uint i, uint j, uint k, float val);
 } cfp_array3f_api;
 
 #endif

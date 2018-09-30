@@ -29,13 +29,13 @@ _t1(CFP_ARRAY_TYPE, resize)(CFP_ARRAY_TYPE * self, uint nx, uint ny, uint nz, in
 }
 
 static ZFP_SCALAR_TYPE
-_t1(CFP_ARRAY_TYPE, get_ijk)(const CFP_ARRAY_TYPE * self, uint i, uint j, uint k)
+_t1(CFP_ARRAY_TYPE, get)(const CFP_ARRAY_TYPE * self, uint i, uint j, uint k)
 {
   return reinterpret_cast<const ZFP_ARRAY_TYPE *>(self)->operator()(i, j, k);
 }
 
 static void
-_t1(CFP_ARRAY_TYPE, set_ijk)(CFP_ARRAY_TYPE * self, uint i, uint j, uint k, ZFP_SCALAR_TYPE val)
+_t1(CFP_ARRAY_TYPE, set)(CFP_ARRAY_TYPE * self, uint i, uint j, uint k, ZFP_SCALAR_TYPE val)
 {
   reinterpret_cast<ZFP_ARRAY_TYPE *>(self)->operator()(i, j, k) = val;
 }
