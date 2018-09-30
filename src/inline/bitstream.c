@@ -438,3 +438,13 @@ stream_close(bitstream* s)
 {
   free(s);
 }
+
+/* make a copy of bit stream to shared memory buffer */
+inline_ bitstream*
+stream_clone(const bitstream* s)
+{
+  bitstream* c = (bitstream*)malloc(sizeof(bitstream));
+  if (c)
+    *c = *s;
+  return c;
+}

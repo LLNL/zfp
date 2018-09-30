@@ -23,14 +23,30 @@ protected:
 
     arr.set_rate(ZFP_RATE_PARAM_BITS);
     arr2.set_rate(ZFP_RATE_PARAM_BITS);
+
+    offsetX = 5;
+    viewLenX = 3;
+    EXPECT_LT(offsetX + viewLenX, arr.size_x());
+
+    offsetY = 1;
+    viewLenY = 3;
+    EXPECT_LT(offsetY + viewLenY, arr.size_y());
+
+    offsetZ = 0;
+    viewLenZ = 2;
+    EXPECT_LT(offsetZ + viewLenZ, arr.size_z());
   }
 
   static array3d arr, arr2;
   static array3d::pointer ptr, ptr2;
   static array3d::iterator iter, iter2;
+  static uint offsetX, offsetY, offsetZ;
+  static uint viewLenX, viewLenY, viewLenZ;
 };
 
 array3d Array3dTest::arr(ARRAY_SIZE_X, ARRAY_SIZE_Y, ARRAY_SIZE_Z, ZFP_RATE_PARAM_BITS);
 array3d Array3dTest::arr2(ARRAY_SIZE_X, ARRAY_SIZE_Y, ARRAY_SIZE_Z, ZFP_RATE_PARAM_BITS);
 array3d::pointer Array3dTest::ptr, Array3dTest::ptr2;
 array3d::iterator Array3dTest::iter, Array3dTest::iter2;
+uint Array3dTest::offsetX, Array3dTest::offsetY, Array3dTest::offsetZ;
+uint Array3dTest::viewLenX, Array3dTest::viewLenY, Array3dTest::viewLenZ;
