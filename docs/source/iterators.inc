@@ -7,9 +7,14 @@ Iterators
 
 .. cpp:namespace:: zfp
 
-.. cpp:class:: template<typename Scalar> array1::iterator
-.. cpp:class:: template<typename Scalar> array2::iterator
-.. cpp:class:: template<typename Scalar> array3::iterator
+..
+  .. cpp:class:: template<typename Scalar> array1::iterator
+  .. cpp:class:: template<typename Scalar> array2::iterator
+  .. cpp:class:: template<typename Scalar> array3::iterator
+
+.. cpp:class:: array1::iterator
+.. cpp:class:: array2::iterator
+.. cpp:class:: array3::iterator
 
 Iterators provide a mechanism for sequentially traversing a possibly
 multi-dimensional array without having to track array indices or bounds.
@@ -101,40 +106,40 @@ The following operations are defined on iterators:
 
 The following operators are defined **only for 1D arrays**:
 
-.. cpp:namespace:: zfp::array1
+.. cpp:namespace:: zfp
 
-.. cpp:function:: reference iterator::operator[](difference_type d) const
+.. cpp:function:: array1::reference array1::iterator::operator[](difference_type d) const
 
   Random access index operator.
 
-.. cpp:function:: iterator& iterator::operator--()
+.. cpp:function:: array1::iterator& array1::iterator::operator--()
 
   Pre decrement.  Return a reference to the decremented iterator.
 
-.. cpp:function:: iterator iterator::operator--(int)
+.. cpp:function:: array1::iterator array1::iterator::operator--(int)
 
   Post decrement.  Return the value of the iterator before being decremented.
 
-.. cpp:function:: iterator iterator::operator+=(difference_type d)
-.. cpp:function:: iterator iterator::operator-=(difference_type d)
+.. cpp:function:: array1::iterator array1::iterator::operator+=(difference_type d)
+.. cpp:function:: array1::iterator array1::iterator::operator-=(difference_type d)
 
   Increment (decrement) iterator *d* times.  Return value of incremented
   (decremented) iterator.
 
-.. cpp:function:: iterator iterator::operator+(difference_type d) const
-.. cpp:function:: iterator iterator::operator-(difference_type d) const
+.. cpp:function:: array1::iterator array1::iterator::operator+(difference_type d) const
+.. cpp:function:: array1::iterator array1::iterator::operator-(difference_type d) const
 
   Return a new iterator that has been incremented (decremented) by *d*.
 
-.. cpp:function:: difference_type iterator::operator-(const iterator& it) const
+.. cpp:function:: difference_type array1::iterator::operator-(const array1::iterator& it) const
 
   Return difference between this iterator and *it* in number of elements.
   The iterators must refer to elements in the same array.
 
-.. cpp:function:: bool iterator::operator<=(const iterator& it) const
-.. cpp:function:: bool iterator::operator>=(const iterator& it) const
-.. cpp:function:: bool iterator::operator<(const iterator& it) const
-.. cpp:function:: bool iterator::operator>(const iterator& it) const
+.. cpp:function:: bool array1::iterator::operator<=(const array1::iterator& it) const
+.. cpp:function:: bool array1::iterator::operator>=(const array1::iterator& it) const
+.. cpp:function:: bool array1::iterator::operator<(const array1::iterator& it) const
+.. cpp:function:: bool array1::iterator::operator>(const array1::iterator& it) const
 
   Return true if the two iterators satisfy the given relationship.
   For two iterators, *p* and *q*, within the same array, *p* < *q*

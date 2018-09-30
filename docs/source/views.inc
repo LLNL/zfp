@@ -7,6 +7,7 @@ Views
 
 .. cpp:namespace:: zfp
 
+|zfp| |viewsrelease| adds array views.
 Much like how :ref:`references <references>` allow indirect access to
 a single array element, *views* provide indirect access to whole arrays,
 or more generally to rectangular subsets of arrays.  A view of an array
@@ -24,10 +25,10 @@ subset of the array, and unlike pointers also provide for the same
 syntax when accessing the array, e.g., :code:`array_view(i, j)` instead
 of :code:`(*array_ptr)(i, j)`.
 
-|zfp|'s *nested views* (see below) further provide for multidimensional
+|zfp|'s *nested views* further provide for multidimensional
 array access analogous to the C/C++ nested array syntax :code:`array[i][j]`.
-Finally, |zfp|'s views can be used to ensure thread-safe access to its
-compressed arrays.
+Finally, |zfp|'s *private views* can be used to ensure thread-safe access
+to its compressed arrays.
 
 Like iterators and proxy references and pointers, a view is valid only
 during the lifetime of the array that it references.  **No reference
@@ -38,8 +39,8 @@ a view.
 There are several types of views distinguished by these attributes:
 
 * Read-only vs. read-write access.
-* Flat vs. nested layout.
 * Shared vs. private access.
+* Flat vs. nested indexing.
 
 Each of these attributes is discussed in detail below in these
 sections:
@@ -67,10 +68,9 @@ references, pointers, and iterators, views are types nested within
 the arrays that they reference.
 
 ..
-  Sphinx cross references to templated classes are broken
-  cpp:class:: template<typename Scalar> array1::const_view
-  cpp:class:: template<typename Scalar> array2::const_view
-  cpp:class:: template<typename Scalar> array3::const_view
+  .. cpp:class:: template<typename Scalar> array1::const_view
+  .. cpp:class:: template<typename Scalar> array2::const_view
+  .. cpp:class:: template<typename Scalar> array3::const_view
 
 .. cpp:class:: array1::const_view
 .. cpp:class:: array2::const_view
@@ -78,6 +78,7 @@ the arrays that they reference.
 
   Immutable view into 1D, 2D, and 3D array.
 
+.. _view_ctor:
 .. cpp:function:: array1::const_view::const_view(array1* array)
 .. cpp:function:: array2::const_view::const_view(array2* array)
 .. cpp:function:: array3::const_view::const_view(array3* array)
@@ -90,7 +91,7 @@ the arrays that they reference.
 .. cpp:function:: array2::const_view::const_view(array2* array, uint x, uint y, uint nx, uint ny)
 .. cpp:function:: array3::const_view::const_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
 
-  Constructors for read-write access to a rectangular subset of an
+  Constructors for read-only access to a rectangular subset of an
   array.  The subset is specified by an offset, e.g.,
   (*x*, *y*, *z*) for a 3D array, and dimensions, e.g.,
   (*nx*, *ny*, *nz*) for a 3D array.  The rectangle must fit within
@@ -116,6 +117,7 @@ the arrays that they reference.
 
   Return dimensions of view.
 
+.. _view_accessor:
 .. cpp:function:: Scalar array1::const_view::operator()(uint i) const
 .. cpp:function:: Scalar array2::const_view::operator()(uint i, uint j) const
 .. cpp:function:: Scalar array3::const_view::operator()(uint i, uint j, uint k) const
@@ -160,10 +162,9 @@ adds operators for write-access.  Its constructors are similar to those
 for the :code:`const_view`.
 
 ..
-  Sphinx cross references to templated classes are broken
-  cpp:class:: template<typename Scalar> array1::view
-  cpp:class:: template<typename Scalar> array2::view
-  cpp:class:: template<typename Scalar> array3::view
+  .. cpp:class:: template<typename Scalar> array1::view
+  .. cpp:class:: template<typename Scalar> array2::view
+  .. cpp:class:: template<typename Scalar> array3::view
 
 .. cpp:class:: array1::view
 .. cpp:class:: array2::view
@@ -178,14 +179,15 @@ for the :code:`const_view`.
 .. cpp:function:: array2::view::view(array2* array, uint x, uint y, uint nx, uint ny)
 .. cpp:function:: array3::view::view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
 
-  Whole-array and sub-array mutable view constructors.
+  Whole-array and sub-array mutable view constructors.  See
+  :ref:`const_view constructors <view_ctor>` for details.
 
 .. cpp:function:: array1::reference array1::view::operator()(uint i)
 .. cpp:function:: array2::reference array2::view::operator()(uint i, uint j)
 .. cpp:function:: array3::reference array3::view::operator()(uint i, uint j, uint k)
 
-  These operators, whose arguments have the same meaning as in
-  :cpp:member:`array1::const_view::operator()`, return
+  These operators, whose arguments have the same meaning as in the
+  :ref:`array accessors <array_accessor>`, return
   :ref:`proxy references <references>` to individual array elements for
   write access.
 
@@ -217,9 +219,8 @@ view, :cpp:class:`array1::view`, for 1D arrays can be thought of as
 either a flat or a nested view.
 
 ..
-  Sphinx cross references to templated classes are broken
-  cpp:class:: template<typename Scalar> array2::flat_view
-  cpp:class:: template<typename Scalar> array3::flat_view
+  .. cpp:class:: template<typename Scalar> array2::flat_view
+  .. cpp:class:: template<typename Scalar> array3::flat_view
 
 .. cpp:class:: array2::flat_view
 .. cpp:class:: array3::flat_view
@@ -231,7 +232,8 @@ either a flat or a nested view.
 .. cpp:function:: array2::flat_view::flat_view(array2* array, uint x, uint y, uint nx, uint ny)
 .. cpp:function:: array3::flat_view::flat_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
 
-  Whole-array and sub-array flat view constructors.
+  Whole-array and sub-array flat view constructors.  See
+  :ref:`const_view constructors <view_ctor>` for details.
 
 .. cpp:function:: uint array2::flat_view::index(uint i, uint j) const
 .. cpp:function:: uint array3::flat_view::index(uint i, uint j, uint k) const
@@ -259,10 +261,10 @@ either a flat or a nested view.
 Nested view
 ^^^^^^^^^^^
 
-C and C++ support nested arrays, e.g., :code:`double a[10][20][30]`,
-which are usually accessed via nested indexing :code:`a[i][j][k]`.
-Here :code:`a` is a 3D array, :code:`a[i]` is a 2D array, and
-:code:`a[i][j]` is a 1D array.  This 3D array can also be accessed
+C and C++ support nested arrays (arrays of arrays), e.g.,
+:code:`double a[10][20][30]`, which are usually accessed via nested indexing
+:code:`a[i][j][k]`.  Here :code:`a` is a 3D array, :code:`a[i]` is a 2D array,
+and :code:`a[i][j]` is a 1D array.  This 3D array can also be accessed
 via flat indexing, e.g.,
 ::
 
@@ -287,28 +289,43 @@ nested view to in effect provide nested array indexing::
   zfp::array3d a(30, 20, 10, rate); // define 30x20x10 3D array
   assert(a[32] == a(2, 1, 0)); // OK: flat and multidimensional indexing
   assert(a[32] == a[0][1][2]); // ERROR: a does not support nested indexing
-  zfp::array3d::nested_view3 v(&a); // define a nested view of a
+  zfp::array3d::nested_view v(&a); // define a nested view of a
   assert(a[32] == v[0][1][2]); // OK: v supports nested indexing
   zfp::array2d b(v[5]); // define and deep copy 30x20 2D slice of a
   assert(a(2, 1, 5) == b(2, 1)); // OK: multidimensional indexing
 
-.. cpp:class:: template<typename Scalar> array2::nested_view1
+..
+  .. cpp:class:: template<typename Scalar> array2::nested_view1
+
+.. cpp:class:: array2::nested_view1
 
   View of a 1D slice of a 2D array.
 
-.. cpp:class:: template<typename Scalar> array2::nested_view2
+..
+  .. cpp:class:: template<typename Scalar> array2::nested_view2
+
+.. cpp:class:: array2::nested_view2
 
   2D view of a 2D (sub)array.
 
-.. cpp:class:: template<typename Scalar> array3::nested_view1
+..
+  .. cpp:class:: template<typename Scalar> array3::nested_view1
+
+.. cpp:class:: array3::nested_view1
 
   View of a 1D slice of a 3D array.
 
-.. cpp:class:: template<typename Scalar> array3::nested_view2
+..
+  .. cpp:class:: template<typename Scalar> array3::nested_view2
+
+.. cpp:class:: array3::nested_view2
 
   View of a 2D slice of a 3D array.
 
-.. cpp:class:: template<typename Scalar> array3::nested_view3
+..
+  .. cpp:class:: template<typename Scalar> array3::nested_view3
+
+.. cpp:class:: array3::nested_view3
 
   3D view of a 3D (sub)array.
 
@@ -336,17 +353,17 @@ nested view to in effect provide nested array indexing::
 
 .. cpp:function:: array3::nested_view2 array3::nested_view3::operator[](uint index) const
 
-  Return 2D view to a slice of a 3D array.
+  Return view to a 2D slice of a 3D array.
 
 .. cpp:function:: array2::nested_view1 array2::nested_view2::operator[](uint index) const
 .. cpp:function:: array3::nested_view1 array3::nested_view2::operator[](uint index) const
 
-  Return 1D view to a slice of a 2D or 3D array.
+  Return view to a 1D slice of a 2D or 3D array.
 
 .. cpp:function:: Scalar array2::nested_view1::operator[](uint index) const
 .. cpp:function:: Scalar array3::nested_view1::operator[](uint index) const
 
-  Return scalar element of a 2D or 3D array through a 1D view.
+  Return scalar element of a 2D or 3D array.
 
 .. cpp:function:: array2::reference array2::nested_view1::operator[](uint index)
 .. cpp:function:: array3::reference array3::nested_view1::operator[](uint index)
@@ -378,7 +395,7 @@ Slicing
 Arrays can be constructed as deep copies of slices of higher-dimensional
 arrays, as the code example above shows (i.e.,
 :code:`zfp::array2d b(v[5]);`).  Unlike views, which have reference
-semantices, such array *slicing* has value semantics.  In this example,
+semantics, such array *slicing* has value semantics.  In this example,
 2D array *b* is initialized as a (deep) copy of a slice of 3D array *a*
 via nested view *v*.  Subsequent modifications of *b* have no effect on
 *a*.
@@ -396,24 +413,24 @@ example::
   zfp::array3d a(30, 20, 10, rate);
   zfp::array3d::const_view v(&a, 1, 2, 3, 4, 5, 6);
   zfp::array3d b(v);
+  assert(b(0, 0, 0) == a(1, 2, 3));
   assert(b.size_x() == 4);
   assert(b.size_y() == 5);
   assert(b.size_z() == 6);
-  assert(b(0, 0, 0) == a(1, 2, 3));
 
-Slicing adds the following array constructors.
+Slicing adds the following templated array constructors.
 
 .. cpp:function:: template<class View> array1::array1(const View& v)
 .. cpp:function:: template<class View> array2::array2(const View& v)
 .. cpp:function:: template<class View> array3::array3(const View& v)
 
   Construct array from a view via a deep copy.  The view, *v*, must support
-  multidimensional indexing (:cpp:func:`array1::const_view::operator()`).
-  The rate for the constructed rate is initialized to the rate of the arkray
+  :ref:`multidimensional indexing <view_accessor>`.
+  The rate for the constructed array is initialized to the rate of the array
   associated with the view.  Note that the actual rate may differ if the
-  constructed array is a slice of a higher-dimensional array due to lower
-  rate granularity (see FAQ :ref:`#12 <q-granularity>`).  The cache size
-  of the constructed array is set to the default size.
+  constructed array is a lower-dimensional slice of a higher-dimensional
+  array due to lower rate granularity (see FAQ :ref:`#12 <q-granularity>`).
+  The cache size of the constructed array is set to the default size.
 
 
 .. _private_immutable_view:
@@ -423,9 +440,9 @@ Private immutable view
 
 |zfp|'s compressed arrays are in general not thread-safe.  The main
 reason for this is that each array maintains its own cache of
-uncompressed blocks, and without locking the array upon each and
-every array access--which would have a high performance cost--race
-conditions on the cache would occur.
+uncompressed blocks.  Race conditions on the cache would occur unless
+it were locked upon each and every array access, which would have a
+prohibitive performance cost.
 
 To ensure thread-safe access, |zfp| provides private mutable and
 immutable views of arrays that maintain their own, private caches.
@@ -456,9 +473,14 @@ see the :ref:`diffusion <ex-diffusion>` code example.
 Private views support only multidimensional indexing, i.e., they
 are neither flat nor nested.
 
-.. cpp:class:: template<typename Scalar> array1::private_const_view
-.. cpp:class:: template<typename Scalar> array2::private_const_view
-.. cpp:class:: template<typename Scalar> array3::private_const_view
+..
+  .. cpp:class:: template<typename Scalar> array1::private_const_view
+  .. cpp:class:: template<typename Scalar> array2::private_const_view
+  .. cpp:class:: template<typename Scalar> array3::private_const_view
+
+.. cpp:class:: array1::private_const_view
+.. cpp:class:: array2::private_const_view
+.. cpp:class:: array3::private_const_view
 
   Immutable views of 1D, 2D, and 3D arrays with private caches.
 
@@ -470,7 +492,7 @@ are neither flat nor nested.
 .. cpp:function:: array3::private_const_view::private_const_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
 
   Whole-array and sub-array private immutable view constructors.  See
-  :ref:`const_view <immutable_view>` constructors for details.
+  :ref:`const_view constructors <view_ctor>` for details.
 
 .. cpp:function:: array1::private_const_view::size_x() const
 .. cpp:function:: array2::private_const_view::size_x() const
@@ -490,10 +512,10 @@ are neither flat nor nested.
 The following functions are common among all dimensionalities:
 
 .. cpp:function:: size_t arrayANY::private_const_view::cache_size() const
-.. cpp:function:: void arrayANY::private_const_view::cache_set_size(size_t csize)
+.. cpp:function:: void arrayANY::private_const_view::set_cache_size(size_t csize)
 .. cpp:function:: void arrayANY::private_const_view::clear_cache() const
 
-  Cache manipulation.  See :cpp:class:`array` for details.
+  Cache manipulation.  See :ref:`caching` for details.
 
 
 .. _private_mutable_view:
@@ -511,12 +533,14 @@ serialize compression, thus hurting performance, or add a possibly large
 memory overhead by maintaining a lock with each block.
 
 To avoid multiple threads simultanously compressing the same block,
-the **private mutable views of an array must reference disjoint,
-block-aligned subarrays** for thread-safe access.  Each block of
-|4powd| array elements must be associated with at most one private
-mutable view, and therefore these views must reference
-non-overlapping rectangular subsets that are aligned on block boundaries
-(except possibly for partial blocks on the array boundary).
+**private mutable views of an array must reference disjoint,
+block-aligned subarrays** for thread-safe access.  Each block of |4powd|
+array elements must be associated with at most one private mutable view,
+and therefore these views must reference non-overlapping rectangular
+subsets that are aligned on block boundaries, except possibly for partial
+blocks on the array boundary.  (Expert users may alternatively ensure
+serialization of block compression calls and cache coherence in other
+ways, in which case overlapping private views may be permitted.)
 
 Aside from this requirement, the user may partition the array into
 disjoint views in whatever manner is suitable for the application.
@@ -541,15 +565,25 @@ cache coherence with mutable and immutable private views.
 The :code:`private_view` class inherits all public functions from
 :code:`private_const_view`.
 
-.. cpp:class:: template<typename Scalar> array1::private_view
-.. cpp:class:: template<typename Scalar> array2::private_view
-.. cpp:class:: template<typename Scalar> array3::private_view
+..
+  .. cpp:class:: template<typename Scalar> array1::private_view
+  .. cpp:class:: template<typename Scalar> array2::private_view
+  .. cpp:class:: template<typename Scalar> array3::private_view
+
+.. cpp:class:: array1::private_view
+.. cpp:class:: array2::private_view
+.. cpp:class:: array3::private_view
 
   Mutable views of 1D, 2D, and 3D arrays with private caches.
 
-.. cpp:class:: template<typename Scalar> array1::private_view::view_reference
-.. cpp:class:: template<typename Scalar> array2::private_view::view_reference
-.. cpp:class:: template<typename Scalar> array3::private_view::view_reference
+..
+  .. cpp:class:: template<typename Scalar> array1::private_view::view_reference
+  .. cpp:class:: template<typename Scalar> array2::private_view::view_reference
+  .. cpp:class:: template<typename Scalar> array3::private_view::view_reference
+
+.. cpp:class:: array1::private_view::view_reference
+.. cpp:class:: array2::private_view::view_reference
+.. cpp:class:: array3::private_view::view_reference
 
   Proxy references to array elements specialized for mutable
   private views.
@@ -562,7 +596,7 @@ The :code:`private_view` class inherits all public functions from
 .. cpp:function:: array3::private_view::private_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
 
   Whole-array and sub-array private mutable view constructors.  See
-  :ref:`const_view <immutable_view>` constructors for details.
+  :ref:`const_view constructors <view_ctor>` for details.
 
 .. cpp:function:: array1::private_view::view_reference array1::private_view::operator()(uint i) const
 .. cpp:function:: array2::private_view::view_reference array2::private_view::operator()(uint i, uint j) const
@@ -581,7 +615,7 @@ The following functions are common among all dimensionalities:
   partition along different dimensions.  The partitioner does not generate
   new views; it merely modifies the current values of the view's offsets
   and dimensions.  Note that this may result in empty views whose dimensions
-  are zero if there are more pieces than blocks along a dimension.
+  are zero, e.g., if there are more pieces than blocks along a dimension.
 
 .. cpp:function:: void arrayANY::private_view::flush_cache() const
 

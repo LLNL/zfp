@@ -1,13 +1,13 @@
 # zfp Release Notes
 
-## 0.5.4 (September 2018)
+## 0.5.4 (September 30, 2018)
 
 - Added support for CUDA fixed-rate compression and decompression.
 
 - Added views into compressed arrays for thread safety, nested array
   indexing, slicing, and array subsetting.
 
-- Added C language bindings for compressed arrays via cfp API.
+- Added C language bindings for compressed arrays.
 
 - Added support for compressing and decompressing 4D data.
 

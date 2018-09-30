@@ -20,15 +20,16 @@ accessing an element of a 3D array of doubles, such function names would
 quickly become unwieldy when part of longer expressions.
 
 Instead, |cfp| uses the notion of nested C *namespaces* that are structs
-of function pointers, such as :code:`cfp_api.array3d`.  Although this may
+of function pointers, such as :code:`cfp.array3d`.  Although this may
 seem no more concise than a design based on prefixes, the user may alias
 these global namespaces (somewhat similar to C++ :code:`using namespace`
-declarations) locally using far shorter names.  For instance::
+declarations) using far shorter names via C macros or local variables.
+For instance::
 
-  const Cfp_array3d_api _ = cfp_api.array3d; // _ is a namespace alias
+  const cfp_array3d_api _ = cfp.array3d; // _ is a namespace alias
   cfp_array3d* a = _.ctor(nx, ny, nz, rate, 0, 0);
-  double value = _.gijk(a, i, j, k);
-  _.sijk(a, i, j, k, value + 1);
+  double value = _.get(a, i, j, k);
+  _.set(a, i, j, k, value + 1);
 
 which is a substitute for the C++ code
 ::
@@ -42,14 +43,14 @@ and because C objects are not self aware (they have no implicit :code:`this`
 pointer), the C interface interacts with compressed arrays through
 *pointers* to opaque types that the wrappers convert to pointers to
 the corresponding C++ objects.  As a consequence, |cfp| compressed arrays
-must be allocated on the heap and explicitly destructed to avoid memory
-leaks.  Hence, the C++ constructors are mapped to C by allocating objects
-via :code:`new`.  Moreover, the C API requires passing an array
-*self pointer* in order to manipulate the array.
+must be allocated on the heap and explicitly freed via designated
+destructor functions to avoid memory leaks.  Hence, the C++ constructors
+are mapped to C by allocating objects via :code:`new`.  Moreover, the C API
+requires passing an array *self pointer* in order to manipulate the array.
 
 As with the :ref:`C++ classes <array_classes>`, array elements can be
-accessed via multidimensional array indexing, e.g., :code:`gij(array, i, j)`,
-and via flat indexing, e.g., :code:`get(array, i + nx * j)`.
+accessed via multidimensional array indexing, e.g., :code:`get(array, i, j)`,
+and via flat indexing, e.g., :code:`getf(array, i + nx * j)`.
 
 .. c:type:: cfp_array1f
 .. c:type:: cfp_array2f
@@ -60,21 +61,6 @@ and via flat indexing, e.g., :code:`get(array, i + nx * j)`.
 
   Opaque types for 1D, 2D, and 3D compressed arrays of floats and doubles.
 
-.. c:function:: float cfp_array2f.gij(const cfp_array2f* a, uint i, uint j)
-.. c:function:: float cfp_array3f.gijk(const cfp_array3f* a, uint i, uint j, uint k)
-.. c:function:: double cfp_array2d.gij(const cfp_array2d* a, uint i, uint j)
-.. c:function:: double cfp_array3d.gijk(const cfp_array3d* a, uint i, uint j, uint k)
-
-  Array accessors for multidimensional arrays; see
-  :cpp:func:`array1::operator()`.
-
-.. c:function:: void cfp_array2f.sij(const cfp_array2f* a, uint i, uint j)
-.. c:function:: void cfp_array3f.sijk(const cfp_array3f* a, uint i, uint j, uint k)
-.. c:function:: void cfp_array2d.sij(const cfp_array2d* a, uint i, uint j)
-.. c:function:: void cfp_array3d.sijk(const cfp_array3d* a, uint i, uint j, uint k)
-
-  Array mutators for multidimensional arrays.
-
 .. c:function:: cfp_array1f* cfp_array1f.ctor(uint nx, double rate, const float* p, size_t csize)
 .. c:function:: cfp_array2d* cfp_array1d.ctor(uint nx, double rate, const double* p, size_t csize)
 .. c:function:: cfp_array2f* cfp_array2f.ctor(uint nx, uint ny, double rate, const float* p, size_t csize)
@@ -82,7 +68,25 @@ and via flat indexing, e.g., :code:`get(array, i + nx * j)`.
 .. c:function:: cfp_array3f* cfp_array3f.ctor(uint nx, uint ny, uint nz, double rate, const float* p, size_t csize)
 .. c:function:: cfp_array3d* cfp_array3d.ctor(uint nx, uint ny, uint nz, double rate, const double* p, size_t csize)
 
-  Constructors.
+  :ref:`Array constructors <array_ctor>`.
+  If *p* is not :code:`NULL`, then the array is initialized from uncompressed
+  storage; otherwise the array is zero initialized.  *csize* is the minimum
+  size cache (in bytes) to use.  If *csize* is zero, a default size is chosen.
+
+.. c:function:: float cfp_array2f.gij(const cfp_array2f* a, uint i, uint j)
+.. c:function:: float cfp_array3f.gijk(const cfp_array3f* a, uint i, uint j, uint k)
+.. c:function:: double cfp_array2d.gij(const cfp_array2d* a, uint i, uint j)
+.. c:function:: double cfp_array3d.gijk(const cfp_array3d* a, uint i, uint j, uint k)
+
+  :ref:`Array accessors <array_accessor>` for multidimensional arrays.
+
+.. c:function:: void cfp_array2f.sij(const cfp_array2f* a, uint i, uint j, float val)
+.. c:function:: void cfp_array3f.sijk(const cfp_array3f* a, uint i, uint j, uint k, float val)
+.. c:function:: void cfp_array2d.sij(const cfp_array2d* a, uint i, uint j, double val)
+.. c:function:: void cfp_array3d.sijk(const cfp_array3d* a, uint i, uint j, uint k, double val)
+
+  Array mutators for multidimensional arrays for assigning values to array
+  elements indexed by *i*, *j*, and *k*.
 
 .. c:function:: void cfp_array1f.get_array(const cfp_array1f* self, float* p)
 .. c:function:: void cfp_array1d.get_array(const cfp_array1d* self, double* p)
@@ -114,7 +118,7 @@ and via flat indexing, e.g., :code:`get(array, i + nx * j)`.
 .. c:function:: uint cfp_array3d.size_y(const cfp_array3d* self)
 .. c:function:: uint cfp_array3d.size_z(const cfp_array3d* self)
 
-  Array dimensions; see :cpp:func:`array2::size_x`.
+  :ref:`Array dimensions <array_dims>`.
 
 .. c:function:: void cfp_array1f.resize(cfp_array1f* self, uint n, int clear)
 .. c:function:: void cfp_array2f.resize(cfp_array2f* self, uint nx, uint ny, int clear)
@@ -123,18 +127,23 @@ and via flat indexing, e.g., :code:`get(array, i + nx * j)`.
 .. c:function:: void cfp_array2d.resize(cfp_array2d* self, uint nx, uint ny, int clear)
 .. c:function:: void cfp_array3d.resize(cfp_array3d* self, uint nx, uint ny, uint nz, int clear)
 
-  Resize array; see :cpp:func:`array1::resize`.
+  :ref:`Resize array <array_resize>`.
 
-The six array types share many functions.  Below, each instance of
-:code:`cfp_array` generically refers to one of those six types.
+The six array types share many functions that have the same signature.
+Below, each instance of :code:`cfp_array` generically refers to one of
+those six types.
 
 .. c:function:: cfp_array* cfp_array.ctor_default()
   
-  Default constructor.
+  Default constructor.  Allocate an empty array that later can be
+  resized via :c:func:`resize` and whose rate and cache size can be
+  set by :c:func:`cfp_array.set_rate` and :c:func:`cfp_array.set_cache_size`.
+  Return a pointer to the constructed array.
 
 .. c:function:: cfp_array* cfp_array.ctor_copy(const cfp_array* src)
 
-  Copy constructor; see :cpp:func:`array1::array1`.
+  :ref:`Copy constructor <array_ctor_default>`.  Return a pointer to
+  the constructed array.
 
 .. c:function:: void cfp_array.dtor(cfp_array* self)
 
@@ -145,9 +154,8 @@ The six array types share many functions.  Below, each instance of
 
 .. c:function:: void cfp_array.deep_copy(cfp_array* self, const cfp_array* src)
 
-  Perform a deep copy of *src* analogous to the C++ copy constructor
-  :cpp:func:`array1::array1` and assignment operator
-  :cpp:func:`array1::operator=`.
+  Perform a deep copy of *src* analogous to the
+  :ref:`C++ assignment operator <array_copy>`.
 
 .. c:function:: double cfp_array.rate(const cfp_array* self)
 

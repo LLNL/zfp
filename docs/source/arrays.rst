@@ -170,17 +170,16 @@ template scalar type (:code:`float` or :code:`double`).  Since the classes
 and methods share obvious similarities regardless of dimensionality, only
 one generic description for all dimensionalities is provided.
 
-Note: Due to limitations of the otherwise excellent
-`Sphinx <http://www.sphinx-doc.org>`_ system used to generate this
-documentation, :code:`template <typename Scalar>` should precede the
-templated :cpp:class:`array1`, :cpp:class:`array2`, and
-:cpp:class:`array3` classes, but has been omitted below.
+Note: In the class declarations below, the scalar type template
+is ommitted for readability, e.g.,
+:code:`class array1` is used as shorhand for
+:code:`template <typename Scalar> class array1`.  Wherever the type
+:code:`Scalar` appears, it refers to this template argument.
 
 ..
-  Sphinx cross references to templated classes are broken
-  cpp:class:: template<typename Scalar> array1 : public array
-  cpp:class:: template<typename Scalar> array2 : public array
-  cpp:class:: template<typename Scalar> array3 : public array
+  .. cpp:class:: template<typename Scalar> array1 : public array
+  .. cpp:class:: template<typename Scalar> array2 : public array
+  .. cpp:class:: template<typename Scalar> array3 : public array
 
 .. cpp:class:: array1 : public array
 .. cpp:class:: array2 : public array
@@ -193,12 +192,20 @@ templated :cpp:class:`array1`, :cpp:class:`array2`, and
   or double type, e.g. :cpp:class:`array1f` is a synonym for
   :cpp:class:`array1\<float>`.
 
+.. cpp:class:: arrayANY : public array
+
+  Fictitious class used to refer to any one of :cpp:class:`array1`,
+  :cpp:class:`array2`, and :cpp:class:`array3`.  This class is not part of
+  the |zfp| API.
+
+.. _array_ctor_default:
 .. cpp:function:: array1::array1()
 .. cpp:function:: array2::array2()
 .. cpp:function:: array3::array3()
 
   Default constructor.  Creates an empty array.
 
+.. _array_ctor:
 .. cpp:function:: array1::array1(uint n, double rate, const Scalar* p = 0, size_t csize = 0)
 .. cpp:function:: array2::array2(uint nx, uint ny, double rate, const Scalar* p = 0, size_t csize = 0)
 .. cpp:function:: array3::array3(uint nx, uint ny, uint nz, double rate, const Scalar* p = 0, size_t csize = 0)
@@ -220,12 +227,14 @@ templated :cpp:class:`array1`, :cpp:class:`array2`, and
 
   Virtual destructor (allows for inheriting from |zfp| arrays).
 
+.. _array_copy:
 .. cpp:function:: array1& array1::operator=(const array1& a)
 .. cpp:function:: array2& array2::operator=(const array2& a)
 .. cpp:function:: array3& array3::operator=(const array3& a)
 
   Assignment operator.  Performs a deep copy.
 
+.. _array_dims:
 .. cpp:function:: uint array2::size_x() const
 .. cpp:function:: uint array2::size_y() const
 .. cpp:function:: uint array3::size_x() const
@@ -234,6 +243,7 @@ templated :cpp:class:`array1`, :cpp:class:`array2`, and
 
   Return array dimensions.
 
+.. _array_resize:
 .. cpp:function:: void array1::resize(uint n, bool clear = true)
 .. cpp:function:: void array2::resize(uint nx, uint ny, bool clear = true)
 .. cpp:function:: void array3::resize(uint nx, uint ny, uint nz, bool clear = true)
@@ -241,6 +251,7 @@ templated :cpp:class:`array1`, :cpp:class:`array2`, and
   Resize the array (all previously stored data will be lost).  If *clear* is
   true, then the array elements are all initialized to zero.
 
+.. _array_accessor:
 .. cpp:function:: Scalar array1::operator()(uint i) const
 .. cpp:function:: Scalar array2::operator()(uint i, uint j) const
 .. cpp:function:: Scalar array3::operator()(uint i, uint j, uint k) const

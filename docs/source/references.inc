@@ -7,9 +7,14 @@ References
 
 .. cpp:namespace:: zfp
 
-.. cpp:class:: template<typename Scalar> array1::reference
-.. cpp:class:: template<typename Scalar> array2::reference
-.. cpp:class:: template<typename Scalar> array3::reference
+..
+  .. cpp:class:: template<typename Scalar> array1::reference
+  .. cpp:class:: template<typename Scalar> array2::reference
+  .. cpp:class:: template<typename Scalar> array3::reference
+
+.. cpp:class:: array1::reference
+.. cpp:class:: array2::reference
+.. cpp:class:: array3::reference
 
 Array :ref:`indexing operators <lvref>` must return lvalue references that
 alias array elements and serve as vehicles for assigning values to those
