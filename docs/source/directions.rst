@@ -44,9 +44,9 @@ important features, including:
   the blocks among threads.  An OpenMP implementation of parallel
   compression is available that produces compressed streams that
   are identical to serially compressed streams.  However, parallel
-  decompression is not yet supported.  In addition, an experimental
-  `CUDA implementation <https://github.com/mclarsen/cuzfp/>`_ for parallel
-  compression and decompression on the GPU is under development.
+  decompression is not yet supported.  |zfp| also supports compression and
+  decompression on the GPU via CUDA.  However, only fixed-rate mode is
+  so far supported.
 
 - **Thread-safe arrays**.  |zfp|'s compressed arrays are not thread-safe,
   even when performing read accesses only.  The primary reason is that

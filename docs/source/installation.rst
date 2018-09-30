@@ -30,6 +30,8 @@ C++11, and C++14.
 
 **NOTE: zfp requires 64-bit compiler and operating system support**.
 
+.. _gnu_builds:
+
 GNU Builds 
 ----------
 
@@ -56,6 +58,8 @@ difficult to portably generate a floating-point array that agrees
 bit-for-bit across platforms.  If most tests succeed and the failures
 result in byte sizes and error values reasonably close to the expected
 values, then it is likely that the compressor is working correctly.
+
+.. _cmake_builds:
 
 CMake Builds
 ------------
@@ -175,11 +179,15 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 
 .. c:macro:: ZFP_WITH_CUDA
 
-  CMake and GNU make macro for enabling or disabling CUDA support for
-  GPU compression and decompression.  When enabled, the
-  `nvcc <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc>`_
-  compiler needs to be installed.
-  Default: off.
+  CMake macro for enabling or disabling CUDA support for
+  GPU compression and decompression.  When enabled, CUDA and a compatible
+  host compiler must be installed.  For a full list of compatible compilers,
+  please consult the
+  `NVIDIA documentation <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/>`_.  If a CUDA installation is in the user's path, it will be
+  automatically found by CMake.  Alternatively, the CUDA binary directory 
+  can be specified using the :envvar:`CUDA_BIN_DIR` environment variable.
+  CMake default: off.
+  GNU make default: off and ignored.
 
 .. c:macro:: ZFP_WITH_ALIGNED_ALLOC
 

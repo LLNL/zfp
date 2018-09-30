@@ -9,34 +9,37 @@ Parallel Execution
 
 As of |zfp| |omprelease|, parallel compression (but not decompression) is
 supported on multicore processors via `OpenMP <http://www.openmp.org>`_
-threads.  Since |zfp| partitions arrays into small independent blocks, a
+threads.
+|zfp| |cudarelease| adds `CUDA <https://developer.nvidia.com/about-cuda>`_
+support for fixed-rate compression and decompression on the GPU.
+
+Since |zfp| partitions arrays into small independent blocks, a
 large amount of data parallelism is inherent in the compression scheme that
 can be exploited.  In principle, concurrency is limited only by the number
 of blocks that make up an array, though in practice each thread is
 responsible for compressing a *chunk* of several contiguous blocks.
 
 Note: |zfp| parallel compression is confined to shared memory on a single
-compute node.  No effort is made to coordinate compression across distributed
-memory on networked compute nodes, although |zfp|'s fine-grained partitioning
-of arrays should facilitate distributed parallel compression.
+compute node or GPU.  No effort is made to coordinate compression across
+distributed memory on networked compute nodes, although |zfp|'s fine-grained
+partitioning of arrays should facilitate distributed parallel compression.
 
 This section describes the |zfp| parallel compression algorithm and explains
 how to configure |libzfp| and enable parallel compression at run time via
 its :ref:`high-level C API <hl-api>`.  Parallel compression is not supported
-via the :ref:`low-level API <ll-api>`, and |zfp|'s compressed arrays are
-not yet :ref:`thread-safe <q-thread-safety>`.
+via the :ref:`low-level API <ll-api>`.
+
 
 Execution Policies
 ------------------
 
 |zfp| supports multiple *execution policies*, which dictate how (e.g.,
 sequentially, in parallel) and where (e.g., on the CPU or GPU) arrays are
-compressed.  Currently two *execution policies* are available: :code:`serial`
-and :code:`omp`.  The default mode is :code:`serial`, which ensures sequential
-compression on a single thread.  The :code:`omp` execution policy
-allows for data-parallel compression on multiple OpenMP threads.
-Future versions of |zfp| will also support a
-`CUDA <https://developer.nvidia.com/about-cuda>`_ execution policy.
+compressed.  Currently three execution policies are available:
+:code:`serial`, :code:`omp`, and :code:`cuda`.  The default mode is
+:code:`serial`, which ensures sequential compression on a single thread.
+The :code:`omp` and :code:`cuda` execution policies allow for data-parallel
+compression on multiple threads.
 
 The execution policy is set by :c:func:`zfp_stream_set_execution` and
 pertains to a particular :c:type:`zfp_stream`.  Hence, each stream
@@ -48,17 +51,19 @@ most advantage of concurrent execution.
 As outlined in FAQ :ref:`#23 <q-parallel>`, the final compressed stream
 is independent of execution policy.
 
+
 Execution Parameters
 --------------------
 
 Each execution policy allows tailoring the execution via its associated
 *execution parameters*.  Examples include number of threads, chunk size,
-scheduling, etc.  The :code:`serial` policy has no parameters.  The
-subsections below discuss the :code:`omp` parameters.
+scheduling, etc.  The :code:`serial` and :code:`cuda` policies have no
+parameters.  The subsections below discuss the :code:`omp` parameters.
 
 Whenever the execution policy is changed via
 :c:func:`zfp_stream_set_execution`, its parameters (if any) are initialized
 to their defaults, overwriting any prior setting.
+
 
 OpenMP Thread Count
 ^^^^^^^^^^^^^^^^^^^
@@ -103,6 +108,7 @@ setting the chunk size (in number of |zfp| blocks) via
 :c:func:`zfp_stream_set_omp_chunk_size`.  See FAQ :ref:`#25 <q-omp-perf>`
 for a discussion of chunk sizes and parallel performance.
 
+
 OpenMP Scheduling
 ^^^^^^^^^^^^^^^^^
 
@@ -141,25 +147,63 @@ than 64, this is usually an easy requirement to satisfy.
 When chunks are whole multiples of the word size, no temporary buffers
 are allocated and the threads write compressed data directly to the
 target buffer.
+The CUDA implementation uses atomics to avoid race conditions, and therefore
+does not need temporary buffers, regardless of chunk alignment.
 
-Enabling OpenMP
----------------
 
-In order to support parallel compression, |zfp| must be compiled with
-OpenMP support.  If built with CMake, OpenMP support is automatically
-enabled when available.  To manually disable OpenMP support, see the
+Using OpenMP
+------------
+
+In order to use OpenMP compression, |zfp| must be compiled with OpenMP
+support.  If built with CMake, OpenMP support is automatically enabled when
+available.  To manually disable OpenMP support, see the
 :c:macro:`ZFP_WITH_OPENMP` macro.
 
 To avoid compilation errors on systems with spotty OpenMP support
 (e.g. macOS), OpenMP is by default disabled in GNU builds.  To enable
-OpenMP, edit the :file:`Config` file and see instructions on how to
-set the :c:macro:`ZFP_WITH_OPENMP` macro.
+OpenMP, see :ref:`gnu_builds` and the :c:macro:`ZFP_WITH_OPENMP` macro.
+
+
+Using CUDA
+----------
+
+CUDA support is by default disabled.  Enabling it requires an installation
+of CUDA and a compatible host compiler.  Furthermore, the
+:c:macro:`ZFP_WITH_CUDA` macro must be set and |zfp| must be built with
+CMake.  See :c:macro:`ZFP_WITH_CUDA` for further details.
+
+Device Memory Management
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The CUDA version of |zfp| supports both host and device memory.  If device
+memory is allocated for fields or compressed streams, this is automatically
+detected and handled in a consistent manner.  For example, with compression,
+if host memory pointers are provided for both the field and compressed
+stream, then device memory will transparently be allocated and the uncompressed
+data will be copied to the GPU.  Once compression completes, the compressed
+stream is copied back to the host and device memory is deallocated.  If both
+pointers are device pointers, then no copies are made.  Additionally, any
+combination of mixing host and device pointers is supported.
+
+Additional Requirements
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The CUDA implementation supports strided fields.  However, when the field
+is stored in host memory, it must occupy contiguous storage, i.e., with
+no unused memory addresses between the minimum and maximum address spanned
+by the field.  This requirement avoids having to copy and allocate more
+temporary memory than needed to hold the array if it were not strided.
+Note that the strides can still be arbitrary as long as they serve only to
+permute the array elements.  Moreover, this restriction applies only to the
+CUDA execution policy and the case where the uncompressed field resides on
+the host.
+
 
 Setting the Execution Policy
 ----------------------------
 
-Enabling OpenMP parallel compression at run time is often as simple as
-calling :c:func:`zfp_stream_set_execution`
+Enabling parallel compression at run time is often as simple as
+calling :c:func:`zfp_stream_set_execution` with :code:`zfp_exec_omp`
 ::
 
     if (zfp_stream_set_execution(stream, zfp_exec_omp)) {
@@ -168,15 +212,22 @@ calling :c:func:`zfp_stream_set_execution`
       zfpsize = zfp_compress(stream, field);
     }
 
-before calling :c:func:`zfp_compress`.  If OpenMP is disabled or not
-supported, then the return value of functions setting the :code:`omp`
-execution policy and parameters will indicate failure.  Execution
-parameters are optional and may be set using the functions discussed
-above.
+before calling :c:func:`zfp_compress`.  Replacing :code:`zfp_exec_omp`
+with :code:`zfp_exec_cuda` enables CUDA execution.  If OpenMP or CUDA is
+disabled or not supported, then the return value of functions setting these
+execution policies and parameters will indicate failure.  Execution
+parameters are optional and may be set using the functions discussed above.
 
 The source code for the |zfpcmd| command-line tool includes further examples
-on how to set the execution policy.  To use parallel compression in this
-tool, see the :option:`-x` command-line option.
+on how to set the execution policy.  To use parallel compression and
+decompression in this tool, see the :option:`-x` command-line option.
+
+Note: As of |zfp| |cudarelease|, the execution policy refers to both
+compression and decompression.  The OpenMP implementation does not
+yet support decompression, and hence :c:func:`zfp_decompress` will
+fail if the execution policy is not reset to :code:`zfp_exec_serial`
+before calling the decompressor.  See the table below for supported
+combinations of compression modes and execution policies.
 
 
 Parallel Compression
@@ -198,61 +249,40 @@ as used for compression.  However, in |zfp|'s
 fixed storage, and therefore the decompressor needs to be instructed
 where each compressed block resides in the bit stream to enable
 parallel decompression.  Because the |zfp| bit stream does not currently
-store such information, parallel decompression is not yet supported.
+store such information, variable-rate parallel decompression is not yet
+supported.
+
+The CUDA implementation supports fixed-rate decompression.  OpenMP
+fixed-rate decompression will be added in the near future.
 
 Future versions of |zfp| will allow efficient encoding of block sizes and/or
 offsets to allow each thread to quickly locate the blocks it is responsible
-for decompressing.
+for decompressing, which will allow for variable-rate compression and
+decompression.
 
-Enabling CUDA Support
----------------------
 
-CUDA support currently exists on a feature branch of zfp located 
-`here <https://github.com/LLNL/zfp/tree/feature/cuda_support>`_.
-zfp currently supports only fixed rate compression and decompression with cuda. 
-Other compression modes will be support in the future.
-The CUDA version supports 32 and 64 bit integers and floating point types.
+Execution Policies and Compression Modes
+----------------------------------------
 
-Currently, CUDA support can only be used if zfp is built using CMake. To enable 
-CUDA set the CMake flag :code:`ZFP_WITH_CUDA=ON`. If a CUDA installation is in your
-path, it will be automatically found. Alternatively, the CUDA binary directory 
-can be specified using the :code:`CUDA_BIN_DIR` environmental variable.
+The following table summarizes which execution policies are supported
+with which :ref:`compression modes <modes>`:
 
-Supported compilers
-^^^^^^^^^^^^^^^^^^^
-CUDA support requires an installation of CUDA and a compatible host compiler. 
-For a full list of compatible compilers, please consult the NVIDIA documentation.
+  +---------------------------------+--------+--------+------+
+  | (de)compression mode            | serial | OpenMP | CUDA |
+  +===============+=================+========+========+======+
+  |               | fixed rate      |    x   |    x   |   x  |
+  |               +-----------------+--------+--------+------+
+  | compression   | fixed precision |    x   |    x   |      |
+  |               +-----------------+--------+--------+------+
+  |               | fixed accuracy  |    x   |    x   |      |
+  +---------------+-----------------+--------+--------+------+
+  |               | fixed rate      |    x   |        |   x  |
+  |               +-----------------+--------+--------+------+
+  | decompression | fixed precision |    x   |        |      |
+  |               +-----------------+--------+--------+------+
+  |               | fixed accuracy  |    x   |        |      |
+  +---------------+-----------------+--------+--------+------+
 
-Device Memory Management
-^^^^^^^^^^^^^^^^^^^^^^^^
-The CUDA version of zfp supports both host and device memory. If device memory 
-is allocated for fields or streams, this is automatically detected and handled in 
-a consistent manner. For example with compression, if host memory pointers are 
-provided for both the field and compressed stream, then device memory will transparently
-be allocate, the memory will be copied the the GPU. Once compression is finished, the 
-memory is copied back to the host and device memory is deallocated. If both pointers
-are device pointers, then no copies are made. Additionally, mixing host and device 
-pointers is supported.
-
-Setting the Execution Policy
-----------------------------
-
-Enabling CUDA parallel fixed rate compression and decompression at run time is handled 
-using the function calling :c:func:`zfp_stream_set_execution`
-::
-
-    if (zfp_stream_set_execution(stream, zfp_exec_cuda)) {
-      // use CUDA parallel compression
-      ...
-      zfpsize = zfp_compress(stream, field);
-    }
-
-before calling :c:func:`zfp_compress`.  If CUDA is disabled or not
-supported, then the return value of functions setting the :code:`cuda`
-execution policy and parameters will indicate failure.  Execution
-parameters are optional and may be set using the functions discussed
-above.
-
-The source code for the |zfpcmd| command-line tool includes further examples
-on how to set the execution policy.  To use parallel compression in this
-tool, see the :option:`-x` command-line option.
+:c:func:`zfp_compress` and :c:func:`zfp_decompress` both return zero if the
+current execution policy is not supported for the requested compression
+mode.

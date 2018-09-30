@@ -114,7 +114,7 @@
 
 /* types ------------------------------------------------------------------- */
 
-/* execution policy (for compression only) */
+/* execution policy */
 typedef enum {
   zfp_exec_serial = 0, /* serial execution (default) */
   zfp_exec_omp    = 1, /* OpenMP multi-threaded execution */
