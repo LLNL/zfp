@@ -9,3 +9,15 @@ _t1(CFP_ARRAY_TYPE, resize)(CFP_ARRAY_TYPE * self, uint n, int clear)
 {
   reinterpret_cast<ZFP_ARRAY_TYPE *>(self)->resize(n, clear);
 }
+
+static ZFP_SCALAR_TYPE
+_t1(CFP_ARRAY_TYPE, get_i)(const CFP_ARRAY_TYPE * self, uint i)
+{
+  return reinterpret_cast<const ZFP_ARRAY_TYPE *>(self)->operator()(i);
+}
+
+static void
+_t1(CFP_ARRAY_TYPE, set_i)(CFP_ARRAY_TYPE * self, uint i, ZFP_SCALAR_TYPE val)
+{
+  reinterpret_cast<ZFP_ARRAY_TYPE *>(self)->operator()(i) = val;
+}

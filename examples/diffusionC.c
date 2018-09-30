@@ -59,8 +59,8 @@ time_step_indexed_compressed(cfp_array2d* u, const constants* c)
   uint i;
   for (i = 0; i < _.size(u); i++) {
     // u[i] += du[i]
-    double val = _.get(u, i) + _.get(du, i);
-    _.set(u, i, val);
+    double val = _.get_flat(u, i) + _.get_flat(du, i);
+    _.set_flat(u, i, val);
   }
 
   _.dtor(du);

@@ -30,9 +30,9 @@ typedef struct {
 
   void (*get_array)(const cfp_array2d* self, double* p);
   void (*set_array)(cfp_array2d* self, const double* p);
-  double (*get)(const cfp_array2d* self, uint i);
+  double (*get_flat)(const cfp_array2d* self, uint i);
+  void (*set_flat)(cfp_array2d* self, uint i, double val);
   double (*get_ij)(const cfp_array2d* self, uint i, uint j);
-  void (*set)(cfp_array2d* self, uint i, double val);
   void (*set_ij)(cfp_array2d* self, uint i, uint j, double val);
 } cfp_array2d_api;
 

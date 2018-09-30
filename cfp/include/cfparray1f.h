@@ -28,6 +28,8 @@ typedef struct {
 
   void (*get_array)(const cfp_array1f* self, float* p);
   void (*set_array)(cfp_array1f* self, const float* p);
+  float (*get_flat)(const cfp_array1f* self, uint i);
+  void (*set_flat)(cfp_array1f* self, uint i, float val);
   float (*get)(const cfp_array1f* self, uint i);
   void (*set)(cfp_array1f* self, uint i, float val);
 } cfp_array1f_api;

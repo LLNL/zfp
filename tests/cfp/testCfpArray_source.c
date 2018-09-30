@@ -288,7 +288,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_copyCtor_expect_cacheCopied)(void **stat
 
   // create dirty cache
   uint i = 5;
-  CFP_NAMESPACE.SUB_NAMESPACE.set(srcCfpArr, i, (SCALAR)VAL);
+  CFP_NAMESPACE.SUB_NAMESPACE.set_flat(srcCfpArr, i, (SCALAR)VAL);
 
   // exec copy constructor
   CFP_ARRAY_TYPE* newCfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor_copy(srcCfpArr);
@@ -306,7 +306,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_copyCtor_expect_cacheCopied)(void **stat
   assert_memory_equal(newData, srcData, newDataSize);
 
   // verify compressed value is the same
-  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get(newCfpArr, i) == CFP_NAMESPACE.SUB_NAMESPACE.get(srcCfpArr, i));
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get_flat(newCfpArr, i) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(srcCfpArr, i));
 
   CFP_NAMESPACE.SUB_NAMESPACE.dtor(newCfpArr);
 }
@@ -350,7 +350,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _with_dirtyCache_when_flushCache_expect_cacheE
   uchar* oldMemory = malloc(compressedSize * sizeof(uchar));
   memcpy(oldMemory, compressedDataPtr, compressedSize);
 
-  CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, 0, (SCALAR)VAL);
+  CFP_NAMESPACE.SUB_NAMESPACE.set_flat(cfpArr, 0, (SCALAR)VAL);
 
   CFP_NAMESPACE.SUB_NAMESPACE.flush_cache(cfpArr);
 
@@ -364,13 +364,13 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_clearCache_expect_cacheCleared)(void **s
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
 
-  SCALAR prevVal = CFP_NAMESPACE.SUB_NAMESPACE.get(cfpArr, 0);
-  CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, 0, (SCALAR)VAL);
+  SCALAR prevVal = CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, 0);
+  CFP_NAMESPACE.SUB_NAMESPACE.set_flat(cfpArr, 0, (SCALAR)VAL);
 
   CFP_NAMESPACE.SUB_NAMESPACE.clear_cache(cfpArr);
 
   CFP_NAMESPACE.SUB_NAMESPACE.flush_cache(cfpArr);
-  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get(cfpArr, 0) == prevVal);
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, 0) == prevVal);
 }
 
 static void
@@ -387,7 +387,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_setEntry_expect_entryWrittenToCacheOnly)
   uchar* oldMemory = malloc(compressedSize * sizeof(uchar));
   memcpy(oldMemory, compressedDataPtr, compressedSize);
 
-  CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, 0, (SCALAR)VAL);
+  CFP_NAMESPACE.SUB_NAMESPACE.set_flat(cfpArr, 0, (SCALAR)VAL);
 
   assert_memory_equal(compressedDataPtr, oldMemory, compressedSize);
   free(oldMemory);
@@ -398,10 +398,10 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getEntry_expect_entryReturned)(void **st
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
-  CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, 0, (SCALAR)VAL);
+  CFP_NAMESPACE.SUB_NAMESPACE.set_flat(cfpArr, 0, (SCALAR)VAL);
 
   // dirty cache preserves exact value (compression not applied until flush)
-  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get(cfpArr, 0) == (SCALAR)VAL);
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, 0) == (SCALAR)VAL);
 }
 
 static void

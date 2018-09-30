@@ -30,8 +30,10 @@ const cfp_api CFP_NAMESPACE = {
 
     cfp_array1f_get_array,
     cfp_array1f_set_array,
-    cfp_array1f_get,
-    cfp_array1f_set,
+    cfp_array1f_get_flat,
+    cfp_array1f_set_flat,
+    cfp_array1f_get_i,
+    cfp_array1f_set_i,
   },
   // array1d
   {
@@ -55,8 +57,10 @@ const cfp_api CFP_NAMESPACE = {
 
     cfp_array1d_get_array,
     cfp_array1d_set_array,
-    cfp_array1d_get,
-    cfp_array1d_set,
+    cfp_array1d_get_flat,
+    cfp_array1d_set_flat,
+    cfp_array1d_get_i,
+    cfp_array1d_set_i,
   },
   // array2f
   {
@@ -82,9 +86,9 @@ const cfp_api CFP_NAMESPACE = {
 
     cfp_array2f_get_array,
     cfp_array2f_set_array,
-    cfp_array2f_get,
+    cfp_array2f_get_flat,
+    cfp_array2f_set_flat,
     cfp_array2f_get_ij,
-    cfp_array2f_set,
     cfp_array2f_set_ij,
   },
   // array2d
@@ -111,9 +115,9 @@ const cfp_api CFP_NAMESPACE = {
 
     cfp_array2d_get_array,
     cfp_array2d_set_array,
-    cfp_array2d_get,
+    cfp_array2d_get_flat,
+    cfp_array2d_set_flat,
     cfp_array2d_get_ij,
-    cfp_array2d_set,
     cfp_array2d_set_ij,
   },
   // array3f
@@ -141,9 +145,9 @@ const cfp_api CFP_NAMESPACE = {
 
     cfp_array3f_get_array,
     cfp_array3f_set_array,
-    cfp_array3f_get,
+    cfp_array3f_get_flat,
+    cfp_array3f_set_flat,
     cfp_array3f_get_ijk,
-    cfp_array3f_set,
     cfp_array3f_set_ijk,
   },
   // array3d
@@ -171,9 +175,9 @@ const cfp_api CFP_NAMESPACE = {
 
     cfp_array3d_get_array,
     cfp_array3d_set_array,
-    cfp_array3d_get,
+    cfp_array3d_get_flat,
+    cfp_array3d_set_flat,
     cfp_array3d_get_ijk,
-    cfp_array3d_set,
     cfp_array3d_set_ijk,
   },
 };
