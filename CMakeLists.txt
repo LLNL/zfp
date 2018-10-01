@@ -212,6 +212,11 @@ mark_as_advanced(ZFP_LIBRARY_PREFIX)
 
 add_subdirectory(src)
 
+option(BUILD_CFP "Build CFP arrays library" OFF)
+if(BUILD_CFP)
+  add_subdirectory(cfp)
+endif()
+
 option(BUILD_UTILITIES "Build command line utilities for zfp" ON)
 if(BUILD_UTILITIES)
   add_subdirectory(utils)
