@@ -143,6 +143,8 @@ Regardless of the settings below, |libzfp| will always be built.
 .. c:macro:: BUILD_SHARED_LIBS
 
   Build :file:`libzfp.so` and :file:`libcfp.so` shared objects.
+  On macOS, the :code:`SOFLAGS` line in the :file:`Config` file may have
+  to be uncommented when compiling with GNU make.
   CMake default: on.
   GNU make default: off.
 
