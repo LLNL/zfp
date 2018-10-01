@@ -27,7 +27,6 @@ function(zfp_add_test dims type bits)
 
     set(cuda_test_name testZfpCuda${dims}d${type})
     add_executable(${cuda_test_name} ${cuda_test_name}.c)
-#    target_compile_options(${cuda_test_name} PRIVATE ${OpenMP_C_FLAGS})
     target_link_libraries(${cuda_test_name}
       cmocka zfp hash${bits}Lib genSmoothRandNumsLib)
     if(HAVE_LIBM_MATH)

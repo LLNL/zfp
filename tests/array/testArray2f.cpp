@@ -4,7 +4,7 @@ using namespace zfp;
 extern "C" {
   #include "constants/2dFloat.h"
   #include "utils/hash32.h"
-};
+}
 
 #include "gtest/gtest.h"
 #include "utils/gtestFloatEnv.h"
