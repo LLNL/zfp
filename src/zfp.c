@@ -10,7 +10,7 @@
 
 export_ const uint zfp_codec_version = ZFP_CODEC;
 export_ const uint zfp_library_version = ZFP_VERSION;
-export_ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (March 28, 2018)";
+export_ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (September 30, 2018)";
 
 /* private functions ------------------------------------------------------- */
 
@@ -896,8 +896,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
 
   /* compress field and align bit stream on word boundary */
   compress(zfp, field);
-  size_t flush = stream_flush(zfp->stream);
-  size_t ssize = stream_size(zfp->stream);
+  stream_flush(zfp->stream);
 
   return stream_size(zfp->stream);
 }
