@@ -374,7 +374,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_clearCache_expect_cacheCleared)(void **s
 }
 
 static void
-_catFunc3(given_, CFP_ARRAY_TYPE, _when_setEntry_expect_entryWrittenToCacheOnly)(void **state)
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_setFlat_expect_entryWrittenToCacheOnly)(void **state)
 {
   struct setupVars *bundle = *state;
 
@@ -394,7 +394,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_setEntry_expect_entryWrittenToCacheOnly)
 }
 
 static void
-_catFunc3(given_, CFP_ARRAY_TYPE, _when_getEntry_expect_entryReturned)(void **state)
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlat_expect_entryReturned)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;

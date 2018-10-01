@@ -38,7 +38,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_resize_expect_sizeChanged)(void **state)
 }
 
 static void
-_catFunc3(given_, CFP_ARRAY_TYPE, _when_setIJK_expect_entryWrittenToCacheOnly)(void **state)
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_set_expect_entryWrittenToCacheOnly)(void **state)
 {
   struct setupVars *bundle = *state;
 
@@ -58,7 +58,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_setIJK_expect_entryWrittenToCacheOnly)(v
 }
 
 static void
-_catFunc3(given_, CFP_ARRAY_TYPE, _when_getIJK_expect_entryReturned)(void **state)
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_get_expect_entryReturned)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
