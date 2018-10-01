@@ -7,7 +7,7 @@
 #include "cfparray3f.cpp"
 #include "cfparray3d.cpp"
 
-const cfp_api CFP_NAMESPACE = {
+export_ const cfp_api CFP_NAMESPACE = {
   // array1f
   {
     cfp_array1f_ctor_default,

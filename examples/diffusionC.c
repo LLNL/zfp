@@ -6,7 +6,7 @@
 #include <math.h>
 
 #include "cfparrays.h"
-#define _ (cfp.array2d)
+#define _ (CFP_NAMESPACE.array2d)
 
 #define MAX(x, y) (((nx) > (ny)) ? (nx) : (ny))
 
