@@ -1,6 +1,6 @@
 # zfp Release Notes
 
-## 0.5.4 (September 30, 2018)
+## 0.5.4 (October 1, 2018)
 
 - Added support for CUDA fixed-rate compression and decompression.
 

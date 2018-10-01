@@ -136,7 +136,7 @@ public:
 
 protected:
   // construction--perform shallow copy of (sub)array
-  friend class array2::nested_view2;
+  friend class nested_view2;
   explicit nested_view1(array2* array) : preview(array) {}
   explicit nested_view1(array2* array, uint x, uint y, uint nx, uint ny) : preview(array, x, y, nx, ny) {}
 };
