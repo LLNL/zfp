@@ -10,7 +10,7 @@
 
 export_ const uint zfp_codec_version = ZFP_CODEC;
 export_ const uint zfp_library_version = ZFP_VERSION;
-export_ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (September 30, 2018)";
+export_ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (October 1, 2018)";
 
 /* private functions ------------------------------------------------------- */
 
