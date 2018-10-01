@@ -5,13 +5,13 @@
 Installation
 ============
 
-|zfp| consists of four distinct parts: a compression library written in C,
-a set of C++ header files that implement compressed arrays, corresponding
-C wrappers for compressed arrays, and a set of C and C++ examples.  The
-main compression codec is written in C and should conform to both the
-ISO C89 and C99 standards.  The C++ array classes are implemented entirely
-in header files and can be included as is, but since they call the
-compression library, applications must link with |libzfp|.
+|zfp| consists of three distinct parts: a compression library written in C,
+a set of C++ header files that implement compressed arrays and corresponding
+C wrappers, and a set of C and C++ examples.  The main compression codec is
+written in C and should conform to both the ISO C89 and C99 standards.
+The C++ array classes are implemented entirely in header files and can be
+included as is, but since they call the compression library, applications
+must link with |libzfp|.
 
 On Linux, macOS, and MinGW, |zfp| is easiest compiled using gcc and gmake.
 `CMake <https://cmake.org>`_ support is also available, e.g., for Windows
@@ -46,19 +46,6 @@ parallel compression, type::
 
     make ZFP_WITH_OPENMP=1
 
-To test the compressor, type::
-
-    make test
-
-If the compilation or regression tests fail, it is possible that some of
-the macros in the file :file:`Config` have to be adjusted.  Also, the tests
-may fail due to minute differences in the computed floating-point fields
-being compressed (as indicated by checksum errors).  It is surprisingly
-difficult to portably generate a floating-point array that agrees
-bit-for-bit across platforms.  If most tests succeed and the failures
-result in byte sizes and error values reasonably close to the expected
-values, then it is likely that the compressor is working correctly.
-
 .. _cmake_builds:
 
 CMake Builds
@@ -92,6 +79,26 @@ cd to the top-level |zfp| directory, and type::
 This builds |zfp| in release mode.  Replace 'Release' with 'Debug' to
 build |zfp| in debug mode.  See the instructions for Linux on how to
 change the cmake line to also build the example programs.
+
+Testing
+-------
+
+To test that |zfp| is working properly, type::
+
+    make test
+
+or using CMake::
+
+    ctest
+
+If the compilation or regression tests fail, it is possible that some of
+the macros in the file :file:`Config` have to be adjusted.  Also, the tests
+may fail due to minute differences in the computed floating-point fields
+being compressed, which will be indicated by checksum errors.  If most
+tests succeed and the failures result in byte sizes and error values
+reasonably close to the expected values, then it is likely that the
+compressor is working correctly.
+
 
 .. index::
    single: Build Targets

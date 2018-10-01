@@ -129,12 +129,14 @@ Types
 
 .. c:type:: zfp_exec_policy
 
-  Currently two execution policies are available: serial and OpenMP parallel.
+  Currently three execution policies are available: serial, OpenMP parallel,
+  and CUDA parallel.
   ::
 
     typedef enum {
       zfp_exec_serial = 0, // serial execution (default)
-      zfp_exec_omp    = 1  // OpenMP multi-threaded execution
+      zfp_exec_omp    = 1, // OpenMP multi-threaded execution
+      zfp_exec_cuda   = 2  // CUDA parallel execution
     } zfp_exec_policy;
 
 .. c:type:: zfp_exec_params
@@ -221,7 +223,7 @@ Types
   Strides can be used in case multiple fields are stored interleaved via
   "array of struct" (AoS) rather than "struct of array" (SoA) storage,
   or if the dimensions should be transposed during (de)compression.
-  Given 4D array indices :code:`(x, y, z, w)`, the corresponding array
+  Given 4D array indices (*x*, *y*, *z*, *w*), the corresponding array
   element is stored at
   ::
 
@@ -556,7 +558,8 @@ Compression and Decompression
 .. c:function:: size_t zfp_compress(zfp_stream* stream, const zfp_field* field)
 
   Compress the whole array described by *field* using parameters given by
-  *stream* and then flush the stream.  The number of bytes of compressed storage
+  *stream* and then flush the stream to emit any buffered bits and align the
+  stream on a word boundary.  The number of bytes of compressed storage
   is returned, if the stream were rewound before compression, and otherwise the
   current byte offset within the bit stream.  Zero is returned if compression
   failed.

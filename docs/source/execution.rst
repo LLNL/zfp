@@ -203,7 +203,7 @@ Setting the Execution Policy
 ----------------------------
 
 Enabling parallel compression at run time is often as simple as
-calling :c:func:`zfp_stream_set_execution` with :code:`zfp_exec_omp`
+calling :c:func:`zfp_stream_set_execution`
 ::
 
     if (zfp_stream_set_execution(stream, zfp_exec_omp)) {
@@ -226,8 +226,30 @@ Note: As of |zfp| |cudarelease|, the execution policy refers to both
 compression and decompression.  The OpenMP implementation does not
 yet support decompression, and hence :c:func:`zfp_decompress` will
 fail if the execution policy is not reset to :code:`zfp_exec_serial`
-before calling the decompressor.  See the table below for supported
-combinations of compression modes and execution policies.
+before calling the decompressor.
+
+The following table summarizes which execution policies are supported
+with which :ref:`compression modes <modes>`:
+
+  +---------------------------------+--------+--------+------+
+  | (de)compression mode            | serial | OpenMP | CUDA |
+  +===============+=================+========+========+======+
+  |               | fixed rate      |    x   |    x   |   x  |
+  |               +-----------------+--------+--------+------+
+  | compression   | fixed precision |    x   |    x   |      |
+  |               +-----------------+--------+--------+------+
+  |               | fixed accuracy  |    x   |    x   |      |
+  +---------------+-----------------+--------+--------+------+
+  |               | fixed rate      |    x   |        |   x  |
+  |               +-----------------+--------+--------+------+
+  | decompression | fixed precision |    x   |        |      |
+  |               +-----------------+--------+--------+------+
+  |               | fixed accuracy  |    x   |        |      |
+  +---------------+-----------------+--------+--------+------+
+
+:c:func:`zfp_compress` and :c:func:`zfp_decompress` both return zero if the
+current execution policy is not supported for the requested compression
+mode.
 
 
 Parallel Compression
@@ -259,30 +281,3 @@ Future versions of |zfp| will allow efficient encoding of block sizes and/or
 offsets to allow each thread to quickly locate the blocks it is responsible
 for decompressing, which will allow for variable-rate compression and
 decompression.
-
-
-Execution Policies and Compression Modes
-----------------------------------------
-
-The following table summarizes which execution policies are supported
-with which :ref:`compression modes <modes>`:
-
-  +---------------------------------+--------+--------+------+
-  | (de)compression mode            | serial | OpenMP | CUDA |
-  +===============+=================+========+========+======+
-  |               | fixed rate      |    x   |    x   |   x  |
-  |               +-----------------+--------+--------+------+
-  | compression   | fixed precision |    x   |    x   |      |
-  |               +-----------------+--------+--------+------+
-  |               | fixed accuracy  |    x   |    x   |      |
-  +---------------+-----------------+--------+--------+------+
-  |               | fixed rate      |    x   |        |   x  |
-  |               +-----------------+--------+--------+------+
-  | decompression | fixed precision |    x   |        |      |
-  |               +-----------------+--------+--------+------+
-  |               | fixed accuracy  |    x   |        |      |
-  +---------------+-----------------+--------+--------+------+
-
-:c:func:`zfp_compress` and :c:func:`zfp_decompress` both return zero if the
-current execution policy is not supported for the requested compression
-mode.

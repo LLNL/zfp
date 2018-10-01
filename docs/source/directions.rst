@@ -48,15 +48,6 @@ important features, including:
   decompression on the GPU via CUDA.  However, only fixed-rate mode is
   so far supported.
 
-- **Thread-safe arrays**.  |zfp|'s compressed arrays are not thread-safe,
-  even when performing read accesses only.  The primary reason is that
-  the arrays employ caching, which requires special protection to avoid
-  race conditions.  Work is planned to support both read-only and
-  read-write accessible arrays that are thread-safe, most likely by
-  using thread-local caches for read-only access and disjoint sub-arrays
-  for read-write access, where each thread has exclusive ownership of a
-  portion of the array.
-
 - **Variable-rate arrays**.  |zfp| currently supports only fixed-rate
   compressed arrays, which wastes bits in smooth regions with little
   information content while too few bits may be allocated to accurately
@@ -67,16 +58,17 @@ important features, including:
   arrays will support both fixed precision and accuracy.
 
 - **Array operations**.  |zfp|'s compressed arrays currently support basic
-  indexing and initialization, but lack essential features such as shallow
-  copies, slicing, views, etc.  Work is underway to address these
-  deficiencies.
+  indexing and initialization, but lack array-wise operations such as
+  arithmetic, reductions, etc.  Some such operations can exploit the
+  higher precision (than IEEE) supported by |zfp|, as well as accelerated
+  blockwise computations that need not fully decompress and convert the
+  |zfp| representation to IEEE.
 
 - **Language bindings**.  The main compression codec is written in C89 to
   facilitate calls from other languages, but would benefit from language
-  wrappers to ease integration.  |zfp|'s compressed arrays exploit the
-  operator overloading provided by C++, and therefore can currently not
-  be used in other languages, including C.  Work is planned to add complete
-  language bindings for C, C++, Fortran, and Python.
+  wrappers to ease integration.  As of |zfp| |cfprelease|, C wrappers are
+  available for a subset of the C++ compressed array API.  Work is planned
+  to add complete language bindings for C, C++, Fortran, and Python.
 
 Please contact `Peter Lindstrom <mailto:pl@llnl.gov>`__ with requests for
 features not listed above.

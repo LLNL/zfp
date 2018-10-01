@@ -9,7 +9,7 @@ Views
 
 |zfp| |viewsrelease| adds array views.
 Much like how :ref:`references <references>` allow indirect access to
-a single array element, *views* provide indirect access to whole arrays,
+single array elements, *views* provide indirect access to whole arrays,
 or more generally to rectangular subsets of arrays.  A view of an array
 does not allocate any storage for the array elements.  Rather, the
 view accesses shared storage managed by the underlying array.  This
@@ -17,9 +17,9 @@ allows for multiple entries into an array without the need for expensive
 deep copies.  In a sense, views can be thought of as *shallow copies*
 of arrays.
 
-When a view exposes a whole array :code:`zfp::array<type>`, it provides
-similar functionality to a C++ reference :code:`zfp::array<type>&` or
-pointer :code:`zfp::array<type>*` to the array.  However, views are more
+When a view exposes a whole array :code:`array<type>`, it provides
+similar functionality to a C++ reference :code:`array<type>&` or
+pointer :code:`array<type>*` to the array.  However, views are more
 general in that they also allow restricting access to a user-specified
 subset of the array, and unlike pointers also provide for the same
 syntax when accessing the array, e.g., :code:`array_view(i, j)` instead
@@ -166,9 +166,9 @@ for the :code:`const_view`.
   .. cpp:class:: template<typename Scalar> array2::view
   .. cpp:class:: template<typename Scalar> array3::view
 
-.. cpp:class:: array1::view
-.. cpp:class:: array2::view
-.. cpp:class:: array3::view
+.. cpp:class:: array1::view : public array1::const_view
+.. cpp:class:: array2::view : public array2::const_view
+.. cpp:class:: array3::view : public array3::const_view
 
   Mutable view into 1D, 2D, and 3D array.
 
@@ -222,8 +222,8 @@ either a flat or a nested view.
   .. cpp:class:: template<typename Scalar> array2::flat_view
   .. cpp:class:: template<typename Scalar> array3::flat_view
 
-.. cpp:class:: array2::flat_view
-.. cpp:class:: array3::flat_view
+.. cpp:class:: array2::flat_view : public array2::view
+.. cpp:class:: array3::flat_view : public array2::view
 
   Flat, mutable views for 2D and 3D arrays.
 
@@ -570,9 +570,9 @@ The :code:`private_view` class inherits all public functions from
   .. cpp:class:: template<typename Scalar> array2::private_view
   .. cpp:class:: template<typename Scalar> array3::private_view
 
-.. cpp:class:: array1::private_view
-.. cpp:class:: array2::private_view
-.. cpp:class:: array3::private_view
+.. cpp:class:: array1::private_view : public array1::private_const_view
+.. cpp:class:: array2::private_view : public array2::private_const_view
+.. cpp:class:: array3::private_view : public array3::private_const_view
 
   Mutable views of 1D, 2D, and 3D arrays with private caches.
 

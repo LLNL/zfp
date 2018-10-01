@@ -37,8 +37,8 @@ not), a "dirty bit" is set with its cached block to indicate that the block
 must be compressed back to persistent storage when evicted from the cache.
 
 This section documents the public interface to the array classes, including
-base classes and member accessor classes like proxy references/pointers and
-iterators.
+base classes and member accessor classes like proxy references/pointers,
+iterators, and views.
 
 The following sections are available:
 
@@ -86,7 +86,7 @@ Base Class
 
 .. cpp:function:: virtual void array::clear_cache() const
 
-  Empty cache without compressing modified cached blocks, i.e. discard any
+  Empty cache without compressing modified cached blocks, i.e., discard any
   cached updates to the array.
 
 .. cpp:function:: virtual void array::flush_cache() const
@@ -170,8 +170,8 @@ template scalar type (:code:`float` or :code:`double`).  Since the classes
 and methods share obvious similarities regardless of dimensionality, only
 one generic description for all dimensionalities is provided.
 
-Note: In the class declarations below, the scalar type template
-is ommitted for readability, e.g.,
+Note: In the class declarations below, the class template for the scalar
+type is ommitted for readability, e.g.,
 :code:`class array1` is used as shorhand for
 :code:`template <typename Scalar> class array1`.  Wherever the type
 :code:`Scalar` appears, it refers to this template argument.

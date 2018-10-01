@@ -13,10 +13,10 @@ exactly, is possible in some circumstances.
 
 The |zfp| software consists of three main components: a C library for
 compressing whole arrays (or smaller pieces of arrays); C++ classes
-that implement compressed arrays; and a command-line compression tool
-and other code examples.  |zfp| has also been incorporated into several
-independently developed plugins for interfacing |zfp| with popular
-I/O libraries and visualization tools such as
+(plus C wrappers) that implement compressed arrays; and a command-line
+compression tool and other code examples.  |zfp| has also been incorporated
+into several independently developed plugins for interfacing |zfp| with
+popular I/O libraries and visualization tools such as
 `ADIOS <https://www.olcf.ornl.gov/center-projects/adios/>`_,
 `HDF5 <https://support.hdfgroup.org>`_, and
 `VTK <http://www.vtk.org/>`_.
@@ -27,7 +27,7 @@ components, specifically
 * Via the :ref:`C API <hl-api>` when doing I/O in an application or
   otherwise performing data (de)compression online.
 
-* Via |zfp|'s C++ in-memory :ref:`compressed array classes <arrays>` when
+* Via |zfp|'s in-memory :ref:`compressed array classes <arrays>` when
   performing computations on very large arrays that demand random access to
   array elements, e.g., in visualization, data analysis, or even in numerical
   simulation.

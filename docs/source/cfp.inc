@@ -34,19 +34,20 @@ For instance::
 which is a substitute for the C++ code
 ::
 
-  zfp::array3d a(nx, ny, nz, rate, 0, 0);;
+  zfp::array3d a(nx, ny, nz, rate, 0, 0);
   double value = a(i, j, k);
   a(i, j, k) = value + 1;
 
 Because the underlying C++ objects have no corresponding C representation,
 and because C objects are not self aware (they have no implicit :code:`this`
 pointer), the C interface interacts with compressed arrays through
-*pointers* to opaque types that the wrappers convert to pointers to
+*pointers* to opaque types that |cfp| converts to pointers to
 the corresponding C++ objects.  As a consequence, |cfp| compressed arrays
 must be allocated on the heap and explicitly freed via designated
-destructor functions to avoid memory leaks.  Hence, the C++ constructors
-are mapped to C by allocating objects via :code:`new`.  Moreover, the C API
-requires passing an array *self pointer* in order to manipulate the array.
+destructor functions to avoid memory leaks.  The C++ constructors
+are mapped to C by allocating objects via C++ :code:`new`.  Moreover, the
+C API requires passing an array *self pointer* in order to manipulate the
+array.
 
 As with the :ref:`C++ classes <array_classes>`, array elements can be
 accessed via multidimensional array indexing, e.g., :code:`get(array, i, j)`,
@@ -124,6 +125,7 @@ and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
 
   :ref:`Array dimensions <array_dims>`.
 
+.. _cfp_resize:
 .. c:function:: void cfp_array1f.resize(cfp_array1f* self, uint n, int clear)
 .. c:function:: void cfp_array2f.resize(cfp_array2f* self, uint nx, uint ny, int clear)
 .. c:function:: void cfp_array3f.resize(cfp_array3f* self, uint nx, uint ny, uint nz, int clear)
@@ -140,7 +142,7 @@ those six types.
 .. c:function:: cfp_array* cfp_array.ctor_default()
   
   Default constructor.  Allocate an empty array that later can be
-  resized via :c:func:`resize` and whose rate and cache size can be
+  :ref:`resized <cfp_resize>` and whose rate and cache size can be
   set by :c:func:`cfp_array.set_rate` and :c:func:`cfp_array.set_cache_size`.
   Return a pointer to the constructed array.
 

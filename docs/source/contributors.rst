@@ -7,7 +7,7 @@ Contributors
 * LLNL |zfp| team
 
   - Peter Lindstrom (Project Lead and original developer)
-  - Matt Larsen (`CUDA port <https://github.com/mclarsen/cuzfp/>`_)
+  - Matt Larsen (CUDA port)
   - Mark Miller (`HDF5 plugin <https://github.com/LLNL/H5Z-ZFP>`_)
   - Markus Salasoo (testing, backwards compatibility, language bindings)
 
