@@ -155,11 +155,11 @@ given_zfpStreamSetWithFixedAccuracy_when_zfpStreamCompressionMode_expect_returns
 
   int accExp;
   /* using ZFP_MIN_EXP implies expert mode (all default values) */
-  for (accExp = MAX_EXP; accExp > ZFP_MIN_EXP; accExp--) {
+  for (accExp = MAX_EXP; (accExp > ZFP_MIN_EXP) && (ldexp(1., accExp) != 0.); accExp--) {
     setDefaultCompressionParams(stream);
 
     /* set fixed-accuracy, assert fixed-accuracy identified */
-    zfp_stream_set_accuracy(stream, pow(2., (double)accExp));
+    zfp_stream_set_accuracy(stream, ldexp(1., accExp));
 
     zfp_mode mode = zfp_stream_compression_mode(stream);
     if (mode != zfp_mode_fixed_accuracy) {
@@ -328,7 +328,7 @@ given_zfpStreamSetAccuracyModeVal_when_zfpStreamSetMode_expect_returnsFixedAccur
   zfp_stream* stream = bundle->stream;
 
   int accExp;
-  for (accExp = MAX_EXP; accExp > ZFP_MIN_EXP; accExp--) {
+  for (accExp = MAX_EXP; (accExp > ZFP_MIN_EXP) && (ldexp(1., accExp) != 0.); accExp--) {
     zfp_stream_set_accuracy(stream, ldexp(1., accExp));
     assert_int_equal(zfp_stream_compression_mode(stream), zfp_mode_fixed_accuracy);
 
