@@ -1,4 +1,7 @@
 add_library(cfp cfparrays.cpp)
+if(DEFINED CFP_NAMESPACE)
+  target_compile_definitions(cfp PUBLIC "CFP_NAMESPACE=${CFP_NAMESPACE}")
+endif()
 target_include_directories(cfp
   PUBLIC
     ${ZFP_SOURCE_DIR}/include
