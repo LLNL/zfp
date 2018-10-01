@@ -30,6 +30,8 @@ int main()
 
     cmocka_unit_test_setup_teardown(given_cfp_array1d_when_setFlat_expect_entryWrittenToCacheOnly, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array1d_when_getFlat_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array1d_when_set_expect_entryWrittenToCacheOnly, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array1d_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
 
     // fixed rate rounds up to multiples of 16 (omit fixed rate 8)
     cmocka_unit_test_setup_teardown(given_cfp_array1d_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate1, teardownCfpArr),
