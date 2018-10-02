@@ -13,12 +13,10 @@
 #include "zfparray1.h"
 #include "zfparray2.h"
 #include "zfparray3.h"
-#include "fields.h"
 
 enum ArraySize {
-  Small  = 0, // 4^6 = 4096 scalars
-  Medium = 1, // 8^6 = 256 K scalars
-  Large  = 2  // 16^6 = 16 M scalars
+  Small  = 0, // 2^12 = 4096 scalars (2^12 = (2^6)^2 = (2^4)^3 = (2^3)^4)
+  Large  = 1  // 2^24 = 16 M scalars (2^24 = (2^12)^2 = (2^8)^3 = (2^6)^4)
 };
 
 enum ScalarType {
@@ -37,48 +35,256 @@ mask(uint i)
 inline uint
 test_size(ArraySize size)
 {
-  return 4u << size;
+  return 2u << size;
 }
 
-// polynomial x - 3 x^2 + 4 x^4
-template <typename Scalar>
-inline Scalar
-polynomial(volatile Scalar x)
+// refine 1D array f[m] to g[2m]
+inline void
+refine1d(int* g, const int* f, size_t m)
 {
-  // volatile used to ensure bit-for-bit reproducibility across compilers
-  volatile Scalar xx = x * x;
-  volatile Scalar yy = 4 * xx - 3;
-  volatile Scalar p = x + xx * yy;
-  return p;
+  const int weight[4] = { -1, 9, 9, -1 };
+  const size_t n = 2 * m;
+
+  for (size_t x = 0; x < n; x++) {
+    int s = 0;
+    for (int i = 0; i < 4; i++) {
+      size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
+      s += weight[i] * f[xx];
+    }
+    g[x] = s / 16;
+  }
+}
+
+// refine 2D array f[m][m] to g[2m][2m]
+inline void
+refine2d(int* g, const int* f, size_t m)
+{
+  const int weight[4] = { -1, 9, 9, -1 };
+  const size_t n = 2 * m;
+
+  for (size_t y = 0; y < n; y++)
+    for (size_t x = 0; x < n; x++) {
+      int s = 0;
+      for (int j = 0; j < 4; j++) {
+        size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
+        for (int i = 0; i < 4; i++) {
+          size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
+          s += weight[i] * weight[j] * f[xx + m * yy];
+        }
+      }
+      g[x + n * y] = s / (16 * 16);
+    }
+}
+
+// refine 3D array f[m][m][m] to g[2m][2m][2m]
+inline void
+refine3d(int* g, const int* f, size_t m)
+{
+  const int weight[4] = { -1, 9, 9, -1 };
+  const size_t n = 2 * m;
+
+  for (size_t z = 0; z < n; z++)
+    for (size_t y = 0; y < n; y++)
+      for (size_t x = 0; x < n; x++) {
+        int s = 0;
+        for (int k = 0; k < 4; k++) {
+          size_t zz = z & 1u ? (z / 2 + k - 1 + m) % m : z / 2;
+          for (int j = 0; j < 4; j++) {
+            size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
+            for (int i = 0; i < 4; i++) {
+              size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
+              s += weight[i] * weight[j] * weight[k] * f[xx + m * (yy + m * zz)];
+            }
+          }
+        }
+        g[x + n * (y + n * z)] = s / (16 * 16 * 16);
+      }
+}
+
+// refine 4D array f[m][m][m][m] to g[2m][2m][2m][2m]
+inline void
+refine4d(int* g, const int* f, size_t m)
+{
+  const int weight[4] = { -1, 9, 9, -1 };
+  const size_t n = 2 * m;
+
+  for (size_t w = 0; w < n; w++)
+    for (size_t z = 0; z < n; z++)
+      for (size_t y = 0; y < n; y++)
+        for (size_t x = 0; x < n; x++) {
+          int s = 0;
+          for (int l = 0; l < 4; l++) {
+            size_t ww = w & 1u ? (w / 2 + l - 1 + m) % m : w / 2;
+            for (int k = 0; k < 4; k++) {
+              size_t zz = z & 1u ? (z / 2 + k - 1 + m) % m : z / 2;
+              for (int j = 0; j < 4; j++) {
+                size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
+                for (int i = 0; i < 4; i++) {
+                  size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
+                  s += weight[i] * weight[j] * weight[k] * weight[l] * f[xx + m * (yy + m * (zz + m * ww))];
+                }
+              }
+            }
+          }
+          g[x + n * (y + n * (z + n * w))] = s / (16 * 16 * 16 * 16);
+        }
+}
+
+template <typename real>
+inline void
+convert_ints_to_reals(real* data, const int* f, size_t n)
+{
+  for (size_t i = 0; i < n; i++)
+    data[i] = std::ldexp(real(f[i]), -12);
+}
+
+// generate 1D test array of size n
+template <typename real>
+inline bool
+gen_array_1d(real* data, size_t n)
+{
+  // ensure n >= 4 is a power of two
+  if (n < 4 || n & (n - 1))
+    return false;
+
+  // initialize 4-element integer array
+  int* f = new int[n];
+  std::fill(f, f + 4, 0);
+  for (uint x = 1; x < 3; x++)
+    f[x] = 0x10000 * (1 - 2 * int(x & 1u));
+
+  // refine to n-element array
+  int* g = new int[n];
+  for (size_t m = 4; m < n; m *= 2) {
+    refine1d(g, f, m);
+    std::swap(f, g);
+  }
+  delete[] g;
+
+  // convert ints to real type
+  convert_ints_to_reals(data, f, n);
+  delete[] f;
+
+  return true;
+}
+
+// generate 2D test array of size n^2
+template <typename real>
+inline bool
+gen_array_2d(real* data, size_t n)
+{
+  // ensure n >= 4 is a power of two
+  if (n < 4 || n & (n - 1))
+    return false;
+
+  // initialize 4x4 integer array
+  int* f = new int[n * n];
+  std::fill(f, f + 4 * 4, 0);
+  for (uint y = 1; y < 3; y++)
+    for (uint x = 1; x < 3; x++)
+      f[x + 4 * y] = 0x10000 * (1 - 2 * int((x ^ y) & 1u));
+
+  // refine to n^2 array
+  int* g = new int[n * n];
+  for (size_t m = 4; m < n; m *= 2) {
+    refine2d(g, f, m);
+    std::swap(f, g);
+  }
+  delete[] g;
+
+  // convert ints to real type
+  convert_ints_to_reals(data, f, n * n);
+  delete[] f;
+
+  return true;
+}
+
+// generate 3D test array of size n^3
+template <typename real>
+inline bool
+gen_array_3d(real* data, size_t n)
+{
+  // ensure n >= 4 is a power of two
+  if (n < 4 || n & (n - 1))
+    return false;
+
+  // initialize 4x4x4 integer array
+  int* f = new int[n * n * n];
+  std::fill(f, f + 4 * 4 * 4, 0);
+  for (uint z = 1; z <= 2u; z++)
+    for (uint y = 1; y <= 2u; y++)
+      for (uint x = 1; x <= 2u; x++)
+        f[x + 4 * (y + 4 * z)] = 0x10000 * (1 - 2 * int((x ^ y ^ z) & 1u));
+
+  // refine to n^3 array
+  int* g = new int[n * n * n];
+  for (size_t m = 4; m < n; m *= 2) {
+    refine3d(g, f, m);
+    std::swap(f, g);
+  }
+  delete[] g;
+
+  // convert ints to real type
+  convert_ints_to_reals(data, f, n * n * n);
+  delete[] f;
+
+  return true;
+}
+
+// generate 4D test array of size n^4
+template <typename real>
+inline bool
+gen_array_4d(real* data, size_t n)
+{
+  // ensure n >= 4 is a power of two
+  if (n < 4 || n & (n - 1))
+    return false;
+
+  // initialize 4x4x4x4 integer array
+  int* f = new int[n * n * n * n];
+  std::fill(f, f + 4 * 4 * 4 * 4, 0);
+  for (uint w = 1; w < 3; w++)
+    for (uint z = 1; z < 3; z++)
+      for (uint y = 1; y < 3; y++)
+        for (uint x = 1; x < 3; x++)
+          f[x + 4 * (y + 4 * (z + 4 * w))] = 0x10000 * (1 - 2 * int((x ^ y ^ z ^ w) & 1u));
+
+  // refine to n^4 array
+  int* g = new int[n * n * n * n];
+  for (size_t m = 4; m < n; m *= 2) {
+    refine4d(g, f, m);
+    std::swap(f, g);
+  }
+  delete[] g;
+
+  // convert ints to real type
+  convert_ints_to_reals(data, f, n * n * n * n);
+  delete[] f;
+
+  return true;
 }
 
 // initialize array
 template <typename Scalar>
 inline void
-initialize(Scalar* p, int nx, int ny, int nz, Scalar (*f)(Scalar), ArraySize array_size)
+initialize(Scalar* p, uint dims, ArraySize array_size)
 {
-  nx = std::max(nx, 1);
-  ny = std::max(ny, 1);
-  nz = std::max(nz, 1);
-  if (array_size == Small) {
-    // use precomputed small arrays for portability
-    uint d = nz == 1 ? ny == 1 ? 0 : 1 : 2;
-    std::copy(&Field<Scalar>::array[d][0], &Field<Scalar>::array[d][0] + nx * ny * nz, p);
-  }
-  else {
-    for (int k = 0; k < nz; k++) {
-      volatile Scalar z = Scalar(2 * k - nz + 1) / nz;
-      volatile Scalar fz = nz > 1 ? f(z) : Scalar(1);
-      for (int j = 0; j < ny; j++) {
-        volatile Scalar y = Scalar(2 * j - ny + 1) / ny;
-        volatile Scalar fy = ny > 1 ? f(y) : Scalar(1);
-        for (int i = 0; i < nx; i++) {
-          volatile Scalar x = Scalar(2 * i - nx + 1) / nx;
-          volatile Scalar fx = nx > 1 ? f(x) : Scalar(1);
-          *p++ = fx * fy * fz;
-        }
-      }
-    }
+  size_t size = 1ul << ((array_size == Small ? 12 : 24) / dims);
+
+  switch (dims) {
+    default:
+    case 1:
+      gen_array_1d<Scalar>(p, size);
+      break;
+    case 2:
+      gen_array_2d<Scalar>(p, size);
+      break;
+    case 3:
+      gen_array_3d<Scalar>(p, size);
+      break;
+    case 4:
+      gen_array_4d<Scalar>(p, size);
+      break;
   }
 }
 
@@ -436,63 +642,61 @@ test_array(Array& a, const Scalar* f, uint n, double tolerance, double dfmax)
   return failures;
 }
 
-// test small, medium, or large d-dimensional arrays of type Scalar
+// test small or large d-dimensional arrays of type Scalar
 template <typename Scalar>
 inline uint
 test(uint dims, ArraySize array_size)
 {
   uint failures = 0;
   uint m = test_size(array_size);
-  uint n = m * m * m * m * m * m;
+  uint n = m * m * m * m * m * m * m * m * m * m * m * m;
   Scalar* f = new Scalar[n];
 
   // determine array size
-  uint nx, ny, nz;
+  uint nx, ny, nz ,nw;
   zfp_field* field = zfp_field_alloc();
   zfp_field_set_type(field, zfp::codec<Scalar>::type);
   zfp_field_set_pointer(field, f);
   switch (dims) {
     case 1:
       nx = n;
-      ny = 0;
-      nz = 0;
+      ny = nz = nw = 0;
       zfp_field_set_size_1d(field, nx);
       break;
     case 2:
-      nx = m * m * m;
-      ny = m * m * m;
-      nz = 0;
+      nx = ny = m * m * m * m * m * m;
+      nz = nw = 0;
       zfp_field_set_size_2d(field, nx, ny);
       break;
     case 3:
-      nx = m * m;
-      ny = m * m;
-      nz = m * m;
+      nx = ny = nz = m * m * m * m;
+      nw = 0;
       zfp_field_set_size_3d(field, nx, ny, nz);
+      break;
+    case 4:
+      nx = ny = nz = nw = m * m * m;
+      zfp_field_set_size_4d(field, nx, ny, nz, nw);
       break;
     default:
       std::cout << "invalid dimensions " << dims << std::endl;
       return 1;
   }
-  initialize<Scalar>(f, nx, ny, nz, polynomial, array_size);
+  initialize<Scalar>(f, dims, array_size);
   uint t = (zfp_field_type(field) == zfp_type_float ? 0 : 1);
   std::cout << "testing " << dims << "D array of " << (t == 0 ? "floats" : "doubles") << std::endl;
 
   // test data integrity
-  uint32 checksum[3][2][3] = {
+  uint32 checksum[2][2][4] = {
     // small
-    {{ 0xdad6fd69u, 0x000f8df1u, 0x60993f48u },
-     { 0x8d95b1fdu, 0x96a0e601u, 0x66e77c83u }},
-    // medium
-    {{ 0x269fb420u, 0xfc4fd405u, 0x733b9643u },
-     { 0x3321e28bu, 0xfcb8f0f0u, 0xd0f6d6adu }},
+    {{ 0x54174c44u, 0x86609589u, 0xfc0a6a76u, 0xa3481e00u },
+     { 0x7d257bb6u, 0x294bb210u, 0x68614d26u, 0xf6bd3a21u }},
     // large
-    {{ 0x62d6c2b5u, 0x88aa838eu, 0x84f98253u },
-     { 0xf2bd03a4u, 0x10084595u, 0xb8df0e02u }},
+    {{ 0xd1ce1aceu, 0x644274dau, 0xc0ad63fau, 0x700de480u },
+     { 0xc3ed7116u, 0x644e2117u, 0xd7464b07u, 0x2516382eu }},
   };
   uint32 h = hash(f, n * sizeof(Scalar));
   if (h != checksum[array_size][t][dims - 1])
-    std::cout << "warning: array checksum mismatch; tests below may fail" << std::endl;
+    std::cout << "warning: test data checksum " << std::hex << h << " != " << checksum[array_size][t][dims - 1] << "; tests below may fail" << std::endl;
 
   // open compressed stream
   zfp_stream* stream = zfp_stream_open(0);
@@ -500,44 +704,35 @@ test(uint dims, ArraySize array_size)
   // test fixed rate
   for (uint rate = 2u >> t, i = 0; rate <= 32 * (t + 1); rate *= 4, i++) {
     // expected max errors
-    double emax[3][2][3][4] = {
+    double emax[2][2][4][4] = {
       // small
       {
         {
-          {1.998e+00, 7.767e-03, 0.000e+00},
-          {2.356e-01, 3.939e-04, 7.451e-09},
-          {2.479e-01, 1.525e-03, 7.451e-08},
+          {1.627e+01, 8.277e-02, 0.000e+00},
+          {1.500e+00, 3.663e-03, 0.000e+00},
+          {1.500e+00, 9.583e-03, 0.000e+00},
+          {1.373e+01, 6.633e-01, 0.000e+00},
         },
         {
-          {1.998e+00, 9.976e-01, 1.360e-05},
-          {2.944e+00, 2.491e-02, 2.578e-06},
-          {6.103e-01, 3.253e-02, 6.467e-06},
-        },
-      },
-      // medium
-      {
-        {
-          {2.000e+00, 1.425e-03, 0.000e+00},
-          {7.110e-02, 1.264e-05, 2.329e-10},
-          {1.864e-02, 2.814e-05, 1.193e-07},
-        },
-        {
-          {2.000e+00, 1.001e+00, 3.084e-06, 0.000e+00},
-          {2.266e+00, 3.509e-03, 1.784e-08, 0.000e+00},
-          {2.494e-01, 1.473e-03, 7.060e-08, 3.470e-18},
+          {1.627e+01, 1.601e+01, 1.832e-04, 0.000e+00},
+          {2.376e+01, 1.797e-01, 8.584e-06, 0.000e+00},
+          {5.210e+00, 2.002e-01, 3.338e-05, 0.000e+00},
+          {1.016e+01, 8.985e+00, 3.312e-03, 0.000e+00},
         },
       },
       // large
       {
         {
-          {2.000e+00, 1.304e-03, 0.000e+00},
-          {6.907e-02, 5.961e-07, 2.911e-11},
-          {3.458e-03, 7.153e-07, 2.385e-07},
+          {1.627e+01, 2.100e-02, 0.000e+00},
+          {1.624e-01, 7.439e-05, 0.000e+00},
+          {1.001e-02, 7.248e-05, 0.000e+00},
+          {2.527e-02, 2.460e-04, 0.000e+00},
         },
         {
-          {2.000e+00, 1.001e+00, 6.353e-07, 0.000e+00},
-          {2.036e+00, 3.174e-04, 1.646e-10, 5.294e-23},
-          {5.483e-02, 8.559e-05, 4.564e-10, 8.674e-19},
+          {1.627e+01, 1.601e+01, 2.289e-05, 0.000e+00},
+          {1.607e+01, 2.076e-03, 0.000e+00, 0.000e+00},
+          {1.407e-01, 7.344e-04, 0.000e+00, 0.000e+00},
+          {1.436e-01, 2.659e-03, 8.801e-08, 0.000e+00},
         }
       }
     };
@@ -550,44 +745,35 @@ test(uint dims, ArraySize array_size)
   // test fixed precision
   for (uint prec = 4u << t, i = 0; i < 3; prec *= 2, i++) {
     // expected compressed sizes
-    size_t bytes[3][2][3][3] = {
+    size_t bytes[2][2][4][3] = {
       // small
       {
         {
-          {2176, 3256, 6272},
-          { 576, 1296, 4136},
-          { 128,  720, 4096},
+          {2192, 3280, 6328},
+          { 592, 1328, 4384},
+          { 152, 1040, 4600},
+          {  64, 1760, 5856},
         },
         {
-          {3640, 6656, 14576},
-          {1392, 4232, 12312},
-          { 744, 4120, 12304},
-        },
-      },
-      // medium
-      {
-        {
-          {138864, 204456, 349888},
-          { 35216,  63632, 163008},
-          {  8856,  26768, 133360},
-        },
-        {
-          {229048, 374264, 786504},
-          { 69776, 169168, 564192},
-          { 28304, 134904, 588600},
+          {3664, 6712, 14104},
+          {1424, 4480, 12616},
+          {1064, 4624, 12808},
+          {1768, 5864, 14056},
         },
       },
       // large
       {
         {
-          {8886920, 13080944, 21487696},
-          {2240256,  3457592,  7787752},
-          { 570656,  1277128,  4803216},
+          {8965672, 13160560, 21835352},
+          {2235560,  3512848, 10309240},
+          { 568456,  1361056,  8759696},
+          { 134344,   739632,  8896360},
         },
         {
-          {14654848, 23059592, 45965208},
-          { 3850784,  8168520, 25149520},
-          { 1375440,  4901552, 24339800},
+          {14733112, 23407904, 44997832},
+          { 3905240, 10701640, 40856544},
+          { 1458368,  8857008, 41270184},
+          {  763928,  8920656, 41574712},
         },
       }
     };
@@ -598,44 +784,35 @@ test(uint dims, ArraySize array_size)
   for (uint i = 0; i < 3; i++) {
     Scalar tol[] = { Scalar(1e-3), 2 * std::numeric_limits<Scalar>::epsilon(), 0 };
     // expected compressed sizes
-    size_t bytes[3][2][3][3] = {
+    size_t bytes[2][2][4][3] = {
       // small
       {
         {
-          {4752, 10184, 14192},
-          {2920,  8720, 12216},
-          {4264, 10408, 12280},
+          {6328, 11944, 13720},
+          {4936, 11064, 12520},
+          {6104, 11752, 12784},
+          {9440, 14048, 14048},
         },
         {
-          {5136, 25416, 30960},
-          {3016, 23664, 28696},
-          {4288, 25280, 28688},
-        },
-      },
-      // medium
-      {
-        {
-          {272208, 552856, 792528},
-          {105440, 329280, 572552},
-          { 90584, 381264, 588528},
-        },
-        {
-          {296672, 1478648, 1834416},
-          {111560, 1250056, 1609720},
-          { 92120, 1327544, 1637168},
+          {6712, 25888, 29064},
+          {5032, 26016, 28984},
+          {6128, 27120, 29192},
+          {9448, 30440, 30440},
         },
       },
       // large
       {
         {
-          {17416688, 32229448, 47431656},
-          { 5327000, 14827440, 28920960},
-          { 2721504, 12688136, 26308832},
+          {21815976, 38285256, 43425280},
+          { 9187232, 32695984, 40464144},
+          { 8914336, 33364208, 41172864},
+          {12109200, 35921784, 41550416},
         },
         {
-          {18982344, 85195360, 107965448},
-          { 5715280, 63417800,  86969224},
-          { 2819224, 66345592,  89157296},
+          {23388528, 79426016,  88659304},
+          { 9579632, 89770896, 103388072},
+          { 9011648, 94009072, 107606336},
+          {12133496, 97126288, 107911568},
         },
       }
     };
@@ -643,41 +820,31 @@ test(uint dims, ArraySize array_size)
   }
 
   // test compressed array support
-  double emax[3][2][3] = {
+  double emax[2][2][3] = {
     // small
     {
-      {0.000e+00, 7.451e-09, 7.451e-08},
-      {2.354e-10, 5.731e-09, 2.804e-08},
-    },
-    // medium
-    {
-      {0.000e+00, 2.329e-10, 1.193e-07},
-      {1.302e-11, 5.678e-11, 4.148e-10},
+      {4.578e-05, 7.630e-06, 3.148e-05},
+      {1.832e-04, 8.584e-06, 3.338e-05},
     },
     // large
     {
-      {0.000e+00, 2.911e-11, 2.385e-07},
-      {4.464e-13, 3.051e-13, 1.224e-12},
+      {0.000e+00, 0.000e+00, 0.000e+00},
+      {2.289e-05, 0.000e+00, 0.000e+00},
     }
   };
-  double dfmax[3][2][3] = {
+  double dfmax[2][2][3] = {
     // small
     {
-      {4.385e-03, 9.260e-02, 3.760e-01},
-      {4.385e-03, 9.260e-02, 3.760e-01},
-    },
-    // medium
-    {
-      {6.866e-05, 1.792e-03, 2.239e-02},
-      {6.866e-05, 1.792e-03, 2.239e-02},
+      {2.155e-02, 3.755e-01, 1.846e+00},
+      {2.155e-02, 3.755e-01, 1.846e+00},
     },
     // large
     {
-      {1.073e-06, 2.906e-05, 4.714e-04},
-      {1.073e-06, 2.880e-05, 4.714e-04},
+      {2.441e-04, 4.883e-04, 1.221e-03},
+      {2.670e-04, 4.883e-04, 1.221e-03},
     }
   };
-  double rate = 24;
+  double rate = 16;
   switch (dims) {
     case 1: {
         zfp::array1<Scalar> a(nx, rate, f);
@@ -693,6 +860,8 @@ test(uint dims, ArraySize array_size)
         zfp::array3<Scalar> a(nx, ny, nz, rate, f);
         failures += test_array(a, f, n, static_cast<Scalar>(emax[array_size][t][dims - 1]), static_cast<Scalar>(dfmax[array_size][t][dims - 1]));
       }
+      break;
+    case 4: // 4D arrays not yet supported
       break;
   }
 
@@ -790,8 +959,6 @@ int main(int argc, char* argv[])
   for (int i = 1; i < argc; i++)
     if (std::string(argv[i]) == "small")
       sizes |= mask(Small);
-    else if (std::string(argv[i]) == "medium")
-      sizes |= mask(Medium);
     else if (std::string(argv[i]) == "large")
       sizes |= mask(Large);
     else if (std::string(argv[i]) == "float" || std::string(argv[i]) == "fp32")
@@ -804,13 +971,15 @@ int main(int argc, char* argv[])
       dims |= mask(2);
     else if (std::string(argv[i]) == "3d")
       dims |= mask(3);
+    else if (std::string(argv[i]) == "4d")
+      dims |= mask(4);
     else if (std::string(argv[i]) == "all") {
-      sizes |= mask(Small) | mask(Medium) | mask(Large);
+      sizes |= mask(Small) | mask(Large);
       types |= mask(Float) | mask(Double);
-      dims |= mask(1) | mask(2) | mask(3);
+      dims |= mask(1) | mask(2) | mask(3) | mask(4);
     }
     else {
-      std::cerr << "Usage: testzfp [all] [small|medium|large] [fp32|fp64|float|double] [1d|2d|3d]" << std::endl;
+      std::cerr << "Usage: testzfp [all] [small|large] [fp32|fp64|float|double] [1d|2d|3d|4d]" << std::endl;
       return EXIT_FAILURE;
     }
 
@@ -820,7 +989,7 @@ int main(int argc, char* argv[])
   if (!types)
     types = mask(Float) | mask(Double);
   if (!dims)
-    dims = mask(1) | mask(2) | mask(3);
+    dims = mask(1) | mask(2) | mask(3) | mask(4);
 
   // test library and compiler
   uint failures = common_tests();
@@ -830,7 +999,7 @@ int main(int argc, char* argv[])
   // test arrays
   for (int size = Small; size <= Large; size++)
     if (sizes & mask(ArraySize(size))) {
-      for (uint d = 1; d <= 3; d++)
+      for (uint d = 1; d <= 4; d++)
         if (dims & mask(d)) {
           if (types & mask(Float))
             failures += test<float>(d, ArraySize(size));

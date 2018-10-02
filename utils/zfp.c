@@ -28,23 +28,23 @@ The 7 major tasks to be accomplished are:
 
 /* compute and print reconstruction error */
 static void
-print_error(const void* fin, const void* fout, zfp_type type, uint n)
+print_error(const void* fin, const void* fout, zfp_type type, size_t n)
 {
-  const int32* i32i = fin;
-  const int64* i64i = fin;
-  const float* f32i = fin;
-  const double* f64i = fin;
-  const int32* i32o = fout;
-  const int64* i64o = fout;
-  const float* f32o = fout;
-  const double* f64o = fout;
+  const int32* i32i = (const int32*)fin;
+  const int64* i64i = (const int64*)fin;
+  const float* f32i = (const float*)fin;
+  const double* f64i = (const double*)fin;
+  const int32* i32o = (const int32*)fout;
+  const int64* i64o = (const int64*)fout;
+  const float* f32o = (const float*)fout;
+  const double* f64o = (const double*)fout;
   double fmin = +DBL_MAX;
   double fmax = -DBL_MAX;
   double erms = 0;
   double ermsn = 0;
   double emax = 0;
   double psnr = 0;
-  uint i;
+  size_t i;
 
   for (i = 0; i < n; i++) {
     double d, val;
@@ -99,6 +99,7 @@ usage()
   fprintf(stderr, "  -1 <nx> : dimensions for 1D array a[nx]\n");
   fprintf(stderr, "  -2 <nx> <ny> : dimensions for 2D array a[ny][nx]\n");
   fprintf(stderr, "  -3 <nx> <ny> <nz> : dimensions for 3D array a[nz][ny][nx]\n");
+  fprintf(stderr, "  -4 <nx> <ny> <nz> <nw> : dimensions for 4D array a[nw][nz][ny][nx]\n");
   fprintf(stderr, "Compression parameters (needed with -i):\n");
   fprintf(stderr, "  -r <rate> : fixed rate (# compressed bits per floating-point value)\n");
   fprintf(stderr, "  -p <precision> : fixed precision (# uncompressed bits per value)\n");
@@ -111,6 +112,7 @@ usage()
   fprintf(stderr, "Execution parameters:\n");
   fprintf(stderr, "  -x serial : serial compression (default)\n");
   fprintf(stderr, "  -x omp[=threads[,chunk_size]] : OpenMP parallel compression\n");
+  fprintf(stderr, "  -x cuda : CUDA fixed rate parallel compression/decompression\n");
   fprintf(stderr, "Examples:\n");
   fprintf(stderr, "  -i file : read uncompressed file and compress to memory\n");
   fprintf(stderr, "  -z file : read compressed file and decompress to memory\n");
@@ -137,6 +139,8 @@ int main(int argc, char* argv[])
   uint nx = 0;
   uint ny = 0;
   uint nz = 0;
+  uint nw = 0;
+  size_t count = 0;
   double rate = 0;
   uint precision = 0;
   double tolerance = 0;
@@ -178,14 +182,14 @@ int main(int argc, char* argv[])
       case '1':
         if (++i == argc || sscanf(argv[i], "%u", &nx) != 1)
           usage();
-        ny = nz = 1;
+        ny = nz = nw = 1;
         dims = 1;
         break;
       case '2':
         if (++i == argc || sscanf(argv[i], "%u", &nx) != 1 ||
             ++i == argc || sscanf(argv[i], "%u", &ny) != 1)
           usage();
-        nz = 1;
+        nz = nw = 1;
         dims = 2;
         break;
       case '3':
@@ -193,7 +197,16 @@ int main(int argc, char* argv[])
             ++i == argc || sscanf(argv[i], "%u", &ny) != 1 ||
             ++i == argc || sscanf(argv[i], "%u", &nz) != 1)
           usage();
+        nw = 1;
         dims = 3;
+        break;
+      case '4':
+        if (++i == argc || sscanf(argv[i], "%u", &nx) != 1 ||
+            ++i == argc || sscanf(argv[i], "%u", &ny) != 1 ||
+            ++i == argc || sscanf(argv[i], "%u", &nz) != 1 ||
+            ++i == argc || sscanf(argv[i], "%u", &nw) != 1)
+          usage();
+        dims = 4;
         break;
       case 'a':
         if (++i == argc || sscanf(argv[i], "%lf", &tolerance) != 1)
@@ -262,6 +275,8 @@ int main(int argc, char* argv[])
           usage();
         if (!strcmp(argv[i], "serial"))
           exec = zfp_exec_serial;
+        else if (!strcmp(argv[i], "cuda"))
+          exec = zfp_exec_cuda;
         else if (sscanf(argv[i], "omp=%u,%u", &threads, &chunk_size) == 2)
           exec = zfp_exec_omp;
         else if (sscanf(argv[i], "omp=%u", &threads) == 1) {
@@ -288,6 +303,13 @@ int main(int argc, char* argv[])
   }
 
   typesize = zfp_type_size(type);
+  count = (size_t)nx * (size_t)ny * (size_t)nz * (size_t)nw;
+
+  /* make sure one of the array dimensions is not zero */
+  if (!count) {
+    fprintf(stderr, "array size must be nonzero\n");
+    return EXIT_FAILURE;
+  }
 
   /* make sure we have an input file */
   if (!inpath && !zfppath) {
@@ -336,13 +358,13 @@ int main(int argc, char* argv[])
       fprintf(stderr, "cannot open input file\n");
       return EXIT_FAILURE;
     }
-    rawsize = typesize * nx * ny * nz;
+    rawsize = typesize * count;
     fi = malloc(rawsize);
     if (!fi) {
       fprintf(stderr, "cannot allocate memory\n");
       return EXIT_FAILURE;
     }
-    if (fread(fi, typesize, nx * ny * nz, file) != nx * ny * nz) {
+    if (fread(fi, typesize, count, file) != count) {
       fprintf(stderr, "cannot read input file\n");
       return EXIT_FAILURE;
     }
@@ -395,6 +417,9 @@ int main(int argc, char* argv[])
       case 3:
         zfp_field_set_size_3d(field, nx, ny, nz);
         break;
+      case 4:
+        zfp_field_set_size_4d(field, nx, ny, nz, nw);
+        break;
     }
 
     /* set (de)compression mode */
@@ -419,6 +444,25 @@ int main(int argc, char* argv[])
         }
         break;
     }
+  }
+
+  /* specify execution policy */
+  switch (exec) {
+    case zfp_exec_omp:
+      if (!zfp_stream_set_execution(zfp, exec) ||
+          !zfp_stream_set_omp_threads(zfp, threads) ||
+          !zfp_stream_set_omp_chunk_size(zfp, chunk_size)) {
+        fprintf(stderr, "OpenMP execution not available\n");
+        return EXIT_FAILURE;
+      }
+      break;
+    case zfp_exec_serial:
+    default:
+      if (!zfp_stream_set_execution(zfp, exec)) {
+        fprintf(stderr, "serial execution not available\n");
+        return EXIT_FAILURE;
+      }
+      break;
   }
 
   /* compress input file if provided */
@@ -453,6 +497,11 @@ int main(int argc, char* argv[])
           return EXIT_FAILURE;
         }
         break;
+      case zfp_exec_cuda:
+        if (!zfp_stream_set_execution(zfp, exec)) {
+          fprintf(stderr, "cuda execution not available\n");
+          return EXIT_FAILURE;
+        }
       case zfp_exec_serial:
       default:
         if (!zfp_stream_set_execution(zfp, exec)) {
@@ -514,10 +563,30 @@ int main(int argc, char* argv[])
       nx = MAX(field->nx, 1u);
       ny = MAX(field->ny, 1u);
       nz = MAX(field->nz, 1u);
+      nw = MAX(field->nw, 1u);
+    }
+
+    /* specify execution policy */
+    switch (exec) {
+      case zfp_exec_omp: 
+          fprintf(stderr, "OpenMP decompression not available\n");
+          return EXIT_FAILURE;
+      case zfp_exec_cuda:
+        if (!zfp_stream_set_execution(zfp, exec)) {
+          fprintf(stderr, "cuda execution not available\n");
+          return EXIT_FAILURE;
+        }
+      case zfp_exec_serial:
+      default:
+        if (!zfp_stream_set_execution(zfp, exec)) {
+          fprintf(stderr, "serial execution not available\n");
+          return EXIT_FAILURE;
+        }
+        break;
     }
 
     /* allocate memory for decompressed data */
-    rawsize = typesize * nx * ny * nz;
+    rawsize = typesize * count;
     fo = malloc(rawsize);
     if (!fo) {
       fprintf(stderr, "cannot allocate memory\n");
@@ -526,9 +595,18 @@ int main(int argc, char* argv[])
     zfp_field_set_pointer(field, fo);
 
     /* decompress data */
-    if (!zfp_decompress(zfp, field)) {
-      fprintf(stderr, "decompression failed\n");
-      return EXIT_FAILURE;
+    while (!zfp_decompress(zfp, field)) {
+      /* fall back on serial decompression if execution policy not supported */
+      if (inpath && zfp_stream_execution(zfp) != zfp_exec_serial) {
+        if (!zfp_stream_set_execution(zfp, zfp_exec_serial)) {
+          fprintf(stderr, "cannot change execution policy\n");
+          return EXIT_FAILURE;
+        }
+      }
+      else {
+        fprintf(stderr, "decompression failed\n");
+        return EXIT_FAILURE;
+      }
     }
 
     /* optionally write reconstructed data */
@@ -538,7 +616,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "cannot create output file\n");
         return EXIT_FAILURE;
       }
-      if (fwrite(fo, typesize, nx * ny * nz, file) != nx * ny * nz) {
+      if (fwrite(fo, typesize, count, file) != count) {
         fprintf(stderr, "cannot write output file\n");
         return EXIT_FAILURE;
       }
@@ -549,10 +627,10 @@ int main(int argc, char* argv[])
   /* print compression and error statistics */
   if (!quiet) {
     const char* type_name[] = { "int32", "int64", "float", "double" };
-    fprintf(stderr, "type=%s nx=%u ny=%u nz=%u", type_name[type - zfp_type_int32], nx, ny, nz);
-    fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / (nx * ny * nz));
+    fprintf(stderr, "type=%s nx=%u ny=%u nz=%u nw=%u", type_name[type - zfp_type_int32], nx, ny, nz, nw);
+    fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / count);
     if (stats)
-      print_error(fi, fo, type, nx * ny * nz);
+      print_error(fi, fo, type, count);
     fprintf(stderr, "\n");
   }
 

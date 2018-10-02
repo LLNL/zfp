@@ -6,14 +6,11 @@ CXXLIBS = -L../lib -lzfp
 
 all: $(TARGETS)
 
-$(BINDIR)/testzfp: testzfp.cpp fields.o ../lib/libzfp.a
-	$(CXX) $(CXXFLAGS) -I../array testzfp.cpp fields.o $(CXXLIBS) -o $@
-
-fields.o: fields.c fields.h
-	$(CC) $(CFLAGS) -c fields.c
+$(BINDIR)/testzfp: testzfp.cpp ../lib/$(LIBZFP)
+	$(CXX) $(CXXFLAGS) -I../array testzfp.cpp $(CXXLIBS) -o $@
 
 test: $(BINDIR)/testzfp
 	$(BINDIR)/testzfp
 
 clean:
-	rm -f $(TARGETS) fields.o
+	rm -f $(TARGETS)

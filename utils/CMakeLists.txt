@@ -1,3 +1,6 @@
 add_executable(zfpcmd zfp.c)
 set_property(TARGET zfpcmd PROPERTY OUTPUT_NAME zfp)
 target_link_libraries(zfpcmd zfp)
+if(HAVE_LIBM_MATH)
+  target_link_libraries(zfpcmd m)
+endif()

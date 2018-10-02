@@ -9,6 +9,10 @@
 #include "zfparray2.h"
 #include "array2d.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 // constants used in the solution
 class Constants {
 public:
@@ -38,6 +42,56 @@ public:
   double tfinal; // minimum time to run solution to
   double pi;     // 3.141...
 };
+
+template <class array2d>
+inline void
+time_step_parallel(array2d& u, const Constants& c);
+
+// advance solution in parallel via thread-safe views
+template <>
+inline void
+time_step_parallel(zfp::array2d& u, const Constants& c)
+{
+#ifdef _OPENMP
+  // flush shared cache to ensure cache consistency across threads
+  u.flush_cache();
+  // compute du/dt in parallel
+  zfp::array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
+  #pragma omp parallel
+  {
+    // create read-only private view of entire array u
+    zfp::array2d::private_const_view myu(&u);
+    // create read-write private view into rectangular subset of du
+    zfp::array2d::private_view mydu(&du);
+    mydu.partition(omp_get_thread_num(), omp_get_num_threads());
+    // process rectangular region owned by this thread
+    for (uint j = 0; j < mydu.size_y(); j++) {
+      int y = mydu.global_y(j);
+      if (1 <= y && y <= c.ny - 2)
+        for (uint i = 0; i < mydu.size_x(); i++) {
+          int x = mydu.global_x(i);
+          if (1 <= x && x <= c.nx - 2) {
+            double uxx = (myu(x - 1, y) - 2 * myu(x, y) + myu(x + 1, y)) / (c.dx * c.dx);
+            double uyy = (myu(x, y - 1) - 2 * myu(x, y) + myu(x, y + 1)) / (c.dy * c.dy);
+            mydu(i, j) = c.dt * c.k * (uxx + uyy);
+          }
+        }
+    }
+    // compress all private cached blocks to shared storage
+    mydu.flush_cache();
+  }
+  // take forward Euler step in serial
+  for (uint i = 0; i < u.size(); i++)
+    u[i] += du[i];
+#endif
+}
+
+// dummy template instantiation; never executed
+template <>
+inline void
+time_step_parallel(raw::array2d& u, const Constants& c)
+{
+}
 
 // advance solution using integer array indices
 template <class array2d>
@@ -83,7 +137,7 @@ time_step_iterated(array2d& u, const Constants& c)
 // solve heat equation using 
 template <class array2d>
 inline double
-solve(array2d& u, const Constants& c, bool iterator)
+solve(array2d& u, const Constants& c, bool iterator, bool parallel)
 {
   // initialize u with point heat source (u is assumed to be zero initialized)
   u(c.x0, c.y0) = 1;
@@ -92,7 +146,9 @@ solve(array2d& u, const Constants& c, bool iterator)
   double t;
   for (t = 0; t < c.tfinal; t += c.dt) {
     std::cerr << "t=" << std::setprecision(6) << std::fixed << t << std::endl;
-    if (iterator)
+    if (parallel)
+      time_step_parallel(u, c);
+    else if (iterator)
       time_step_iterated(u, c);
     else
       time_step_indexed(u, c);
@@ -140,6 +196,9 @@ usage()
   std::cerr << "Options:" << std::endl;
   std::cerr << "-i : traverse arrays using iterators" << std::endl;
   std::cerr << "-n <nx> <ny> : number of grid points" << std::endl;
+#ifdef _OPENMP
+  std::cerr << "-p : use multithreading (only with compressed arrays)" << std::endl;
+#endif
   std::cerr << "-t <nt> : number of time steps" << std::endl;
   std::cerr << "-r <rate> : use compressed arrays with 'rate' bits/value" << std::endl;
   std::cerr << "-c <blocks> : use 'blocks' 4x4 blocks of cache" << std::endl;
@@ -154,6 +213,7 @@ int main(int argc, char* argv[])
   double rate = 64;
   bool iterator = false;
   bool compression = false;
+  bool parallel = false;
   int cache = 0;
 
   // parse command-line options
@@ -165,6 +225,10 @@ int main(int argc, char* argv[])
           ++i == argc || sscanf(argv[i], "%i", &ny) != 1)
         return usage();
     }
+#ifdef _OPENMP
+    else if (std::string(argv[i]) == "-p")
+      parallel = true;
+#endif
     else if (std::string(argv[i]) == "-t") {
       if (++i == argc || sscanf(argv[i], "%i", &nt) != 1)
         return usage();
@@ -181,6 +245,15 @@ int main(int argc, char* argv[])
     else
       return usage();
 
+  if (parallel && !compression) {
+    fprintf(stderr, "multithreading requires compressed arrays\n");
+    return EXIT_FAILURE;
+  }
+  if (parallel && iterator) {
+    fprintf(stderr, "multithreading does not support iterators\n");
+    return EXIT_FAILURE;
+  }
+
   Constants c(nx, ny, nt);
 
   double sum;
@@ -189,14 +262,14 @@ int main(int argc, char* argv[])
     // solve problem using compressed arrays
     zfp::array2d u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
     rate = u.rate();
-    double t = solve(u, c, iterator);
+    double t = solve(u, c, iterator, parallel);
     sum = total(u);
     err = error(u, c, t);
   }
   else {
     // solve problem using uncompressed arrays
     raw::array2d u(nx, ny);
-    double t = solve(u, c, iterator);
+    double t = solve(u, c, iterator, parallel);
     sum = total(u);
     err = error(u, c, t);
   }

@@ -13,6 +13,11 @@ CXX = g++
 # common compiler options -----------------------------------------------------
 
 FLAGS = -O3 -fPIC -Wall -pedantic -I../include
+SOFLAGS =
+
+# macOS compiler options (uncomment on macOS) ---------------------------------
+
+# SOFLAGS += -undefined dynamic_lookup
 
 # OpenMP compiler options -----------------------------------------------------
 
@@ -45,6 +50,24 @@ OMPFLAGS = -fopenmp
 
 # count cache misses
 # DEFS += -DZFP_WITH_CACHE_PROFILE
+
+# build targets ---------------------------------------------------------------
+
+BUILD_CFP = 0
+BUILD_UTILITIES = 1
+BUILD_EXAMPLES = 0
+BUILD_TESTING = 1
+BUILD_SHARED_LIBS = 0
+
+ifneq ($(BUILD_SHARED_LIBS),0)
+  LIBRARY = shared
+  LIBZFP = libzfp.so
+  LIBCFP = libcfp.so
+else
+  LIBRARY = static
+  LIBZFP = libzfp.a
+  LIBCFP = libcfp.a
+endif
 
 # conditionals ----------------------------------------------------------------
 

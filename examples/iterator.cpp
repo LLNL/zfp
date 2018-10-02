@@ -29,7 +29,7 @@ int main()
   zfp::array1<double> v(10, 64.0);
   // initialize and print array of random values
   for (zfp::array1<double>::iterator p = v.begin(); p != v.end(); p++)
-    *p = drand48();
+    *p = rand();
   std::cout << "random array" << std::endl;
   print1(&v[0], v.size());
   std::cout << std::endl;
