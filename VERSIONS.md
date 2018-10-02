@@ -1,5 +1,28 @@
 # zfp Release Notes
 
+## 0.5.4 (October 1, 2018)
+
+- Added support for CUDA fixed-rate compression and decompression.
+
+- Added views into compressed arrays for thread safety, nested array
+  indexing, slicing, and array subsetting.
+
+- Added C language bindings for compressed arrays.
+
+- Added support for compressing and decompressing 4D data.
+
+- Changes:
+  - Execution policy now applies to both compression and decompression.
+  - Compressed array accessors now return Scalar type instead of
+    const Scalar& to avoid stale references to evicted cache lines.
+
+- Bug fixes:
+  - Handling of negative strides.
+  - Command line tool handling of arrays with more than 2^32 elements.
+  - bitstream C++ compatibility.  
+  - Respect minimum cache size request.
+
+
 ## 0.5.3 (March 28, 2018)
 
 - Added support for OpenMP multithreaded compression (but not decompression).

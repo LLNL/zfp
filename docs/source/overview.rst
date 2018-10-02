@@ -13,10 +13,10 @@ exactly, is possible in some circumstances.
 
 The |zfp| software consists of three main components: a C library for
 compressing whole arrays (or smaller pieces of arrays); C++ classes
-that implement compressed arrays; and a command-line compression tool
-and other code examples.  |zfp| has also been incorporated into several
-independently developed plugins for interfacing |zfp| with popular
-I/O libraries and visualization tools such as
+(plus C wrappers) that implement compressed arrays; and a command-line
+compression tool and other code examples.  |zfp| has also been incorporated
+into several independently developed plugins for interfacing |zfp| with
+popular I/O libraries and visualization tools such as
 `ADIOS <https://www.olcf.ornl.gov/center-projects/adios/>`_,
 `HDF5 <https://support.hdfgroup.org>`_, and
 `VTK <http://www.vtk.org/>`_.
@@ -27,15 +27,16 @@ components, specifically
 * Via the :ref:`C API <hl-api>` when doing I/O in an application or
   otherwise performing data (de)compression online.
 
-* Via |zfp|'s C++ in-memory :ref:`compressed array classes <arrays>` when
+* Via |zfp|'s in-memory :ref:`compressed array classes <arrays>` when
   performing computations on very large arrays that demand random access to
-  array elements, e.g. in visualization, data analysis, or even in numerical
+  array elements, e.g., in visualization, data analysis, or even in numerical
   simulation.
 
 * Via the |zfp| :ref:`command-line tool <zfpcmd>` when compressing
   binary files offline.
 
-* Via one of the I/O libraries or visualization tools that support |zfp|, e.g.
+* Via one of the I/O libraries or visualization tools that support |zfp|,
+  e.g.,
 
   * `ADIOS plugin <https://github.com/suchyta1/AtoZ>`_
   * `HDF5 plugin <https://github.com/LLNL/H5Z-ZFP>`_
@@ -50,7 +51,7 @@ its major components may help understand what to expect and how |zfp|'s
 parameters influence the result.
 
 |zfp| compresses *d*-dimensional (1D, 2D, 3D, and 4D) arrays of integer or
-floating-point values by partitioning the array into blocks of |4powd|
+floating-point values by partitioning the array into cubical blocks of |4powd|
 values, i.e., 4, 16, 64, or 256 values for 1D, 2D, 3D, and 4D arrays,
 respectively.  Each such block is (de)compressed independently into a fixed-
 or variable-length bit string, and these bit strings are concatenated into a

@@ -49,8 +49,8 @@ the block.  The four constraints are as follows:
 .. c:member:: uint zfp_stream.minbits
 
   The minimum number of compressed bits used to represent a block.  Usually
-  this parameter is zero, unless each and every block is to be stored using
-  a fixed number of bits to facilitate random access, in which case it
+  this parameter equals one bit, unless each and every block is to be stored
+  using a fixed number of bits to facilitate random access, in which case it
   should be set to the same value as :c:member:`zfp_stream.maxbits`.
 
 .. c:member:: uint zfp_stream.maxbits

@@ -13,6 +13,11 @@ CXX = g++
 # common compiler options -----------------------------------------------------
 
 FLAGS = -O3 -fPIC -Wall -pedantic -I../include
+SOFLAGS =
+
+# macOS compiler options (uncomment on macOS) ---------------------------------
+
+# SOFLAGS += -undefined dynamic_lookup
 
 # OpenMP compiler options -----------------------------------------------------
 

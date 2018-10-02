@@ -4,7 +4,7 @@ using namespace zfp;
 extern "C" {
   #include "utils/hash64.h"
   #include "utils/rand64.h"
-};
+}
 
 #define ARRAY_DIMS_SCALAR_TEST Array3dTest
 #define ARRAY_DIMS_SCALAR_TEST_VIEWS Array3dTestViews

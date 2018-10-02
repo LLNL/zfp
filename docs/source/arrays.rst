@@ -6,10 +6,10 @@ Compressed Arrays
 
 .. cpp:namespace:: zfp
 
-|zfp|'s compressed arrays are C++ classes that implement random-accessible
-single- and multi-dimensional floating-point arrays whose storage size,
-specified in number of bits per array element, is set by the user.
-Such arbitrary storage is achieved via
+|zfp|'s compressed arrays are C++ classes, plus C wrappers around these
+classes, that implement random-accessible single- and multi-dimensional
+floating-point arrays whose storage size, specified in number of bits per
+array element, is set by the user.  Such arbitrary storage is achieved via
 |zfp|'s lossy :ref:`fixed-rate compression <mode-fixed-rate>` mode, by
 partitioning each *d*-dimensional array into blocks of |4powd| values
 and compressing each block to a fixed number of bits.  The more smoothly
@@ -37,8 +37,20 @@ not), a "dirty bit" is set with its cached block to indicate that the block
 must be compressed back to persistent storage when evicted from the cache.
 
 This section documents the public interface to the array classes, including
-base classes and member accessor classes like proxy references/pointers and
-iterators.
+base classes and member accessor classes like proxy references/pointers,
+iterators, and views.
+
+The following sections are available:
+
+* :ref:`array_classes`
+* :ref:`caching`
+* :ref:`references`
+* :ref:`pointers`
+* :ref:`iterators`
+* :ref:`views`
+* :ref:`cfp`
+
+.. _array_classes:
 
 Array Classes
 -------------
@@ -74,7 +86,7 @@ Base Class
 
 .. cpp:function:: virtual void array::clear_cache() const
 
-  Empty cache without compressing modified cached blocks, i.e. discard any
+  Empty cache without compressing modified cached blocks, i.e., discard any
   cached updates to the array.
 
 .. cpp:function:: virtual void array::flush_cache() const
@@ -130,7 +142,7 @@ class.
   uncompressed data is assumed to be stored as in the :cpp:func:`get`
   method.
 
-.. cpp:function:: const Scalar& array::operator[](uint index) const
+.. cpp:function:: Scalar array::operator[](uint index) const
 
   Return scalar stored at given flat index (inspector).  For a 3D array,
   :code:`index = x + nx * (y + ny * z)`.
@@ -153,14 +165,25 @@ class.
 1D, 2D, and 3D Arrays
 ^^^^^^^^^^^^^^^^^^^^^
 
-Below are classes and methods specific to each array dimensionality.  Since
-the classes and methods share obvious similarities regardless of
-dimensionality, only one generic description for all dimensionalities is
-provided.
+Below are classes and methods specific to each array dimensionality and
+template scalar type (:code:`float` or :code:`double`).  Since the classes
+and methods share obvious similarities regardless of dimensionality, only
+one generic description for all dimensionalities is provided.
 
-.. cpp:class:: template<typename Scalar> array1 : public array
-.. cpp:class:: template<typename Scalar> array2 : public array
-.. cpp:class:: template<typename Scalar> array3 : public array
+Note: In the class declarations below, the class template for the scalar
+type is ommitted for readability, e.g.,
+:code:`class array1` is used as shorhand for
+:code:`template <typename Scalar> class array1`.  Wherever the type
+:code:`Scalar` appears, it refers to this template argument.
+
+..
+  .. cpp:class:: template<typename Scalar> array1 : public array
+  .. cpp:class:: template<typename Scalar> array2 : public array
+  .. cpp:class:: template<typename Scalar> array3 : public array
+
+.. cpp:class:: array1 : public array
+.. cpp:class:: array2 : public array
+.. cpp:class:: array3 : public array
 
   This is a 1D/2D/3D array that inherits basic functionality from the generic
   :cpp:class:`array` base class.  The template argument, :cpp:type:`Scalar`,
@@ -169,12 +192,20 @@ provided.
   or double type, e.g. :cpp:class:`array1f` is a synonym for
   :cpp:class:`array1\<float>`.
 
+.. cpp:class:: arrayANY : public array
+
+  Fictitious class used to refer to any one of :cpp:class:`array1`,
+  :cpp:class:`array2`, and :cpp:class:`array3`.  This class is not part of
+  the |zfp| API.
+
+.. _array_ctor_default:
 .. cpp:function:: array1::array1()
 .. cpp:function:: array2::array2()
 .. cpp:function:: array3::array3()
 
   Default constructor.  Creates an empty array.
 
+.. _array_ctor:
 .. cpp:function:: array1::array1(uint n, double rate, const Scalar* p = 0, size_t csize = 0)
 .. cpp:function:: array2::array2(uint nx, uint ny, double rate, const Scalar* p = 0, size_t csize = 0)
 .. cpp:function:: array3::array3(uint nx, uint ny, uint nz, double rate, const Scalar* p = 0, size_t csize = 0)
@@ -196,12 +227,14 @@ provided.
 
   Virtual destructor (allows for inheriting from |zfp| arrays).
 
+.. _array_copy:
 .. cpp:function:: array1& array1::operator=(const array1& a)
 .. cpp:function:: array2& array2::operator=(const array2& a)
 .. cpp:function:: array3& array3::operator=(const array3& a)
 
   Assignment operator.  Performs a deep copy.
 
+.. _array_dims:
 .. cpp:function:: uint array2::size_x() const
 .. cpp:function:: uint array2::size_y() const
 .. cpp:function:: uint array3::size_x() const
@@ -210,6 +243,7 @@ provided.
 
   Return array dimensions.
 
+.. _array_resize:
 .. cpp:function:: void array1::resize(uint n, bool clear = true)
 .. cpp:function:: void array2::resize(uint nx, uint ny, bool clear = true)
 .. cpp:function:: void array3::resize(uint nx, uint ny, uint nz, bool clear = true)
@@ -217,9 +251,10 @@ provided.
   Resize the array (all previously stored data will be lost).  If *clear* is
   true, then the array elements are all initialized to zero.
 
-.. cpp:function:: const Scalar& array1::operator()(uint i) const
-.. cpp:function:: const Scalar& array2::operator()(uint i, uint j) const
-.. cpp:function:: const Scalar& array3::operator()(uint i, uint j, uint k) const
+.. _array_accessor:
+.. cpp:function:: Scalar array1::operator()(uint i) const
+.. cpp:function:: Scalar array2::operator()(uint i, uint j) const
+.. cpp:function:: Scalar array3::operator()(uint i, uint j, uint k) const
 
   Return scalar stored at multi-dimensional index given by *i*, *j*, and *k*
   (inspector).
@@ -236,3 +271,5 @@ provided.
 .. include:: references.inc
 .. include:: pointers.inc
 .. include:: iterators.inc
+.. include:: views.inc
+.. include:: cfp.inc

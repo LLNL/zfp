@@ -1,5 +1,5 @@
-#ifndef BITSTREAM_H
-#define BITSTREAM_H
+#ifndef ZFP_BITSTREAM_H
+#define ZFP_BITSTREAM_H
 
 #include <stddef.h>
 #include "zfp/types.h"

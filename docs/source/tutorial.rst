@@ -81,10 +81,10 @@ for more details on the meaning of these parameters)::
 Note that only one of these three functions should be called.  The return
 value from these functions gives the actual rate, precision, or tolerance,
 and may differ slightly from the argument passed due to constraints imposed
-by the compressor, e.g. each block must be stored using a whole number of
+by the compressor, e.g., each block must be stored using a whole number of
 bits at least as large as the number of bits in the floating-point exponent;
 the precision cannot exceed the number of bits in a floating-point value
-(i.e. 32 for single and 64 for double precision); and the tolerance must
+(i.e., 32 for single and 64 for double precision); and the tolerance must
 be a (possibly negative) power of two.
 
 The compression parameters have now been specified, but before compression
@@ -110,7 +110,8 @@ with a bit stream used by the compressor to read and write bits::
   zfp_stream_set_bit_stream(zfp, stream);
 
 Compression can be accelerated via OpenMP multithreading (since |zfp|
-|omprelease|).  To enable parallel compression, call::
+|omprelease|) and CUDA (since |zfp| |cudarelease|).  To enable OpenMP
+parallel compression, call::
 
   if (!zfp_stream_set_execution(zfp, zfp_exec_omp)) {
     // OpenMP not available; handle error
@@ -197,7 +198,7 @@ on demand, a low-level interface is available.  Since this API is useful
 primarily for supporting random access, the user also needs to manipulate
 the :ref:`bit stream <bs-api>`, e.g., to position the bit pointer to where
 data is to be read or written.  Please be advised that the bit stream
-functions have been optimized for speed, and do not check for buffer
+functions have been optimized for speed and do not check for buffer
 overruns or other types of programmer error.
 
 Like the high-level API, the low-level API also makes use of the
@@ -214,8 +215,8 @@ assumed to be stored contiguously.  For example,
   uint bits = zfp_encode_block_double_3(zfp, block);
 
 The return value is the number of bits of compressed storage for the block.
-For fixed-rate streams, if random access is desired, then the stream should
-also be flushed after each block is encoded::
+For fixed-rate streams, if random write access is desired, then the stream
+should also be flushed after each block is encoded::
 
   // flush any buffered bits
   zfp_stream_flush(zfp);
@@ -281,7 +282,8 @@ The |zfp| compressed array API, which currently supports 1D, 2D, and 3D
 (but not 4D) arrays, has been designed to facilitate integration with existing
 applications.  After initial array declaration, a |zfp| array can often
 be used in place of a regular C/C++ array or STL vector, e.g., using flat
-indexing via :code:`a[index]`, or using multidimensional indexing via
+indexing via :code:`a[index]`, nested indexing :code:`a[k][j][i]` (via
+:ref:`nested views <nested_view>`), or using multidimensional indexing via
 :code:`a(i)`, :code:`a(i, j)`, or :code:`a(i, j, k)`.  There are,
 however, some important differences.  For instance, applications that
 rely on addresses or references to array elements may have to be
@@ -317,7 +319,7 @@ an array, use
 This declaration is conceptually equivalent to
 ::
 
-  double a[nz][ny][nx] = {};
+  double a[nz][ny][nx] = { 0.0 };
 
 or using STL vectors
 ::
@@ -341,7 +343,7 @@ dimensions, i.e.
 
 For finer granularity, the :c:macro:`BIT_STREAM_WORD_TYPE` macro needs to
 be set to a type narrower than 64 bits during compilation of |libzfp|,
-e.g. if set to :c:type:`uint8` the rate granularity becomes 8 / |4powd|
+e.g., if set to :c:type:`uint8` the rate granularity becomes 8 / |4powd|
 bits in *d* dimensions, or
 ::
 
@@ -410,6 +412,14 @@ These access the same value if and only if
 Note that 0 |leq| *i* < *nx*, 0 |leq| *j* < *ny*, and 0 |leq| *k* < *nz*,
 and *i* varies faster than *j*, which varies faster than *k*.
 
+|zfp| |viewsrelease| adds views to arrays, which among other things can
+be used to perform nested indexing::
+
+  zfp::array3d::nested_view v(&a);
+  double value = v[k][j][i];
+
+A view is a shallow copy of an array or a subset of an array.
+
 Array values may be written and updated using the usual set of C++ assignment
 and compound assignment operators.  For example::
 
@@ -424,7 +434,7 @@ the return type of both operators :code:`[]` and :code:`()` is a proxy
 reference class, similar to :code:`std::vector<bool>::reference` from the
 STL library.  Because read accesses to a mutable object cannot call the
 const-qualified accessor, a proxy reference may be returned even for read
-calls, e.g. in
+calls.  For example, in
 ::
 
   a[i] = a[i + 1];
@@ -441,7 +451,7 @@ Array dimensions *nx*, *ny*, and *nz* can be queried using these functions::
   uint size_y(); // ny
   uint size_z(); // nz
 
-The array dimensions can also be changed dynamically, e.g. if not known
+The array dimensions can also be changed dynamically, e.g., if not known
 at time of construction, using
 ::
 
@@ -552,10 +562,10 @@ Caching
 
 As mentioned above, the array class maintains a software write-back cache
 of at least one uncompressed block.  When a block in this cache is evicted
-(e.g. due to a conflict), it is compressed back to permanent storage only
+(e.g., due to a conflict), it is compressed back to permanent storage only
 if it was modified while stored in the cache.
 
-The size cache to use is specified by the user, and is an important
+The size cache to use is specified by the user and is an important
 parameter that needs careful consideration in order to balance the extra
 memory usage, performance, and quality (recall that data loss is incurred
 only when a block is evicted from the cache and compressed).  Although the

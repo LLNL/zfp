@@ -149,7 +149,7 @@ public:
 
 protected:
   // construction--perform shallow copy of (sub)array
-  friend class array3::nested_view2;
+  friend class nested_view2;
   explicit nested_view1(array3* array) : preview(array) {}
   explicit nested_view1(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : preview(array, x, y, z, nx, ny, nz) {}
 };
@@ -178,7 +178,7 @@ public:
 
 protected:
   // construction--perform shallow copy of (sub)array
-  friend class array3::nested_view3;
+  friend class nested_view3;
   explicit nested_view2(array3* array) : preview(array) {}
   explicit nested_view2(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : preview(array, x, y, z, nx, ny, nz) {}
 };

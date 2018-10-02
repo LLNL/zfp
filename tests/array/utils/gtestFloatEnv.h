@@ -2,7 +2,7 @@
 
 extern "C" {
   #include "utils/genSmoothRandNums.h"
-};
+}
 
 const size_t MIN_TOTAL_ELEMENTS = 1000000;
 

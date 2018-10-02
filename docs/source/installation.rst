@@ -6,12 +6,12 @@ Installation
 ============
 
 |zfp| consists of three distinct parts: a compression library written in C,
-a set of C++ header files that implement compressed arrays, and a set of
-C and C++ examples.  The main compression codec is written in C and should
-conform to both the ISO C89 and C99 standards.  The C++ array classes are
-implemented entirely in header files and can be included as is, but since
-they call the compression library, applications must link with
-:file:`libzfp`.
+a set of C++ header files that implement compressed arrays and corresponding
+C wrappers, and a set of C and C++ examples.  The main compression codec is
+written in C and should conform to both the ISO C89 and C99 standards.
+The C++ array classes are implemented entirely in header files and can be
+included as is, but since they call the compression library, applications
+must link with |libzfp|.
 
 On Linux, macOS, and MinGW, |zfp| is easiest compiled using gcc and gmake.
 `CMake <https://cmake.org>`_ support is also available, e.g., for Windows
@@ -19,14 +19,18 @@ builds.  See below for instructions on GNU and CMake builds.
 
 |zfp| has successfully been built and tested using these compilers:
 
-* gcc versions 4.4.7, 4.7.2, 4.8.2, 4.9.2, 5.4.1, 6.3.0
-* icc versions 12.0.5, 12.1.5, 15.0.4, 16.0.1, 17.0.0, 18.0.0
-* clang version 3.6.0
-* xlc version 12.1
+* gcc versions 4.4.7, 4.7.3, 4.8.5, 4.9.4, 5.5.0, 6.1.0, 6.4.0, 7.1.0, 7.3.0, 8.1.0
+* icc versions 15.0.6, 16.0.4, 17.0.2, 18.0.2, 19.0.0
+* clang versions 3.9.1, 4.0.0, 5.0.0, 6.0.0
 * MinGW version 5.3.0
-* Visual Studio versions 14.0 (2015), 14.1 (2017)
+* Visual Studio versions 14 (2015), 15 (2017)
+
+|zfp| conforms to various language standards, including C89, C99, C++98,
+C++11, and C++14.
 
 **NOTE: zfp requires 64-bit compiler and operating system support**.
+
+.. _gnu_builds:
 
 GNU Builds 
 ----------
@@ -36,29 +40,13 @@ To compile |zfp| using `gcc <https://gcc.gnu.org>`_ without
 
     make
 
-from the |zfp| root directory.  This builds :file:`libzfp` as a static
+from the |zfp| root directory.  This builds |libzfp| as a static
 library as well as utilities and example programs.  To enable OpenMP
 parallel compression, type::
 
     make ZFP_WITH_OPENMP=1
 
-To optionally create a shared library, type::
-
-    make shared
-
-and set :envvar:`LD_LIBRARY_PATH` to point to :file:`lib`.  To test the
-compressor, type::
-
-    make test
-
-If the compilation or regression tests fail, it is possible that some of
-the macros in the file :file:`Config` have to be adjusted.  Also, the tests
-may fail due to minute differences in the computed floating-point fields
-being compressed (as indicated by checksum errors).  It is surprisingly
-difficult to portably generate a floating-point array that agrees
-bit-for-bit across platforms.  If most tests succeed and the failures
-result in byte sizes and error values reasonably close to the expected
-values, then it is likely that the compressor is working correctly.
+.. _cmake_builds:
 
 CMake Builds
 ------------
@@ -92,6 +80,75 @@ This builds |zfp| in release mode.  Replace 'Release' with 'Debug' to
 build |zfp| in debug mode.  See the instructions for Linux on how to
 change the cmake line to also build the example programs.
 
+Testing
+-------
+
+To test that |zfp| is working properly, type::
+
+    make test
+
+or using CMake::
+
+    ctest
+
+If the compilation or regression tests fail, it is possible that some of
+the macros in the file :file:`Config` have to be adjusted.  Also, the tests
+may fail due to minute differences in the computed floating-point fields
+being compressed, which will be indicated by checksum errors.  If most
+tests succeed and the failures result in byte sizes and error values
+reasonably close to the expected values, then it is likely that the
+compressor is working correctly.
+
+
+.. index::
+   single: Build Targets
+.. _targets:
+
+Build Targets
+-------------
+
+To specify which components to build, set the macros below to :code:`1`
+(GNU make) or :code:`ON` (CMake), e.g.,
+::
+
+  make BUILD_UTILITIES=1 BUILD_EXAMPLES=0
+
+or using CMake
+::
+
+  cmake -DBUILD_UTILITIES=ON -DBUILD_EXAMPLES=OFF ..
+
+Regardless of the settings below, |libzfp| will always be built.
+
+.. c:macro:: BUILD_CFP
+
+  Build |libcfp| for C bindings to compressed arrays.
+  Default: off.
+
+.. c:macro:: BUILD_UTILITIES
+
+  Build |zfpcmd| command-line utility for compressing binary files.
+  Default: on.
+
+.. c:macro:: BUILD_EXAMPLES
+
+  Build code examples.
+  Default: off.
+
+.. c:macro:: BUILD_TESTING
+
+  Build |testzfp| and (when on the develop branch) unit tests.
+  Default: on.
+
+.. c:macro:: BUILD_SHARED_LIBS
+
+  Build :file:`libzfp.so` and :file:`libcfp.so` shared objects.
+  On macOS, the :code:`SOFLAGS` line in the :file:`Config` file may have
+  to be uncommented when compiling with GNU make.
+  CMake default: on.
+  GNU make default: off.
+
+
 .. index::
    single: Configuration
 .. _config:
@@ -99,9 +156,8 @@ change the cmake line to also build the example programs.
 Compile-Time Macros
 -------------------
 
-The behavior of |zfp| can be configured at compile time via a set of macros.
-For GNU builds, these macros are set in the file :file:`Config`.  For CMake
-builds, use the :code:`-D` option on the cmake line, e.g.
+The behavior of |zfp| can be configured at compile time via a set of macros
+in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 ::
 
     cmake -DZFP_WITH_OPENMP=OFF ..
@@ -129,6 +185,18 @@ builds, use the :code:`-D` option on the cmake line, e.g.
   :code:`-fopenmp`.  NOTE: clang currently does not support OpenMP on macOS.
   CMake default: on.
   GNU make default: off.
+
+.. c:macro:: ZFP_WITH_CUDA
+
+  CMake macro for enabling or disabling CUDA support for
+  GPU compression and decompression.  When enabled, CUDA and a compatible
+  host compiler must be installed.  For a full list of compatible compilers,
+  please consult the
+  `NVIDIA documentation <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/>`_.  If a CUDA installation is in the user's path, it will be
+  automatically found by CMake.  Alternatively, the CUDA binary directory 
+  can be specified using the :envvar:`CUDA_BIN_DIR` environment variable.
+  CMake default: off.
+  GNU make default: off and ignored.
 
 .. c:macro:: ZFP_WITH_ALIGNED_ALLOC
 
@@ -173,3 +241,9 @@ builds, use the :code:`-D` option on the cmake line, e.g.
   Enable support for strided bit streams that allow for non-contiguous memory
   layouts, e.g., to enable progressive access.
   Default: undefined/off.
+
+.. c:macro:: CFP_NAMESPACE
+
+  Macro for renaming the outermost |cfp| namespace, e.g., to avoid name
+  clashes.
+  Default: cfp.

@@ -9,7 +9,7 @@ all: $(TARGETS)
 $(BINDIR)/testzfp: testzfp.cpp ../lib/$(LIBZFP)
 	$(CXX) $(CXXFLAGS) -I../array testzfp.cpp $(CXXLIBS) -o $@
 
-$(BINDIR)/testviews: testviews.cpp ../lib/libzfp.a
+$(BINDIR)/testviews: testviews.cpp ../lib/$(LIBZFP)
 	$(CXX) $(CXXFLAGS) -I../array testviews.cpp $(CXXLIBS) -o $@
 
 test: $(BINDIR)/testzfp

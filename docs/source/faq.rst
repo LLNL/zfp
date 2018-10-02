@@ -34,6 +34,8 @@ Questions answered in this FAQ:
   #. :ref:`Are parallel compressed streams identical to serial streams? <q-parallel>`
   #. :ref:`Are zfp arrays and other data structures thread-safe? <q-thread-safety>`
   #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
+  #. :ref:`Why are 1D compressed arrays so slow? <q-1d-speed>`
+  #. :ref:`Do compressed arrays use reference counting? <q-ref-count>`
 
 -------------------------------------------------------------------------------
 
@@ -134,7 +136,7 @@ floating-point value at a time and copy it into the array::
 Note, however, that if the array cache is not large enough, then this may
 compress blocks before they have been completely filled.  Therefore it is
 recommended that the cache holds at least one complete layer of blocks,
-i.e. (*nx* / 4) |times| (*ny* / 4) blocks in the example above.
+i.e., (*nx* / 4) |times| (*ny* / 4) blocks in the example above.
 
 To avoid inadvertent evictions of partially initialized blocks, it is better
 to buffer four layers of *nx* |times| *ny* values each at a time, when
@@ -175,7 +177,7 @@ the quality or compression ratio may suffer.
 
 Q5: *Can zfp compress logically regular but geometrically irregular data?*
 
-My data is logically structured but irregularly sampled, e.g. it is
+My data is logically structured but irregularly sampled, e.g., it is
 rectilinear, curvilinear, or Lagrangian, or uses an irregular spacing of
 quadrature points.  Can I still use zfp to compress it?
 
@@ -295,20 +297,20 @@ example, endianness issues?
 
 A: Yes, |zfp| can write portable compressed streams.  To ensure portability
 across different endian platforms, the bit stream must however be written
-in increments of single bytes on big endian processors (e.g. PowerPC, SPARC),
+in increments of single bytes on big endian processors (e.g., PowerPC, SPARC),
 which is achieved by compiling |zfp| with an 8-bit (single-byte) word size::
 
   -DBIT_STREAM_WORD_TYPE=uint8
 
 See :c:macro:`BIT_STREAM_WORD_TYPE`.  Note that on little endian processors
-(e.g. Intel x86-64 and AMD64), the word size does not affect the bit stream
+(e.g., Intel x86-64 and AMD64), the word size does not affect the bit stream
 produced, and thus the default word size may be used.  By default, |zfp| uses
 a word size of 64 bits, which results in the coarsest rate granularity but
 fastest (de)compression.  If cross-platform portability is not needed, then
 the maximum word size is recommended (but see also :ref:`Q12 <q-granularity>`).
 
 When using 8-bit words, |zfp| produces a compressed stream that is byte order
-independent, i.e. the exact same compressed sequence of bytes is generated
+independent, i.e., the exact same compressed sequence of bytes is generated
 on little and big endian platforms.  When decompressing such streams,
 floating-point and integer values are recovered in the native byte order of
 the machine performing decompression.  The decompressed values can be used
@@ -324,15 +326,15 @@ Issues may arise on architectures that do not support IEEE floating point.
 
 Q12: *How can I achieve finer rate granularity?*
 
-A: For *d*-dimensional arrays, |zfp| supports a granularity of 8 / |4powd|
-bits, i.e. the rate can be specified in increments of a fraction of a bit for
+A: For *d*-dimensional arrays, |zfp| supports a rate granularity of 8 / |4powd|
+bits, i.e., the rate can be specified in increments of a fraction of a bit for
 2D and 3D arrays.  Such fine rate selection is always available for sequential
-compression (e.g. when calling :c:func:`zfp_compress`).
+compression (e.g., when calling :c:func:`zfp_compress`).
 
 Unlike in sequential compression, |zfp|'s compressed arrays require random
 access writes, which are supported only at the granularity of whole words.
 By default, a word is 64 bits, which gives a rate granularity of
-64 / |4powd| in *d* dimensions, i.e. 16 bits in 1D, 4 bits in 2D, and 1 bit
+64 / |4powd| in *d* dimensions, i.e., 16 bits in 1D, 4 bits in 2D, and 1 bit
 in 3D.
 
 To achieve finer granularity, recompile |zfp| with a smaller (but as large as
@@ -390,7 +392,7 @@ be maintained separately by the application.
 
 Since version 0.5.0, functions exist for reading and writing a 12- to 19-byte
 header that encodes compression and field parameters.  For applications that
-wish to embed only the compression parameters, e.g. when the field dimensions
+wish to embed only the compression parameters, e.g., when the field dimensions
 are already known, there are separate functions that encode and decode this
 information independently.
 
@@ -415,7 +417,7 @@ analysis.  This feature of decompressing to a lower precision is particularly
 useful when the stream is stored progressively (see :ref:`Q13 <q-progressive>`).
 
 Note that one may not use less constrained parameters during decompression,
-e.g. one cannot ask for more than :c:member:`zfp_stream.maxprec` bits of
+e.g., one cannot ask for more than :c:member:`zfp_stream.maxprec` bits of
 precision when decompressing.
 
 Currently float arrays have a different compressed representation from
@@ -451,10 +453,10 @@ and :code:`&out[1][0][0]`.
 Q17: *Why does zfp sometimes not respect my error tolerance?*
 
 A: |zfp| does not store each floating-point value independently, but represents
-a group of values (4, 16, or 64 values, depending on dimensionality) as linear
-combinations like averages by evaluating arithmetic expressions.  Just like in
-uncompressed IEEE floating-point arithmetic, both representation error and
-roundoff error in the least significant bit(s) often occur.
+a group of values (4, 16, 64, or 256 values, depending on dimensionality) as
+linear combinations like averages by evaluating arithmetic expressions.  Just
+like in uncompressed IEEE floating-point arithmetic, both representation error
+and roundoff error in the least significant bit(s) often occur.
 
 To illustrate this, consider compressing the following 1D array of four
 floats::
@@ -499,7 +501,7 @@ two orders of magnitude smaller than the roundoff errors (4.668e-8 and
 1.192e-7) introduced by IEEE floating-point in these computations.  This lower
 error is in part due to |zfp|'s use of 30-bit significands compared to IEEE's
 24-bit single-precision significands.  Note that data sets with a large dynamic
-range, e.g. where adjacent values differ a lot in magnitude, are more
+range, e.g., where adjacent values differ a lot in magnitude, are more
 susceptible to representation errors.
 
 The moral of the story is that error tolerances smaller than machine epsilon
@@ -524,7 +526,7 @@ value of :c:func:`zfp_stream_set_rate`, which gives the actual rate.
 
 There are several reasons why the requested rate may not be honored.  First,
 the rate is specified in bits/value, while |zfp| always represents a block
-of |4powd| values in *d* dimensions, i.e. using
+of |4powd| values in *d* dimensions, i.e., using
 *N* = |4powd| |times| *rate* bits.  *N* must be an integer number of bits,
 which constrains the actual rate to be a multiple of 1 / |4powd|.  The actual
 rate is computed by rounding |4powd| times the desired rate.
@@ -561,7 +563,7 @@ for instance.
 
 Q19: *Can zfp perform compression in place?*
 
-Because the compressed data tends to be far smaller than the uncompressed
+A: Because the compressed data tends to be far smaller than the uncompressed
 data, it is natural to ask if the compressed stream can overwrite the
 uncompressed array to avoid having to allocate separate storage for the
 compressed stream.  |zfp| does allow for the possibility of such in-place
@@ -607,10 +609,10 @@ can be done.
 
 Q20: *How should I set the precision to bound the relative error?*
 
-In general, |zfp| cannot bound the point-wise relative error due to its use of
-a block-floating-point representation, in which all values within a block
-are represented in relation to a single common exponent.  For a high enough
-dynamic range within a block there may simply not be enough precision
+A: In general, |zfp| cannot bound the point-wise relative error due to its
+use of a block-floating-point representation, in which all values within a
+block are represented in relation to a single common exponent.  For a high
+enough dynamic range within a block there may simply not be enough precision
 available to guard against loss.  For instance, a block containing the values
 2\ :sup:`0` = 1 and 2\ :sup:`-n` would require a precision of *n* + 3 bits to
 represent losslessly, and |zfp| uses at most 64-bit integers to represent
@@ -648,11 +650,12 @@ Here *k*\ (*d*) is a constant that depends on the data dimensionality *d*::
 
   k(d) = 20 * (15/4)^(d-1)
 
-so that in 1D, 2D, and 3D we have::
+so that in 1D, 2D, 3D, and 4D we have::
 
   k(1) = 20
   k(2) = 125
   k(3) = 1125/4
+  k(4) = 16876/16
 
 Thus, to guarantee *n* bits of accuracy in the decompressed data, we need
 to choose a higher precision, *p*, for the transform coefficients::
@@ -665,6 +668,7 @@ so that
   p(n, 1) = n + 5
   p(n, 2) = n + 7
   p(n, 3) = n + 9
+  p(n, 4) = n + 11
 
 This *p* value should be used in the call to
 :c:func:`zfp_stream_set_precision`.
@@ -690,12 +694,13 @@ are leading zeros.
 
 Q21: *Does zfp support lossless compression?*
 
-Yes, and no.  For integer data, |zfp| can with few exceptions ensure lossless
-compression.  For a given *n*-bit integer type (*n* = 32 or *n* = 64), consider
-compressing *p*-bit signed integer data, with the sign bit counting toward the
-precision.  In other words, there are exactly 2\ :sup:`p` possible signed
-integers.  If the integers are unsigned, then subtract 2\ :sup:`p-1` first so
-that they range from |minus|\ 2\ :sup:`p-1` to 2\ :sup:`p-1` - 1.
+A: Yes, and no.  For integer data, |zfp| can with few exceptions ensure
+lossless compression.  For a given *n*-bit integer type (*n* = 32 or
+*n* = 64), consider compressing *p*-bit signed integer data, with the sign
+bit counting toward the precision.  In other words, there are exactly
+2\ :sup:`p` possible signed integers.  If the integers are unsigned, then
+subtract 2\ :sup:`p-1` first so that they range from |minus|\ 2\ :sup:`p-1`
+to 2\ :sup:`p-1` - 1.
 
 Lossless compression is achieved by first promoting the *p*-bit integers to
 *n* - 1 bits (see :ref:`Q8 <q-integer>`) such that all integer values fall in
@@ -707,7 +712,7 @@ promotion, the data should be compressed in zfp's fixed-precision mode using::
   q = p + 4 * d + 1
 
 bits of precision to ensure no loss, where *d* is the data dimensionality
-(1 |leq| d |leq| 3).  Consequently, the *p*-bit data can be losslessly
+(1 |leq| d |leq| 4).  Consequently, the *p*-bit data can be losslessly
 compressed as long as *p* |leq| *n* - 4 |times| *d* - 1.  The table below
 lists the maximum precision *p* that can be losslessly compressed using 32-
 and 64-bit integer types.
@@ -718,6 +723,7 @@ and 64-bit integer types.
   1 27   59
   2 23   55
   3 19   51
+  4 15   47
   = ==== ====
 
 Although lossless compression is possible as long as the precision constraint
@@ -756,7 +762,7 @@ single-precision data and only in 1D and 2D for double-precision data.
 
 Q22: *Why is my actual, measured error so much smaller than the tolerance?*
 
-For two reasons.  The way |zfp| bounds the absolute error in
+A: For two reasons.  The way |zfp| bounds the absolute error in
 :ref:`fixed-accuracy mode <mode-fixed-accuracy>` is by keeping all transform
 coefficient bits whose place value exceeds the tolerance while discarding the
 less significant bits.  Each such bit has a place value that is a power of
@@ -768,7 +774,7 @@ lower, effective tolerance is returned by the
 Second, the quantized coefficients are then put through an inverse transform.
 This linear transform will combine signed quantization errors that, in the
 worst case, may cause them to add up and increase the error, even though the
-average (RMS) error remains the same, i.e. some errors cancel while others
+average (RMS) error remains the same, i.e., some errors cancel while others
 compound.  For *d*-dimensional data, *d* such inverse transforms are applied,
 with the possibility of errors cascading across transforms.  To account for
 the worst possible case, zfp has to conservatively lower its internal error
@@ -781,7 +787,7 @@ maximum error tends to be about 4-8 times lower than the error tolerance
 for 3D data, while the difference is smaller for 2D and 1D data.
 
 We recommend experimenting with tolerances and evaluating what error levels
-are appropriate for each application, e.g. by starting with a low,
+are appropriate for each application, e.g., by starting with a low,
 conservative tolerance and successively doubling it.  The distribution of
 errors produced by |zfp| is approximately Gaussian, so even if the maximum
 error may seem large at an individual grid point, most errors tend to be
@@ -793,9 +799,9 @@ much smaller and tightly clustered around zero.
 
 Q23: *Are parallel compressed streams identical to serial streams?*
 
-Yes, it matters not what execution policy is used; the final compressed stream
-produced by :c:func:`zfp_compress` depends only on the uncompressed data and
-compression settings.
+A: Yes, it matters not what execution policy is used; the final compressed
+stream produced by :c:func:`zfp_compress` depends only on the uncompressed
+data and compression settings.
 
 To support future parallel decompression, in particular variable-rate
 streams, it will be necessary to also store an index of where (at what
@@ -811,12 +817,24 @@ do not need to be the same for compression and decompression.
 
 Q24: *Are zfp's compressed arrays and other data structures thread-safe?*
 
-No, but thread-safe arrays are under development.  Similarly, data structures
-like :c:type:`zfp_stream` are not thread-safe.  |zfp|'s parallel compressor
-assigns one :c:type:`zfp_stream` per thread, each of which uses its own
-private :c:type:`bitstream`.  Users who wish to make parallel calls to
-|zfp|'s :ref:`low-level functions <ll-api>` are advised to consult the
-source files :file:`ompcompress.c` and :file:`parallel.c`.
+A: Yes, compressed arrays can be made thread-safe; no, data structures
+like :c:type:`zfp_stream` and :c:type:`bitstream` are not necessarily
+thread-safe.  As of |zfp| |viewsrelease|, thread-safe read and write access
+to compressed arrays is provided through the use of
+:ref:`private views <private_immutable_view>`, although these come with
+certain restrictions and requirements such as the need for the user to
+enforce cache coherence.  Please see the documentation on
+:ref:`views <views>` for further details.
+
+As far as C objects, |zfp|'s parallel OpenMP compressor assigns one
+:c:type:`zfp_stream` per thread, each of which uses its own private
+:c:type:`bitstream`.  Users who wish to make parallel calls to |zfp|'s
+:ref:`low-level functions <ll-api>` are advised to consult the source
+files :file:`ompcompress.c` and :file:`parallel.c`.
+
+Finally, the |zfp| API is thread-safe as long as multiple threads do not
+simultaneously call API functions and pass the same :c:type:`zfp_stream`
+or :c:type:`bitstream` object.
 
 -------------------------------------------------------------------------------
 
@@ -824,7 +842,7 @@ source files :file:`ompcompress.c` and :file:`parallel.c`.
 
 Q25: *Why does parallel compression performance not match my expectations?*
 
-|zfp| partitions arrays into chunks and assigns each chunk to an OpenMP
+A: |zfp| partitions arrays into chunks and assigns each chunk to an OpenMP
 thread.  A chunk is a sequence of consecutive *d*-dimensional blocks, each
 composed of |4powd| values.  If there are fewer chunks than threads, then
 full processor utilization will not be achieved.
@@ -851,3 +869,30 @@ Other reasons for poor parallel performance include compressing arrays
 that are too small to offset the overhead of thread creation and
 synchronization.  Arrays should ideally consist of thousands of blocks
 to offset the overhead of setting up parallel compression.
+
+-------------------------------------------------------------------------------
+
+.. _q-1d-speed:
+
+Q26: *Why are 1D compressed arrays so slow?*
+
+A: This is likely due to the use of a very small cache.  All arrays use
+two 'layers' of blocks as default cache size, which is reasonable for
+2D and higher-dimensional arrays.  In 1D, this implies that the cache
+holds only two blocks, which is likely to cause excessive thrashing.
+Experiment with larger cache sizes of at least a few KB.
+
+-------------------------------------------------------------------------------
+
+.. _q-ref-count:
+
+Q27: *Do compressed arrays use reference counting?*
+
+A: It is possible to reference compressed  array elements via proxy
+:ref:`references <references>` and :ref:`pointers <pointers>`, through
+:ref:`iterators <iterators>`, and through :ref:`views <views>`.  Such
+indirect references are valid only during the lifetime of the underlying
+array.  No reference counting and garbage collection is used to keep the
+array alive if there are external references to it.  Such references
+become invalid once the array is destructed, and dereferencing them will
+likely lead to segmentation faults.

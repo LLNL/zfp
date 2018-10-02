@@ -4,7 +4,6 @@ function(cfp_add_test dims type bits)
   target_link_libraries(${test_name}
     cmocka cfp hash${bits}Lib genSmoothRandNumsLib)
   add_test(NAME ${test_name} COMMAND ${test_name})
-
 endfunction()
 
 cfp_add_test(1 f 32)

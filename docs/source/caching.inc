@@ -5,7 +5,7 @@ Caching
 
 As mentioned above, the array classes maintain a software write-back cache
 of at least one uncompressed block.  When a block in this cache is evicted
-(e.g. due to a conflict), it is compressed back to permanent storage only
+(e.g., due to a conflict), it is compressed back to permanent storage only
 if it was modified while stored in the cache.
 
 The size cache to use is specified by the user, and is an important
@@ -26,8 +26,8 @@ the array dimensions must have already been specified for the default size
 to be computed correctly.  When the cache is resized, it is first flushed
 if not already empty.  The cache can also be flushed explicitly if desired
 by calling :cpp:func:`array::flush_cache`.  To empty the cache without
-compressing any cached data, call :cpp:func:`clear_cache`.  To query the
-byte size of the cache, use :cpp:func:`array::cache_size`.
+compressing any cached data, call :cpp:func:`array::clear_cache`.  To query
+the byte size of the cache, use :cpp:func:`array::cache_size`.
 
 By default a direct-mapped cache is used with a hash function that maps
 block indices to cache lines.  A faster but more collision prone hash

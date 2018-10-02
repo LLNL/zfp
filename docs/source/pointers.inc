@@ -7,9 +7,14 @@ Pointers
 
 .. cpp:namespace:: zfp
 
-.. cpp:class:: template<typename Scalar> array1::pointer
-.. cpp:class:: template<typename Scalar> array2::pointer
-.. cpp:class:: template<typename Scalar> array3::pointer
+..
+  .. cpp:class:: template<typename Scalar> array1::pointer
+  .. cpp:class:: template<typename Scalar> array2::pointer
+  .. cpp:class:: template<typename Scalar> array3::pointer
+
+.. cpp:class:: array1::pointer
+.. cpp:class:: array2::pointer
+.. cpp:class:: array3::pointer
 
 Similar to :ref:`references <references>`, |zfp| supports proxies for
 pointers to individual array elements.  From the user's perspective, such

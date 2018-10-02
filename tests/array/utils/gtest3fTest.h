@@ -2,7 +2,7 @@
 
 extern "C" {
   #include "constants/universalConsts.h"
-};
+}
 
 #define SCALAR float
 

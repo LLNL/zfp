@@ -37,11 +37,20 @@ set_property(TARGET cmocka
 add_dependencies(cmocka cmocka_cloned)
 include_directories(${source_dir}/include)
 
-
 # include home dir so #include statements are clear in test files
 include_directories(${ZFP_SOURCE_DIR} ${ZFP_SOURCE_DIR}/include)
 # access to constants/ and utils/
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+# suppress warnings for all targets
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+  add_compile_options(-Wno-unused-function)
+endif()
+# -Wno-variadic-macros was not working for gcc...revisit
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+  add_compile_options(-Wno-gnu-zero-variadic-macro-arguments)
+endif()
+
 
 add_subdirectory(utils)
 add_subdirectory(src)

@@ -8,6 +8,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 // expert mode compression parameters
 #define MIN_BITS  11u
@@ -155,11 +156,11 @@ given_zfpStreamSetWithFixedAccuracy_when_zfpStreamCompressionMode_expect_returns
 
   int accExp;
   /* using ZFP_MIN_EXP implies expert mode (all default values) */
-  for (accExp = MAX_EXP; accExp > ZFP_MIN_EXP; accExp--) {
+  for (accExp = MAX_EXP; (accExp > ZFP_MIN_EXP) && (ldexp(1., accExp) != 0.); accExp--) {
     setDefaultCompressionParams(stream);
 
     /* set fixed-accuracy, assert fixed-accuracy identified */
-    zfp_stream_set_accuracy(stream, pow(2., (double)accExp));
+    zfp_stream_set_accuracy(stream, ldexp(1., accExp));
 
     zfp_mode mode = zfp_stream_compression_mode(stream);
     if (mode != zfp_mode_fixed_accuracy) {
@@ -204,7 +205,7 @@ given_zfpStreamDefaultModeVal_when_zfpStreamSetMode_expect_returnsExpertMode_and
       || stream->maxbits != maxbits
       || stream->maxprec != maxprec
       || stream->minexp != minexp) {
-    printf("Using default params, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %llx\n", mode);
+    printf("Using default params, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"PRIu64"\n", mode);
     fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
   }
 }
@@ -248,7 +249,7 @@ given_zfpStreamSetRateModeVal_when_zfpStreamSetMode_expect_returnsFixedRate_and_
               || stream->maxbits != maxbits
               || stream->maxprec != maxprec
               || stream->minexp != minexp) {
-            printf("Using fixed rate %d, wra %d, zfp_type %u, in %u dimensions, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %llx\n", rate, wra, zfpType, dims, mode);
+            printf("Using fixed rate %d, wra %d, zfp_type %u, in %u dimensions, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"PRIu64"\n", rate, wra, zfpType, dims, mode);
             fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
           }
         }
@@ -290,7 +291,7 @@ given_zfpStreamSetPrecisionModeVal_when_zfpStreamSetMode_expect_returnsFixedPrec
         || stream->maxbits != maxbits
         || stream->maxprec != maxprec
         || stream->minexp != minexp) {
-      printf("Using fixed precision %u, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %llx\n", prec, mode);
+      printf("Using fixed precision %u, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"PRIu64"\n", prec, mode);
       fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
     }
   }
@@ -328,7 +329,7 @@ given_zfpStreamSetAccuracyModeVal_when_zfpStreamSetMode_expect_returnsFixedAccur
   zfp_stream* stream = bundle->stream;
 
   int accExp;
-  for (accExp = MAX_EXP; accExp > ZFP_MIN_EXP; accExp--) {
+  for (accExp = MAX_EXP; (accExp > ZFP_MIN_EXP) && (ldexp(1., accExp) != 0.); accExp--) {
     zfp_stream_set_accuracy(stream, ldexp(1., accExp));
     assert_int_equal(zfp_stream_compression_mode(stream), zfp_mode_fixed_accuracy);
 
@@ -353,7 +354,7 @@ given_zfpStreamSetAccuracyModeVal_when_zfpStreamSetMode_expect_returnsFixedAccur
         || stream->maxbits != maxbits
         || stream->maxprec != maxprec
         || stream->minexp != minexp) {
-      printf("Using fixed accuracy 2^(%d), zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %llx\n", accExp, mode);
+      printf("Using fixed accuracy 2^(%d), zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"PRIu64"\n", accExp, mode);
       fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
     }
   }

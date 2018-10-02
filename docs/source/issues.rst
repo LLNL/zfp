@@ -211,7 +211,7 @@ have dimensions that are multiples of four.
 
 P6: *Is the data logically structured?*
 
-|zfp| was designed for logically structured data, i.e. Cartesian grids.  It
+|zfp| was designed for logically structured data, i.e., Cartesian grids.  It
 works much like an image compressor does, which assumes that the data set is a
 structured array of pixels, and it assumes that values vary reasonably smoothly
 on average, just like natural images tend to contain large regions of uniform
@@ -296,7 +296,7 @@ the exponent of the largest (in magnitude) value within a block, but produces
 unspecified behavior if that value is not finite.  
 
 |zfp| currently has no independent mechanism for handling fill values.  Ideally
-such special values would be signalled separately, e.g. using a bit mask, 
+such special values would be signalled separately, e.g., using a bit mask, 
 and then replaced with zeros to ensure that they both compress well and do
 not pollute actual data.
 
@@ -306,8 +306,8 @@ not pollute actual data.
 
 P9: *Is the byte order correct?*
 
-|zfp| generally works with the native byte order (e.g. little or big endian) of
-the machine it is compiled on.  One needs only be concerned with byte order
+|zfp| generally works with the native byte order (e.g., little or big endian)
+of the machine it is compiled on.  One needs only be concerned with byte order
 when reading raw, binary data into the |zfp| executable, when exchanging
 compressed files across platforms, and when varying the bit stream word size
 on big endian machines (not common).  For instance, to compress a binary
@@ -396,7 +396,7 @@ value within a block has the requested precision.
 
 Finally, |zfp| supports a fixed-accuracy mode, which except in rare
 circumstances (see FAQ :ref:`#17 <q-tolerance>`) ensures that the absolute
-error is bounded, i.e. the difference between any decompressed and original
+error is bounded, i.e., the difference between any decompressed and original
 value is at most the tolerance specified by the user (but usually several
 times smaller).  Whenever possible, we recommend using this compression mode,
 which depending on how easy the data is to compress results in the smallest

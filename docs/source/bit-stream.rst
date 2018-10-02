@@ -116,6 +116,10 @@ Functions
 
   Close the bit stream and deallocate *stream*.
 
+.. c:function:: bitstream* stream_clone(const bitstream* stream)
+
+  Create a copy of *stream* that points to the same memory buffer.
+
 .. c:function:: void* stream_data(const bitstream* stream)
 
   Return pointer to the beginning of bit stream *stream*.

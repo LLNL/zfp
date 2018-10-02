@@ -57,13 +57,13 @@ that will address some of these limitations.
   opportunities for compression, e.g. if the complex magnitude is constant
   and only the phase varies.
 
-- |zfp| arrays are not thread-safe.  We are considering options for
-  supporting multi-threaded access, e.g. for OpenMP parallelization.
-
-- This version of |zfp| does not run on the GPU.  Some work has been done
-  to port |zfp| to CUDA, and an
-  `experimental version <https://github.com/mclarsen/cuzfp/>`_ is available.
+- Version |cudarelease| adds support for CUDA compression and decompression.
+  However, only the fixed-rate compression mode is so far supported.
 
 - As of version |4drelease|, |zfp| supports compression and decompression
   of 4D arrays.  However, |zfp| does not yet implement a 4D compressed
   array C++ class.  This will be added in the near future.
+
+- The :ref:`C wrappers <cfp>` for |zfp|'s compressed arrays support only
+  basic array accesses.  There is currently no C interface for proxy
+  references, pointers, iterators, or views.

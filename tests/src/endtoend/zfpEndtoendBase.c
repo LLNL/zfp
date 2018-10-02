@@ -216,7 +216,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
   assert_non_null(bundle->decompressedArr);
 
   // identify strides and produce compressedArr
-  int sx, sy, sz, sw;
+  int sx = 0, sy = 0, sz = 0, sw = 0;
   switch(bundle->stride) {
     case REVERSED:
       if (DIMS == 4) {
@@ -228,17 +228,11 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
         sx = -1;
         sy = sx * (int)bundle->randomGenArrSideLen;
         sz = sy * (int)bundle->randomGenArrSideLen;
-        sw = 0;
       } else if (DIMS == 2) {
         sx = -1;
         sy = sx * (int)bundle->randomGenArrSideLen;
-        sz = 0;
-        sw = 0;
       } else {
         sx = -1;
-        sy = 0;
-        sz = 0;
-        sw = 0;
       }
       reverseArray(bundle->randomGenArr, bundle->compressedArr, bundle->totalRandomGenArrLen);
 
@@ -257,17 +251,11 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
         sx = 2;
         sy = sx * (int)bundle->randomGenArrSideLen;
         sz = sy * (int)bundle->randomGenArrSideLen;
-        sw = 0;
       } else if (DIMS == 2) {
         sx = 2;
         sy = sx * (int)bundle->randomGenArrSideLen;
-        sz = 0;
-        sw = 0;
       } else {
         sx = 2;
-        sy = 0;
-        sz = 0;
-        sw = 0;
       }
       interleaveArray(bundle->randomGenArr, bundle->compressedArr, bundle->totalRandomGenArrLen);
       break;
@@ -282,19 +270,15 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
         sx = (int)intPow(bundle->randomGenArrSideLen, 2);
         sy = (int)bundle->randomGenArrSideLen;
         sz = 1;
-        sw = 0;
       } else if (DIMS == 2) {
         sx = (int)bundle->randomGenArrSideLen;
         sy = 1;
-        sz = 0;
-        sw = 0;
       }
       permuteArray(bundle->randomGenArr, bundle->compressedArr, bundle->randomGenArrSideLen);
       break;
 
     case AS_IS:
       // no-op
-      sx = sy = sz = sw = 0;
       memcpy(bundle->compressedArr, bundle->randomGenArr, bundle->totalRandomGenArrLen * sizeof(Scalar));
       break;
   }
@@ -684,7 +668,7 @@ assertZfpCompressDecompressChecksumMatches(void **state)
   size_t rSideLen = bundle->randomGenArrSideLen;
   int strides[4];
 
-  UInt checksum;
+  UInt checksum = 0;
   switch(bundle->stride) {
     case REVERSED:
       zfp_field_stride(field, strides);
@@ -725,6 +709,10 @@ assertZfpCompressDecompressChecksumMatches(void **state)
 
         case 2:
           checksum = hash2dStridedArray(arr, rSideLen, rSideLen, strides[0], strides[1]);
+          break;
+
+        case 1:
+        default:
           break;
       }
       break;
@@ -915,7 +903,7 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
 
           switch(ZFP_TYPE) {
             case zfp_type_float:
-              absDiffF = fabsf(bundle->decompressedArr[offset] - bundle->compressedArr[offset]);
+              absDiffF = fabsf((float)bundle->decompressedArr[offset] - (float)bundle->compressedArr[offset]);
 
               assert_true(absDiffF < bundle->accParam);
 

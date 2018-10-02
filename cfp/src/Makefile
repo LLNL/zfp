@@ -1,6 +1,6 @@
 include ../../Config
 
-CXXFLAGS += -I../../include -I../../src
+CXXFLAGS += -I../../include -I../../src -I../../array
 LIBDIR = ../../lib
 TARGETS = $(LIBDIR)/libcfp.a $(LIBDIR)/libcfp.so
 OBJECTS = cfparrays.o
@@ -19,7 +19,7 @@ $(LIBDIR)/libcfp.a: $(OBJECTS)
 
 $(LIBDIR)/libcfp.so: $(OBJECTS)
 	mkdir -p $(LIBDIR)
-	$(CC) $(CFLAGS) -shared $^ -o $@
+	$(CXX) $(CXXLAGS) -shared $(SOFLAGS) $^ -o $@
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
