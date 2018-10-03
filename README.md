@@ -1,6 +1,8 @@
 ZFP
 ===
 
+[![codecov](https://codecov.io/gh/LLNL/zfp/branch/develop/graph/badge.svg)](https://codecov.io/gh/LLNL/zfp)
+
 INTRODUCTION
 ------------
 
