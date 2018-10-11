@@ -3,6 +3,7 @@ if(ZFP_WITH_CUDA)
   SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC" )
 
   add_subdirectory(cuda_zfp)
+  cuda_include_directories(${PROJECT_SOURCE_DIR}/include)
   cuda_wrap_srcs(zfp OBJ zfp_cuda_backend_obj cuda_zfp/cuZFP.cu)
   SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_PREVIOUS})
   add_definitions(-DZFP_WITH_CUDA)
