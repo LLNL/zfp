@@ -275,8 +275,6 @@ int main(int argc, char* argv[])
           usage();
         if (!strcmp(argv[i], "serial"))
           exec = zfp_exec_serial;
-        else if (!strcmp(argv[i], "cuda"))
-          exec = zfp_exec_cuda;
         else if (sscanf(argv[i], "omp=%u,%u", &threads, &chunk_size) == 2)
           exec = zfp_exec_omp;
         else if (sscanf(argv[i], "omp=%u", &threads) == 1) {
@@ -288,6 +286,8 @@ int main(int argc, char* argv[])
           threads = 0;
           chunk_size = 0;
         }
+        else if (!strcmp(argv[i], "cuda"))
+          exec = zfp_exec_cuda;
         else
           usage();
         break;
@@ -448,6 +448,12 @@ int main(int argc, char* argv[])
 
   /* specify execution policy */
   switch (exec) {
+      case zfp_exec_cuda:
+        if (!zfp_stream_set_execution(zfp, exec)) {
+          fprintf(stderr, "cuda execution not available\n");
+          return EXIT_FAILURE;
+        }
+        break;
     case zfp_exec_omp:
       if (!zfp_stream_set_execution(zfp, exec) ||
           !zfp_stream_set_omp_threads(zfp, threads) ||
@@ -486,30 +492,6 @@ int main(int argc, char* argv[])
       return EXIT_FAILURE;
     }
     zfp_stream_set_bit_stream(zfp, stream);
-
-    /* specify execution policy */
-    switch (exec) {
-      case zfp_exec_omp:
-        if (!zfp_stream_set_execution(zfp, exec) ||
-            !zfp_stream_set_omp_threads(zfp, threads) ||
-            !zfp_stream_set_omp_chunk_size(zfp, chunk_size)) {
-          fprintf(stderr, "OpenMP execution not available\n");
-          return EXIT_FAILURE;
-        }
-        break;
-      case zfp_exec_cuda:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "cuda execution not available\n");
-          return EXIT_FAILURE;
-        }
-      case zfp_exec_serial:
-      default:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "serial execution not available\n");
-          return EXIT_FAILURE;
-        }
-        break;
-    }
 
     /* optionally write header */
     if (header && !zfp_write_header(zfp, field, ZFP_HEADER_FULL)) {
@@ -564,25 +546,6 @@ int main(int argc, char* argv[])
       ny = MAX(field->ny, 1u);
       nz = MAX(field->nz, 1u);
       nw = MAX(field->nw, 1u);
-    }
-
-    /* specify execution policy */
-    switch (exec) {
-      case zfp_exec_omp: 
-          fprintf(stderr, "OpenMP decompression not available\n");
-          return EXIT_FAILURE;
-      case zfp_exec_cuda:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "cuda execution not available\n");
-          return EXIT_FAILURE;
-        }
-      case zfp_exec_serial:
-      default:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "serial execution not available\n");
-          return EXIT_FAILURE;
-        }
-        break;
     }
 
     /* allocate memory for decompressed data */
