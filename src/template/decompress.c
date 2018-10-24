@@ -14,24 +14,6 @@ _t2(decompress, Scalar, 1)(zfp_stream* stream, zfp_field* field)
     _t2(zfp_decode_partial_block_strided, Scalar, 1)(stream, data, nx - x, 1);
 }
 
-#if 0
-/* decompress 1d strided array */
-static void
-_t2(decompress_strided, Scalar, 1)(zfp_stream* stream, zfp_field* field)
-{
-  Scalar* data = (Scalar*)field->data;
-  uint nx = field->nx;
-  uint mx = nx & ~3u;
-  int sx = field->sx ? field->sx : 1;
-  uint x;
-
-  /* decompress array one block of 4 values at a time */
-  for (x = 0; x < mx; x += 4, data += 4 * sx)
-    _t2(zfp_decode_block_strided, Scalar, 1)(stream, data, sx);
-  if (x < nx)
-    _t2(zfp_decode_partial_block_strided, Scalar, 1)(stream, data, nx - x, sx);
-}
-#else
 /* decompress 1d strided array */
 static void
 _t2(decompress_strided, Scalar, 1)(zfp_stream* stream, zfp_field* field)
@@ -50,7 +32,6 @@ _t2(decompress_strided, Scalar, 1)(zfp_stream* stream, zfp_field* field)
       _t2(zfp_decode_block_strided, Scalar, 1)(stream, p, sx);
   }
 }
-#endif
 
 /* decompress 2d strided array */
 static void
