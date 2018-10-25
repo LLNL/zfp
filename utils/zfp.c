@@ -306,7 +306,7 @@ int main(int argc, char* argv[])
   count = (size_t)nx * (size_t)ny * (size_t)nz * (size_t)nw;
 
   /* make sure one of the array dimensions is not zero */
-  if (!count) {
+  if (!count && dims) {
     fprintf(stderr, "array size must be nonzero\n");
     return EXIT_FAILURE;
   }
@@ -546,6 +546,7 @@ int main(int argc, char* argv[])
       ny = MAX(field->ny, 1u);
       nz = MAX(field->nz, 1u);
       nw = MAX(field->nw, 1u);
+      count = (size_t)nx * (size_t)ny * (size_t)nz * (size_t)nw;
     }
 
     /* allocate memory for decompressed data */
