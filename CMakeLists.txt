@@ -217,6 +217,11 @@ if(BUILD_CFP)
   add_subdirectory(cfp)
 endif()
 
+option(BUILD_ZFORP "Build Fortran library" OFF)
+if(BUILD_ZFORP)
+  add_subdirectory(fortran)
+endif()
+
 option(BUILD_UTILITIES "Build command line utilities for zfp" ON)
 if(BUILD_UTILITIES)
   add_subdirectory(utils)
