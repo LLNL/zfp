@@ -59,6 +59,10 @@ if(BUILD_CFP)
   add_subdirectory(cfp)
 endif()
 
+if(BUILD_ZFORP)
+  add_subdirectory(fortran)
+endif()
+
 # needed to compile gtest on MSVC
 if(MSVC)
   list(APPEND GTEST_ARGS "/D:_SILENCE_TR1_DEPRECATION_NAMESPACE_WARNING=1")
