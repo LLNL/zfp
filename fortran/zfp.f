@@ -51,6 +51,14 @@ module zFORp_module
       type(c_ptr), value :: bitstream
     end subroutine
 
+    ! high-level API: utility functions
+
+    function zfp_type_size(zfp_type) result(type_size) bind(c, name="zfp_type_size")
+      import
+      integer(c_int) zfp_type
+      integer(c_size_t) type_size
+    end function
+
     ! high-level API: zfp_stream functions
 
     function zfp_stream_open(bitstream) result(zfp_stream) bind(c, name="zfp_stream_open")
@@ -92,6 +100,12 @@ module zFORp_module
       import
       type(c_ptr), value :: zfp_stream
       integer(c_size_t) compressed_size
+    end function
+
+    function zfp_stream_maximum_size(zfp_stream, zfp_field) result(max_size) bind(c, name="zfp_stream_maximum_size")
+      import
+      type(c_ptr), value :: zfp_stream, zfp_field
+      integer(c_size_t) max_size
     end function
 
     subroutine zfp_stream_set_bit_stream(zfp_stream, bitstream) bind(c, name="zfp_stream_set_bit_stream")
@@ -136,6 +150,44 @@ module zFORp_module
       type(c_ptr), value :: zfp_stream
       integer(c_int), value :: minbits, maxbits, maxprec, minexp
       integer(c_int) is_success
+    end function
+
+    ! high-level API: execution policy functions
+
+    function zfp_stream_execution(zfp_stream) result(execution_policy) bind(c, name="zfp_stream_execution")
+      import
+      type(c_ptr), value :: zfp_stream
+      integer(c_int) execution_policy
+    end function
+
+    function zfp_stream_omp_threads(zfp_stream) result(num_threads) bind(c, name="zfp_stream_omp_threads")
+      import
+      type(c_ptr), value :: zfp_stream
+      integer(c_int) num_threads
+    end function
+
+    function zfp_stream_omp_chunk_size(zfp_stream) result(chunk_size_blocks) bind(c, name="zfp_stream_omp_chunk_size")
+      import
+      type(c_ptr), value :: zfp_stream
+      integer(c_int) chunk_size_blocks
+    end function
+
+    function zfp_stream_set_execution(zfp_stream, execution_policy) result(is_success) bind(c, name="zfp_stream_set_execution")
+      import
+      type(c_ptr), value :: zfp_stream
+      integer(c_int) execution_policy, is_success
+    end function
+
+    function zfp_stream_set_omp_threads(zfp_stream, threads) result(is_success) bind(c, name="zfp_stream_set_omp_threads")
+      import
+      type(c_ptr), value :: zfp_stream
+      integer(c_int) threads, is_success
+    end function
+
+    function zfp_stream_set_omp_chunk_size(zfp_stream, chunk_size) result(is_success) bind(c, name="zfp_stream_set_omp_chunk_size")
+      import
+      type(c_ptr), value :: zfp_stream
+      integer(c_int) chunk_size, is_success
     end function
 
     ! high-level API: zfp_field functions
@@ -338,6 +390,8 @@ module zFORp_module
 
   ! minimal bitstream API
 
+  public :: zFORp_type_size
+
   public :: zFORp_bitstream_stream_open, &
             zFORp_bitstream_stream_close
 
@@ -350,12 +404,21 @@ module zFORp_module
             zFORp_stream_mode, &
             zFORp_stream_params, &
             zFORp_stream_compressed_size, &
+            zFORp_stream_maximum_size, &
             zFORp_stream_set_bit_stream, &
             zFORp_stream_set_rate, &
             zFORp_stream_set_precision, &
             zFORp_stream_set_accuracy, &
             zFORp_stream_set_mode, &
             zFORp_stream_set_params
+
+  ! high-level API: execution policy functions
+  public :: zFORp_stream_execution, &
+            zFORp_stream_omp_threads, &
+            zFORp_stream_omp_chunk_size, &
+            zFORp_stream_set_execution, &
+            zFORp_stream_set_omp_threads, &
+            zFORp_stream_set_omp_chunk_size
 
   ! high-level API: zfp_field functions
 
@@ -408,6 +471,15 @@ contains
     call zfp_bitstream_stream_close(bitstream%object)
     bitstream%object = c_null_ptr
   end subroutine zFORp_bitstream_stream_close
+
+  ! high-level API: utility functions
+
+  function zFORp_type_size(zfp_type) result(type_size)
+    implicit none
+    integer, intent(in) :: zfp_type
+    integer type_size
+    type_size = zfp_type_size(int(zfp_type, c_int))
+  end function zFORp_type_size
 
   ! high-level API: zfp_stream functions
 
@@ -462,6 +534,14 @@ contains
     compressed_size = zfp_stream_compressed_size(zfp_stream%object)
   end function zFORp_stream_compressed_size
 
+  function zFORp_stream_maximum_size(zfp_stream, zfp_field) result(max_size)
+    implicit none
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    type(zFORp_field_type), intent(in) :: zfp_field
+    integer max_size
+    max_size = zfp_stream_maximum_size(zfp_stream%object, zfp_field%object)
+  end function zFORp_stream_maximum_size
+
   subroutine zFORp_stream_set_bit_stream(zfp_stream, bitstream)
     type(zFORp_stream_type), intent(in) :: zfp_stream
     type(zFORp_bitstream_type), intent(in) :: bitstream
@@ -514,6 +594,53 @@ contains
                                        int(maxprec, c_int), &
                                        int(minexp, c_int))
   end function zFORp_stream_set_params
+
+  ! high-level API: execution policy functions
+
+  function zFORp_stream_execution(zfp_stream) result(execution_policy)
+    implicit none
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    integer execution_policy
+    execution_policy = zfp_stream_execution(zfp_stream%object)
+  end function zFORp_stream_execution
+
+  function zFORp_stream_omp_threads(zfp_stream) result(thread_count)
+    implicit none
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    integer thread_count
+    thread_count = zfp_stream_omp_threads(zfp_stream%object)
+  end function zFORp_stream_omp_threads
+
+  function zFORp_stream_omp_chunk_size(zfp_stream) result(chunk_size_blocks)
+    implicit none
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    integer chunk_size_blocks
+    chunk_size_blocks = zfp_stream_omp_chunk_size(zfp_stream%object)
+  end function zFORp_stream_omp_chunk_size
+
+  function zFORp_stream_set_execution(zfp_stream, execution_policy) result(is_success)
+    implicit none
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    integer, intent(in) :: execution_policy
+    integer is_success
+    is_success = zfp_stream_set_execution(zfp_stream%object, int(execution_policy, c_int))
+  end function zFORp_stream_set_execution
+
+  function zFORp_stream_set_omp_threads(zfp_stream, thread_count) result(is_success)
+    implicit none
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    integer, intent(in) :: thread_count
+    integer is_success
+    is_success = zfp_stream_set_omp_threads(zfp_stream%object, int(thread_count, c_int))
+  end function zFORp_stream_set_omp_threads
+
+  function zFORp_stream_set_omp_chunk_size(zfp_stream, chunk_size) result(is_success)
+    implicit none
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    integer, intent(in) :: chunk_size
+    integer is_success
+    is_success = zfp_stream_set_omp_chunk_size(zfp_stream%object, int(chunk_size, c_int))
+  end function zFORp_stream_set_omp_chunk_size
 
   ! high-level API: zfp_field functions
 
