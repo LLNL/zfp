@@ -64,9 +64,7 @@ struct setupVars {
   UInt decompressedChecksum;
 
   // timer
-#if defined(__linux__)
-  struct timespec timeStart, timeEnd;
-#elif defined(_WIN32)
+#if defined(__linux__) || defined(_WIN32)
   clock_t timeStart, timeEnd;
 #elif defined(__MACH__)
   uint64_t timeStart, timeEnd;
@@ -465,9 +463,7 @@ startTimer(void **state)
   struct setupVars *bundle = *state;
 
   // set up timer
-#if defined(__linux__)
-  clock_gettime(CLOCK_REALTIME, &(bundle->timeStart));
-#elif defined(_WIN32)
+#if defined(__linux__) || defined(_WIN32)
   bundle->timeStart = clock();
 #elif defined(__MACH__)
   bundle->timeStart = mach_absolute_time();
@@ -483,10 +479,7 @@ stopTimer(void **state)
   double time;
 
   // stop timer, compute elapsed time
-#if defined(__linux__)
-  clock_gettime(CLOCK_REALTIME, &(bundle->timeEnd));
-  time = ((bundle->timeEnd.tv_sec) - (bundle->timeStart.tv_sec)) + ((bundle->timeEnd.tv_nsec) - (bundle->timeStart.tv_nsec)) / 1E9;
-#elif defined(_WIN32)
+#if defined(__linux__) || defined(_WIN32)
   bundle->timeEnd = clock();
   time = (double)((bundle->timeEnd) - (bundle->timeStart)) / CLOCKS_PER_SEC;
 #elif defined(__MACH__)
