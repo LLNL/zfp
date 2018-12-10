@@ -24,3 +24,12 @@ set_target_properties(_zfp PROPERTIES LIBRARY_OUTPUT_NAME zfp)
 # Install to the typical python module directory
 set(python_install_lib_dir "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/")
 install(TARGETS _zfp LIBRARY DESTINATION ${python_install_lib_dir})
+
+if(BUILD_TESTING)
+  add_test(NAME test_numpy
+    COMMAND ${PYTHON_EXECUTABLE} test_numpy.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+  set_tests_properties(test_numpy PROPERTIES
+    ENVIRONMENT PYTHONPATH=${pylib_build_dir}:$ENV{PYTHONPATH})
+endif()

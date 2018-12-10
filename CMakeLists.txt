@@ -206,6 +206,11 @@ endif()
 #------------------------------------------------------------------------------#
 # Add source code
 #------------------------------------------------------------------------------#
+include(CTest)
+if(BUILD_TESTING)
+  enable_testing()
+endif()
+
 set(ZFP_LIBRARY_PREFIX "" CACHE STRING
   "Prefix to prepend to the output library name")
 mark_as_advanced(ZFP_LIBRARY_PREFIX)
@@ -237,9 +242,7 @@ if(BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-include(CTest)
 if(BUILD_TESTING)
-  enable_testing()
   add_subdirectory(tests)
 endif()
 
