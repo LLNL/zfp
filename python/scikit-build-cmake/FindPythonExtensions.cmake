@@ -423,7 +423,7 @@ function(python_extension_module _target)
     target_link_libraries_with_dynamic_lookup(${_target} ${PYTHON_LIBRARIES})
 
     if(_is_module_lib)
-      _set_python_extension_symbol_visibility(${_target})
+      #_set_python_extension_symbol_visibility(${_altname})
     endif()
   endif()
 endfunction()

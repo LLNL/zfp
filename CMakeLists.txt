@@ -227,6 +227,11 @@ if(BUILD_UTILITIES)
   add_subdirectory(utils)
 endif()
 
+option(BUILD_PYTHON "Build python bindings for zfp" OFF)
+if(BUILD_PYTHON)
+  add_subdirectory(python)
+endif()
+
 option(BUILD_EXAMPLES "Build Examples" OFF)
 if(BUILD_EXAMPLES)
   add_subdirectory(examples)
