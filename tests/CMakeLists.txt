@@ -10,7 +10,7 @@ list(APPEND CMOCKA_ARGS "-DWITH_STATIC_LIB=ON;-DCMAKE_C_COMPILER=${CMAKE_C_COMPI
 include(ExternalProject)
 ExternalProject_Add(
   cmocka_cloned
-  GIT_REPOSITORY    git://git.cryptomilk.org/projects/cmocka.git
+  GIT_REPOSITORY    https://git.cryptomilk.org/projects/cmocka.git
   GIT_TAG           cmocka-1.1.0
   SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
   BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
