@@ -8,7 +8,7 @@
 #include <math.h>
 #include <string.h>
 
-#if defined(__linux__) || defined(_WIN32)
+#if defined(__unix__) || defined(_WIN32)
   #include <time.h>
 #elif defined(__MACH__)
   #include <mach/mach_time.h>
@@ -64,7 +64,7 @@ struct setupVars {
   UInt decompressedChecksum;
 
   // timer
-#if defined(__linux__) || defined(_WIN32)
+#if defined(__unix__) || defined(_WIN32)
   clock_t timeStart, timeEnd;
 #elif defined(__MACH__)
   uint64_t timeStart, timeEnd;
@@ -463,7 +463,7 @@ startTimer(void **state)
   struct setupVars *bundle = *state;
 
   // set up timer
-#if defined(__linux__) || defined(_WIN32)
+#if defined(__unix__) || defined(_WIN32)
   bundle->timeStart = clock();
 #elif defined(__MACH__)
   bundle->timeStart = mach_absolute_time();
@@ -479,7 +479,7 @@ stopTimer(void **state)
   double time;
 
   // stop timer, compute elapsed time
-#if defined(__linux__) || defined(_WIN32)
+#if defined(__unix__) || defined(_WIN32)
   bundle->timeEnd = clock();
   time = (double)((bundle->timeEnd) - (bundle->timeStart)) / CLOCKS_PER_SEC;
 #elif defined(__MACH__)
