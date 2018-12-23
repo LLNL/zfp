@@ -13,6 +13,22 @@ matrix:
             - gcc-6
             - g++-6
             - gfortran-6
+            - cython3
+            - python3-numpy
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' BUILD_PYTHON='ON'
+
+    - os: linux
+      dist: trusty
+      compiler: gcc-6
+      addons:
+        apt:
+          sources: ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+            - g++-6
+            - gfortran-6
+            - cython3
+            - python3-numpy
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' COVERAGE='ON'
 
     - os: linux
