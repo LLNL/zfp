@@ -1,14 +1,17 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/scikit-build-cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/eyescale-cmake)
 include(UseCython)
 include(FindPythonExtensions)
-
+include(FindNumPy)
 
 find_package(PythonInterp REQUIRED)
 find_package(PythonLibs REQUIRED)
 find_package(PythonExtensions REQUIRED)
 find_package(Cython REQUIRED)
+find_package(NumPy REQUIRED)
 
 include_directories(${ZFP_SOURCE_DIR}/include)
+include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
 
 # cannot reuse the zfp target, use _zfp instead
 add_cython_target(_zfp zfp.pyx C PY2)
