@@ -46,6 +46,7 @@ cdef extern from "zfp.h":
     void zfp_stream_set_bit_stream(zfp_stream* stream, bitstream* bs);
     cython.uint zfp_stream_set_precision(zfp_stream* stream, cython.uint precision);
     double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance);
+    double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, cython.uint dims, int wra);
     zfp_field* zfp_field_alloc();
     zfp_field* zfp_field_1d(void* pointer, zfp_type type, cython.uint nx);
     zfp_field* zfp_field_2d(void* pointer, zfp_type type, cython.uint nx, cython.uint ny);
@@ -147,11 +148,16 @@ cdef class Memory:
     def __exit__(self, exc_type, exc_value, exc_tb):
         free(self.data)
 
-cpdef bytes compress_numpy(np.ndarray arr, double tolerance = 1e-3):
+cpdef bytes compress_numpy(np.ndarray arr, double tolerance = -1,
+                           double rate = -1, int precision = -1):
     # Input validation
     if arr is None:
         raise TypeError("Input array cannot be None")
-
+    num_params_set = sum([1 for x in [tolerance, rate, precision] if x > -1])
+    if num_params_set == 0:
+        raise ValueError("Either tolerance, rate, or precision must be set")
+    elif num_params_set > 1:
+        raise ValueError("Only one of tolerance, rate, or precision can be set")
     if not arr.flags['F_CONTIGUOUS']:
         # zfp requires a fortran ordered array for optimal compression
         # bonus side-effect: we get a contiguous chunk of memory
@@ -160,7 +166,16 @@ cpdef bytes compress_numpy(np.ndarray arr, double tolerance = 1e-3):
     # Setup zfp structs to begin compression
     cdef zfp_field* field = _init_field(arr)
     stream = zfp_stream_open(NULL)
-    zfp_stream_set_accuracy(stream, tolerance)
+
+    cdef zfp_type ztype = zfp_type_none;
+    cdef int ndim = arr.ndim;
+    if tolerance > -1:
+        zfp_stream_set_accuracy(stream, tolerance)
+    elif rate > -1:
+        ztype = dtype_to_ztype(arr.dtype)
+        zfp_stream_set_rate(stream, rate, ztype, ndim, 0)
+    elif precision > -1:
+        zfp_stream_set_precision(stream, precision)
 
     # Allocate space based on the maximum size potentially required by zfp to
     # store the compressed array
