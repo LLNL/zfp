@@ -140,6 +140,8 @@ cdef class Memory:
     cdef void* data
     def __cinit__(self, size_t size):
         self.data = malloc(size)
+        if self.data == NULL:
+            raise MemoryError()
     cdef void* __enter__(self):
         return self.data
     def __exit__(self, exc_type, exc_value, exc_tb):
@@ -195,7 +197,8 @@ cdef np.ndarray _decompress_with_view(zfp_field* field, zfp_stream* stream):
                                             allocate_buffer=True)
     cdef void* pointer = <void *> decomp_arr.data
     zfp_field_set_pointer(field, pointer)
-    zfp_decompress(stream, field)
+    if zfp_decompress(stream, field) == 0:
+        raise RuntimeError("error during zfp decompression")
 
     return np.asarray(decomp_arr)
 
