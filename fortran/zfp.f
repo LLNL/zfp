@@ -4,17 +4,18 @@ module zFORp_module
   implicit none
   private
 
-  type zFORp_bitstream_type
+  ! bind(c) on types, enums because tests written in C need to reference them
+  type, bind(c) :: zFORp_bitstream_type
     private
     type(c_ptr) :: object = c_null_ptr
   end type zFORp_bitstream_type
 
-  type zFORp_stream_type
+  type, bind(c) :: zFORp_stream_type
     private
     type(c_ptr) :: object = c_null_ptr
   end type zFORp_stream_type
 
-  type zFORp_field_type
+  type, bind(c) :: zFORp_field_type
     private
     type(c_ptr) :: object = c_null_ptr
   end type zFORp_field_type
@@ -34,6 +35,20 @@ module zFORp_module
                   zFORp_mode_fixed_precision = 3, &
                   zFORp_mode_fixed_accuracy = 4
   end enum
+
+  integer, parameter :: zFORp_header_magic = 1
+  integer, parameter :: zFORp_header_meta = 2
+  integer, parameter :: zFORp_header_mode = 4
+  integer, parameter :: zFORp_header_full = 7
+
+  integer, protected, bind(c, name="zFORp_header_magic") :: const_zFORp_header_magic
+  integer, protected, bind(c, name="zFORp_header_meta") :: const_zFORp_header_meta
+  integer, protected, bind(c, name="zFORp_header_mode") :: const_zFORp_header_mode
+  integer, protected, bind(c, name="zFORp_header_full") :: const_zFORp_header_full
+  data const_zFORp_header_magic/zFORp_header_magic/, &
+       const_zFORp_header_meta/zFORp_header_meta/, &
+       const_zFORp_header_mode/zFORp_header_mode/, &
+       const_zFORp_header_full/zFORp_header_full/
 
   interface
 
@@ -394,6 +409,17 @@ module zFORp_module
             zFORp_mode_fixed_precision, &
             zFORp_mode_fixed_accuracy
 
+  ! C macros -> constants
+  public :: zFORp_header_magic, &
+            zFORp_header_meta, &
+            zFORp_header_mode, &
+            zFORp_header_full
+
+  public :: const_zFORp_header_magic, &
+            const_zFORp_header_meta, &
+            const_zFORp_header_mode, &
+            const_zFORp_header_full
+
   ! minimal bitstream API
 
   public :: zFORp_type_size
@@ -468,7 +494,7 @@ contains
 
   ! minimal bitstream API
 
-  function zFORp_bitstream_stream_open(buffer, bytes) result(bitstream)
+  function zFORp_bitstream_stream_open(buffer, bytes) result(bitstream) bind(c, name="zforp_bitstream_stream_open")
     implicit none
     type(zFORp_bitstream_type) :: bitstream
     type(c_ptr), intent(in) :: buffer
@@ -476,7 +502,7 @@ contains
     bitstream%object = zfp_bitstream_stream_open(buffer, int(bytes, c_int))
   end function zFORp_bitstream_stream_open
 
-  subroutine zFORp_bitstream_stream_close(bitstream)
+  subroutine zFORp_bitstream_stream_close(bitstream) bind(c, name="zforp_bitstream_stream_close")
     type(zFORp_bitstream_type), intent(inout) :: bitstream
     call zfp_bitstream_stream_close(bitstream%object)
     bitstream%object = c_null_ptr
@@ -484,7 +510,7 @@ contains
 
   ! high-level API: utility functions
 
-  function zFORp_type_size(zfp_type) result(type_size)
+  function zFORp_type_size(zfp_type) result(type_size) bind(c, name="zforp_type_size")
     implicit none
     integer, intent(in) :: zfp_type
     integer type_size
@@ -493,41 +519,41 @@ contains
 
   ! high-level API: zfp_stream functions
 
-  function zFORp_stream_open(bitstream) result(zfp_stream)
+  function zFORp_stream_open(bitstream) result(zfp_stream) bind(c, name="zforp_stream_open")
     implicit none
     type(zFORp_bitstream_type), intent(in) :: bitstream
     type(zFORp_stream_type) :: zfp_stream
     zfp_stream%object = zfp_stream_open(bitstream%object)
   end function zFORp_stream_open
 
-  subroutine zFORp_stream_close(zfp_stream)
+  subroutine zFORp_stream_close(zfp_stream) bind(c, name="zforp_stream_close")
     type(zFORp_stream_type), intent(inout) :: zfp_stream
     call zfp_stream_close(zfp_stream%object)
     zfp_stream%object = c_null_ptr
   end subroutine zFORp_stream_close
 
-  function zFORp_stream_bit_stream(zfp_stream) result(bitstream)
+  function zFORp_stream_bit_stream(zfp_stream) result(bitstream) bind(c, name="zforp_stream_bit_stream")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     type(zFORp_bitstream_type) :: bitstream
     bitstream%object = zfp_stream_bit_stream(zfp_stream%object)
   end function zFORp_stream_bit_stream
 
-  function zFORp_stream_compression_mode(zfp_stream) result(zfp_mode)
+  function zFORp_stream_compression_mode(zfp_stream) result(zfp_mode) bind(c, name="zforp_stream_compression_mode")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     integer zfp_mode
     zfp_mode = zfp_stream_compression_mode(zfp_stream%object)
   end function zFORp_stream_compression_mode
 
-  function zFORp_stream_mode(zfp_stream) result(encoded_mode)
+  function zFORp_stream_mode(zfp_stream) result(encoded_mode) bind(c, name="zforp_stream_mode")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     integer (kind=8) encoded_mode
     encoded_mode = zfp_stream_mode(zfp_stream%object)
   end function zFORp_stream_mode
 
-  subroutine zFORp_stream_params(zfp_stream, minbits, maxbits, maxprec, minexp)
+  subroutine zFORp_stream_params(zfp_stream, minbits, maxbits, maxprec, minexp) bind(c, name="zforp_stream_params")
     type(zFORp_stream_type), intent(in) :: zfp_stream
     integer, intent(inout) :: minbits, maxbits, maxprec, minexp
     call zfp_stream_params(zfp_stream%object, &
@@ -537,14 +563,14 @@ contains
                            int(minexp, c_int))
   end subroutine zFORp_stream_params
 
-  function zFORp_stream_compressed_size(zfp_stream) result(compressed_size)
+  function zFORp_stream_compressed_size(zfp_stream) result(compressed_size) bind(c, name="zforp_stream_compressed_size")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     integer compressed_size
     compressed_size = zfp_stream_compressed_size(zfp_stream%object)
   end function zFORp_stream_compressed_size
 
-  function zFORp_stream_maximum_size(zfp_stream, zfp_field) result(max_size)
+  function zFORp_stream_maximum_size(zfp_stream, zfp_field) result(max_size) bind(c, name="zforp_stream_maximum_size")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     type(zFORp_field_type), intent(in) :: zfp_field
@@ -552,24 +578,24 @@ contains
     max_size = zfp_stream_maximum_size(zfp_stream%object, zfp_field%object)
   end function zFORp_stream_maximum_size
 
-  subroutine zFORp_stream_set_bit_stream(zfp_stream, bitstream)
+  subroutine zFORp_stream_set_bit_stream(zfp_stream, bitstream) bind(c, name="zforp_stream_set_bit_stream")
     type(zFORp_stream_type), intent(in) :: zfp_stream
     type(zFORp_bitstream_type), intent(in) :: bitstream
     call zfp_stream_set_bit_stream(zfp_stream%object, bitstream%object)
   end subroutine zFORp_stream_set_bit_stream
 
-  function zFORp_stream_set_rate(zfp_stream, rate, zfp_type, dims, wra) result(rate_result)
+  function zFORp_stream_set_rate(zfp_stream, rate, zfp_type, dims, wra) result(rate_result) bind(c, name="zforp_stream_set_rate")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
-    real, intent(in) :: rate
+    real (kind=8), intent(in) :: rate
     integer, intent(in) :: zfp_type
     integer, intent(in) :: dims, wra
-    real :: rate_result
+    real (kind=8) :: rate_result
     rate_result = zfp_stream_set_rate(zfp_stream%object, real(rate, c_double), &
       int(zfp_type, c_int), int(dims, c_int), int(wra, c_int))
   end function zFORp_stream_set_rate
 
-  function zFORp_stream_set_precision(zfp_stream, prec) result(prec_result)
+  function zFORp_stream_set_precision(zfp_stream, prec) result(prec_result) bind(c, name="zforp_stream_set_precision")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     integer, intent(in) :: prec
@@ -577,7 +603,7 @@ contains
     prec_result = zfp_stream_set_precision(zfp_stream%object, int(prec, c_int))
   end function zFORp_stream_set_precision
 
-  function zFORp_stream_set_accuracy(zfp_stream, acc) result(acc_result)
+  function zFORp_stream_set_accuracy(zfp_stream, acc) result(acc_result) bind(c, name="zforp_stream_set_accuracy")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     real (kind=8), intent(in) :: acc
@@ -585,15 +611,16 @@ contains
     acc_result = zfp_stream_set_accuracy(zfp_stream%object, real(acc, c_double))
   end function zFORp_stream_set_accuracy
 
-  function zFORp_stream_set_mode(zfp_stream, encoded_mode) result(mode_result)
+  function zFORp_stream_set_mode(zfp_stream, encoded_mode) result(mode_result) bind(c, name="zforp_stream_set_mode")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
-    integer, intent(in) :: encoded_mode
+    integer (kind=8), intent(in) :: encoded_mode
     integer mode_result
     mode_result = zfp_stream_set_mode(zfp_stream%object, int(encoded_mode, c_int64_t))
   end function zFORp_stream_set_mode
 
-  function zFORp_stream_set_params(zfp_stream, minbits, maxbits, maxprec, minexp) result(is_success)
+  function zFORp_stream_set_params(zfp_stream, minbits, maxbits, maxprec, minexp) result(is_success) &
+      bind(c, name="zforp_stream_set_params")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     integer, intent(in) :: minbits, maxbits, maxprec, minexp
@@ -733,18 +760,18 @@ contains
     dims = zfp_field_dimensionality(zfp_field%object)
   end function zFORp_field_dimensionality
 
-  function zFORp_field_size(zfp_field, size_arr) result(total_size)
+  function zFORp_field_size(zfp_field, size_arr) result(total_size) bind(c, name="zforp_field_size")
     implicit none
     type(zFORp_field_type), intent(in) :: zfp_field
-    integer, dimension(:), target, intent(inout) :: size_arr
+    integer, dimension(4), target, intent(inout) :: size_arr
     integer total_size
     total_size = zfp_field_size(zfp_field%object, c_loc(size_arr))
   end function zFORp_field_size
 
-  function zFORp_field_stride(zfp_field, stride_arr) result(is_strided)
+  function zFORp_field_stride(zfp_field, stride_arr) result(is_strided) bind(c, name="zforp_field_stride")
     implicit none
     type(zFORp_field_type), intent(in) :: zfp_field
-    integer, dimension(:), target, intent(inout) :: stride_arr
+    integer, dimension(4), target, intent(inout) :: stride_arr
     integer is_strided
     is_strided = zfp_field_stride(zfp_field%object, c_loc(stride_arr))
   end function zFORp_field_stride
