@@ -11,3 +11,6 @@
 #include "template/encode.c"
 #include "template/encodef.c"
 #include "template/encode3.c"
+#include "template/revencode.c"
+#include "template/revencodef.c"
+#include "template/revencode3.c"
