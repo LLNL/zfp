@@ -2,10 +2,23 @@ program main
   use zFORp_module
   use iso_c_binding
 
+  ! loop counters
+  integer i, j
+
+  ! input/decompressed arrays
+  integer xLen, yLen
+  integer, dimension(:, :), allocatable, target :: input_array
+  integer, dimension(:, :), allocatable, target :: decompressed_array
+  type(c_ptr) :: array_c_ptr
+  integer error, max_abs_error
+
+  ! zfp_field
+  type(zFORp_field_type) :: zfp_field
+
   ! bitstream
   character, dimension(:), allocatable, target :: buffer
   type(c_ptr) :: buffer_c_ptr
-  integer bytes
+  integer buffer_size_bytes, bitstream_offset_bytes
   type(zFORp_bitstream_type) :: bitstream, queried_bitstream
 
   ! zfp_stream
@@ -14,16 +27,33 @@ program main
   integer :: dims, wra
   integer :: zfp_type
 
-  ! bitstream
-  bytes = 256
-  allocate(buffer(bytes))
-  buffer_c_ptr = c_loc(buffer)
-  bitstream = zFORp_bitstream_stream_open(buffer_c_ptr, bytes)
+  ! initialize input and decompressed arrays
+  xLen = 8
+  yLen = 8
+  allocate(input_array(xLen, yLen))
+  do i = 1, xLen
+    do j = 1, yLen
+      input_array(i, j) = i * i + j * (j + 1)
+    enddo
+  enddo
 
-  ! zfp_stream
+  allocate(decompressed_array(xLen, yLen))
+
+  ! setup zfp_field
+  array_c_ptr = c_loc(input_array)
+  zfp_type = zFORp_type_int32
+  zfp_field = zFORp_field_2d(array_c_ptr, zfp_type, xLen, yLen)
+
+  ! setup bitstream
+  buffer_size_bytes = 256
+  allocate(buffer(buffer_size_bytes))
+  buffer_c_ptr = c_loc(buffer)
+  bitstream = zFORp_bitstream_stream_open(buffer_c_ptr, buffer_size_bytes)
+
+  ! setup zfp_stream
   zfp_stream = zFORp_stream_open(bitstream)
 
-  desired_rate = 16.0
+  desired_rate = 8.0
   dims = 2
   wra = 0
   zfp_type = zFORp_type_float
@@ -31,8 +61,39 @@ program main
 
   queried_bitstream = zFORp_stream_bit_stream(zfp_stream)
 
+  ! compress
+  bitstream_offset_bytes = zFORp_compress(zfp_stream, zfp_field)
+  write(*, *) "After compression, bitstream offset at "
+  write(*, *) bitstream_offset_bytes
+
+  ! decompress
+  call zFORp_stream_rewind(zfp_stream)
+  array_c_ptr = c_loc(decompressed_array)
+  call zFORp_field_set_pointer(zfp_field, array_c_ptr)
+
+  bitstream_offset_bytes = zFORp_decompress(zfp_stream, zfp_field)
+  write(*, *) "After decompression, bitstream offset at "
+  write(*, *) bitstream_offset_bytes
+
+  max_abs_error = 0
+  do i = 1, xLen
+    do j = 1, yLen
+      error = abs(decompressed_array(i, j) - input_array(i, j))
+      max_abs_error = max(error, max_abs_error)
+    enddo
+  enddo
+  write(*, *) "Max absolute error: "
+  write(*, *) max_abs_error
+
+  write(*, *) "Absolute errors: "
+  write(*, *) abs(input_array - decompressed_array)
+
   ! deallocations
   call zFORp_stream_close(zfp_stream)
   call zFORp_bitstream_stream_close(queried_bitstream)
+  call zFORp_field_free(zfp_field)
+
   deallocate(buffer)
+  deallocate(input_array)
+  deallocate(decompressed_array)
 end program main
