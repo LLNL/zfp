@@ -53,7 +53,7 @@ _t1(rev_precision, UInt)(const UInt* block, uint n)
 static uint
 _t2(rev_encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock)
 {
-  int bits;
+  int bits = PBITS;
   int prec;
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* perform decorrelating transform */
@@ -67,9 +67,9 @@ _t2(rev_encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, in
   stream_write_bits(stream, prec - 1, PBITS);
   /* encode integer coefficients */
   if (BLOCK_SIZE <= 64)
-    bits = _t1(encode_ints, UInt)(stream, maxbits, prec, ublock, BLOCK_SIZE);
+    bits += _t1(encode_ints, UInt)(stream, maxbits - bits, prec, ublock, BLOCK_SIZE);
   else
-    bits = _t1(encode_many_ints, UInt)(stream, maxbits, prec, ublock, BLOCK_SIZE);
+    bits += _t1(encode_many_ints, UInt)(stream, maxbits - bits, prec, ublock, BLOCK_SIZE);
   /* write at least minbits bits by padding with zeros */
   if (bits < minbits) {
     stream_pad(stream, minbits - bits);

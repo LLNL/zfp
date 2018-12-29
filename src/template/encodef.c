@@ -54,6 +54,7 @@ _t1(fwd_cast, Scalar)(Int* iblock, const Scalar* fblock, uint n, int emax)
 static uint
 _t2(encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
 {
+  uint bits = 1;
   /* compute maximum exponent */
   int emax = _t1(exponent_block, Scalar)(fblock, BLOCK_SIZE);
   int maxprec = precision(emax, zfp->maxprec, zfp->minexp, DIMS);
@@ -62,23 +63,22 @@ _t2(encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
   if (e) {
     cache_align_(Int iblock[BLOCK_SIZE]);
     /* encode common exponent; LSB indicates that exponent is nonzero */
-    uint bits = EBITS + 1;
+    bits += EBITS;
     stream_write_bits(zfp->stream, 2 * e + 1, bits);
     /* perform forward block-floating-point transform */
     _t1(fwd_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
     /* encode integer block */
-    return bits + _t2(encode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, maxprec, iblock);
+    bits += _t2(encode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, maxprec, iblock);
   }
   else {
     /* write single zero-bit to indicate that all values are zero */
     stream_write_bit(zfp->stream, 0);
-    if (zfp->minbits > 1) {
-      stream_pad(zfp->stream, zfp->minbits - 1);
-      return zfp->minbits;
+    if (zfp->minbits > bits) {
+      stream_pad(zfp->stream, zfp->minbits - bits);
+      bits = zfp->minbits;
     }
-    else
-      return 1;
   }
+  return bits;
 }
 
 /* public functions -------------------------------------------------------- */

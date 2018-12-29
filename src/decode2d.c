@@ -11,3 +11,6 @@
 #include "template/decode.c"
 #include "template/decodef.c"
 #include "template/decode2.c"
+#include "template/revdecode.c"
+#include "template/revdecodef.c"
+#include "template/revdecode2.c"

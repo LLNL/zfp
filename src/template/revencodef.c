@@ -58,5 +58,6 @@ _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
     _t1(rev_fwd_reinterpret, Scalar)(iblock, fblock, BLOCK_SIZE);
     stream_write_bit(zfp->stream, 0);
   }
-  return bits + _t2(rev_encode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
+  bits += _t2(rev_encode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
+  return bits;
 }
