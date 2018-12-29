@@ -366,6 +366,12 @@ module zFORp_module
       integer(c_size_t) num_bits_read
     end function
 
+    ! low-level API: stream manipulation
+    subroutine zfp_stream_rewind(zfp_stream) bind(c, name="zfp_stream_rewind")
+      import
+      type(c_ptr), value :: zfp_stream
+    end subroutine
+
   end interface
 
   ! types
@@ -453,6 +459,10 @@ module zFORp_module
             zFORp_decompress, &
             zFORp_write_header, &
             zFORp_read_header
+
+  ! low-level API: stream manipulation
+
+  public :: zFORp_stream_rewind
 
 contains
 
@@ -851,5 +861,12 @@ contains
     integer num_bits_read
     num_bits_read = zfp_read_header(zfp_stream%object, zfp_field%object, int(mask, c_int))
   end function zFORp_read_header
+
+  ! low-level API: stream manipulation
+
+  subroutine zFORp_stream_rewind(zfp_stream)
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    call zfp_stream_rewind(zfp_stream%object)
+  end subroutine zFORp_stream_rewind
 
 end module zFORp_module
