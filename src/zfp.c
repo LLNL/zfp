@@ -461,14 +461,14 @@ zfp_stream_compression_mode(const zfp_stream* zfp)
   if (zfp->minbits == zfp->maxbits &&
       1 <= zfp->maxbits && zfp->maxbits <= ZFP_MAX_BITS &&
       zfp->maxprec >= ZFP_MAX_PREC &&
-      zfp->minexp <= ZFP_MIN_EXP)
+      zfp->minexp == ZFP_MIN_EXP)
     return zfp_mode_fixed_rate;
 
   /* fixed precision? */
   if (zfp->minbits <= ZFP_MIN_BITS &&
       zfp->maxbits >= ZFP_MAX_BITS &&
       zfp->maxprec >= 1 &&
-      zfp->minexp <= ZFP_MIN_EXP)
+      zfp->minexp == ZFP_MIN_EXP)
     return zfp_mode_fixed_precision;
 
   /* fixed accuracy? */
