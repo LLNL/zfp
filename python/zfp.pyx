@@ -12,7 +12,7 @@ cimport numpy as np
 cdef extern from "bitstream.h":
     cdef struct bitstream:
         pass
-    bitstream* stream_open(void* data, size_t bytes);
+    bitstream* stream_open(void* data, size_t);
     void stream_close(bitstream* stream);
 
 cdef extern from "zfp.h":
@@ -26,7 +26,7 @@ cdef extern from "zfp.h":
 
     # structs
     ctypedef struct zfp_field:
-        zfp_type type
+        zfp_type _type "type"
         cython.uint nx, ny, nz, nw
         int sx, sy, sz, sw
         void* data
@@ -48,10 +48,10 @@ cdef extern from "zfp.h":
     double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance);
     double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, cython.uint dims, int wra);
     zfp_field* zfp_field_alloc();
-    zfp_field* zfp_field_1d(void* pointer, zfp_type type, cython.uint nx);
-    zfp_field* zfp_field_2d(void* pointer, zfp_type type, cython.uint nx, cython.uint ny);
-    zfp_field* zfp_field_3d(void* pointer, zfp_type type, cython.uint nx, cython.uint ny, cython.uint nz);
-    zfp_field* zfp_field_4d(void* pointer, zfp_type type, cython.uint nx, cython.uint ny, cython.uint nz, cython.uint nw);
+    zfp_field* zfp_field_1d(void* pointer, zfp_type, cython.uint nx);
+    zfp_field* zfp_field_2d(void* pointer, zfp_type, cython.uint nx, cython.uint ny);
+    zfp_field* zfp_field_3d(void* pointer, zfp_type, cython.uint nx, cython.uint ny, cython.uint nz);
+    zfp_field* zfp_field_4d(void* pointer, zfp_type, cython.uint nx, cython.uint ny, cython.uint nz, cython.uint nw);
     void zfp_field_free(zfp_field* field);
     size_t zfp_compress(zfp_stream* stream, const zfp_field* field);
     size_t zfp_decompress(zfp_stream* stream, zfp_field* field);
@@ -199,7 +199,7 @@ cpdef bytes compress_numpy(np.ndarray arr, double tolerance = -1,
     return compress_str
 
 cdef np.ndarray _decompress_with_view(zfp_field* field, zfp_stream* stream):
-    cdef zfp_type ztype = field[0].type
+    cdef zfp_type ztype = field[0]._type
     dtype = ztype_to_dtype(ztype)
     format_type = dtype_to_format(dtype)
 
@@ -229,7 +229,7 @@ cpdef np.ndarray decompress_numpy(bytes compressed_data):
     zfp_stream_rewind(stream)
     zfp_read_header(stream, field, HEADER_FULL)
 
-    cdef zfp_type ztype = field[0].type
+    cdef zfp_type ztype = field[0]._type
     if ztype == zfp_type_int32 or ztype == zfp_type_int64:
         raise NotImplementedError("Integer types not supported")
 
