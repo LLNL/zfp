@@ -4,7 +4,7 @@ language:
 matrix:
   include:
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-6
       addons:
         apt:
