@@ -140,6 +140,7 @@ int main(int argc, char* argv[])
   uint ny = 0;
   uint nz = 0;
   uint nw = 0;
+  uint blocks = 0;
   size_t count = 0;
   double rate = 0;
   uint precision = 0;
@@ -167,9 +168,12 @@ int main(int argc, char* argv[])
   void* fi = NULL;
   void* fo = NULL;
   void* buffer = NULL;
+  unsigned long long * offset_table = NULL;
+  uint chunks = 0;
   size_t rawsize = 0;
   size_t zfpsize = 0;
   size_t bufsize = 0;
+  size_t offset_table_size = 0;
 
   if (argc == 1)
     usage();
@@ -279,12 +283,14 @@ int main(int argc, char* argv[])
           exec = zfp_exec_omp;
         else if (sscanf(argv[i], "omp=%u", &threads) == 1) {
           exec = zfp_exec_omp;
-          chunk_size = 0;
+          chunk_size = 100;
+          printf("Warning: chunk size not specified \n Using default chunk size of 100 \n");
         }
         else if (!strcmp(argv[i], "omp")) {
           exec = zfp_exec_omp;
           threads = 0;
-          chunk_size = 0;
+          chunk_size = 100;
+          printf("Warning: threads and chunk size not specified\n Using default chunk size of 100 \n");
         }
         else if (!strcmp(argv[i], "cuda"))
           exec = zfp_exec_cuda;
@@ -467,6 +473,7 @@ int main(int argc, char* argv[])
   /* specify execution policy */
   switch (exec) {
       case zfp_exec_cuda:
+      /* TODO: Add chunk size parameter */
         if (!zfp_stream_set_execution(zfp, exec)) {
           fprintf(stderr, "cuda execution not available\n");
           return EXIT_FAILURE;
@@ -511,6 +518,21 @@ int main(int argc, char* argv[])
     }
     zfp_stream_set_bit_stream(zfp, stream);
 
+    /* store block lengths in a table for fixed accuracy or precision headers
+    TODO: integrate this with the current ZFP header and move the header writing after the compression
+    TODO: find a better check */
+    if (chunk_size) {
+      blocks = ((nx + 3)/4) * ((ny + 3)/4) * ((nz + 3)/4) * ((nw + 3)/4);
+      chunks = (blocks + chunk_size - 1) / chunk_size;
+      offset_table_size = sizeof(unsigned long long) * (size_t)chunks;
+      offset_table = malloc(offset_table_size);
+      if (!offset_table) {
+        fprintf(stderr, "cannot allocate memory for offset table \n");
+        return EXIT_FAILURE;
+      }
+      zfp_stream_set_offset_table(zfp, offset_table);
+    }
+
     /* optionally write header */
     if (header && !zfp_write_header(zfp, field, ZFP_HEADER_FULL)) {
       fprintf(stderr, "cannot write header\n");
@@ -531,8 +553,16 @@ int main(int argc, char* argv[])
         fprintf(stderr, "cannot create compressed file\n");
         return EXIT_FAILURE;
       }
+      /* TODO: think of a clean way to check for offset header, possibly execution policy */
+	    if (chunk_size) {
+        /* write the offset header to the file */
+        if (fwrite(offset_table, sizeof(unsigned long long), chunks, file) != chunks) {
+          fprintf(stderr, "cannot write chunk offset table to file\n");
+          return EXIT_FAILURE;
+        }
+      }
       if (fwrite(buffer, 1, zfpsize, file) != zfpsize) {
-        fprintf(stderr, "cannot write compressed file\n");
+        fprintf(stderr, "cannot write compressed data to file\n");
         return EXIT_FAILURE;
       }
       fclose(file);
@@ -576,9 +606,21 @@ int main(int argc, char* argv[])
     }
     zfp_field_set_pointer(field, fo);
 
+    /* check if offset table is present in the zfp stream struct or in the input file */
+    if(offset_table == NULL && zfp_stream_execution(zfp) != zfp_exec_serial) {
+      blocks = ((nx + 3)/4) * ((ny + 3)/4) * ((nz + 3)/4) * ((nw + 3)/4);
+      chunks = (blocks + chunk_size - 1) / chunk_size;
+      unsigned long long * offset_table_pointer = (unsigned long long *)buffer;
+      zfp_stream_set_offset_table(zfp, offset_table_pointer);
+      void* temp = (void*)((unsigned long long *)buffer + chunks);
+      stream = stream_open(temp, bufsize - chunks * sizeof(unsigned long long));
+      zfp_stream_set_bit_stream(zfp, stream);
+    }
+
     /* decompress data */
     while (!zfp_decompress(zfp, field)) {
-      /* fall back on serial decompression if execution policy not supported */
+      /* fall back on serial decompression if execution policy not supported
+         TODO: look into removing this exception as all modes are now supported */
       if (inpath && zfp_stream_execution(zfp) != zfp_exec_serial) {
         if (!zfp_stream_set_execution(zfp, zfp_exec_serial)) {
           fprintf(stderr, "cannot change execution policy\n");
@@ -623,6 +665,8 @@ int main(int argc, char* argv[])
   free(buffer);
   free(fi);
   free(fo);
+  if(offset_table)
+  free(offset_table);
 
   return EXIT_SUCCESS;
 }

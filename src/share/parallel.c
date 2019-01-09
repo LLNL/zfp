@@ -83,4 +83,30 @@ compress_finish_par(zfp_stream* stream, bitstream** src, uint chunks)
     stream_wseek(dst, offset);
 }
 
+/* initialize per-thread bit streams for parallel decompression */
+static bitstream**
+decompress_init_par(zfp_stream* stream, const zfp_field* field, uint chunks)
+{
+  uint i;
+  void * buffer = stream_begin(zfp_stream_bit_stream(stream));
+  bitstream** bs = (bitstream**)malloc(chunks * sizeof(bitstream*));
+  unsigned long long* offset_table = stream->offset_table;
+  const size_t size = stream_size(stream->stream);
+  for (i = 0; i < chunks; i++) {
+    /* read the chunk offset and set the bitstream to the start of the chunk */
+    bs[i] = stream_open(buffer, size);
+    stream_rseek(bs[i], (size_t)offset_table[i]);
+  }
+  return bs;
+}
+
+static void
+decompress_finish_par(bitstream** bs, uint chunks)
+{
+  uint i;
+  for (i = 0; i < chunks; i++)
+    stream_close(bs[i]);
+  free(bs);
+}
+
 #endif
