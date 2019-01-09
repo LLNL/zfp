@@ -317,22 +317,40 @@ int main(int argc, char* argv[])
     return EXIT_FAILURE;
   }
 
-  /* make sure we know floating-point type */
-  if ((inpath || !header) && !typesize) {
-    fprintf(stderr, "must specify scalar type via -f, -d, or -t or header via -h\n");
-    return EXIT_FAILURE;
+  /* make sure we (will) know scalar type */
+  if (!typesize) {
+    if (inpath) {
+      fprintf(stderr, "must specify scalar type via -f, -d, or -t to compress\n");
+      return EXIT_FAILURE;
+    }
+    else if (!header) {
+      fprintf(stderr, "must specify scalar type via -f, -d, or -t or header via -h to decompress\n");
+      return EXIT_FAILURE;
+    }
   }
 
-  /* make sure we know array dimensions */
-  if ((inpath || !header) && !dims) {
-    fprintf(stderr, "must specify array dimensions via -1, -2, or -3 or header via -h\n");
-    return EXIT_FAILURE;
+  /* make sure we (will) know array dimensions */
+  if (!dims) {
+    if (inpath) {
+      fprintf(stderr, "must specify array dimensions via -1, -2, -3, or -4 to compress\n");
+      return EXIT_FAILURE;
+    }
+    else if (!header) {
+      fprintf(stderr, "must specify array dimensions via -1, -2, -3, or -4 or header via -h to decompress\n");
+      return EXIT_FAILURE;
+    }
   }
 
-  /* make sure we know (de)compression mode and parameters */
-  if ((inpath || !header) && !mode) {
-    fprintf(stderr, "must specify compression parameters via -a, -c, -p, or -r or header via -h\n");
-    return EXIT_FAILURE;
+  /* make sure we (will) know (de)compression mode and parameters */
+  if (!mode) {
+    if (inpath) {
+      fprintf(stderr, "must specify compression parameters via -a, -c, -p, or -r to compress\n");
+      return EXIT_FAILURE;
+    }
+    else if (!header) {
+      fprintf(stderr, "must specify compression parameters via -a, -c, -p, or -r or header via -h to decompress\n");
+      return EXIT_FAILURE;
+    }
   }
 
   /* make sure we have input file for stats */
