@@ -448,10 +448,3 @@ stream_clone(const bitstream* s)
     *c = *s;
   return c;
 }
-
-/* return pointer to start of data array used by this bitstream */
-inline_ void *
-stream_begin(bitstream* s)
-{
-	return s->begin;
-}

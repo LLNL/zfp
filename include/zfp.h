@@ -145,7 +145,7 @@ typedef struct {
   int minexp;         /* minimum floating point bit plane number to store */
   bitstream* stream;  /* compressed bit stream */
   zfp_execution exec; /* execution policy and parameters */
-  unsigned long long * offset_table; /* table with the chunk offsets in bits */
+  uint64 * offset_table; /* table with the chunk offsets in bits */
 } zfp_stream;
 
 /* compression mode */
@@ -303,7 +303,7 @@ zfp_stream_set_params(
 void
 zfp_stream_set_offset_table(
   zfp_stream* zfp,
-  unsigned long long * offset_table
+  uint64 * offset_table
 );
 
 /* high-level API: execution policy ---------------------------------------- */

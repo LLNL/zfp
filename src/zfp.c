@@ -682,7 +682,7 @@ zfp_stream_set_params(zfp_stream* zfp, uint minbits, uint maxbits, uint maxprec,
 }
 
 void
-zfp_stream_set_offset_table(zfp_stream* zfp, unsigned long long* offset_table)
+zfp_stream_set_offset_table(zfp_stream* zfp, uint64* offset_table)
 {
   zfp->offset_table = offset_table;
 }

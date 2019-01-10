@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
   void* fi = NULL;
   void* fo = NULL;
   void* buffer = NULL;
-  unsigned long long * offset_table = NULL;
+  uint64 * offset_table = NULL;
   uint chunks = 0;
   size_t rawsize = 0;
   size_t zfpsize = 0;
@@ -524,7 +524,7 @@ int main(int argc, char* argv[])
     if (chunk_size) {
       blocks = ((nx + 3)/4) * ((ny + 3)/4) * ((nz + 3)/4) * ((nw + 3)/4);
       chunks = (blocks + chunk_size - 1) / chunk_size;
-      offset_table_size = sizeof(unsigned long long) * (size_t)chunks;
+      offset_table_size = sizeof(uint64) * (size_t)chunks;
       offset_table = malloc(offset_table_size);
       if (!offset_table) {
         fprintf(stderr, "cannot allocate memory for offset table \n");
@@ -556,7 +556,7 @@ int main(int argc, char* argv[])
       /* TODO: think of a clean way to check for offset header, possibly execution policy */
 	    if (chunk_size) {
         /* write the offset header to the file */
-        if (fwrite(offset_table, sizeof(unsigned long long), chunks, file) != chunks) {
+        if (fwrite(offset_table, sizeof(uint64), chunks, file) != chunks) {
           fprintf(stderr, "cannot write chunk offset table to file\n");
           return EXIT_FAILURE;
         }
@@ -610,10 +610,10 @@ int main(int argc, char* argv[])
     if(offset_table == NULL && zfp_stream_execution(zfp) != zfp_exec_serial) {
       blocks = ((nx + 3)/4) * ((ny + 3)/4) * ((nz + 3)/4) * ((nw + 3)/4);
       chunks = (blocks + chunk_size - 1) / chunk_size;
-      unsigned long long * offset_table_pointer = (unsigned long long *)buffer;
+      uint64 * offset_table_pointer = (uint64 *)buffer;
       zfp_stream_set_offset_table(zfp, offset_table_pointer);
-      void* temp = (void*)((unsigned long long *)buffer + chunks);
-      stream = stream_open(temp, bufsize - chunks * sizeof(unsigned long long));
+      void* temp = (void*)((uint64 *)buffer + chunks);
+      stream = stream_open(temp, bufsize - chunks * sizeof(uint64));
       zfp_stream_set_bit_stream(zfp, stream);
     }
 

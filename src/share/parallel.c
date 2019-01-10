@@ -88,9 +88,13 @@ static bitstream**
 decompress_init_par(zfp_stream* stream, const zfp_field* field, uint chunks)
 {
   uint i;
-  void * buffer = stream_begin(zfp_stream_bit_stream(stream));
+  void * buffer = stream_data(zfp_stream_bit_stream(stream));
   bitstream** bs = (bitstream**)malloc(chunks * sizeof(bitstream*));
-  unsigned long long* offset_table = stream->offset_table;
+  if (!bs) {
+    fprintf(stderr, "cannot allocate memory for per-thread bit streams \n");
+    exit(EXIT_FAILURE);
+  }
+  uint64 * offset_table = stream->offset_table;
   const size_t size = stream_size(stream->stream);
   for (i = 0; i < chunks; i++) {
     /* read the chunk offset and set the bitstream to the start of the chunk */

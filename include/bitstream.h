@@ -81,9 +81,6 @@ size_t stream_flush(bitstream* stream);
 /* copy n bits from one bit stream to another */
 void stream_copy(bitstream* dst, bitstream* src, size_t n);
 
-/* return pointer to start of data array used by this bitstream */
-void * stream_begin(bitstream* s);
-
 #ifdef BIT_STREAM_STRIDED
 /* set block size in number of words and spacing in number of blocks */
 int stream_set_stride(bitstream* stream, size_t block, ptrdiff_t delta);

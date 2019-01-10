@@ -6,7 +6,7 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = (const Scalar*)field->data;
-  unsigned long long * offset_table = stream->offset_table;
+  uint64 * offset_table = stream->offset_table;
   const uint chunk_size = zfp_stream_omp_chunk_size(stream);
   uint nx = field->nx;
 
@@ -49,7 +49,7 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
     if(chunk + 1 == chunks)
       offset_table[0] = 0;
     else
-      offset_table[chunk + 1] = (unsigned long long)bits;
+      offset_table[chunk + 1] = (uint64)bits;
   }
 
   /* concatenate per-thread streams */
@@ -66,7 +66,7 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = (const Scalar*)field->data;
-  unsigned long long * offset_table = stream->offset_table;
+  uint64 * offset_table = stream->offset_table;
   const uint chunk_size = zfp_stream_omp_chunk_size(stream);
   uint nx = field->nx;
   int sx = field->sx ? field->sx : 1;
@@ -107,7 +107,7 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
     if(chunk + 1 == chunks)
       offset_table[0] = 0;
     else
-      offset_table[chunk + 1] = (unsigned long long)bits;
+      offset_table[chunk + 1] = (uint64)bits;
   }
 
   /* concatenate per-thread streams */
@@ -124,7 +124,7 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = (const Scalar*)field->data;
-  unsigned long long * offset_table = stream->offset_table;
+  uint64 * offset_table = stream->offset_table;
   const uint chunk_size = zfp_stream_omp_chunk_size(stream);
   uint nx = field->nx;
   uint ny = field->ny;
@@ -171,7 +171,7 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
     if(chunk + 1 == chunks)
       offset_table[0] = 0;
     else
-      offset_table[chunk + 1] = (unsigned long long)bits;
+      offset_table[chunk + 1] = (uint64)bits;
   }
 
   /* concatenate per-thread streams */
@@ -188,7 +188,7 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = (const Scalar*)field->data;
-  unsigned long long * offset_table = stream->offset_table;
+  uint64 * offset_table = stream->offset_table;
   const uint chunk_size = zfp_stream_omp_chunk_size(stream);
   uint nx = field->nx;
   uint ny = field->ny;
@@ -239,7 +239,7 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
     if(chunk + 1 == chunks)
       offset_table[0] = 0;
     else
-      offset_table[chunk + 1] = (unsigned long long)bits;
+      offset_table[chunk + 1] = (uint64)bits;
   }
 
   /* concatenate per-thread streams */
@@ -256,7 +256,7 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = field->data;
-  unsigned long long * offset_table = stream->offset_table;
+  uint64 * offset_table = stream->offset_table;
   const uint chunk_size = zfp_stream_omp_chunk_size(stream);
   uint nx = field->nx;
   uint ny = field->ny;
@@ -311,7 +311,7 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
     if(chunk + 1 == chunks)
       offset_table[0] = 0;
     else
-      offset_table[chunk + 1] = (unsigned long long)bits;
+      offset_table[chunk + 1] = (uint64)bits;
   }
 
   /* concatenate per-thread streams */
