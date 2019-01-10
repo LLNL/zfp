@@ -49,9 +49,17 @@ compress_init_par(zfp_stream* stream, const zfp_field* field, uint chunks, uint 
 
   /* set up buffer for each thread to compress to */
   bs = (bitstream**)malloc(chunks * sizeof(bitstream*));
+  if (!bs) {
+    fprintf(stderr, "cannot allocate memory for per-thread bit streams\n");
+    exit(EXIT_FAILURE);
+  }
   for (i = 0; i < chunks; i++) {
     uint block = chunk_offset(blocks, chunks, i);
     void* buffer = copy ? malloc(size) : (uchar*)stream_data(stream->stream) + stream_size(stream->stream) + block * stream->maxbits / CHAR_BIT;
+    if (copy && !buffer) {
+      fprintf(stderr, "cannot allocate memory for compression buffer\n");
+      exit(EXIT_FAILURE);
+    }
     bs[i] = stream_open(buffer, size);
   }
 
