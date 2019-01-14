@@ -283,14 +283,12 @@ int main(int argc, char* argv[])
           exec = zfp_exec_omp;
         else if (sscanf(argv[i], "omp=%u", &threads) == 1) {
           exec = zfp_exec_omp;
-          chunk_size = 100;
-          printf("Warning: chunk size not specified \n Using default chunk size of 100 \n");
+          chunk_size = 0;
         }
         else if (!strcmp(argv[i], "omp")) {
           exec = zfp_exec_omp;
           threads = 0;
-          chunk_size = 100;
-          printf("Warning: threads and chunk size not specified\n Using default chunk size of 100 \n");
+          chunk_size = 0;
         }
         else if (!strcmp(argv[i], "cuda"))
           exec = zfp_exec_cuda;
@@ -520,10 +518,18 @@ int main(int argc, char* argv[])
 
     /* store block lengths in a table for fixed accuracy or precision headers
     TODO: integrate this with the current ZFP header and move the header writing after the compression
-    TODO: find a better check */
-    if (chunk_size) {
+    TODO: merge with CUDA implementation, handle chunk size based on policy */
+    if ((exec == zfp_exec_omp || exec == zfp_exec_cuda) && (mode == 'a' || mode == 'p')) {
       blocks = ((nx + 3)/4) * ((ny + 3)/4) * ((nz + 3)/4) * ((nw + 3)/4);
-      chunks = (blocks + chunk_size - 1) / chunk_size;
+      uint chunks;
+      if (chunk_size)
+        chunks = (blocks + chunk_size - 1) / chunk_size;
+      else if (threads)
+        chunks = threads;
+      else {
+        fprintf(stderr,"no chunk size or number of threads specified for parallel variable rate compression\n");
+        return EXIT_FAILURE;
+      }
       offset_table_size = sizeof(uint64) * (size_t)chunks;
       offset_table = malloc(offset_table_size);
       if (!offset_table) {
@@ -553,8 +559,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "cannot create compressed file\n");
         return EXIT_FAILURE;
       }
-      /* TODO: think of a clean way to check for offset header, possibly execution policy */
-	    if (chunk_size) {
+	    if ((exec == zfp_exec_omp || exec == zfp_exec_cuda) && (mode == 'a' || mode == 'p')) {
         /* write the offset header to the file */
         if (fwrite(offset_table, sizeof(uint64), chunks, file) != chunks) {
           fprintf(stderr, "cannot write chunk offset table to file\n");
@@ -606,10 +611,19 @@ int main(int argc, char* argv[])
     }
     zfp_field_set_pointer(field, fo);
 
-    /* check if offset table is present in the zfp stream struct or in the input file */
-    if(offset_table == NULL && zfp_stream_execution(zfp) != zfp_exec_serial) {
+    /* check if offset table is present in the zfp stream struct or in the input file
+    TODO: merge with CUDA implementation, handle chunk size based on policy */
+    if(offset_table == NULL && (exec == zfp_exec_omp || exec == zfp_exec_cuda) && (mode == 'a' || mode == 'p')) {
       blocks = ((nx + 3)/4) * ((ny + 3)/4) * ((nz + 3)/4) * ((nw + 3)/4);
-      chunks = (blocks + chunk_size - 1) / chunk_size;
+      uint chunks;
+      if (chunk_size)
+        chunks = (blocks + chunk_size - 1) / chunk_size;
+      else if (threads)
+        chunks = threads;
+      else {
+        fprintf(stderr,"no chunk size or number of threads specified for parallel variable rate compression\n");
+        return EXIT_FAILURE;
+      }
       uint64 * offset_table_pointer = (uint64 *)buffer;
       zfp_stream_set_offset_table(zfp, offset_table_pointer);
       void* temp = (void*)((uint64 *)buffer + chunks);
