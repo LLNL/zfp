@@ -1,18 +1,23 @@
 trigger:
 - misc/azure-pipelines-gui
 
-pool:
-  vmImage: 'Ubuntu-16.04'
+jobs:
+- job: visual_studio_15_win64
 
-steps:
-- script: |
-    mkdir build
-    cd build
-    cmake ..
-    cmake --build .
-  displayName: 'Build'
+  displayName: 'Visual Studio 15 2017 Win64'
 
-- script: |
-    cd build
-    ctest
-  displayName: 'Tests'
+  pool:
+    vmImage: 'vs2017-win2016'
+
+  steps:
+  - bash: |
+      mkdir build
+      cd build
+      cmake -G 'Visual Studio 15 2017 Win64' -DCMAKE_BUILD_TYPE='Debug' -DBUILD_CFP=ON  ..
+      cmake --build . --config 'Debug'
+    displayName: 'Build'
+
+  - bash: |
+      cd build
+      ctest -V -C 'Debug'
+    displayName: 'Tests'
