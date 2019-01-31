@@ -2,25 +2,29 @@ trigger:
 - misc/azure-pipelines-gui
 
 jobs:
-- job: 'vs2017'
+- job: 'mingw'
 
   strategy:
     matrix:
       64bit_debug:
-        GENERATOR: 'Visual Studio 15 2017 Win64'
+        GENERATOR: 'MinGW Makefiles'
         BUILD_TYPE: 'Debug'
+        MINGW_DIR: 'mingw64'
 
       64bit_release:
-        GENERATOR: 'Visual Studio 15 2017 Win64'
+        GENERATOR: 'MinGW Makefiles'
         BUILD_TYPE: 'Release'
+        MINGW_DIR: 'mingw64'
 
       32bit_debug:
-        GENERATOR: 'Visual Studio 15 2017'
+        GENERATOR: 'MinGW Makefiles'
         BUILD_TYPE: 'Debug'
+        MINGW_DIR: 'mingw32'
 
       32bit_release:
-        GENERATOR: 'Visual Studio 15 2017'
+        GENERATOR: 'MinGW Makefiles'
         BUILD_TYPE: 'Release'
+        MINGW_DIR: 'mingw32'
 
   pool:
     vmImage: 'vs2017-win2016'
@@ -29,8 +33,8 @@ jobs:
   - bash: |
       mkdir build
       cd build
-      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON ..
-      cmake --build . --config '$(BUILD_TYPE)'
+      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON ..
+      cmake --build .
     displayName: 'Build without OpenMP, with CFP'
 
   - bash: |
@@ -40,8 +44,8 @@ jobs:
 
   - bash: |
       cd build
-      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DZFP_WITH_OPENMP=ON -DZFP_ENDTOEND_TESTS_ONLY=1 -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 ..
-      cmake --build . --config '$(BUILD_TYPE)'
+      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_OPENMP=ON -DZFP_ENDTOEND_TESTS_ONLY=1 -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 ..
+      cmake --build .
     displayName: 'Build with OpenMP, with CFP custom namespace'
 
   - bash: |
@@ -49,51 +53,98 @@ jobs:
       ctest -V -C '$(BUILD_TYPE)'
     displayName: 'Test'
 
-- job: 'vs2015'
-
-  strategy:
-    matrix:
-      64bit_debug:
-        GENERATOR: 'Visual Studio 14 2015 Win64'
-        BUILD_TYPE: 'Debug'
-
-      64bit_release:
-        GENERATOR: 'Visual Studio 14 2015 Win64'
-        BUILD_TYPE: 'Release'
-
-      32bit_debug:
-        GENERATOR: 'Visual Studio 14 2015'
-        BUILD_TYPE: 'Debug'
-
-      32bit_release:
-        GENERATOR: 'Visual Studio 14 2015'
-        BUILD_TYPE: 'Release'
-
-  pool:
-    vmImage: 'vs2015-win2012r2'
-
-  steps:
-  - bash: |
-      mkdir build
-      cd build
-      # TODO: re-enable OpenMP (has link errors on this image/compiler)
-      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON ..
-      cmake --build . --config '$(BUILD_TYPE)'
-    displayName: 'Build without OpenMP, with CFP'
-
-  - bash: |
-      cd build
-      ctest -V -C '$(BUILD_TYPE)'
-    displayName: 'Test'
-
-  - bash: |
-      cd build
-      # TODO: re-enable OpenMP (has link errors on this image/compiler)
-      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 ..
-      cmake --build . --config '$(BUILD_TYPE)'
-    displayName: 'Build without OpenMP, with CFP custom namespace'
-
-  - bash: |
-      cd build
-      ctest -V -C '$(BUILD_TYPE)'
-    displayName: 'Test'
+#- job: 'vs2017'
+#
+#  strategy:
+#    matrix:
+#      64bit_debug:
+#        GENERATOR: 'Visual Studio 15 2017 Win64'
+#        BUILD_TYPE: 'Debug'
+#
+#      64bit_release:
+#        GENERATOR: 'Visual Studio 15 2017 Win64'
+#        BUILD_TYPE: 'Release'
+#
+#      32bit_debug:
+#        GENERATOR: 'Visual Studio 15 2017'
+#        BUILD_TYPE: 'Debug'
+#
+#      32bit_release:
+#        GENERATOR: 'Visual Studio 15 2017'
+#        BUILD_TYPE: 'Release'
+#
+#  pool:
+#    vmImage: 'vs2017-win2016'
+#
+#  steps:
+#  - bash: |
+#      mkdir build
+#      cd build
+#      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON ..
+#      cmake --build . --config '$(BUILD_TYPE)'
+#    displayName: 'Build without OpenMP, with CFP'
+#
+#  - bash: |
+#      cd build
+#      ctest -V -C '$(BUILD_TYPE)'
+#    displayName: 'Test'
+#
+#  - bash: |
+#      cd build
+#      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DZFP_WITH_OPENMP=ON -DZFP_ENDTOEND_TESTS_ONLY=1 -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 ..
+#      cmake --build . --config '$(BUILD_TYPE)'
+#    displayName: 'Build with OpenMP, with CFP custom namespace'
+#
+#  - bash: |
+#      cd build
+#      ctest -V -C '$(BUILD_TYPE)'
+#    displayName: 'Test'
+#
+#- job: 'vs2015'
+#
+#  strategy:
+#    matrix:
+#      64bit_debug:
+#        GENERATOR: 'Visual Studio 14 2015 Win64'
+#        BUILD_TYPE: 'Debug'
+#
+#      64bit_release:
+#        GENERATOR: 'Visual Studio 14 2015 Win64'
+#        BUILD_TYPE: 'Release'
+#
+#      32bit_debug:
+#        GENERATOR: 'Visual Studio 14 2015'
+#        BUILD_TYPE: 'Debug'
+#
+#      32bit_release:
+#        GENERATOR: 'Visual Studio 14 2015'
+#        BUILD_TYPE: 'Release'
+#
+#  pool:
+#    vmImage: 'vs2015-win2012r2'
+#
+#  steps:
+#  - bash: |
+#      mkdir build
+#      cd build
+#      # TODO: re-enable OpenMP (has link errors on this image/compiler)
+#      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON ..
+#      cmake --build . --config '$(BUILD_TYPE)'
+#    displayName: 'Build without OpenMP, with CFP'
+#
+#  - bash: |
+#      cd build
+#      ctest -V -C '$(BUILD_TYPE)'
+#    displayName: 'Test'
+#
+#  - bash: |
+#      cd build
+#      # TODO: re-enable OpenMP (has link errors on this image/compiler)
+#      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 ..
+#      cmake --build . --config '$(BUILD_TYPE)'
+#    displayName: 'Build without OpenMP, with CFP custom namespace'
+#
+#  - bash: |
+#      cd build
+#      ctest -V -C '$(BUILD_TYPE)'
+#    displayName: 'Test'
