@@ -47,7 +47,7 @@ jobs:
   - bash: |
       mkdir build
       cd build
-      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' ..
+      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DZFP_WITH_OPENMP=ON ..
       cmake --build . --config '$(BUILD_TYPE)'
     displayName: 'Build'
 
