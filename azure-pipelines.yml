@@ -20,11 +20,13 @@ jobs:
         GENERATOR: 'MinGW Makefiles'
         BUILD_TYPE: 'Debug'
         MINGW_DIR: 'mingw32'
+        32BIT_FLAG: '-m32'
 
       32bit_release:
         GENERATOR: 'MinGW Makefiles'
         BUILD_TYPE: 'Release'
         MINGW_DIR: 'mingw32'
+        32BIT_FLAG: '-m32'
 
   pool:
     vmImage: 'vs2017-win2016'
@@ -33,7 +35,7 @@ jobs:
   - bash: |
       mkdir build
       cd build
-      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON ..
+      cmake -G '$(GENERATOR)' -DCMAKE_BUILD_TYPE='$(BUILD_TYPE)' -DCMAKE_C_FLAGS='$(32BIT_FLAG)' -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON ..
       cmake --build .
     displayName: 'Build without OpenMP, with CFP'
 
