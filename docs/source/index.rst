@@ -18,6 +18,7 @@
    low-level-api
    bit-stream
    arrays
+   zforp
    tutorial
    zfpcmd
    examples
