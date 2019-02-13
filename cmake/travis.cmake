@@ -2,7 +2,6 @@
 set(CTEST_SOURCE_DIRECTORY "$ENV{TRAVIS_BUILD_DIR}")
 set(CTEST_BINARY_DIRECTORY "$ENV{TRAVIS_BUILD_DIR}/build")
 
-# We need to set this otherwise we yet 255 as our return code!
 set(CTEST_COMMAND ctest)
 include(${CTEST_SOURCE_DIRECTORY}/CTestConfig.cmake)
 set(CTEST_SITE "travis")
@@ -16,16 +15,34 @@ set(cfg_options
   -DZFP_WITH_CUDA=${BUILD_CUDA}
   )
 
+# Add the variants to the testers name so that we can report multiple
+# times from the same CI builder
+if(BUILD_OPENMP)
+  set(CTEST_SITE "${CTEST_SITE}_openmp")
+endif()
+
+if(BUILD_CUDA)
+  set(CTEST_SITE "${CTEST_SITE}_cuda")
+endif()
+
 if(CFP_NAMESPACE)
   list(APPEND cfg_options
     -DCFP_NAMESPACE=${CFP_NAMESPACE}
-  )
+    )
+  set(TEST_SITE "${CTEST_SITE}_namespace")
 endif()
 
 if(WITH_COVERAGE)
   list(APPEND cfg_options
     -DCMAKE_C_FLAGS=-coverage
     -DCMAKE_CXX_FLAGS=-coverage
+    )
+  set(CTEST_SITE "${CTEST_SITE}_coverage")
+endif()
+
+if(ENDTOEND_TESTS_ONLY)
+  list(APPEND cfg_options
+    -DZFP_ENDTOEND_TESTS_ONLY=1
     )
 endif()
 
@@ -34,7 +51,7 @@ ctest_configure(OPTIONS "${cfg_options}")
 ctest_submit(PARTS Update Notes Configure)
 ctest_build(FLAGS -j1)
 ctest_submit(PARTS Build)
-ctest_test(RETURN_VALUE rv)
+ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv)
 ctest_submit(PARTS Test)
 
 if(WITH_COVERAGE)
