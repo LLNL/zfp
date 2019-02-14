@@ -12,13 +12,4 @@ hashArray(const uint64* arr, size_t nx, int sx);
 uint64
 hashStridedArray(const uint64* arr, size_t n[4], int s[4]);
 
-uint64
-hash2dStridedBlock(const uint64* arr, int sx, int sy);
-
-uint64
-hash3dStridedBlock(const uint64* arr, int sx, int sy, int sz);
-
-uint64
-hash4dStridedBlock(const uint64* arr, int sx, int sy, int sz, int sw);
-
 #endif

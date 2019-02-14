@@ -254,22 +254,15 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
 
-  UInt checksum;
-  switch (DIMS) {
-    case 1:
-      checksum = hashArray((const UInt*)bundle->dataArr, BLOCK_SIDE_LEN, SX);
-      break;
-    case 2:
-      checksum = hash2dStridedBlock((const UInt*)bundle->dataArr, SX, SY);
-      break;
-    case 3:
-      checksum = hash3dStridedBlock((const UInt*)bundle->dataArr, SX, SY, SZ);
-      break;
-    case 4:
-      checksum = hash4dStridedBlock((const UInt*)bundle->dataArr, SX, SY, SZ, SW);
-      break;
+  size_t n[4];
+  int i;
+  for (i = 0; i < 4; i++) {
+    n[i] = (i < DIMS) ? BLOCK_SIDE_LEN : 0;
   }
 
+  int s[4] = {SX, SY, SZ, SW};
+
+  UInt checksum = hashStridedArray((const UInt*)bundle->dataArr, n, s);
   assert_int_equal(checksum, CHECKSUM_ORIGINAL_DATA_BLOCK);
 }
 

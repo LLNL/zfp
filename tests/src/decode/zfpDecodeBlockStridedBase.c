@@ -224,25 +224,17 @@ teardown(void **state)
 }
 
 UInt
-hashStridedEntries(Scalar* dataArr)
+hashStridedBlock(Scalar* dataArr)
 {
-  UInt checksum = 0;
-  switch (DIMS) {
-    case 1:
-      checksum = hashArray((const UInt*)dataArr, BLOCK_SIZE, SX);
-      break;
-    case 2:
-      checksum = hash2dStridedBlock((const UInt*)dataArr, SX, SY);
-      break;
-    case 3:
-      checksum = hash3dStridedBlock((const UInt*)dataArr, SX, SY, SZ);
-      break;
-    case 4:
-      checksum = hash4dStridedBlock((const UInt*)dataArr, SX, SY, SZ, SW);
-      break;
+  size_t n[4];
+  int i;
+  for (i = 0; i < 4; i++) {
+    n[i] = (i < DIMS) ? BLOCK_SIDE_LEN : 0;
   }
 
-  return checksum;
+  int s[4] = {SX, SY, SZ, SW};
+
+  return hashStridedArray((const UInt*)dataArr, n, s);
 }
 
 uint
@@ -487,7 +479,7 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashStridedEntries(bundle->dataArr), CHECKSUM_ORIGINAL_DATA_BLOCK);
+  assert_int_equal(hashStridedBlock(bundle->dataArr), CHECKSUM_ORIGINAL_DATA_BLOCK);
 }
 
 static void
@@ -532,7 +524,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlockStrided_expect_ArrayChecksu
 
   decodeBlockStrided(stream, bundle->decodedDataArr);
 
-  assert_int_equal(hashStridedEntries(bundle->decodedDataArr), CHECKSUM_DECODED_BLOCK);
+  assert_int_equal(hashStridedBlock(bundle->decodedDataArr), CHECKSUM_DECODED_BLOCK);
 }
 
 static void
@@ -591,5 +583,5 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_Array
 
   decodePartialBlockStrided(stream, bundle->decodedDataArr);
 
-  assert_int_equal(hashStridedEntries(bundle->decodedDataArr), CHECKSUM_DECODED_PARTIAL_BLOCK);
+  assert_int_equal(hashStridedBlock(bundle->decodedDataArr), CHECKSUM_DECODED_PARTIAL_BLOCK);
 }
