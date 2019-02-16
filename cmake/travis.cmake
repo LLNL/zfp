@@ -25,11 +25,15 @@ if(BUILD_CUDA)
   set(CTEST_SITE "${CTEST_SITE}_cuda")
 endif()
 
-if(CFP_NAMESPACE)
-  list(APPEND cfg_options
-    -DCFP_NAMESPACE=${CFP_NAMESPACE}
-    )
-  set(TEST_SITE "${CTEST_SITE}_namespace")
+if(BUILD_CFP)
+  set(CTEST_SITE "${CTEST_SITE}_cfp")
+
+  if(CFP_NAMESPACE)
+    list(APPEND cfg_options
+      -DCFP_NAMESPACE=${CFP_NAMESPACE}
+      )
+    set(CTEST_SITE "${CTEST_SITE}namespace")
+  endif()
 endif()
 
 if(WITH_COVERAGE)
