@@ -4,6 +4,8 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+
+#include "constants/checksums/checksums.h"
 #include "utils/testMacros.h"
 
 #define SX 2
@@ -263,7 +265,8 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
   int s[4] = {SX, SY, SZ, SW};
 
   UInt checksum = hashStridedArray((const UInt*)bundle->dataArr, n, s);
-  assert_int_equal(checksum, CHECKSUM_ORIGINAL_DATA_BLOCK);
+  uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -321,7 +324,8 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_BitstreamChe
   zfp_stream_flush(stream);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  assert_int_equal(checksum, CHECKSUM_ENCODED_BLOCK);
+  uint64 expectedChecksum = getChecksumEncodedBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -452,5 +456,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_Bitst
   zfp_stream_flush(stream);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  assert_int_equal(checksum, CHECKSUM_ENCODED_PARTIAL_BLOCK);
+  uint64 expectedChecksum = getChecksumEncodedPartialBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }

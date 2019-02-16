@@ -4,6 +4,8 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+
+#include "constants/checksums/checksums.h"
 #include "utils/testMacros.h"
 
 struct setupVars {
@@ -89,7 +91,9 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashArray((const UInt*)bundle->dataArr, BLOCK_SIZE, 1), CHECKSUM_ORIGINAL_DATA_BLOCK);
+  UInt checksum = hashArray((const UInt*)bundle->dataArr, BLOCK_SIZE, 1);
+  uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -116,5 +120,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlock_expect_BitstreamChecksumMa
   zfp_stream_flush(stream);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  assert_int_equal(checksum, CHECKSUM_ENCODED_BLOCK);
+  uint64 expectedChecksum = getChecksumEncodedBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }

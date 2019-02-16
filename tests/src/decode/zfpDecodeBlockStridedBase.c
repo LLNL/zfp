@@ -4,6 +4,8 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+
+#include "constants/checksums/checksums.h"
 #include "utils/testMacros.h"
 
 #define SX 2
@@ -479,7 +481,9 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashStridedBlock(bundle->dataArr), CHECKSUM_ORIGINAL_DATA_BLOCK);
+  UInt checksum = hashStridedBlock(bundle->dataArr);
+  uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -524,7 +528,9 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlockStrided_expect_ArrayChecksu
 
   decodeBlockStrided(stream, bundle->decodedDataArr);
 
-  assert_int_equal(hashStridedBlock(bundle->decodedDataArr), CHECKSUM_DECODED_BLOCK);
+  UInt checksum = hashStridedBlock(bundle->decodedDataArr);
+  uint64 expectedChecksum = getChecksumDecodedBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -583,5 +589,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_Array
 
   decodePartialBlockStrided(stream, bundle->decodedDataArr);
 
-  assert_int_equal(hashStridedBlock(bundle->decodedDataArr), CHECKSUM_DECODED_PARTIAL_BLOCK);
+  UInt checksum = hashStridedBlock(bundle->decodedDataArr);
+  uint64 expectedChecksum = getChecksumDecodedPartialBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }

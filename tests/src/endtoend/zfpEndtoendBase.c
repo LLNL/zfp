@@ -8,6 +8,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "constants/checksums/checksums.h"
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
 #include "utils/zfpTimer.h"
@@ -54,9 +55,6 @@ struct setupVars {
   double accParam;
 
   stride_config stride;
-
-  uint64 compressedChecksum;
-  UInt decompressedChecksum;
 
   zfp_timer* timer;
 };
@@ -334,7 +332,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
   zfp_stream_set_bit_stream(stream, s);
   zfp_stream_rewind(stream);
 
-  // grab checksums for this compressParamNum
+  // set compression mode for this compressParamNum
   if (compressParamNum > 2 || compressParamNum < 0) {
     fail_msg("Unknown compressParamNum during setupChosenZfpMode()");
   }
@@ -346,46 +344,12 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
       zfp_stream_set_precision(stream, bundle->precParam);
       printf("\t\tFixed precision param: %u\n", bundle->precParam);
 
-      switch(compressParamNum) {
-        case 0:
-          bundle->compressedChecksum = CHECKSUM_FP_8_COMPRESSED_BITSTREAM;
-          bundle->decompressedChecksum = CHECKSUM_FP_8_DECOMPRESSED_ARRAY;
-          break;
-
-        case 1:
-          bundle->compressedChecksum = CHECKSUM_FP_16_COMPRESSED_BITSTREAM;
-          bundle->decompressedChecksum = CHECKSUM_FP_16_DECOMPRESSED_ARRAY;
-          break;
-
-        case 2:
-          bundle->compressedChecksum = CHECKSUM_FP_32_COMPRESSED_BITSTREAM;
-          bundle->decompressedChecksum = CHECKSUM_FP_32_DECOMPRESSED_ARRAY;
-          break;
-      }
-
       break;
 
     case zfp_mode_fixed_rate:
       bundle->rateParam = intPow(2, bundle->compressParamNum + 3);
       zfp_stream_set_rate(stream, (double)bundle->rateParam, type, DIMS, 0);
       printf("\t\tFixed rate param: %lu\n", (unsigned long)bundle->rateParam);
-
-      switch(compressParamNum) {
-        case 0:
-          bundle->compressedChecksum = CHECKSUM_FR_8_COMPRESSED_BITSTREAM;
-          bundle->decompressedChecksum = CHECKSUM_FR_8_DECOMPRESSED_ARRAY;
-          break;
-
-        case 1:
-          bundle->compressedChecksum = CHECKSUM_FR_16_COMPRESSED_BITSTREAM;
-          bundle->decompressedChecksum = CHECKSUM_FR_16_DECOMPRESSED_ARRAY;
-          break;
-
-        case 2:
-          bundle->compressedChecksum = CHECKSUM_FR_32_COMPRESSED_BITSTREAM;
-          bundle->decompressedChecksum = CHECKSUM_FR_32_DECOMPRESSED_ARRAY;
-          break;
-      }
 
       break;
 
@@ -394,23 +358,6 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
       bundle->accParam = ldexp(1.0, -(1u << bundle->compressParamNum));
       zfp_stream_set_accuracy(stream, bundle->accParam);
       printf("\t\tFixed accuracy param: %lf\n", bundle->accParam);
-
-      switch(compressParamNum) {
-        case 0:
-          bundle->compressedChecksum = CHECKSUM_FA_0p5_COMPRESSED_BITSTREAM;
-          bundle->decompressedChecksum = CHECKSUM_FA_0p5_DECOMPRESSED_ARRAY;
-          break;
-
-        case 1:
-          bundle->compressedChecksum = CHECKSUM_FA_0p25_COMPRESSED_BITSTREAM;
-          bundle->decompressedChecksum = CHECKSUM_FA_0p25_DECOMPRESSED_ARRAY;
-          break;
-
-        case 2:
-          bundle->compressedChecksum = CHECKSUM_FA_0p0625_COMPRESSED_BITSTREAM;
-          bundle->decompressedChecksum = CHECKSUM_FA_0p0625_DECOMPRESSED_ARRAY;
-          break;
-      }
 
       break;
 #endif
@@ -460,7 +407,9 @@ static void
 when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashArray((const UInt*)bundle->randomGenArr, bundle->totalRandomGenArrLen, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
+  UInt checksum = hashArray((const UInt*)bundle->randomGenArr, bundle->totalRandomGenArrLen, 1);
+  uint64 expectedChecksum = getChecksumOriginalDataArray(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -481,7 +430,8 @@ assertZfpCompressBitstreamChecksumMatches(void **state)
   assert_int_not_equal(result, 0);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  assert_int_equal(checksum, bundle->compressedChecksum);
+  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 #ifdef ZFP_TEST_SERIAL
@@ -654,7 +604,9 @@ assertZfpCompressDecompressChecksumMatches(void **state)
       checksum = hashArray(arr, bundle->totalRandomGenArrLen, 1);
       break;
   }
-  assert_int_equal(checksum, bundle->decompressedChecksum);
+
+  uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void

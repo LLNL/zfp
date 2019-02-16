@@ -1,3 +1,5 @@
+#include "constants/checksums/checksums.h"
+
 TEST_F(TEST_FIXTURE, when_constructorCalled_then_rateSetWithWriteRandomAccess)
 {
   double rate = ZFP_RATE_PARAM_BITS;
@@ -62,7 +64,7 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
 
 TEST_F(TEST_FIXTURE, when_generateRandomData_then_checksumMatches)
 {
-  EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, CHECKSUM_ORIGINAL_DATA_ARRAY, hashArray((UINT*)inputDataArr, inputDataTotalLen, 1));
+  EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, getChecksumOriginalDataArray(DIMS, ZFP_TYPE), hashArray((UINT*)inputDataArr, inputDataTotalLen, 1));
 }
 
 #if DIMS == 1
@@ -82,7 +84,7 @@ TEST_P(TEST_FIXTURE, given_dataset_when_set_then_underlyingBitstreamChecksumMatc
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate());
 #endif
 
-  uint64 expectedChecksum = getExpectedBitstreamChecksum();
+  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, GetParam());
   uint64 checksum = hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size());
   EXPECT_PRED_FORMAT2(ExpectNeqPrintHexPred, expectedChecksum, checksum);
 
@@ -105,7 +107,7 @@ TEST_P(TEST_FIXTURE, given_setArray_when_get_then_decompressedValsReturned)
   SCALAR* decompressedArr = new SCALAR[inputDataTotalLen];
   arr.get(decompressedArr);
 
-  uint64 expectedChecksum = getExpectedDecompressedChecksum();
+  uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, GetParam());
   uint64 checksum = hashArray((UINT*)decompressedArr, inputDataTotalLen, 1);
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, expectedChecksum, checksum);
 
@@ -151,7 +153,7 @@ TEST_P(TEST_FIXTURE, when_configureCompressedArrayFromDefaultConstructor_then_bi
   arr.set_rate(getRate());
   arr.set(inputDataArr);
 
-  uint64 expectedChecksum = getExpectedBitstreamChecksum();
+  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, GetParam());
   uint64 checksum = hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size());
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, expectedChecksum, checksum);
 }
