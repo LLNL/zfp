@@ -8,14 +8,9 @@
 #include <math.h>
 #include <string.h>
 
-#if defined(__unix__) || defined(_WIN32)
-  #include <time.h>
-#elif defined(__MACH__)
-  #include <mach/mach_time.h>
-#endif
-
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
+#include "utils/zfpTimer.h"
 
 #ifdef FL_PT_DATA
   #define MIN_TOTAL_ELEMENTS 1000000
@@ -63,12 +58,7 @@ struct setupVars {
   uint64 compressedChecksum;
   UInt decompressedChecksum;
 
-  // timer
-#if defined(__unix__) || defined(_WIN32)
-  clock_t timeStart, timeEnd;
-#elif defined(__MACH__)
-  uint64_t timeStart, timeEnd;
-#endif
+  zfp_timer* timer;
 };
 
 // run this once per (datatype, DIM) combination for performance
@@ -434,6 +424,9 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
   bundle->field = field;
   bundle->decompressField = decompressField;
   bundle->stream = stream;
+
+  bundle->timer = zfp_timer_alloc();
+
   *state = bundle;
 
   return 0;
@@ -458,6 +451,8 @@ teardown(void **state)
   free(bundle->decompressedArr);
   free(bundle->compressedArr);
 
+  zfp_timer_free(bundle->timer);
+
   return 0;
 }
 
@@ -469,43 +464,6 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 }
 
 static void
-startTimer(void **state)
-{
-  struct setupVars *bundle = *state;
-
-  // set up timer
-#if defined(__unix__) || defined(_WIN32)
-  bundle->timeStart = clock();
-#elif defined(__MACH__)
-  bundle->timeStart = mach_absolute_time();
-#else
-  fail_msg("Unknown platform (none of linux, win, osx)");
-#endif
-}
-
-static double
-stopTimer(void **state)
-{
-  struct setupVars *bundle = *state;
-  double time;
-
-  // stop timer, compute elapsed time
-#if defined(__unix__) || defined(_WIN32)
-  bundle->timeEnd = clock();
-  time = (double)((bundle->timeEnd) - (bundle->timeStart)) / CLOCKS_PER_SEC;
-#elif defined(__MACH__)
-  bundle->timeEnd = mach_absolute_time();
-
-  mach_timebase_info_data_t tb = {0};
-  mach_timebase_info(&tb);
-  double timebase = tb.numer / tb.denom;
-  time = ((bundle->timeEnd) - (bundle->timeStart)) * timebase * (1E-9);
-#endif
-
-  return time;
-}
-
-static void
 assertZfpCompressBitstreamChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
@@ -514,9 +472,11 @@ assertZfpCompressBitstreamChecksumMatches(void **state)
   bitstream* s = zfp_stream_bit_stream(stream);
 
   // perform compression and time it
-  startTimer(state);
+  if (zfp_timer_start(bundle->timer)) {
+    fail_msg("Unknown platform (none of linux, win, osx)");
+  }
   size_t result = zfp_compress(stream, field);
-  double time = stopTimer(state);
+  double time = zfp_timer_stop(bundle->timer);
   printf("\t\tCompress time (s): %lf\n", time);
   assert_int_not_equal(result, 0);
 
@@ -661,9 +621,11 @@ assertZfpCompressDecompressChecksumMatches(void **state)
 
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location
-  startTimer(state);
+  if (zfp_timer_start(bundle->timer)) {
+    fail_msg("Unknown platform (none of linux, win, osx)");
+  }
   size_t result = zfp_decompress(stream, bundle->decompressField);
-  double time = stopTimer(state);
+  double time = zfp_timer_stop(bundle->timer);
   printf("\t\tDecompress time (s): %lf\n", time);
   assert_int_equal(compressedBytes, result);
 
