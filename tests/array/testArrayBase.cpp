@@ -1,4 +1,6 @@
-#include "constants/checksums/checksums.h"
+extern "C" {
+  #include "utils/zfpChecksums.h"
+}
 
 TEST_F(TEST_FIXTURE, when_constructorCalled_then_rateSetWithWriteRandomAccess)
 {

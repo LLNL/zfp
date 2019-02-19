@@ -11,9 +11,9 @@
 #include "cfparrays.h"
 #include "zfp.h"
 
-#include "constants/checksums/checksums.h"
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
+#include "utils/zfpChecksums.h"
 
 #define SIZE_X 20
 #define SIZE_Y 31

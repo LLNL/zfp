@@ -5,8 +5,8 @@
 
 #include <stdlib.h>
 
-#include "constants/checksums/checksums.h"
 #include "utils/testMacros.h"
+#include "utils/zfpChecksums.h"
 
 #define SX 2
 #define SY (3 * BLOCK_SIDE_LEN*SX)

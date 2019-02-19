@@ -2,7 +2,7 @@ function(cfp_add_test dims type bits)
   set(test_name testCfpArray${dims}${type})
   add_executable(${test_name} ${test_name}.c)
   target_link_libraries(${test_name}
-    cmocka cfp hash${bits}Lib genSmoothRandNumsLib)
+    cmocka cfp hash${bits}Lib genSmoothRandNumsLib zfpChecksumsLib)
   add_test(NAME ${test_name} COMMAND ${test_name})
 endfunction()
 

@@ -1,21 +1,26 @@
 #include "zfp/types.h"
+#include "zfpChecksums.h"
 
+// raw checksums as static arrays
+#include "constants/checksums/1dDouble.h"
+#include "constants/checksums/1dFloat.h"
 #include "constants/checksums/1dInt32.h"
 #include "constants/checksums/1dInt64.h"
-#include "constants/checksums/1dFloat.h"
-#include "constants/checksums/1dDouble.h"
+
+#include "constants/checksums/2dDouble.h"
+#include "constants/checksums/2dFloat.h"
 #include "constants/checksums/2dInt32.h"
 #include "constants/checksums/2dInt64.h"
-#include "constants/checksums/2dFloat.h"
-#include "constants/checksums/2dDouble.h"
+
+#include "constants/checksums/3dDouble.h"
+#include "constants/checksums/3dFloat.h"
 #include "constants/checksums/3dInt32.h"
 #include "constants/checksums/3dInt64.h"
-#include "constants/checksums/3dFloat.h"
-#include "constants/checksums/3dDouble.h"
+
+#include "constants/checksums/4dDouble.h"
+#include "constants/checksums/4dFloat.h"
 #include "constants/checksums/4dInt32.h"
 #include "constants/checksums/4dInt64.h"
-#include "constants/checksums/4dFloat.h"
-#include "constants/checksums/4dDouble.h"
 
 // [dimensionality][zfp_type]
 static const uint64* checksums[4][4] = {

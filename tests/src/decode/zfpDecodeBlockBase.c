@@ -5,8 +5,8 @@
 
 #include <stdlib.h>
 
-#include "constants/checksums/checksums.h"
 #include "utils/testMacros.h"
+#include "utils/zfpChecksums.h"
 
 struct setupVars {
   Scalar* dataArr;

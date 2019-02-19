@@ -3,7 +3,7 @@ function(zfp_add_cpp_tests dims type bits)
   set(test_name testArray${dims}${type})
   add_executable(${test_name} ${test_name}.cpp)
   target_link_libraries(${test_name}
-    gtest gtest_main zfp hash${bits}Lib genSmoothRandNumsLib)
+    gtest gtest_main zfp hash${bits}Lib genSmoothRandNumsLib zfpChecksumsLib)
   add_test(NAME ${test_name} COMMAND ${test_name})
 
   # test class's references

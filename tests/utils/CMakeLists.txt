@@ -28,6 +28,9 @@ target_link_libraries(genSmoothRandNumsLib PRIVATE rand64Lib fixedpoint96Lib)
 # timer
 add_library(zfpTimerLib zfpTimer.c zfpTimer.h)
 
+# checksums API
+add_library(zfpChecksumsLib zfpChecksums.c zfpChecksums.h)
+
 if(HAVE_LIBM_MATH)
   target_link_libraries(rand32Lib PRIVATE m)
   target_link_libraries(rand64Lib PRIVATE m)

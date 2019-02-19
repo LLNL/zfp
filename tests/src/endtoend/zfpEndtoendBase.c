@@ -8,9 +8,9 @@
 #include <math.h>
 #include <string.h>
 
-#include "constants/checksums/checksums.h"
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
+#include "utils/zfpChecksums.h"
 #include "utils/zfpTimer.h"
 
 #ifdef FL_PT_DATA
