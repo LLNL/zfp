@@ -25,6 +25,9 @@ add_library(fixedpoint96Lib fixedpoint96.c fixedpoint96.h)
 add_library(genSmoothRandNumsLib genSmoothRandNums.c genSmoothRandNums.h)
 target_link_libraries(genSmoothRandNumsLib PRIVATE rand64Lib fixedpoint96Lib)
 
+# compute zfp compression parameters
+add_library(zfpCompressionParamsLib zfpCompressionParams.c zfpCompressionParams.h)
+
 # timer
 add_library(zfpTimerLib zfpTimer.c zfpTimer.h)
 
@@ -35,4 +38,5 @@ if(HAVE_LIBM_MATH)
   target_link_libraries(rand32Lib PRIVATE m)
   target_link_libraries(rand64Lib PRIVATE m)
   target_link_libraries(genSmoothRandNumsLib PRIVATE m)
+  target_link_libraries(zfpCompressionParamsLib PRIVATE m)
 endif()

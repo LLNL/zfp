@@ -11,6 +11,7 @@
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
+#include "utils/zfpCompressionParams.h"
 #include "utils/zfpTimer.h"
 
 #ifdef FL_PT_DATA
@@ -18,8 +19,6 @@
 #else
   #define MIN_TOTAL_ELEMENTS 4096
 #endif
-
-#define RATE_TOL (1e-3)
 
 typedef enum {
   AS_IS = 0,
@@ -364,14 +363,14 @@ setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParam
 
   switch(zfpMode) {
     case zfp_mode_fixed_precision:
-      bundle->precParam = 1u << (bundle->compressParamNum + 3);
+      bundle->precParam = computeFixedPrecisionParam(bundle->compressParamNum);
       zfp_stream_set_precision(bundle->stream, bundle->precParam);
       printf("\t\tFixed precision param: %u\n", bundle->precParam);
 
       break;
 
     case zfp_mode_fixed_rate:
-      bundle->rateParam = intPow(2, bundle->compressParamNum + 3);
+      bundle->rateParam = computeFixedRateParam(bundle->compressParamNum);
       zfp_stream_set_rate(bundle->stream, (double)bundle->rateParam, ZFP_TYPE, DIMS, 0);
       printf("\t\tFixed rate param: %lu\n", (unsigned long)bundle->rateParam);
 
@@ -379,7 +378,7 @@ setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParam
 
 #ifdef FL_PT_DATA
     case zfp_mode_fixed_accuracy:
-      bundle->accParam = ldexp(1.0, -(1u << bundle->compressParamNum));
+      bundle->accParam = computeFixedAccuracyParam(bundle->compressParamNum);
       zfp_stream_set_accuracy(bundle->stream, bundle->accParam);
       printf("\t\tFixed accuracy param: %lf\n", bundle->accParam);
 

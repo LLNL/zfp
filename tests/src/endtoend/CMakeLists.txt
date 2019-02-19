@@ -2,7 +2,8 @@ function(zfp_add_test dims type bits)
   set(serial_test_name testZfpSerial${dims}d${type})
   add_executable(${serial_test_name} ${serial_test_name}.c)
   target_link_libraries(${serial_test_name}
-    cmocka zfp hash${bits}Lib genSmoothRandNumsLib zfpChecksumsLib zfpTimerLib)
+    cmocka zfp hash${bits}Lib genSmoothRandNumsLib zfpChecksumsLib
+    zfpCompressionParamsLib zfpTimerLib)
   if(HAVE_LIBM_MATH)
     target_link_libraries(${serial_test_name} m)
   endif()
@@ -14,7 +15,7 @@ function(zfp_add_test dims type bits)
     target_compile_options(${omp_test_name} PRIVATE ${OpenMP_C_FLAGS})
     target_link_libraries(${omp_test_name}
       cmocka zfp hash${bits}Lib genSmoothRandNumsLib zfpChecksumsLib zfpTimerLib
-      ${OpenMP_C_LIBRARIES})
+      zfpCompressionParamsLib ${OpenMP_C_LIBRARIES})
     if(HAVE_LIBM_MATH)
       target_link_libraries(${omp_test_name} m)
     endif()
@@ -28,7 +29,8 @@ function(zfp_add_test dims type bits)
     set(cuda_test_name testZfpCuda${dims}d${type})
     add_executable(${cuda_test_name} ${cuda_test_name}.c)
     target_link_libraries(${cuda_test_name}
-      cmocka zfp hash${bits}Lib genSmoothRandNumsLib zfpChecksumsLib zfpTimerLib)
+      cmocka zfp hash${bits}Lib genSmoothRandNumsLib zfpChecksumsLib zfpTimerLib
+      zfpCompressionParamsLib)
     if(HAVE_LIBM_MATH)
       target_link_libraries(${cuda_test_name} m)
     endif()
