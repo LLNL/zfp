@@ -141,15 +141,9 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
 
 }
 
-static int
-setup(void **state)
+static void
+setupZfpStream(struct setupVars* bundle)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
-  assert_non_null(bundle);
-
-  resetRandGen();
-  initializeStridedArray(&bundle->dataArr, DUMMY_VAL);
-
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   switch(DIMS) {
@@ -187,6 +181,17 @@ setup(void **state)
 
   bundle->buffer = buffer;
   bundle->stream = stream;
+}
+
+static int
+setup(void **state)
+{
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  resetRandGen();
+  initializeStridedArray(&bundle->dataArr, DUMMY_VAL);
+  setupZfpStream(bundle);
 
   *state = bundle;
 

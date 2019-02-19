@@ -14,26 +14,26 @@ struct setupVars {
   zfp_stream* stream;
 };
 
-static int
-setup(void **state)
+static void
+populateInitialArray(Scalar** dataArrPtr)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
-  assert_non_null(bundle);
-
-  resetRandGen();
-
-  bundle->dataArr = malloc(sizeof(Scalar) * BLOCK_SIZE);
-  assert_non_null(bundle->dataArr);
+  *dataArrPtr = malloc(sizeof(Scalar) * BLOCK_SIZE);
+  assert_non_null(*dataArrPtr);
 
   int i;
   for (i = 0; i < BLOCK_SIZE; i++) {
 #ifdef FL_PT_DATA
-    bundle->dataArr[i] = nextSignedRandFlPt();
+    (*dataArrPtr)[i] = nextSignedRandFlPt();
 #else
-    bundle->dataArr[i] = nextSignedRandInt();
+    (*dataArrPtr)[i] = nextSignedRandInt();
 #endif
   }
 
+}
+
+static void
+setupZfpStream(struct setupVars* bundle)
+{
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   switch(DIMS) {
@@ -67,6 +67,17 @@ setup(void **state)
 
   bundle->buffer = buffer;
   bundle->stream = stream;
+}
+
+static int
+setup(void **state)
+{
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  resetRandGen();
+  populateInitialArray(&bundle->dataArr);
+  setupZfpStream(bundle);
 
   *state = bundle;
 

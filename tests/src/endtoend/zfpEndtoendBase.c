@@ -187,12 +187,60 @@ permuteSquareArray(Scalar* inputArr, Scalar* outputArr, size_t sideLen)
   }
 }
 
-// assumes setupRandomData() already run (having set some setupVars members)
-static int
-setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_config stride)
+static void
+setupZfpFields(struct setupVars* bundle, int s[4])
 {
-  struct setupVars *bundle = *state;
+  uint nx = (uint)bundle->randomGenArrSideLen[0];
+  uint ny = (uint)bundle->randomGenArrSideLen[1];
+  uint nz = (uint)bundle->randomGenArrSideLen[2];
+  uint nw = (uint)bundle->randomGenArrSideLen[3];
 
+  // setup zfp_fields: source/destination arrays for compression/decompression
+  zfp_type type = ZFP_TYPE;
+  zfp_field* field;
+  zfp_field* decompressField;
+
+  switch(DIMS) {
+    case 1:
+      field = zfp_field_1d(bundle->compressedArr, type, nx);
+      zfp_field_set_stride_1d(field, s[0]);
+
+      decompressField = zfp_field_1d(bundle->decompressedArr, type, nx);
+      zfp_field_set_stride_1d(decompressField, s[0]);
+      break;
+
+    case 2:
+      field = zfp_field_2d(bundle->compressedArr, type, nx, ny);
+      zfp_field_set_stride_2d(field, s[0], s[1]);
+
+      decompressField = zfp_field_2d(bundle->decompressedArr, type, nx, ny);
+      zfp_field_set_stride_2d(decompressField, s[0], s[1]);
+      break;
+
+    case 3:
+      field = zfp_field_3d(bundle->compressedArr, type, nx, ny, nz);
+      zfp_field_set_stride_3d(field, s[0], s[1], s[2]);
+
+      decompressField = zfp_field_3d(bundle->decompressedArr, type, nx, ny, nz);
+      zfp_field_set_stride_3d(decompressField, s[0], s[1], s[2]);
+      break;
+
+    case 4:
+      field = zfp_field_4d(bundle->compressedArr, type, nx, ny, nz, nw);
+      zfp_field_set_stride_4d(field, s[0], s[1], s[2], s[3]);
+
+      decompressField = zfp_field_4d(bundle->decompressedArr, type, nx, ny, nz, nw);
+      zfp_field_set_stride_4d(decompressField, s[0], s[1], s[2], s[3]);
+      break;
+  }
+
+  bundle->field = field;
+  bundle->decompressField = decompressField;
+}
+
+static void
+initStridedFields(struct setupVars* bundle, stride_config stride)
+{
   // apply stride permutations on randomGenArr, into compressedArr, which gets compressed
   bundle->stride = stride;
 
@@ -280,49 +328,18 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
       break;
   }
 
-  // setup zfp_fields: source/destination arrays for compression/decompression
-  zfp_type type = ZFP_TYPE;
-  zfp_field* field;
-  zfp_field* decompressField;
+  int s[4] = {sx, sy, sz, sw};
+  setupZfpFields(bundle, s);
+}
 
-  switch(DIMS) {
-    case 1:
-      field = zfp_field_1d(bundle->compressedArr, type, nx);
-      zfp_field_set_stride_1d(field, sx);
-
-      decompressField = zfp_field_1d(bundle->decompressedArr, type, nx);
-      zfp_field_set_stride_1d(decompressField, sx);
-      break;
-
-    case 2:
-      field = zfp_field_2d(bundle->compressedArr, type, nx, ny);
-      zfp_field_set_stride_2d(field, sx, sy);
-
-      decompressField = zfp_field_2d(bundle->decompressedArr, type, nx, ny);
-      zfp_field_set_stride_2d(decompressField, sx, sy);
-      break;
-
-    case 3:
-      field = zfp_field_3d(bundle->compressedArr, type, nx, ny, nz);
-      zfp_field_set_stride_3d(field, sx, sy, sz);
-
-      decompressField = zfp_field_3d(bundle->decompressedArr, type, nx, ny, nz);
-      zfp_field_set_stride_3d(decompressField, sx, sy, sz);
-      break;
-
-    case 4:
-      field = zfp_field_4d(bundle->compressedArr, type, nx, ny, nz, nw);
-      zfp_field_set_stride_4d(field, sx, sy, sz, sw);
-
-      decompressField = zfp_field_4d(bundle->decompressedArr, type, nx, ny, nz, nw);
-      zfp_field_set_stride_4d(decompressField, sx, sy, sz, sw);
-      break;
-  }
-
+static void
+setupZfpStream(struct setupVars* bundle)
+{
   // setup zfp_stream (compression settings)
   zfp_stream* stream = zfp_stream_open(NULL);
+  assert_non_null(stream);
 
-  size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
+  size_t bufsizeBytes = zfp_stream_maximum_size(stream, bundle->field);
   char* buffer = calloc(bufsizeBytes, sizeof(char));
   assert_non_null(buffer);
 
@@ -332,6 +349,13 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
   zfp_stream_set_bit_stream(stream, s);
   zfp_stream_rewind(stream);
 
+  bundle->stream = stream;
+  bundle->buffer = buffer;
+}
+
+static void
+setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParamNum)
+{
   // set compression mode for this compressParamNum
   if (compressParamNum > 2 || compressParamNum < 0) {
     fail_msg("Unknown compressParamNum during setupChosenZfpMode()");
@@ -341,14 +365,14 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
   switch(zfpMode) {
     case zfp_mode_fixed_precision:
       bundle->precParam = 1u << (bundle->compressParamNum + 3);
-      zfp_stream_set_precision(stream, bundle->precParam);
+      zfp_stream_set_precision(bundle->stream, bundle->precParam);
       printf("\t\tFixed precision param: %u\n", bundle->precParam);
 
       break;
 
     case zfp_mode_fixed_rate:
       bundle->rateParam = intPow(2, bundle->compressParamNum + 3);
-      zfp_stream_set_rate(stream, (double)bundle->rateParam, type, DIMS, 0);
+      zfp_stream_set_rate(bundle->stream, (double)bundle->rateParam, ZFP_TYPE, DIMS, 0);
       printf("\t\tFixed rate param: %lu\n", (unsigned long)bundle->rateParam);
 
       break;
@@ -356,7 +380,7 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
 #ifdef FL_PT_DATA
     case zfp_mode_fixed_accuracy:
       bundle->accParam = ldexp(1.0, -(1u << bundle->compressParamNum));
-      zfp_stream_set_accuracy(stream, bundle->accParam);
+      zfp_stream_set_accuracy(bundle->stream, bundle->accParam);
       printf("\t\tFixed accuracy param: %lf\n", bundle->accParam);
 
       break;
@@ -366,11 +390,17 @@ setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_
       fail_msg("Invalid zfp mode during setupChosenZfpMode()");
       break;
   }
+}
 
-  bundle->buffer = buffer;
-  bundle->field = field;
-  bundle->decompressField = decompressField;
-  bundle->stream = stream;
+// assumes setupRandomData() already run (having set some setupVars members)
+static int
+setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_config stride)
+{
+  struct setupVars *bundle = *state;
+
+  initStridedFields(bundle, stride);
+  setupZfpStream(bundle);
+  setupCompressParam(bundle, zfpMode, compressParamNum);
 
   bundle->timer = zfp_timer_alloc();
 
