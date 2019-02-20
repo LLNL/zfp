@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "utils/genSmoothRandNums.h"
+#include "utils/stridedOperations.h"
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
 #include "utils/zfpCompressionParams.h"
@@ -19,13 +20,6 @@
 #else
   #define MIN_TOTAL_ELEMENTS 4096
 #endif
-
-typedef enum {
-  AS_IS = 0,
-  PERMUTED = 1,
-  INTERLEAVED = 2,
-  REVERSED = 3,
-} stride_config;
 
 struct setupVars {
   // randomly generated array
@@ -110,80 +104,6 @@ teardownRandomData(void** state)
   free(bundle);
 
   return 0;
-}
-
-// reversed array ([inputLen - 1], [inputLen - 2], ..., [1], [0])
-static void
-reverseArray(Scalar* inputArr, Scalar* outputArr, size_t inputLen)
-{
-  size_t i;
-  for (i = 0; i < inputLen; i++) {
-    outputArr[i] = inputArr[inputLen - i - 1];
-  }
-}
-
-// interleaved array ([0], [0], [1], [1], [2], ...)
-static void
-interleaveArray(Scalar* inputArr, Scalar* outputArr, size_t inputLen)
-{
-  size_t i;
-  for (i = 0; i < inputLen; i++) {
-    outputArr[2*i] = inputArr[i];
-    outputArr[2*i + 1] = inputArr[i];
-  }
-}
-
-static void
-permuteSquareArray(Scalar* inputArr, Scalar* outputArr, size_t sideLen)
-{
-  size_t i, j, k, l;
-
-  switch(DIMS) {
-    case 4:
-      // permute ijkl lkji
-      for (l = 0; l < sideLen; l++) {
-        for (k = 0; k < sideLen; k++) {
-          for (j = 0; j < sideLen; j++) {
-            for (i = 0; i < sideLen; i++) {
-              size_t index = l*sideLen*sideLen*sideLen + k*sideLen*sideLen + j*sideLen + i;
-              size_t transposedIndex = i*sideLen*sideLen*sideLen + j*sideLen*sideLen + k*sideLen + l;
-              outputArr[transposedIndex] = inputArr[index];
-            }
-          }
-        }
-      }
-      break;
-
-    case 3:
-      // permute ijk to kji
-      for (k = 0; k < sideLen; k++) {
-        for (j = 0; j < sideLen; j++) {
-          for (i = 0; i < sideLen; i++) {
-            size_t index = k*sideLen*sideLen + j*sideLen + i;
-            size_t transposedIndex = i*sideLen*sideLen + j*sideLen + k;
-            outputArr[transposedIndex] = inputArr[index];
-          }
-        }
-      }
-      break;
-
-    case 2:
-      // permute ij to ji
-      for (j = 0; j < sideLen; j++) {
-        for (i = 0; i < sideLen; i++) {
-          size_t index = j*sideLen + i;
-          size_t transposedIndex = i*sideLen + j;
-          outputArr[transposedIndex] = inputArr[index];
-        }
-      }
-
-      break;
-
-    case 1:
-    default:
-      fail_msg("Unexpected DIMS value in permuteSquareArray()");
-      break;
-  }
 }
 
 static void
@@ -278,7 +198,7 @@ initStridedFields(struct setupVars* bundle, stride_config stride)
       } else {
         sx = -1;
       }
-      reverseArray(bundle->randomGenArr, bundle->compressedArr, bundle->totalRandomGenArrLen);
+      reverseArray(bundle->randomGenArr, bundle->compressedArr, bundle->totalRandomGenArrLen, ZFP_TYPE);
 
       // adjust pointer to last element, so strided traverse is valid
       bundle->compressedArr += bundle->totalRandomGenArrLen - 1;
@@ -301,7 +221,7 @@ initStridedFields(struct setupVars* bundle, stride_config stride)
       } else {
         sx = 2;
       }
-      interleaveArray(bundle->randomGenArr, bundle->compressedArr, bundle->totalRandomGenArrLen);
+      interleaveArray(bundle->randomGenArr, bundle->compressedArr, bundle->totalRandomGenArrLen, ZFP_TYPE);
       break;
 
     case PERMUTED:
@@ -318,7 +238,9 @@ initStridedFields(struct setupVars* bundle, stride_config stride)
         sx = (int)nx;
         sy = 1;
       }
-      permuteSquareArray(bundle->randomGenArr, bundle->compressedArr, nx);
+      if (permuteSquareArray(bundle->randomGenArr, bundle->compressedArr, nx, DIMS, ZFP_TYPE)) {
+        fail_msg("Unexpected DIMS value in permuteSquareArray()");
+      }
       break;
 
     case AS_IS:
