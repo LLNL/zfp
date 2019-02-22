@@ -8,14 +8,14 @@ reverseArray(void* inputArr, void* outputArr, size_t inputArrLen, zfp_type zfpTy
   const size_t elementSizeBytes = zfp_type_size(zfpType);
 
   // move ptr to last element
-  inputArr += elementSizeBytes * (inputArrLen - 1);
+  inputArr = (char *)inputArr + elementSizeBytes * (inputArrLen - 1);
 
   size_t i;
   for (i = 0; i < inputArrLen; i++) {
     memcpy(outputArr, inputArr, elementSizeBytes);
 
-    outputArr += elementSizeBytes;
-    inputArr -= elementSizeBytes;
+    outputArr = (char *)outputArr + elementSizeBytes;
+    inputArr = (char *)inputArr - elementSizeBytes;
   }
 }
 
@@ -28,10 +28,10 @@ interleaveArray(void* inputArr, void* outputArr, size_t inputArrLen, zfp_type zf
   size_t i;
   for (i = 0; i < inputArrLen; i++) {
     memcpy(outputArr, inputArr, elementSizeBytes);
-    memcpy(outputArr + elementSizeBytes, inputArr, elementSizeBytes);
+    memcpy((char *)outputArr + elementSizeBytes, inputArr, elementSizeBytes);
 
-    inputArr += elementSizeBytes;
-    outputArr += 2 * elementSizeBytes;
+    inputArr = (char *)inputArr + elementSizeBytes;
+    outputArr = (char *)outputArr + 2 * elementSizeBytes;
   }
 }
 
@@ -51,7 +51,7 @@ permuteSquareArray(void* inputArr, void* outputArr, size_t sideLen, int dims, zf
             for (i = 0; i < sideLen; i++) {
               size_t index = l*sideLen*sideLen*sideLen + k*sideLen*sideLen + j*sideLen + i;
               size_t transposedIndex = i*sideLen*sideLen*sideLen + j*sideLen*sideLen + k*sideLen + l;
-              memcpy(outputArr + elementSizeBytes * index, inputArr + elementSizeBytes * transposedIndex, elementSizeBytes);
+              memcpy((char *)outputArr + elementSizeBytes * index, (char *)inputArr + elementSizeBytes * transposedIndex, elementSizeBytes);
             }
           }
         }
@@ -65,7 +65,7 @@ permuteSquareArray(void* inputArr, void* outputArr, size_t sideLen, int dims, zf
           for (i = 0; i < sideLen; i++) {
             size_t index = k*sideLen*sideLen + j*sideLen + i;
             size_t transposedIndex = i*sideLen*sideLen + j*sideLen + k;
-            memcpy(outputArr + elementSizeBytes * index, inputArr + elementSizeBytes * transposedIndex, elementSizeBytes);
+            memcpy((char *)outputArr + elementSizeBytes * index, (char *)inputArr + elementSizeBytes * transposedIndex, elementSizeBytes);
           }
         }
       }
@@ -77,7 +77,7 @@ permuteSquareArray(void* inputArr, void* outputArr, size_t sideLen, int dims, zf
         for (i = 0; i < sideLen; i++) {
           size_t index = j*sideLen + i;
           size_t transposedIndex = i*sideLen + j;
-          memcpy(outputArr + elementSizeBytes * index, inputArr + elementSizeBytes * transposedIndex, elementSizeBytes);
+          memcpy((char *)outputArr + elementSizeBytes * index, (char *)inputArr + elementSizeBytes * transposedIndex, elementSizeBytes);
         }
       }
       break;
