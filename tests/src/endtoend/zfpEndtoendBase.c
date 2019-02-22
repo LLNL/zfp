@@ -13,6 +13,7 @@
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
 #include "utils/zfpCompressionParams.h"
+#include "utils/zfpHash.h"
 #include "utils/zfpTimer.h"
 
 #ifdef FL_PT_DATA
@@ -339,7 +340,7 @@ static void
 when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  UInt checksum = hashArray((const UInt*)bundle->randomGenArr, bundle->totalRandomGenArrLen, 1);
+  UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->randomGenArr, bundle->totalRandomGenArrLen, 1);
   uint64 expectedChecksum = getChecksumOriginalDataArray(DIMS, ZFP_TYPE);
   assert_int_equal(checksum, expectedChecksum);
 }
@@ -521,19 +522,19 @@ assertZfpCompressDecompressChecksumMatches(void **state)
   switch(bundle->stride) {
     case REVERSED:
       // arr already points to last element (so strided traverse is legal)
-      checksum = hashStridedArray(arr, bundle->randomGenArrSideLen, strides);
+      checksum = _catFunc2(hashStridedArray, SCALAR_BITS)(arr, bundle->randomGenArrSideLen, strides);
       break;
 
     case INTERLEAVED:
-      checksum = hashArray(arr, bundle->totalRandomGenArrLen, 2);
+      checksum = _catFunc2(hashArray, SCALAR_BITS)(arr, bundle->totalRandomGenArrLen, 2);
       break;
 
     case PERMUTED:
-      checksum = hashStridedArray(arr, bundle->randomGenArrSideLen, strides);
+      checksum = _catFunc2(hashStridedArray, SCALAR_BITS)(arr, bundle->randomGenArrSideLen, strides);
       break;
 
     case AS_IS:
-      checksum = hashArray(arr, bundle->totalRandomGenArrLen, 1);
+      checksum = _catFunc2(hashArray, SCALAR_BITS)(arr, bundle->totalRandomGenArrLen, 1);
       break;
   }
 

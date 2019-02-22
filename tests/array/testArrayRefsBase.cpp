@@ -1,6 +1,10 @@
 #include "gtest/gtest.h"
 #include "utils/predicates.h"
 
+extern "C" {
+  #include "utils/zfpHash.h"
+}
+
 // assumes macros ARRAY_DIMS_SCALAR_TEST, ARRAY_DIMS_SCALAR_TEST_REFS defined
 class ARRAY_DIMS_SCALAR_TEST_REFS : public ARRAY_DIMS_SCALAR_TEST {};
 

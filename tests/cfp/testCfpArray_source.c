@@ -14,6 +14,7 @@
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
+#include "utils/zfpHash.h"
 
 #define SIZE_X 20
 #define SIZE_Y 31
@@ -225,7 +226,7 @@ static void
 when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  UInt checksum = hashArray((const UInt*)bundle->dataArr, bundle->totalDataLen, 1);
+  UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->dataArr, bundle->totalDataLen, 1);
   uint64 expectedChecksum = getChecksumOriginalDataArray(DIMS, ZFP_TYPE);
   assert_int_equal(checksum, expectedChecksum);
 }
@@ -418,7 +419,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getArray_expect_decompressedArrChecksumM
   CFP_NAMESPACE.SUB_NAMESPACE.set_array(cfpArr, bundle->dataArr);
   CFP_NAMESPACE.SUB_NAMESPACE.get_array(cfpArr, bundle->decompressedArr);
 
-  UInt checksum = hashArray((UInt*)bundle->decompressedArr, bundle->totalDataLen, 1);
+  UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((UInt*)bundle->decompressedArr, bundle->totalDataLen, 1);
   uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, bundle->paramNum);
   assert_int_equal(checksum, expectedChecksum);
 }

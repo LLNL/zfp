@@ -7,6 +7,7 @@
 
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
+#include "utils/zfpHash.h"
 
 #define SX 2
 #define SY (3 * BLOCK_SIDE_LEN*SX)
@@ -241,7 +242,7 @@ hashStridedBlock(Scalar* dataArr)
 
   int s[4] = {SX, SY, SZ, SW};
 
-  return hashStridedArray((const UInt*)dataArr, n, s);
+  return _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)dataArr, n, s);
 }
 
 uint

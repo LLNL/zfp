@@ -7,6 +7,7 @@
 
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
+#include "utils/zfpHash.h"
 
 #define SX 2
 #define SY (3 * BLOCK_SIDE_LEN*SX)
@@ -269,7 +270,7 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 
   int s[4] = {SX, SY, SZ, SW};
 
-  UInt checksum = hashStridedArray((const UInt*)bundle->dataArr, n, s);
+  UInt checksum = _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)bundle->dataArr, n, s);
   uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
   assert_int_equal(checksum, expectedChecksum);
 }

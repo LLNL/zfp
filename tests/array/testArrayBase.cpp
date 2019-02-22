@@ -1,5 +1,7 @@
 extern "C" {
+  #include "utils/testMacros.h"
   #include "utils/zfpChecksums.h"
+  #include "utils/zfpHash.h"
 }
 
 TEST_F(TEST_FIXTURE, when_constructorCalled_then_rateSetWithWriteRandomAccess)
@@ -66,7 +68,7 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
 
 TEST_F(TEST_FIXTURE, when_generateRandomData_then_checksumMatches)
 {
-  EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, getChecksumOriginalDataArray(DIMS, ZFP_TYPE), hashArray((UINT*)inputDataArr, inputDataTotalLen, 1));
+  EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, getChecksumOriginalDataArray(DIMS, ZFP_TYPE), _catFunc2(hashArray, SCALAR_BITS)((UINT*)inputDataArr, inputDataTotalLen, 1));
 }
 
 #if DIMS == 1
@@ -110,7 +112,7 @@ TEST_P(TEST_FIXTURE, given_setArray_when_get_then_decompressedValsReturned)
   arr.get(decompressedArr);
 
   uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, GetParam());
-  uint64 checksum = hashArray((UINT*)decompressedArr, inputDataTotalLen, 1);
+  uint64 checksum = _catFunc2(hashArray, SCALAR_BITS)((UINT*)decompressedArr, inputDataTotalLen, 1);
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, expectedChecksum, checksum);
 
   delete[] decompressedArr;

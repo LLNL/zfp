@@ -7,6 +7,7 @@
 
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
+#include "utils/zfpHash.h"
 
 struct setupVars {
   Scalar* dataArr;
@@ -102,7 +103,7 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  UInt checksum = hashArray((const UInt*)bundle->dataArr, BLOCK_SIZE, 1);
+  UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->dataArr, BLOCK_SIZE, 1);
   uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
   assert_int_equal(checksum, expectedChecksum);
 }
@@ -137,7 +138,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatche
   assert_non_null(decodedDataArr);
   _t2(zfp_decode_block, Scalar, DIMS)(stream, decodedDataArr);
 
-  UInt checksum = hashArray((const UInt*)decodedDataArr, BLOCK_SIZE, 1);
+  UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)decodedDataArr, BLOCK_SIZE, 1);
   free(decodedDataArr);
 
   uint64 expectedChecksum = getChecksumDecodedBlock(DIMS, ZFP_TYPE);

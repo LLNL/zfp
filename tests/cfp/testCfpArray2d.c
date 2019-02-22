@@ -2,7 +2,6 @@
 #include "src/block2.h"
 
 #include "constants/2dDouble.h"
-#include "utils/hash64.h"
 
 #define CFP_ARRAY_TYPE cfp_array2d
 #define SUB_NAMESPACE array2d

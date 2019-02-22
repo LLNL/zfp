@@ -2,7 +2,6 @@
 
 #include "constants/3dFloat.h"
 #include "utils/rand32.h"
-#include "utils/hash32.h"
 #include "zfpDecodeBlockStridedBase.c"
 
 int main()

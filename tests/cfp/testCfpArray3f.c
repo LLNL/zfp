@@ -2,7 +2,6 @@
 #include "src/block3.h"
 
 #include "constants/3dFloat.h"
-#include "utils/hash32.h"
 
 #define CFP_ARRAY_TYPE cfp_array3f
 #define SUB_NAMESPACE array3f

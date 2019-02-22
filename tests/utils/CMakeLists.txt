@@ -12,11 +12,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     PUBLIC $<$<COMPILE_LANGUAGE:C>:-Wno-pointer-sign>)
 endif()
 
-add_library(hash32Lib hash32.c hash32.h)
-target_link_libraries(hash32Lib hashBaseLib)
-
-add_library(hash64Lib hash64.c hash64.h)
-target_link_libraries(hash64Lib hashBaseLib)
+add_library(zfpHashLib zfpHash.c zfpHash.h)
+target_link_libraries(zfpHashLib hashBaseLib)
 
 # fixed point
 add_library(fixedpoint96Lib fixedpoint96.c fixedpoint96.h)

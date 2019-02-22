@@ -2,7 +2,6 @@
 using namespace zfp;
 
 extern "C" {
-  #include "utils/hash64.h"
   #include "utils/rand64.h"
 }
 

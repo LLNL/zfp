@@ -1,7 +1,6 @@
 #include "src/encode1i.c"
 
 #include "constants/1dInt32.h"
-#include "utils/hash32.h"
 #include "ompExecBase.c"
 
 int main()

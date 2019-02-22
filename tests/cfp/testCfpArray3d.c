@@ -2,7 +2,6 @@
 #include "src/block3.h"
 
 #include "constants/3dDouble.h"
-#include "utils/hash64.h"
 
 #define CFP_ARRAY_TYPE cfp_array3d
 #define SUB_NAMESPACE array3d
