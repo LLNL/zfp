@@ -27,6 +27,7 @@ target_link_libraries(genSmoothRandNumsLib PRIVATE rand64Lib fixedpoint96Lib)
 
 # strided array operations
 add_library(stridedOperationsLib stridedOperations.c stridedOperations.h)
+target_link_libraries(stridedOperationsLib PRIVATE zfp)
 
 # compute zfp compression parameters
 add_library(zfpCompressionParamsLib zfpCompressionParams.c zfpCompressionParams.h)

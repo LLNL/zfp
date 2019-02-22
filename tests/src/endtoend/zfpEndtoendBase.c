@@ -188,29 +188,10 @@ generateStridedRandomArray(stride_config stride, Scalar* randomGenArr, zfp_type 
   }
 
   // identify strides and produce compressedArr
-  uint nx = (uint)n[0];
-  uint ny = (uint)n[1];
-  uint nz = (uint)n[2];
-  uint nw = (uint)n[3];
-  int sx = 0, sy = 0, sz = 0, sw = 0;
-
   switch(stride) {
     case REVERSED:
-      if (dims == 4) {
-        sx = -1;
-        sy = sx * (int)nx;
-        sz = sy * (int)ny;
-        sw = sz * (int)nz;
-      } else if (dims == 3) {
-        sx = -1;
-        sy = sx * (int)nx;
-        sz = sy * (int)ny;
-      } else if (dims == 2) {
-        sx = -1;
-        sy = sx * (int)nx;
-      } else {
-        sx = -1;
-      }
+      getReversedStrides(dims, n, s);
+
       reverseArray(randomGenArr, *compressedArrPtr, totalRandomGenArrLen, type);
 
       // adjust pointer to last element, so strided traverse is valid
@@ -219,39 +200,15 @@ generateStridedRandomArray(stride_config stride, Scalar* randomGenArr, zfp_type 
       break;
 
     case INTERLEAVED:
-      if (dims == 4) {
-        sx = 2;
-        sy = sx * (int)nx;
-        sz = sy * (int)ny;
-        sw = sz * (int)nz;
-      } else if (dims == 3) {
-        sx = 2;
-        sy = sx * (int)nx;
-        sz = sy * (int)ny;
-      } else if (dims == 2) {
-        sx = 2;
-        sy = sx * (int)nx;
-      } else {
-        sx = 2;
-      }
+      getInterleavedStrides(dims, n, s);
+
       interleaveArray(randomGenArr, *compressedArrPtr, totalRandomGenArrLen, ZFP_TYPE);
       break;
 
     case PERMUTED:
-      if (dims == 4) {
-        sx = (int)(nx * ny * nz);
-        sy = (int)(nx * ny);
-        sz = (int)nx;
-        sw = 1;
-      } else if (dims == 3) {
-        sx = (int)(nx * ny);
-        sy = (int)nx;
-        sz = 1;
-      } else if (dims == 2) {
-        sx = (int)nx;
-        sy = 1;
-      }
-      if (permuteSquareArray(randomGenArr, *compressedArrPtr, nx, dims, type)) {
+      getPermutedStrides(dims, n, s);
+
+      if (permuteSquareArray(randomGenArr, *compressedArrPtr, n[0], dims, type)) {
         fail_msg("Unexpected dims value in permuteSquareArray()");
       }
       break;
@@ -261,11 +218,6 @@ generateStridedRandomArray(stride_config stride, Scalar* randomGenArr, zfp_type 
       memcpy(*compressedArrPtr, randomGenArr, totalRandomGenArrLen * sizeof(Scalar));
       break;
   }
-
-  s[0] = sx;
-  s[1] = sy;
-  s[2] = sz;
-  s[3] = sw;
 }
 
 static void
@@ -276,7 +228,7 @@ initStridedFields(struct setupVars* bundle, stride_config stride)
 
   allocateFieldArrays(stride, bundle->totalRandomGenArrLen, &bundle->compressedArr, &bundle->decompressedArr);
 
-  int s[4];
+  int s[4] = {0};
   generateStridedRandomArray(stride, bundle->randomGenArr, ZFP_TYPE, bundle->randomGenArrSideLen, s, &bundle->compressedArr, &bundle->decompressedArr);
 
   setupZfpFields(bundle, s);

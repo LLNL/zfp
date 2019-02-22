@@ -24,4 +24,13 @@ interleaveArray(void* inputArr, void* outputArr, size_t inputArrLen, zfp_type zf
 int
 permuteSquareArray(void* inputArr, void* outputArr, size_t sideLen, int dims, zfp_type zfpType);
 
+void
+getReversedStrides(int dims, size_t n[4], int s[4]);
+
+void
+getInterleavedStrides(int dims, size_t n[4], int s[4]);
+
+void
+getPermutedStrides(int dims, size_t n[4], int s[4]);
+
 #endif
