@@ -1,8 +1,11 @@
 #ifndef ZFP_HASH_H
 #define ZFP_HASH_H
 
+#include <stddef.h>
 #include "include/zfp/types.h"
-#include "hashBase.h"
+
+uint64
+hashBitstream(uint64* ptrStart, size_t bufsizeBytes);
 
 // hash 32-bit valued arrays (int32, float)
 

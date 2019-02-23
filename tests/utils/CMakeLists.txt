@@ -6,14 +6,11 @@ add_library(rand32Lib rand32.c rand32.h)
 add_library(rand64Lib rand64.c rand64.h)
 
 # hashing
-add_library(hashBaseLib hashBase.c hashBase.h)
+add_library(zfpHashLib zfpHash.c zfpHash.h)
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(hashBaseLib
+  target_compile_options(zfpHashLib
     PUBLIC $<$<COMPILE_LANGUAGE:C>:-Wno-pointer-sign>)
 endif()
-
-add_library(zfpHashLib zfpHash.c zfpHash.h)
-target_link_libraries(zfpHashLib hashBaseLib)
 
 # fixed point
 add_library(fixedpoint96Lib fixedpoint96.c fixedpoint96.h)
