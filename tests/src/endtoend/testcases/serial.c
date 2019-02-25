@@ -7,6 +7,10 @@ _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, ReversedArray_wh
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, ReversedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches), setupReversed, teardown),
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, InterleavedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches), setupInterleaved, teardown),
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, InterleavedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches), setupInterleaved, teardown),
+#if DIMS >= 2
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, PermutedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches), setupPermuted, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, PermutedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches), setupPermuted, teardown),
+#endif
 
 /* fixed-precision */
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches), setupFixedPrec0, teardown),

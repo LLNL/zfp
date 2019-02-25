@@ -9,6 +9,11 @@ _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, ReversedArr
 _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, InterleavedArray_when_ZfpCompressFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupInterleaved, teardown),
 _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, InterleavedArray_when_ZfpDecompressFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupInterleaved, teardown),
 
+#if DIMS >= 2
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, PermutedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches), setupPermuted, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, PermutedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches), setupPermuted, teardown),
+#endif
+
 /* fixed-rate */
 _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches), setupFixedRate0Param, teardown),
 _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches), setupFixedRate0Param, teardown),
