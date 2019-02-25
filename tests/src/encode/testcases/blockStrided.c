@@ -1,0 +1,11 @@
+#include "utils/testMacros.h"
+
+_cmocka_unit_test_setup_teardown(when_seededRandomDataGenerated_expect_ChecksumMatches, setup, teardown),
+
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_ReturnValReflectsNumBitsWrittenToBitstream), setup, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_OnlyStridedEntriesUsed), setup, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_BitstreamChecksumMatches), setup, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_ReturnValReflectsNumBitsWrittenToBitstream), setup, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyStridedEntriesUsed), setup, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyEntriesWithinPartialBlockBoundsUsed), setup, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_BitstreamChecksumMatches), setup, teardown),
