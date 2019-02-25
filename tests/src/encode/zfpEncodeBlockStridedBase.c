@@ -4,7 +4,10 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+
 #include "utils/testMacros.h"
+#include "utils/zfpChecksums.h"
+#include "utils/zfpHash.h"
 
 #define SX 2
 #define SY (3 * BLOCK_SIDE_LEN*SX)
@@ -139,15 +142,9 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
 
 }
 
-static int
-setup(void **state)
+static void
+setupZfpStream(struct setupVars* bundle)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
-  assert_non_null(bundle);
-
-  resetRandGen();
-  initializeStridedArray(&bundle->dataArr, DUMMY_VAL);
-
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   switch(DIMS) {
@@ -185,6 +182,17 @@ setup(void **state)
 
   bundle->buffer = buffer;
   bundle->stream = stream;
+}
+
+static int
+setup(void **state)
+{
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  resetRandGen();
+  initializeStridedArray(&bundle->dataArr, DUMMY_VAL);
+  setupZfpStream(bundle);
 
   *state = bundle;
 
@@ -254,23 +262,17 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
 
-  UInt checksum;
-  switch (DIMS) {
-    case 1:
-      checksum = hashArray((const UInt*)bundle->dataArr, BLOCK_SIDE_LEN, SX);
-      break;
-    case 2:
-      checksum = hash2dStridedBlock((const UInt*)bundle->dataArr, SX, SY);
-      break;
-    case 3:
-      checksum = hash3dStridedBlock((const UInt*)bundle->dataArr, SX, SY, SZ);
-      break;
-    case 4:
-      checksum = hash4dStridedBlock((const UInt*)bundle->dataArr, SX, SY, SZ, SW);
-      break;
+  size_t n[4];
+  int i;
+  for (i = 0; i < 4; i++) {
+    n[i] = (i < DIMS) ? BLOCK_SIDE_LEN : 0;
   }
 
-  assert_int_equal(checksum, CHECKSUM_ORIGINAL_DATA_BLOCK);
+  int s[4] = {SX, SY, SZ, SW};
+
+  UInt checksum = _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)bundle->dataArr, n, s);
+  uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -328,7 +330,8 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_BitstreamChe
   zfp_stream_flush(stream);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  assert_int_equal(checksum, CHECKSUM_ENCODED_BLOCK);
+  uint64 expectedChecksum = getChecksumEncodedBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -459,5 +462,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_Bitst
   zfp_stream_flush(stream);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  assert_int_equal(checksum, CHECKSUM_ENCODED_PARTIAL_BLOCK);
+  uint64 expectedChecksum = getChecksumEncodedPartialBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }

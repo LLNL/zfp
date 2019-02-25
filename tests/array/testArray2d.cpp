@@ -3,7 +3,6 @@ using namespace zfp;
 
 extern "C" {
   #include "constants/2dDouble.h"
-  #include "utils/hash64.h"
 }
 
 #include "gtest/gtest.h"

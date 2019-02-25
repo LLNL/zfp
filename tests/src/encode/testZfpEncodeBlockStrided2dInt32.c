@@ -2,7 +2,6 @@
 
 #include "constants/2dInt32.h"
 #include "utils/rand32.h"
-#include "utils/hash32.h"
 #include "zfpEncodeBlockStridedBase.c"
 
 int main()

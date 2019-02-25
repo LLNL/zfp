@@ -1,7 +1,6 @@
 #include "src/encode2d.c"
 
 #include "constants/2dDouble.h"
-#include "utils/hash64.h"
 #include "serialExecBase.c"
 
 int main()

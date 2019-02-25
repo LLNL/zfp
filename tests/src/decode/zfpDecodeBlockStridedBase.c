@@ -4,7 +4,10 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+
 #include "utils/testMacros.h"
+#include "utils/zfpChecksums.h"
+#include "utils/zfpHash.h"
 
 #define SX 2
 #define SY (3 * BLOCK_SIDE_LEN*SX)
@@ -152,19 +155,9 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
   return arrayLen;
 }
 
-static int
-setup(void **state)
+static void
+setupZfpStream(struct setupVars* bundle)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
-  assert_non_null(bundle);
-
-  resetRandGen();
-
-  size_t arrayLen = initializeStridedArray(&bundle->dataArr, DUMMY_VAL);
-
-  bundle->decodedDataArr = calloc(arrayLen, sizeof(Scalar));
-  assert_non_null(bundle->decodedDataArr);
-
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   switch(DIMS) {
@@ -202,6 +195,21 @@ setup(void **state)
 
   bundle->buffer = buffer;
   bundle->stream = stream;
+}
+
+static int
+setup(void **state)
+{
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  resetRandGen();
+
+  size_t arrayLen = initializeStridedArray(&bundle->dataArr, DUMMY_VAL);
+  bundle->decodedDataArr = calloc(arrayLen, sizeof(Scalar));
+  assert_non_null(bundle->decodedDataArr);
+
+  setupZfpStream(bundle);
 
   *state = bundle;
 
@@ -224,25 +232,17 @@ teardown(void **state)
 }
 
 UInt
-hashStridedArray(Scalar* dataArr)
+hashStridedBlock(Scalar* dataArr)
 {
-  UInt checksum = 0;
-  switch (DIMS) {
-    case 1:
-      checksum = hashArray((const UInt*)dataArr, BLOCK_SIZE, SX);
-      break;
-    case 2:
-      checksum = hash2dStridedBlock((const UInt*)dataArr, SX, SY);
-      break;
-    case 3:
-      checksum = hash3dStridedBlock((const UInt*)dataArr, SX, SY, SZ);
-      break;
-    case 4:
-      checksum = hash4dStridedBlock((const UInt*)dataArr, SX, SY, SZ, SW);
-      break;
+  size_t n[4];
+  int i;
+  for (i = 0; i < 4; i++) {
+    n[i] = (i < DIMS) ? BLOCK_SIDE_LEN : 0;
   }
 
-  return checksum;
+  int s[4] = {SX, SY, SZ, SW};
+
+  return _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)dataArr, n, s);
 }
 
 uint
@@ -487,7 +487,9 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashStridedArray(bundle->dataArr), CHECKSUM_ORIGINAL_DATA_BLOCK);
+  UInt checksum = hashStridedBlock(bundle->dataArr);
+  uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -532,7 +534,9 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlockStrided_expect_ArrayChecksu
 
   decodeBlockStrided(stream, bundle->decodedDataArr);
 
-  assert_int_equal(hashStridedArray(bundle->decodedDataArr), CHECKSUM_DECODED_BLOCK);
+  UInt checksum = hashStridedBlock(bundle->decodedDataArr);
+  uint64 expectedChecksum = getChecksumDecodedBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -591,5 +595,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_Array
 
   decodePartialBlockStrided(stream, bundle->decodedDataArr);
 
-  assert_int_equal(hashStridedArray(bundle->decodedDataArr), CHECKSUM_DECODED_PARTIAL_BLOCK);
+  UInt checksum = hashStridedBlock(bundle->decodedDataArr);
+  uint64 expectedChecksum = getChecksumDecodedPartialBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }

@@ -1,7 +1,6 @@
 #include "src/encode1f.c"
 
 #include "constants/1dFloat.h"
-#include "utils/hash32.h"
 #include "serialExecBase.c"
 
 int main()

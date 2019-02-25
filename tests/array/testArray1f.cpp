@@ -3,7 +3,6 @@ using namespace zfp;
 
 extern "C" {
   #include "constants/1dFloat.h"
-  #include "utils/hash32.h"
 }
 
 #include "gtest/gtest.h"

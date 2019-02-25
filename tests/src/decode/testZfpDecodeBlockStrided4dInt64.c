@@ -2,7 +2,6 @@
 
 #include "constants/4dInt64.h"
 #include "utils/rand64.h"
-#include "utils/hash64.h"
 #include "zfpDecodeBlockStridedBase.c"
 
 int main()

@@ -2,7 +2,6 @@
 #include "src/block2.h"
 
 #include "constants/2dFloat.h"
-#include "utils/hash32.h"
 
 #define CFP_ARRAY_TYPE cfp_array2f
 #define SUB_NAMESPACE array2f

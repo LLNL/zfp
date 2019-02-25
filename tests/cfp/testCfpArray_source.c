@@ -13,6 +13,8 @@
 
 #include "utils/genSmoothRandNums.h"
 #include "utils/testMacros.h"
+#include "utils/zfpChecksums.h"
+#include "utils/zfpHash.h"
 
 #define SIZE_X 20
 #define SIZE_Y 31
@@ -33,9 +35,6 @@ struct setupVars {
   int paramNum;
   double rate;
   size_t csize;
-
-  uint64 compressedChecksums[3];
-  UInt decompressedChecksums[3];
 };
 
 // run this once per (datatype, DIM) combination for performance
@@ -190,16 +189,6 @@ loadFixedRateVars(void **state, int paramNum)
   bundle->rate = (double)(1u << (bundle->paramNum + 3));
   printf("\t\tFixed rate: %lf\n", bundle->rate);
 
-  bundle->compressedChecksums[0] = CHECKSUM_FR_8_COMPRESSED_BITSTREAM;
-  bundle->compressedChecksums[1] = CHECKSUM_FR_16_COMPRESSED_BITSTREAM;
-  bundle->compressedChecksums[2] = CHECKSUM_FR_32_COMPRESSED_BITSTREAM;
-
-  bundle->decompressedChecksums[0] = CHECKSUM_FR_8_DECOMPRESSED_ARRAY;
-  bundle->decompressedChecksums[1] = CHECKSUM_FR_16_DECOMPRESSED_ARRAY;
-  bundle->decompressedChecksums[2] = CHECKSUM_FR_32_DECOMPRESSED_ARRAY;
-
-  memset(bundle->decompressedArr, 0, sizeof(Scalar) * bundle->totalDataLen);
-
   *state = bundle;
 
   return setupCfpArrLarge(state);
@@ -237,7 +226,9 @@ static void
 when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashArray((const UInt*)bundle->dataArr, bundle->totalDataLen, 1), CHECKSUM_ORIGINAL_DATA_ARRAY);
+  UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->dataArr, bundle->totalDataLen, 1);
+  uint64 expectedChecksum = getChecksumOriginalDataArray(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -415,7 +406,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_setArray_expect_compressedStreamChecksum
 
   size_t compressedSize = CFP_NAMESPACE.SUB_NAMESPACE.compressed_size(cfpArr);
   uint64 checksum = hashBitstream((uint64*)compressedPtr, compressedSize);
-  uint64 expectedChecksum = bundle->compressedChecksums[bundle->paramNum];
+  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, bundle->paramNum);
   assert_int_equal(checksum, expectedChecksum);
 }
 
@@ -428,7 +419,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getArray_expect_decompressedArrChecksumM
   CFP_NAMESPACE.SUB_NAMESPACE.set_array(cfpArr, bundle->dataArr);
   CFP_NAMESPACE.SUB_NAMESPACE.get_array(cfpArr, bundle->decompressedArr);
 
-  uint64 checksum = hashArray((UInt*)bundle->decompressedArr, bundle->totalDataLen, 1);
-  uint64 expectedChecksum = bundle->decompressedChecksums[bundle->paramNum];
+  UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((UInt*)bundle->decompressedArr, bundle->totalDataLen, 1);
+  uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, bundle->paramNum);
   assert_int_equal(checksum, expectedChecksum);
 }

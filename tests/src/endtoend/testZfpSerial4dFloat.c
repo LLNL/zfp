@@ -1,7 +1,6 @@
 #include "src/encode4f.c"
 
 #include "constants/4dFloat.h"
-#include "utils/hash32.h"
 #include "serialExecBase.c"
 
 int main()

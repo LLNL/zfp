@@ -4,7 +4,10 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+
 #include "utils/testMacros.h"
+#include "utils/zfpChecksums.h"
+#include "utils/zfpHash.h"
 
 struct setupVars {
   Scalar* dataArr;
@@ -12,26 +15,25 @@ struct setupVars {
   zfp_stream* stream;
 };
 
-static int
-setup(void **state)
+static void
+populateInitialArray(Scalar** dataArrPtr)
 {
-  struct setupVars *bundle = malloc(sizeof(struct setupVars));
-  assert_non_null(bundle);
-
-  resetRandGen();
-
-  bundle->dataArr = malloc(sizeof(Scalar) * BLOCK_SIZE);
-  assert_non_null(bundle);
+  *dataArrPtr = malloc(sizeof(Scalar) * BLOCK_SIZE);
+  assert_non_null(*dataArrPtr);
 
   int i;
   for (i = 0; i < BLOCK_SIZE; i++) {
 #ifdef FL_PT_DATA
-    bundle->dataArr[i] = nextSignedRandFlPt();
+    (*dataArrPtr)[i] = nextSignedRandFlPt();
 #else
-    bundle->dataArr[i] = nextSignedRandInt();
+    (*dataArrPtr)[i] = nextSignedRandInt();
 #endif
   }
+}
 
+static void
+setupZfpStream(struct setupVars* bundle)
+{
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   switch(DIMS) {
@@ -65,6 +67,17 @@ setup(void **state)
 
   bundle->buffer = buffer;
   bundle->stream = stream;
+}
+
+static int
+setup(void **state)
+{
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  resetRandGen();
+  populateInitialArray(&bundle->dataArr);
+  setupZfpStream(bundle);
 
   *state = bundle;
 
@@ -89,7 +102,9 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(hashArray((const UInt*)bundle->dataArr, BLOCK_SIZE, 1), CHECKSUM_ORIGINAL_DATA_BLOCK);
+  UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->dataArr, BLOCK_SIZE, 1);
+  uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }
 
 static void
@@ -116,5 +131,6 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlock_expect_BitstreamChecksumMa
   zfp_stream_flush(stream);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  assert_int_equal(checksum, CHECKSUM_ENCODED_BLOCK);
+  uint64 expectedChecksum = getChecksumEncodedBlock(DIMS, ZFP_TYPE);
+  assert_int_equal(checksum, expectedChecksum);
 }

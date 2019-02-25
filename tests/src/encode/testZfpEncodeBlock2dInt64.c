@@ -2,7 +2,6 @@
 
 #include "constants/2dInt64.h"
 #include "utils/rand64.h"
-#include "utils/hash64.h"
 #include "zfpEncodeBlockBase.c"
 
 int main()

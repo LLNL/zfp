@@ -1,7 +1,6 @@
 #include "src/encode4d.c"
 
 #include "constants/4dDouble.h"
-#include "utils/hash64.h"
 #include "ompExecBase.c"
 
 int main()
