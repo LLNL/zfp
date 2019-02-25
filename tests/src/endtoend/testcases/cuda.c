@@ -1,0 +1,29 @@
+#include "utils/testMacros.h"
+
+_cmocka_unit_test(when_seededRandomSmoothDataGenerated_expect_ChecksumMatches),
+
+/* strided */
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, ReversedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches), setupReversed, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, ReversedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches), setupReversed, teardown),
+
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, InterleavedArray_when_ZfpCompressFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupInterleaved, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, InterleavedArray_when_ZfpDecompressFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupInterleaved, teardown),
+
+/* fixed-rate */
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches), setupFixedRate0Param, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches), setupFixedRate0Param, teardown),
+
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches), setupFixedRate1Param, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches), setupFixedRate1Param, teardown),
+
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches), setupFixedRate2Param, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches), setupFixedRate2Param, teardown),
+
+/* non fixed-rate */
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupFixedPrec1Param, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupFixedPrec1Param, teardown),
+
+#ifdef FL_PT_DATA
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupFixedAcc1Param, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupFixedAcc1Param, teardown),
+#endif
