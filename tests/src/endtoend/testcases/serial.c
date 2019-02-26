@@ -1,0 +1,46 @@
+#include "utils/testMacros.h"
+
+_cmocka_unit_test(when_seededRandomSmoothDataGenerated_expect_ChecksumMatches),
+
+/* strided tests */
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, ReversedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches), setupReversed, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, ReversedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches), setupReversed, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, InterleavedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches), setupInterleaved, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, InterleavedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches), setupInterleaved, teardown),
+#if DIMS >= 2
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, PermutedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches), setupPermuted, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, PermutedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches), setupPermuted, teardown),
+#endif
+
+/* fixed-precision */
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches), setupFixedPrec0, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches), setupFixedPrec0, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches), setupFixedPrec1, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches), setupFixedPrec1, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches), setupFixedPrec2, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches), setupFixedPrec2, teardown),
+
+/* fixed-rate */
+_cmocka_unit_test(_catFunc3(given_, DIM_INT_STR, ZfpStream_when_SetRateWithWriteRandomAccess_expect_RateRoundedUpProperly)),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches), setupFixedRate0, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches), setupFixedRate0, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate), setupFixedRate0, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches), setupFixedRate1, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches), setupFixedRate1, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate), setupFixedRate1, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches), setupFixedRate2, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches), setupFixedRate2, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate), setupFixedRate2, teardown),
+
+#ifdef FL_PT_DATA
+/* fixed-accuracy */
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches), setupFixedAccuracy0, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches), setupFixedAccuracy0, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy), setupFixedAccuracy0, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches), setupFixedAccuracy1, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches), setupFixedAccuracy1, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy), setupFixedAccuracy1, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches), setupFixedAccuracy2, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches), setupFixedAccuracy2, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy), setupFixedAccuracy2, teardown),
+#endif
