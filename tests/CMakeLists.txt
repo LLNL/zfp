@@ -1,6 +1,5 @@
 add_executable(testzfp testzfp.cpp)
 target_link_libraries(testzfp zfp)
-target_compile_definitions(testzfp PRIVATE ${zfp_defs})
 
 option(ZFP_BUILD_TESTING_SMALL "Enable small-sized array testing" ON)
 if(ZFP_BUILD_TESTING_SMALL)

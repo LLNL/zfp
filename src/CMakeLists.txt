@@ -35,16 +35,16 @@ if(HAVE_LIBM_MATH)
   target_link_libraries(zfp PRIVATE m)
 endif()
 
-if(WIN32)
-  # Define ZFP_SOURCE when compiling libzfp to export symbols to Windows DLL
-  list(APPEND zfp_defs ZFP_SOURCE)
-endif()
-
 if(ZFP_WITH_CUDA)
   target_link_libraries(zfp PRIVATE ${CUDA_CUDART_LIBRARY} stdc++)
 endif()
 
-target_compile_definitions(zfp PRIVATE ${zfp_defs})
+target_compile_definitions(zfp PUBLIC ${zfp_defs})
+
+if(WIN32)
+  # Define ZFP_SOURCE when compiling libzfp to export symbols to Windows DLL
+  target_compile_definitions(zfp PRIVATE ZFP_SOURCE)
+endif()
 
 target_include_directories(zfp
   PUBLIC
