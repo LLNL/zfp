@@ -191,6 +191,10 @@ if(ZFP_WITH_CACHE_PROFILE)
   list(APPEND zfp_defs ZFP_CACHE_PROFILE)
 endif()
 
+if(BUILD_SHARED_LIBS)
+  list(APPEND zfp_defs ZFP_SHARED_LIBS)
+endif()
+
 # Link libm only if necessary
 include(CheckCSourceCompiles)
 check_c_source_compiles("#include<math.h>\nfloat f; int main(){sqrt(f);return 0;}" HAVE_MATH)

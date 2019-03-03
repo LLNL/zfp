@@ -9,19 +9,28 @@
 
 /* macros for exporting and importing symbols */
 #ifdef _MSC_VER
-  #define export_ __declspec(dllexport)
-  /* export (import) symbols when ZFP_SOURCE is (is not) defined */
-  #ifdef ZFP_SOURCE
+  #ifndef ZFP_SHARED_LIBS
+    #define export_
     #ifdef __cplusplus
-      #define extern_ extern "C" __declspec(dllexport)
+      #define extern_ extern "C"
     #else
-      #define extern_ extern     __declspec(dllexport)
+      #define extern_ extern
     #endif
   #else
-    #ifdef __cplusplus
-      #define extern_ extern "C" __declspec(dllimport)
+    #define export_ __declspec(dllexport)
+    /* export (import) symbols when ZFP_SOURCE is (is not) defined */
+    #ifdef ZFP_SOURCE
+      #ifdef __cplusplus
+        #define extern_ extern "C" __declspec(dllexport)
+      #else
+        #define extern_ extern     __declspec(dllexport)
+      #endif
     #else
-      #define extern_ extern     __declspec(dllimport)
+      #ifdef __cplusplus
+        #define extern_ extern "C" __declspec(dllimport)
+      #else
+        #define extern_ extern     __declspec(dllimport)
+      #endif
     #endif
   #endif
 #else /* !_MSC_VER */
