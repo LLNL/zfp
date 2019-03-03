@@ -14,7 +14,7 @@ include_directories(${ZFP_SOURCE_DIR}/include)
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
 
 # cannot reuse the zfp target, use _zfp instead
-add_cython_target(_zfp zfp.pyx C PY2)
+add_cython_target(_zfp zfp.pyx C)
 add_library(_zfp MODULE ${_zfp})
 target_link_libraries(_zfp zfp)
 python_extension_module(_zfp)
