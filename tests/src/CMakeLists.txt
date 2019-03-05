@@ -1,5 +1,5 @@
 # compile tests
-if(NOT DEFINED ZFP_ENDTOEND_TESTS_ONLY)
+if(NOT DEFINED ZFP_OMP_TESTS_ONLY)
   add_subdirectory(inline)
   add_subdirectory(misc)
   add_subdirectory(encode)

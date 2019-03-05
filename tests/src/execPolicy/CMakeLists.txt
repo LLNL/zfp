@@ -15,7 +15,7 @@ if(ZFP_WITH_OPENMP)
   add_test(NAME testOmpInternal COMMAND testOmpInternal)
 endif()
 
-if(ZFP_WITH_CUDA)
+if(ZFP_WITH_CUDA AND NOT DEFINED ZFP_OMP_TESTS_ONLY)
   add_executable(testCuda testCuda.c)
   target_link_libraries(testCuda cmocka zfp)
   add_test(NAME testCuda COMMAND testCuda)
