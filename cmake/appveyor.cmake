@@ -46,9 +46,9 @@ if(BUILD_CFP)
   endif()
 endif()
 
-if(ENDTOEND_TESTS_ONLY)
+if(OMP_TESTS_ONLY)
   list(APPEND cfg_options
-    -DZFP_ENDTOEND_TESTS_ONLY=1
+    -DZFP_OMP_TESTS_ONLY=1
     )
 endif()
 

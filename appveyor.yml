@@ -81,5 +81,5 @@ build_script:
   - rm -rf ./*
 
   # build/test with OpenMP
-  - if "%COMPILER%"=="msvc" ctest -V -C "%BUILD_TYPE%" -DGENERATOR="%GENERATOR%" -DBUILD_OPENMP=ON -DENDTOEND_TESTS_ONLY=ON -S %APPVEYOR_BUILD_FOLDER%/cmake/appveyor.cmake
-  - if not "%COMPILER%"=="msvc" ctest -V -C "%BUILD_TYPE%" -DGENERATOR="%GENERATOR%" -DBUILD_OPENMP=ON -DENDTOEND_TESTS_ONLY=ON -S %APPVEYOR_BUILD_FOLDER%/cmake/appveyor.cmake
+  - if "%COMPILER%"=="msvc" ctest -V -C "%BUILD_TYPE%" -DGENERATOR="%GENERATOR%" -DBUILD_OPENMP=ON -DOMP_TESTS_ONLY=ON -S %APPVEYOR_BUILD_FOLDER%/cmake/appveyor.cmake
+  - if not "%COMPILER%"=="msvc" ctest -V -C "%BUILD_TYPE%" -DGENERATOR="%GENERATOR%" -DBUILD_OPENMP=ON -DOMP_TESTS_ONLY=ON -S %APPVEYOR_BUILD_FOLDER%/cmake/appveyor.cmake
