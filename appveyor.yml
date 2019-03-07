@@ -71,15 +71,4 @@ install:
   - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
 
 build_script:
-  - mkdir build
-  - cd build
-
-  # build/test without OpenMP, with CFP (and custom namespace)
-  - if "%COMPILER%"=="msvc" ctest -V -C "%BUILD_TYPE%" -DGENERATOR="%GENERATOR%" -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DBUILD_OPENMP=OFF -DBUILD_CUDA=OFF -S %APPVEYOR_BUILD_FOLDER%/cmake/appveyor.cmake
-  - if not "%COMPILER%"=="msvc" ctest -V -C "%BUILD_TYPE%" -DGENERATOR="%GENERATOR%" -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DBUILD_OPENMP=OFF -DBUILD_CUDA=OFF -S %APPVEYOR_BUILD_FOLDER%/cmake/appveyor.cmake
-
-  - rm -rf ./*
-
-  # build/test with OpenMP
-  - if "%COMPILER%"=="msvc" ctest -V -C "%BUILD_TYPE%" -DGENERATOR="%GENERATOR%" -DBUILD_OPENMP=ON -DOMP_TESTS_ONLY=ON -S %APPVEYOR_BUILD_FOLDER%/cmake/appveyor.cmake
-  - if not "%COMPILER%"=="msvc" ctest -V -C "%BUILD_TYPE%" -DGENERATOR="%GENERATOR%" -DBUILD_OPENMP=ON -DOMP_TESTS_ONLY=ON -S %APPVEYOR_BUILD_FOLDER%/cmake/appveyor.cmake
+  - sh appveyor.sh
