@@ -11,8 +11,8 @@ run_all () {
 mkdir build
 cd build
 
-# config without OpenMP, with CFP (and custom namespace)
-run_all " -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DBUILD_OPENMP=OFF -DBUILD_CUDA=OFF"
+# config without OpenMP, with CFP (and custom namespace), with aligned allocations (compressed arrays)
+run_all " -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DZFP_WITH_ALIGNED_ALLOC=1 -DBUILD_OPENMP=OFF -DBUILD_CUDA=OFF"
 
 # build empty project requiring OpenMP, in a temp directory that ZFP is oblivious to
 mkdir tmpBuild
