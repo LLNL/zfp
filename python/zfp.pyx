@@ -183,8 +183,6 @@ cpdef np.ndarray decompress_numpy(bytes compressed_data):
     zfp_read_header(stream, field, HEADER_FULL)
 
     cdef zfp_type ztype = field[0]._type
-    if ztype == zfp_type_int32 or ztype == zfp_type_int64:
-        raise NotImplementedError("Integer types not supported")
 
     output_arr = _decompress_with_view(field, stream)
 
