@@ -112,10 +112,38 @@ cdef extern from "zfpHash.h":
                                 size_t n[4],
                                 int s[4]);
 
+cdef validate_num_dimensions(int dims):
+    if dims > 4 or dims < 1:
+        raise ValueError("Unsupported number of dimensions: {}".format(dims))
+
+cdef validate_ztype(zfp.zfp_type ztype):
+    if ztype not in [
+            zfp.type_float,
+            zfp.type_double,
+            zfp.type_int32,
+            zfp.type_int64
+    ]:
+        raise ValueError("Unsupported ztype: {}".format(ztype))
+
+cdef validate_mode(zfp.zfp_mode mode):
+    if mode not in [
+            zfp.mode_fixed_rate,
+            zfp.mode_fixed_precision,
+            zfp.mode_fixed_accuracy,
+    ]:
+        raise ValueError("Unsupported mode: {}".format(mode))
+
+cdef validate_compress_param(int comp_param):
+    if comp_param not in range(3): # i.e., [0, 1, 2]
+        raise ValueError("Unsupported compression parameter number: {}".format(comp_param))
+
 cpdef getRandNumpyArray(
     int numDims,
     zfp.zfp_type ztype,
 ):
+    validate_num_dimensions(numDims)
+    validate_ztype(ztype)
+
     cdef size_t minTotalElements = 0
     cdef int amplitudeExp = 0
 
@@ -123,8 +151,6 @@ cpdef getRandNumpyArray(
         minTotalElements = 1000000
     elif ztype in [zfp.type_int32, zfp.type_int64]:
         minTotalElements = 4096
-    else:
-        raise ValueError("Unsupported zfp_type: {}".format(ztype))
 
     # ztype = zfp.dtype_to_ztype(dtype)
     # format_type = zfp.dtype_to_format(dtype)
@@ -207,6 +233,9 @@ cpdef uint64_t getChecksumOrigArray(
     int dims,
     zfp.zfp_type ztype
 ):
+    validate_num_dimensions(dims)
+    validate_ztype(ztype)
+
     return getChecksumOriginalDataArray(dims, ztype)
 
 cpdef uint64_t getChecksumCompArray(
@@ -215,6 +244,11 @@ cpdef uint64_t getChecksumCompArray(
     zfp.zfp_mode mode,
     int compressParamNum
 ):
+    validate_num_dimensions(dims)
+    validate_ztype(ztype)
+    validate_mode(mode)
+    validate_compress_param(compressParamNum)
+
     return getChecksumCompressedBitstream(dims, ztype, mode, compressParamNum)
 
 cpdef uint64_t getChecksumDecompArray(
@@ -223,9 +257,17 @@ cpdef uint64_t getChecksumDecompArray(
     zfp.zfp_mode mode,
     int compressParamNum
 ):
+    validate_num_dimensions(dims)
+    validate_ztype(ztype)
+    validate_mode(mode)
+    validate_compress_param(compressParamNum)
+
     return getChecksumDecompressedArray(dims, ztype, mode, compressParamNum)
 
 cpdef computeParameterValue(zfp.zfp_mode mode, int param):
+    validate_mode(mode)
+    validate_compress_param(param)
+
     if mode == zfp.mode_fixed_accuracy:
         return computeFixedAccuracyParam(param)
     elif mode == zfp.mode_fixed_precision:
