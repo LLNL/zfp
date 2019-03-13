@@ -14,11 +14,10 @@ cd build
 # config without OpenMP, with CFP (and custom namespace)
 run_all " -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DBUILD_OPENMP=OFF -DBUILD_CUDA=OFF"
 
-rm -rf ./*
-
-
-# build empty project requiring OpenMP
-# (satisfy mingw builds)
+# build empty project requiring OpenMP, in a temp directory that ZFP is oblivious to
+mkdir tmpBuild
+cd tmpBuild
+# (CMAKE_SH satisfies mingw builds)
 set +e
 if [ $COMPILER != "msvc" ]; then
   cmake -G "$GENERATOR" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils" -DCMAKE_SH=CMAKE_SH-NOTFOUND
@@ -29,7 +28,9 @@ fi
 if [ $? -eq 0 ]; then
   echo "OpenMP found, starting 2nd zfp build"
   set -e
-  rm -rf ./*
+  cd ..
+  # keep compiled testing frameworks, to speedup Appveyor
+  rm CMakeCache.txt
 
   # only run tests not run in previous build, due to appveyor time limit (1 hour)
   run_all " -DBUILD_OPENMP=ON -DOMP_TESTS_ONLY=1"
