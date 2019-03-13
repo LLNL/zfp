@@ -3,6 +3,7 @@
 import unittest
 
 import zfp
+import test_utils
 import numpy as np
 
 
@@ -61,6 +62,36 @@ class TestNumpy(unittest.TestCase):
         with self.assertRaises(AssertionError):
             np.testing.assert_allclose(decompressed_array, c_array, atol=1e-3)
 
+    def test_utils(self):
+        # TODO: more dimensions
+        for ndims in [1]:
+            for ztype in [zfp.type_float, zfp.type_double]:
+                random_array = test_utils.getRandNumpyArray(ndims, ztype)
+                orig_checksum = test_utils.getChecksumOrigArray(ndims, ztype)
+                actual_checksum = test_utils.hashNumpyArray(random_array)
+                self.assertEqual(orig_checksum, actual_checksum)
+                # TODO: strided arrays
+
+                for compress_param_num in range(3):
+                    for mode, mode_str in [(zfp.mode_fixed_accuracy, "tolerance"),
+                                           (zfp.mode_fixed_precision, "precision"),
+                                           (zfp.mode_fixed_rate, "rate")]:
+                        kwargs = {
+                            mode_str: test_utils.computeParameterValue(mode, compress_param_num),
+                            "write_header" : False,
+                        }
+                        compressed_array = zfp.compress_numpy(random_array, **kwargs)
+                        compressed_checksum = test_utils.getChecksumCompArray(ndims, ztype, mode, compress_param_num)
+                        actual_checksum = test_utils.hashCompressedArray(compressed_array)
+                        self.assertEqual(compressed_checksum, actual_checksum)
+
+                        kwargs['write_header'] = True
+                        compressed_array = zfp.compress_numpy(random_array, **kwargs)
+
+                        decompressed_array = zfp.decompress_numpy(compressed_array)
+                        decompressed_checksum = test_utils.getChecksumDecompArray(ndims, ztype, mode, compress_param_num)
+                        actual_checksum = test_utils.hashNumpyArray(decompressed_array)
+                        self.assertEqual(decompressed_checksum, actual_checksum)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
