@@ -100,7 +100,8 @@ cdef class Memory:
         free(self.data)
 
 cpdef bytes compress_numpy(np.ndarray arr, double tolerance = -1,
-                           double rate = -1, int precision = -1):
+                           double rate = -1, int precision = -1,
+                           write_header=True):
     # Input validation
     if arr is None:
         raise TypeError("Input array cannot be None")
@@ -138,7 +139,8 @@ cpdef bytes compress_numpy(np.ndarray arr, double tolerance = -1,
         zfp_stream_rewind(stream)
         # write the full header so we can reconstruct the numpy array on
         # decompression
-        zfp_write_header(stream, field, HEADER_FULL)
+        if write_header:
+            zfp_write_header(stream, field, HEADER_FULL)
         compressed_size = zfp_compress(stream, field)
         # copy the compressed data into a perfectly sized bytes object
         compress_str = (<char *>data)[:compressed_size]
