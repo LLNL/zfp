@@ -325,6 +325,60 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateWrongScalarTypeWrongDimensional
   delete[] buffer;
 }
 
+TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSerialized_then_success)
+{
+  // create a compressed stream through C API
+  // (one that is supported with compressed arrays)
+  zfp_field* field;
+#if DIMS == 1
+  field = zfp_field_1d(inputDataArr, ZFP_TYPE, inputDataSideLen);
+#elif DIMS == 2
+  field = zfp_field_2d(inputDataArr, ZFP_TYPE, inputDataSideLen, inputDataSideLen);
+#elif DIMS == 3
+  field = zfp_field_3d(inputDataArr, ZFP_TYPE, inputDataSideLen, inputDataSideLen, inputDataSideLen);
+#endif
+
+  zfp_stream* stream = zfp_stream_open(NULL);
+
+  size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
+  uchar* buffer = new uchar[bufsizeBytes];
+  memset(buffer, 0, bufsizeBytes);
+
+  bitstream* bs = stream_open(buffer, bufsizeBytes);
+  zfp_stream_set_bit_stream(stream, bs);
+  zfp_stream_rewind(stream);
+
+  zfp_stream_set_rate(stream, 10, ZFP_TYPE, DIMS, 1);
+  EXPECT_EQ(zfp_mode_fixed_rate, zfp_stream_compression_mode(stream));
+
+  // write header
+  size_t writtenBits = zfp_write_header(stream, field, ZFP_HEADER_FULL);
+  EXPECT_EQ(ZFP_HEADER_SIZE_BITS, writtenBits);
+  zfp_stream_flush(stream);
+
+  // copy header into header
+  size_t headerSizeBytes = (writtenBits + CHAR_BIT - 1) / CHAR_BIT;
+  zfp::array::header h;
+  memcpy(h.buffer, buffer, headerSizeBytes);
+
+  // compress data
+  uchar* compressedDataPtr = (uchar*)stream_data(bs) + headerSizeBytes;
+  zfp_compress(stream, field);
+
+  // close/free C API things (keep buffer)
+  zfp_field_free(field);
+  zfp_stream_close(stream);
+  stream_close(bs);
+
+  try {
+    ZFP_ARRAY_TYPE arr2(h, compressedDataPtr, bufsizeBytes - headerSizeBytes);
+  } catch (std::exception const & e) {
+    FailAndPrintException(e);
+  }
+
+  delete[] buffer;
+}
+
 TEST_F(TEST_FIXTURE, given_incompleteChunkOfSerializedCompressedArray_when_constructorFromSerialized_then_exceptionThrown)
 {
 #if DIMS == 1
