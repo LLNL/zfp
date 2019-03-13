@@ -17,6 +17,19 @@ HEADER_META = ZFP_HEADER_META
 HEADER_MODE = ZFP_HEADER_MODE
 HEADER_FULL = ZFP_HEADER_FULL
 
+# export enums
+type_none = zfp_type_none
+type_int32 = zfp_type_int32
+type_int64 = zfp_type_int64
+type_float = zfp_type_float
+type_double = zfp_type_double
+mode_null = zfp_mode_null
+mode_expert = zfp_mode_expert
+mode_fixed_rate = zfp_mode_fixed_rate
+mode_fixed_precision = zfp_mode_fixed_precision
+mode_fixed_accuracy = zfp_mode_fixed_accuracy
+
+
 cpdef dtype_to_ztype(dtype):
     if dtype == np.int32:
         return zfp_type_int32
