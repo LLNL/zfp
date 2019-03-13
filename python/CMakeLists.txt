@@ -27,3 +27,11 @@ set_target_properties(_zfp PROPERTIES LIBRARY_OUTPUT_NAME zfp)
 # Install to the typical python module directory
 set(python_install_lib_dir "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/")
 install(TARGETS _zfp LIBRARY DESTINATION ${python_install_lib_dir})
+
+include_directories(${ZFP_SOURCE_DIR}/tests/utils)
+include_directories(${ZFP_SOURCE_DIR})
+add_cython_target(test_utils test_utils.pyx C)
+add_library(test_utils MODULE ${test_utils})
+target_link_libraries(test_utils zfp genSmoothRandNumsLib stridedOperationsLib zfpCompressionParamsLib zfpChecksumsLib zfpHashLib)
+python_extension_module(test_utils)
+set_target_properties(test_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYLIB_BUILD_DIR})
