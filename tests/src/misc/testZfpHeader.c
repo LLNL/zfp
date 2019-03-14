@@ -36,8 +36,23 @@ struct zfp_struct_container {
 #endif
 };
 
+// for code readability, pass these into API functions taking any ZFP struct
+// (devs editing code should not know/worry about the container abstraction,
+// however helper functions should accept the container)
+// requires container instance to be called "container" or "containerPtr"
+#define ZFP_STREAM container.stream
+#define ZFP_STREAM_FROM_PTR containerPtr->stream
+#define ZFP_FIELD container.field
+
 struct setupVars {
   void* buffer;
+
+  // write code as if the following lines existed
+  // (this is done to reuse tests and run them through Fortran API)
+
+  // zfp_stream* ZFP_STREAM
+  // zfp_field* ZFP_FIELD
+
   zfp_struct_container container;
 };
 
@@ -48,20 +63,20 @@ setup(void **state)
   assert_non_null(bundle);
 
   zfp_type type = ZFP_TYPE;
-  bundle->container.field = zfp_field_2d(NULL, type, FIELD_X_LEN, FIELD_Y_LEN);
+  bundle->ZFP_FIELD = zfp_field_2d(NULL, type, FIELD_X_LEN, FIELD_Y_LEN);
 
-  bundle->container.stream = zfp_stream_open(NULL);
-  zfp_stream_set_rate(bundle->container.stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
+  bundle->ZFP_STREAM = zfp_stream_open(NULL);
+  zfp_stream_set_rate(bundle->ZFP_STREAM, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
 
-  size_t bufsizeBytes = zfp_stream_maximum_size(bundle->container.stream, bundle->container.field);
+  size_t bufsizeBytes = zfp_stream_maximum_size(bundle->ZFP_STREAM, bundle->ZFP_FIELD);
   bundle->buffer = calloc(bufsizeBytes, sizeof(char));
   assert_non_null(bundle->buffer);
 
   bitstream* s = stream_open(bundle->buffer, bufsizeBytes);
   assert_non_null(s);
 
-  zfp_stream_set_bit_stream(bundle->container.stream, s);
-  zfp_stream_rewind(bundle->container.stream);
+  zfp_stream_set_bit_stream(bundle->ZFP_STREAM, s);
+  zfp_stream_rewind(bundle->ZFP_STREAM);
 
   *state = bundle;
 
@@ -72,9 +87,9 @@ static int
 teardown(void **state)
 {
   struct setupVars *bundle = *state;
-  stream_close(zfp_stream_bit_stream(bundle->container.stream));
-  zfp_stream_close(bundle->container.stream);
-  zfp_field_free(bundle->container.field);
+  stream_close(zfp_stream_bit_stream(bundle->ZFP_STREAM));
+  zfp_stream_close(bundle->ZFP_STREAM);
+  zfp_field_free(bundle->ZFP_FIELD);
   free(bundle->buffer);
   free(bundle);
 
@@ -86,7 +101,7 @@ when_zfpFieldMetadataCalled_expect_LSB2BitsEncodeScalarType(void **state)
 {
   struct setupVars *bundle = *state;
 
-  uint64 metadata = zfp_field_metadata(bundle->container.field);
+  uint64 metadata = zfp_field_metadata(bundle->ZFP_FIELD);
   uint zfpType = (metadata & 0x3u) + 1;
 
   assert_int_equal(zfpType, ZFP_TYPE);
@@ -97,7 +112,7 @@ when_zfpFieldMetadataCalled_expect_LSBBits3To4EncodeDimensionality(void **state)
 {
   struct setupVars *bundle = *state;
 
-  uint64 metadata = zfp_field_metadata(bundle->container.field);
+  uint64 metadata = zfp_field_metadata(bundle->ZFP_FIELD);
   uint dimensionality = ((metadata >> 2) & 0x3u) + 1;
 
   // setup uses a 2d field
@@ -112,7 +127,7 @@ when_zfpFieldMetadataCalled_expect_LSBBits5To53EncodeArrayDimensions(void **stat
 
   struct setupVars *bundle = *state;
 
-  uint64 metadata = zfp_field_metadata(bundle->container.field);
+  uint64 metadata = zfp_field_metadata(bundle->ZFP_FIELD);
 
   // setup uses a 2d field
   uint64 metadataEncodedDims = (metadata >> 4) & MASK_48_BITS;
@@ -128,13 +143,13 @@ static void
 when_zfpFieldSetMetadataCalled_expect_scalarTypeSet(void **state)
 {
   struct setupVars *bundle = *state;
-  zfp_field* field = bundle->container.field;
-  uint64 metadata = zfp_field_metadata(bundle->container.field);
+  zfp_field* field = bundle->ZFP_FIELD;
+  uint64 metadata = zfp_field_metadata(bundle->ZFP_FIELD);
 
   // reset field parameter
   field->type = zfp_type_none;
 
-  zfp_field_set_metadata(bundle->container.field, metadata);
+  zfp_field_set_metadata(bundle->ZFP_FIELD, metadata);
 
   assert_int_equal(field->type, ZFP_TYPE);
 }
@@ -143,13 +158,13 @@ static void
 when_zfpFieldSetMetadataCalled_expect_arrayDimensionsSet(void **state)
 {
   struct setupVars *bundle = *state;
-  zfp_field* field = bundle->container.field;
-  uint64 metadata = zfp_field_metadata(bundle->container.field);
+  zfp_field* field = bundle->ZFP_FIELD;
+  uint64 metadata = zfp_field_metadata(bundle->ZFP_FIELD);
 
   // reset dimension values
-  zfp_field_set_size_3d(bundle->container.field, 0, 0, 0);
+  zfp_field_set_size_3d(bundle->ZFP_FIELD, 0, 0, 0);
 
-  zfp_field_set_metadata(bundle->container.field, metadata);
+  zfp_field_set_metadata(bundle->ZFP_FIELD, metadata);
 
   // setup uses a 2d field
   assert_int_equal(field->nx, FIELD_X_LEN);
@@ -162,10 +177,10 @@ when_zfpWriteHeaderMagic_expect_numBitsWrittenEqualToZFP_MAGIC_BITS(void **state
 {
   struct setupVars *bundle = *state;
 
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_MAGIC), ZFP_MAGIC_BITS);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_MAGIC), ZFP_MAGIC_BITS);
 
   // check bitstream buffer
-  bitstream* s = zfp_stream_bit_stream(bundle->container.stream);
+  bitstream* s = zfp_stream_bit_stream(bundle->ZFP_STREAM);
   assert_int_equal(s->bits, ZFP_MAGIC_BITS);
 }
 
@@ -174,11 +189,11 @@ when_zfpWriteHeaderMagic_expect_24BitsAreCharsZfpFollowedBy8BitsZfpCodecVersion(
 {
   struct setupVars *bundle = *state;
 
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_MAGIC), ZFP_MAGIC_BITS);
-  zfp_stream_flush(bundle->container.stream);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_MAGIC), ZFP_MAGIC_BITS);
+  zfp_stream_flush(bundle->ZFP_STREAM);
 
-  zfp_stream_rewind(bundle->container.stream);
-  bitstream* s = zfp_stream_bit_stream(bundle->container.stream);
+  zfp_stream_rewind(bundle->ZFP_STREAM);
+  bitstream* s = zfp_stream_bit_stream(bundle->ZFP_STREAM);
   uint64 char1 = stream_read_bits(s, 8);
   uint64 char2 = stream_read_bits(s, 8);
   uint64 char3 = stream_read_bits(s, 8);
@@ -195,7 +210,7 @@ when_zfpWriteHeaderMetadata_expect_numBitsWrittenEqualToZFP_META_BITS(void **sta
 {
   struct setupVars *bundle = *state;
 
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_META), ZFP_META_BITS);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_META), ZFP_META_BITS);
 }
 
 static void
@@ -204,48 +219,48 @@ given_fixedRate_when_zfpWriteHeaderMode_expect_12BitsWrittenToBitstream(void **s
   struct setupVars *bundle = *state;
   // setup uses fixed rate
 
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_MODE), ZFP_MODE_SHORT_BITS);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_MODE), ZFP_MODE_SHORT_BITS);
 }
 
 static void
 given_fixedPrecision_when_zfpWriteHeaderMode_expect_12BitsWrittenToBitstream(void **state)
 {
   struct setupVars *bundle = *state;
-  zfp_stream_set_precision(bundle->container.stream, PREC);
+  zfp_stream_set_precision(bundle->ZFP_STREAM, PREC);
 
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_MODE), ZFP_MODE_SHORT_BITS);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_MODE), ZFP_MODE_SHORT_BITS);
 }
 
 static void
 given_fixedAccuracy_when_zfpWriteHeaderMode_expect_12BitsWrittenToBitstream(void **state)
 {
   struct setupVars *bundle = *state;
-  zfp_stream_set_accuracy(bundle->container.stream, ACC);
+  zfp_stream_set_accuracy(bundle->ZFP_STREAM, ACC);
 
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_MODE), ZFP_MODE_SHORT_BITS);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_MODE), ZFP_MODE_SHORT_BITS);
 }
 
 static void
 given_customCompressParamsSet_when_zfpWriteHeaderMode_expect_64BitsWrittenToBitstream(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(zfp_stream_set_params(bundle->container.stream, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
+  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
 
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_MODE), ZFP_MODE_LONG_BITS);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_MODE), ZFP_MODE_LONG_BITS);
 }
 
 static void
 setupAndAssertProperNumBitsRead(void **state, uint mask, size_t expectedWrittenBits, size_t expectedReadBits)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, mask), expectedWrittenBits);
-  zfp_stream_flush(bundle->container.stream);
-  zfp_stream_rewind(bundle->container.stream);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, mask), expectedWrittenBits);
+  zfp_stream_flush(bundle->ZFP_STREAM);
+  zfp_stream_rewind(bundle->ZFP_STREAM);
 
-  assert_int_equal(zfp_read_header(bundle->container.stream, bundle->container.field, mask), expectedReadBits);
+  assert_int_equal(zfp_read_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, mask), expectedReadBits);
 
   // check bitstream buffer
-  bitstream* s = zfp_stream_bit_stream(bundle->container.stream);
+  bitstream* s = zfp_stream_bit_stream(bundle->ZFP_STREAM);
   // use expectedWrittenBits because when zfp_read_header() returns 0, the bitstream is still displaced
   assert_int_equal(s->bits, wsize - expectedWrittenBits);
 }
@@ -262,8 +277,8 @@ given_improperHeader_when_zfpReadHeaderMagic_expect_returnsZero(void **state)
   struct setupVars *bundle = *state;
   // bitstream is zeros
 
-  assert_int_equal(zfp_read_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_MAGIC), 0);
-  assert_int_equal(zfp_stream_bit_stream(bundle->container.stream)->bits, 64 - 8);
+  assert_int_equal(zfp_read_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_MAGIC), 0);
+  assert_int_equal(zfp_stream_bit_stream(bundle->ZFP_STREAM)->bits, 64 - 8);
 }
 
 static void
@@ -276,20 +291,20 @@ static void
 given_properHeader_when_zfpReadHeaderMetadata_expect_fieldArrayDimsSet(void **state)
 {
   struct setupVars *bundle = *state;
-  zfp_field* field = bundle->container.field;
+  zfp_field* field = bundle->ZFP_FIELD;
   uint nx = field->nx;
   uint ny = field->ny;
   uint nz = field->nz;
 
   // write header to bitstream
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_META), ZFP_META_BITS);
-  zfp_stream_flush(bundle->container.stream);
-  zfp_stream_rewind(bundle->container.stream);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_META), ZFP_META_BITS);
+  zfp_stream_flush(bundle->ZFP_STREAM);
+  zfp_stream_rewind(bundle->ZFP_STREAM);
 
   // reset field->nx, ny, nz
-  zfp_field_set_size_3d(bundle->container.field, 0, 0, 0);
+  zfp_field_set_size_3d(bundle->ZFP_FIELD, 0, 0, 0);
 
-  assert_int_equal(zfp_read_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_META), ZFP_META_BITS);
+  assert_int_equal(zfp_read_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_META), ZFP_META_BITS);
   assert_int_equal(field->nx, nx);
   assert_int_equal(field->ny, ny);
   assert_int_equal(field->nz, nz);
@@ -305,7 +320,7 @@ static void
 given_properHeaderFixedPrecision_when_zfpReadHeaderMode_expect_properNumBitsRead(void **state)
 {
   struct setupVars *bundle = *state;
-  zfp_stream_set_precision(bundle->container.stream, PREC);
+  zfp_stream_set_precision(bundle->ZFP_STREAM, PREC);
 
   setupAndAssertProperNumBitsRead(state, ZFP_HEADER_MODE, ZFP_MODE_SHORT_BITS, ZFP_MODE_SHORT_BITS);
 }
@@ -314,7 +329,7 @@ static void
 given_properHeaderFixedAccuracy_when_zfpReadHeaderMode_expect_properNumBitsRead(void **state)
 {
   struct setupVars *bundle = *state;
-  zfp_stream_set_accuracy(bundle->container.stream, ACC);
+  zfp_stream_set_accuracy(bundle->ZFP_STREAM, ACC);
 
   setupAndAssertProperNumBitsRead(state, ZFP_HEADER_MODE, ZFP_MODE_SHORT_BITS, ZFP_MODE_SHORT_BITS);
 }
@@ -323,7 +338,7 @@ static void
 given_customCompressParamsSet_when_zfpReadHeaderMode_expect_properNumBitsRead(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(zfp_stream_set_params(bundle->container.stream, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
+  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
 
   setupAndAssertProperNumBitsRead(state, ZFP_HEADER_MODE, ZFP_MODE_LONG_BITS, ZFP_MODE_LONG_BITS);
 }
@@ -331,7 +346,8 @@ given_customCompressParamsSet_when_zfpReadHeaderMode_expect_properNumBitsRead(vo
 static void
 setInvalidCompressParams(zfp_struct_container* containerPtr)
 {
-  assert_int_equal(zfp_stream_set_params(containerPtr->stream, MAX_BITS + 1, MAX_BITS, MAX_PREC, MIN_EXP), 0);
+  assert_int_equal(zfp_stream_set_params(ZFP_STREAM_FROM_PTR, MAX_BITS + 1, MAX_BITS, MAX_PREC, MIN_EXP), 0);
+  // no macro because we purposefully make modifications directly on struct, not through API
   containerPtr->stream->minbits = MAX_BITS + 1;
   containerPtr->stream->maxbits = MAX_BITS;
   containerPtr->stream->maxprec = MAX_PREC;
@@ -351,19 +367,19 @@ static void
 assertCompressParamsBehaviorWhenReadHeader(void **state, int expectedWrittenBits, int expectedReadBits)
 {
   struct setupVars *bundle = *state;
-  zfp_stream* stream = bundle->container.stream;
+  zfp_stream* stream = bundle->ZFP_STREAM;
 
   uint minBits, maxBits, maxPrec;
   int minExp;
-  zfp_stream_params(bundle->container.stream, &minBits, &maxBits, &maxPrec, &minExp);
+  zfp_stream_params(bundle->ZFP_STREAM, &minBits, &maxBits, &maxPrec, &minExp);
 
-  assert_int_equal(zfp_write_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_MODE), expectedWrittenBits);
-  zfp_stream_flush(bundle->container.stream);
-  zfp_stream_rewind(bundle->container.stream);
+  assert_int_equal(zfp_write_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_MODE), expectedWrittenBits);
+  zfp_stream_flush(bundle->ZFP_STREAM);
+  zfp_stream_rewind(bundle->ZFP_STREAM);
 
-  assert_int_equal(zfp_stream_set_params(bundle->container.stream, ZFP_MIN_BITS, ZFP_MAX_BITS, ZFP_MAX_PREC, ZFP_MIN_EXP), 1);
+  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, ZFP_MIN_BITS, ZFP_MAX_BITS, ZFP_MAX_PREC, ZFP_MIN_EXP), 1);
 
-  assert_int_equal(zfp_read_header(bundle->container.stream, bundle->container.field, ZFP_HEADER_MODE), expectedReadBits);
+  assert_int_equal(zfp_read_header(bundle->ZFP_STREAM, bundle->ZFP_FIELD, ZFP_HEADER_MODE), expectedReadBits);
 
   if (!expectedReadBits) {
     // expect params were not set
@@ -389,7 +405,7 @@ static void
 given_properHeaderFixedPrecision_when_zfpReadHeaderMode_expect_streamParamsSet(void **state)
 {
   struct setupVars *bundle = *state;
-  zfp_stream_set_precision(bundle->container.stream, PREC);
+  zfp_stream_set_precision(bundle->ZFP_STREAM, PREC);
 
   assertCompressParamsBehaviorWhenReadHeader(state, ZFP_MODE_SHORT_BITS, ZFP_MODE_SHORT_BITS);
 }
@@ -398,7 +414,7 @@ static void
 given_properHeaderFixedAccuracy_when_zfpReadHeaderMode_expect_streamParamsSet(void **state)
 {
   struct setupVars *bundle = *state;
-  zfp_stream_set_accuracy(bundle->container.stream, ACC);
+  zfp_stream_set_accuracy(bundle->ZFP_STREAM, ACC);
 
   assertCompressParamsBehaviorWhenReadHeader(state, ZFP_MODE_SHORT_BITS, ZFP_MODE_SHORT_BITS);
 }
@@ -407,7 +423,7 @@ static void
 given_customCompressParamsAndProperHeader_when_zfpReadHeaderMode_expect_streamParamsSet(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(zfp_stream_set_params(bundle->container.stream, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
+  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
 
   assertCompressParamsBehaviorWhenReadHeader(state, ZFP_MODE_LONG_BITS, ZFP_MODE_LONG_BITS);
 }
