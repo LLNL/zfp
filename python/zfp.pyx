@@ -88,16 +88,24 @@ cdef zfp_field* _init_field(np.ndarray arr):
     cdef zfp_type ztype = dtype_to_ztype(arr.dtype)
     cdef zfp_field* field
     cdef void* pointer = arr.data
+
+    strides = [int(x) / arr.itemsize for x in arr.strides[:ndim]]
+
     if ndim == 1:
         field = zfp_field_1d(pointer, ztype, shape[0])
+        zfp_field_set_stride_1d(field, strides[0])
     elif ndim == 2:
         field = zfp_field_2d(pointer, ztype, shape[0], shape[1])
+        zfp_field_set_stride_2d(field, strides[0], strides[1])
     elif ndim == 3:
         field = zfp_field_3d(pointer, ztype, shape[0], shape[1], shape[2])
+        zfp_field_set_stride_3d(field, strides[0], strides[1], strides[2])
     elif ndim == 4:
         field = zfp_field_4d(pointer, ztype, shape[0], shape[1], shape[2], shape[3])
+        zfp_field_set_stride_4d(field, strides[0], strides[1], strides[2], strides[3])
     else:
         raise RuntimeError("Greater than 4 dimensions not supported")
+
     return field
 
 @cython.final
@@ -123,10 +131,6 @@ cpdef bytes compress_numpy(np.ndarray arr, double tolerance = -1,
         raise ValueError("Either tolerance, rate, or precision must be set")
     elif num_params_set > 1:
         raise ValueError("Only one of tolerance, rate, or precision can be set")
-    if not arr.flags['F_CONTIGUOUS']:
-        # zfp requires a fortran ordered array for optimal compression
-        # bonus side-effect: we get a contiguous chunk of memory
-        arr = np.asfortranarray(arr)
 
     # Setup zfp structs to begin compression
     cdef zfp_field* field = _init_field(arr)

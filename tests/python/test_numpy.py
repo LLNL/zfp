@@ -63,9 +63,8 @@ class TestNumpy(unittest.TestCase):
             np.testing.assert_allclose(decompressed_array, c_array, atol=1e-3)
 
     def test_utils(self):
-        # TODO: more dimensions
-        for ndims in [1]:
             for ztype in [zfp.type_float, zfp.type_double]:
+        for ndims in range(1, 5):
                 random_array = test_utils.getRandNumpyArray(ndims, ztype)
                 orig_checksum = test_utils.getChecksumOrigArray(ndims, ztype)
                 actual_checksum = test_utils.hashNumpyArray(random_array)

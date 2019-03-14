@@ -50,6 +50,11 @@ cdef extern from "zfp.h":
     zfp_field* zfp_field_2d(void* pointer, zfp_type, cython.uint nx, cython.uint ny);
     zfp_field* zfp_field_3d(void* pointer, zfp_type, cython.uint nx, cython.uint ny, cython.uint nz);
     zfp_field* zfp_field_4d(void* pointer, zfp_type, cython.uint nx, cython.uint ny, cython.uint nz, cython.uint nw);
+    void zfp_field_set_stride_1d(zfp_field* field, int sx);
+    void zfp_field_set_stride_2d(zfp_field* field, int sx, int sy);
+    void zfp_field_set_stride_3d(zfp_field* field, int sx, int sy, int sz);
+    void zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw);
+    int zfp_field_stride(const zfp_field* field, int* stride)
     void zfp_field_free(zfp_field* field);
     size_t zfp_compress(zfp_stream* stream, const zfp_field* field);
     size_t zfp_decompress(zfp_stream* stream, zfp_field* field);
