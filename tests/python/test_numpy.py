@@ -13,6 +13,11 @@ class TestNumpy(unittest.TestCase):
         decompressed_array = zfp.decompress_numpy(compressed_array)
         self.assertIsNone(np.testing.assert_allclose(decompressed_array, orig_array, atol=1e-3))
 
+    def rate_round_trip(self, orig_array):
+        compressed_array = zfp.compress_numpy(orig_array, rate=16)
+        decompressed_array = zfp.decompress_numpy(compressed_array)
+        self.assertIsNone(np.testing.assert_allclose(decompressed_array, orig_array, atol=1))
+
     def test_large_zeros_array(self):
         zero_array = np.zeros((1000,1000), dtype=np.float64)
         self.tolerance_round_trip(zero_array)
@@ -39,8 +44,7 @@ class TestNumpy(unittest.TestCase):
 
         for dtype in [np.int32, np.int64]:
             array = np.random.randint(2**30, size=shape, dtype=dtype)
-            with self.assertRaises(NotImplementedError):
-                self.tolerance_round_trip(array)
+            self.rate_round_trip(array)
 
     def test_fixed_rate(self):
         c_array = np.random.rand(25, 25, 25)
@@ -63,8 +67,8 @@ class TestNumpy(unittest.TestCase):
             np.testing.assert_allclose(decompressed_array, c_array, atol=1e-3)
 
     def test_utils(self):
-            for ztype in [zfp.type_float, zfp.type_double]:
         for ndims in range(1, 5):
+            for ztype in [zfp.type_float, zfp.type_double, zfp.type_int32, zfp.type_int64]:
                 random_array = test_utils.getRandNumpyArray(ndims, ztype)
                 orig_checksum = test_utils.getChecksumOrigArray(ndims, ztype)
                 actual_checksum = test_utils.hashNumpyArray(random_array)
@@ -72,9 +76,12 @@ class TestNumpy(unittest.TestCase):
                 # TODO: strided arrays
 
                 for compress_param_num in range(3):
-                    for mode, mode_str in [(zfp.mode_fixed_accuracy, "tolerance"),
-                                           (zfp.mode_fixed_precision, "precision"),
-                                           (zfp.mode_fixed_rate, "rate")]:
+                    modes = [(zfp.mode_fixed_accuracy, "tolerance"),
+                             (zfp.mode_fixed_precision, "precision"),
+                             (zfp.mode_fixed_rate, "rate")]
+                    if ztype in [zfp.type_int32, zfp.type_int64]:
+                        modes = [modes[-1]] # only fixed-rate is supported for integers
+                    for mode, mode_str in modes:
                         kwargs = {
                             mode_str: test_utils.computeParameterValue(mode, compress_param_num),
                             "write_header" : False,
