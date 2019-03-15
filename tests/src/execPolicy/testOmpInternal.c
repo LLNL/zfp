@@ -38,7 +38,7 @@ teardown(void **state)
 }
 
 static void
-given_zfpStreamOmpThreadsZero_when_threadCountOmp_expect_returnsOmpMaxThreadCount(void **state)
+given_withOpenMP_zfpStreamOmpThreadsZero_when_threadCountOmp_expect_returnsOmpMaxThreadCount(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
@@ -48,7 +48,7 @@ given_zfpStreamOmpThreadsZero_when_threadCountOmp_expect_returnsOmpMaxThreadCoun
 }
 
 static void
-given_zfpStreamOmpChunkSizeZero_when_chunkCountOmp_expect_returnsOneChunkPerThread(void **state)
+given_withOpenMP_zfpStreamOmpChunkSizeZero_when_chunkCountOmp_expect_returnsOneChunkPerThread(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
@@ -60,7 +60,7 @@ given_zfpStreamOmpChunkSizeZero_when_chunkCountOmp_expect_returnsOneChunkPerThre
 }
 
 static void
-given_zfpStreamOmpChunkSizeNonzero_when_chunkCountOmp_expect_returnsNumChunks(void **state)
+given_withOpenMP_zfpStreamOmpChunkSizeNonzero_when_chunkCountOmp_expect_returnsNumChunks(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
@@ -76,9 +76,9 @@ given_zfpStreamOmpChunkSizeNonzero_when_chunkCountOmp_expect_returnsNumChunks(vo
 int main()
 {
   const struct CMUnitTest tests[] = {
-    cmocka_unit_test_setup_teardown(given_zfpStreamOmpThreadsZero_when_threadCountOmp_expect_returnsOmpMaxThreadCount, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_zfpStreamOmpChunkSizeZero_when_chunkCountOmp_expect_returnsOneChunkPerThread, setup, teardown),
-    cmocka_unit_test_setup_teardown(given_zfpStreamOmpChunkSizeNonzero_when_chunkCountOmp_expect_returnsNumChunks, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_withOpenMP_zfpStreamOmpThreadsZero_when_threadCountOmp_expect_returnsOmpMaxThreadCount, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_withOpenMP_zfpStreamOmpChunkSizeZero_when_chunkCountOmp_expect_returnsOneChunkPerThread, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_withOpenMP_zfpStreamOmpChunkSizeNonzero_when_chunkCountOmp_expect_returnsNumChunks, setup, teardown),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

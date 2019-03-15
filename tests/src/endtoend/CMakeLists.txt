@@ -1,13 +1,15 @@
 function(zfp_add_test dims type bits)
-  set(serial_test_name testZfpSerial${dims}d${type})
-  add_executable(${serial_test_name} ${serial_test_name}.c)
-  target_link_libraries(${serial_test_name}
-    cmocka zfp zfpHashLib genSmoothRandNumsLib stridedOperationsLib
-    zfpChecksumsLib zfpCompressionParamsLib zfpTimerLib)
-  if(HAVE_LIBM_MATH)
-    target_link_libraries(${serial_test_name} m)
+  if(NOT DEFINED ZFP_OMP_TESTS_ONLY)
+    set(serial_test_name testZfpSerial${dims}d${type})
+    add_executable(${serial_test_name} ${serial_test_name}.c)
+    target_link_libraries(${serial_test_name}
+      cmocka zfp zfpHashLib genSmoothRandNumsLib stridedOperationsLib
+      zfpChecksumsLib zfpCompressionParamsLib zfpTimerLib)
+    if(HAVE_LIBM_MATH)
+      target_link_libraries(${serial_test_name} m)
+    endif()
+    add_test(NAME ${serial_test_name} COMMAND ${serial_test_name})
   endif()
-  add_test(NAME ${serial_test_name} COMMAND ${serial_test_name})
 
   if(ZFP_WITH_OPENMP)
     set(omp_test_name testZfpOmp${dims}d${type})
@@ -23,19 +25,21 @@ function(zfp_add_test dims type bits)
     set_property(TEST ${omp_test_name} PROPERTY RUN_SERIAL TRUE)
   endif()
 
-  if(ZFP_WITH_CUDA AND (${dims} LESS 4))
-    add_definitions(-DZFP_WITH_CUDA)
+  if(NOT DEFINED ZFP_OMP_TESTS_ONLY)
+    if(ZFP_WITH_CUDA AND (${dims} LESS 4))
+      add_definitions(-DZFP_WITH_CUDA)
 
-    set(cuda_test_name testZfpCuda${dims}d${type})
-    add_executable(${cuda_test_name} ${cuda_test_name}.c)
-    target_link_libraries(${cuda_test_name}
-      cmocka zfp zfpHashLib genSmoothRandNumsLib stridedOperationsLib
-      zfpChecksumsLib zfpTimerLib zfpCompressionParamsLib)
-    if(HAVE_LIBM_MATH)
-      target_link_libraries(${cuda_test_name} m)
+      set(cuda_test_name testZfpCuda${dims}d${type})
+      add_executable(${cuda_test_name} ${cuda_test_name}.c)
+      target_link_libraries(${cuda_test_name}
+        cmocka zfp zfpHashLib genSmoothRandNumsLib stridedOperationsLib
+        zfpChecksumsLib zfpTimerLib zfpCompressionParamsLib)
+      if(HAVE_LIBM_MATH)
+        target_link_libraries(${cuda_test_name} m)
+      endif()
+      add_test(NAME ${cuda_test_name} COMMAND ${cuda_test_name})
+      set_property(TEST ${cuda_test_name} PROPERTY RUN_SERIAL TRUE)
     endif()
-    add_test(NAME ${cuda_test_name} COMMAND ${cuda_test_name})
-    set_property(TEST ${cuda_test_name} PROPERTY RUN_SERIAL TRUE)
   endif()
 endfunction()
 
