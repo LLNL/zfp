@@ -2,9 +2,10 @@ add_executable(diffusion diffusion.cpp)
 target_link_libraries(diffusion zfp)
 target_compile_definitions(diffusion PRIVATE ${zfp_defs})
 
-add_executable(diffusionC diffusionC.c)
-target_link_libraries(diffusionC cfp)
-target_compile_definitions(diffusionC PRIVATE ${zfp_defs})
+if(BUILD_CFP)
+  add_executable(diffusionC diffusionC.c)
+  target_link_libraries(diffusionC cfp)
+endif()
 
 add_executable(inplace inplace.c)
 target_link_libraries(inplace zfp)
@@ -28,7 +29,11 @@ target_compile_definitions(speed PRIVATE ${zfp_defs})
 
 if(HAVE_LIBM_MATH)
   target_link_libraries(diffusion m)
-  target_link_libraries(diffusionC m)
+
+  if(BUILD_CFP)
+    target_link_libraries(diffusionC m)
+  endif()
+
   target_link_libraries(inplace m)
   target_link_libraries(pgm m)
   target_link_libraries(simple m)
