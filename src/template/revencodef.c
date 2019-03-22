@@ -2,25 +2,27 @@
 
 /* private functions ------------------------------------------------------- */
 
-/* reversible forward block-floating-point transform to signed integers */
+/* test if block-floating-point encoding is reversible */
 static int
+_t1(rev_fwd_reversible, Scalar)(const Int* iblock, const Scalar* fblock, uint n, int emax)
+{
+  /* reconstruct block */
+  cache_align_(Scalar gblock[BLOCK_SIZE]);
+  _t1(rev_inv_cast, Scalar)(iblock, gblock, n, emax);
+  /* perform bit-wise comparison */
+  return !memcmp(fblock, gblock, n * sizeof(*fblock));
+}
+
+/* forward block-floating-point transform to signed integers */
+static void
 _t1(rev_fwd_cast, Scalar)(Int* iblock, const Scalar* fblock, uint n, int emax)
 {
-  /* compute power-of-two scale factor, s, and its reciprocal, r */
-  Scalar s = _t1(quantize, Scalar)(1, emax);
-  Scalar r = 1 / s;
-  /* convert to integer and make sure transform is reversible */
-  do {
-    /* convert from float, f, to integer, i = s*f, and back to float, g=i/s */
-    volatile Scalar f = *fblock++;
-    Int i = (Int)(s * f);
-    volatile Scalar g = r * i;
-    /* return false if transform is not lossless */
-    if (f != g)
-      return 0;
-    *iblock++ = i;
-  } while (--n);
-  return 1;
+  /* test for all-zero block, which needs special treatment */
+  if (emax != -EBIAS)
+    _t1(fwd_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
+  else
+    while (n--)
+      *iblock++ = 0;
 }
 
 /* reinterpret floating values as two's complement integers */
@@ -47,7 +49,9 @@ _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
   /* compute maximum exponent */
   int emax = _t1(exponent_block, Scalar)(fblock, BLOCK_SIZE);
   /* perform forward block-floating-point transform */
-  if (_t1(rev_fwd_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax)) {
+  _t1(rev_fwd_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
+  /* test if block-floating-point transform is reversible */
+  if (_t1(rev_fwd_reversible, Scalar)(iblock, fblock, BLOCK_SIZE, emax)) {
     /* transform is reversible; encode exponent */
     uint e = emax + EBIAS;
     bits += EBITS;
@@ -58,6 +62,7 @@ _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
     _t1(rev_fwd_reinterpret, Scalar)(iblock, fblock, BLOCK_SIZE);
     stream_write_bit(zfp->stream, 0);
   }
+  /* losslessly encode integers */
   bits += _t2(rev_encode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
   return bits;
 }

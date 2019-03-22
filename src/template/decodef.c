@@ -1,28 +1,6 @@
-#include <limits.h>
-#include <math.h>
-
 static uint _t2(rev_decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock);
 
 /* private functions ------------------------------------------------------- */
-
-/* map integer x relative to exponent e to floating-point number */
-static Scalar
-_t1(dequantize, Scalar)(Int x, int e)
-{
-  return LDEXP((Scalar)x, e - (CHAR_BIT * (int)sizeof(Scalar) - 2));
-}
-
-/* inverse block-floating-point transform from signed integers */
-static void
-_t1(inv_cast, Scalar)(const Int* iblock, Scalar* fblock, uint n, int emax)
-{
-  /* compute power-of-two scale factor s */
-  Scalar s = _t1(dequantize, Scalar)(1, emax);
-  /* compute p-bit float x = s*y where |y| <= 2^(p-2) - 1 */
-  do
-    *fblock++ = (Scalar)(s * *iblock++);
-  while (--n);
-}
 
 /* decode contiguous floating-point block using lossy algorithm */
 static uint

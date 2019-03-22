@@ -31,7 +31,7 @@ _t2(rev_decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock)
     /* decode integer block */
     bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
     /* perform inverse block-floating-point transform */
-    _t1(inv_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
+    _t1(rev_inv_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
   }
   else {
     /* decode integer block */
