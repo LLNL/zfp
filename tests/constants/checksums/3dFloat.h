@@ -1,4 +1,4 @@
-static const uint64 _3dFloatChecksums[24] = {
+static const uint64 _3dFloatChecksums[25] = {
 UINT64C(0x54572f34),
 UINT64C(0x6ad38b388f18d118),
 UINT64C(0x256107e3209389ee),
@@ -23,4 +23,5 @@ UINT64C(0x73829fdec12a0374),
 UINT64C(0x3518c38f),
 UINT64C(0x4f0985dd),
 UINT64C(0xcb6afbd),
+UINT64C(0x1a250a134f9bac0),
 };

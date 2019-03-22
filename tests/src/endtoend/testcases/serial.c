@@ -44,3 +44,7 @@ _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCo
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches), setupFixedAccuracy2, teardown),
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy), setupFixedAccuracy2, teardown),
 #endif
+
+/* reversible */
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressReversible_expect_BitstreamChecksumMatches), setupReversible, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpDecompressReversible_expect_ArrayMatchesBitForBit), setupReversible, teardown),

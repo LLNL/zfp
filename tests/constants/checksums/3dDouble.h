@@ -1,4 +1,4 @@
-static const uint64 _3dDoubleChecksums[24] = {
+static const uint64 _3dDoubleChecksums[25] = {
 UINT64C(0x5f9e82c4fef6f593),
 UINT64C(0x20a6c761afd4380b),
 UINT64C(0x9a658e0fe05b9657),
@@ -23,4 +23,5 @@ UINT64C(0x5c056eecba4d5349),
 UINT64C(0x8eaf0fa126b3de89),
 UINT64C(0xb0dd4ed6a7196f47),
 UINT64C(0x3262044561f9cceb),
+UINT64C(0x47a68c9cc2f63872),
 };

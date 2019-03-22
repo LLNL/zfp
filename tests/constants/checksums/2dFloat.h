@@ -1,4 +1,4 @@
-static const uint64 _2dFloatChecksums[24] = {
+static const uint64 _2dFloatChecksums[25] = {
 UINT64C(0xd61ebeeb),
 UINT64C(0xda4c301a8e0f8cee),
 UINT64C(0x584942f81bec40fb),
@@ -23,4 +23,5 @@ UINT64C(0x53ed9feb9ca6dd1a),
 UINT64C(0x2e0e3c8b),
 UINT64C(0xb6a7efcb),
 UINT64C(0x18bad4a1),
+UINT64C(0x95e74840e655e635),
 };
