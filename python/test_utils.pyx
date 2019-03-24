@@ -1,7 +1,8 @@
 import cython
-from libc.stdlib cimport free
+from libc.stdlib cimport malloc, free
 cimport libc.stdint as stdint
 from cython cimport view
+from itertools import islice, repeat, chain
 
 import zfp
 cimport zfp
@@ -112,6 +113,13 @@ cdef extern from "zfpHash.h":
                                 size_t n[4],
                                 int s[4]);
 
+# enums
+stride_as_is = AS_IS
+stride_permuted = PERMUTED
+stride_interleaved = INTERLEAVED
+stride_reversed = REVERSED
+
+# functions
 cdef validate_num_dimensions(int dims):
     if dims > 4 or dims < 1:
         raise ValueError("Unsupported number of dimensions: {}".format(dims))
@@ -279,21 +287,122 @@ cpdef computeParameterValue(zfp.zfp_mode mode, int param):
     elif mode == zfp.mode_fixed_rate:
         return computeFixedRateParam(param)
 
+cpdef hashStridedArray(
+    bytes inarray,
+    zfp.zfp_type ztype,
+    shape,
+    strides,
+):
+    cdef char* array = inarray
+    cdef size_t[4] padded_shape = zfp.gen_padded_int_list(shape)
+    cdef int[4] padded_strides = zfp.gen_padded_int_list(strides)
+
+    if ztype == zfp.type_int32 or ztype == zfp.type_float:
+        return hashStridedArray32(<uint32_t*>array, padded_shape, padded_strides)
+    elif ztype == zfp.type_int64 or ztype == zfp.type_double:
+        return hashStridedArray64(<uint64_t*>array, padded_shape, padded_strides)
+
 cpdef hashNumpyArray(
     np.ndarray nparray,
+    stride_config stride_conf = AS_IS,
 ):
     dtype = nparray.dtype
-    size = nparray.size
-    # TODO: support strided arrays
-    if dtype == np.int32 or dtype == np.float32:
-        return hashArray32(<uint32_t*>nparray.data, size, 1)
-    elif dtype == np.int64 or dtype == np.float64:
-        return hashArray64(<uint64_t*>nparray.data, size, 1)
-    else:
+    if dtype not in [np.int32, np.float32, np.int64, np.float64]:
         raise ValueError("Unsupported numpy type: {}".format(dtype))
+    if stride_conf not in [AS_IS, PERMUTED, INTERLEAVED, REVERSED]:
+        raise ValueError("Unsupported stride config: {}".format(stride_conf))
+
+    size = int(nparray.size)
+    cdef int[4] strides
+    cdef size_t[4] shape
+    if stride_conf in [AS_IS, INTERLEAVED]:
+        stride_width = 1 if stride_conf is AS_IS else 2
+        if dtype == np.int32 or dtype == np.float32:
+            return hashArray32(<uint32_t*>nparray.data, size, stride_width)
+        elif dtype == np.int64 or dtype == np.float64:
+            return hashArray64(<uint64_t*>nparray.data, size, stride_width)
+    elif stride_conf in [REVERSED, PERMUTED]:
+        strides = zfp.gen_padded_int_list(
+            [x for x in nparray.strides[:nparray.ndim]]
+        )
+        shape = zfp.gen_padded_int_list(
+            [x for x in nparray.shape[:nparray.ndim]]
+        )
+        if dtype == np.int32 or dtype == np.float32:
+            return hashStridedArray32(<uint32_t*>nparray.data, shape, strides)
+        elif dtype == np.int64 or dtype == np.float64:
+            return hashStridedArray64(<uint64_t*>nparray.data, shape, strides)
+
 
 cpdef hashCompressedArray(
     bytes array,
 ):
     cdef const char* c_array = array
     return hashBitstream(<uint64_t*> c_array, len(array))
+
+
+cpdef generateStridedRandomNumpyArray(
+    stride_config stride,
+    np.ndarray randomArray,
+):
+    cdef int ndim = randomArray.ndim
+    shape = [int(x) for x in randomArray.shape[:ndim]]
+    dtype = randomArray.dtype
+    cdef zfp.zfp_type ztype = zfp.dtype_to_ztype(dtype)
+    cdef int[4] strides = [0, 0, 0, 0]
+    cdef size_t[4] dims = zfp.gen_padded_int_list(shape)
+    cdef size_t inputLen = len(randomArray)
+    cdef void* output_array_ptr = NULL
+    cdef np.ndarray output_array = None
+    cdef view.array output_array_view = None
+
+    if stride == AS_IS:
+        # return an unmodified copy
+        return randomArray.copy(order='K')
+    elif stride == PERMUTED:
+        if ndim == 1:
+            raise ValueError("Permutation not supported on 1D arrays")
+        output_array = np.empty_like(randomArray, order='K')
+        getPermutedStrides(ndim, dims, strides)
+        strides = [int(x) * (randomArray.itemsize) for x in strides]
+        ret = permuteSquareArray(
+            randomArray.data,
+            output_array.data,
+            dims[0],
+            ndim,
+            ztype
+        )
+        if ret != 0:
+            raise RuntimeError("Error permuting square array")
+
+        return np.lib.stride_tricks.as_strided(
+            output_array,
+            shape=[x for x in dims[:ndim]],
+            strides=[x for x in strides[:ndim]],
+        )
+
+    elif stride == INTERLEAVED:
+        num_elements = np.prod(shape)
+        new_shape = [x for x in dims if x > 0]
+        new_shape[-1] *= 2
+        dims = tuple(zfp.gen_padded_int_list(new_shape, pad=0, length=4))
+
+        output_array = np.empty(
+            new_shape,
+            dtype=dtype
+        )
+        interleaveArray(
+            randomArray.data,
+            output_array.data,
+            num_elements,
+            ztype
+        )
+        getInterleavedStrides(ndim, dims, strides)
+        strides = [int(x) * (randomArray.itemsize) for x in strides]
+        return np.lib.stride_tricks.as_strided(
+            output_array,
+            shape=shape,
+            strides=[x for x in strides[:ndim]],
+        )
+    else:
+        raise ValueError("Unsupported_config: {|}".format(stride_config))
