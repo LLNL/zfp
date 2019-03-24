@@ -1,4 +1,5 @@
 import cython
+cimport libc.stdint as stdint
 
 cdef extern from "bitstream.h":
     cdef struct bitstream:
@@ -45,6 +46,8 @@ cdef extern from "zfp.h":
     cython.uint zfp_stream_set_precision(zfp_stream* stream, cython.uint precision);
     double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance);
     double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, cython.uint dims, int wra);
+    stdint.uint64_t zfp_stream_mode(const zfp_stream* zfp);
+    zfp_mode zfp_stream_set_mode(zfp_stream* stream, stdint.uint64_t mode);
     zfp_field* zfp_field_alloc();
     zfp_field* zfp_field_1d(void* pointer, zfp_type, cython.uint nx);
     zfp_field* zfp_field_2d(void* pointer, zfp_type, cython.uint nx, cython.uint ny);
@@ -56,9 +59,12 @@ cdef extern from "zfp.h":
     void zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw);
     int zfp_field_stride(const zfp_field* field, int* stride)
     void zfp_field_free(zfp_field* field);
+    zfp_type zfp_field_set_type(zfp_field* field, zfp_type type);
     size_t zfp_compress(zfp_stream* stream, const zfp_field* field);
     size_t zfp_decompress(zfp_stream* stream, zfp_field* field);
     size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, cython.uint mask);
     size_t zfp_read_header(zfp_stream* stream, zfp_field* field, cython.uint mask);
     void zfp_stream_rewind(zfp_stream* stream);
     void zfp_field_set_pointer(zfp_field* field, void* pointer);
+
+cdef gen_padded_int_list(orig_array, pad=*, length=*)
