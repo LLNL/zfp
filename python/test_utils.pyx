@@ -403,4 +403,4 @@ cpdef generateStridedRandomNumpyArray(
             strides=[x for x in strides[:ndim]],
         )
     else:
-        raise ValueError("Unsupported_config: {|}".format(stride_config))
+        raise ValueError("Unsupported_config: {|}".format(stride))
