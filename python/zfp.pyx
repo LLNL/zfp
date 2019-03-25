@@ -75,18 +75,6 @@ cpdef ztype_to_dtype(zfp_type ztype):
     except KeyError:
         raise ValueError("Unsupported zfp_type {}".format(ztype))
 
-cdef size_t sizeof_ztype(zfp_type ztype):
-    if ztype == zfp_type_int32:
-        return sizeof(signed int)
-    elif ztype == zfp_type_int64:
-        return sizeof(signed long long)
-    elif ztype == zfp_type_float:
-        return sizeof(float)
-    elif ztype == zfp_type_double:
-        return sizeof(double)
-    else:
-        return -1
-
 cdef zfp_field* _init_field(np.ndarray arr):
     shape = arr.shape
     cdef int ndim = arr.ndim
@@ -195,10 +183,12 @@ cdef view.array _decompress_with_view(
     shape = (field[0].nx, field[0].ny, field[0].nz, field[0].nw)
     shape = tuple([x for x in shape if x > 0])
 
-    cdef view.array decomp_arr = view.array(shape,
-                                            itemsize=sizeof_ztype(ztype),
-                                            format=format_type,
-                                            allocate_buffer=True)
+    cdef view.array decomp_arr = view.array(
+        shape,
+        itemsize=np.dtype(dtype).itemsize,
+        format=format_type,
+        allocate_buffer=True
+    )
     cdef void* pointer = <void *> decomp_arr.data
     with nogil:
         zfp_field_set_pointer(field, pointer)
