@@ -172,7 +172,8 @@ cpdef bytes compress_numpy(
         # decompression
         if write_header:
             zfp_write_header(stream, field, HEADER_FULL)
-        compressed_size = zfp_compress(stream, field)
+        with nogil:
+            compressed_size = zfp_compress(stream, field)
         # copy the compressed data into a perfectly sized bytes object
         compress_str = (<char *>data)[:compressed_size]
 
@@ -198,8 +199,10 @@ cdef view.array _decompress_with_view(
                                             format=format_type,
                                             allocate_buffer=True)
     cdef void* pointer = <void *> decomp_arr.data
-    zfp_field_set_pointer(field, pointer)
-    if zfp_decompress(stream, field) == 0:
+    with nogil:
+        zfp_field_set_pointer(field, pointer)
+        ret = zfp_decompress(stream, field)
+    if ret == 0:
         raise RuntimeError("error during zfp decompression")
     return decomp_arr
 
@@ -208,8 +211,10 @@ cdef _decompress_with_user_array(
     zfp_stream* stream,
     void* out,
 ):
-    zfp_field_set_pointer(field, out)
-    if zfp_decompress(stream, field) == 0:
+    with nogil:
+        zfp_field_set_pointer(field, out)
+        ret = zfp_decompress(stream, field)
+    if ret == 0:
         raise RuntimeError("error during zfp decompression")
 
 cdef _set_compression_mode(

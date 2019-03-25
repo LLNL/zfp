@@ -60,11 +60,11 @@ cdef extern from "zfp.h":
     int zfp_field_stride(const zfp_field* field, int* stride)
     void zfp_field_free(zfp_field* field);
     zfp_type zfp_field_set_type(zfp_field* field, zfp_type type);
-    size_t zfp_compress(zfp_stream* stream, const zfp_field* field);
-    size_t zfp_decompress(zfp_stream* stream, zfp_field* field);
+    size_t zfp_compress(zfp_stream* stream, const zfp_field* field) nogil;
+    size_t zfp_decompress(zfp_stream* stream, zfp_field* field) nogil;
     size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, cython.uint mask);
     size_t zfp_read_header(zfp_stream* stream, zfp_field* field, cython.uint mask);
     void zfp_stream_rewind(zfp_stream* stream);
-    void zfp_field_set_pointer(zfp_field* field, void* pointer);
+    void zfp_field_set_pointer(zfp_field* field, void* pointer) nogil;
 
 cdef gen_padded_int_list(orig_array, pad=*, length=*)
