@@ -324,9 +324,11 @@ function(add_cython_target _name)
   endif()
 
   set(no_docstrings_arg "")
-  if(CMAKE_BUILD_TYPE STREQUAL "Release" OR
-     CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+  set(embed_signature_arg "")
+  if(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     set(no_docstrings_arg "--no-docstrings")
+  else()
+    set(embed_signature_arg "-Xembedsignature=True")
   endif()
 
   set(cython_debug_arg "")
@@ -355,7 +357,7 @@ function(add_cython_target _name)
                      COMMAND ${CYTHON_EXECUTABLE}
                      ARGS ${cxx_arg} ${include_directory_arg} ${py_version_arg}
                           ${embed_arg} ${annotate_arg} ${no_docstrings_arg}
-                          ${cython_debug_arg} ${embed_pos_arg}
+                          ${cython_debug_arg} ${embed_pos_arg} ${embed_signature_arg}
                           ${line_directives_arg} ${CYTHON_FLAGS_LIST} ${pyx_location}
                           --output-file ${generated_file}
                      DEPENDS ${_source_file}
