@@ -158,7 +158,7 @@ cpdef bytes compress_numpy(
 
     cdef zfp_type ztype = zfp_type_none;
     cdef int ndim = arr.ndim;
-    set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
+    _set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
 
     # Allocate space based on the maximum size potentially required by zfp to
     # store the compressed array
@@ -212,7 +212,7 @@ cdef _decompress_with_user_array(
     if zfp_decompress(stream, field) == 0:
         raise RuntimeError("error during zfp decompression")
 
-cdef set_compression_mode(
+cdef _set_compression_mode(
     zfp_stream *stream,
     zfp_type ztype,
     int ndim,
@@ -229,6 +229,114 @@ cdef set_compression_mode(
     else:
         raise ValueError("Either tolerance, rate, or precision must be set")
 
+cdef _validate_4d_list(in_list, list_name):
+    # Validate that the input list is either a valid list for strides or shape
+    # Specifically, check it is a list and the length is > 0 and <= 4
+    # Throws a TypeError or ValueError if invalid
+    try:
+        if len(in_list) > 4:
+            raise ValueError(
+                "User-provided {} has too many dimensions "
+                "(up to 4 supported)"
+            )
+        elif len(in_list) <= 0:
+            raise ValueError(
+                    "User-provided {} needs at least one dimension"
+            )
+    except TypeError:
+        raise TypeError(
+            "User-provided {} is not an iterable"
+        )
+
+cdef _validate_userinput_matches_header(
+    zfp_field* field,
+    zfp_stream* stream,
+    out,
+    zfp_type ztype,
+    shape,
+    strides,
+    double tolerance,
+    double rate,
+    int precision
+):
+    # check that the header and user type matches
+    if ztype != type_none and ztype is not field[0]._type:
+        raise ValueError(
+            "User-provided zfp_type does not match zfp_type in header"
+        )
+
+    # check that the header and user shapes match
+    header_shape = (field[0].nx, field[0].ny, field[0].nz, field[0].nw)
+    header_shape = [x for x in header_shape if x > 0]
+    if shape is not None:
+        if not all([x == y for x, y in zip_longest(shape, header_shape)]):
+           raise ValueError(
+               "User-provided shape does not match shape in header"
+           )
+
+    # check that the shape and strides have the same number of dimensions
+    if shape is not None and sum(strides) > 0:
+        stride_dims = sum([1 for x in strides if x > 0])
+        shape_dims = sum([1 for x in shape if x > 0])
+        if len(strides) != len(shape):
+            raise ValueError(
+                "Mis-match in shape and stride lengths"
+            )
+
+    # check that setting the compression parameters based on user input
+    # does not change the stream mode (i.e., the compression parameters
+    # provided by the user and in the header match)
+    if tolerance >= 0 or rate >= 0 or precision >= 0:
+        header_mode = zfp_stream_mode(stream)
+        ndim = len(header_shape)
+        _set_compression_mode(
+            stream,
+            ztype,
+            ndim,
+            tolerance,
+            rate,
+            precision
+        )
+        mode = zfp_stream_mode(stream)
+        if mode != mode_null and mode != header_mode:
+            raise ValueError(
+                "User-provided zfp_mode {} does not match zfp_mode "
+                "in header {}".format(
+                    mode,
+                    header_mode,
+                )
+            )
+
+    # if the out buffer is a numpy array, check that it's properties match the
+    # header metadata
+    if out is not None and isinstance(out, np.ndarray):
+        # check that numpy and header types match
+        header_dtype = ztype_to_dtype(field[0]._type)
+        if out.dtype != header_dtype:
+            raise ValueError(
+                "Out ndarray has dtype {} but decompression is using "
+                "{}".format(
+                    out.dtype,
+                    header_dtype
+                )
+            )
+
+        # check that numpy and header shape match
+        numpy_shape = [int(x) for x in out.shape[:ndim]]
+        if not all(
+                [x == y for x, y in
+                 zip_longest(numpy_shape, header_shape)
+                ]
+        ):
+            raise ValueError(
+                "Out ndarray has shape {} but decompression is using "
+                "{}".format(
+                    numpy_shape,
+                    header_shape
+                )
+            )
+
+
 cpdef np.ndarray decompress_numpy(
     bytes compressed_data,
     out=None,
@@ -244,6 +352,10 @@ cpdef np.ndarray decompress_numpy(
         raise TypeError("compressed_data cannot be None")
     if compressed_data is out:
         raise ValueError("Cannot decompress in-place")
+    if shape is not None:
+        _validate_4d_list(shape, "shape")
+    if strides is not None:
+        _validate_4d_list(strides, "strides")
 
     cdef char* comp_data_pointer = compressed_data
     cdef zfp_field* field = zfp_field_alloc()
@@ -263,125 +375,47 @@ cpdef np.ndarray decompress_numpy(
                     "Failed to read zfp header and the ztype/shape/mode "
                     "were not provided"
                 )
-            try:
-                if len(shape) > 4:
-                    raise ValueError(
-                        "User-provided shape has too many dimensions "
-                        "(up to 4 supported)"
-                    )
-                elif len(shape) <= 0:
-                    raise ValueError(
-                        "User-provided shape needs at least one dimension"
-                    )
-                else: # pad the shape with zeros to reach len == 4
-                    zshape = gen_padded_int_list(shape, pad=0, length=4)
-            except TypeError:
-                raise TypeError(
-                    "User-provided shape is not an iterable"
-                )
+            zshape = gen_padded_int_list(shape, pad=0, length=4)
             # set the shape, type, and compression mode
             # strides are set further down
             field[0].nx, field[0].ny, field[0].nz, field[0].nw = zshape
             zfp_field_set_type(field, ztype)
             ndim = sum([1 for x in zshape if x > 0])
-            set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
-        else: # Check that user-inputs match the header
-            if ztype != type_none and ztype is not field[0]._type:
-                raise ValueError(
-                    "User-provided zfp_type does not match zfp_type in header"
-                )
-            # check that the header and user shapes match
-            header_shape = (field[0].nx, field[0].ny, field[0].nz, field[0].nw)
-            header_shape = [x for x in header_shape if x > 0]
-            if shape is not None:
-                if not all([x == y for x, y in zip_longest(shape, header_shape)]):
-                   raise ValueError(
-                       "User-provided shape does not match shape in header"
-                   )
-            # check that setting the compression parameters based on user input
-            # does not change the stream mode (i.e., the compression parameters
-            # provided by the user and in the header match)
-            if tolerance >= 0 or rate >= 0 or precision >= 0:
-                header_mode = zfp_stream_mode(stream)
-                ndim = len(header_shape)
-                set_compression_mode(
-                    stream,
-                    ztype,
-                    ndim,
-                    tolerance,
-                    rate,
-                    precision
-                )
-                mode = zfp_stream_mode(stream)
-                if mode != mode_null and mode != header_mode:
-                    raise ValueError(
-                        "User-provided zfp_mode {} does not match zfp_mode "
-                        "in header {}".format(
-                            mode,
-                            header_mode,
-                        )
-                    )
-            # check that the shape and strides have the same number of dimensions
-            if shape is not None and sum(strides) > 0:
-                stride_dims = sum([1 for x in strides if x > 0])
-                shape_dims = sum([1 for x in shape if x > 0])
-                if len(strides) != len(shape):
-                    raise ValueError(
-                        "Mis-match in shape and stride lengths"
-                    )
-        try:
-            if len(strides) > 4:
-                raise ValueError(
-                    "User-provided strides has too many dimensions "
-                    "(up to 4 supported)"
-                )
-            elif len(strides) <= 0:
-                raise ValueError(
-                        "User-provided strides needs at least one dimension"
-                )
-            else: # pad the shape with zeros to reach len == 4
-                strides = gen_padded_int_list(strides, pad=0, length=4)
-        except TypeError:
-            raise TypeError(
-                "User-provided strides is not an iterable"
+            _set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
+        else:
+            # zfp_read_header should have taken care of setting the metadata
+            # correctly, but check that user inputs match the header
+            _validate_userinput_matches_header(
+                field,
+                stream,
+                out,
+                ztype,
+                shape,
+                strides,
+                tolerance,
+                rate,
+                precision
             )
 
+        # pad the shape with zeros to reach len == 4
+        strides = gen_padded_int_list(strides, pad=0, length=4)
         field[0].sx, field[0].sy, field[0].sz, field[0].sw = strides
 
         if out is None:
             output = np.asarray(_decompress_with_view(field, stream))
         else:
-            header_dtype = ztype_to_dtype(field[0]._type)
-            header_shape = (field[0].nx, field[0].ny, field[0].nz, field[0].nw)
-            header_shape = [x for x in header_shape if x > 0]
             if isinstance(out, np.ndarray):
-                if out.dtype != header_dtype:
-                    raise ValueError(
-                        "Out ndarray has dtype {} but decompression is using "
-                        "{}".format(
-                            out.dtype,
-                            header_dtype
-                        )
-                    )
-                numpy_shape = [int(x) for x in out.shape[:ndim]]
-                if not all(
-                        [x == y for x, y in
-                         zip_longest(numpy_shape, header_shape)
-                        ]
-                ):
-                    raise ValueError(
-                        "Out ndarray has shape {} but decompression is using "
-                        "{}".format(
-                            numpy_shape,
-                            header_shape
-                        )
-                    )
                 output = out
             else:
+                header_dtype = ztype_to_dtype(field[0]._type)
+                header_shape = (field[0].nx, field[0].ny, field[0].nz, field[0].nw)
+                header_shape = [x for x in header_shape if x > 0]
+
                 output = np.frombuffer(out, dtype=header_dtype)
                 output = output.reshape(header_shape)
 
             _decompress_with_user_array(field, stream, <void *>output.data)
+
     finally:
         zfp_field_free(field)
         zfp_stream_close(stream)
