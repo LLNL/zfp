@@ -164,22 +164,23 @@ cpdef bytes compress_numpy(
     # store the compressed array
     cdef bytes compress_str = None
     cdef size_t maxsize = zfp_stream_maximum_size(stream, field)
-    with Memory(maxsize) as data:
-        bstream = stream_open(data, maxsize)
-        zfp_stream_set_bit_stream(stream, bstream)
-        zfp_stream_rewind(stream)
-        # write the full header so we can reconstruct the numpy array on
-        # decompression
-        if write_header:
-            zfp_write_header(stream, field, HEADER_FULL)
-        with nogil:
-            compressed_size = zfp_compress(stream, field)
-        # copy the compressed data into a perfectly sized bytes object
-        compress_str = (<char *>data)[:compressed_size]
-
-    zfp_field_free(field)
-    zfp_stream_close(stream)
-    stream_close(bstream)
+    try:
+        with Memory(maxsize) as data:
+            bstream = stream_open(data, maxsize)
+            zfp_stream_set_bit_stream(stream, bstream)
+            zfp_stream_rewind(stream)
+            # write the full header so we can reconstruct the numpy array on
+            # decompression
+            if write_header and zfp_write_header(stream, field, HEADER_FULL) == 0:
+                raise RuntimeError("Failed to write header to stream")
+            with nogil:
+                compressed_size = zfp_compress(stream, field)
+            # copy the compressed data into a perfectly sized bytes object
+            compress_str = (<char *>data)[:compressed_size]
+    finally:
+        zfp_field_free(field)
+        zfp_stream_close(stream)
+        stream_close(bstream)
 
     return compress_str
 
