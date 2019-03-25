@@ -73,9 +73,7 @@ cpdef ztype_to_dtype(zfp_type ztype):
     try:
         return zfp_to_dtype_map[ztype]
     except KeyError:
-        # TODO: is this the correct type?
-        print "Using np.bytes_"
-        return np.bytes_
+        raise ValueError("Unsupported zfp_type {}".format(ztype))
 
 cdef size_t sizeof_ztype(zfp_type ztype):
     if ztype == zfp_type_int32:
@@ -138,9 +136,13 @@ cdef class Memory:
     def __exit__(self, exc_type, exc_value, exc_tb):
         free(self.data)
 
-cpdef bytes compress_numpy(np.ndarray arr, double tolerance = -1,
-                           double rate = -1, int precision = -1,
-                           write_header=True):
+cpdef bytes compress_numpy(
+    np.ndarray arr,
+    double tolerance = -1,
+    double rate = -1,
+    int precision = -1,
+    write_header=True
+):
     # Input validation
     if arr is None:
         raise TypeError("Input array cannot be None")
@@ -180,17 +182,20 @@ cpdef bytes compress_numpy(np.ndarray arr, double tolerance = -1,
 
     return compress_str
 
-cdef np.ndarray _decompress_with_view(zfp_field* field, zfp_stream* stream):
+cdef view.array _decompress_with_view(
+    zfp_field* field,
+    zfp_stream* stream,
+):
     cdef zfp_type ztype = field[0]._type
     dtype = ztype_to_dtype(ztype)
     format_type = dtype_to_format(dtype)
 
     shape = (field[0].nx, field[0].ny, field[0].nz, field[0].nw)
     shape = tuple([x for x in shape if x > 0])
-    num_elements = functools.reduce(operator.mul, shape)
 
-    cdef view.array decomp_arr = view.array(shape, itemsize=sizeof_ztype(ztype),
-                                            format=format_type, mode="fortran",
+    cdef view.array decomp_arr = view.array(shape,
+                                            itemsize=sizeof_ztype(ztype),
+                                            format=format_type,
                                             allocate_buffer=True)
     cdef void* pointer = <void *> decomp_arr.data
     zfp_field_set_pointer(field, pointer)
@@ -227,7 +232,7 @@ cdef set_compression_mode(
 cpdef np.ndarray decompress_numpy(
     bytes compressed_data,
     out=None,
-    ztype=type_none,
+    zfp_type ztype=type_none,
     shape=None,
     strides=[0,0,0,0],
     double tolerance = -1,
@@ -241,8 +246,11 @@ cpdef np.ndarray decompress_numpy(
         raise ValueError("Cannot decompress in-place")
 
     cdef char* comp_data_pointer = compressed_data
-    cdef bitstream* bstream = stream_open(comp_data_pointer, len(compressed_data))
     cdef zfp_field* field = zfp_field_alloc()
+    cdef bitstream* bstream = stream_open(
+        comp_data_pointer,
+        len(compressed_data)
+    )
     cdef zfp_stream* stream = zfp_stream_open(bstream)
     cdef np.ndarray output
 
@@ -356,7 +364,11 @@ cpdef np.ndarray decompress_numpy(
                         )
                     )
                 numpy_shape = [int(x) for x in out.shape[:ndim]]
-                if not all([x == y for x, y in zip_longest(numpy_shape, header_shape)]):
+                if not all(
+                        [x == y for x, y in
+                         zip_longest(numpy_shape, header_shape)
+                        ]
+                ):
                     raise ValueError(
                         "Out ndarray has shape {} but decompression is using "
                         "{}".format(

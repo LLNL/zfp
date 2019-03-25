@@ -143,7 +143,9 @@ cdef validate_mode(zfp.zfp_mode mode):
 
 cdef validate_compress_param(int comp_param):
     if comp_param not in range(3): # i.e., [0, 1, 2]
-        raise ValueError("Unsupported compression parameter number: {}".format(comp_param))
+        raise ValueError(
+            "Unsupported compression parameter number: {}".format(comp_param)
+        )
 
 cpdef getRandNumpyArray(
     int numDims,
@@ -159,9 +161,6 @@ cpdef getRandNumpyArray(
         minTotalElements = 1000000
     elif ztype in [zfp.type_int32, zfp.type_int64]:
         minTotalElements = 4096
-
-    # ztype = zfp.dtype_to_ztype(dtype)
-    # format_type = zfp.dtype_to_format(dtype)
 
     cdef int64_t* outputArrInt64 = NULL
     cdef int32_t* outputArrInt32 = NULL
@@ -179,7 +178,6 @@ cpdef getRandNumpyArray(
                                  &outputArrInt64,
                                  &outputSideLen,
                                  &outputTotalLen)
-        # TODO: all dimensions
         if numDims == 1:
             viewArr = <int64_t[:outputSideLen]> outputArrInt64
         elif numDims == 2:
@@ -237,8 +235,8 @@ cpdef getRandNumpyArray(
 
     np_arr = np.asarray(viewArr)
     return np.lib.stride_tricks.as_strided(
-         np_arr,
-         strides=reversed(np_arr.strides)
+        np_arr,
+        strides=reversed(np_arr.strides)
     )
 
 cpdef uint64_t getChecksumOrigArray(
