@@ -83,5 +83,11 @@ setupFixedAcc1Param(void **state)
   return setupCudaConfig(state, zfp_mode_fixed_accuracy, 1, AS_IS);
 }
 
+static int
+setupReversible(void **state)
+{
+  return setupCudaConfig(state, zfp_mode_reversible, 1, AS_IS);
+}
+
 // end #ifdef ZFP_WITH_CUDA
 #endif

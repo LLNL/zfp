@@ -32,3 +32,6 @@ _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_
 _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupFixedAcc1Param, teardown),
 _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupFixedAcc1Param, teardown),
 #endif
+
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupReversible, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupReversible, teardown),
