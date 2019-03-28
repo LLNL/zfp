@@ -88,14 +88,14 @@ cdef zfp_field* _init_field(np.ndarray arr):
         field = zfp_field_1d(pointer, ztype, shape[0])
         zfp_field_set_stride_1d(field, strides[0])
     elif ndim == 2:
-        field = zfp_field_2d(pointer, ztype, shape[0], shape[1])
-        zfp_field_set_stride_2d(field, strides[0], strides[1])
+        field = zfp_field_2d(pointer, ztype, shape[1], shape[0])
+        zfp_field_set_stride_2d(field, strides[1], strides[0])
     elif ndim == 3:
-        field = zfp_field_3d(pointer, ztype, shape[0], shape[1], shape[2])
-        zfp_field_set_stride_3d(field, strides[0], strides[1], strides[2])
+        field = zfp_field_3d(pointer, ztype, shape[2], shape[1], shape[0])
+        zfp_field_set_stride_3d(field, strides[2], strides[1], strides[0])
     elif ndim == 4:
-        field = zfp_field_4d(pointer, ztype, shape[0], shape[1], shape[2], shape[3])
-        zfp_field_set_stride_4d(field, strides[0], strides[1], strides[2], strides[3])
+        field = zfp_field_4d(pointer, ztype, shape[3], shape[2], shape[1], shape[0])
+        zfp_field_set_stride_4d(field, strides[3], strides[2], strides[1], strides[0])
     else:
         raise RuntimeError("Greater than 4 dimensions not supported")
 
@@ -178,7 +178,7 @@ cdef view.array _decompress_with_view(
     dtype = ztype_to_dtype(ztype)
     format_type = dtype_to_format(dtype)
 
-    shape = (field[0].nx, field[0].ny, field[0].nz, field[0].nw)
+    shape = (field[0].nw, field[0].nz, field[0].ny, field[0].nx)
     shape = tuple([x for x in shape if x > 0])
 
     cdef view.array decomp_arr = view.array(

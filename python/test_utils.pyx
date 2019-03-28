@@ -233,11 +233,7 @@ cpdef getRandNumpyArray(
     else:
         raise ValueError("Unknown zfp_type: {}".format(ztype))
 
-    np_arr = np.asarray(viewArr)
-    return np.lib.stride_tricks.as_strided(
-        np_arr,
-        strides=reversed(np_arr.strides)
-    )
+    return np.asarray(viewArr)
 
 cpdef uint64_t getChecksumOrigArray(
     int dims,

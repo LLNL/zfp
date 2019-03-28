@@ -20,10 +20,12 @@ class TestNumpy(unittest.TestCase):
     def test_different_dimensions(self):
         for dimensions in range(1, 5):
             shape = [5] * dimensions
-
             c_array = np.random.rand(*shape)
             self.lossless_round_trip(c_array)
 
+            shape = range(2, 2 + dimensions)
+            c_array = np.random.rand(*shape)
+            self.lossless_round_trip(c_array)
 
     def test_different_dtypes(self):
         shape = (5, 5)
