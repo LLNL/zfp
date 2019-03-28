@@ -64,7 +64,8 @@ populateInitialArraySpecial(Scalar** dataArrPtr, int index)
   *dataArrPtr = malloc(sizeof(Scalar) * BLOCK_SIZE);
   assert_non_null(*dataArrPtr);
 
-  for (size_t i = 0; i < BLOCK_SIZE; i++) {
+  size_t i;
+  for (i = 0; i < BLOCK_SIZE; i++) {
 #ifdef FL_PT_DATA
     // generate special values
     if ((i & 3u) == 0) {

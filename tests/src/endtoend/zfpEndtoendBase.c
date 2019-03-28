@@ -590,11 +590,12 @@ assertZfpCompressDecompressArrayMatchesBitForBit(void **state)
         const size_t* n = bundle->randomGenArrSideLen;
         int strides[4];
         ptrdiff_t offset = 0;
+        size_t i, j, k, l;
         zfp_field_stride(field, strides);
-        for (size_t l = (n[3] ? n[3] : 1); l--; offset += strides[3] - n[2]*strides[2]) {
-          for (size_t k = (n[2] ? n[2] : 1); k--; offset += strides[2] - n[1]*strides[1]) {
-            for (size_t j = (n[1] ? n[1] : 1); j--; offset += strides[1] - n[0]*strides[0]) {
-              for (size_t i = (n[0] ? n[0] : 1); i--; offset += strides[0]) {
+        for (l = (n[3] ? n[3] : 1); l--; offset += strides[3] - n[2]*strides[2]) {
+          for (k = (n[2] ? n[2] : 1); k--; offset += strides[2] - n[1]*strides[1]) {
+            for (j = (n[1] ? n[1] : 1); j--; offset += strides[1] - n[0]*strides[0]) {
+              for (i = (n[0] ? n[0] : 1); i--; offset += strides[0]) {
                 assert_memory_equal(&bundle->compressedArr[offset], &bundle->decompressedArr[offset], sizeof(Scalar));
               }
             }
