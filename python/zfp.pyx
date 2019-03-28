@@ -333,7 +333,7 @@ cdef _validate_userinput_matches_header(
             )
 
 
-cpdef np.ndarray decompress_numpy(
+cpdef np.ndarray _decompress(
     bytes compressed_data,
     out=None,
     zfp_type ztype=type_none,
@@ -418,3 +418,8 @@ cpdef np.ndarray decompress_numpy(
         stream_close(bstream)
 
     return output
+
+cpdef np.ndarray decompress_numpy(
+    bytes compressed_data,
+):
+    return _decompress(compressed_data)

@@ -27,6 +27,7 @@ class TestNumpy(unittest.TestCase):
                         ("interleaved", test_utils.stride_interleaved),
                         #("reversed", test_utils.stride_reversed),
                 ]:
+                    # permuting a 1D array is not supported
                     if stride_config == test_utils.stride_permuted and ndims == 1:
                         continue
                     random_array = test_utils.generateStridedRandomNumpyArray(
@@ -67,32 +68,29 @@ class TestNumpy(unittest.TestCase):
                             self.assertEqual(compressed_checksum, actual_checksum)
 
                             # Decompression
-                            zshape = [int(x) for x in random_array.shape]
-                            decompression_kwargs = dict(
-                                compression_kwargs,
-                                ztype=ztype,
-                                shape=zshape,
-                            )
-                            if stride_config == test_utils.stride_permuted:
-                                # test decompressing into a numpy array
-                                # created by the "user"
-                                decompressed_array = np.empty_like(random_array)
-                                decompression_kwargs['out'] = decompressed_array
-
-                            decompressed_array = zfp.decompress_numpy(
-                                compressed_array,
-                                **decompression_kwargs
-                            )
-                            actual_checksum = test_utils.hashNumpyArray(
-                                decompressed_array
-                            )
                             decompressed_checksum = test_utils.getChecksumDecompArray(
                                 ndims,
                                 ztype,
                                 mode,
                                 compress_param_num
                             )
+
+                            # Decompression using the "public" interface
+                            # requires a header, so re-compress with the header
+                            # included in the stream
+                            compressed_array = zfp.compress_numpy(
+                                random_array,
+                                write_header=True,
+                                **compression_kwargs
+                            )
+                            decompressed_array = zfp.decompress_numpy(
+                                compressed_array,
+                            )
+                            actual_checksum = test_utils.hashNumpyArray(
+                                decompressed_array
+                            )
                             self.assertEqual(decompressed_checksum, actual_checksum)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
