@@ -5,9 +5,46 @@ import unittest
 import zfp
 import test_utils
 import numpy as np
+try:
+    from packaging.version import parse as version_parse
+except ImportError:
+    version_parse = None
 
 
 class TestNumpy(unittest.TestCase):
+    def lossless_round_trip(self, orig_array):
+        compressed_array = zfp.compress_numpy(orig_array, write_header=True)
+        decompressed_array = zfp.decompress_numpy(compressed_array)
+        self.assertIsNone(np.testing.assert_array_equal(decompressed_array, orig_array))
+
+    def test_different_dimensions(self):
+        for dimensions in range(1, 5):
+            shape = [5] * dimensions
+
+            c_array = np.random.rand(*shape)
+            self.lossless_round_trip(c_array)
+
+
+    def test_different_dtypes(self):
+        shape = (5, 5)
+        num_elements = shape[0] * shape[1]
+
+        for dtype in [np.float32, np.float64]:
+            elements = np.random.random_sample(num_elements)
+            elements = elements.astype(dtype, casting="same_kind")
+            array = np.reshape(elements, newshape=shape)
+            self.lossless_round_trip(array)
+
+        if (version_parse is not None and
+            (version_parse(np.__version__) >= version_parse("1.11.0"))
+        ):
+            for dtype in [np.int32, np.int64]:
+                array = np.random.randint(2**30, size=shape, dtype=dtype)
+                self.lossless_round_trip(array)
+        else:
+            array = np.random.randint(2**30, size=shape)
+            self.lossless_round_trip(array)
+
     def test_utils(self):
         for ndims in range(1, 5):
             for ztype, ztype_str in [

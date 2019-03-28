@@ -135,9 +135,7 @@ cpdef bytes compress_numpy(
     if arr is None:
         raise TypeError("Input array cannot be None")
     num_params_set = sum([1 for x in [tolerance, rate, precision] if x >= 0])
-    if num_params_set == 0:
-        raise ValueError("Either tolerance, rate, or precision must be set")
-    elif num_params_set > 1:
+    if num_params_set > 1:
         raise ValueError("Only one of tolerance, rate, or precision can be set")
 
     # Setup zfp structs to begin compression
@@ -223,7 +221,7 @@ cdef _set_compression_mode(
     elif precision >= 0:
         zfp_stream_set_precision(stream, precision)
     else:
-        raise ValueError("Either tolerance, rate, or precision must be set")
+        zfp_stream_set_reversible(stream)
 
 cdef _validate_4d_list(in_list, list_name):
     # Validate that the input list is either a valid list for strides or shape

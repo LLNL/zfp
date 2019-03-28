@@ -46,6 +46,7 @@ cdef extern from "zfp.h":
     cython.uint zfp_stream_set_precision(zfp_stream* stream, cython.uint precision);
     double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance);
     double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, cython.uint dims, int wra);
+    void zfp_stream_set_reversible(zfp_stream* stream);
     stdint.uint64_t zfp_stream_mode(const zfp_stream* zfp);
     zfp_mode zfp_stream_set_mode(zfp_stream* stream, stdint.uint64_t mode);
     zfp_field* zfp_field_alloc();
