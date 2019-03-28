@@ -6,6 +6,14 @@ add_executable(testZfpStream testZfpStream.c)
 target_link_libraries(testZfpStream cmocka zfp)
 add_test(NAME testZfpStream COMMAND testZfpStream)
 
+add_executable(rose_testZfpHeader rose_testZfpHeader.c)
+target_link_libraries(rose_testZfpHeader cmocka zfp zFORp)
+add_test(NAME rose_testZfpHeader COMMAND rose_testZfpHeader)
+
+add_executable(rose_testZfpStream rose_testZfpStream.c)
+target_link_libraries(rose_testZfpStream cmocka zfp zFORp)
+add_test(NAME rose_testZfpStream COMMAND rose_testZfpStream)
+
 if(HAVE_LIBM_MATH)
   target_link_libraries(testZfpHeader m)
   target_link_libraries(testZfpStream m)
