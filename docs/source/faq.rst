@@ -694,16 +694,23 @@ are leading zeros.
 
 Q21: *Does zfp support lossless compression?*
 
-A: Yes, and no.  For integer data, |zfp| can with few exceptions ensure
-lossless compression.  For a given *n*-bit integer type (*n* = 32 or
-*n* = 64), consider compressing *p*-bit signed integer data, with the sign
-bit counting toward the precision.  In other words, there are exactly
-2\ :sup:`p` possible signed integers.  If the integers are unsigned, then
-subtract 2\ :sup:`p-1` first so that they range from |minus|\ 2\ :sup:`p-1`
-to 2\ :sup:`p-1` - 1.
+A: Yes.  As of |zfp| |revrelease|, bit-for-bit lossless compression is
+supported via the :ref:`reversible compression mode <mode-reversible>`.
+This mode supports both integer and floating-point data.
 
-Lossless compression is achieved by first promoting the *p*-bit integers to
-*n* - 1 bits (see :ref:`Q8 <q-integer>`) such that all integer values fall in
+In addition, it is sometimes possible to ensure lossless compression using
+|zfp|'s fixed-precision and fixed-accuracy modes.  For integer data, |zfp|
+can with few exceptions ensure lossless compression in
+:ref:`fixed-precision mode <mode-fixed-precision>`.
+For a given *n*-bit integer type (*n* = 32 or *n* = 64), consider compressing
+*p*-bit signed integer data, with the sign bit counting toward the precision.
+In other words, there are exactly 2\ :sup:`p` possible signed integers.  If
+the integers are unsigned, then subtract 2\ :sup:`p-1` first so that they
+range from |minus|\ 2\ :sup:`p-1` to 2\ :sup:`p-1` - 1.
+
+Lossless integer compression in fixed-precision mode is achieved by first
+promoting the *p*-bit integers to *n* - 1 bits (see :ref:`Q8 <q-integer>`)
+such that all integer values fall in
 [|minus|\ 2\ :sup:`30`, +2\ :sup:`30`), when *n* = 32, or in
 [|minus|\ 2\ :sup:`62`, +2\ :sup:`62`), when *n* = 64.  In other words, the
 *p*-bit integers first need to be shifted left by *n* - *p* - 1 bits.  After
@@ -728,12 +735,11 @@ and 64-bit integer types.
 
 Although lossless compression is possible as long as the precision constraint
 is met, the precision needed to guarantee no loss is generally much higher
-than the precision intrinsic in the uncompressed data, making lossless
-compression via |zfp| not competitive with compressors designed for lossless
-compression.  Lossy integer compression with zfp can, on the other hand, work
-fairly well by using fewer than q bits of precision.
+than the precision intrinsic in the uncompressed data.  Therefore, we
+recommend using the :ref:`reversible mode <mode-reversible>` when lossless
+compression is desired.
 
-Furthermore, the minimum precision, *q*, given above is often larger than what
+The minimum precision, *q*, given above is often larger than what
 is necessary in practice.  There are worst-case inputs that do require such
 large *q* values, but they are quite rare.
 
@@ -743,8 +749,10 @@ applied *d* times in *d* dimensions.  Each average of two *p*-bit numbers
 requires *p* + 1 bits to avoid loss, and each transform can be thought of
 involving up to four such averaging operations.
 
-For floating-point data, fully lossless compression with |zfp| is unlikely,
-albeit possible.  If the dynamic range is low or varies slowly such that values
+For floating-point data, fully lossless compression with |zfp| usually
+requires :ref:`reversible mode <mode-reversible>`, as the other compression
+modes are unlikely to guarantee bit-for-bit exact reconstructions.  However,
+if the dynamic range is low or varies slowly such that values
 within a |4powd| block have the same or similar exponent, then the
 precision gained by discarding the 8 or 11 bits of the common floating-point
 exponents can offset the precision lost in the decorrelating transform.  For
@@ -755,6 +763,8 @@ and *q* = 55 + 4 |times| *d* |leq| 64 bits of precision for double-precision
 data.  Of course, the constraint imposed by the available integer precision
 *n* implies that lossless compression of such data is possible only in 1D for
 single-precision data and only in 1D and 2D for double-precision data.
+Finally, to preserve special values such as negative zero, plus and minues
+infinity, and NaNs, reversible mode is needed.
 
 -------------------------------------------------------------------------------
 

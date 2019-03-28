@@ -20,3 +20,4 @@
 .. |viewsrelease| replace:: 0.5.4
 .. |cudarelease| replace:: 0.5.4
 .. |cfprelease| replace:: 0.5.4
+.. |revrelease| replace:: 0.5.5

@@ -9,12 +9,13 @@ Compression Modes
 
 |zfp| accepts one or more parameters for specifying how the data is to be
 compressed to meet various constraints on accuracy or size.  At a high
-level, there are four different compression modes that are mutually
+level, there are five different compression modes that are mutually
 exclusive:
 :ref:`expert <mode-expert>`,
 :ref:`fixed-rate <mode-fixed-rate>`,
-:ref:`fixed-precision <mode-fixed-precision>`, and
-:ref:`fixed-accuracy <mode-fixed-accuracy>` mode.
+:ref:`fixed-precision <mode-fixed-precision>`,
+:ref:`fixed-accuracy <mode-fixed-accuracy>`, and
+:ref:`reversible <mode-reversible>` mode.
 The user has to select one of these modes and its corresponding parameters.
 In streaming I/O applications, the
 :ref:`fixed-accuracy mode <mode-fixed-accuracy>` is preferred, as
@@ -127,9 +128,9 @@ bits per *value*::
 
   rate = maxbits / 4^d
 
-This rate is specified in the :ref:`zfp executable <zfpcmd>` via the -r
-option, and programmatically via :c:func:`zfp_stream_set_rate`, as a
-floating-point value.  Fixed-rate mode can also be achieved via the
+This rate is specified in the :ref:`zfp executable <zfpcmd>` via the
+:option:`-r` option, and programmatically via :c:func:`zfp_stream_set_rate`,
+as a floating-point value.  Fixed-rate mode can also be achieved via the
 expert mode interface by setting
 ::
 
@@ -159,7 +160,7 @@ Fixed-Precision Mode
 In fixed-precision mode, the number of bits used to encode a block may
 vary, but the number of bit planes (i.e. the precision) encoded for the
 transform coefficients is fixed.  To achieve the desired precision,
-use option -p with the :ref:`zfp executable <zfpcmd>` or call
+use option :option:`-p` with the :ref:`zfp executable <zfpcmd>` or call
 :c:func:`zfp_stream_set_precision`.  In expert mode, fixed precision is
 achieved by specifying the precision in :c:member:`zfp_stream.maxprec`
 and fully relaxing the size constraints, i.e.,
@@ -195,7 +196,7 @@ machine epsilon relative to the largest value within a block.)  This error
 tolerance is not always tight (especially for 3D arrays), but can
 conservatively be set so that even for worst-case inputs the error
 tolerance is respected.  To achieve fixed accuracy to within 'tolerance',
-use option -a with the :ref:`zfp executable <zfpcmd>` or call
+use option :option:`-a` with the :ref:`zfp executable <zfpcmd>` or call
 :c:func:`zfp_stream_set_accuracy`.  The corresponding expert mode
 parameters are::
 
@@ -205,7 +206,36 @@ parameters are::
   minexp = floor(log2(tolerance))
 
 As in fixed-precision mode, the number of bits used per block is not
-fixed but is dictated by the data.  Use tolerance = 0 to achieve
-near-lossless compression.  Fixed-accuracy mode gives the highest quality
+fixed but is dictated by the data.  Use *tolerance* = 0 to achieve
+near-lossless compression (see :ref:`mode-reversible` for guaranteed
+lossless compression).  Fixed-accuracy mode gives the highest quality
 (in terms of absolute error) for a given compression rate, and is
 preferable when random access is not needed.
+
+.. index::
+   single: Compression mode; Reversible mode
+   single: Lossless compression
+.. _mode-reversible:
+
+Reversible Mode
+---------------
+
+As of |zfp| |revrelease|, reversible (lossless) compression is supported.
+As with the other compression modes, each block is compressed and decompressed
+independently, but reversible mode uses a different compression algorithm
+that ensures a bit-for-bit identical reconstruction of integer and
+floating-point data.  For IEEE-754 floating-point data, reversible mode
+preserves special values such as subnormals, infinities, NaNs, and
+positive and negative zero.
+
+The expert mode parameters corresponding to reversible mode are::
+
+  minbits = ZFP_MIN_BITS
+  maxbits = ZFP_MAX_BITS
+  maxprec = ZFP_MAX_PREC
+  minexp < ZFP_MIN_EXP
+
+Reversible mode is enabled via :c:func:`zfp_set_reversible` and through
+the :option:`-R` command-line option in the :ref:`zfp executable <zfpcmd>`.
+It is supported by both the low- and high-level interfaces and by the serial
+and OpenMP execution policies, but it is not yet implemented in CUDA.

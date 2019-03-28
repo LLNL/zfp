@@ -20,15 +20,11 @@ important features, including:
   accuracy in nearby valid values.  See :ref:`FAQ #7 <q-missing>`.
 
 - **Support for NaNs and infinities**.  Similar to missing values, some
-  applications store special IEEE floating-point values that are not yet
-  supported by |zfp|.  In fact, the presence of such values will currently
-  result in undefined behavior and loss of data for all values within a
-  block that contains non-finite values.
-
-- **Lossless compression**.  Although |zfp| can usually limit compression
-  errors to within floating-point roundoff error, some applications demand
-  bit-for-bit accurate reconstruction.  Strategies for lossless compression
-  are currently being evaluated.
+  applications store special IEEE floating-point values that are supported
+  by |zfp| only in :ref:`reversible mode <mode-reversible>`.
+  In fact, for all lossy compression modes, the presence of such values will
+  currently result in undefined behavior and loss of data for all values
+  within a block that contains non-finite values.
 
 - **Progressive decompression**.  Streaming large data sets from remote
   storage for visualization can be time consuming, even when the data is
