@@ -1,4 +1,4 @@
-static const uint64 _4dDoubleChecksums[25] = {
+static const uint64 _4dDoubleChecksums[35] = {
 UINT64C(0x61f9b8c3ddcbe9b),
 UINT64C(0x3bd0d8f2da9e9acf),
 UINT64C(0x1dbd79f0a52ec95b),
@@ -24,4 +24,14 @@ UINT64C(0xb8f1525cd842fbd5),
 UINT64C(0xb14abd4386fddb81),
 UINT64C(0x249da35a6e8ca411),
 UINT64C(0xdafd40ed6a04ab4a),
+UINT64C(0x124ea49d),
+UINT64C(0xf505d6d583113df9),
+UINT64C(0x8126589e360ef55),
+UINT64C(0x52300f134ea45f5e),
+UINT64C(0x9e3663c6201cc0f6),
+UINT64C(0x1fda09d432768733),
+UINT64C(0x97cb64bf1f05dd76),
+UINT64C(0x4ca76064ebdd3c36),
+UINT64C(0xe052a4a55853b1e1),
+UINT64C(0x757fede7476e0c0),
 };
