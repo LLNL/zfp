@@ -51,7 +51,8 @@ setup(void **state)
   struct setupVars *bundle = malloc(sizeof(struct setupVars));
   assert_non_null(bundle);
 
-  bundle->ZFP_STREAM = zfp_stream_open(NULL);
+  void* bs = NULL;
+  bundle->ZFP_STREAM = zfp_stream_open(bs);
 
   *state = bundle;
 
@@ -85,7 +86,11 @@ given_zfpStreamSetWithInvalidParams_when_zfpStreamCompressionMode_expect_returns
   assert_int_equal(zfp_stream_compression_mode(bundle->ZFP_STREAM), zfp_mode_expert);
 
   // ensure this config would be rejected by zfp_stream_set_params()
-  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, stream->maxbits + 1, stream->maxbits, stream->maxprec, stream->minexp), 0);
+  uint minbits = stream->maxbits + 1;
+  uint maxbits = stream->maxbits;
+  uint maxprec = stream->maxprec;
+  int minexp = stream->minexp;
+  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, minbits, maxbits, maxprec, minexp), 0);
   stream->minbits = stream->maxbits + 1;
 
   assert_int_equal(zfp_stream_compression_mode(bundle->ZFP_STREAM), zfp_mode_null);
@@ -94,7 +99,8 @@ given_zfpStreamSetWithInvalidParams_when_zfpStreamCompressionMode_expect_returns
 static void
 setNonExpertMode(zfp_struct_container* containerPtr)
 {
-  zfp_stream_set_precision(ZFP_STREAM_FROM_PTR, ZFP_MAX_PREC - 2);
+  uint prec = ZFP_MAX_PREC - 2;
+  zfp_stream_set_precision(ZFP_STREAM_FROM_PTR, prec);
   assert_int_not_equal(zfp_stream_compression_mode(ZFP_STREAM_FROM_PTR), zfp_mode_expert);
 }
 
@@ -102,7 +108,11 @@ static void
 setDefaultCompressionParams(zfp_struct_container* containerPtr)
 {
   /* reset to expert mode */
-  assert_int_equal(zfp_stream_set_params(ZFP_STREAM_FROM_PTR, ZFP_MIN_BITS, ZFP_MAX_BITS, ZFP_MAX_PREC, ZFP_MIN_EXP), 1);
+  uint minbits = ZFP_MIN_BITS;
+  uint maxbits = ZFP_MAX_BITS;
+  uint maxprec = ZFP_MAX_PREC;
+  int minexp = ZFP_MIN_EXP;
+  assert_int_equal(zfp_stream_set_params(ZFP_STREAM_FROM_PTR, minbits, maxbits, maxprec, minexp), 1);
   assert_int_equal(zfp_stream_compression_mode(ZFP_STREAM_FROM_PTR), zfp_mode_expert);
 }
 
@@ -118,11 +128,13 @@ given_zfpStreamSetWithFixedRate_when_zfpStreamCompressionMode_expect_returnsFixe
   for (zfpType = 1; zfpType <= 4; zfpType++) {
     for (dims = 1; dims <= 4; dims++) {
       for (rate = 1; rate <= ((zfpType % 2) ? 32 : 64); rate++) {
+        double r = (double)rate;
+
         for (wra = 0; wra <= 1; wra++) {
           setDefaultCompressionParams(&bundle->container);
 
           /* set fixed-rate, assert fixed-rate identified */
-          zfp_stream_set_rate(bundle->ZFP_STREAM, rate, zfpType, dims, wra);
+          zfp_stream_set_rate(bundle->ZFP_STREAM, r, zfpType, dims, wra);
 
           zfp_mode mode = zfp_stream_compression_mode(bundle->ZFP_STREAM);
           if (mode != zfp_mode_fixed_rate) {
@@ -163,7 +175,8 @@ given_zfpStreamSetWithMaxPrecision_when_zfpStreamCompressionMode_expect_returnsE
   struct setupVars *bundle = *state;
   setDefaultCompressionParams(&bundle->container);
 
-  zfp_stream_set_precision(bundle->ZFP_STREAM, ZFP_MAX_PREC);
+  uint prec = ZFP_MAX_PREC;
+  zfp_stream_set_precision(bundle->ZFP_STREAM, prec);
   assert_int_equal(zfp_stream_compression_mode(bundle->ZFP_STREAM), zfp_mode_expert);
 }
 
@@ -178,7 +191,8 @@ given_zfpStreamSetWithFixedAccuracy_when_zfpStreamCompressionMode_expect_returns
     setDefaultCompressionParams(&bundle->container);
 
     /* set fixed-accuracy, assert fixed-accuracy identified */
-    zfp_stream_set_accuracy(bundle->ZFP_STREAM, ldexp(1., accExp));
+    double acc = ldexp(1., accExp);
+    zfp_stream_set_accuracy(bundle->ZFP_STREAM, acc);
 
     zfp_mode mode = zfp_stream_compression_mode(bundle->ZFP_STREAM);
     if (mode != zfp_mode_fixed_accuracy) {
@@ -195,7 +209,11 @@ given_zfpStreamSetWithExpertParams_when_zfpStreamCompressionMode_expect_returnsE
   setNonExpertMode(&bundle->container);
 
   /* successfully set custom expert params, assert change */
-  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
+  uint minbits = MIN_BITS;
+  uint maxbits = MAX_BITS;
+  uint maxprec = MAX_PREC;
+  int minexp = MIN_EXP;
+  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, minbits, maxbits, maxprec, minexp), 1);
   assert_int_equal(zfp_stream_compression_mode(bundle->ZFP_STREAM), zfp_mode_expert);
 }
 
@@ -242,9 +260,11 @@ given_zfpStreamSetRateModeVal_when_zfpStreamSetMode_expect_returnsFixedRate_and_
   for (zfpType = 1; zfpType <= 4; zfpType++) {
     for (dims = 1; dims <= 4; dims++) {
       for (rate = 1; rate <= ((zfpType % 2) ? 32 : 64); rate++) {
+        double r = (double)rate;
+
         for (wra = 0; wra <= 1; wra++) {
           /* set fixed-rate mode */
-          zfp_stream_set_rate(bundle->ZFP_STREAM, rate, zfpType, dims, wra);
+          zfp_stream_set_rate(bundle->ZFP_STREAM, r, zfpType, dims, wra);
           assert_int_equal(zfp_stream_compression_mode(bundle->ZFP_STREAM), zfp_mode_fixed_rate);
 
           /* get mode and compression params */
@@ -325,12 +345,14 @@ given_fixedPrecisionMaxPrecModeVal_when_zfpStreamSetMode_expect_returnsExpert_an
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->ZFP_STREAM;
 
-  zfp_stream_set_precision(bundle->ZFP_STREAM, ZFP_MAX_PREC);
+  uint prec = ZFP_MAX_PREC;
+  zfp_stream_set_precision(bundle->ZFP_STREAM, prec);
   assert_int_equal(zfp_stream_compression_mode(bundle->ZFP_STREAM), zfp_mode_expert);
   uint64 mode = zfp_stream_mode(bundle->ZFP_STREAM);
 
   /* set non-expert mode */
-  zfp_stream_set_precision(bundle->ZFP_STREAM, ZFP_MAX_PREC - 2);
+  prec = ZFP_MAX_PREC - 2;
+  zfp_stream_set_precision(bundle->ZFP_STREAM, prec);
   assert_int_not_equal(zfp_stream_compression_mode(bundle->ZFP_STREAM), zfp_mode_expert);
 
   /* see that mode is updated correctly */
@@ -351,7 +373,8 @@ given_zfpStreamSetAccuracyModeVal_when_zfpStreamSetMode_expect_returnsFixedAccur
 
   int accExp;
   for (accExp = MAX_EXP; (accExp > ZFP_MIN_EXP) && (ldexp(1., accExp) != 0.); accExp--) {
-    zfp_stream_set_accuracy(bundle->ZFP_STREAM, ldexp(1., accExp));
+    double acc = ldexp(1., accExp);
+    zfp_stream_set_accuracy(bundle->ZFP_STREAM, acc);
     assert_int_equal(zfp_stream_compression_mode(bundle->ZFP_STREAM), zfp_mode_fixed_accuracy);
 
     /* get mode and compression params */
@@ -396,7 +419,11 @@ assertCompressParamsBehaviorThroughSetMode(void **state, zfp_mode expectedMode)
   uint64 mode = zfp_stream_mode(bundle->ZFP_STREAM);
 
   // reset params
-  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, ZFP_MIN_BITS, ZFP_MAX_BITS, ZFP_MAX_PREC, ZFP_MIN_EXP), 1);
+  uint minbits = ZFP_MIN_BITS;
+  uint maxbits = ZFP_MAX_BITS;
+  uint maxprec = ZFP_MAX_PREC;
+  int minexp = ZFP_MIN_EXP;
+  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, minbits, maxbits, maxprec, minexp), 1);
   assert_int_equal(zfp_stream_set_mode(bundle->ZFP_STREAM, mode), expectedMode);
 
   if (expectedMode == zfp_mode_null) {
@@ -416,7 +443,12 @@ static void
 given_customCompressParamsModeVal_when_zfpStreamSetMode_expect_returnsExpert_and_compressParamsConserved(void **state)
 {
   struct setupVars *bundle = *state;
-  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, MIN_BITS, MAX_BITS, MAX_PREC, MIN_EXP), 1);
+
+  uint minbits = ZFP_MIN_BITS;
+  uint maxbits = ZFP_MAX_BITS;
+  uint maxprec = ZFP_MAX_PREC;
+  int minexp = ZFP_MIN_EXP;
+  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, minbits, maxbits, maxprec, minexp), 1);
 
   assertCompressParamsBehaviorThroughSetMode(state, zfp_mode_expert);
 }
@@ -428,7 +460,12 @@ given_invalidCompressParamsModeVal_when_zfpStreamSetMode_expect_returnsNullMode_
   zfp_stream* stream = bundle->ZFP_STREAM;
 
   /* set invalid compress params */
-  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, MAX_BITS + 1, MAX_BITS, MAX_PREC, MIN_EXP), 0);
+  uint minbits = MAX_BITS + 1;
+  uint maxbits = MAX_BITS;
+  uint maxprec = MAX_PREC;
+  int minexp = MIN_EXP;
+  assert_int_equal(zfp_stream_set_params(bundle->ZFP_STREAM, minbits, maxbits, maxprec, minexp), 0);
+
   stream->minbits = MAX_BITS + 1;
   stream->maxbits = MAX_BITS;
   stream->maxprec = MAX_PREC;
