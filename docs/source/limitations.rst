@@ -24,6 +24,11 @@ that will address some of these limitations.
   extensions to other floating-point formats should be possible with
   minor effort.
 
+- The optional |zfp| :ref:`header <zfp-header>` supports arrays with at
+  most 2\ :sup:`48` elements.  Each dimension is limited to 2\ :sup:`48/d`
+  elements in a *d*-dimensional array, i.e., 2\ :sup:`48`, 2\ :sup:`24`,
+  2\ :sup:`16`, and 2\ :sup:`12` for 1D through 4D arrays, respectively.
+
 - Conventional pointers and references to individual array elements are
   not available.  That is, constructions like :code:`double* ptr = &a[i];`
   are not possible when :code:`a` is a |zfp| array.  However, as of

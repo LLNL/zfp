@@ -58,6 +58,14 @@ Macros
   of doubles, is given by :c:macro:`ZFP_MAX_BITS`.  See also
   :c:type:`zfp_stream`.
 
+.. c:macro:: ZFP_META_NULL
+
+  Null representation of the 52-bit encoding of field metadata.  This value
+  is returned by :c:func:`zfp_field_metadata` when the field metadata cannot
+  be encoded in 64 bits, such as when the array dimensions are too large
+  (see :ref:`limitations`).  In addition to signaling error, this value
+  is guaranteed not to represent valid metadata.
+
 .. _header-macros:
 .. c:macro:: ZFP_HEADER_MAGIC
 .. c:macro:: ZFP_HEADER_META
@@ -495,6 +503,9 @@ Array Metadata
 .. c:function:: uint64 zfp_field_metadata(const zfp_field* field)
 
   Return 52-bit compact encoding of the scalar type and array dimensions.
+  This function returns :c:macro:`ZFP_META_NULL` on failure, e.g., if the
+  array dimensions are :ref:`too large <limitations>` to be encoded in 52
+  bits.
 
 .. _zfp_field_set:
 
@@ -572,12 +583,15 @@ Compression and Decompression
   i.e. the current byte offset or the number of compressed bytes consumed.
   Zero is returned if decompression failed.
 
+.. _zfp-header:
 .. c:function:: size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, uint mask)
 
   Write an optional header to the stream that encodes compression parameters,
   array metadata, etc.  The header information written is determined by the
   bit *mask* (see :c:macro:`macros <ZFP_HEADER_MAGIC>`).  The return value is
-  the number of bits written, or zero upon failure.
+  the number of bits written, or zero upon failure.  See the
+  :ref:`limitations <limitations>` section for limits on the maximum array
+  size supported by the header.
 
 .. c:function:: size_t zfp_read_header(zfp_stream* stream, zfp_field* field, uint mask)
 

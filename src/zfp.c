@@ -237,18 +237,32 @@ zfp_field_metadata(const zfp_field* field)
   /* 48 bits for dimensions */
   switch (zfp_field_dimensionality(field)) {
     case 1:
+      if ((field->nx - 1) >> 48)
+        return ZFP_META_NULL;
       meta <<= 48; meta += field->nx - 1;
       break;
     case 2:
+      if (((field->nx - 1) >> 24) ||
+          ((field->ny - 1) >> 24))
+        return ZFP_META_NULL;
       meta <<= 24; meta += field->ny - 1;
       meta <<= 24; meta += field->nx - 1;
       break;
     case 3:
+      if (((field->nx - 1) >> 16) ||
+          ((field->ny - 1) >> 16) ||
+          ((field->nz - 1) >> 16))
+        return ZFP_META_NULL;
       meta <<= 16; meta += field->nz - 1;
       meta <<= 16; meta += field->ny - 1;
       meta <<= 16; meta += field->nx - 1;
       break;
     case 4:
+      if (((field->nx - 1) >> 12) ||
+          ((field->ny - 1) >> 12) ||
+          ((field->nz - 1) >> 12) ||
+          ((field->nw - 1) >> 12))
+        return ZFP_META_NULL;
       meta <<= 12; meta += field->nw - 1;
       meta <<= 12; meta += field->nz - 1;
       meta <<= 12; meta += field->ny - 1;
@@ -359,6 +373,9 @@ int
 zfp_field_set_metadata(zfp_field* field, uint64 meta)
 {
   uint64 dims;
+  /* ensure value is in range */
+  if (meta >> ZFP_META_BITS)
+    return 0;
   field->type = (zfp_type)((meta & 0x3u) + 1); meta >>= 2;
   dims = (meta & 0x3u) + 1; meta >>= 2;
   switch (dims) {
@@ -968,6 +985,15 @@ size_t
 zfp_write_header(zfp_stream* zfp, const zfp_field* field, uint mask)
 {
   size_t bits = 0;
+  uint64 meta = 0;
+
+  /* first make sure field dimensions fit in header */
+  if (mask & ZFP_HEADER_META) {
+    meta = zfp_field_metadata(field);
+    if (meta == ZFP_META_NULL)
+      return 0;
+  }
+
   /* 32-bit magic */
   if (mask & ZFP_HEADER_MAGIC) {
     stream_write_bits(zfp->stream, 'z', 8);
@@ -978,7 +1004,6 @@ zfp_write_header(zfp_stream* zfp, const zfp_field* field, uint mask)
   }
   /* 52-bit field metadata */
   if (mask & ZFP_HEADER_META) {
-    uint64 meta = zfp_field_metadata(field);
     stream_write_bits(zfp->stream, meta, ZFP_META_BITS);
     bits += ZFP_META_BITS;
   }
@@ -989,6 +1014,7 @@ zfp_write_header(zfp_stream* zfp, const zfp_field* field, uint mask)
     stream_write_bits(zfp->stream, mode, size);
     bits += size;
   }
+
   return bits;
 }
 

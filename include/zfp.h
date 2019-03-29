@@ -104,6 +104,9 @@
 #define ZFP_HEADER_MODE   0x4u /* embed 12- or 64-bit compression mode */
 #define ZFP_HEADER_FULL   0x7u /* embed all of the above */
 
+/* field metadata indeterminate state and error code */
+#define ZFP_META_NULL (UINT64C(-1))
+
 /* number of bits per header entry */
 #define ZFP_MAGIC_BITS       32 /* number of magic word bits */
 #define ZFP_META_BITS        52 /* number of field metadata bits */
