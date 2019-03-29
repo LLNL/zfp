@@ -13,6 +13,7 @@ struct setupVars {
   Scalar* dataArr;
   void* buffer;
   zfp_stream* stream;
+  int specialValueIndex;
 };
 
 static void
@@ -30,6 +31,60 @@ populateInitialArray(Scalar** dataArrPtr)
 #endif
   }
 
+}
+
+static void
+populateInitialArraySpecial(Scalar** dataArrPtr, int index)
+{
+  // IEEE-754 special values
+  static const uint32 special_float_values[] = {
+    0x00000000u, // +0
+    0x80000000u, // -0
+    0x00000001u, // +FLT_TRUE_MIN
+    0x80000001u, // -FLT_TRUE_MIN
+    0x7f7fffffu, // +FLT_MAX
+    0xff7fffffu, // -FLT_MAX
+    0x7f800000u, // +infinity
+    0xff800000u, // -infinity
+    0x7fc00000u, // qNaN
+    0x7fa00000u, // sNaN
+  };
+  static const uint64 special_double_values[] = {
+    UINT64C(0x0000000000000000), // +0
+    UINT64C(0x8000000000000000), // -0
+    UINT64C(0x0000000000000001), // +DBL_TRUE_MIN
+    UINT64C(0x8000000000000001), // -DBL_TRUE_MIN
+    UINT64C(0x7fefffffffffffff), // +DBL_MAX
+    UINT64C(0xffefffffffffffff), // -DBL_MAX
+    UINT64C(0x7ff0000000000000), // +infinity
+    UINT64C(0xfff0000000000000), // -infinity
+    UINT64C(0x7ff8000000000000), // qNaN
+    UINT64C(0x7ff4000000000000), // sNaN
+  };
+
+  *dataArrPtr = malloc(sizeof(Scalar) * BLOCK_SIZE);
+  assert_non_null(*dataArrPtr);
+
+  size_t i;
+  for (i = 0; i < BLOCK_SIZE; i++) {
+#ifdef FL_PT_DATA
+    // generate special values
+    if ((i & 3u) == 0) {
+      switch(ZFP_TYPE) {
+        case zfp_type_float:
+          memcpy((*dataArrPtr) + i, &special_float_values[index], sizeof(Scalar));
+          break;
+        case zfp_type_double:
+          memcpy((*dataArrPtr) + i, &special_double_values[index], sizeof(Scalar));
+          break;
+      }
+    }
+    else
+      (*dataArrPtr)[i] = 0;
+#else
+    (*dataArrPtr)[i] = nextSignedRandInt();
+#endif
+  }
 }
 
 static void
@@ -70,6 +125,45 @@ setupZfpStream(struct setupVars* bundle)
   bundle->stream = stream;
 }
 
+static void
+setupZfpStreamSpecial(struct setupVars* bundle, int index)
+{
+  zfp_type type = ZFP_TYPE;
+  zfp_field* field;
+  switch(DIMS) {
+    case 1:
+      field = zfp_field_1d(bundle->dataArr, type, BLOCK_SIDE_LEN);
+      break;
+    case 2:
+      field = zfp_field_2d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      break;
+    case 3:
+      field = zfp_field_3d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      break;
+    case 4:
+      field = zfp_field_4d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      break;
+  }
+
+  zfp_stream* stream = zfp_stream_open(NULL);
+  zfp_stream_set_reversible(stream);
+
+  size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
+  char* buffer = calloc(bufsizeBytes, sizeof(char));
+  assert_non_null(buffer);
+
+  bitstream* s = stream_open(buffer, bufsizeBytes);
+  assert_non_null(s);
+
+  zfp_stream_set_bit_stream(stream, s);
+  zfp_stream_rewind(stream);
+  zfp_field_free(field);
+
+  bundle->buffer = buffer;
+  bundle->stream = stream;
+  bundle->specialValueIndex = index;
+}
+
 static int
 setup(void **state)
 {
@@ -83,6 +177,81 @@ setup(void **state)
   *state = bundle;
 
   return 0;
+}
+
+static int
+setupSpecial(void **state, int specialValueIndex)
+{
+  struct setupVars *bundle = malloc(sizeof(struct setupVars));
+  assert_non_null(bundle);
+
+  resetRandGen();
+  populateInitialArraySpecial(&bundle->dataArr, specialValueIndex);
+  setupZfpStreamSpecial(bundle, specialValueIndex);
+
+  *state = bundle;
+
+  return 0;
+}
+
+static int
+setupSpecial0(void **state)
+{
+  return setupSpecial(state, 0);
+}
+
+static int
+setupSpecial1(void **state)
+{
+  return setupSpecial(state, 1);
+}
+
+static int
+setupSpecial2(void **state)
+{
+  return setupSpecial(state, 2);
+}
+
+static int
+setupSpecial3(void **state)
+{
+  return setupSpecial(state, 3);
+}
+
+static int
+setupSpecial4(void **state)
+{
+  return setupSpecial(state, 4);
+}
+
+static int
+setupSpecial5(void **state)
+{
+  return setupSpecial(state, 5);
+}
+
+static int
+setupSpecial6(void **state)
+{
+  return setupSpecial(state, 6);
+}
+
+static int
+setupSpecial7(void **state)
+{
+  return setupSpecial(state, 7);
+}
+
+static int
+setupSpecial8(void **state)
+{
+  return setupSpecial(state, 8);
+}
+
+static int
+setupSpecial9(void **state)
+{
+  return setupSpecial(state, 9);
 }
 
 static int
@@ -143,4 +312,23 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatche
 
   uint64 expectedChecksum = getChecksumDecodedBlock(DIMS, ZFP_TYPE);
   assert_int_equal(checksum, expectedChecksum);
+}
+
+static void
+_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit)(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+
+  _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
+  zfp_stream_flush(stream);
+  zfp_stream_rewind(stream);
+
+  Scalar* decodedDataArr = calloc(BLOCK_SIZE, sizeof(Scalar));
+  assert_non_null(decodedDataArr);
+  _t2(zfp_decode_block, Scalar, DIMS)(stream, decodedDataArr);
+
+  assert_memory_equal(bundle->dataArr, decodedDataArr, BLOCK_SIZE * sizeof(Scalar));
+
+  free(decodedDataArr);
 }

@@ -4,3 +4,17 @@ _cmocka_unit_test_setup_teardown(when_seededRandomDataGenerated_expect_ChecksumM
 
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ReturnValReflectsNumBitsReadFromBitstream), setup, teardown),
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatches), setup, teardown),
+
+#ifdef FL_PT_DATA
+// reversible compression and decompression of blocks containing special floating-point values
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial0, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial1, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial2, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial3, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial4, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial5, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial6, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial7, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial8, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit), setupSpecial9, teardown),
+#endif
