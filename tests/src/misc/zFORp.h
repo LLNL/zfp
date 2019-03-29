@@ -1,41 +1,39 @@
 #include <stddef.h>
 
-#include "zfp/types.h"
-
-typedef struct zFORp_structs zFORp_structs;
+#include "zfp.h"
 
 void*
 zforp_bitstream_stream_open(void** buffer, size_t* bufferSizeBytes);
 
 void
-zforp_bitstream_stream_close(zFORp_structs* container);
+zforp_bitstream_stream_close(bitstream** stream);
 
 void*
 zforp_stream_open(void** bs);
 
 void
-zforp_stream_close(zFORp_structs* container);
+zforp_stream_close(zfp_stream** stream);
 
 int
-zforp_stream_compression_mode(zFORp_structs* container);
+zforp_stream_compression_mode(zfp_stream** stream);
 
 uint64
-zforp_stream_mode(zFORp_structs* container);
+zforp_stream_mode(zfp_stream** stream);
 
 double
-zforp_stream_set_rate(zFORp_structs* container, double* rate, uint* type, uint* dims, int* wra);
+zforp_stream_set_rate(zfp_stream** stream, double* rate, zfp_type* type, uint* dims, int* wra);
 
 uint
-zforp_stream_set_precision(zFORp_structs* container, uint* prec);
+zforp_stream_set_precision(zfp_stream** stream, uint* prec);
 
 double
-zforp_stream_set_accuracy(zFORp_structs* container, double* tolerance);
+zforp_stream_set_accuracy(zfp_stream** stream, double* tolerance);
 
 uint
-zforp_stream_set_mode(zFORp_structs* container, uint64* mode);
+zforp_stream_set_mode(zfp_stream** stream, uint64* mode);
 
 void
-zforp_stream_params(zFORp_structs* container, uint** minbits, uint** maxbits, uint**maxprec, int** minexp);
+zforp_stream_params(zfp_stream** stream, uint** minbits, uint** maxbits, uint**maxprec, int** minexp);
 
 int
-zforp_stream_set_params(zFORp_structs* container, uint* minbits, uint* maxbits, uint* maxprec, int* minexp);
+zforp_stream_set_params(zfp_stream** stream, uint* minbits, uint* maxbits, uint* maxprec, int* minexp);
