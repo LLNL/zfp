@@ -2,19 +2,19 @@
 
 #include "zfp.h"
 
-void*
+bitstream*
 zforp_bitstream_stream_open(void** buffer, size_t* bufferSizeBytes);
 
 void
 zforp_bitstream_stream_close(bitstream** stream);
 
-void*
+zfp_stream*
 zforp_stream_open(void** bs);
 
 void
 zforp_stream_close(zfp_stream** stream);
 
-int
+zfp_mode
 zforp_stream_compression_mode(zfp_stream** stream);
 
 uint64
