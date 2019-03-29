@@ -239,6 +239,9 @@ endif()
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+if(BUILD_CFP)
+  install(DIRECTORY cfp/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
 #------------------------------------------------------------------------------#
 # Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel
 #------------------------------------------------------------------------------#
@@ -253,6 +256,12 @@ endif()
 # Add all targets to the build-tree export set
 export(TARGETS zfp NAMESPACE zfp::
   FILE "${PROJECT_BINARY_DIR}/zfp-targets.cmake")
+
+if(BUILD_CFP)
+  export(TARGETS cfp NAMESPACE zfp::
+    APPEND FILE "${PROJECT_BINARY_DIR}/zfp-targets.cmake")
+endif()
+
 configure_file(zfp-config.cmake.in
   "${PROJECT_BINARY_DIR}/zfp-config.cmake" @ONLY)
 configure_file(zfp-config-version.cmake.in
@@ -267,3 +276,8 @@ install(FILES
 # Install the export set for use with the install-tree
 install(EXPORT zfp-targets NAMESPACE zfp::
   DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+
+if(BUILD_CFP)
+  install(EXPORT cfp-targets NAMESPACE zfp::
+    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+endif()
