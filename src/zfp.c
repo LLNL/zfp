@@ -237,7 +237,7 @@ zfp_field_metadata(const zfp_field* field)
   /* 48 bits for dimensions */
   switch (zfp_field_dimensionality(field)) {
     case 1:
-      if ((field->nx - 1) >> 48)
+      if ((uint64)(field->nx - 1) >> 48)
         return ZFP_META_NULL;
       meta <<= 48; meta += field->nx - 1;
       break;
@@ -899,6 +899,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
   uint strided = zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
+  void (*compress)(zfp_stream*, const zfp_field*);
 
   switch (type) {
     case zfp_type_int32:
@@ -911,7 +912,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
   }
 
   /* return 0 if compression mode is not supported */
-  void (*compress)(zfp_stream*, const zfp_field*) = ftable[exec][strided][dims - 1][type - zfp_type_int32];
+  compress = ftable[exec][strided][dims - 1][type - zfp_type_int32];
   if (!compress)
     return 0;
 
@@ -958,6 +959,7 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
   uint strided = zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
+  void (*decompress)(zfp_stream*, zfp_field*);
 
   switch (type) {
     case zfp_type_int32:
@@ -970,7 +972,7 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
   }
 
   /* return 0 if decompression mode is not supported */
-  void (*decompress)(zfp_stream*, zfp_field*) = ftable[exec][strided][dims - 1][type - zfp_type_int32];
+  decompress = ftable[exec][strided][dims - 1][type - zfp_type_int32];
   if (!decompress)
     return 0;
 
