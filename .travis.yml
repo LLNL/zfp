@@ -18,7 +18,7 @@ matrix:
     - os: linux
       dist: trusty
       compiler: clang-3.6
-      addons:
+      addons: &clang36
         apt:
           sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty']
           packages:
@@ -27,17 +27,17 @@ matrix:
       env: CC='clang-3.6' CXX='clang++-3.6' FC='gfortran-6'
 
     - os: linux
-      dist: trusty
-      compiler: clang
+      dist: xenial
+      compiler: clang-4.0
       before_install:
         - export LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
-      addons:
+      addons: &clang40
         apt:
-          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty']
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-4.0']
           packages:
-            - clang-3.4
+            - clang-4.0
             - gfortran-6
-      env: CC='clang-3.4' CXX='clang++-3.4' FC='gfortran-6'
+      env: CC='clang-4.0' CXX='clang++-4.0' FC='gfortran-6'
 
     - os: linux
       dist: trusty
