@@ -11,6 +11,7 @@ set(cfg_options
   -DCMAKE_C_STANDARD=${C_STANDARD}
   -DCMAKE_CXX_STANDARD=${CXX_STANDARD}
   -DBUILD_CFP=${BUILD_CFP}
+  -DBUILD_ZFORP=${BUILD_ZFORP}
   -DZFP_WITH_OPENMP=${BUILD_OPENMP}
   -DZFP_WITH_CUDA=${BUILD_CUDA}
   )
@@ -34,6 +35,10 @@ if(BUILD_CFP)
       )
     set(CTEST_SITE "${CTEST_SITE}namespace")
   endif()
+endif()
+
+if(BUILD_ZFORP)
+  set(CTEST_SITE "${CTEST_SITE}_zforp")
 endif()
 
 if(WITH_COVERAGE)
