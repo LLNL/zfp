@@ -15,6 +15,8 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
+  if (!bs)
+    return;
 
   /* compress chunks of blocks in parallel */
   int chunk;
@@ -61,6 +63,8 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
+  if (!bs)
+    return;
 
   /* compress chunks of blocks in parallel */
   int chunk;
@@ -111,6 +115,8 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
+  if (!bs)
+    return;
 
   /* compress chunks of blocks in parallel */
   int chunk;
@@ -167,6 +173,8 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
+  if (!bs)
+    return;
 
   /* compress chunks of blocks in parallel */
   int chunk;
@@ -227,6 +235,8 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
+  if (!bs)
+    return;
 
   /* compress chunks of blocks in parallel */
   int chunk;
