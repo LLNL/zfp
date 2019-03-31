@@ -1,4 +1,4 @@
-static const uint64 _1dFloatChecksums[24] = {
+static const uint64 _1dFloatChecksums[35] = {
 UINT64C(0xa35730c2),
 UINT64C(0x40bdf65ac73b115c),
 UINT64C(0xb4fe1804c2e28f46),
@@ -23,4 +23,15 @@ UINT64C(0xe7ab29faf14866d1),
 UINT64C(0xaef278e8),
 UINT64C(0x60361242),
 UINT64C(0x67e8c596),
+UINT64C(0xed4507b04c0b7919),
+UINT64C(0),
+UINT64C(0x7baad4bceaf3d5c4),
+UINT64C(0xe3aab612eaf3d5c4),
+UINT64C(0x71d55b09a42ac833),
+UINT64C(0x8ca6efaedb5cd44e),
+UINT64C(0x15845a4aad908133),
+UINT64C(0xd277135bdcf92823),
+UINT64C(0xed4fc9b68f3c00b8),
+UINT64C(0x9fd129bea6d1bbd5),
+UINT64C(0xaee692dd4f340c9f),
 };

@@ -3,6 +3,7 @@
 #include <ctime>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -517,6 +518,68 @@ test_accuracy(zfp_stream* stream, const zfp_field* input, Scalar tolerance, size
   return failures;
 }
 
+// test reversible mode
+template <typename Scalar>
+inline uint
+test_reversible(zfp_stream* stream, const zfp_field* input, size_t bytes)
+{
+  uint failures = 0;
+  size_t n = zfp_field_size(input, NULL);
+
+  // allocate memory for compressed data
+  zfp_stream_set_reversible(stream);
+  size_t bufsize = zfp_stream_maximum_size(stream, input);
+  uchar* buffer = new uchar[bufsize];
+  bitstream* s = stream_open(buffer, bufsize);
+  zfp_stream_set_bit_stream(stream, s);
+
+  // perform compression test
+  std::ostringstream status;
+  status << "  compress:  ";
+  status << " reversible";
+  zfp_stream_rewind(stream);
+  size_t outsize = zfp_compress(stream, input);
+  double ratio = double(n * sizeof(Scalar)) / outsize;
+  status << " ratio=" << std::fixed << std::setprecision(3) << std::setw(7) << ratio;
+  bool pass = true;
+  // make sure compressed size agrees
+  if (outsize != bytes) {
+    status << " [" << outsize << " != " << bytes << "]";
+    pass = false;
+  }
+  std::cout << std::setw(width) << std::left << status.str() << (pass ? " OK " : "FAIL") << std::endl;
+  if (!pass)
+    failures++;
+
+  // perform decompression test
+  status.str("");
+  status << "  decompress:";
+  status << " reversible";
+  Scalar* g = new Scalar[n];
+  zfp_field* output = zfp_field_alloc();
+  *output = *input;
+  zfp_field_set_pointer(output, g);
+  zfp_stream_rewind(stream);
+  pass = !!zfp_decompress(stream, output);
+  if (!pass)
+    status << " [decompression failed]";
+  else {
+    // make sure reconstruction is bit-for-bit exact
+    pass = !memcmp(zfp_field_pointer(input), zfp_field_pointer(output), n * sizeof(Scalar));
+    if (!pass)
+      status << " [reconstruction differs]";
+  }
+  zfp_field_free(output);
+  delete[] g;
+  stream_close(s);
+  delete[] buffer;
+  std::cout << std::setw(width) << std::left << status.str() << (pass ? " OK " : "FAIL") << std::endl;
+  if (!pass)
+    failures++;
+
+  return failures;
+}
+
 // perform 1D differencing
 template <typename Scalar>
 inline void
@@ -817,6 +880,44 @@ test(uint dims, ArraySize array_size)
       }
     };
     failures += test_accuracy<Scalar>(stream, field, tol[i], bytes[array_size][t][dims - 1][i]);
+  }
+
+  // test reversible
+  {
+    // expected compressed sizes
+    size_t bytes[2][2][4] = {
+      // small
+      {
+        {
+          7272,
+          5104,
+          6096,
+          6864,
+        },
+        {
+          7784,
+          5232,
+          6128,
+          6872,
+        },
+      },
+      // large
+      {
+        {
+          25037288,
+          12792440,
+          14187128,
+          17135704,
+        },
+        {
+          27134024,
+          13315632,
+          14316880,
+          17168096,
+        },
+      }
+    };
+    failures += test_reversible<Scalar>(stream, field, bytes[array_size][t][dims - 1]);
   }
 
   // test compressed array support

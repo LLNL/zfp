@@ -101,6 +101,7 @@ usage()
   fprintf(stderr, "  -3 <nx> <ny> <nz> : dimensions for 3D array a[nz][ny][nx]\n");
   fprintf(stderr, "  -4 <nx> <ny> <nz> <nw> : dimensions for 4D array a[nw][nz][ny][nx]\n");
   fprintf(stderr, "Compression parameters (needed with -i):\n");
+  fprintf(stderr, "  -R : reversible (lossless) compression\n");
   fprintf(stderr, "  -r <rate> : fixed rate (# compressed bits per floating-point value)\n");
   fprintf(stderr, "  -p <precision> : fixed precision (# uncompressed bits per value)\n");
   fprintf(stderr, "  -a <tolerance> : fixed accuracy (absolute error tolerance)\n");
@@ -252,6 +253,9 @@ int main(int argc, char* argv[])
         if (++i == argc || sscanf(argv[i], "%lf", &rate) != 1)
           usage();
         mode = 'r';
+        break;
+      case 'R':
+        mode = 'R';
         break;
       case 's':
         stats = 1;
@@ -442,6 +446,9 @@ int main(int argc, char* argv[])
 
     /* set (de)compression mode */
     switch (mode) {
+      case 'R':
+        zfp_stream_set_reversible(zfp);
+        break;
       case 'a':
         zfp_stream_set_accuracy(zfp, tolerance);
         break;
@@ -466,12 +473,12 @@ int main(int argc, char* argv[])
 
   /* specify execution policy */
   switch (exec) {
-      case zfp_exec_cuda:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "cuda execution not available\n");
-          return EXIT_FAILURE;
-        }
-        break;
+    case zfp_exec_cuda:
+      if (!zfp_stream_set_execution(zfp, exec)) {
+        fprintf(stderr, "cuda execution not available\n");
+        return EXIT_FAILURE;
+      }
+      break;
     case zfp_exec_omp:
       if (!zfp_stream_set_execution(zfp, exec) ||
           !zfp_stream_set_omp_threads(zfp, threads) ||

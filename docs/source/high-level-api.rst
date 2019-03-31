@@ -360,7 +360,7 @@ Compression Parameters
   Set *precision* for :ref:`fixed-precision mode <mode-fixed-precision>`.
   The precision specifies how many uncompressed bits per value to store,
   and indirectly governs the relative error.  The actual precision is
-  returned, e.g. in case the desired precision is out of range.  To
+  returned, e.g., in case the desired precision is out of range.  To
   preserve a certain floating-point mantissa or integer precision in the
   decompressed data, see :ref:`FAQ #21 <q-lossless>`.
 

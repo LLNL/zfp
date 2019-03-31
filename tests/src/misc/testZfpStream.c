@@ -170,6 +170,23 @@ given_zfpStreamSetWithFixedAccuracy_when_zfpStreamCompressionMode_expect_returns
 }
 
 static void
+given_zfpStreamSetWithReversible_when_zfpStreamCompressionMode_expect_returnsReversibleEnum(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+
+  setDefaultCompressionParams(stream);
+
+  /* set reversible, assert reversible identified */
+  zfp_stream_set_reversible(stream);
+
+  zfp_mode mode = zfp_stream_compression_mode(stream);
+  if (mode != zfp_mode_reversible) {
+    fail_msg("Setting zfp_stream with reversible returned zfp_mode enum %u", mode);
+  }
+}
+
+static void
 given_zfpStreamSetWithExpertParams_when_zfpStreamCompressionMode_expect_returnsExpertEnum(void **state)
 {
   struct setupVars *bundle = *state;
@@ -205,7 +222,7 @@ given_zfpStreamDefaultModeVal_when_zfpStreamSetMode_expect_returnsExpertMode_and
       || stream->maxbits != maxbits
       || stream->maxprec != maxprec
       || stream->minexp != minexp) {
-    printf("Using default params, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"PRIu64"\n", mode);
+    printf("Using default params, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"UINT64PRIu"\n", mode);
     fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
   }
 }
@@ -249,7 +266,7 @@ given_zfpStreamSetRateModeVal_when_zfpStreamSetMode_expect_returnsFixedRate_and_
               || stream->maxbits != maxbits
               || stream->maxprec != maxprec
               || stream->minexp != minexp) {
-            printf("Using fixed rate %d, wra %d, zfp_type %u, in %u dimensions, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"PRIu64"\n", rate, wra, zfpType, dims, mode);
+            printf("Using fixed rate %d, wra %d, zfp_type %u, in %u dimensions, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"UINT64PRIu"\n", rate, wra, zfpType, dims, mode);
             fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
           }
         }
@@ -291,7 +308,7 @@ given_zfpStreamSetPrecisionModeVal_when_zfpStreamSetMode_expect_returnsFixedPrec
         || stream->maxbits != maxbits
         || stream->maxprec != maxprec
         || stream->minexp != minexp) {
-      printf("Using fixed precision %u, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"PRIu64"\n", prec, mode);
+      printf("Using fixed precision %u, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"UINT64PRIu"\n", prec, mode);
       fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
     }
   }
@@ -354,9 +371,44 @@ given_zfpStreamSetAccuracyModeVal_when_zfpStreamSetMode_expect_returnsFixedAccur
         || stream->maxbits != maxbits
         || stream->maxprec != maxprec
         || stream->minexp != minexp) {
-      printf("Using fixed accuracy 2^(%d), zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"PRIu64"\n", accExp, mode);
+      printf("Using fixed accuracy 2^(%d), zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"UINT64PRIu"\n", accExp, mode);
       fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
     }
+  }
+}
+
+static void
+given_zfpStreamSetReversibleModeVal_when_zfpStreamSetMode_expect_returnsReversible_and_compressParamsConserved(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+
+  zfp_stream_set_reversible(stream);
+  assert_int_equal(zfp_stream_compression_mode(stream), zfp_mode_reversible);
+
+  /* get mode and compression params */
+  uint64 mode = zfp_stream_mode(stream);
+  uint minbits = stream->minbits;
+  uint maxbits = stream->maxbits;
+  uint maxprec = stream->maxprec;
+  int minexp = stream->minexp;
+
+  /* set expert mode */
+  setDefaultCompressionParams(stream);
+
+  /* see that mode is updated correctly */
+  zfp_mode zfpMode = zfp_stream_set_mode(stream, mode);
+  if (zfpMode != zfp_mode_reversible) {
+    fail_msg("Using reversible mode, zfp_stream_compression_mode() incorrectly returned %u", zfpMode);
+  }
+
+  /* see that compression params conserved */
+  if (stream->minbits != minbits
+      || stream->maxbits != maxbits
+      || stream->maxprec != maxprec
+      || stream->minexp != minexp) {
+    printf("Using reversible mode, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"UINT64PRIu"\n", mode);
+    fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
   }
 }
 
@@ -426,6 +478,7 @@ int main()
     cmocka_unit_test_setup_teardown(given_zfpStreamSetWithFixedPrecision_when_zfpStreamCompressionMode_expect_returnsFixedPrecisionEnum, setup, teardown),
     cmocka_unit_test_setup_teardown(given_zfpStreamSetWithMaxPrecision_when_zfpStreamCompressionMode_expect_returnsExpertModeEnum, setup, teardown),
     cmocka_unit_test_setup_teardown(given_zfpStreamSetWithFixedAccuracy_when_zfpStreamCompressionMode_expect_returnsFixedAccuracyEnum, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_zfpStreamSetWithReversible_when_zfpStreamCompressionMode_expect_returnsReversibleEnum, setup, teardown),
     cmocka_unit_test_setup_teardown(given_zfpStreamSetWithExpertParams_when_zfpStreamCompressionMode_expect_returnsExpertEnum, setup, teardown),
 
     /* test zfp_stream_set_mode() */
@@ -435,6 +488,7 @@ int main()
     cmocka_unit_test_setup_teardown(given_zfpStreamSetPrecisionModeVal_when_zfpStreamSetMode_expect_returnsFixedPrecision_and_compressParamsConserved, setup, teardown),
     cmocka_unit_test_setup_teardown(given_fixedPrecisionMaxPrecModeVal_when_zfpStreamSetMode_expect_returnsExpert_and_compressParamsConserved, setup, teardown),
     cmocka_unit_test_setup_teardown(given_zfpStreamSetAccuracyModeVal_when_zfpStreamSetMode_expect_returnsFixedAccuracy_and_compressParamsConserved, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_zfpStreamSetReversibleModeVal_when_zfpStreamSetMode_expect_returnsReversible_and_compressParamsConserved, setup, teardown),
     cmocka_unit_test_setup_teardown(given_customCompressParamsModeVal_when_zfpStreamSetMode_expect_returnsExpert_and_compressParamsConserved, setup, teardown),
     cmocka_unit_test_setup_teardown(given_invalidCompressParamsModeVal_when_zfpStreamSetMode_expect_returnsNullMode_and_paramsNotSet, setup, teardown),
   };

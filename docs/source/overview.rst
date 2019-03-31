@@ -8,8 +8,8 @@ Overview
 multidimensional arrays.  The compressor is primarily *lossy*, meaning
 that the numerical values are usually only approximately represented,
 though the user may specify error tolerances to limit the amount of loss.
-:ref:`Lossless compression <q-lossless>`, where values are represented
-exactly, is possible in some circumstances.
+Fully :ref:`lossless compression <q-lossless>`, where values are
+represented exactly, is also possible.
 
 The |zfp| software consists of three main components: a C library for
 compressing whole arrays (or smaller pieces of arrays); C++ classes

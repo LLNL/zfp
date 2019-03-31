@@ -1,4 +1,4 @@
-static const uint64 _1dInt64Checksums[18] = {
+static const uint64 _1dInt64Checksums[25] = {
 UINT64C(0x10decbfab896db77),
 UINT64C(0x103c2fc57809b590),
 UINT64C(0x5a808f85fa746948),
@@ -17,4 +17,11 @@ UINT64C(0x2fa06f3672c34330),
 UINT64C(0xae502d3900000000),
 UINT64C(0xdf36970200000000),
 UINT64C(0xc64d5c7c923c2a4e),
+0,
+0,
+0,
+0,
+0,
+0,
+UINT64C(0x718abd28a6b2f034),
 };

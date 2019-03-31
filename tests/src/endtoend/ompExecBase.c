@@ -766,5 +766,60 @@ setupFixedAccuracy2Param2Thread2Chunk(void **state)
 
 #endif
 
+/* reversible */
+static int
+setupReversible0Thread0Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_reversible, 0, 0, 0, AS_IS);
+}
+
+static int
+setupReversible0Thread1Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_reversible, 0, 0, 1, AS_IS);
+}
+
+static int
+setupReversible0Thread2Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_reversible, 0, 0, 2, AS_IS);
+}
+
+static int
+setupReversible1Thread0Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_reversible, 0, 1, 0, AS_IS);
+}
+
+static int
+setupReversible1Thread1Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_reversible, 0, 1, 1, AS_IS);
+}
+
+static int
+setupReversible1Thread2Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_reversible, 0, 1, 2, AS_IS);
+}
+
+static int
+setupReversible2Thread0Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_reversible, 0, 2, 0, AS_IS);
+}
+
+static int
+setupReversible2Thread1Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_reversible, 0, 2, 1, AS_IS);
+}
+
+static int
+setupReversible2Thread2Chunk(void **state)
+{
+  return setupOmpConfig(state, zfp_mode_reversible, 0, 2, 2, AS_IS);
+}
+
 // end #ifdef _OPENMP
 #endif

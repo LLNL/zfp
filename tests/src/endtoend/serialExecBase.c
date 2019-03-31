@@ -85,3 +85,10 @@ setupFixedAccuracy2(void **state)
   return setupChosenZfpMode(state, zfp_mode_fixed_accuracy, 2, AS_IS);
 }
 #endif
+
+/* reversible */
+static int
+setupReversible(void **state)
+{
+  return setupChosenZfpMode(state, zfp_mode_reversible, 0, AS_IS);
+}

@@ -25,10 +25,9 @@ paper:
 |zfp| was originally designed for floating-point arrays only, but has been
 extended to also support integer data, and could for instance be used to
 compress images and quantized volumetric data.  To achieve high compression
-ratios, |zfp| uses lossy but optionally error-bounded compression.  Although
-bit-for-bit lossless compression of floating-point data is not always
-possible, |zfp| is usually accurate to within machine epsilon in near-lossless
-mode.
+ratios, |zfp| generally uses lossy but optionally error-bounded compression.
+Bit-for-bit lossless compression is also possible through one of |zfp|'s
+:ref:`compression modes <modes>`.
 
 |zfp| works best for 2D and 3D arrays that exhibit spatial correlation, such as
 continuous fields from physics simulations, images, regularly sampled terrain

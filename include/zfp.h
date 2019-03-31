@@ -94,7 +94,7 @@
 
 /* default compression parameters */
 #define ZFP_MIN_BITS     1 /* minimum number of bits per block */
-#define ZFP_MAX_BITS 16651 /* maximum number of bits per block */
+#define ZFP_MAX_BITS 16657 /* maximum number of bits per block */
 #define ZFP_MAX_PREC    64 /* maximum precision supported */
 #define ZFP_MIN_EXP  -1074 /* minimum floating-point base-2 exponent */
 
@@ -156,7 +156,8 @@ typedef enum {
   zfp_mode_expert          = 1, /* expert mode (4 params set manually) */
   zfp_mode_fixed_rate      = 2, /* fixed rate mode */
   zfp_mode_fixed_precision = 3, /* fixed precision mode */
-  zfp_mode_fixed_accuracy  = 4  /* fixed accuracy mode */
+  zfp_mode_fixed_accuracy  = 4, /* fixed accuracy mode */
+  zfp_mode_reversible      = 5  /* reversible (lossless) mode */
 } zfp_mode;
 
 /* scalar type */
@@ -215,16 +216,21 @@ zfp_stream_bit_stream(
   const zfp_stream* stream /* compressed stream */
 );
 
+int                     /* nonzero if lossless compression is enabled */
+zfp_stream_is_reversible(
+  const zfp_stream* zfp /* compressed stream */
+);
+
 /* returns enum of compression mode */
-zfp_mode                     /* enum for compression mode */
+zfp_mode                /* enum for compression mode */
 zfp_stream_compression_mode(
-  const zfp_stream* zfp      /* compressed stream */
+  const zfp_stream* zfp /* compressed stream */
 );
 
 /* get all compression parameters in a compact representation */
-uint64                     /* 12- or 64-bit encoding of parameters */
+uint64                  /* 12- or 64-bit encoding of parameters */
 zfp_stream_mode(
-  const zfp_stream* zfp    /* compressed stream */
+  const zfp_stream* zfp /* compressed stream */
 );
 
 /* get all compression parameters (pointers may be NULL) */
@@ -257,6 +263,12 @@ void
 zfp_stream_set_bit_stream(
   zfp_stream* stream, /* compressed stream */
   bitstream* bs       /* bit stream to read from and write to */
+);
+
+/* enable reversible (lossless) compression */
+void
+zfp_stream_set_reversible(
+  zfp_stream* stream /* compressed stream */
 );
 
 /* set size in compressed bits/scalar (fixed-rate mode) */

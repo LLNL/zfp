@@ -178,10 +178,12 @@ was stored using :option:`-h` during compression.
 Compression parameters
 ^^^^^^^^^^^^^^^^^^^^^^
 
+One of the following :ref:`compression modes <modes>` must be selected.
+
 .. option:: -r <rate>
 
   Specify fixed rate in terms of number of compressed bits per
-  floating-point value.
+  integer or floating-point value.
 
 .. option:: -p <precision>
 
@@ -191,6 +193,10 @@ Compression parameters
 .. option:: -a <tolerance>
 
   Specify fixed accuracy in terms of absolute error tolerance.
+
+.. option:: -R
+
+  Reversible (lossless) mode.
 
 .. option:: -c <minbits> <maxbits> <maxprec> <minexp>
 
