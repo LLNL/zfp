@@ -21,23 +21,38 @@ _t1(rev_inv_reinterpret, Scalar)(Int* iblock, Scalar* fblock, uint n)
 static uint
 _t2(rev_decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock)
 {
-  uint bits = 1;
+  uint bits = 0;
   cache_align_(Int iblock[BLOCK_SIZE]);
-  /* test whether to use block-floating-point transform */
+  /* test whether block is all-zero */
+  bits++;
   if (stream_read_bit(zfp->stream)) {
-    /* decode common exponent */
-    bits += EBITS;
-    int emax = (int)stream_read_bits(zfp->stream, EBITS) - EBIAS;
-    /* decode integer block */
-    bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
-    /* perform inverse block-floating-point transform */
-    _t1(rev_inv_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
+    /* non-zero block; test whether to use block-floating-point transform */
+    bits++;
+    if (stream_read_bit(zfp->stream)) {
+      /* decode integer block */
+      bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
+      /* reinterpret integers as floating values */
+      _t1(rev_inv_reinterpret, Scalar)(iblock, fblock, BLOCK_SIZE);
+    }
+    else {
+      /* decode common exponent */
+      bits += EBITS;
+      int emax = (int)stream_read_bits(zfp->stream, EBITS) - EBIAS;
+      /* decode integer block */
+      bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
+      /* perform inverse block-floating-point transform */
+      _t1(rev_inv_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
+    }
   }
   else {
-    /* decode integer block */
-    bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
-    /* reinterpret integers as floating values */
-    _t1(rev_inv_reinterpret, Scalar)(iblock, fblock, BLOCK_SIZE);
+    /* all-zero block; set all values to zero */
+    uint i;
+    for (i = 0; i < BLOCK_SIZE; i++)
+      *fblock++ = 0;
+    if (zfp->minbits > bits) {
+      stream_skip(zfp->stream, zfp->minbits - bits);
+      bits = zfp->minbits;
+    }
   }
   return bits;
 }

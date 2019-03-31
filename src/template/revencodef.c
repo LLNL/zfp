@@ -44,7 +44,7 @@ _t1(rev_fwd_reinterpret, Scalar)(Int* iblock, const Scalar* fblock, uint n)
 static uint
 _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
 {
-  uint bits = 1;
+  uint bits = 0;
   cache_align_(Int iblock[BLOCK_SIZE]);
   /* compute maximum exponent */
   int emax = _t1(exponent_block, Scalar)(fblock, BLOCK_SIZE);
@@ -52,15 +52,27 @@ _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
   _t1(rev_fwd_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
   /* test if block-floating-point transform is reversible */
   if (_t1(rev_fwd_reversible, Scalar)(iblock, fblock, BLOCK_SIZE, emax)) {
-    /* transform is reversible; encode exponent */
+    /* transform is reversible; test if block has any non-zeros */
     uint e = emax + EBIAS;
-    bits += EBITS;
-    stream_write_bits(zfp->stream, 2 * e + 1, bits);
+    if (e) {
+      /* encode common exponent */
+      bits += 2;
+      stream_write_bits(zfp->stream, 1, 2);
+      bits += EBITS;
+      stream_write_bits(zfp->stream, e, EBITS);
+    }
+    else {
+      /* emit single bit for all-zero block */
+      bits++;
+      stream_write_bit(zfp->stream, 0);
+      return bits;
+    }
   }
   else {
     /* transform is irreversible; reinterpret floating values as integers */
     _t1(rev_fwd_reinterpret, Scalar)(iblock, fblock, BLOCK_SIZE);
-    stream_write_bit(zfp->stream, 0);
+    bits++;
+    stream_write_bits(zfp->stream, 3, 2);
   }
   /* losslessly encode integers */
   bits += _t2(rev_encode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);

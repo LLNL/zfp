@@ -5,8 +5,11 @@
 Algorithm
 =========
 
-|zfp| uses two different algorithms to support lossy and lossless
-compression.  These algorithms are described in detail below.
+|zfp| uses two different algorithms to support :ref:`lossy <algorithm-lossy>`
+and :ref:`lossless <algorithm-lossless>` compression.  These algorithms are
+described in detail below.
+
+.. _algorithm-lossy:
 
 Lossy Compression
 -----------------
@@ -109,26 +112,33 @@ Various parameters are exposed for controlling the quality and compressed
 size of a block, and can be specified by the user at a very fine
 granularity.  These parameters are discussed :ref:`here <modes>`.
 
+.. _algorithm-lossless:
+
 Lossless Compression
 --------------------
 
-The reversible (lossless) compression algorithm shares many steps with
+The reversible (lossless) compression algorithm shares most steps with
 the lossy algorithm.  The main differences are steps 2, 3, and 8, which are
 the only sources of error.  Since step 2 may introduce loss in the conversion
 to |zfp|'s block-floating-point representation, the reversible algorithm adds
-a test to see if this conversion is indeed lossless.  It does so by converting
-the values back to the source format and testing the result for bitwise
-equality with the uncompressed data.  If this test passes, then a modified
+a test to see if this conversion is lossless.  It does so by converting the
+values back to the source format and testing the result for bitwise equality
+with the uncompressed data.  If this test passes, then a modified
 decorrelating transform is performed in step 3 that uses reversible integer
 subtraction operations only.  Finally, step 8 is modified so that no one-bits
 are truncated in the variable-length bit stream.  However, all least
 significant bit planes with all-zero bits are truncated, and the number of
-encoded bit planes is recorded in step 7.
+encoded bit planes is recorded in step 7.  As with lossy compression, a
+floating-point block consisting of all (positive) zeros is represented as a
+single bit, making it possible to efficiently encode sparse data.
 
 If the block-floating-point transform is not lossless, then the reversible
 compression algorithm falls back on a simpler scheme that reinterprets
 floating-point values as integers via *type punning*.  This lossless
 conversion from floating-point to integer data replaces step 2, and the
-algorithm proceeds from there with step 3.  Moreover, this conversion
-ensures that special values like infinity, NaNs, and negative zero are
-preserved.
+algorithm proceeds from there with the modified step 3.  Moreover, this
+conversion ensures that special values like infinities, NaNs, and negative
+zero are preserved.
+
+The lossless algorithm handles integer data also, in which case step 2
+is omitted.
