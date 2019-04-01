@@ -372,7 +372,7 @@ cpdef generateStridedRandomNumpyArray(
         return np.lib.stride_tricks.as_strided(
             output_array,
             shape=[x for x in dims[:ndim]],
-            strides=[x for x in strides[:ndim]],
+            strides=reversed([x for x in strides[:ndim]]),
         )
 
     elif stride == INTERLEAVED:
@@ -396,7 +396,7 @@ cpdef generateStridedRandomNumpyArray(
         return np.lib.stride_tricks.as_strided(
             output_array,
             shape=shape,
-            strides=[x for x in strides[:ndim]],
+            strides=reversed([x for x in strides[:ndim]]),
         )
     else:
         raise ValueError("Unsupported_config: {|}".format(stride))
