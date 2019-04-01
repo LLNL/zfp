@@ -10,8 +10,13 @@ Dependencies
 Minimum Tested Versions:
 
 * Python: Python 2.7 & Python 3.5
-* Cython: 0.23.4
+* Cython: 0.22
 * Numpy: 1.8.0
+
+You can install the necessary dependencies using ``pip`` and the zfp
+``requirements.txt``::
+
+  pip install -r $ZFP_ROOT/python/requirements.txt
 
 Installation
 ------------
