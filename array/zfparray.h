@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <climits>
-#include <stdexcept>
+#include <exception>
 #include <string>
 
 #include "zfp.h"
@@ -22,6 +22,22 @@ public:
   typedef struct {
     uchar buffer[ZFP_HEADER_SIZE_BYTES];
   } header;
+
+  class header_exception : public std::exception {
+  public:
+    header_exception(const char* msg) : msg(msg) {}
+
+    header_exception(const std::string& msg) : msg(msg) {}
+
+    virtual ~header_exception() throw (){}
+
+    virtual const char* what() const throw () {
+      return msg.c_str();
+    }
+
+  protected:
+    std::string msg;
+  };
 
 protected:
   // default constructor
@@ -59,7 +75,7 @@ protected:
     // read header to populate member variables associated with zfp_stream
     try {
       read_header(h);
-    } catch (std::invalid_argument const & e) {
+    } catch (zfp::array::header_exception const & e) {
       unused_(e);
       zfp_stream_close(zfp);
       throw;
@@ -72,10 +88,9 @@ protected:
       uint mz = ((std::max(nz, 1u)) + 3) / 4;
       size_t blocks = (size_t)mx * (size_t)my * (size_t)mz;
       size_t describedSize = ((blocks * zfp->maxbits + stream_word_bits - 1) & ~(stream_word_bits - 1)) / CHAR_BIT;
-
       if (bufferSizeBytes < describedSize) {
         zfp_stream_close(zfp);
-        throw std::invalid_argument("ZFP header expects a longer buffer than what was passed in.");
+        throw zfp::array::header_exception("ZFP header expects a longer buffer than what was passed in.");
       }
     }
 
@@ -289,7 +304,7 @@ protected:
 
     // read header to populate member variables associated with zfp_stream
     if (zfp_read_header(zfp, zfh.field, ZFP_HEADER_FULL) != ZFP_HEADER_SIZE_BITS)
-      throw std::invalid_argument("Invalid ZFP header.");
+      throw zfp::array::header_exception("Invalid ZFP header.");
 
     // verify read-header contents
     std::string errMsg = "";
@@ -309,7 +324,7 @@ protected:
     }
 
     if (!errMsg.empty())
-      throw std::invalid_argument(errMsg);
+      throw zfp::array::header_exception(errMsg);
 
     // set class variables
     nx = zfh.field->nx;
