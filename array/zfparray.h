@@ -3,14 +3,21 @@
 
 #include <algorithm>
 #include <climits>
+#include <cstring>
 #include <exception>
 #include <string>
 
 #include "zfp.h"
 #include "zfp/memory.h"
 
+// header is 96 bits
 #define ZFP_HEADER_SIZE_BITS (ZFP_MAGIC_BITS + ZFP_META_BITS + ZFP_MODE_SHORT_BITS)
 #define ZFP_HEADER_SIZE_BYTES ((ZFP_HEADER_SIZE_BITS + CHAR_BIT - 1) / CHAR_BIT)
+// when r/w bitstream, underlying memory needs to be word aligned
+// then memcpy() to move data between aligned bitstream mem and unaligned zfp::array::header
+#define ZFP_HEADER_SIZE_WORDS ((ZFP_HEADER_SIZE_BITS + stream_word_bits - 1) / stream_word_bits)
+#define ZFP_HEADER_PADDED_TO_WORD_BYTES (ZFP_HEADER_SIZE_WORDS * stream_word_bits / CHAR_BIT)
+// note: ZFP_HEADER_PADDED_TO_WORD_BYTES >= ZFP_HEADER_SIZE_BYTES
 
 #define unused_(x) ((void)(x))
 
@@ -165,16 +172,42 @@ public:
   // write header with latest metadata
   void write_header(zfp::array::header& h) const
   {
-    DualBitstreamHandle dbh(zfp, &h, ZFP_HEADER_SIZE_BYTES);
+    // intermediate buffer needed (bitstream accesses multiples of wordsize)
+    AlignedBufferHandle abh;
+
+    DualBitstreamHandle dbh(zfp, abh.buffer, ZFP_HEADER_SIZE_BYTES);
     ZfpFieldHandle zfh(type, nx, ny, nz);
 
     // write header
     zfp_write_header(zfp, zfh.field, ZFP_HEADER_FULL);
     stream_flush(zfp->stream);
+
+    abh.copy_to_header(&h);
   }
 
 protected:
   // "Handle" classes useful when throwing exceptions in read_header()
+
+  // buffer holds aligned memory for header, suitable for bitstream r/w
+  class AlignedBufferHandle {
+    public:
+      uchar* buffer;
+
+      // can copy a header into aligned buffer
+      AlignedBufferHandle(const zfp::array::header* h = 0) {
+        buffer = new uchar[ZFP_HEADER_PADDED_TO_WORD_BYTES];
+        if (h)
+          memcpy(buffer, h->buffer, ZFP_HEADER_SIZE_BYTES);
+      }
+
+      ~AlignedBufferHandle() {
+        delete[] buffer;
+      }
+
+      void copy_to_header(zfp::array::header* h) {
+        memcpy(h, buffer, ZFP_HEADER_SIZE_BYTES);
+      }
+  };
 
   // redirect zfp_stream->bitstream to header while object remains in scope
   class DualBitstreamHandle {
@@ -183,11 +216,11 @@ protected:
       bitstream* newBs;
       zfp_stream* zfp;
 
-      DualBitstreamHandle(zfp_stream* zfp, zfp::array::header* h, size_t headerSizeBytes) :
+      DualBitstreamHandle(zfp_stream* zfp, uchar* buffer, size_t bufferSizeBytes) :
         zfp(zfp)
       {
         oldBs = zfp_stream_bit_stream(zfp);
-        newBs = stream_open(h->buffer, headerSizeBytes);
+        newBs = stream_open(buffer, bufferSizeBytes);
 
         stream_rewind(newBs);
         zfp_stream_set_bit_stream(zfp, newBs);
@@ -298,8 +331,10 @@ protected:
   // and verify header contents (throws exceptions upon failure)
   void read_header(const zfp::array::header& h)
   {
-    // cast off const to satisfy bitstream constructor (we only perform reads anyway)
-    DualBitstreamHandle dbh(zfp, (zfp::array::header*)&h, ZFP_HEADER_SIZE_BYTES);
+    // copy header into aligned buffer
+    AlignedBufferHandle abh(&h);
+
+    DualBitstreamHandle dbh(zfp, abh.buffer, ZFP_HEADER_SIZE_BYTES);
     ZfpFieldHandle zfh;
 
     // read header to populate member variables associated with zfp_stream

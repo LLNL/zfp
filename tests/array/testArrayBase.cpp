@@ -582,10 +582,8 @@ void CheckHeadersEquivalent(const ZFP_ARRAY_TYPE& arr1, const ZFP_ARRAY_TYPE& ar
   arr1.write_header(h[0]);
   arr2.write_header(h[1]);
 
-  size_t headerSizeBytes = (ZFP_HEADER_SIZE_BITS + CHAR_BIT - 1) / CHAR_BIT;
-
-  uint64 header1Checksum = hashBitstream((uint64*)(h + 0), headerSizeBytes);
-  uint64 header2Checksum = hashBitstream((uint64*)(h + 1), headerSizeBytes);
+  uint64 header1Checksum = hashBitstream((uint64*)(h + 0), ZFP_HEADER_SIZE_BYTES);
+  uint64 header2Checksum = hashBitstream((uint64*)(h + 1), ZFP_HEADER_SIZE_BYTES);
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, header1Checksum, header2Checksum);
 }
 
