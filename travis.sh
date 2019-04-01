@@ -3,7 +3,7 @@ set -e
 
 # pass additional args in $1 (starting with whitespace character)
 run_all () {
-  run_all_cmd="ctest -V -C Debug -DC_STANDARD=${C_STANDARD:-99} -DCXX_STANDARD=${CXX_STANDARD:-98} -DPYTHON_VERSION=${PYTHON_VERSION} -DPYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR} -DPYTHON_LIBRARY=${PYTHON_LIBRARY} -DPYTHON_EXECUTABLE=${PYTHON_BINARY} -S \"$TRAVIS_BUILD_DIR/cmake/travis.cmake\""
+  run_all_cmd="ctest -V -C Debug -DC_STANDARD=${C_STANDARD:-99} -DCXX_STANDARD=${CXX_STANDARD:-98} -S \"$TRAVIS_BUILD_DIR/cmake/travis.cmake\""
   eval "${run_all_cmd}$1"
 }
 
