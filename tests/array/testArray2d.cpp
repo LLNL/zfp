@@ -1,4 +1,5 @@
 #include "array/zfparray2.h"
+#include "array/zfparray3.h"
 using namespace zfp;
 
 extern "C" {
@@ -21,6 +22,9 @@ class Array2dTest : public ArrayNdTestFixture {};
 
 #define TEST_FIXTURE Array2dTest
 #define ZFP_ARRAY_TYPE array2d
+#define ZFP_ARRAY_TYPE_WRONG_SCALAR array2f
+#define ZFP_ARRAY_TYPE_WRONG_DIM array3d
+#define ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM array3f
 #define UINT uint64
 #define SCALAR double
 #define DIMS 2
