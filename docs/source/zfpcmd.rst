@@ -50,18 +50,19 @@ varies faster than *z*, and so on.  That is, a 4D input file corresponding
 to a flattened C array :code:`a[nw][nz][ny][nx]` is specified as
 :code:`-4 nx ny nz nw`.
 
-Note that :code:`-2 nx ny` is not equivalent to :code:`-3 nx ny 1`, even
-though the same number of values are compressed.  One invokes the 2D codec,
-while the other uses the 3D codec, which in this example has to pad the
-input to an *nx* |times| *ny* |times| 4 array since arrays are partitioned
-into blocks of dimensions |4powd|.  Such padding usually negatively impacts
-compression.
+.. note::
+  Note that :code:`-2 nx ny` is not equivalent to :code:`-3 nx ny 1`, even
+  though the same number of values are compressed.  One invokes the 2D codec,
+  while the other uses the 3D codec, which in this example has to pad the
+  input to an *nx* |times| *ny* |times| 4 array since arrays are partitioned
+  into blocks of dimensions |4powd|.  Such padding usually negatively impacts
+  compression.
 
-Moreover, :code:`-2 nx ny` is not equivalent to :code:`-2 ny nx`, i.e., with
-the dimensions transposed.  It is crucial for accuracy and compression ratio
-that the array dimensions are listed in the order expected by |zfpcmd| so
-that the array layout is correctly interpreted.  See this
-:ref:`discussion <p-dimensions>` for more details.
+In addition to ensuring correct dimensionality, the order of dimensions
+also matters.  For instance, :code:`-2 nx ny` is not equivalent to
+:code:`-2 ny nx`, i.e., with the dimensions transposed.
+
+.. include:: disclaimer.inc
 
 Using :option:`-h`, the array dimensions and type are stored in a header of
 the compressed stream so that they do not have to be specified on the command

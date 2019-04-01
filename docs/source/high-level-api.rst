@@ -239,6 +239,21 @@ Types
 
   where :code:`data` is a pointer to the first array element.
 
+.. _indexing:
+.. index::
+   single: C order
+   single: Fortran order
+.. warning::
+  It is paramount that the field dimensions, *nx*, *ny*, *nz*, and *nw*,
+  and strides, *sx*, *sy*, *sz*, and *sw*, be correctly mapped to how the
+  uncompressed array is laid out in memory.  Although compression will
+  still succeed if array dimensions are accidentally transposed, compression
+  ratio and/or accuracy may suffer greatly.  Since the leftmost index, *x*,
+  is assumed to vary fastest, |zfp| can be thought of as assuming
+  Fortran ordering.  For C ordered arrays, the user should transpose
+  the dimensions or specify strides to properly describe the memory layout.
+  See this :ref:`discussion <p-dimensions>` for further details.
+
 .. _hl-data:
 
 Constants

@@ -3,6 +3,27 @@
 Release Notes
 =============
 
+zfp 0.5.5, March 31, 2019
+
+  - Added support for reversible (lossless) compression of floating-point and
+    integer data.
+
+  - Added methods for serializing and deserializing zfp's compressed arrays.
+
+  - Added Python bindings for compressing numpy arrays.
+
+  - Added Fortran bindings to zfp's high-level C API.
+
+  - Bug fixes:
+
+    - Incorrect handling of execution policy in zfp utility.
+    - Incorrect handling of decompression via header in zfp utility.
+    - Tests for failing mallocs.
+    - CMake installation of CFP when built.
+    - zfp_write_header and zfp_field_metadata now fail if array dimensions
+      are too large to fit in header.
+
+
 zfp 0.5.4, October 1, 2018
 
   - Added support for CUDA fixed-rate compression and decompression.
@@ -23,7 +44,7 @@ zfp 0.5.4, October 1, 2018
   - Bug fixes:
 
     - Handling of negative strides.
-    - Command line tool handling of arrays with more than 2^32 elements.
+    - Command line tool handling of arrays with more than 2\ :sup:`32` elements.
     - bitstream C++ compatibility.
     - Respect minimum cache size request.
 

@@ -10,6 +10,8 @@ zfp is an open source C/C++ library for compressed numerical arrays that
 support high throughput read and write random access.  zfp also supports
 streaming compression of integer and floating-point data, e.g., for
 applications that read and write large data sets to and from disk.
+zfp is primarily written in C and C++ but also includes Python and
+Fortran bindings.
 
 zfp was developed at Lawrence Livermore National Laboratory and is loosely
 based on the algorithm described in the following paper:
@@ -21,12 +23,11 @@ based on the algorithm described in the following paper:
     doi:10.1109/TVCG.2014.2346458
 
 zfp was originally designed for floating-point arrays only, but has been
-extended to also support integer data, and could for instance be used to
+extended to also support integer data and could for instance be used to
 compress images and quantized volumetric data.  To achieve high compression
-ratios, zfp uses lossy but optionally error-bounded compression.  Although
-bit-for-bit lossless compression of floating-point data is not always
-possible, zfp is usually accurate to within machine epsilon in near-lossless
-mode.
+ratios, zfp generally uses lossy but optionally error-bounded compression.
+Bit-for-bit lossless compression is also possible through one of zfp's
+compression modes.
 
 zfp works best for 2D and 3D arrays that exhibit spatial correlation, such as
 continuous fields from physics simulations, images, regularly sampled terrain
@@ -34,7 +35,8 @@ surfaces, etc.  Although zfp also provides a 1D array class that can be used
 for 1D signals such as audio, or even unstructured floating-point streams,
 the compression scheme has not been well optimized for this use case, and
 rate and quality may not be competitive with floating-point compressors
-designed specifically for 1D streams.
+designed specifically for 1D streams.  zfp also supports compression of
+4D arrays.
 
 zfp is freely available as open source under a BSD license, as outlined in
 the file 'LICENSE'.  For more information on zfp and comparisons with other
@@ -48,9 +50,9 @@ DOCUMENTATION
 -------------
 
 Full
-[documentation](http://zfp.readthedocs.io/en/release0.5.4/)
+[documentation](http://zfp.readthedocs.io/en/release0.5.5/)
 is available online via Read the Docs.  A
-[PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release0.5.4/)
+[PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release0.5.5/)
 version is also available.
 
 
@@ -77,14 +79,14 @@ zfp has successfully been built and tested using these compilers:
     MinGW version 5.3.0
     Visual Studio versions 14 (2015), 15 (2017)
 
-zfp conforms to various language standards, including C89, C99, C++98,
-C++11, and C++14.
+zfp conforms to various language standards, including C89, C99, C11,
+C++98, C++11, and C++14.
 
 NOTE: zfp requires 64-bit compiler and operating system support.
 
 ## GNU builds 
 
-To compile zfp using gcc, type
+To build zfp using gcc, type
 
     make
 

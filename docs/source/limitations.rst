@@ -21,9 +21,12 @@ that will address some of these limitations.
   minor effort.
 
 - The optional |zfp| :ref:`header <zfp-header>` supports arrays with at
-  most 2\ :sup:`48` elements.  Each dimension is limited to 2\ :sup:`48/d`
-  elements in a *d*-dimensional array, i.e., 2\ :sup:`48`, 2\ :sup:`24`,
-  2\ :sup:`16`, and 2\ :sup:`12` for 1D through 4D arrays, respectively.
+  most 2\ :sup:`48` elements.  The |zfp| header limits each dimension
+  to 2\ :sup:`48/d` elements in a *d*-dimensional array, i.e.,
+  2\ :sup:`48`, 2\ :sup:`24`, 2\ :sup:`16`, and 2\ :sup:`12` for 1D through
+  4D arrays, respectively.  Note that this limitation applies only to
+  the header; array dimensions are otherwise limited only by the size
+  of an unsigned integer.
 
 - Conventional pointers and references to individual array elements are
   not available.  That is, constructions like :code:`double* ptr = &a[i];`
@@ -71,3 +74,7 @@ that will address some of these limitations.
 - The :ref:`C wrappers <cfp>` for |zfp|'s compressed arrays support only
   basic array accesses.  There is currently no C interface for proxy
   references, pointers, iterators, or views.
+
+- The Python and Fortran bindings do not yet support compressed arrays.
+  Moreover, only a select subset of the :ref:`high-level API <hl-api>`
+  is available via Python.

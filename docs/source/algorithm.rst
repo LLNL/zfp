@@ -61,8 +61,13 @@ purposes):
 
   5. The two's complement signed integers are converted to their negabinary
      (base negative two) representation using one addition and one bit-wise
-     exclusive or per integer.  Because negabinary has no dedicated single
-     sign bit, these integers are subsequently treated as unsigned.
+     exclusive or per integer.  Because negabinary has no single dedicated
+     sign bit, these integers are subsequently treated as unsigned.  Unlike
+     sign-magnitude representations, the leftmost one-bit in negabinary
+     simultaneously encodes the sign and approximate magnitude of a number.
+     Moreover, unlike two's complement, numbers small in magnitude have many
+     leading zeros in negabinary regardless of sign, which facilitates
+     encoding.
 
   6. The bits that represent the list of |4powd| integers are transposed so
      that instead of being ordered by coefficient they are ordered by bit
@@ -75,23 +80,24 @@ purposes):
   7. The transform coefficients are compressed losslessly using embedded
      coding by exploiting the property that the coefficients tend to have many
      leading zeros that need not be encoded explicitly.  Each bit plane is
-     encoded in two parts, from lowest to highest bit.  First the *n* lowest
-     bits are emitted verbatim, where *n* depends on previous bit planes and
-     is initially zero.  Then a variable-length representation of the remaining
-     |4powd| |minus| *n* bits, *x*, is encoded.  For such an integer *x*, a single
-     bit is emitted to indicate if *x* = 0, in which case we are done with the
-     current bit plane.  If not, then bits of *x* are emitted, starting from
-     the lowest bit, until a one-bit is emitted.  This triggers another test
-     whether this is the highest set bit of *x*, and the result of this test
-     is output as a single bit.  If not, then the procedure repeats until all
-     *m* of *x*'s value bits have been output, where
+     encoded in two parts, from lowest to highest bit.  First, the *n* lowest
+     bits are emitted verbatim, where *n* is the smallest number such that
+     the |4powd| |minus| *n* highest bits in all previous bit planes are all
+     zero.  Initially, *n* = 0.  Then, a variable-length representation of the
+     remaining |4powd| |minus| *n* bits, *x*, is encoded.  For such an integer
+     *x*, a single bit is emitted to indicate if *x* = 0, in which case we are
+     done with the current bit plane.  If not, then bits of *x* are emitted,
+     starting from the lowest bit, until a one-bit is emitted.  This triggers
+     another test whether this is the highest set bit of *x*, and the result
+     of this test is output as a single bit.  If not, then the procedure
+     repeats until all *m* of *x*'s value bits have been output, where
      2\ :sup:`m-1` |leq| *x* < 2\ :sup:`m`.  This can be thought of as a
      run-length encoding of the zeros of *x*, where the run lengths are
      expressed in unary.  The total number of value bits, *n*, in this bit
      plane is then incremented by *m* before being passed to the next bit
      plane, which is encoded by first emitting its *n* lowest bits.  The
      assumption is that these bits correspond to *n* coefficients whose most
-     significant bits have already been output, i.e. these *n* bits are
+     significant bits have already been output, i.e., these *n* bits are
      essentially random and not compressible.  Following this, the remaining
      |4powd| |minus| *n* bits of the bit plane are run-length encoded as
      described above, which potentially results in *n* being increased.

@@ -4,10 +4,12 @@
 Introduction
 ============
 
-|zfp| is an open source C/C++ library for compressed numerical arrays that
+|zfp| is an open source library for compressed numerical arrays that
 support high throughput read and write random access.  |zfp| also supports
 streaming compression of integer and floating-point data, e.g., for
 applications that read and write large data sets to and from disk.
+|zfp| is primarily written in C and C++ but also includes Python and
+Fortran bindings.
 
 |zfp| was developed at
 `Lawrence Livermore National Laboratory <https://www.llnl.gov>`_ and is

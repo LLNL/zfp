@@ -222,11 +222,14 @@ The source code for the |zfpcmd| command-line tool includes further examples
 on how to set the execution policy.  To use parallel compression and
 decompression in this tool, see the :option:`-x` command-line option.
 
-Note: As of |zfp| |cudarelease|, the execution policy refers to both
-compression and decompression.  The OpenMP implementation does not
-yet support decompression, and hence :c:func:`zfp_decompress` will
-fail if the execution policy is not reset to :code:`zfp_exec_serial`
-before calling the decompressor.
+.. note::
+  As of |zfp| |cudarelease|, the execution policy refers to both
+  compression and decompression.  The OpenMP implementation does not
+  yet support decompression, and hence :c:func:`zfp_decompress` will
+  fail if the execution policy is not reset to :code:`zfp_exec_serial`
+  before calling the decompressor.  Similarly, the CUDA implementation
+  supports only fixed-rate mode and will fail if other compression modes
+  are specified.
 
 The following table summarizes which execution policies are supported
 with which :ref:`compression modes <modes>`:
@@ -236,15 +239,19 @@ with which :ref:`compression modes <modes>`:
   +===============+=================+========+========+======+
   |               | fixed rate      |    x   |    x   |   x  |
   |               +-----------------+--------+--------+------+
-  | compression   | fixed precision |    x   |    x   |      |
-  |               +-----------------+--------+--------+------+
+  |               | fixed precision |    x   |    x   |      |
+  | compression   +-----------------+--------+--------+------+
   |               | fixed accuracy  |    x   |    x   |      |
+  |               +-----------------+--------+--------+------+
+  |               | reversible      |    x   |    x   |      |
   +---------------+-----------------+--------+--------+------+
   |               | fixed rate      |    x   |        |   x  |
   |               +-----------------+--------+--------+------+
-  | decompression | fixed precision |    x   |        |      |
-  |               +-----------------+--------+--------+------+
+  |               | fixed precision |    x   |        |      |
+  | decompression +-----------------+--------+--------+------+
   |               | fixed accuracy  |    x   |        |      |
+  |               +-----------------+--------+--------+------+
+  |               | reversible      |    x   |        |      |
   +---------------+-----------------+--------+--------+------+
 
 :c:func:`zfp_compress` and :c:func:`zfp_decompress` both return zero if the

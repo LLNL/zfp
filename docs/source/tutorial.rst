@@ -41,10 +41,13 @@ Consider compressing the 3D C/C++ array
   // define an uncompressed array
   double a[nz][ny][nx];
 
-where *nx*, *ny*, and *nz* can be any positive dimensions.  To invoke the
-|libzfp| compressor, the dimensions and type must first be specified in a
-:c:type:`zfp_field` parameter object that encapsulates the type, size, and
-memory layout of the array::
+where *nx*, *ny*, and *nz* can be any positive dimensions.
+
+.. include:: disclaimer.inc
+
+To invoke the |libzfp| compressor, the dimensions and type must first be
+specified in a :c:type:`zfp_field` parameter object that encapsulates the
+type, size, and memory layout of the array::
 
   // allocate metadata for the 3D array a[nz][ny][nx]
   uint dims = 3;
@@ -328,13 +331,16 @@ or using STL vectors
 
 but with the user specifying the amount of storage used via the *rate*
 parameter.  (A predefined type :cpp:type:`array3d` also exists, while
-the suffix 'f' is used for floats.)  Note that the array dimensions can
-be arbitrary, and need not be multiples of four (see above for a discussion
-of incomplete blocks).  The *rate* argument specifies how many bits per
-value (amortized) to store in the compressed representation.  By default
-the block size is restricted to a multiple of 64 bits, and therefore the
-rate argument can be specified in increments of 64 / |4powd| bits in *d*
-dimensions, i.e.
+the suffix 'f' is used for floats.)
+
+.. include:: disclaimer.inc
+
+Note that the array dimensions can be arbitrary, and need not be multiples
+of four (see above for a discussion of incomplete blocks).  The *rate*
+argument specifies how many bits per value (amortized) to store in the
+compressed representation.  By default the block size is restricted to a
+multiple of 64 bits, and therefore the rate argument can be specified in
+increments of 64 / |4powd| bits in *d* dimensions, i.e.
 ::
 
   1D arrays: 16-bit granularity
