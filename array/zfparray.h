@@ -180,7 +180,10 @@ public:
     DualBitstreamHandle dbh(zfp, abh.buffer, ZFP_HEADER_SIZE_BYTES);
     ZfpFieldHandle zfh(type, nx, ny, nz);
 
-    // write header
+    // avoid long header (alignment issue)
+    if (zfp_stream_mode(zfp) > ZFP_MODE_SHORT_MAX)
+      throw zfp::array::header_exception("ZFP compressed arrays only support short headers at this time.");
+
     zfp_write_header(zfp, zfh.field, ZFP_HEADER_FULL);
     stream_flush(zfp->stream);
 
@@ -340,8 +343,11 @@ protected:
     ZfpFieldHandle zfh;
 
     // read header to populate member variables associated with zfp_stream
-    if (zfp_read_header(zfp, zfh.field, ZFP_HEADER_FULL) != ZFP_HEADER_SIZE_BITS)
+    size_t readbits = zfp_read_header(zfp, zfh.field, ZFP_HEADER_FULL);
+    if (!readbits)
       throw zfp::array::header_exception("Invalid ZFP header.");
+    else if (readbits != ZFP_HEADER_SIZE_BITS)
+      throw zfp::array::header_exception("ZFP compressed arrays only support short headers at this time.");
 
     // verify read-header contents
     std::string errMsg = "";

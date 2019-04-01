@@ -22,13 +22,17 @@ Array1fTestEnv* const testEnv = new Array1fTestEnv;
 class Array1fTest : public ArrayNdTestFixture {};
 
 #define TEST_FIXTURE Array1fTest
+
 #define ZFP_ARRAY_TYPE array1f
 #define ZFP_ARRAY_TYPE_WRONG_SCALAR array1d
 #define ZFP_ARRAY_TYPE_WRONG_DIM array2f
 #define ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM array2d
+#define ZFP_ARRAY_NOT_INCLUDED_TYPE array3f
+
 #define UINT uint32
 #define SCALAR float
 #define DIMS 1
+
 #include "testArrayBase.cpp"
 #include "testArray1Base.cpp"
 

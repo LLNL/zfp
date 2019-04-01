@@ -5,6 +5,7 @@ extern "C" {
 }
 
 #include <cstring>
+#include <sstream>
 
 TEST_F(TEST_FIXTURE, when_constructorCalled_then_rateSetWithWriteRandomAccess)
 {
@@ -150,6 +151,49 @@ TEST_F(TEST_FIXTURE, when_constructorFromSerializedWithInvalidHeader_then_except
     FailWhenNoExceptionThrown();
   } catch (zfp::array::header_exception const & e) {
     EXPECT_EQ(e.what(), std::string("Invalid ZFP header."));
+  } catch (std::exception const & e) {
+    FailAndPrintException(e);
+  }
+}
+
+TEST_F(TEST_FIXTURE, given_zfpHeaderForCertainDimensionalityButHeaderMissing_when_construct_expect_zfpArrayHeaderExceptionThrown)
+{
+  uint missingDim = ((DIMS + 1) % 3) + 1;
+  zfp_stream_set_rate(stream, 12, ZFP_TYPE, missingDim, 1);
+
+  zfp_field_set_type(field, ZFP_TYPE);
+  switch(missingDim) {
+    case 3:
+      zfp_field_set_size_3d(field, 12, 12, 12);
+      break;
+
+    case 2:
+      zfp_field_set_size_2d(field, 12, 12);
+      break;
+
+    case 1:
+      zfp_field_set_size_1d(field, 12);
+      break;
+  }
+
+  // write header to buffer with C API
+  zfp_stream_rewind(stream);
+  EXPECT_EQ(ZFP_HEADER_SIZE_BITS, zfp_write_header(stream, field, ZFP_HEADER_FULL));
+  zfp_stream_flush(stream);
+
+  zfp::array::header h;
+  // zfp::array::header collects header up to next byte
+  memcpy(h.buffer, buffer, ZFP_HEADER_SIZE_BYTES);
+
+  try {
+    zfp::array* arr = zfp::array::construct(h);
+    FailWhenNoExceptionThrown();
+
+  } catch (zfp::array::header_exception const & e) {
+    std::stringstream ss;
+    ss << "Header files for " << missingDim << " dimensional ZFP compressed arrays were not included.";
+    EXPECT_EQ(e.what(), ss.str());
+
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
