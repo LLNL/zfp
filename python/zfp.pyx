@@ -1,4 +1,4 @@
-import six
+import sys
 import operator
 import functools
 import cython
@@ -8,9 +8,9 @@ from cpython cimport array
 import array
 
 import itertools
-if six.PY2:
+if sys.version_info[0] == 2:
     from itertools import izip_longest as zip_longest
-elif six.PY3:
+elif sys.version_info[0] == 3:
     from itertools import zip_longest
 
 cimport zfp
