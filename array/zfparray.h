@@ -46,6 +46,8 @@ public:
     std::string msg;
   };
 
+  static zfp::array* construct(const zfp::array::header& header, const uchar* buffer = 0, size_t bufferSizeBytes = 0);
+
 protected:
   // default constructor
   array() :
@@ -119,13 +121,6 @@ protected:
     deep_copy(a);
   }
 
-  // protected destructor (cannot delete array through base class pointer)
-  ~array()
-  {
-    free();
-    zfp_stream_close(zfp);
-  }
-
   // assignment operator--performs a deep copy
   array& operator=(const array& a)
   {
@@ -134,6 +129,13 @@ protected:
   }
  
 public:
+  // public virtual destructor (can delete array through base class pointer)
+  virtual ~array()
+  {
+    free();
+    zfp_stream_close(zfp);
+  }
+
   // rate in bits per value
   double rate() const { return double(blkbits) / block_size(); }
 

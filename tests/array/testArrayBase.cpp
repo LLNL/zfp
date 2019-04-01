@@ -348,6 +348,69 @@ TEST_F(TEST_FIXTURE, given_incompleteChunkOfSerializedCompressedArray_when_const
   }
 }
 
+TEST_F(TEST_FIXTURE, given_serializedCompressedArrayHeader_when_factoryFuncConstruct_then_correctTypeConstructed)
+{
+#if DIMS == 1
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#elif DIMS == 2
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#elif DIMS == 3
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#endif
+
+  zfp::array::header h;
+  arr.write_header(h);
+
+  array* arr2 = zfp::array::construct(h);
+
+  ASSERT_TRUE(arr2 != 0);
+
+  delete arr2;
+}
+
+TEST_F(TEST_FIXTURE, given_serializedCompressedArray_when_factoryFuncConstruct_then_correctTypeConstructedWithPopulatedEntries)
+{
+#if DIMS == 1
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#elif DIMS == 2
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#elif DIMS == 3
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#endif
+
+  arr[1] = 999.;
+
+  zfp::array::header h;
+  arr.write_header(h);
+
+  array* arr2 = zfp::array::construct(h, arr.compressed_data(), arr.compressed_size());
+
+  ASSERT_TRUE(arr2 != 0);
+  EXPECT_EQ(arr.compressed_size(), arr2->compressed_size());
+  ASSERT_TRUE(std::memcmp(arr.compressed_data(), arr2->compressed_data(), arr.compressed_size()) == 0);
+
+  delete arr2;
+}
+
+TEST_F(TEST_FIXTURE, given_uncompatibleSerializedMem_when_factoryFuncConstruct_then_throwsZfpHeaderException)
+{
+  zfp::array::header h = {0};
+
+  size_t dummyLen = 1024;
+  uchar* dummyMem = new uchar[dummyLen];
+  memset(dummyMem, 0, dummyLen);
+
+  try {
+    array* arr = zfp::array::construct(h, dummyMem, dummyLen);
+  } catch (zfp::array::header_exception const & e) {
+    EXPECT_EQ(e.what(), std::string("Invalid ZFP header."));
+  } catch (std::exception const & e) {
+    FailAndPrintException(e);
+  }
+
+  delete[] dummyMem;
+}
+
 #if DIMS == 1
 // with write random access in 1D, fixed-rate params rounded up to multiples of 16
 INSTANTIATE_TEST_CASE_P(TestManyCompressionRates, TEST_FIXTURE, ::testing::Values(1, 2));
