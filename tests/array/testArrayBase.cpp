@@ -72,7 +72,7 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
 void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, uint chosenSizeY, uint chosenSizeZ, double chosenRate)
 {
   // verify valid header (manually through C API)
-  bitstream* stream = stream_open((zfp::array::header*)&h, ZFP_HEADER_SIZE_BYTES);
+  bitstream* stream = stream_open((zfp::array::header*)&h, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
 
   zfp_field* field = zfp_field_alloc();
   zfp_stream* zfp = zfp_stream_open(stream);
@@ -183,7 +183,7 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForCertainDimensionalityButHeaderMissing_whe
 
   zfp::array::header h;
   // zfp::array::header collects header up to next byte
-  memcpy(h.buffer, buffer, ZFP_HEADER_SIZE_BYTES);
+  memcpy(h.buffer, buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
 
   try {
     zfp::array* arr = zfp::array::construct(h);
@@ -309,11 +309,11 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateWrongScalarTypeWrongDimensional
   zfp_field* field;
   // (inputDataSideLen specific to that dimensionality, can request too much memory if fitted to higher dimensionality)
 #if DIMS == 1
-  field = zfp_field_2d(inputDataArr, zfp_type_int32, 100, 100);
-#elif DIMS == 2
-  field = zfp_field_3d(inputDataArr, zfp_type_int32, 100, 100, 100);
-#elif DIMS == 3
   field = zfp_field_1d(inputDataArr, zfp_type_int32, 100);
+#elif DIMS == 2
+  field = zfp_field_2d(inputDataArr, zfp_type_int32, 100, 100);
+#elif DIMS == 3
+  field = zfp_field_3d(inputDataArr, zfp_type_int32, 100, 100, 100);
 #endif
 
   zfp_stream* stream = zfp_stream_open(NULL);
@@ -743,8 +743,8 @@ void CheckHeadersEquivalent(const ZFP_ARRAY_TYPE& arr1, const ZFP_ARRAY_TYPE& ar
   arr1.write_header(h[0]);
   arr2.write_header(h[1]);
 
-  uint64 header1Checksum = hashBitstream((uint64*)(h + 0), ZFP_HEADER_SIZE_BYTES);
-  uint64 header2Checksum = hashBitstream((uint64*)(h + 1), ZFP_HEADER_SIZE_BYTES);
+  uint64 header1Checksum = hashBitstream((uint64*)(h + 0), BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
+  uint64 header2Checksum = hashBitstream((uint64*)(h + 1), BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, header1Checksum, header2Checksum);
 }
 

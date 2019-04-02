@@ -1,10 +1,11 @@
 #include "gtest/gtest.h"
+#include "commonMacros.h"
 
 class ZfpArrayConstructTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
-    buffer = new uchar[ZFP_HEADER_PADDED_TO_WORD_BYTES];
-    bs = stream_open(buffer, ZFP_HEADER_SIZE_BYTES);
+    buffer = new uchar[BITS_TO_WORDS(ZFP_HEADER_SIZE_BITS) * stream_word_bits / CHAR_BIT];
+    bs = stream_open(buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
     stream = zfp_stream_open(bs);
     field = zfp_field_alloc();
   }

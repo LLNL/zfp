@@ -40,8 +40,8 @@ public:
   }
 
   // constructor, from previously-serialized compressed array
-  array2(const zfp::array::header& h, const uchar* buffer = 0, size_t bufferSizeBytes = 0) :
-    array(2, Codec::type, h, bufferSizeBytes)
+  array2(const zfp::array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0) :
+    array(2, Codec::type, h, buffer_size_bytes)
   {
     resize(nx, ny, false);
     if (buffer)

@@ -36,7 +36,7 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForIntegerData_when_construct_expect_zfpArra
 
   zfp::array::header h;
   // zfp::array::header collects header up to next byte
-  memcpy(h.buffer, buffer, ZFP_HEADER_SIZE_BYTES);
+  memcpy(h.buffer, buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
 
   try {
     zfp::array* arr = zfp::array::construct(h);
@@ -64,7 +64,7 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForHigherDimensionalData_when_construct_expe
 
   zfp::array::header h;
   // zfp::array::header collects header up to next byte
-  memcpy(h.buffer, buffer, ZFP_HEADER_SIZE_BYTES);
+  memcpy(h.buffer, buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
 
   try {
     zfp::array* arr = zfp::array::construct(h);
@@ -92,7 +92,7 @@ TEST_F(TEST_FIXTURE, given_onlyInclude2D3D_and_zfpHeaderFor1D_when_construct_exp
 
   zfp::array::header h;
   // zfp::array::header collects header up to next byte
-  memcpy(h.buffer, buffer, ZFP_HEADER_SIZE_BYTES);
+  memcpy(h.buffer, buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
 
   try {
     zfp::array* arr = zfp::array::construct(h);

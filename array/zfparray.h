@@ -4,22 +4,17 @@
 #include <algorithm>
 #include <climits>
 #include <cstring>
-#include <exception>
+#include <stdexcept>
 #include <string>
 
 #include "zfp.h"
 #include "zfp/memory.h"
 
-// header is 96 bits
-#define ZFP_HEADER_SIZE_BITS (ZFP_MAGIC_BITS + ZFP_META_BITS + ZFP_MODE_SHORT_BITS)
-#define ZFP_HEADER_SIZE_BYTES ((ZFP_HEADER_SIZE_BITS + CHAR_BIT - 1) / CHAR_BIT)
-// when r/w bitstream, underlying memory needs to be word aligned
-// then memcpy() to move data between aligned bitstream mem and unaligned zfp::array::header
-#define ZFP_HEADER_SIZE_WORDS ((ZFP_HEADER_SIZE_BITS + stream_word_bits - 1) / stream_word_bits)
-#define ZFP_HEADER_PADDED_TO_WORD_BYTES (ZFP_HEADER_SIZE_WORDS * stream_word_bits / CHAR_BIT)
-// note: ZFP_HEADER_PADDED_TO_WORD_BYTES >= ZFP_HEADER_SIZE_BYTES
+// all undefined at end
+#define DIV_ROUND_UP(x, y) (((x) + (y) - 1) / (y))
+#define BITS_TO_BYTES(x) DIV_ROUND_UP(x, CHAR_BIT)
 
-#define unused_(x) ((void)(x))
+#define ZFP_HEADER_SIZE_BITS (ZFP_MAGIC_BITS + ZFP_META_BITS + ZFP_MODE_SHORT_BITS)
 
 namespace zfp {
 
@@ -27,26 +22,12 @@ namespace zfp {
 class array {
 public:
   typedef struct {
-    uchar buffer[ZFP_HEADER_SIZE_BYTES];
+    uchar buffer[BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS)];
   } header;
 
-  class header_exception : public std::exception {
-  public:
-    header_exception(const char* msg) : msg(msg) {}
+  #include "zfp/exceptions.h"
 
-    header_exception(const std::string& msg) : msg(msg) {}
-
-    virtual ~header_exception() throw (){}
-
-    virtual const char* what() const throw () {
-      return msg.c_str();
-    }
-
-  protected:
-    std::string msg;
-  };
-
-  static zfp::array* construct(const zfp::array::header& header, const uchar* buffer = 0, size_t bufferSizeBytes = 0);
+  static zfp::array* construct(const zfp::array::header& header, const uchar* buffer = 0, size_t buffer_size_bytes = 0);
 
 protected:
   // default constructor
@@ -72,7 +53,7 @@ protected:
   {}
 
   // constructor, from previously-serialized compressed array
-  array(uint dims, zfp_type type, const zfp::array::header& h, size_t bufferSizeBytes) :
+  array(uint dims, zfp_type type, const zfp::array::header& h, size_t expected_buffer_size_bytes) :
     dims(dims), type(type),
     nx(0), ny(0), nz(0),
     bx(0), by(0), bz(0),
@@ -84,23 +65,14 @@ protected:
     // read header to populate member variables associated with zfp_stream
     try {
       read_header(h);
-    } catch (zfp::array::header_exception const & e) {
-      unused_(e);
+    } catch (zfp::array::header_exception const &) {
       zfp_stream_close(zfp);
       throw;
     }
 
-    if (bufferSizeBytes != 0) {
-      // verify buffer is large enough, with what header describes
-      uint mx = ((std::max(nx, 1u)) + 3) / 4;
-      uint my = ((std::max(ny, 1u)) + 3) / 4;
-      uint mz = ((std::max(nz, 1u)) + 3) / 4;
-      size_t blocks = (size_t)mx * (size_t)my * (size_t)mz;
-      size_t describedSize = ((blocks * zfp->maxbits + stream_word_bits - 1) & ~(stream_word_bits - 1)) / CHAR_BIT;
-      if (bufferSizeBytes < describedSize) {
-        zfp_stream_close(zfp);
-        throw zfp::array::header_exception("ZFP header expects a longer buffer than what was passed in.");
-      }
+    if (expected_buffer_size_bytes && !is_valid_buffer_size(zfp, nx, ny, nz, expected_buffer_size_bytes)) {
+      zfp_stream_close(zfp);
+      throw zfp::array::header_exception("ZFP header expects a longer buffer than what was passed in.");
     }
 
     // everything is valid
@@ -176,84 +148,26 @@ public:
   {
     // intermediate buffer needed (bitstream accesses multiples of wordsize)
     AlignedBufferHandle abh;
+    DualBitstreamHandle dbh(zfp, abh);
 
-    DualBitstreamHandle dbh(zfp, abh.buffer, ZFP_HEADER_SIZE_BYTES);
     ZfpFieldHandle zfh(type, nx, ny, nz);
 
     // avoid long header (alignment issue)
     if (zfp_stream_mode(zfp) > ZFP_MODE_SHORT_MAX)
       throw zfp::array::header_exception("ZFP compressed arrays only support short headers at this time.");
 
-    zfp_write_header(zfp, zfh.field, ZFP_HEADER_FULL);
-    stream_flush(zfp->stream);
+    if (!zfp_write_header(zfp, zfh.field, ZFP_HEADER_FULL))
+      throw zfp::array::header_exception("ZFP could not write a header to buffer.");
 
+    stream_flush(zfp->stream);
     abh.copy_to_header(&h);
   }
 
+private:
+  // private members used when reading/writing headers
+  #include "zfp/headerHelpers.h"
+
 protected:
-  // "Handle" classes useful when throwing exceptions in read_header()
-
-  // buffer holds aligned memory for header, suitable for bitstream r/w
-  class AlignedBufferHandle {
-    public:
-      uchar* buffer;
-
-      // can copy a header into aligned buffer
-      AlignedBufferHandle(const zfp::array::header* h = 0) {
-        buffer = new uchar[ZFP_HEADER_PADDED_TO_WORD_BYTES];
-        if (h)
-          memcpy(buffer, h->buffer, ZFP_HEADER_SIZE_BYTES);
-      }
-
-      ~AlignedBufferHandle() {
-        delete[] buffer;
-      }
-
-      void copy_to_header(zfp::array::header* h) {
-        memcpy(h, buffer, ZFP_HEADER_SIZE_BYTES);
-      }
-  };
-
-  // redirect zfp_stream->bitstream to header while object remains in scope
-  class DualBitstreamHandle {
-    public:
-      bitstream* oldBs;
-      bitstream* newBs;
-      zfp_stream* zfp;
-
-      DualBitstreamHandle(zfp_stream* zfp, uchar* buffer, size_t bufferSizeBytes) :
-        zfp(zfp)
-      {
-        oldBs = zfp_stream_bit_stream(zfp);
-        newBs = stream_open(buffer, bufferSizeBytes);
-
-        stream_rewind(newBs);
-        zfp_stream_set_bit_stream(zfp, newBs);
-      }
-
-      ~DualBitstreamHandle() {
-        zfp_stream_set_bit_stream(zfp, oldBs);
-        stream_close(newBs);
-      }
-  };
-
-  class ZfpFieldHandle {
-    public:
-      zfp_field* field;
-
-      ZfpFieldHandle() {
-        field = zfp_field_alloc();
-      }
-
-      ZfpFieldHandle(zfp_type type, int nx, int ny, int nz) {
-        field = zfp_field_3d(0, type, nx, ny, nz);
-      }
-
-      ~ZfpFieldHandle() {
-        zfp_field_free(field);
-      }
-  };
-
   // number of values per block
   uint block_size() const { return 1u << (2 * dims); }
 
@@ -313,33 +227,13 @@ protected:
     zfp::clone(shape, a.shape, blocks);
   }
 
-  // returns if dimension lengths consistent with dimensionality
-  bool is_valid_dims(uint nx, uint ny, uint nz) const
-  {
-    bool result = true;
-    switch(dims) {
-      case 3:
-        result &= nz;
-      case 2:
-        result &= ny;
-      case 1:
-        result &= nx;
-        break;
-
-      default:
-        return false;
-    }
-    return result;
-  }
-
   // attempt reading header from zfp::array::header
   // and verify header contents (throws exceptions upon failure)
   void read_header(const zfp::array::header& h)
   {
     // copy header into aligned buffer
     AlignedBufferHandle abh(&h);
-
-    DualBitstreamHandle dbh(zfp, abh.buffer, ZFP_HEADER_SIZE_BYTES);
+    DualBitstreamHandle dbh(zfp, abh);
     ZfpFieldHandle zfh;
 
     // read header to populate member variables associated with zfp_stream
@@ -349,25 +243,21 @@ protected:
     else if (readbits != ZFP_HEADER_SIZE_BITS)
       throw zfp::array::header_exception("ZFP compressed arrays only support short headers at this time.");
 
-    // verify read-header contents
-    std::string errMsg = "";
-    if (type != zfh.field->type)
-      errMsg += "ZFP header specified an underlying scalar type different than that for this object.";
+    // verify metadata on zfp_field match that for this object
+    std::string err_msg = "";
+    if (type != zfp_field_type(zfh.field))
+      err_msg += "ZFP header specified an underlying scalar type different than that for this object.";
 
-    if (!is_valid_dims(zfh.field->nx, zfh.field->ny, zfh.field->nz)) {
-      if (!errMsg.empty())
-        errMsg += " ";
-      errMsg += "ZFP header specified a dimensionality different than that for this object.";
+    if (dims != zfp_field_dimensionality(zfh.field)) {
+      if (!err_msg.empty())
+        err_msg += " ";
+      err_msg += "ZFP header specified a dimensionality different than that for this object.";
     }
 
-    if (zfp_stream_compression_mode(zfp) != zfp_mode_fixed_rate) {
-      if (!errMsg.empty())
-        errMsg += " ";
-      errMsg += "ZFP header specified a non fixed-rate mode, unsupported by this object.";
-    }
+    verify_header_contents(zfp, zfh.field, err_msg);
 
-    if (!errMsg.empty())
-      throw zfp::array::header_exception(errMsg);
+    if (!err_msg.empty())
+      throw zfp::array::header_exception(err_msg);
 
     // set class variables
     nx = zfh.field->nx;
@@ -388,7 +278,10 @@ protected:
   uchar* shape;        // precomputed block dimensions (or null if uniform)
 };
 
-#undef unused_
+#undef DIV_ROUND_UP
+#undef BITS_TO_BYTES
+
+#undef ZFP_HEADER_SIZE_BITS
 
 }
 
