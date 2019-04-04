@@ -4,6 +4,8 @@
 Python
 =======================
 
+.. py:module:: zfp
+
 Dependencies
 ------------
 
