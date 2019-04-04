@@ -28,6 +28,11 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const uchar*
         case zfp_type_float:
           arr = new zfp::array3f(n[0], n[1], n[2], rate);
           break;
+
+        default:
+          /* NOTREACHED */
+          err_msg = "Unexpected ZFP type.";
+          break;
       }
 #else
       err_msg = "Header files for 3 dimensional ZFP compressed arrays were not included.";
@@ -44,6 +49,11 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const uchar*
         case zfp_type_float:
           arr = new zfp::array2f(n[0], n[1], rate);
           break;
+
+        default:
+          /* NOTREACHED */
+          err_msg = "Unexpected ZFP type.";
+          break;
       }
 #else
       err_msg = "Header files for 2 dimensional ZFP compressed arrays were not included.";
@@ -59,6 +69,11 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const uchar*
 
         case zfp_type_float:
           arr = new zfp::array1f(n[0], rate);
+          break;
+
+        default:
+          /* NOTREACHED */
+          err_msg = "Unexpected ZFP type.";
           break;
       }
 #else
