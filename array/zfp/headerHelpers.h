@@ -105,7 +105,7 @@ static void read_header_contents(const zfp::array::header& header, size_t expect
   ZfpFieldHandle zfh;
 
   if (!zfp_read_header(zsh.stream, zfh.field, ZFP_HEADER_FULL))
-    throw zfp::array::header_exception("Invalid ZFP header.");
+    throw zfp::array::header::exception("Invalid ZFP header.");
 
   // gather metadata
   dims = zfp_field_dimensionality(zfh.field);
@@ -121,10 +121,10 @@ static void read_header_contents(const zfp::array::header& header, size_t expect
   verify_header_contents(zsh.stream, zfh.field, err_msg);
 
   if (!err_msg.empty())
-    throw zfp::array::header_exception(err_msg);
+    throw zfp::array::header::exception(err_msg);
 
   if (expected_buffer_size_bytes && !is_valid_buffer_size(zsh.stream, zfh.field->nx, zfh.field->ny, zfh.field->nz, expected_buffer_size_bytes))
-    throw zfp::array::header_exception("ZFP header expects a longer buffer than what was passed in.");
+    throw zfp::array::header::exception("ZFP header expects a longer buffer than what was passed in.");
 }
 
 // verifies metadata on zfp_stream and zfp_field describe a valid compressed array

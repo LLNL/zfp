@@ -72,7 +72,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const uchar*
   }
 
   if (!err_msg.empty())
-    throw zfp::array::header_exception(err_msg);
+    throw zfp::array::header::exception(err_msg);
 
   if (buffer)
     memcpy(arr->compressed_data(), buffer, arr->compressed_size());

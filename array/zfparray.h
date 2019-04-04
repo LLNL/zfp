@@ -21,11 +21,7 @@ namespace zfp {
 // abstract base class for compressed array of scalars
 class array {
 public:
-  typedef struct {
-    uchar buffer[BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS)];
-  } header;
-
-  #include "zfp/exceptions.h"
+  #include "zfp/header.h"
 
   static zfp::array* construct(const zfp::array::header& header, const uchar* buffer = 0, size_t buffer_size_bytes = 0);
 
@@ -65,14 +61,14 @@ protected:
     // read header to populate member variables associated with zfp_stream
     try {
       read_from_header(h);
-    } catch (zfp::array::header_exception const &) {
+    } catch (zfp::array::header::exception const &) {
       zfp_stream_close(zfp);
       throw;
     }
 
     if (expected_buffer_size_bytes && !is_valid_buffer_size(zfp, nx, ny, nz, expected_buffer_size_bytes)) {
       zfp_stream_close(zfp);
-      throw zfp::array::header_exception("ZFP header expects a longer buffer than what was passed in.");
+      throw zfp::array::header::exception("ZFP header expects a longer buffer than what was passed in.");
     }
   }
 
@@ -146,10 +142,10 @@ public:
 
     // avoid long header (alignment issue)
     if (zfp_stream_mode(zfp) > ZFP_MODE_SHORT_MAX)
-      throw zfp::array::header_exception("ZFP compressed arrays only support short headers at this time.");
+      throw zfp::array::header::exception("ZFP compressed arrays only support short headers at this time.");
 
     if (!zfp_write_header(zfp, zfh.field, ZFP_HEADER_FULL))
-      throw zfp::array::header_exception("ZFP could not write a header to buffer.");
+      throw zfp::array::header::exception("ZFP could not write a header to buffer.");
     stream_flush(zfp->stream);
 
     zfp::array::header h;
@@ -234,9 +230,9 @@ protected:
     // read header to populate member variables associated with zfp_stream
     size_t readbits = zfp_read_header(zfp, zfh.field, ZFP_HEADER_FULL);
     if (!readbits)
-      throw zfp::array::header_exception("Invalid ZFP header.");
+      throw zfp::array::header::exception("Invalid ZFP header.");
     else if (readbits != ZFP_HEADER_SIZE_BITS)
-      throw zfp::array::header_exception("ZFP compressed arrays only support short headers at this time.");
+      throw zfp::array::header::exception("ZFP compressed arrays only support short headers at this time.");
 
     // verify metadata on zfp_field match that for this object
     std::string err_msg = "";
@@ -249,7 +245,7 @@ protected:
     verify_header_contents(zfp, zfh.field, err_msg);
 
     if (!err_msg.empty())
-      throw zfp::array::header_exception(err_msg);
+      throw zfp::array::header::exception(err_msg);
 
     // set class variables
     nx = zfh.field->nx;

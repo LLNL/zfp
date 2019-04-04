@@ -45,7 +45,7 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForIntegerData_when_construct_expect_zfpArra
   try {
     zfp::array* arr = zfp::array::construct(h);
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header_exception const & e) {
+  } catch (zfp::array::header::exception const & e) {
     EXPECT_EQ(e.what(), std::string("ZFP compressed arrays do not yet support scalar types beyond floats and doubles."));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
@@ -73,7 +73,7 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForHigherDimensionalData_when_construct_expe
   try {
     zfp::array* arr = zfp::array::construct(h);
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header_exception const & e) {
+  } catch (zfp::array::header::exception const & e) {
     EXPECT_EQ(e.what(), std::string("ZFP compressed arrays do not yet support dimensionalities beyond 1, 2, and 3."));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
@@ -101,7 +101,7 @@ TEST_F(TEST_FIXTURE, given_onlyInclude2D3D_and_zfpHeaderFor1D_when_construct_exp
   try {
     zfp::array* arr = zfp::array::construct(h);
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header_exception const & e) {
+  } catch (zfp::array::header::exception const & e) {
     EXPECT_EQ(e.what(), std::string("Header files for 1 dimensional ZFP compressed arrays were not included."));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
@@ -117,7 +117,7 @@ TEST_F(TEST_FIXTURE, given_validHeaderBuffer_withBufferSizeTooLow_when_construct
   try {
     zfp::array* arr2 = zfp::array::construct(h, arr.compressed_data(), 1);
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header_exception const & e) {
+  } catch (zfp::array::header::exception const & e) {
     EXPECT_EQ(e.what(), std::string("ZFP header expects a longer buffer than what was passed in."));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
@@ -131,7 +131,7 @@ TEST_F(TEST_FIXTURE, given_compressedArrayWithLongHeader_when_writeHeader_expect
   try {
     zfp::array::header h = arr.get_header();
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header_exception const & e) {
+  } catch (zfp::array::header::exception const & e) {
     EXPECT_EQ(e.what(), std::string("ZFP compressed arrays only support short headers at this time."));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
