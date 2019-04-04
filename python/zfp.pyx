@@ -161,6 +161,8 @@ cpdef bytes compress_numpy(
                 raise RuntimeError("Failed to write header to stream")
             with nogil:
                 compressed_size = zfp_compress(stream, field)
+            if compressed_size == 0:
+                raise RuntimeError("Failed to write to stream")
             # copy the compressed data into a perfectly sized bytes object
             compress_str = (<char *>data)[:compressed_size]
     finally:
