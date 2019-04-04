@@ -10,6 +10,10 @@ using namespace zfp;
 
 TestEnv* const testEnv = new TestEnv;
 
+// this file tests exceptions thrown from zfp::array::construct() that cannot be
+// generalized and run on every {1/2/3 x f/d} combination, or need not be run
+// multiple times
+
 void FailWhenNoExceptionThrown()
 {
   FAIL() << "No exception was thrown when one was expected";

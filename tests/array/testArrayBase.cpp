@@ -485,6 +485,8 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayHeader_when_factoryFuncConst
   array* arr2 = zfp::array::construct(h);
 
   ASSERT_TRUE(arr2 != 0);
+  ASSERT_TRUE(dynamic_cast<ZFP_ARRAY_TYPE *>(arr2) != NULL);
+  ASSERT_TRUE(dynamic_cast<ZFP_ARRAY_TYPE_WRONG_DIM *>(arr2) == NULL);
 
   delete arr2;
 }
