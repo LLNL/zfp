@@ -130,8 +130,7 @@ TEST_F(TEST_FIXTURE, when_writeHeader_then_cCompatibleHeaderWritten)
   ZFP_ARRAY_TYPE arr(chosenSizeX, chosenSizeY, chosenSizeZ, chosenRate);
 #endif
 
-  zfp::array::header h;
-  arr.write_header(h);
+  zfp::array::header h = arr.get_header();
 
   VerifyProperHeaderWritten(h, chosenSizeX, chosenSizeY, chosenSizeZ, chosenRate);
 }
@@ -218,8 +217,7 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayFromWrongScalarType_when_con
   ZFP_ARRAY_TYPE_WRONG_SCALAR arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #endif
 
-  zfp::array::header h;
-  arr.write_header(h);
+  zfp::array::header h = arr.get_header();
 
   try {
     ZFP_ARRAY_TYPE arr2(h, arr.compressed_data());
@@ -241,8 +239,7 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayFromWrongDimensionality_when
   ZFP_ARRAY_TYPE_WRONG_DIM arr(100, ZFP_RATE_PARAM_BITS);
 #endif
 
-  zfp::array::header h;
-  arr.write_header(h);
+  zfp::array::header h = arr.get_header();
 
   try {
     ZFP_ARRAY_TYPE arr2(h, arr.compressed_data());
@@ -443,8 +440,7 @@ TEST_F(TEST_FIXTURE, given_incompleteChunkOfSerializedCompressedArray_when_const
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #endif
 
-  zfp::array::header h;
-  arr.write_header(h);
+  zfp::array::header h = arr.get_header();
 
   try {
     ZFP_ARRAY_TYPE arr2(h, arr.compressed_data(), arr.compressed_size() - 1);
@@ -466,8 +462,7 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayHeader_when_factoryFuncConst
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #endif
 
-  zfp::array::header h;
-  arr.write_header(h);
+  zfp::array::header h = arr.get_header();
 
   array* arr2 = zfp::array::construct(h);
 
@@ -488,8 +483,7 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArray_when_factoryFuncConstruct_t
 
   arr[1] = 999.;
 
-  zfp::array::header h;
-  arr.write_header(h);
+  zfp::array::header h = arr.get_header();
 
   array* arr2 = zfp::array::construct(h, arr.compressed_data(), arr.compressed_size());
 
@@ -750,8 +744,8 @@ TEST_P(TEST_FIXTURE, given_compressedArray_when_setSecondArrayEqualToFirst_then_
 void CheckHeadersEquivalent(const ZFP_ARRAY_TYPE& arr1, const ZFP_ARRAY_TYPE& arr2)
 {
   zfp::array::header h[2];
-  arr1.write_header(h[0]);
-  arr2.write_header(h[1]);
+  h[0] = arr1.get_header();
+  h[1] = arr2.get_header();
 
   uint64 header1Checksum = hashBitstream((uint64*)(h + 0), BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
   uint64 header2Checksum = hashBitstream((uint64*)(h + 1), BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
@@ -786,8 +780,7 @@ TEST_P(TEST_FIXTURE, given_serializedCompressedArray_when_constructorFromSeriali
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #endif
 
-  zfp::array::header h;
-  arr.write_header(h);
+  zfp::array::header h = arr.get_header();
 
   ZFP_ARRAY_TYPE arr2(h, arr.compressed_data(), arr.compressed_size());
 

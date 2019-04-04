@@ -108,8 +108,7 @@ TEST_F(TEST_FIXTURE, given_validHeaderBuffer_withBufferSizeTooLow_when_construct
 {
   zfp::array3d arr(12, 12, 12, 32);
 
-  zfp::array::header h;
-  arr.write_header(h);
+  zfp::array::header h = arr.get_header();
 
   try {
     zfp::array* arr2 = zfp::array::construct(h, arr.compressed_data(), 1);
@@ -125,10 +124,8 @@ TEST_F(TEST_FIXTURE, given_compressedArrayWithLongHeader_when_writeHeader_expect
 {
   zfp::array3d arr(12, 12, 12, 33);
 
-  zfp::array::header h;
-
   try {
-    arr.write_header(h);
+    zfp::array::header h = arr.get_header();
     FailWhenNoExceptionThrown();
   } catch (zfp::array::header_exception const & e) {
     EXPECT_EQ(e.what(), std::string("ZFP compressed arrays only support short headers at this time."));

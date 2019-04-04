@@ -64,7 +64,7 @@ protected:
   {
     // read header to populate member variables associated with zfp_stream
     try {
-      read_header(h);
+      read_from_header(h);
     } catch (zfp::array::header_exception const &) {
       zfp_stream_close(zfp);
       throw;
@@ -144,7 +144,7 @@ public:
   zfp_type scalar_type() const { return type; }
 
   // write header with latest metadata
-  void write_header(zfp::array::header& h) const
+  zfp::array::header get_header() const
   {
     // intermediate buffer needed (bitstream accesses multiples of wordsize)
     AlignedBufferHandle abh;
@@ -158,9 +158,12 @@ public:
 
     if (!zfp_write_header(zfp, zfh.field, ZFP_HEADER_FULL))
       throw zfp::array::header_exception("ZFP could not write a header to buffer.");
-
     stream_flush(zfp->stream);
+
+    zfp::array::header h;
     abh.copy_to_header(&h);
+
+    return h;
   }
 
 private:
@@ -229,7 +232,7 @@ protected:
 
   // attempt reading header from zfp::array::header
   // and verify header contents (throws exceptions upon failure)
-  void read_header(const zfp::array::header& h)
+  void read_from_header(const zfp::array::header& h)
   {
     // copy header into aligned buffer
     AlignedBufferHandle abh(&h);
@@ -246,13 +249,10 @@ protected:
     // verify metadata on zfp_field match that for this object
     std::string err_msg = "";
     if (type != zfp_field_type(zfh.field))
-      err_msg += "ZFP header specified an underlying scalar type different than that for this object.";
+      concat_sentence(err_msg, "ZFP header specified an underlying scalar type different than that for this object.");
 
-    if (dims != zfp_field_dimensionality(zfh.field)) {
-      if (!err_msg.empty())
-        err_msg += " ";
-      err_msg += "ZFP header specified a dimensionality different than that for this object.";
-    }
+    if (dims != zfp_field_dimensionality(zfh.field))
+      concat_sentence(err_msg, "ZFP header specified a dimensionality different than that for this object.");
 
     verify_header_contents(zfp, zfh.field, err_msg);
 
