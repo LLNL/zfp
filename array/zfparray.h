@@ -74,14 +74,6 @@ protected:
       zfp_stream_close(zfp);
       throw zfp::array::header_exception("ZFP header expects a longer buffer than what was passed in.");
     }
-
-    // everything is valid
-    // set remaining class variables, allocate space, copy entire buffer into place
-
-    // set_rate() residual behavior (rate itself was set on zfp_stream* in zfp_read_header())
-    blkbits = zfp->maxbits;
-
-    // resize() called in sub-class constructor, followed by memcpy()
   }
 
   // copy constructor--performs a deep copy
@@ -264,6 +256,7 @@ protected:
     ny = zfh.field->ny;
     nz = zfh.field->nz;
     type = zfh.field->type;
+    blkbits = zfp->maxbits;
   }
 
   uint dims;           // array dimensionality (1, 2, or 3)

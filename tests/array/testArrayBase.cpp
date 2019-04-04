@@ -376,7 +376,7 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateWrongScalarTypeWrongDimensional
   delete[] buffer;
 }
 
-TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSerialized_then_success)
+TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSerialized_then_successWithParamsSet)
 {
   // create a compressed stream through C API
   // (one that is supported with compressed arrays)
@@ -399,7 +399,7 @@ TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSe
   zfp_stream_set_bit_stream(stream, bs);
   zfp_stream_rewind(stream);
 
-  zfp_stream_set_rate(stream, 10, ZFP_TYPE, DIMS, 1);
+  double rate = zfp_stream_set_rate(stream, 10, ZFP_TYPE, DIMS, 1);
   EXPECT_EQ(zfp_mode_fixed_rate, zfp_stream_compression_mode(stream));
 
   // write header
@@ -416,17 +416,35 @@ TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSe
   uchar* compressedDataPtr = (uchar*)stream_data(bs) + headerSizeBytes;
   zfp_compress(stream, field);
 
-  // close/free C API things (keep buffer)
-  zfp_field_free(field);
-  zfp_stream_close(stream);
-  stream_close(bs);
-
   try {
     ZFP_ARRAY_TYPE arr2(h, compressedDataPtr, bufsizeBytes - headerSizeBytes);
+
+    EXPECT_EQ(arr2.dimensionality(), zfp_field_dimensionality(field));
+    EXPECT_EQ(arr2.scalar_type(), zfp_field_type(field));
+
+    uint n[4];
+    EXPECT_EQ(arr2.size(), zfp_field_size(field, n));
+
+#if DIMS == 1
+    EXPECT_EQ(arr2.size_x(), n[0]);
+#elif DIMS == 2
+    EXPECT_EQ(arr2.size_x(), n[0]);
+    EXPECT_EQ(arr2.size_y(), n[1]);
+#elif DIMS == 3
+    EXPECT_EQ(arr2.size_x(), n[0]);
+    EXPECT_EQ(arr2.size_y(), n[1]);
+    EXPECT_EQ(arr2.size_z(), n[2]);
+#endif
+
+    EXPECT_EQ(arr2.rate(), rate);
+
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
 
+  zfp_stream_close(stream);
+  stream_close(bs);
+  zfp_field_free(field);
   delete[] buffer;
 }
 
