@@ -71,8 +71,15 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
 
 void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, uint chosenSizeY, uint chosenSizeZ, double chosenRate)
 {
+  // copy header into aligned memory suitable for bitstream r/w
+  size_t num_64bit_entries = DIV_ROUND_UP(ZFP_HEADER_SIZE_BITS, CHAR_BIT * sizeof(uint64));
+  uint64* buffer = new uint64[num_64bit_entries];
+  size_t buffer_size_bytes = num_64bit_entries * sizeof(uint64);
+
+  memcpy(buffer, &h, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
+
   // verify valid header (manually through C API)
-  bitstream* stream = stream_open((zfp::array::header*)&h, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
+  bitstream* stream = stream_open(buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
 
   zfp_field* field = zfp_field_alloc();
   zfp_stream* zfp = zfp_stream_open(stream);
@@ -97,6 +104,8 @@ void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, ui
   zfp_stream_close(zfp);
   zfp_field_free(field);
   stream_close(stream);
+
+  delete[] buffer;
 }
 
 TEST_F(TEST_FIXTURE, when_writeHeader_then_cCompatibleHeaderWritten)
@@ -277,7 +286,7 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateHeader_when_constructorFromSeri
   zfp_stream_flush(stream);
 
   // copy header into header
-  size_t headerSizeBytes = (writtenBits + CHAR_BIT - 1) / CHAR_BIT;
+  size_t headerSizeBytes = DIV_ROUND_UP(writtenBits, CHAR_BIT);
   zfp::array::header h;
   memcpy(h.buffer, buffer, headerSizeBytes);
 
@@ -355,6 +364,7 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateWrongScalarTypeWrongDimensional
   } catch (zfp::array::header_exception const & e) {
     EXPECT_TRUE(strstr(e.what(), "ZFP header specified an underlying scalar type different than that for this object.") != NULL);
     EXPECT_TRUE(strstr(e.what(), "ZFP header specified a dimensionality different than that for this object.") != NULL);
+    EXPECT_TRUE(strstr(e.what(), "ZFP compressed arrays do not yet support scalar types beyond floats and doubles.") != NULL);
     EXPECT_TRUE(strstr(e.what(), "ZFP header specified a non fixed-rate mode, unsupported by this object.") != NULL);
 
     // print exception if any of above were not met

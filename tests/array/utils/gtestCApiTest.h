@@ -4,8 +4,10 @@
 class ZfpArrayConstructTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
-    buffer = new uchar[BITS_TO_WORDS(ZFP_HEADER_SIZE_BITS) * stream_word_bits / CHAR_BIT];
-    bs = stream_open(buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
+    size_t num_64bit_entries = DIV_ROUND_UP(ZFP_HEADER_SIZE_BITS, CHAR_BIT * sizeof(uint64));
+    buffer = new uint64[num_64bit_entries];
+
+    bs = stream_open(buffer, num_64bit_entries * sizeof(uint64));
     stream = zfp_stream_open(bs);
     field = zfp_field_alloc();
   }
@@ -17,13 +19,13 @@ protected:
     delete[] buffer;
   }
 
-  static uchar* buffer;
+  static uint64* buffer;
   static bitstream* bs;
   static zfp_stream* stream;
   static zfp_field* field;
 };
 
-uchar* ZfpArrayConstructTest::buffer;
+uint64* ZfpArrayConstructTest::buffer;
 bitstream* ZfpArrayConstructTest::bs;
 zfp_stream* ZfpArrayConstructTest::stream;
 zfp_field* ZfpArrayConstructTest::field;

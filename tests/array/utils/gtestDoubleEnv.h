@@ -14,7 +14,7 @@ const size_t MIN_TOTAL_ELEMENTS = 1000000;
 size_t inputDataSideLen, inputDataTotalLen;
 double* inputDataArr;
 
-uchar* buffer;
+uint64* buffer;
 bitstream* bs;
 zfp_stream* stream;
 zfp_field* field;
@@ -26,8 +26,10 @@ public:
   virtual void SetUp() {
     generateSmoothRandDoubles(MIN_TOTAL_ELEMENTS, getDims(), &inputDataArr, &inputDataSideLen, &inputDataTotalLen);
 
-    buffer = new uchar[BITS_TO_WORDS(ZFP_HEADER_SIZE_BITS) * stream_word_bits / CHAR_BIT];
-    bs = stream_open(buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
+    size_t num_64bit_entries = DIV_ROUND_UP(ZFP_HEADER_SIZE_BITS, CHAR_BIT * sizeof(uint64));
+    buffer = new uint64[num_64bit_entries];
+
+    bs = stream_open(buffer, num_64bit_entries * sizeof(uint64));
     stream = zfp_stream_open(bs);
     field = zfp_field_alloc();
   }
