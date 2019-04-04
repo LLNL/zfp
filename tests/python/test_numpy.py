@@ -47,6 +47,67 @@ class TestNumpy(unittest.TestCase):
             array = np.random.randint(2**30, size=shape)
             self.lossless_round_trip(array)
 
+    def test_advanced_decompression_checksum(self):
+        ndims = 2
+        ztype = zfp.type_float
+        random_array = test_utils.getRandNumpyArray(ndims, ztype)
+        mode = zfp.mode_fixed_accuracy
+        compress_param_num = 1
+        compression_kwargs = {
+            "tolerance": test_utils.computeParameterValue(
+                mode,
+                compress_param_num
+            ),
+        }
+        compressed_array = zfp.compress_numpy(
+            random_array,
+            write_header=False,
+            **compression_kwargs
+        )
+
+        # Decompression using the "advanced" interface requires no header,
+        # but the user must provide all the metadata
+        decompressed_array = np.empty_like(random_array)
+        zfp._decompress(
+            compressed_array,
+            out=decompressed_array,
+            ztype=ztype,
+            shape=random_array.shape,
+            **compression_kwargs
+        )
+        decompressed_checksum = test_utils.getChecksumDecompArray(
+            ndims,
+            ztype,
+            mode,
+            compress_param_num
+        )
+        actual_checksum = test_utils.hashNumpyArray(
+            decompressed_array
+        )
+        self.assertEqual(decompressed_checksum, actual_checksum)
+
+    def test_advanced_decompression_nonsquare(self):
+        for dimensions in range(1, 5):
+            shape = range(2, 2 + dimensions)
+            random_array = np.random.rand(*shape)
+
+            decompressed_array = np.empty_like(random_array)
+            decompression_kwargs = {
+                "out": decompressed_array,
+                "shape": random_array.shape,
+                "ztype": zfp.dtype_to_ztype(random_array.dtype),
+            }
+            for header in [True, False]:
+                compressed_array = zfp.compress_numpy(
+                    random_array,
+                    write_header=header
+                )
+                zfp._decompress(
+                    compressed_array,
+                    **decompression_kwargs
+                )
+                self.assertIsNone(np.testing.assert_array_equal(decompressed_array, random_array))
+
     def test_utils(self):
         for ndims in range(1, 5):
             for ztype, ztype_str in [

@@ -260,7 +260,7 @@ cdef _validate_userinput_matches_header(
         )
 
     # check that the header and user shapes match
-    header_shape = (field[0].nx, field[0].ny, field[0].nz, field[0].nw)
+    header_shape = (field[0].nw, field[0].nz, field[0].ny, field[0].nx)
     header_shape = [x for x in header_shape if x > 0]
     if shape is not None:
         if not all([x == y for x, y in zip_longest(shape, header_shape)]):
@@ -316,7 +316,7 @@ cdef _validate_userinput_matches_header(
             )
 
         # check that numpy and header shape match
-        numpy_shape = [int(x) for x in out.shape[:ndim]]
+        numpy_shape = out.shape
         if not all(
                 [x == y for x, y in
                  zip_longest(numpy_shape, header_shape)
@@ -369,7 +369,7 @@ cpdef np.ndarray _decompress(
                     "Failed to read zfp header and the ztype/shape/mode "
                     "were not provided"
                 )
-            zshape = gen_padded_int_list(shape, pad=0, length=4)
+            zshape = gen_padded_int_list(reversed(shape), pad=0, length=4)
             # set the shape, type, and compression mode
             # strides are set further down
             field[0].nx, field[0].ny, field[0].nz, field[0].nw = zshape
@@ -392,7 +392,7 @@ cpdef np.ndarray _decompress(
             )
 
         # pad the shape with zeros to reach len == 4
-        strides = gen_padded_int_list(strides, pad=0, length=4)
+        strides = gen_padded_int_list(reversed(strides), pad=0, length=4)
         field[0].sx, field[0].sy, field[0].sz, field[0].sw = strides
 
         if out is None:
@@ -402,7 +402,7 @@ cpdef np.ndarray _decompress(
                 output = out
             else:
                 header_dtype = ztype_to_dtype(field[0]._type)
-                header_shape = (field[0].nx, field[0].ny, field[0].nz, field[0].nw)
+                header_shape = (field[0].nw, field[0].nz, field[0].ny, field[0].nx)
                 header_shape = [x for x in header_shape if x > 0]
 
                 output = np.frombuffer(out, dtype=header_dtype)
