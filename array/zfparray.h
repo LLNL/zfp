@@ -237,10 +237,10 @@ protected:
     // verify metadata on zfp_field match that for this object
     std::string err_msg = "";
     if (type != zfp_field_type(zfh.field))
-      concat_sentence(err_msg, "ZFP header specified an underlying scalar type different than that for this object.");
+      zfp::array::header::concat_sentence(err_msg, "ZFP header specified an underlying scalar type different than that for this object.");
 
     if (dims != zfp_field_dimensionality(zfh.field))
-      concat_sentence(err_msg, "ZFP header specified a dimensionality different than that for this object.");
+      zfp::array::header::concat_sentence(err_msg, "ZFP header specified a dimensionality different than that for this object.");
 
     verify_header_contents(zfp, zfh.field, err_msg);
 

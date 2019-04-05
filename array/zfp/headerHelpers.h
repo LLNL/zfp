@@ -133,19 +133,12 @@ static void verify_header_contents(const zfp_stream* stream, const zfp_field* fi
   // verify read-header contents
   zfp_type type = zfp_field_type(field);
   if (type != zfp_type_float && type != zfp_type_double)
-    concat_sentence(err_msg, "ZFP compressed arrays do not yet support scalar types beyond floats and doubles.");
+    zfp::array::header::concat_sentence(err_msg, "ZFP compressed arrays do not yet support scalar types beyond floats and doubles.");
 
   uint dims = zfp_field_dimensionality(field);
   if (dims < 1 || dims > 3)
-    concat_sentence(err_msg, "ZFP compressed arrays do not yet support dimensionalities beyond 1, 2, and 3.");
+    zfp::array::header::concat_sentence(err_msg, "ZFP compressed arrays do not yet support dimensionalities beyond 1, 2, and 3.");
 
   if (zfp_stream_compression_mode(stream) != zfp_mode_fixed_rate)
-    concat_sentence(err_msg, "ZFP header specified a non fixed-rate mode, unsupported by this object.");
-}
-
-static void concat_sentence(std::string& s, const std::string& msg)
-{
-  if (!s.empty())
-    s += " ";
-  s += msg;
+    zfp::array::header::concat_sentence(err_msg, "ZFP header specified a non fixed-rate mode, unsupported by this object.");
 }
