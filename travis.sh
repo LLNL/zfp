@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
-mkdir build
+mkdir -p build
 cd build
 
 
