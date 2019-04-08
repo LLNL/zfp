@@ -65,14 +65,14 @@ class TestNumpy(unittest.TestCase):
             **compression_kwargs
         )
 
-        # Decompression using the "advanced" interface requires no header,
-        # but the user must provide all the metadata
+        # Decompression using the "advanced" interface which enforces no header,
+        # and the user must provide all the metadata
         decompressed_array = np.empty_like(random_array)
         zfp._decompress(
             compressed_array,
+            ztype,
+            random_array.shape,
             out=decompressed_array,
-            ztype=ztype,
-            shape=random_array.shape,
             **compression_kwargs
         )
         decompressed_checksum = test_utils.getChecksumDecompArray(
@@ -92,21 +92,17 @@ class TestNumpy(unittest.TestCase):
             random_array = np.random.rand(*shape)
 
             decompressed_array = np.empty_like(random_array)
-            decompression_kwargs = {
-                "out": decompressed_array,
-                "shape": random_array.shape,
-                "ztype": zfp.dtype_to_ztype(random_array.dtype),
-            }
-            for header in [True, False]:
-                compressed_array = zfp.compress_numpy(
-                    random_array,
-                    write_header=header
-                )
-                zfp._decompress(
-                    compressed_array,
-                    **decompression_kwargs
-                )
-                self.assertIsNone(np.testing.assert_array_equal(decompressed_array, random_array))
+            compressed_array = zfp.compress_numpy(
+                random_array,
+                write_header=False,
+            )
+            zfp._decompress(
+                compressed_array,
+                zfp.dtype_to_ztype(random_array.dtype),
+                random_array.shape,
+                out= decompressed_array,
+            )
+            self.assertIsNone(np.testing.assert_array_equal(decompressed_array, random_array))
 
     def test_utils(self):
         for ndims in range(1, 5):

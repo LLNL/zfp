@@ -95,23 +95,21 @@ before and after.
 .. note:: Decompressing a stream without a header requires using the
    internal ``_decompress`` python function (or the C API).
 
-.. py:function:: _decompress(compressed_data, out=None, ztype=type_none, shape=None, strides=[0,0,0,0], tolerance = -1, rate = -1, precision = -1,)
+.. py:function:: _decompress(compressed_data, ztype, shape, out=None, tolerance = -1, rate = -1, precision = -1,)
 
-.. warning:: ``_decompress`` is a function mainly for internal use within the
-             zfp library.  It does allow decompression of streams without
-             headers, but providing too small of an output bufffer or
-             incorrectly specifying the shape or strides can result in
-             segmentation faults.  Use with care.
+.. warning:: ``_decompress`` is an "experimental" function currently used
+             internally for testing the .  It does allow decompression of
+             streams without headers, but providing too small of an output
+             bufffer or incorrectly specifying the shape or strides can result
+             in segmentation faults.  Use with care.
 
-Decompresses a compressed stream (with or without a header).  If a header is
-present in the stream, all user-provided metadata is compared against the stream
-header metadata, and an exception is thrown if they disagree.  If ``out`` is
-specified, the data is decompressed into the ``out`` buffer.  ``out`` can be a
-numpy array or a pointer to memory large enough to hold the decompressed data.
-Regardless if ``out`` is provided or its type, ``_decompress`` always returns a
-numpy array.  If ``out`` is not provided, the array is allocated for the user,
-and if ``out`` is provided, then the returned numpy is just a pointer to or
-wrapper around the user-supplied ``out``.  If ``strides`` is provided, it is
-added to the ``zfp_field`` before decompression, but it is not added to the
-output numpy array metadata.  ``strides`` should be a zfp-style strides (i.e.,
-number of elements) rather than a numpy-style strides (i.e., number of bytes).
+Decompresses a compressed stream without a header.  If a header is present in
+the stream, it will be incorrectly interpreted as compressed data.  ``ztype`` is
+a ``zfp_type``, which can be manually specified (e.g., ``zfp.type_int32``) or
+generated from a numpy dtype (e.g., ``zfp.dtype_to_ztype(array.dtype)``). If
+``out`` is specified, the data is decompressed into the ``out`` buffer.  ``out``
+can be a numpy array or a pointer to memory large enough to hold the
+decompressed data.  Regardless if ``out`` is provided or its type,
+``_decompress`` always returns a numpy array.  If ``out`` is not provided, the
+array is allocated for the user, and if ``out`` is provided, then the returned
+numpy is just a pointer to or wrapper around the user-supplied ``out``.

@@ -244,101 +244,11 @@ cdef _validate_4d_list(in_list, list_name):
             "User-provided {} is not an iterable"
         )
 
-cdef _validate_userinput_matches_header(
-    zfp_field* field,
-    zfp_stream* stream,
-    out,
-    zfp_type ztype,
-    shape,
-    strides,
-    double tolerance,
-    double rate,
-    int precision
-):
-    # check that the header and user type matches
-    if ztype != type_none and ztype is not field[0]._type:
-        raise ValueError(
-            "User-provided zfp_type does not match zfp_type in header"
-        )
-
-    # check that the header and user shapes match
-    header_shape = (field[0].nw, field[0].nz, field[0].ny, field[0].nx)
-    header_shape = [x for x in header_shape if x > 0]
-    if shape is not None:
-        if not all([x == y for x, y in zip_longest(shape, header_shape)]):
-           raise ValueError(
-               "User-provided shape does not match shape in header"
-           )
-
-    # check that the shape and strides have the same number of dimensions
-    if shape is not None and sum(strides) > 0:
-        stride_dims = sum([1 for x in strides if x > 0])
-        shape_dims = sum([1 for x in shape if x > 0])
-        if len(strides) != len(shape):
-            raise ValueError(
-                "Mis-match in shape and stride lengths"
-            )
-
-    # check that setting the compression parameters based on user input
-    # does not change the stream mode (i.e., the compression parameters
-    # provided by the user and in the header match)
-    if tolerance >= 0 or rate >= 0 or precision >= 0:
-        header_mode = zfp_stream_mode(stream)
-        ndim = len(header_shape)
-        _set_compression_mode(
-            stream,
-            ztype,
-            ndim,
-            tolerance,
-            rate,
-            precision
-        )
-        mode = zfp_stream_mode(stream)
-        if mode != mode_null and mode != header_mode:
-            raise ValueError(
-                "User-provided zfp_mode {} does not match zfp_mode "
-                "in header {}".format(
-                    mode,
-                    header_mode,
-                )
-            )
-
-    # if the out buffer is a numpy array, check that it's properties match the
-    # header metadata
-    if out is not None and isinstance(out, np.ndarray):
-        # check that numpy and header types match
-        header_dtype = ztype_to_dtype(field[0]._type)
-        if out.dtype != header_dtype:
-            raise ValueError(
-                "Out ndarray has dtype {} but decompression is using "
-                "{}".format(
-                    out.dtype,
-                    header_dtype
-                )
-            )
-
-        # check that numpy and header shape match
-        numpy_shape = out.shape
-        if not all(
-                [x == y for x, y in
-                 zip_longest(numpy_shape, header_shape)
-                ]
-        ):
-            raise ValueError(
-                "Out ndarray has shape {} but decompression is using "
-                "{}".format(
-                    numpy_shape,
-                    header_shape
-                )
-            )
-
-
 cpdef np.ndarray _decompress(
     bytes compressed_data,
+    zfp_type ztype,
+    shape,
     out=None,
-    zfp_type ztype=type_none,
-    shape=None,
-    strides=[0,0,0,0],
     double tolerance = -1,
     double rate = -1,
     int precision = -1,
@@ -348,10 +258,7 @@ cpdef np.ndarray _decompress(
         raise TypeError("compressed_data cannot be None")
     if compressed_data is out:
         raise ValueError("Cannot decompress in-place")
-    if shape is not None:
-        _validate_4d_list(shape, "shape")
-    if strides is not None:
-        _validate_4d_list(strides, "strides")
+    _validate_4d_list(shape, "shape")
 
     cdef char* comp_data_pointer = compressed_data
     cdef zfp_field* field = zfp_field_alloc()
@@ -364,38 +271,17 @@ cpdef np.ndarray _decompress(
 
     try:
         zfp_stream_rewind(stream)
-        if zfp_read_header(stream, field, HEADER_FULL) == 0:
-            zfp_stream_rewind(stream)
-            if ztype == type_none or shape is None:
-                raise ValueError(
-                    "Failed to read zfp header and the ztype/shape/mode "
-                    "were not provided"
-                )
-            zshape = gen_padded_int_list(reversed(shape), pad=0, length=4)
-            # set the shape, type, and compression mode
-            # strides are set further down
-            field[0].nx, field[0].ny, field[0].nz, field[0].nw = zshape
-            zfp_field_set_type(field, ztype)
-            ndim = sum([1 for x in zshape if x > 0])
-            _set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
-        else:
-            # zfp_read_header should have taken care of setting the metadata
-            # correctly, but check that user inputs match the header
-            _validate_userinput_matches_header(
-                field,
-                stream,
-                out,
-                ztype,
-                shape,
-                strides,
-                tolerance,
-                rate,
-                precision
-            )
+        zshape = gen_padded_int_list(reversed(shape), pad=0, length=4)
+        # set the shape, type, and compression mode
+        # strides are set further down
+        field[0].nx, field[0].ny, field[0].nz, field[0].nw = zshape
+        zfp_field_set_type(field, ztype)
+        ndim = sum([1 for x in zshape if x > 0])
+        _set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
 
         # pad the shape with zeros to reach len == 4
-        strides = gen_padded_int_list(reversed(strides), pad=0, length=4)
-        field[0].sx, field[0].sy, field[0].sz, field[0].sw = strides
+        # strides = gen_padded_int_list(reversed(strides), pad=0, length=4)
+        # field[0].sx, field[0].sy, field[0].sz, field[0].sw = strides
 
         if out is None:
             output = np.asarray(_decompress_with_view(field, stream))
@@ -422,4 +308,25 @@ cpdef np.ndarray _decompress(
 cpdef np.ndarray decompress_numpy(
     bytes compressed_data,
 ):
-    return _decompress(compressed_data)
+    if compressed_data is None:
+        raise TypeError("compressed_data cannot be None")
+
+    cdef char* comp_data_pointer = compressed_data
+    cdef zfp_field* field = zfp_field_alloc()
+    cdef bitstream* bstream = stream_open(
+        comp_data_pointer,
+        len(compressed_data)
+    )
+    cdef zfp_stream* stream = zfp_stream_open(bstream)
+    cdef np.ndarray output
+
+    try:
+        if zfp_read_header(stream, field, HEADER_FULL) == 0:
+            raise ValueError("Failed to read required zfp header")
+        output = np.asarray(_decompress_with_view(field, stream))
+    finally:
+        zfp_field_free(field)
+        zfp_stream_close(stream)
+        stream_close(bstream)
+
+    return output
