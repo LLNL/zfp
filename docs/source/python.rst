@@ -112,4 +112,8 @@ can be a numpy array or a pointer to memory large enough to hold the
 decompressed data.  Regardless if ``out`` is provided or its type,
 ``_decompress`` always returns a numpy array.  If ``out`` is not provided, the
 array is allocated for the user, and if ``out`` is provided, then the returned
-numpy is just a pointer to or wrapper around the user-supplied ``out``.
+numpy is just a pointer to or wrapper around the user-supplied ``out``.  If
+``out`` is a numpy array, then the shape and type of the numpy array must match
+the required arguments ``shape`` and ``ztype``.  If you want to avoid this
+constraint check, use ``out=ndarray.data`` rather than ``out=ndarray`` when
+calling ``_decompress``.

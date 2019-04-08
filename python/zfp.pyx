@@ -286,15 +286,38 @@ cpdef np.ndarray _decompress(
         if out is None:
             output = np.asarray(_decompress_with_view(field, stream))
         else:
+            dtype = zfp.ztype_to_dtype(ztype)
             if isinstance(out, np.ndarray):
                 output = out
-            else:
-                header_dtype = ztype_to_dtype(field[0]._type)
-                header_shape = (field[0].nw, field[0].nz, field[0].ny, field[0].nx)
-                header_shape = [x for x in header_shape if x > 0]
 
-                output = np.frombuffer(out, dtype=header_dtype)
-                output = output.reshape(header_shape)
+                # check that numpy and user-provided types match
+                if out.dtype != dtype:
+                    raise ValueError(
+                        "Out ndarray has dtype {} but decompression is using "
+                        "{}. Use out=ndarray.data to avoid this check.".format(
+                            out.dtype,
+                            dtype
+                        )
+                    )
+
+                # check that numpy and user-provided shape match
+                numpy_shape = out.shape
+                user_shape = [x for x in shape if x > 0]
+                if not all(
+                        [x == y for x, y in
+                         zip_longest(numpy_shape, user_shape)
+                        ]
+                ):
+                    raise ValueError(
+                        "Out ndarray has shape {} but decompression is using "
+                        "{}.  Use out=ndarray.data to avoid this check.".format(
+                            numpy_shape,
+                            user_shape
+                        )
+                    )
+            else:
+                output = np.frombuffer(out, dtype=dtype)
+                output = output.reshape(shape)
 
             _decompress_with_user_array(field, stream, <void *>output.data)
 
