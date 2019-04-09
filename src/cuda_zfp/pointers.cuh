@@ -10,16 +10,21 @@ namespace cuZFP
 // https://gitlab.kitware.com/third-party/nvpipe/blob/master/encode.c
 bool is_gpu_ptr(const void *ptr)
 {
-  cudaPointerAttributes atts; 
+  cudaPointerAttributes atts;
   const cudaError_t perr = cudaPointerGetAttributes(&atts, ptr);
 
-  // clear last error so other error checking does 
+  // clear last error so other error checking does
   // not pick it up
   cudaError_t error = cudaGetLastError();
-
+#if CUDART_VERSION >= 1000
+  return perr == cudaSuccess &&
+                (atts.type == cudaMemoryTypeDevice ||
+                 atts.type == cudaMemoryTypeManaged);
+#else
   return perr == cudaSuccess && atts.memoryType == cudaMemoryTypeDevice;
+#endif
 }
 
-} // namespace cuZFP 
+} // namespace cuZFP
 
 #endif
