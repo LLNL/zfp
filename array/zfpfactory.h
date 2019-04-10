@@ -1,5 +1,5 @@
-#ifndef ZFP_UTILS_H
-#define ZFP_UTILS_H
+#ifndef ZFP_FACTORY_H
+#define ZFP_FACTORY_H
 
 // (assumes zfparray.h already included)
 
