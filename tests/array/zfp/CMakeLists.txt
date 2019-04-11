@@ -1,0 +1,5 @@
+if(ZFP_WITH_ALIGNED_ALLOC)
+  add_executable(testAlignedMemory testAlignedMemory.cpp)
+  target_link_libraries(testAlignedMemory gtest gtest_main zfp)
+  add_test(NAME testAlignedMemory COMMAND testAlignedMemory)
+endif()

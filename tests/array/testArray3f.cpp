@@ -1,4 +1,6 @@
 #include "array/zfparray3.h"
+#include "array/zfparray1.h"
+#include "array/zfpfactory.h"
 using namespace zfp;
 
 extern "C" {
@@ -20,10 +22,17 @@ Array3fTestEnv* const testEnv = new Array3fTestEnv;
 class Array3fTest : public ArrayNdTestFixture {};
 
 #define TEST_FIXTURE Array3fTest
+
 #define ZFP_ARRAY_TYPE array3f
+#define ZFP_ARRAY_TYPE_WRONG_SCALAR array3d
+#define ZFP_ARRAY_TYPE_WRONG_DIM array1f
+#define ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM array1d
+#define ZFP_ARRAY_NOT_INCLUDED_TYPE array2f
+
 #define UINT uint32
 #define SCALAR float
 #define DIMS 3
+
 #include "testArrayBase.cpp"
 #include "testArray3Base.cpp"
 

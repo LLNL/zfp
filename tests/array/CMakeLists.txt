@@ -42,3 +42,11 @@ zfp_add_cpp_tests(3 f 32)
 zfp_add_cpp_tests(1 d 64)
 zfp_add_cpp_tests(2 d 64)
 zfp_add_cpp_tests(3 d 64)
+
+# test zfp::array::construct() invalid cases
+set(test_name testConstruct)
+add_executable(testConstruct testConstruct.cpp)
+target_link_libraries(testConstruct gtest gtest_main zfp)
+add_test(NAME testConstruct COMMAND testConstruct)
+
+add_subdirectory(zfp)
