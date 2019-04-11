@@ -74,9 +74,9 @@ build_script:
   - mkdir build
   - cd build
 
-  # build/test without OpenMP, with CFP (and custom namespace)
-  - if "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DBUILD_ZFORP=ON ..
-  - if not "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DBUILD_ZFORP=ON ..
+  # build/test without OpenMP, with CFP (and custom namespace), without Fortran
+  - if "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DBUILD_ZFORP=OFF ..
+  - if not "%COMPILER%"=="msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_OPENMP=OFF -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DBUILD_ZFORP=OFF ..
 
   - if "%COMPILER%"=="msvc" cmake --build . --config "%BUILD_TYPE%"
   - if not "%COMPILER%"=="msvc" cmake --build .
