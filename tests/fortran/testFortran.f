@@ -23,7 +23,7 @@ program main
 
   ! zfp_stream
   type(zFORp_stream_type) :: zfp_stream
-  real :: desired_rate, rate_result
+  real (kind=8) :: desired_rate, rate_result
   integer :: dims, wra
   integer :: zfp_type
 
