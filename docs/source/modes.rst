@@ -77,8 +77,9 @@ the block.  The four constraints are as follows:
 
 .. c:member:: int zfp_stream.minexp
 
-  The smallest absolute bit plane number encoded.  The place value of each
-  transform coefficient bit depends on the common floating-point exponent,
+  The smallest absolute bit plane number encoded (applies to floating-point
+  data only; this parameter is ignored for integer data).  The place value of
+  each transform coefficient bit depends on the common floating-point exponent,
   *e*, that scales the integer coefficients.  If the most significant
   coefficient bit has place value 2\ :sup:`e`, then the number of bit planes
   encoded is (one plus) the difference between *e* and
@@ -211,6 +212,10 @@ near-lossless compression (see :ref:`mode-reversible` for guaranteed
 lossless compression).  Fixed-accuracy mode gives the highest quality
 (in terms of absolute error) for a given compression rate, and is
 preferable when random access is not needed.
+
+.. note::
+  Fixed-accuracy mode is available for floating-point (not integer) data
+  only.
 
 .. index::
    single: Compression mode; Reversible mode

@@ -203,7 +203,14 @@ type is ommitted for readability, e.g.,
 .. cpp:function:: array2::array2()
 .. cpp:function:: array3::array3()
 
-  Default constructor.  Creates an empty array.
+  Default constructor.  Creates an empty array whose size and rate are both
+  zero.
+
+.. note::
+  The default constructor is useful when the array size or rate is not known at
+  time of construction.  Before the array can become usable, however, it must
+  be :ref:`resized <array_resize>` and its rate must be set via
+  :cpp:func:`array::set_rate`.  These two tasks can be performed in either order.
 
 .. _array_ctor:
 .. cpp:function:: array1::array1(uint n, double rate, const Scalar* p = 0, size_t csize = 0)

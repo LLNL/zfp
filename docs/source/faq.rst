@@ -452,11 +452,17 @@ and :code:`&out[1][0][0]`.
 
 Q17: *Why does zfp sometimes not respect my error tolerance?*
 
-A: |zfp| does not store each floating-point value independently, but represents
-a group of values (4, 16, 64, or 256 values, depending on dimensionality) as
-linear combinations like averages by evaluating arithmetic expressions.  Just
-like in uncompressed IEEE floating-point arithmetic, both representation error
-and roundoff error in the least significant bit(s) often occur.
+A: First, |zfp| does not support
+:ref:`fixed-accuracy mode <mode-fixed-accuracy>` for integer data and
+will ignore any tolerance requested via :c:func:`zfp_stream_set_accuracy`
+or associated :ref:`expert mode <mode-expert>` parameter settings.
+
+For floating-point data, |zfp| does not store each scalar value independently
+but represents a group of values (4, 16, 64, or 256 values, depending on
+dimensionality) as linear combinations like averages by evaluating arithmetic
+expressions.  Just like in uncompressed IEEE floating-point arithmetic, both
+representation error and roundoff error in the least significant bit(s) often
+occur.
 
 To illustrate this, consider compressing the following 1D array of four
 floats::

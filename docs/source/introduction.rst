@@ -44,5 +44,7 @@ supports compression of 4D arrays.
 For more information on |zfp| and comparisons with other compressors, please
 see the |zfp|
 `website <https://computation.llnl.gov/projects/floating-point-compression>`_.
-For questions, comments, requests, and bug reports, please contact
+For bug reports, please consult the
+`GitHub issue tracker <https://github.com/LLNL/zfp/issues>`_.
+For questions, comments, and requests, please contact
 `Peter Lindstrom <mailto:pl@llnl.gov>`__.
