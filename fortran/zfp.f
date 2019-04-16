@@ -36,6 +36,86 @@ module zFORp_module
                   zFORp_mode_fixed_accuracy = 4
   end enum
 
+  enum, bind(c)
+    enumerator :: zFORp_exec_serial = 0, &
+                  zFORp_exec_omp = 1, &
+                  zFORp_exec_cuda = 2
+  end enum
+
+  ! constants are hardcoded
+  ! const_xyz holds value, but xyz is the public constant
+
+  integer, parameter :: const_zFORp_version_major = 0
+  integer, parameter :: const_zFORp_version_minor = 5
+  integer, parameter :: const_zFORp_version_patch = 4
+  integer, protected, bind(c, name="zFORp_version_major") :: zFORp_version_major
+  integer, protected, bind(c, name="zFORp_version_minor") :: zFORp_version_minor
+  integer, protected, bind(c, name="zFORp_version_patch") :: zFORp_version_patch
+  data zFORp_version_major/const_zFORp_version_major/, &
+       zFORp_version_minor/const_zFORp_version_minor/, &
+       zFORp_version_patch/const_zFORp_version_patch/
+
+  integer, parameter :: const_zFORp_codec_version = 5
+  integer, protected, bind(c, name="zFORp_codec_version") :: zFORp_codec_version
+  data zFORp_codec_version/const_zFORp_codec_version/
+
+  integer, parameter :: const_zFORp_library_version = 84 ! 0x54
+  integer, protected, bind(c, name="zFORp_library_version") :: zFORp_library_version
+  data zFORp_library_version/const_zFORp_library_version/
+
+  character(len = 36), parameter :: const_zFORp_version_string = 'zfp version 0.5.4 (October 1, 2018)'
+  character(len = 36), protected, bind(c, name="zFORp_version_string") :: zFORp_version_string
+  data zFORp_version_string/const_zFORp_version_string/
+
+  integer, parameter :: const_zFORp_min_bits = 1
+  integer, parameter :: const_zFORp_max_bits = 16657
+  integer, parameter :: const_zFORp_max_prec = 64
+  integer, parameter :: const_zFORp_min_exp = -1074
+  integer, protected, bind(c, name="zFORp_min_bits") :: zFORp_min_bits
+  integer, protected, bind(c, name="zFORp_max_bits") :: zFORp_max_bits
+  integer, protected, bind(c, name="zFORp_max_prec") :: zFORp_max_prec
+  integer, protected, bind(c, name="zFORp_min_exp") :: zFORp_min_exp
+  data zFORp_min_bits/const_zFORp_min_bits/, &
+       zFORp_max_bits/const_zFORp_max_bits/, &
+       zFORp_max_prec/const_zFORp_max_prec/, &
+       zFORp_min_exp/const_zFORp_min_exp/
+
+  integer, parameter :: const_zFORp_header_magic = 1
+  integer, parameter :: const_zFORp_header_meta = 2
+  integer, parameter :: const_zFORp_header_mode = 4
+  integer, parameter :: const_zFORp_header_full = 7
+  integer, protected, bind(c, name="zFORp_header_magic") :: zFORp_header_magic
+  integer, protected, bind(c, name="zFORp_header_meta") :: zFORp_header_meta
+  integer, protected, bind(c, name="zFORp_header_mode") :: zFORp_header_mode
+  integer, protected, bind(c, name="zFORp_header_full") :: zFORp_header_full
+  data zFORp_header_magic/const_zFORp_header_magic/, &
+       zFORp_header_meta/const_zFORp_header_meta/, &
+       zFORp_header_mode/const_zFORp_header_mode/, &
+       zFORp_header_full/const_zFORp_header_full/
+
+  integer (kind=8), parameter :: const_zFORp_meta_null = -1
+  integer (kind=8), protected, bind(c, name="zFORp_meta_null") :: zFORp_meta_null
+  data zFORp_meta_null/const_zFORp_meta_null/
+
+  integer, parameter :: const_zFORp_magic_bits = 32
+  integer, parameter :: const_zFORp_meta_bits = 52
+  integer, parameter :: const_zFORp_mode_short_bits = 12
+  integer, parameter :: const_zFORp_mode_long_bits = 64
+  integer, parameter :: const_zFORp_header_max_bits = 148
+  integer, parameter :: const_zFORp_mode_short_max = 4094
+  integer, protected, bind(c, name="zFORp_magic_bits") :: zFORp_magic_bits
+  integer, protected, bind(c, name="zFORp_meta_bits") :: zFORp_meta_bits
+  integer, protected, bind(c, name="zFORp_mode_short_bits") :: zFORp_mode_short_bits
+  integer, protected, bind(c, name="zFORp_mode_long_bits") :: zFORp_mode_long_bits
+  integer, protected, bind(c, name="zFORp_header_max_bits") :: zFORp_header_max_bits
+  integer, protected, bind(c, name="zFORp_mode_short_max") :: zFORp_mode_short_max
+  data zFORp_magic_bits/const_zFORp_magic_bits/, &
+       zFORp_meta_bits/const_zFORp_meta_bits/, &
+       zFORp_mode_short_bits/const_zFORp_mode_short_bits/, &
+       zFORp_mode_long_bits/const_zFORp_mode_long_bits/, &
+       zFORp_header_max_bits/const_zFORp_header_max_bits/, &
+       zFORp_mode_short_max/const_zFORp_mode_short_max/
+
   interface
 
     ! minimal bitstream API
@@ -394,6 +474,38 @@ module zFORp_module
             zFORp_mode_fixed_rate, &
             zFORp_mode_fixed_precision, &
             zFORp_mode_fixed_accuracy
+
+  public :: zFORp_exec_serial, &
+            zFORp_exec_omp, &
+            zFORp_exec_cuda
+
+  ! C macros -> constants
+  public :: zFORp_version_major, &
+            zFORp_version_minor, &
+            zFORp_version_patch
+
+  public :: zFORp_codec_version, &
+            zFORp_library_version, &
+            zFORp_version_string
+
+  public :: zFORp_min_bits, &
+            zFORp_max_bits, &
+            zFORp_max_prec, &
+            zFORp_min_exp
+
+  public :: zFORp_header_magic, &
+            zFORp_header_meta, &
+            zFORp_header_mode, &
+            zFORp_header_full
+
+  public :: zFORp_meta_null
+
+  public :: zFORp_magic_bits, &
+            zFORp_meta_bits, &
+            zFORp_mode_short_bits, &
+            zFORp_mode_long_bits, &
+            zFORp_header_max_bits, &
+            zFORp_mode_short_max
 
   ! minimal bitstream API
 

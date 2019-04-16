@@ -88,6 +88,10 @@ program main
   write(*, *) "Absolute errors: "
   write(*, *) abs(input_array - decompressed_array)
 
+  ! zfp library info
+  write(*, *) zFORp_version_string
+  write(*, *) zFORp_meta_null
+
   ! deallocations
   call zFORp_stream_close(zfp_stream)
   call zFORp_bitstream_stream_close(queried_bitstream)
