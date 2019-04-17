@@ -1,8 +1,5 @@
 language:
-  - c
-
-env:
-  - C_STANDARD=99 CXX_STANDARD=98
+  - generic
 
 matrix:
   include:
@@ -12,27 +9,37 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-6
-      env:
-        - COVERAGE=ON
+          packages:
+            - gcc-6
+            - g++-6
+            - gfortran-6
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' COVERAGE='ON'
 
     - os: linux
       dist: trusty
       compiler: clang-3.6
-      addons:
+      addons: &clang36
         apt:
           sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty']
-          packages: clang-3.6
+          packages:
+            - clang-3.6
+            - g++-7
+            - gfortran-6
+      env: CC='clang-3.6' CXX='clang++-3.6' FC='gfortran-6'
 
     - os: linux
-      dist: trusty
-      compiler: clang
+      dist: xenial
+      compiler: clang-4.0
       before_install:
         - export LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
-      addons:
+      addons: &clang40
         apt:
-          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty']
-          packages: clang-3.4
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-4.0']
+          packages:
+            - clang-4.0
+            - g++-7
+            - gfortran-6
+      env: CC='clang-4.0' CXX='clang++-4.0' FC='gfortran-6'
 
     - os: linux
       dist: trusty
@@ -40,7 +47,11 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-4.4
+          packages:
+            - gcc-4.4
+            - g++-4.4
+            - gfortran-4.4
+      env: CC='gcc-4.4' CXX='g++-4.4' FC='gfortran-4.4'
 
     - os: linux
       dist: trusty
@@ -48,7 +59,11 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-4.7
+          packages:
+            - gcc-4.7
+            - g++-4.7
+            - gfortran-4.7
+      env: CC='gcc-4.7' CXX='g++-4.7' FC='gfortran-4.7'
 
     - os: linux
       dist: trusty
@@ -56,7 +71,11 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-4.8
+          packages:
+            - gcc-4.8
+            - g++-4.8
+            - gfortran-4.8
+      env: CC='gcc-4.8' CXX='g++-4.8' FC='gfortran-4.8'
 
     - os: linux
       dist: trusty
@@ -64,7 +83,11 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-4.9
+          packages:
+            - gcc-4.9
+            - g++-4.9
+            - gfortran-4.9
+      env: CC='gcc-4.9' CXX='g++-4.9' FC='gfortran-4.9'
 
     - os: linux
       dist: trusty
@@ -72,7 +95,11 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-5
+          packages:
+            - gcc-5
+            - g++-5
+            - gfortran-5
+      env: CC='gcc-5' CXX='g++-5' FC='gfortran-5'
 
     - os: linux
       dist: trusty
@@ -80,9 +107,11 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-6
-      env:
-        - C_STANDARD=90
+          packages:
+            - gcc-6
+            - g++-6
+            - gfortran-6
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' C_STANDARD='90'
 
     - os: linux
       dist: trusty
@@ -90,9 +119,11 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-6
-      env:
-        - C_STANDARD=11
+          packages:
+            - gcc-6
+            - g++-6
+            - gfortran-6
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' C_STANDARD='11'
 
     - os: linux
       dist: trusty
@@ -100,9 +131,11 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-6
-      env:
-        - CXX_STANDARD=11
+          packages:
+            - gcc-6
+            - g++-6
+            - gfortran-6
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' CXX_STANDARD='11'
 
     - os: linux
       dist: trusty
@@ -110,9 +143,11 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-6
-      env:
-        - CXX_STANDARD=14
+          packages:
+            - gcc-6
+            - g++-6
+            - gfortran-6
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' CXX_STANDARD='14'
 
     - os: linux
       dist: trusty
@@ -120,23 +155,31 @@ matrix:
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-6
+          packages:
+            - gcc-6
+            - g++-6
+            - gfortran-6
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6'
 
     - os: osx
       osx_image: xcode7.3
       compiler: gcc
+      env: CC='gcc' CXX='g++'
 
     - os: osx
       osx_image: xcode8.3
       compiler: gcc
+      env: CC='gcc' CXX='g++'
 
     - os: osx
       osx_image: xcode7.3
       compiler: clang
+      env: CC='clang' CXX='clang++'
 
     - os: osx
       osx_image: xcode8.3
       compiler: clang
+      env: CC='clang' CXX='clang++'
 
 script:
   - ./travis.sh
