@@ -128,3 +128,7 @@ if(ZFP_BUILD_TESTING_LARGE)
     endforeach()
   endforeach()
 endif()
+
+if(BUILD_PYTHON)
+  add_subdirectory(python)
+endif()

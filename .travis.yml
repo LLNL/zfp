@@ -4,7 +4,7 @@ language:
 matrix:
   include:
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-6
       addons:
         apt:
@@ -13,10 +13,13 @@ matrix:
             - gcc-6
             - g++-6
             - gfortran-6
-      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' COVERAGE='ON'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' PYTHON_VERSION='3.5' COVERAGE='ON'
 
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: clang-3.6
       addons: &clang36
         apt:
@@ -25,7 +28,10 @@ matrix:
             - clang-3.6
             - g++-7
             - gfortran-6
-      env: CC='clang-3.6' CXX='clang++-3.6' FC='gfortran-6'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='clang-3.6' CXX='clang++-3.6' FC='gfortran-6' PYTHON_VERSION='3.5'
 
     - os: linux
       dist: xenial
@@ -39,10 +45,13 @@ matrix:
             - clang-4.0
             - g++-7
             - gfortran-6
-      env: CC='clang-4.0' CXX='clang++-4.0' FC='gfortran-6'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='clang-4.0' CXX='clang++-4.0' FC='gfortran-6' PYTHON_VERSION='3.5'
 
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-4.4
       addons:
         apt:
@@ -51,10 +60,13 @@ matrix:
             - gcc-4.4
             - g++-4.4
             - gfortran-4.4
-      env: CC='gcc-4.4' CXX='g++-4.4' FC='gfortran-4.4'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='gcc-4.4' CXX='g++-4.4' FC='gfortran-4.4' PYTHON_VERSION='3.5'
 
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-4.7
       addons:
         apt:
@@ -63,10 +75,13 @@ matrix:
             - gcc-4.7
             - g++-4.7
             - gfortran-4.7
-      env: CC='gcc-4.7' CXX='g++-4.7' FC='gfortran-4.7'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='gcc-4.7' CXX='g++-4.7' FC='gfortran-4.7' PYTHON_VERSION='3.5'
 
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-4.8
       addons:
         apt:
@@ -75,10 +90,13 @@ matrix:
             - gcc-4.8
             - g++-4.8
             - gfortran-4.8
-      env: CC='gcc-4.8' CXX='g++-4.8' FC='gfortran-4.8'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='gcc-4.8' CXX='g++-4.8' FC='gfortran-4.8' PYTHON_VERSION='3.5'
 
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-4.9
       addons:
         apt:
@@ -87,7 +105,10 @@ matrix:
             - gcc-4.9
             - g++-4.9
             - gfortran-4.9
-      env: CC='gcc-4.9' CXX='g++-4.9' FC='gfortran-4.9'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='gcc-4.9' CXX='g++-4.9' FC='gfortran-4.9' PYTHON_VERSION='3.5'
 
     - os: linux
       dist: trusty
@@ -99,7 +120,9 @@ matrix:
             - gcc-5
             - g++-5
             - gfortran-5
-      env: CC='gcc-5' CXX='g++-5' FC='gfortran-5'
+            - libpython2.7
+            - python-pip
+      env: CC='gcc-5' CXX='g++-5' FC='gfortran-5' PYTHON_VERSION='2.7'
 
     - os: linux
       dist: trusty
@@ -111,10 +134,12 @@ matrix:
             - gcc-6
             - g++-6
             - gfortran-6
-      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' C_STANDARD='90'
+            - libpython2.7
+            - python-pip
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' PYTHON_VERSION='2.7'
 
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-6
       addons:
         apt:
@@ -123,10 +148,13 @@ matrix:
             - gcc-6
             - g++-6
             - gfortran-6
-      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' C_STANDARD='11'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' PYTHON_VERSION='3.5' C_STANDARD='90'
 
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-6
       addons:
         apt:
@@ -135,10 +163,13 @@ matrix:
             - gcc-6
             - g++-6
             - gfortran-6
-      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' CXX_STANDARD='11'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' PYTHON_VERSION='3.5' C_STANDARD='11'
 
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-6
       addons:
         apt:
@@ -147,10 +178,13 @@ matrix:
             - gcc-6
             - g++-6
             - gfortran-6
-      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' CXX_STANDARD='14'
+            - libpython3.5-dev
+            - cython3
+            - python3-numpy
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' PYTHON_VERSION='3.5' CXX_STANDARD='11'
 
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc-6
       addons:
         apt:
@@ -159,29 +193,110 @@ matrix:
             - gcc-6
             - g++-6
             - gfortran-6
-      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6'
+            - libpython3.5
+            - cython3
+            - python3-numpy
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' PYTHON_VERSION='3.5' CXX_STANDARD='14'
+
+    - os: linux
+      dist: xenial
+      compiler: gcc-6
+      addons:
+        apt:
+          sources: ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+            - g++-6
+            - gfortran-6
+            - libpython3.5
+            - cython3
+            - python3-numpy
+      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' PYTHON_VERSION='3.5'
+
+    - os: linux
+      dist: xenial
+      compiler: gcc-7
+      addons:
+        apt:
+          sources: ubuntu-toolchain-r-test
+          packages:
+            - gcc-7
+            - g++-7
+            - gfortran-7
+            - libpython3.5
+            - cython3
+            - python3-numpy
+      env: CC='gcc-7' CXX='g++-7' FC='gfortran-7' PYTHON_VERSION='3.5'
 
     - os: osx
       osx_image: xcode7.3
       compiler: gcc
-      env: CC='gcc' CXX='g++'
+      env: CC='gcc' CXX='g++' PYTHON_VERSION='3.5'
 
     - os: osx
       osx_image: xcode8.3
       compiler: gcc
-      env: CC='gcc' CXX='g++'
+      env: CC='gcc' CXX='g++' PYTHON_VERSION='2.7'
 
     - os: osx
       osx_image: xcode7.3
       compiler: clang
-      env: CC='clang' CXX='clang++'
+      env: CC='clang' CXX='clang++' PYTHON_VERSION='3.5'
 
     - os: osx
       osx_image: xcode8.3
       compiler: clang
-      env: CC='clang' CXX='clang++'
+      env: CC='clang' CXX='clang++' PYTHON_VERSION='2.7'
 
 script:
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then pyenv root; fi
+  - |
+    if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$PYTHON_VERSION" = "2.7" ]; then
+        pyenv install 2.7.12;
+        export PYTHON_INCLUDE_DIR=$(pyenv root)/versions/2.7.12/include/python2.7;
+        export PYTHON_LIBRARY=$(pyenv root)/versions/2.7.12/lib/libpython2.7.dylib;
+        export PYTHON_EXECUTABLE=$(pyenv root)/versions/2.7.12/bin/python2.7;
+    fi
+  - |
+    if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$PYTHON_VERSION" = "3.5" ]; then
+        pyenv install 3.5.0;
+        export PYTHON_INCLUDE_DIR=$(pyenv root)/versions/3.5.0/include/python3.5m;
+        export PYTHON_LIBRARY=$(pyenv root)/versions/3.5.0/lib/libpython3.5m.a;
+        export PYTHON_EXECUTABLE=$(pyenv root)/versions/3.5.0/bin/python3.5m;
+    fi
+  - |
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+        $PYTHON_EXECUTABLE -m pip install --upgrade pip;
+        $PYTHON_EXECUTABLE -m pip install -r ${TRAVIS_BUILD_DIR}/python/requirements.txt;
+    fi
+
+  - |
+    if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        export PYTHON_EXECUTABLE=/usr/bin/python$PYTHON_VERSION;
+        source /etc/lsb-release;
+    fi
+  - |
+    if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$PYTHON_VERSION" = "2.7" ]; then
+        export PYTHON_INCLUDE_DIR=/usr/include/python2.7;
+        export PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython2.7.so;
+    fi
+  - |
+    if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$PYTHON_VERSION" = "3.5" ]; then
+        export PYTHON_INCLUDE_DIR=/usr/include/python3.5m;
+        export PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so;
+    fi
+  - |
+    if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$DISTRIB_CODENAME" = "trusty" ] && [ "$PYTHON_VERSION" = "2.7" ]; then
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade pip;
+        sudo $PYTHON_EXECUTABLE -m pip install -r ${TRAVIS_BUILD_DIR}/python/requirements.txt;
+    fi
+  - |
+    if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$DISTRIB_CODENAME" = "trusty" ] && [ "$PYTHON_VERSION" = "3.5" ]; then
+        echo "Python 3.5 not supported on Ubuntu Trusty";
+        exit 1;
+    fi
+
+  - printenv | grep PYTHON
   - ./travis.sh
 
 after_success:

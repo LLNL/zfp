@@ -206,6 +206,11 @@ endif()
 #------------------------------------------------------------------------------#
 # Add source code
 #------------------------------------------------------------------------------#
+include(CTest)
+if(BUILD_TESTING)
+  enable_testing()
+endif()
+
 set(ZFP_LIBRARY_PREFIX "" CACHE STRING
   "Prefix to prepend to the output library name")
 mark_as_advanced(ZFP_LIBRARY_PREFIX)
@@ -227,14 +232,17 @@ if(BUILD_UTILITIES)
   add_subdirectory(utils)
 endif()
 
+option(BUILD_PYTHON "Build python bindings for zfp" OFF)
+if(BUILD_PYTHON)
+  add_subdirectory(python)
+endif()
+
 option(BUILD_EXAMPLES "Build Examples" OFF)
 if(BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-include(CTest)
 if(BUILD_TESTING)
-  enable_testing()
   add_subdirectory(tests)
 endif()
 
