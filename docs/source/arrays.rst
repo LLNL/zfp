@@ -43,6 +43,9 @@ iterators, and views.
 The following sections are available:
 
 * :ref:`array_classes`
+* :ref:`header`
+* :ref:`exceptions`
+* :ref:`array_factory`
 * :ref:`caching`
 * :ref:`references`
 * :ref:`pointers`
@@ -106,6 +109,19 @@ Base Class
 
   Return pointer to compressed data for read or write access.  The size
   of the buffer is given by :cpp:func:`compressed_size`.
+
+.. cpp:function:: uint array::dimensionality() const
+
+  Return the dimensionality of the compressed array.
+
+.. cpp:function:: zfp_type array::scalar_type() const
+
+  Return the underlying :c:type:`zfp_type` of the compressed array.
+
+.. cpp:function:: zfp::array::header array::get_header() const
+
+  Write a header describing this compressed array into struct
+  :cpp:type:`header`, and return it.
 
 Common Methods
 ^^^^^^^^^^^^^^
@@ -222,6 +238,17 @@ type is ommitted for readability, e.g.,
   *csize* bytes of cache, and optionally initialized from flat, uncompressed
   array *p*.  If *csize* is zero, a default cache size is chosen.
 
+.. cpp:function:: array1::array1(const zfp::array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array2::array2(const zfp::array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array3::array3(const zfp::array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+
+  Constructor of array from previously-serialized compressed array. Struct
+  :cpp:type:`zfp::array::header` contains header information, while optional
+  *buffer* points to the compressed-data. Optional *buffer_size_bytes* argument
+  specifies *buffer* length in case header describes a longer array. Throws
+  :cpp:class:`zfp::array::header::exception` if unable to construct. Omitting a
+  buffer will construct the object with its entries allocated (ready for use).
+
 .. cpp:function:: array1::array1(const array1& a)
 .. cpp:function:: array2::array2(const array2& a)
 .. cpp:function:: array3::array3(const array3& a)
@@ -274,6 +301,9 @@ type is ommitted for readability, e.g.,
   Return :ref:`proxy reference <references>` to scalar stored at
   multi-dimensional index given by *i*, *j*, and *k* (mutator).
 
+.. include:: header.inc
+.. include:: exceptions.inc
+.. include:: array-factory.inc
 .. include:: caching.inc
 .. include:: references.inc
 .. include:: pointers.inc
