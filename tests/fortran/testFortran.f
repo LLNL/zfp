@@ -18,7 +18,7 @@ program main
   ! bitstream
   character, dimension(:), allocatable, target :: buffer
   type(c_ptr) :: buffer_c_ptr
-  integer buffer_size_bytes, bitstream_offset_bytes
+  integer (kind=8) buffer_size_bytes, bitstream_offset_bytes
   type(zFORp_bitstream_type) :: bitstream, queried_bitstream
 
   ! zfp_stream

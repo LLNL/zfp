@@ -585,7 +585,7 @@ contains
     implicit none
     type(zFORp_bitstream_type) :: bitstream
     type(c_ptr), intent(in) :: buffer
-    integer, intent(in) :: bytes
+    integer (kind=8), intent(in) :: bytes
     bitstream%object = zfp_bitstream_stream_open(buffer, int(bytes, c_size_t))
   end function zFORp_bitstream_stream_open
 
@@ -642,7 +642,7 @@ contains
 
   subroutine zFORp_stream_params(zfp_stream, minbits, maxbits, maxprec, minexp) bind(c, name="zforp_stream_params")
     type(zFORp_stream_type), intent(in) :: zfp_stream
-    integer, intent(inout) :: minbits, maxbits, maxprec, minexp
+    integer (kind=8), intent(inout) :: minbits, maxbits, maxprec, minexp
     call zfp_stream_params(zfp_stream%object, &
                            int(minbits, c_int), &
                            int(maxbits, c_int), &
@@ -653,7 +653,7 @@ contains
   function zFORp_stream_compressed_size(zfp_stream) result(compressed_size) bind(c, name="zforp_stream_compressed_size")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
-    integer compressed_size
+    integer (kind=8) compressed_size
     compressed_size = zfp_stream_compressed_size(zfp_stream%object)
   end function zFORp_stream_compressed_size
 
@@ -661,7 +661,7 @@ contains
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     type(zFORp_field_type), intent(in) :: zfp_field
-    integer max_size
+    integer (kind=8) max_size
     max_size = zfp_stream_maximum_size(zfp_stream%object, zfp_field%object)
   end function zFORp_stream_maximum_size
 
@@ -738,7 +738,7 @@ contains
   function zFORp_stream_omp_chunk_size(zfp_stream) result(chunk_size_blocks) bind(c, name="zforp_stream_omp_chunk_size")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
-    integer chunk_size_blocks
+    integer (kind=8) chunk_size_blocks
     chunk_size_blocks = zfp_stream_omp_chunk_size(zfp_stream%object)
   end function zFORp_stream_omp_chunk_size
 
@@ -852,7 +852,7 @@ contains
     implicit none
     type(zFORp_field_type), intent(in) :: zfp_field
     integer, dimension(4), target, intent(inout) :: size_arr
-    integer total_size
+    integer (kind=8) total_size
     total_size = zfp_field_size(zfp_field%object, c_loc(size_arr))
   end function zFORp_field_size
 
@@ -947,7 +947,7 @@ contains
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     type(zFORp_field_type), intent(in) :: zfp_field
-    integer bitstream_offset_bytes
+    integer (kind=8) bitstream_offset_bytes
     bitstream_offset_bytes = zfp_compress(zfp_stream%object, zfp_field%object)
   end function zFORp_compress
 
@@ -955,7 +955,7 @@ contains
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
     type(zFORp_field_type), intent(in) :: zfp_field
-    integer bitstream_offset_bytes
+    integer (kind=8) bitstream_offset_bytes
     bitstream_offset_bytes = zfp_decompress(zfp_stream%object, zfp_field%object)
   end function zFORp_decompress
 
@@ -964,7 +964,7 @@ contains
     type(zFORp_stream_type), intent(in) :: zfp_stream
     type(zFORp_field_type), intent(in) :: zfp_field
     integer, intent(in) :: mask
-    integer num_bits_written
+    integer (kind=8) num_bits_written
     num_bits_written = zfp_write_header(zfp_stream%object, zfp_field%object, int(mask, c_int))
   end function zFORp_write_header
 
@@ -973,7 +973,7 @@ contains
     type(zFORp_stream_type), intent(in) :: zfp_stream
     type(zFORp_field_type), intent(in) :: zfp_field
     integer, intent(in) :: mask
-    integer num_bits_read
+    integer (kind=8) num_bits_read
     num_bits_read = zfp_read_header(zfp_stream%object, zfp_field%object, int(mask, c_int))
   end function zFORp_read_header
 
