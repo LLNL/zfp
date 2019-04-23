@@ -5,7 +5,6 @@
 .. |zfp| replace:: zfp
 .. |cfp| replace:: cfp
 .. |zfpy| replace:: zfPy
-.. |zforp| replace:: zFORp
 .. |libzfp| replace:: :file:`libzfp`
 .. |libcfp| replace:: :file:`libcfp`
 .. |zfpcmd| replace:: :program:`zfp`

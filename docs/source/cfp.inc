@@ -8,8 +8,7 @@ C bindings
 .. cpp:namespace:: zfp
 
 |zfp| |cfprelease| adds |cfp|: C language bindings for compressed arrays
-via wrappers around the C++ classes.  Future releases will add |zfpy| and
-|zforp| for Python and Fortan bindings.
+via wrappers around the C++ classes.
 
 The C API has been designed to facilitate working with compressed arrays
 without the benefits of C++ operator overloading and self-aware objects,

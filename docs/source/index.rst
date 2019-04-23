@@ -19,6 +19,7 @@
    bit-stream
    arrays
    python
+   zforp
    tutorial
    zfpcmd
    examples
