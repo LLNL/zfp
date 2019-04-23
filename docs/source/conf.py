@@ -146,7 +146,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'zfp.tex', u'zfp Documentation',
-     u'Peter Lindstrom', 'manual'),
+     u'\shortstack{Peter Lindstrom\\\\Markus Salasoo}', 'manual'),
 ]
 
 

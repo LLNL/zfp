@@ -43,10 +43,8 @@ iterators, and views.
 The following sections are available:
 
 * :ref:`array_classes`
-* :ref:`header`
-* :ref:`exceptions`
-* :ref:`array_factory`
 * :ref:`caching`
+* :ref:`serialization`
 * :ref:`references`
 * :ref:`pointers`
 * :ref:`iterators`
@@ -112,16 +110,31 @@ Base Class
 
 .. cpp:function:: uint array::dimensionality() const
 
-  Return the dimensionality of the compressed array.
+  Return the dimensionality (1, 2, or 3) of the array.
 
 .. cpp:function:: zfp_type array::scalar_type() const
 
-  Return the underlying :c:type:`zfp_type` of the compressed array.
+  Return the underlying scalar type (:c:type:`zfp_type`) of the array.
 
-.. cpp:function:: zfp::array::header array::get_header() const
+.. cpp:function:: array::header array::get_header() const
 
-  Write a header describing this compressed array into struct
-  :cpp:type:`header`, and return it.
+  Return a short :ref:`header <header>` describing the scalar type,
+  dimensions, and rate associated with the array.
+  A :cpp:class:`array::header::exception` is thrown if the header cannot
+  describe the array.
+
+.. _array_factory:
+.. cpp:function:: static array* array::construct(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+
+  Construct a compressed-array object whose scalar type, dimensions, and rate
+  are given by the header *h*.  Return a pointer to the base class upon
+  success.  The optional *buffer* points to compressed data that, when passed,
+  is copied into the array.  If *buffer* is absent, the array is default
+  intialized with all zeroes.  The optional *buffer_size_bytes* argument
+  specifies the buffer length in bytes.  When passed, a comparison is made to
+  ensure that the buffer size is at least as large as the size implied by
+  the header.  If this function fails for any reason, an
+  :cpp:class:`array::header::exception` is thrown.
 
 Common Methods
 ^^^^^^^^^^^^^^
@@ -238,16 +251,19 @@ type is ommitted for readability, e.g.,
   *csize* bytes of cache, and optionally initialized from flat, uncompressed
   array *p*.  If *csize* is zero, a default cache size is chosen.
 
-.. cpp:function:: array1::array1(const zfp::array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
-.. cpp:function:: array2::array2(const zfp::array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
-.. cpp:function:: array3::array3(const zfp::array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. _array_ctor_header:
+.. cpp:function:: array1::array1(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array2::array2(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array3::array3(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
 
-  Constructor of array from previously-serialized compressed array. Struct
-  :cpp:type:`zfp::array::header` contains header information, while optional
-  *buffer* points to the compressed-data. Optional *buffer_size_bytes* argument
-  specifies *buffer* length in case header describes a longer array. Throws
-  :cpp:class:`zfp::array::header::exception` if unable to construct. Omitting a
-  buffer will construct the object with its entries allocated (ready for use).
+  Constructor from previously :ref:`serialized <serialization>` compressed
+  array.  Struct :cpp:type:`array::header` contains array metadata, while
+  optional *buffer* points to the compressed data that is to be copied to
+  the array.  The optional *buffer_size_bytes* argument specifies the
+  *buffer* length.  If the constructor fails, an
+  :cpp:class:`array::header::exception` is thrown.
+  See :cpp:func:`array::construct` for further details on the *buffer* and
+  *buffer_size_bytes* arguments.
 
 .. cpp:function:: array1::array1(const array1& a)
 .. cpp:function:: array2::array2(const array2& a)
@@ -301,10 +317,8 @@ type is ommitted for readability, e.g.,
   Return :ref:`proxy reference <references>` to scalar stored at
   multi-dimensional index given by *i*, *j*, and *k* (mutator).
 
-.. include:: header.inc
-.. include:: exceptions.inc
-.. include:: array-factory.inc
 .. include:: caching.inc
+.. include:: serialization.inc
 .. include:: references.inc
 .. include:: pointers.inc
 .. include:: iterators.inc
