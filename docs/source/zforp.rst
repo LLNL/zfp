@@ -181,7 +181,7 @@ High-level API utility function wrappers
 
       Wrapper for :c:func:`zfp_stream_open`
 
-      :p type(zFORp_bitstream_type) bitstream [in]: Bitstream
+      :p zFORp_bitstream_type bitstream [in]: Bitstream
       :r zfp_stream: Newly allocated zfp_stream
       :rtype zfp_stream: zFORp_stream_type
 
@@ -189,7 +189,7 @@ High-level API utility function wrappers
 
       Wrapper for :c:func:`zfp_stream_close`
 
-      :p type(zFORp_stream_type) zfp_stream [inout]: Zfp_stream
+      :p zFORp_stream_type zfp_stream [inout]: Zfp_stream
 
   .. f:function:: zFORp_stream_bit_stream(zfp_stream)
 
