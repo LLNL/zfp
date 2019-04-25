@@ -54,6 +54,7 @@ Constants
     .. f:variable:: integer zFORp_mode_fixed_rate
     .. f:variable:: integer zFORp_mode_fixed_precision
     .. f:variable:: integer zFORp_mode_fixed_accuracy
+    .. f:variable:: integer zFORp_mode_reversible
 
   Enums wrapping :c:type:`zfp_exec_policy`
 
@@ -198,6 +199,14 @@ High-level API utility function wrappers
       :r bitstream: Bitstream
       :rtype bitstream: zFORp_bitstream_type
 
+  .. f:function:: zFORp_stream_is_reversible(zfp_stream)
+
+      Wrapper for :c:func:`zfp_stream_is_reversible`
+
+      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+      :r is_reversible: indicate whether reversible mode active (1) or not (0)
+      :rtype is_reversible: integer
+
   .. f:function:: zFORp_stream_compression_mode(zfp_stream)
 
       Wrapper for :c:func:`zfp_stream_compression_mode`
@@ -247,6 +256,12 @@ High-level API utility function wrappers
 
       :p zFORp_stream_type zfp_stream [in]: Zfp_stream
       :p zFORp_bitstream_type bitstream [in]: bitstream
+
+  .. f:subroutine:: zFORp_stream_set_reversible(zfp_stream)
+
+      Wrapper for :c:func:`zfp_stream_set_reversible`
+
+      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
 
   .. f:function:: zFORp_stream_set_rate(zfp_stream, rate, zfp_type, dims, wra)
 

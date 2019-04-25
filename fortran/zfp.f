@@ -33,7 +33,8 @@ module zFORp_module
                   zFORp_mode_expert = 1, &
                   zFORp_mode_fixed_rate = 2, &
                   zFORp_mode_fixed_precision = 3, &
-                  zFORp_mode_fixed_accuracy = 4
+                  zFORp_mode_fixed_accuracy = 4, &
+                  zFORp_mode_reversible = 5
   end enum
 
   enum, bind(c)
@@ -159,6 +160,12 @@ module zFORp_module
       type(c_ptr) :: bitstream
     end function
 
+    function zfp_stream_is_reversible(zfp_stream) result(is_reversible) bind(c, name="zfp_stream_is_reversible")
+      import
+      type(c_ptr), value :: zfp_stream
+      integer(c_int) :: is_reversible
+    end function
+
     function zfp_stream_compression_mode(zfp_stream) result(zfp_mode) bind(c, name="zfp_stream_compression_mode")
       import
       type(c_ptr), value :: zfp_stream
@@ -192,6 +199,11 @@ module zFORp_module
     subroutine zfp_stream_set_bit_stream(zfp_stream, bitstream) bind(c, name="zfp_stream_set_bit_stream")
       import
       type(c_ptr), value :: zfp_stream, bitstream
+    end subroutine
+
+    subroutine zfp_stream_set_reversible(zfp_stream) bind(c, name="zfp_stream_set_reversible")
+      import
+      type(c_ptr), value :: zfp_stream
     end subroutine
 
     function zfp_stream_set_rate(zfp_stream, rate, zfp_type, dims, wra) result(rate_result) bind(c, name="zfp_stream_set_rate")
@@ -519,12 +531,14 @@ module zFORp_module
   public :: zFORp_stream_open, &
             zFORp_stream_close, &
             zFORp_stream_bit_stream, &
+            zFORp_stream_is_reversible, &
             zFORp_stream_compression_mode, &
             zFORp_stream_mode, &
             zFORp_stream_params, &
             zFORp_stream_compressed_size, &
             zFORp_stream_maximum_size, &
             zFORp_stream_set_bit_stream, &
+            zFORp_stream_set_reversible, &
             zFORp_stream_set_rate, &
             zFORp_stream_set_precision, &
             zFORp_stream_set_accuracy, &
@@ -626,6 +640,13 @@ contains
     bitstream%object = zfp_stream_bit_stream(zfp_stream%object)
   end function zFORp_stream_bit_stream
 
+  function zFORp_stream_is_reversible(zfp_stream) result(is_reversible) bind(c, name="zforp_stream_is_reversible")
+    implicit none
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    integer is_reversible
+    is_reversible = zfp_stream_is_reversible(zfp_stream%object)
+  end function zFORp_stream_is_reversible
+
   function zFORp_stream_compression_mode(zfp_stream) result(zfp_mode) bind(c, name="zforp_stream_compression_mode")
     implicit none
     type(zFORp_stream_type), intent(in) :: zfp_stream
@@ -670,6 +691,11 @@ contains
     type(zFORp_bitstream_type), intent(in) :: bitstream
     call zfp_stream_set_bit_stream(zfp_stream%object, bitstream%object)
   end subroutine zFORp_stream_set_bit_stream
+
+  subroutine zFORp_stream_set_reversible(zfp_stream) bind(c, name="zforp_stream_set_reversible")
+    type(zFORp_stream_type), intent(in) :: zfp_stream
+    call zfp_stream_set_reversible(zfp_stream%object)
+  end subroutine zFORp_stream_set_reversible
 
   function zFORp_stream_set_rate(zfp_stream, rate, zfp_type, dims, wra) result(rate_result) bind(c, name="zforp_stream_set_rate")
     implicit none
