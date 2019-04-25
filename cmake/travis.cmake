@@ -55,6 +55,7 @@ if(WITH_COVERAGE)
   list(APPEND cfg_options
     -DCMAKE_C_FLAGS=-coverage
     -DCMAKE_CXX_FLAGS=-coverage
+    -DCMAKE_Fortran_FLAGS=-coverage
     )
   set(CTEST_SITE "${CTEST_SITE}_coverage")
 endif()
