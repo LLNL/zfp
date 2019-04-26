@@ -86,7 +86,7 @@ Constants
 
     .. f:variable:: character(len=36) zFORp_version_string
 
-      Wraps :c:macro:`ZFP_VERSION_STRING`
+      Wraps :c:data:`zfp_version_string`
 
     .. f:variable:: integer zFORp_min_bits
 
