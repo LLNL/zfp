@@ -24,295 +24,295 @@ decompress data.
 Types
 -----
 
-  .. f:type:: zFORp_bitstream_type
+.. f:type:: zFORp_bitstream_type
 
-      :f c_ptr object: A C pointer to the instance of :c:type:`bitstream`
+    :f c_ptr object: A C pointer to the instance of :c:type:`bitstream`
 
-  .. f:type:: zFORp_stream_type
+.. f:type:: zFORp_stream_type
 
-      :f c_ptr object: A C pointer to the instance of :c:type:`zfp_stream`
+    :f c_ptr object: A C pointer to the instance of :c:type:`zfp_stream`
 
-  .. f:type:: zFORp_field_type
+.. f:type:: zFORp_field_type
 
-      :f c_ptr object: A C pointer to the instance of :c:type:`zfp_field`
+    :f c_ptr object: A C pointer to the instance of :c:type:`zfp_field`
 
 Constants
 ---------
 
-  Enums wrapping :c:type:`zfp_type`
+Enums wrapping :c:type:`zfp_type`
 
-    .. f:variable:: integer zFORp_type_none
-    .. f:variable:: integer zFORp_type_int32
-    .. f:variable:: integer zFORp_type_int64
-    .. f:variable:: integer zFORp_type_float
-    .. f:variable:: integer zFORp_type_double
+  .. f:variable:: integer zFORp_type_none
+  .. f:variable:: integer zFORp_type_int32
+  .. f:variable:: integer zFORp_type_int64
+  .. f:variable:: integer zFORp_type_float
+  .. f:variable:: integer zFORp_type_double
 
-  Enums wrapping :c:type:`zfp_mode`
+Enums wrapping :c:type:`zfp_mode`
 
-    .. f:variable:: integer zFORp_mode_null
-    .. f:variable:: integer zFORp_mode_expert
-    .. f:variable:: integer zFORp_mode_fixed_rate
-    .. f:variable:: integer zFORp_mode_fixed_precision
-    .. f:variable:: integer zFORp_mode_fixed_accuracy
-    .. f:variable:: integer zFORp_mode_reversible
+  .. f:variable:: integer zFORp_mode_null
+  .. f:variable:: integer zFORp_mode_expert
+  .. f:variable:: integer zFORp_mode_fixed_rate
+  .. f:variable:: integer zFORp_mode_fixed_precision
+  .. f:variable:: integer zFORp_mode_fixed_accuracy
+  .. f:variable:: integer zFORp_mode_reversible
 
-  Enums wrapping :c:type:`zfp_exec_policy`
+Enums wrapping :c:type:`zfp_exec_policy`
 
-    .. f:variable:: integer zFORp_exec_serial
-    .. f:variable:: integer zFORp_exec_omp
-    .. f:variable:: integer zFORp_exec_cuda
+  .. f:variable:: integer zFORp_exec_serial
+  .. f:variable:: integer zFORp_exec_omp
+  .. f:variable:: integer zFORp_exec_cuda
 
-  Non-enum constants
+Non-enum constants
 
-    .. f:variable:: integer zFORp_version_major
+  .. f:variable:: integer zFORp_version_major
 
-      Wraps :c:macro:`ZFP_VERSION_MAJOR`
+    Wraps :c:macro:`ZFP_VERSION_MAJOR`
 
-    .. f:variable:: integer zFORp_version_minor
+  .. f:variable:: integer zFORp_version_minor
 
-      Wraps :c:macro:`ZFP_VERSION_MINOR`
+    Wraps :c:macro:`ZFP_VERSION_MINOR`
 
-    .. f:variable:: integer zFORp_version_patch
+  .. f:variable:: integer zFORp_version_patch
 
-      Wraps :c:macro:`ZFP_VERSION_PATCH`
+    Wraps :c:macro:`ZFP_VERSION_PATCH`
 
-    .. f:variable:: integer zFORp_codec_version
+  .. f:variable:: integer zFORp_codec_version
 
-      Wraps :c:data:`zfp_codec_version`
+    Wraps :c:data:`zfp_codec_version`
 
-    .. f:variable:: integer zFORp_library_version
+  .. f:variable:: integer zFORp_library_version
 
-      Wraps :c:data:`zfp_library_version`
+    Wraps :c:data:`zfp_library_version`
 
-    .. f:variable:: character(len=36) zFORp_version_string
+  .. f:variable:: character(len=36) zFORp_version_string
 
-      Wraps :c:data:`zfp_version_string`
+    Wraps :c:data:`zfp_version_string`
 
-    .. f:variable:: integer zFORp_min_bits
+  .. f:variable:: integer zFORp_min_bits
 
-      Wraps :c:macro:`ZFP_MIN_BITS`
+    Wraps :c:macro:`ZFP_MIN_BITS`
 
-    .. f:variable:: integer zFORp_max_bits
+  .. f:variable:: integer zFORp_max_bits
 
-      Wraps :c:macro:`ZFP_MAX_BITS`
+    Wraps :c:macro:`ZFP_MAX_BITS`
 
-    .. f:variable:: integer zFORp_max_prec
+  .. f:variable:: integer zFORp_max_prec
 
-      Wraps :c:macro:`ZFP_MAX_PREC`
+    Wraps :c:macro:`ZFP_MAX_PREC`
 
-    .. f:variable:: integer zFORp_min_exp
+  .. f:variable:: integer zFORp_min_exp
 
-      Wraps :c:macro:`ZFP_MIN_EXP`
+    Wraps :c:macro:`ZFP_MIN_EXP`
 
-    .. f:variable:: integer zFORp_header_magic
+  .. f:variable:: integer zFORp_header_magic
 
-      Wraps :c:macro:`ZFP_HEADER_MAGIC`
+    Wraps :c:macro:`ZFP_HEADER_MAGIC`
 
-    .. f:variable:: integer zFORp_header_meta
+  .. f:variable:: integer zFORp_header_meta
 
-      Wraps :c:macro:`ZFP_HEADER_META`
+    Wraps :c:macro:`ZFP_HEADER_META`
 
-    .. f:variable:: integer zFORp_header_mode
+  .. f:variable:: integer zFORp_header_mode
 
-      Wraps :c:macro:`ZFP_HEADER_MODE`
+    Wraps :c:macro:`ZFP_HEADER_MODE`
 
-    .. f:variable:: integer zFORp_header_full
+  .. f:variable:: integer zFORp_header_full
 
-      Wraps :c:macro:`ZFP_HEADER_FULL`
+    Wraps :c:macro:`ZFP_HEADER_FULL`
 
-    .. f:variable:: integer zFORp_meta_null
+  .. f:variable:: integer zFORp_meta_null
 
-      Wraps :c:macro:`ZFP_META_NULL`
+    Wraps :c:macro:`ZFP_META_NULL`
 
-    .. f:variable:: integer zFORp_magic_bits
+  .. f:variable:: integer zFORp_magic_bits
 
-      Wraps :c:macro:`ZFP_MAGIC_BITS`
+    Wraps :c:macro:`ZFP_MAGIC_BITS`
 
-    .. f:variable:: integer zFORp_meta_bits
+  .. f:variable:: integer zFORp_meta_bits
 
-      Wraps :c:macro:`ZFP_META_BITS`
+    Wraps :c:macro:`ZFP_META_BITS`
 
-    .. f:variable:: integer zFORp_mode_short_bits
+  .. f:variable:: integer zFORp_mode_short_bits
 
-      Wraps :c:macro:`ZFP_MODE_SHORT_BITS`
+    Wraps :c:macro:`ZFP_MODE_SHORT_BITS`
 
-    .. f:variable:: integer zFORp_mode_long_bits
+  .. f:variable:: integer zFORp_mode_long_bits
 
-      Wraps :c:macro:`ZFP_MODE_LONG_BITS`
+    Wraps :c:macro:`ZFP_MODE_LONG_BITS`
 
-    .. f:variable:: integer zFORp_header_max_bits
+  .. f:variable:: integer zFORp_header_max_bits
 
-      Wraps :c:macro:`ZFP_HEADER_MAX_BITS`
+    Wraps :c:macro:`ZFP_HEADER_MAX_BITS`
 
-    .. f:variable:: integer zFORp_mode_short_max
+  .. f:variable:: integer zFORp_mode_short_max
 
-      Wraps :c:macro:`ZFP_MODE_SHORT_MAX`
+    Wraps :c:macro:`ZFP_MODE_SHORT_MAX`
 
 Bitstream function wrappers
 ---------------------------
 
-  .. f:function:: zFORp_bitstream_stream_open(buffer, bytes)
+.. f:function:: zFORp_bitstream_stream_open(buffer, bytes)
 
-      Wrapper for :c:func:`stream_open`
+    Wrapper for :c:func:`stream_open`
 
-      :p type(c_ptr) buffer [in]: Bitstream buffer
-      :p integer (kind=8) bytes [in]: Buffer size, in bytes
-      :r bitstream: Bitstream
-      :rtype bitstream: zFORp_bitstream_type
+    :p type(c_ptr) buffer [in]: Bitstream buffer
+    :p integer (kind=8) bytes [in]: Buffer size, in bytes
+    :r bitstream: Bitstream
+    :rtype bitstream: zFORp_bitstream_type
 
-  .. f:subroutine:: zFORp_bitstream_stream_close(bitstream)
+.. f:subroutine:: zFORp_bitstream_stream_close(bitstream)
 
-      Wrapper for :c:func:`stream_close`
+    Wrapper for :c:func:`stream_close`
 
-      :p zFORp_bitstream_type bitstream [inout]: Bitstream
+    :p zFORp_bitstream_type bitstream [inout]: Bitstream
 
 High-level API utility function wrappers
 ----------------------------------------
 
-  .. f:function:: zFORp_type_size(zfp_type)
+.. f:function:: zFORp_type_size(zfp_type)
 
-      Wrapper for :c:func:`zfp_type_size`
+    Wrapper for :c:func:`zfp_type_size`
 
-      :p integer zfp_type [in]: zFORp_type enum.
-      :r type_size: Size of described zfp_type, in bytes, from C-language perspective.
-      :rtype type_size: integer
+    :p integer zfp_type [in]: zFORp_type enum.
+    :r type_size: Size of described zfp_type, in bytes, from C-language perspective.
+    :rtype type_size: integer
 
-  .. f:function:: zFORp_stream_open(bitstream)
+.. f:function:: zFORp_stream_open(bitstream)
 
-      Wrapper for :c:func:`zfp_stream_open`
+    Wrapper for :c:func:`zfp_stream_open`
 
-      :p zFORp_bitstream_type bitstream [in]: Bitstream
-      :r zfp_stream: Newly allocated zfp_stream
-      :rtype zfp_stream: zFORp_stream_type
+    :p zFORp_bitstream_type bitstream [in]: Bitstream
+    :r zfp_stream: Newly allocated zfp_stream
+    :rtype zfp_stream: zFORp_stream_type
 
-  .. f:subroutine:: zFORp_stream_close(zfp_stream)
+.. f:subroutine:: zFORp_stream_close(zfp_stream)
 
-      Wrapper for :c:func:`zfp_stream_close`
+    Wrapper for :c:func:`zfp_stream_close`
 
-      :p zFORp_stream_type zfp_stream [inout]: Zfp_stream
+    :p zFORp_stream_type zfp_stream [inout]: Zfp_stream
 
-  .. f:function:: zFORp_stream_bit_stream(zfp_stream)
+.. f:function:: zFORp_stream_bit_stream(zfp_stream)
 
-      Wrapper for :c:func:`zfp_stream_bit_stream`
+    Wrapper for :c:func:`zfp_stream_bit_stream`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :r bitstream: Bitstream
-      :rtype bitstream: zFORp_bitstream_type
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :r bitstream: Bitstream
+    :rtype bitstream: zFORp_bitstream_type
 
-  .. f:function:: zFORp_stream_is_reversible(zfp_stream)
+.. f:function:: zFORp_stream_is_reversible(zfp_stream)
 
-      Wrapper for :c:func:`zfp_stream_is_reversible`
+    Wrapper for :c:func:`zfp_stream_is_reversible`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :r is_reversible: indicate whether reversible mode active (1) or not (0)
-      :rtype is_reversible: integer
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :r is_reversible: indicate whether reversible mode active (1) or not (0)
+    :rtype is_reversible: integer
 
-  .. f:function:: zFORp_stream_compression_mode(zfp_stream)
+.. f:function:: zFORp_stream_compression_mode(zfp_stream)
 
-      Wrapper for :c:func:`zfp_stream_compression_mode`
+    Wrapper for :c:func:`zfp_stream_compression_mode`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :r zfp_mode: zFORp_mode enum
-      :rtype zfp_mode: integer
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :r zfp_mode: zFORp_mode enum
+    :rtype zfp_mode: integer
 
-  .. f:function:: zFORp_stream_mode(zfp_stream)
+.. f:function:: zFORp_stream_mode(zfp_stream)
 
-      Wrapper for :c:func:`zfp_stream_mode`
+    Wrapper for :c:func:`zfp_stream_mode`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :r encoded_mode: 64 bit encoded mode
-      :rtype encoded_mode: integer (kind=8)
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :r encoded_mode: 64 bit encoded mode
+    :rtype encoded_mode: integer (kind=8)
 
-  .. f:subroutine:: zFORp_stream_params(zfp_stream, minbits, maxbits, maxprec, minexp)
+.. f:subroutine:: zFORp_stream_params(zfp_stream, minbits, maxbits, maxprec, minexp)
 
-      Wrapper for :c:func:`zfp_stream_params`
+    Wrapper for :c:func:`zfp_stream_params`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :p integer (kind=8) minbits [inout]: minbits
-      :p integer (kind=8) maxbits [inout]: maxbits
-      :p integer (kind=8) maxprec [inout]: maxprec
-      :p integer (kind=8) minexp [inout]: minexp
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :p integer (kind=8) minbits [inout]: minbits
+    :p integer (kind=8) maxbits [inout]: maxbits
+    :p integer (kind=8) maxprec [inout]: maxprec
+    :p integer (kind=8) minexp [inout]: minexp
 
-  .. f:function:: zFORp_stream_compressed_size(zfp_stream)
+.. f:function:: zFORp_stream_compressed_size(zfp_stream)
 
-      Wrapper for :c:func:`zfp_stream_compressed_size`
+    Wrapper for :c:func:`zfp_stream_compressed_size`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :r compressed_size: compressed size
-      :rtype compressed_size: integer (kind=8)
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :r compressed_size: compressed size
+    :rtype compressed_size: integer (kind=8)
 
-  .. f:function:: zFORp_stream_maximum_size(zfp_stream, zfp_field)
+.. f:function:: zFORp_stream_maximum_size(zfp_stream, zfp_field)
 
-      Wrapper for :c:func:`zfp_stream_maximum_size`
+    Wrapper for :c:func:`zfp_stream_maximum_size`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :p zFORp_field_type zfp_field [in]: Zfp_field
-      :r max_size: maximum size
-      :rtype max_size: integer (kind=8)
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :p zFORp_field_type zfp_field [in]: Zfp_field
+    :r max_size: maximum size
+    :rtype max_size: integer (kind=8)
 
-  .. f:subroutine:: zFORp_stream_set_bit_stream(zfp_stream, bitstream)
+.. f:subroutine:: zFORp_stream_set_bit_stream(zfp_stream, bitstream)
 
-      Wrapper for :c:func:`zfp_stream_set_bit_stream`
+    Wrapper for :c:func:`zfp_stream_set_bit_stream`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :p zFORp_bitstream_type bitstream [in]: bitstream
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :p zFORp_bitstream_type bitstream [in]: bitstream
 
-  .. f:subroutine:: zFORp_stream_set_reversible(zfp_stream)
+.. f:subroutine:: zFORp_stream_set_reversible(zfp_stream)
 
-      Wrapper for :c:func:`zfp_stream_set_reversible`
+    Wrapper for :c:func:`zfp_stream_set_reversible`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
 
-  .. f:function:: zFORp_stream_set_rate(zfp_stream, rate, zfp_type, dims, wra)
+.. f:function:: zFORp_stream_set_rate(zfp_stream, rate, zfp_type, dims, wra)
 
-      Wrapper for :c:func:`zfp_stream_set_rate`
+    Wrapper for :c:func:`zfp_stream_set_rate`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :p real rate [in]: desired rate
-      :p integer zfp_type [in]: enum zfp_type
-      :p integer dims [in]: dimensions
-      :p integer wra [in]: use write random access?
-      :r rate_result: actual set rate
-      :rtype rate_result: real
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :p real rate [in]: desired rate
+    :p integer zfp_type [in]: enum zfp_type
+    :p integer dims [in]: dimensions
+    :p integer wra [in]: use write random access?
+    :r rate_result: actual set rate
+    :rtype rate_result: real
 
-  .. f:function:: zFORp_stream_set_precision(zfp_stream, prec)
+.. f:function:: zFORp_stream_set_precision(zfp_stream, prec)
 
-      Wrapper for :c:func:`zfp_stream_set_precision`
+    Wrapper for :c:func:`zfp_stream_set_precision`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :p integer prec [in]: desired precision
-      :r prec_result: actual set precision
-      :rtype prec_result: integer
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :p integer prec [in]: desired precision
+    :r prec_result: actual set precision
+    :rtype prec_result: integer
 
-  .. f:function:: zFORp_stream_set_accuracy(zfp_stream, acc)
+.. f:function:: zFORp_stream_set_accuracy(zfp_stream, acc)
 
-      Wrapper for :c:func:`zfp_stream_set_accuracy()`
+    Wrapper for :c:func:`zfp_stream_set_accuracy()`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :p real acc: desired accuracy (kind=8)
-      :r acc_result: actual set accuracy
-      :rtype acc_result: real (kind=8)
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :p real acc: desired accuracy (kind=8)
+    :r acc_result: actual set accuracy
+    :rtype acc_result: real (kind=8)
 
-  .. f:function:: zFORp_stream_set_mode(zfp_stream, encoded_mode)
+.. f:function:: zFORp_stream_set_mode(zfp_stream, encoded_mode)
 
-      Wrapper for :c:func:`zfp_stream_set_mode`
+    Wrapper for :c:func:`zfp_stream_set_mode`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :p integer encoded_mode [in]: encoded mode parameter
-      :r mode_result: newly set zfp_mode enum on zfp_stream
-      :rtype mode_result: integer
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :p integer encoded_mode [in]: encoded mode parameter
+    :r mode_result: newly set zfp_mode enum on zfp_stream
+    :rtype mode_result: integer
 
-  .. f:function:: zFORp_stream_set_params(zfp_stream, minbits, maxbits, maxprec, minexp)
+.. f:function:: zFORp_stream_set_params(zfp_stream, minbits, maxbits, maxprec, minexp)
 
-      Wrapper for :c:func:`zfp_stream_set_params`
+    Wrapper for :c:func:`zfp_stream_set_params`
 
-      :p zFORp_stream_type zfp_stream [in]: Zfp_stream
-      :p integer minbits [in]: min num of bits
-      :p integer maxbits [in]: max num of bits
-      :p integer maxprec [in]: max precision
-      :p integer minexp [in]: min exponent
-      :r is_success: indicate whether parameters were successfully set (1) or not (0)
-      :rtype is_success: integer
+    :p zFORp_stream_type zfp_stream [in]: Zfp_stream
+    :p integer minbits [in]: min num of bits
+    :p integer maxbits [in]: max num of bits
+    :p integer maxprec [in]: max precision
+    :p integer minexp [in]: min exponent
+    :r is_success: indicate whether parameters were successfully set (1) or not (0)
+    :rtype is_success: integer
 
 High-level API: execution policy function wrappers
 --------------------------------------------------
