@@ -135,9 +135,9 @@ module zFORp_module
 
     ! high-level API: utility functions
 
-    function zfp_type_size(zfp_type) result(type_size) bind(c, name="zfp_type_size")
+    function zfp_type_size(scalar_type) result(type_size) bind(c, name="zfp_type_size")
       import
-      integer(c_int) zfp_type
+      integer(c_int) scalar_type
       integer(c_size_t) type_size
     end function
 
@@ -206,11 +206,11 @@ module zFORp_module
       type(c_ptr), value :: stream
     end subroutine
 
-    function zfp_stream_set_rate(stream, rate, zfp_type, dims, wra) result(rate_result) bind(c, name="zfp_stream_set_rate")
+    function zfp_stream_set_rate(stream, rate, scalar_type, dims, wra) result(rate_result) bind(c, name="zfp_stream_set_rate")
       import
       type(c_ptr), value :: stream
       real(c_double), value :: rate
-      integer(c_int), value :: zfp_type
+      integer(c_int), value :: scalar_type
       ! no unsigned int in Fortran
       integer(c_int), value :: dims, wra
       real(c_double) :: rate_result
@@ -290,32 +290,32 @@ module zFORp_module
       type(c_ptr) :: field
     end function
 
-    function zfp_field_1d(uncompressed_ptr, zfp_type, nx) result(field) bind(c, name="zfp_field_1d")
+    function zfp_field_1d(uncompressed_ptr, scalar_type, nx) result(field) bind(c, name="zfp_field_1d")
       import
       type(c_ptr), value :: uncompressed_ptr
       type(c_ptr) :: field
-      integer(c_int), value :: zfp_type, nx
+      integer(c_int), value :: scalar_type, nx
     end function
 
-    function zfp_field_2d(uncompressed_ptr, zfp_type, nx, ny) result(field) bind(c, name="zfp_field_2d")
+    function zfp_field_2d(uncompressed_ptr, scalar_type, nx, ny) result(field) bind(c, name="zfp_field_2d")
       import
       type(c_ptr), value :: uncompressed_ptr
       type(c_ptr) :: field
-      integer(c_int), value :: zfp_type, nx, ny
+      integer(c_int), value :: scalar_type, nx, ny
     end function
 
-    function zfp_field_3d(uncompressed_ptr, zfp_type, nx, ny, nz) result(field) bind(c, name="zfp_field_3d")
+    function zfp_field_3d(uncompressed_ptr, scalar_type, nx, ny, nz) result(field) bind(c, name="zfp_field_3d")
       import
       type(c_ptr), value :: uncompressed_ptr
       type(c_ptr) :: field
-      integer(c_int), value :: zfp_type, nx, ny, nz
+      integer(c_int), value :: scalar_type, nx, ny, nz
     end function
 
-    function zfp_field_4d(uncompressed_ptr, zfp_type, nx, ny, nz, nw) result(field) bind(c, name="zfp_field_4d")
+    function zfp_field_4d(uncompressed_ptr, scalar_type, nx, ny, nz, nw) result(field) bind(c, name="zfp_field_4d")
       import
       type(c_ptr), value :: uncompressed_ptr
       type(c_ptr) :: field
-      integer(c_int), value :: zfp_type, nx, ny, nz, nw
+      integer(c_int), value :: scalar_type, nx, ny, nz, nw
     end function
 
     subroutine zfp_field_free(field) bind(c, name="zfp_field_free")
@@ -329,10 +329,10 @@ module zFORp_module
       type(c_ptr) :: arr_ptr
     end function
 
-    function zfp_field_scalar_type(field) result(zfp_type) bind(c, name="zfp_field_type")
+    function zfp_field_type(field) result(scalar_type) bind(c, name="zfp_field_type")
       import
       type(c_ptr), value :: field
-      integer(c_int) zfp_type
+      integer(c_int) scalar_type
     end function
 
     function zfp_field_precision(field) result(prec) bind(c, name="zfp_field_precision")
@@ -370,10 +370,10 @@ module zFORp_module
       type(c_ptr), value :: field, arr_ptr
     end subroutine
 
-    function zfp_field_set_type(field, zfp_type) result(zfp_type_result) bind(c, name="zfp_field_set_type")
+    function zfp_field_set_type(field, scalar_type) result(scalar_type_result) bind(c, name="zfp_field_set_type")
       import
       type(c_ptr), value :: field
-      integer(c_int) zfp_type, zfp_type_result
+      integer(c_int) scalar_type, scalar_type_result
     end function
 
     subroutine zfp_field_set_size_1d(field, nx) bind(c, name="zfp_field_set_size_1d")
@@ -562,7 +562,7 @@ module zFORp_module
             zFORp_field_4d, &
             zFORp_field_free, &
             zFORp_field_pointer, &
-            zFORp_field_scalar_type, &
+            zFORp_field_type, &
             zFORp_field_precision, &
             zFORp_field_dimensionality, &
             zFORp_field_size, &
@@ -611,11 +611,11 @@ contains
 
   ! high-level API: utility functions
 
-  function zFORp_type_size(zfp_type) result(type_size) bind(c, name="zforp_type_size")
+  function zFORp_type_size(scalar_type) result(type_size) bind(c, name="zforp_type_size")
     implicit none
-    integer, intent(in) :: zfp_type
+    integer, intent(in) :: scalar_type
     integer type_size
-    type_size = zfp_type_size(int(zfp_type, c_int))
+    type_size = zfp_type_size(int(scalar_type, c_int))
   end function zFORp_type_size
 
   ! high-level API: zfp_stream functions
@@ -663,7 +663,7 @@ contains
 
   subroutine zFORp_stream_params(stream, minbits, maxbits, maxprec, minexp) bind(c, name="zforp_stream_params")
     type(zFORp_stream), intent(in) :: stream
-    integer (kind=8), intent(inout) :: minbits, maxbits, maxprec, minexp
+    integer, intent(inout) :: minbits, maxbits, maxprec, minexp
     call zfp_stream_params(stream%object, &
                            int(minbits, c_int), &
                            int(maxbits, c_int), &
@@ -697,15 +697,15 @@ contains
     call zfp_stream_set_reversible(stream%object)
   end subroutine zFORp_stream_set_reversible
 
-  function zFORp_stream_set_rate(stream, rate, zfp_type, dims, wra) result(rate_result) bind(c, name="zforp_stream_set_rate")
+  function zFORp_stream_set_rate(stream, rate, scalar_type, dims, wra) result(rate_result) bind(c, name="zforp_stream_set_rate")
     implicit none
     type(zFORp_stream), intent(in) :: stream
     real (kind=8), intent(in) :: rate
-    integer, intent(in) :: zfp_type
+    integer, intent(in) :: scalar_type
     integer, intent(in) :: dims, wra
     real (kind=8) :: rate_result
     rate_result = zfp_stream_set_rate(stream%object, real(rate, c_double), &
-      int(zfp_type, c_int), int(dims, c_int), int(wra, c_int))
+      int(scalar_type, c_int), int(dims, c_int), int(wra, c_int))
   end function zFORp_stream_set_rate
 
   function zFORp_stream_set_precision(stream, prec) result(prec_result) bind(c, name="zforp_stream_set_precision")
@@ -801,40 +801,40 @@ contains
     field%object = zfp_field_alloc()
   end function zFORp_field_alloc
 
-  function zFORp_field_1d(uncompressed_ptr, zfp_type, nx) result(field) bind(c, name="zforp_field_1d")
+  function zFORp_field_1d(uncompressed_ptr, scalar_type, nx) result(field) bind(c, name="zforp_field_1d")
     implicit none
     type(c_ptr), intent(in) :: uncompressed_ptr
-    integer, intent(in) :: zfp_type, nx
+    integer, intent(in) :: scalar_type, nx
     type(zFORp_field) field
-    field%object = zfp_field_1d(uncompressed_ptr, int(zfp_type, c_int), &
+    field%object = zfp_field_1d(uncompressed_ptr, int(scalar_type, c_int), &
                                     int(nx, c_int))
   end function zFORp_field_1d
 
-  function zFORp_field_2d(uncompressed_ptr, zfp_type, nx, ny) result(field) bind(c, name="zforp_field_2d")
+  function zFORp_field_2d(uncompressed_ptr, scalar_type, nx, ny) result(field) bind(c, name="zforp_field_2d")
     implicit none
     type(c_ptr), intent(in) :: uncompressed_ptr
-    integer, intent(in) :: zfp_type, nx, ny
+    integer, intent(in) :: scalar_type, nx, ny
     type(zFORp_field) field
-    field%object = zfp_field_2d(uncompressed_ptr, int(zfp_type, c_int), &
+    field%object = zfp_field_2d(uncompressed_ptr, int(scalar_type, c_int), &
                                     int(nx, c_int), int(ny, c_int))
   end function zFORp_field_2d
 
-  function zFORp_field_3d(uncompressed_ptr, zfp_type, nx, ny, nz) result(field) bind(c, name="zforp_field_3d")
+  function zFORp_field_3d(uncompressed_ptr, scalar_type, nx, ny, nz) result(field) bind(c, name="zforp_field_3d")
     implicit none
     type(c_ptr), intent(in) :: uncompressed_ptr
-    integer, intent(in) :: zfp_type, nx, ny, nz
+    integer, intent(in) :: scalar_type, nx, ny, nz
     type(zFORp_field) field
-    field%object = zfp_field_3d(uncompressed_ptr, int(zfp_type, c_int), &
+    field%object = zfp_field_3d(uncompressed_ptr, int(scalar_type, c_int), &
                                     int(nx, c_int), int(ny, c_int), &
                                     int(nz, c_int))
   end function zFORp_field_3d
 
-  function zFORp_field_4d(uncompressed_ptr, zfp_type, nx, ny, nz, nw) result(field) bind(c, name="zforp_field_4d")
+  function zFORp_field_4d(uncompressed_ptr, scalar_type, nx, ny, nz, nw) result(field) bind(c, name="zforp_field_4d")
     implicit none
     type(c_ptr), intent(in) :: uncompressed_ptr
-    integer, intent(in) :: zfp_type, nx, ny, nz, nw
+    integer, intent(in) :: scalar_type, nx, ny, nz, nw
     type(zFORp_field) field
-    field%object = zfp_field_4d(uncompressed_ptr, int(zfp_type, c_int), &
+    field%object = zfp_field_4d(uncompressed_ptr, int(scalar_type, c_int), &
                                     int(nx, c_int), int(ny, c_int), &
                                     int(nz, c_int), int(nw, c_int))
   end function zFORp_field_4d
@@ -852,13 +852,12 @@ contains
     arr_ptr = zfp_field_pointer(field%object)
   end function zFORp_field_pointer
 
-  ! added "scalar" to name to avoid clash with zfp_field_type
-  function zFORp_field_scalar_type(field) result(zfp_type) bind(c, name="zforp_field_scalar_type")
+  function zFORp_field_type(field) result(scalar_type) bind(c, name="zforp_field_type")
     implicit none
     type(zFORp_field), intent(in) :: field
-    integer zfp_type
-    zfp_type = zfp_field_scalar_type(field%object)
-  end function zFORp_field_scalar_type
+    integer scalar_type
+    scalar_type = zfp_field_type(field%object)
+  end function zFORp_field_type
 
   function zFORp_field_precision(field) result(prec) bind(c, name="zforp_field_precision")
     implicit none
@@ -903,12 +902,12 @@ contains
     call zfp_field_set_pointer(field%object, arr_ptr)
   end subroutine zFORp_field_set_pointer
 
-  function zFORp_field_set_type(field, zfp_type) result(zfp_type_result) bind(c, name="zforp_field_set_type")
+  function zFORp_field_set_type(field, scalar_type) result(scalar_type_result) bind(c, name="zforp_field_set_type")
     implicit none
     type(zFORp_field), intent(in) :: field
-    integer, intent(in) :: zfp_type
-    integer zfp_type_result
-    zfp_type_result = zfp_field_set_type(field%object, int(zfp_type, c_int))
+    integer, intent(in) :: scalar_type
+    integer scalar_type_result
+    scalar_type_result = zfp_field_set_type(field%object, int(scalar_type, c_int))
   end function zFORp_field_set_type
 
   subroutine zFORp_field_set_size_1d(field, nx) bind(c, name="zforp_field_set_size_1d")

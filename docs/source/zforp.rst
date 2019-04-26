@@ -169,11 +169,11 @@ Bitstream function wrappers
 High-level API utility function wrappers
 ----------------------------------------
 
-.. f:function:: zFORp_type_size(zfp_type)
+.. f:function:: zFORp_type_size(scalar_type)
 
     Wrapper for :c:func:`zfp_type_size`
 
-    :p integer zfp_type [in]: zFORp_type enum.
+    :p integer scalar_type [in]: zFORp_type enum.
     :r type_size: Size of described zfp_type, in bytes, from C-language perspective.
     :rtype type_size: integer
 
@@ -228,10 +228,10 @@ High-level API utility function wrappers
     Wrapper for :c:func:`zfp_stream_params`
 
     :p zFORp_stream stream [in]: Zfp_stream
-    :p integer (kind=8) minbits [inout]: minbits
-    :p integer (kind=8) maxbits [inout]: maxbits
-    :p integer (kind=8) maxprec [inout]: maxprec
-    :p integer (kind=8) minexp [inout]: minexp
+    :p integer minbits [inout]: minbits
+    :p integer maxbits [inout]: maxbits
+    :p integer maxprec [inout]: maxprec
+    :p integer minexp [inout]: minexp
 
 .. f:function:: zFORp_stream_compressed_size(stream)
 
@@ -263,13 +263,13 @@ High-level API utility function wrappers
 
     :p zFORp_stream stream [in]: Zfp_stream
 
-.. f:function:: zFORp_stream_set_rate(stream, rate, zfp_type, dims, wra)
+.. f:function:: zFORp_stream_set_rate(stream, rate, scalar_type, dims, wra)
 
     Wrapper for :c:func:`zfp_stream_set_rate`
 
     :p zFORp_stream stream [in]: Zfp_stream
     :p real rate [in]: desired rate
-    :p integer zfp_type [in]: enum zfp_type
+    :p integer scalar_type [in]: enum zfp_type
     :p integer dims [in]: dimensions
     :p integer wra [in]: use write random access?
     :r rate_result: actual set rate
@@ -378,45 +378,45 @@ High-level API: zfp_field function wrappers
       :r field: newly allocated zfp_field
       :rtype field: zFORp_field
 
-  .. f:function:: zFORp_field_1d(uncompressed_ptr, zfp_type, nx)
+  .. f:function:: zFORp_field_1d(uncompressed_ptr, scalar_type, nx)
 
       Wrapper for :c:func:`zfp_field_1d`
 
       :p type(c_ptr) uncompressed_ptr [in]: pointer to uncompressed data
-      :p integer zfp_type [in]: zfp_type enum describing uncompressed data type
+      :p integer scalar_type [in]: zfp_type enum describing uncompressed data type
       :p integer nx [in]: number of elements in uncompressed data array
       :r field: newly allocated zfp_field
       :rtype field: zFORp_field
 
-  .. f:function:: zFORp_field_2d(uncompressed_ptr, zfp_type, nx, ny)
+  .. f:function:: zFORp_field_2d(uncompressed_ptr, scalar_type, nx, ny)
 
       Wrapper for :c:func:`zfp_field_2d`
 
       :p type(c_ptr) uncompressed_ptr [in]: pointer to uncompressed data
-      :p integer zfp_type [in]: zfp_type enum describing uncompressed data type
+      :p integer scalar_type [in]: zfp_type enum describing uncompressed data type
       :p integer nx [in]: number of elements in uncompressed data array's x dimension
       :p integer ny [in]: number of elements in uncompressed data array's y dimension
       :r field: newly allocated zfp_field
       :rtype field: zFORp_field
 
-  .. f:function:: zFORp_field_3d(uncompressed_ptr, zfp_type, nx, ny, nz)
+  .. f:function:: zFORp_field_3d(uncompressed_ptr, scalar_type, nx, ny, nz)
 
       Wrapper for :c:func:`zfp_field_3d`
 
       :p type(c_ptr) uncompressed_ptr [in]: pointer to uncompressed data
-      :p integer zfp_type [in]: zfp_type enum describing uncompressed data type
+      :p integer scalar_type [in]: zfp_type enum describing uncompressed data type
       :p integer nx [in]: number of elements in uncompressed data array's x dimension
       :p integer ny [in]: number of elements in uncompressed data array's y dimension
       :p integer nz [in]: number of elements in uncompressed data array's z dimension
       :r field: newly allocated zfp_field
       :rtype field: zFORp_field
 
-  .. f:function:: zFORp_field_4d(uncompressed_ptr, zfp_type, nx, ny, nz, nw)
+  .. f:function:: zFORp_field_4d(uncompressed_ptr, scalar_type, nx, ny, nz, nw)
 
       Wrapper for :c:func:`zfp_field_4d`
 
       :p type(c_ptr) uncompressed_ptr [in]: pointer to uncompressed data
-      :p integer zfp_type [in]: zfp_type enum describing uncompressed data type
+      :p integer scalar_type [in]: zfp_type enum describing uncompressed data type
       :p integer nx [in]: number of elements in uncompressed data array's x dimension
       :p integer ny [in]: number of elements in uncompressed data array's y dimension
       :p integer nz [in]: number of elements in uncompressed data array's z dimension
@@ -438,13 +438,13 @@ High-level API: zfp_field function wrappers
       :r arr_ptr: pointer to raw (uncompressed/decompressed) array
       :rtype arr_ptr: type(c_ptr)
 
-  .. f:function:: zFORp_field_scalar_type(field)
+  .. f:function:: zFORp_field_type(field)
 
       Wrapper for :c:func:`zfp_field_type`
 
       :p zFORp_field field [in]: Zfp_field
-      :r zfp_type: zfp_type enum describing field data
-      :rtype zfp_type: integer
+      :r scalar_type: zfp_type enum describing field data
+      :rtype scalar_type: integer
 
   .. f:function:: zFORp_field_precision(field)
 
@@ -495,14 +495,14 @@ High-level API: zfp_field function wrappers
       :p zFORp_field field [in]: Zfp_field
       :p type(c_ptr) arr_ptr [in]: pointer to raw array
 
-  .. f:function:: zFORp_field_set_type(field, zfp_type)
+  .. f:function:: zFORp_field_set_type(field, scalar_type)
 
       Wrapper for :c:func:`zfp_field_set_type`
 
       :p zFORp_field field [in]: Zfp_field
-      :p integer zfp_type: desired zfp_type enum
-      :r zfp_type_result: new zfp_type on the field
-      :rtype zfp_type_result: integer
+      :p integer scalar_type: desired zfp_type enum
+      :r scalar_type_result: new zfp_type on the field
+      :rtype scalar_type_result: integer
 
   .. f:subroutine:: zFORp_field_set_size_1d(field, nx)
 
