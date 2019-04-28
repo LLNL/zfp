@@ -258,6 +258,12 @@ zfp_stream_maximum_size(
 
 /* high-level API: initialization of compressed stream parameters ---------- */
 
+/* rewind bit stream to beginning for compression or decompression */
+void
+zfp_stream_rewind(
+  zfp_stream* stream /* compressed bit stream */
+);
+
 /* associate bit stream with compressed stream */
 void
 zfp_stream_set_bit_stream(
@@ -584,12 +590,6 @@ zfp_stream_flush(
 /* align bit stream on next word boundary (decoding analogy to flush) */
 size_t
 zfp_stream_align(
-  zfp_stream* stream /* compressed bit stream */
-);
-
-/* rewind bit stream to beginning for compression or decompression */
-void
-zfp_stream_rewind(
   zfp_stream* stream /* compressed bit stream */
 );
 
