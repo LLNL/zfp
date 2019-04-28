@@ -1,7 +1,7 @@
 /*
-** Copyright (c) 2014-2018, Lawrence Livermore National Security, LLC.
+** Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
 ** Produced at the Lawrence Livermore National Laboratory.
-** Authors: Peter Lindstrom, Markus Salasoo, Matt Larsen.
+** Authors: Peter Lindstrom, Markus Salasoo, Matt Larsen, Stephen Herbein.
 ** LLNL-CODE-663824.
 ** All rights reserved.
 **
@@ -74,7 +74,7 @@
 /* library version information */
 #define ZFP_VERSION_MAJOR 0 /* library major version number */
 #define ZFP_VERSION_MINOR 5 /* library minor version number */
-#define ZFP_VERSION_PATCH 4 /* library patch version number */
+#define ZFP_VERSION_PATCH 5 /* library patch version number */
 #define ZFP_VERSION_RELEASE ZFP_VERSION_PATCH
 
 /* codec version number (see also zfp_codec_version) */
@@ -216,21 +216,21 @@ zfp_stream_bit_stream(
   const zfp_stream* stream /* compressed stream */
 );
 
-int                     /* nonzero if lossless compression is enabled */
+int                        /* nonzero if lossless compression is enabled */
 zfp_stream_is_reversible(
-  const zfp_stream* zfp /* compressed stream */
+  const zfp_stream* stream /* compressed stream */
 );
 
 /* returns enum of compression mode */
-zfp_mode                /* enum for compression mode */
+zfp_mode                   /* enum for compression mode */
 zfp_stream_compression_mode(
-  const zfp_stream* zfp /* compressed stream */
+  const zfp_stream* stream /* compressed stream */
 );
 
 /* get all compression parameters in a compact representation */
-uint64                  /* 12- or 64-bit encoding of parameters */
+uint64                     /* 12- or 64-bit encoding of parameters */
 zfp_stream_mode(
-  const zfp_stream* zfp /* compressed stream */
+  const zfp_stream* stream /* compressed stream */
 );
 
 /* get all compression parameters (pointers may be NULL) */
@@ -277,7 +277,7 @@ zfp_stream_set_rate(
   zfp_stream* stream, /* compressed stream */
   double rate,        /* desired rate in compressed bits/scalar */
   zfp_type type,      /* scalar type to compress */
-  uint dims,          /* array dimensionality (1, 2, or 3) */
+  uint dims,          /* array dimensionality (1, 2, 3, or 4) */
   int wra             /* nonzero if write random access is needed */
 );
 
