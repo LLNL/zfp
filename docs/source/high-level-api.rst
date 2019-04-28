@@ -180,7 +180,8 @@ Types
       zfp_mode_expert          = 1, // expert mode (4 params set manually)
       zfp_mode_fixed_rate      = 2, // fixed rate mode
       zfp_mode_fixed_precision = 3, // fixed precision mode
-      zfp_mode_fixed_accuracy  = 4  // fixed accuracy mode
+      zfp_mode_fixed_accuracy  = 4, // fixed accuracy mode
+      zfp_mode_reversible      = 5  // reversible (lossless) mode
     } zfp_mode;
 
 .. c:type:: zfp_type
@@ -308,12 +309,12 @@ Compressed Stream
 
   Return bit stream associated with compressed stream.
 
-.. c:function:: zfp_mode zfp_stream_compression_mode(const zfp_stream* zfp)
+.. c:function:: zfp_mode zfp_stream_compression_mode(const zfp_stream* stream)
 
   Return compression mode associated with compression parameters. Returns
   :code:`zfp_mode_null` when compression parameters are invalid.
 
-.. c:function:: uint64 zfp_stream_mode(const zfp_stream* zfp)
+.. c:function:: uint64 zfp_stream_mode(const zfp_stream* stream)
 
   Return compact encoding of compression parameters.  If the return value
   is no larger than :c:macro:`ZFP_MODE_SHORT_MAX`, then the least significant
