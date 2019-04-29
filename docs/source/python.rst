@@ -4,7 +4,7 @@
 Python
 =======================
 
-.. py:module:: zfp
+.. py:module:: zfpy
 
 Dependencies
 ------------
@@ -23,13 +23,13 @@ You can install the necessary dependencies using ``pip`` and the zfp
 Installation
 ------------
 
-To build the python bindings, add ``-DBUILD_PYTHON=on`` to the cmake line. Cmake
+To build the python bindings, add ``-DBUILD_ZFPY=ON`` to the cmake line. Cmake
 will attempt to automatically detect the python installation to use.  If cmake
 finds multiple python installations, it will use the newest one.  To specify a
 specific python installation to use, set ``PYTHON_LIBRARY`` and
 ``PYTHON_INCLUDE_DIR`` in the cmake line. Putting it all together::
 
-    cmake -DBUILD_PYTHON=on -DPYTHON_LIBRARY=/path/to/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=/path/to/include/python2.7 ..
+    cmake -DBUILD_ZFPY=ON -DPYTHON_LIBRARY=/path/to/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=/path/to/include/python2.7 ..
 
 Compression
 -----------
@@ -43,12 +43,12 @@ By default, all that is required to be passed to the compression function is the
 numpy array; this will result in a stream that includes a header and is
 compressed with the ``reversible`` mode.  For example::
 
-  import zfp
+  import zfpy
   import numpy as np
 
   my_array = np.arange(1, 20)
-  compressed_data = zfp.compress_numpy(my_array)
-  decompressed_array = zfp.decompress_numpy(compressed_data)
+  compressed_data = zfpy.compress_numpy(my_array)
+  decompressed_array = zfpy.decompress_numpy(compressed_data)
 
   # confirm lossless compression/decompression
   np.testing.assert_array_equal(my_array, decompressed_array)
@@ -56,8 +56,8 @@ compressed with the ``reversible`` mode.  For example::
 Using the fixed-accuracy, fixed-rate, or fixed-precision modes simply requires
 setting one of the tolerance, rate, or precision arguments, respectively. For example::
 
-  compressed_data = zfp.compress_numpy(my_array, tolerance=1e-4)
-  decompressed_array = zfp.decompress_numpy(compressed_data)
+  compressed_data = zfpy.compress_numpy(my_array, tolerance=1e-4)
+  decompressed_array = zfpy.decompress_numpy(compressed_data)
 
   # Note the change from "equal" to "allclose" due to the lossy compression
   np.testing.assert_allclose(my_array, decompressed_array, atol=1e-3)
@@ -105,8 +105,8 @@ before and after.
 
 Decompresses a compressed stream without a header.  If a header is present in
 the stream, it will be incorrectly interpreted as compressed data.  ``ztype`` is
-a ``zfp_type``, which can be manually specified (e.g., ``zfp.type_int32``) or
-generated from a numpy dtype (e.g., ``zfp.dtype_to_ztype(array.dtype)``). If
+a ``zfp_type``, which can be manually specified (e.g., ``zfpy.type_int32``) or
+generated from a numpy dtype (e.g., ``zfpy.dtype_to_ztype(array.dtype)``). If
 ``out`` is specified, the data is decompressed into the ``out`` buffer.  ``out``
 can be a numpy array or a pointer to memory large enough to hold the
 decompressed data.  Regardless if ``out`` is provided or its type,

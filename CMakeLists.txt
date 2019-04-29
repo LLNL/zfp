@@ -232,8 +232,8 @@ if(BUILD_UTILITIES)
   add_subdirectory(utils)
 endif()
 
-option(BUILD_PYTHON "Build python bindings for zfp" OFF)
-if(BUILD_PYTHON)
+option(BUILD_ZFPY "Build python bindings for zfp" OFF)
+if(BUILD_ZFPY)
   add_subdirectory(python)
 endif()
 

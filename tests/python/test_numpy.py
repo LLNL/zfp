@@ -2,7 +2,7 @@
 
 import unittest
 
-import zfp
+import zfpy
 import test_utils
 import numpy as np
 try:
@@ -13,8 +13,8 @@ except ImportError:
 
 class TestNumpy(unittest.TestCase):
     def lossless_round_trip(self, orig_array):
-        compressed_array = zfp.compress_numpy(orig_array, write_header=True)
-        decompressed_array = zfp.decompress_numpy(compressed_array)
+        compressed_array = zfpy.compress_numpy(orig_array, write_header=True)
+        decompressed_array = zfpy.decompress_numpy(compressed_array)
         self.assertIsNone(np.testing.assert_array_equal(decompressed_array, orig_array))
 
     def test_different_dimensions(self):
@@ -49,9 +49,9 @@ class TestNumpy(unittest.TestCase):
 
     def test_advanced_decompression_checksum(self):
         ndims = 2
-        ztype = zfp.type_float
+        ztype = zfpy.type_float
         random_array = test_utils.getRandNumpyArray(ndims, ztype)
-        mode = zfp.mode_fixed_accuracy
+        mode = zfpy.mode_fixed_accuracy
         compress_param_num = 1
         compression_kwargs = {
             "tolerance": test_utils.computeParameterValue(
@@ -59,7 +59,7 @@ class TestNumpy(unittest.TestCase):
                 compress_param_num
             ),
         }
-        compressed_array = zfp.compress_numpy(
+        compressed_array = zfpy.compress_numpy(
             random_array,
             write_header=False,
             **compression_kwargs
@@ -68,7 +68,7 @@ class TestNumpy(unittest.TestCase):
         # Decompression using the "advanced" interface which enforces no header,
         # and the user must provide all the metadata
         decompressed_array = np.empty_like(random_array)
-        zfp._decompress(
+        zfpy._decompress(
             compressed_array,
             ztype,
             random_array.shape,
@@ -92,13 +92,13 @@ class TestNumpy(unittest.TestCase):
             random_array = np.random.rand(*shape)
 
             decompressed_array = np.empty_like(random_array)
-            compressed_array = zfp.compress_numpy(
+            compressed_array = zfpy.compress_numpy(
                 random_array,
                 write_header=False,
             )
-            zfp._decompress(
+            zfpy._decompress(
                 compressed_array,
-                zfp.dtype_to_ztype(random_array.dtype),
+                zfpy.dtype_to_ztype(random_array.dtype),
                 random_array.shape,
                 out= decompressed_array,
             )
@@ -107,10 +107,10 @@ class TestNumpy(unittest.TestCase):
     def test_utils(self):
         for ndims in range(1, 5):
             for ztype, ztype_str in [
-                    (zfp.type_float,  "float"),
-                    (zfp.type_double, "double"),
-                    (zfp.type_int32,  "int32"),
-                    (zfp.type_int64,  "int64"),
+                    (zfpy.type_float,  "float"),
+                    (zfpy.type_double, "double"),
+                    (zfpy.type_int32,  "int32"),
+                    (zfpy.type_int64,  "int64"),
             ]:
                 orig_random_array = test_utils.getRandNumpyArray(ndims, ztype)
                 orig_checksum = test_utils.getChecksumOrigArray(ndims, ztype)
@@ -133,10 +133,10 @@ class TestNumpy(unittest.TestCase):
                     self.assertTrue(np.equal(orig_random_array, random_array).all())
 
                     for compress_param_num in range(3):
-                        modes = [(zfp.mode_fixed_accuracy, "tolerance"),
-                                 (zfp.mode_fixed_precision, "precision"),
-                                 (zfp.mode_fixed_rate, "rate")]
-                        if ztype in [zfp.type_int32, zfp.type_int64]:
+                        modes = [(zfpy.mode_fixed_accuracy, "tolerance"),
+                                 (zfpy.mode_fixed_precision, "precision"),
+                                 (zfpy.mode_fixed_rate, "rate")]
+                        if ztype in [zfpy.type_int32, zfpy.type_int64]:
                             modes = [modes[-1]] # only fixed-rate is supported for integers
                         for mode, mode_str in modes:
                             # Compression
@@ -147,7 +147,7 @@ class TestNumpy(unittest.TestCase):
                                 ),
                             }
 
-                            compressed_array = zfp.compress_numpy(
+                            compressed_array = zfpy.compress_numpy(
                                 random_array,
                                 write_header=False,
                                 **compression_kwargs
@@ -174,12 +174,12 @@ class TestNumpy(unittest.TestCase):
                             # Decompression using the "public" interface
                             # requires a header, so re-compress with the header
                             # included in the stream
-                            compressed_array = zfp.compress_numpy(
+                            compressed_array = zfpy.compress_numpy(
                                 random_array,
                                 write_header=True,
                                 **compression_kwargs
                             )
-                            decompressed_array = zfp.decompress_numpy(
+                            decompressed_array = zfpy.decompress_numpy(
                                 compressed_array,
                             )
                             actual_checksum = test_utils.hashNumpyArray(
