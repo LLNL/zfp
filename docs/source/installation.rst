@@ -141,6 +141,9 @@ Regardless of the settings below, |libzfp| will always be built.
 .. c:macro:: BUILD_ZFORP
 
   Build |libzforp| for Fortran bindings to the C API.
+
+  Requires Fortran standard 2003 and later.
+
   Default: off.
 
 .. c:macro:: BUILD_UTILITIES

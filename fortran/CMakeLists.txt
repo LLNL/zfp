@@ -1,11 +1,11 @@
 enable_language(Fortran)
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-  set(dialect "-ffree-form -std=f2008 -fimplicit-none")
+  set(dialect "-ffree-form -fimplicit-none")
   set(bounds "-fbounds-check")
 endif()
 if(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-  set(dialect "-stand f08 -free -implicitnone")
+  set(dialect "-stand -free -implicitnone")
   set(bounds "-check bounds")
 endif()
 
