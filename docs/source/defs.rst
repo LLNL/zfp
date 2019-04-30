@@ -7,6 +7,7 @@
 .. |zfpy| replace:: zfPy
 .. |libzfp| replace:: :file:`libzfp`
 .. |libcfp| replace:: :file:`libcfp`
+.. |libzforp| replace:: :file:`libzforp`
 .. |zfpcmd| replace:: :program:`zfp`
 .. |testzfp| replace:: :program:`testzfp`
 .. |4powd| replace:: 4\ :sup:`d`

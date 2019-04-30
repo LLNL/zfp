@@ -6,31 +6,6 @@ Python
 
 .. py:module:: zfpy
 
-Dependencies
-------------
-
-Minimum Tested Versions:
-
-* Python: Python 2.7 & Python 3.5
-* Cython: 0.22
-* Numpy: 1.8.0
-
-You can install the necessary dependencies using ``pip`` and the zfp
-``requirements.txt``::
-
-  pip install -r $ZFP_ROOT/python/requirements.txt
-
-Installation
-------------
-
-To build the python bindings, add ``-DBUILD_ZFPY=ON`` to the cmake line. Cmake
-will attempt to automatically detect the python installation to use.  If cmake
-finds multiple python installations, it will use the newest one.  To specify a
-specific python installation to use, set ``PYTHON_LIBRARY`` and
-``PYTHON_INCLUDE_DIR`` in the cmake line. Putting it all together::
-
-    cmake -DBUILD_ZFPY=ON -DPYTHON_LIBRARY=/path/to/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=/path/to/include/python2.7 ..
-
 Compression
 -----------
 

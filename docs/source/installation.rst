@@ -125,6 +125,24 @@ Regardless of the settings below, |libzfp| will always be built.
   Build |libcfp| for C bindings to compressed arrays.
   Default: off.
 
+.. c:macro:: BUILD_ZFPY
+
+  Build |zfpy| for Python bindings to the C API.
+
+  Cmake will attempt to automatically detect the python installation to use.  If cmake
+  finds multiple python installations, it will use the newest one.  To specify a
+  specific python installation to use, set ``PYTHON_LIBRARY`` and
+  ``PYTHON_INCLUDE_DIR`` in the cmake line. Putting it all together::
+
+      cmake -DBUILD_ZFPY=ON -DPYTHON_LIBRARY=/path/to/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=/path/to/include/python2.7 ..
+
+  Default: off.
+
+.. c:macro:: BUILD_ZFORP
+
+  Build |libzforp| for Fortran bindings to the C API.
+  Default: off.
+
 .. c:macro:: BUILD_UTILITIES
 
   Build |zfpcmd| command-line utility for compressing binary files.
@@ -247,3 +265,17 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   Macro for renaming the outermost |cfp| namespace, e.g., to avoid name
   clashes.
   Default: cfp.
+
+Python Dependencies
+-------------------
+
+Minimum Tested Versions:
+
+* Python: Python 2.7 & Python 3.5
+* Cython: 0.22
+* Numpy: 1.8.0
+
+You can install the necessary dependencies using ``pip`` and the zfp
+``requirements.txt``::
+
+  pip install -r $ZFP_ROOT/python/requirements.txt
