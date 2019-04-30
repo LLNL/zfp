@@ -87,7 +87,7 @@ protected:
     deep_copy(a);
     return *this;
   }
- 
+
 public:
   // public virtual destructor (can delete array through base class pointer)
   virtual ~array()
