@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'zfp'
-copyright = u'2014-2018, LLNL-CODE-663824'
+copyright = u'2014-2019, LLNL-CODE-663824'
 author = u'Peter Lindstrom'
 
 # The version info for the project you're documenting, acts as replacement for
