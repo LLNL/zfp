@@ -1,6 +1,6 @@
 # zfp Release Notes
 
-## 0.5.5 (March 31, 2019)
+## 0.5.5 (April ??, 2019)
 
 - Added support for reversible (lossless) compression of floating-point and
   integer data.
@@ -11,9 +11,14 @@
 
 - Added Fortran bindings to zfp's high-level C API.
 
+- Change:
+  - The default compressed-array cache size is now a function of the total
+    number of array elements, irrespective of array shape.
+
 - Bug fixes:
   - Incorrect handling of execution policy in zfp utility.
   - Incorrect handling of decompression via header in zfp utility.
+  - Incorrect cleanup of device memory in CUDA decompress.
   - Tests for failing mallocs.
   - CMake installation of CFP when built.
   - zfp\_write\_header and zfp\_field\_metadata now fail if array dimensions

@@ -892,11 +892,17 @@ to offset the overhead of setting up parallel compression.
 
 Q26: *Why are 1D compressed arrays so slow?*
 
-A: This is likely due to the use of a very small cache.  All arrays use
-two 'layers' of blocks as default cache size, which is reasonable for
-2D and higher-dimensional arrays.  In 1D, this implies that the cache
-holds only two blocks, which is likely to cause excessive thrashing.
-Experiment with larger cache sizes of at least a few KB.
+A: This is likely due to the use of a very small cache.  Prior to |zfp|
+|csizerelease|, all arrays used two 'layers' of blocks as default cache
+size, which is reasonable for 2D and higher-dimensional arrays (as long
+as they are not too 'skinny').  In 1D, however, this implies that the
+cache holds only two blocks, which is likely to cause excessive thrashing.
+
+As of version |csizerelease|, the default cache size is roughly proportional
+to the square root of the total number of array elements, regardless of
+array dimensionality.  While this tends to reduce thrashing, we suggest
+experimenting with larger cache sizes of at least a few KB to ensure
+acceptable performance.
 
 -------------------------------------------------------------------------------
 

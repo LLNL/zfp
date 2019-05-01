@@ -3,7 +3,7 @@
 Release Notes
 =============
 
-zfp 0.5.5, March 31, 2019
+zfp 0.5.5, April ??, 2019
 
   - Added support for reversible (lossless) compression of floating-point and
     integer data.
@@ -13,6 +13,11 @@ zfp 0.5.5, March 31, 2019
   - Added Python bindings for compressing numpy arrays.
 
   - Added Fortran bindings to zfp's high-level C API.
+
+  - Change:
+
+    - The default compressed-array cache size is now a function of the total 
+      number of array elements, irrespective of array shape.
 
   - Bug fixes:
 

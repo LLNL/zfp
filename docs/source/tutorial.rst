@@ -580,7 +580,9 @@ at least two layers of blocks (2 |times| (*nx* / 4) |times| (*ny* / 4)
 blocks) for applications that stream through the array and perform stencil
 computations such as gathering data from neighboring elements.  This allows
 limiting the cache misses to compulsory ones.  If the *cache_size* parameter
-is set to zero bytes, then this default of two layers is used.
+is set to zero bytes, then a default size of |sqrt|\ *n* blocks is used,
+where *n* is the total number of blocks in the array.
+
 
 The cache size can be set during construction, or can be set at a later
 time via

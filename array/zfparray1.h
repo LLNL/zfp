@@ -281,7 +281,7 @@ protected:
   // number of cache lines corresponding to size (or suggested size if zero)
   static uint lines(size_t size, uint n)
   {
-    n = uint(((size ? size : 8 * sizeof(Scalar)) + sizeof(CacheLine) - 1) / sizeof(CacheLine));
+    n = size ? (size + sizeof(CacheLine) - 1) / sizeof(CacheLine) : array::lines(size_t((n + 3) / 4));
     return std::max(n, 1u);
   }
 

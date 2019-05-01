@@ -1,3 +1,4 @@
+.. include:: defs.rst
 .. _caching:
 
 Caching
@@ -17,8 +18,9 @@ at least two "layers" of blocks, e.g. 2 |times| (*nx* / 4) |times| (*ny* / 4)
 blocks for 3D arrays, for applications that stream through the array and
 perform stencil computations such as gathering data from neighboring elements.
 This allows limiting the cache misses to compulsory ones.  If the *csize*
-parameter provided to the constructor is set to zero bytes, then this default
-of two layers is used.
+parameter provided to the constructor is set to zero bytes, then a default
+cache size of |sqrt|\ *n* blocks is used, where *n* is the total number of
+blocks contained in the array.
 
 The cache size can be set during construction, or can be set at a later
 time via :cpp:func:`array::set_cache_size`.  Note that if *csize* = 0, then

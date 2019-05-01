@@ -255,6 +255,15 @@ protected:
     blkbits = zfp->maxbits;
   }
 
+  // default number of cache lines for array with n blocks
+  static uint lines(size_t n)
+  {
+    // compute m = O(sqrt(n))
+    size_t m;
+    for (m = 1; m * m < n; m *= 2);
+    return static_cast<uint>(m);
+  }
+
   uint dims;           // array dimensionality (1, 2, or 3)
   zfp_type type;       // scalar type
   uint nx, ny, nz;     // array dimensions
