@@ -48,7 +48,10 @@ if(BUILD_ZFPY)
 endif()
 
 if(BUILD_ZFORP)
-  set(CTEST_SITE "${CTEST_SITE}_zforp")
+  set(CTEST_SITE "${CTEST_SITE}_zforp$ENV{FORTRAN_STANDARD}")
+  list(APPEND cfg_options
+    -DCMAKE_FORTRAN_FLAGS='-std=f$ENV{FORTRAN_STANDARD}'
+    )
 endif()
 
 if(WITH_COVERAGE)
