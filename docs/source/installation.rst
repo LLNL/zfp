@@ -120,6 +120,11 @@ or using CMake
 
 Regardless of the settings below, |libzfp| will always be built.
 
+.. c:macro:: BUILD_ALL
+
+  Build all subdirectories; enable all options (except BUILD_SHARED_LIBS).
+  Default: off.
+
 .. c:macro:: BUILD_CFP
 
   Build |libcfp| for C bindings to compressed arrays.
