@@ -199,7 +199,7 @@ Utility Functions
 
   :p integer scalar_type [in]: :ref:`zFORp_type <zforp_type>` enum
   :r type_size: Size of described :c:type:`zfp_type`, in bytes, from C-language perspective
-  :rtype type_size: integer
+  :rtype type_size: integer (kind=8)
 
 
 Compressed Stream

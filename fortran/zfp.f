@@ -607,7 +607,7 @@ contains
   function zFORp_type_size(scalar_type) result(type_size) bind(c, name="zforp_type_size")
     implicit none
     integer, intent(in) :: scalar_type
-    integer type_size
+    integer (kind=8) type_size
     type_size = zfp_type_size(int(scalar_type, c_int))
   end function zFORp_type_size
 
