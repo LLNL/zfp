@@ -122,7 +122,8 @@ Regardless of the settings below, |libzfp| will always be built.
 
 .. c:macro:: BUILD_ALL
 
-  Build all subdirectories; enable all options (except BUILD_SHARED_LIBS).
+  Build all subdirectories; enable all options (except
+  :c:macro:`BUILD_SHARED_LIBS`).
   Default: off.
 
 .. c:macro:: BUILD_CFP
@@ -134,10 +135,10 @@ Regardless of the settings below, |libzfp| will always be built.
 
   Build |zfpy| for Python bindings to the C API.
 
-  Cmake will attempt to automatically detect the python installation to use.  If cmake
-  finds multiple python installations, it will use the newest one.  To specify a
-  specific python installation to use, set ``PYTHON_LIBRARY`` and
-  ``PYTHON_INCLUDE_DIR`` in the cmake line. Putting it all together::
+  Cmake will attempt to automatically detect the python installation to use.
+  If cmake finds multiple python installations, it will use the newest one.
+  To specify a specific python installation to use, set ``PYTHON_LIBRARY``
+  and ``PYTHON_INCLUDE_DIR`` in the cmake line. Putting it all together::
 
       cmake -DBUILD_ZFPY=ON -DPYTHON_LIBRARY=/path/to/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=/path/to/include/python2.7 ..
 
@@ -147,7 +148,7 @@ Regardless of the settings below, |libzfp| will always be built.
 
   Build |libzforp| for Fortran bindings to the C API.
 
-  Requires Fortran standard 2003 and later.
+  Requires Fortran standard 2003 or later.
 
   Default: off.
 
@@ -168,7 +169,7 @@ Regardless of the settings below, |libzfp| will always be built.
 
 .. c:macro:: BUILD_SHARED_LIBS
 
-  Build :file:`libzfp.so` and :file:`libcfp.so` shared objects.
+  Build shared objects (:file:`.so` or :file:`.dylib` files).
   On macOS, the :code:`SOFLAGS` line in the :file:`Config` file may have
   to be uncommented when compiling with GNU make.
   CMake default: on.

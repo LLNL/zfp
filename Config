@@ -2,6 +2,7 @@
 
 CC = gcc
 CXX = g++
+FC = gfortran
 
 # language standard -----------------------------------------------------------
 
@@ -9,6 +10,7 @@ CXX = g++
   CSTD = -std=c99
   CXXSTD = -std=c++98
 # CXXSTD = -std=c++11
+  FSTD = -std=f2003 -ffree-form -Wno-c-binding-type
 
 # common compiler options -----------------------------------------------------
 
@@ -53,10 +55,19 @@ OMPFLAGS = -fopenmp
 
 # build targets ---------------------------------------------------------------
 
-BUILD_CFP = 0
-BUILD_UTILITIES = 1
-BUILD_EXAMPLES = 0
-BUILD_TESTING = 1
+ifeq ($(BUILD_ALL),0)
+  BUILD_CFP = 0
+  BUILD_ZFORP = 0
+  BUILD_UTILITIES = 1
+  BUILD_EXAMPLES = 0
+  BUILD_TESTING = 1
+else
+  BUILD_CFP = 1
+  BUILD_ZFORP = 1
+  BUILD_UTILITIES = 1
+  BUILD_EXAMPLES = 1
+  BUILD_TESTING = 1
+endif
 BUILD_SHARED_LIBS = 0
 
 ifneq ($(BUILD_SHARED_LIBS),0)
@@ -84,3 +95,4 @@ endif
 
 CFLAGS = $(CSTD) $(FLAGS) $(DEFS)
 CXXFLAGS = $(CXXSTD) $(FLAGS) $(DEFS)
+FFLAGS = $(FSTD) $(FLAGS) $(DEFS)

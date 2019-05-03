@@ -11,6 +11,9 @@ all:
 ifneq ($(BUILD_CFP),0)
 	@cd cfp/src; $(MAKE) clean $(LIBRARY)
 endif
+ifneq ($(BUILD_ZFORP),0)
+	@cd fortran; $(MAKE) clean $(LIBRARY)
+endif
 ifneq ($(BUILD_UTILITIES),0)
 	@cd utils; $(MAKE) clean all
 endif
@@ -31,6 +34,7 @@ test:
 clean:
 	@cd src; $(MAKE) clean
 	@cd cfp/src; $(MAKE) clean
+	@cd fortran; $(MAKE) clean
 	@cd utils; $(MAKE) clean
 	@cd tests; $(MAKE) clean
 	@cd examples; $(MAKE) clean
