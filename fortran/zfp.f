@@ -160,12 +160,6 @@ module zFORp_module
       type(c_ptr) :: bs
     end function
 
-    function zfp_stream_is_reversible(stream) result(is_reversible) bind(c, name="zfp_stream_is_reversible")
-      import
-      type(c_ptr), value :: stream
-      integer(c_int) :: is_reversible
-    end function
-
     function zfp_stream_compression_mode(stream) result(zfp_mode) bind(c, name="zfp_stream_compression_mode")
       import
       type(c_ptr), value :: stream
@@ -531,7 +525,6 @@ module zFORp_module
   public :: zFORp_stream_open, &
             zFORp_stream_close, &
             zFORp_stream_bit_stream, &
-            zFORp_stream_is_reversible, &
             zFORp_stream_compression_mode, &
             zFORp_stream_mode, &
             zFORp_stream_params, &
@@ -639,13 +632,6 @@ contains
     type(zFORp_bitstream) :: bs
     bs%object = zfp_stream_bit_stream(stream%object)
   end function zFORp_stream_bit_stream
-
-  function zFORp_stream_is_reversible(stream) result(is_reversible) bind(c, name="zforp_stream_is_reversible")
-    implicit none
-    type(zFORp_stream), intent(in) :: stream
-    integer is_reversible
-    is_reversible = zfp_stream_is_reversible(stream%object)
-  end function zFORp_stream_is_reversible
 
   function zFORp_stream_compression_mode(stream) result(zfp_mode) bind(c, name="zforp_stream_compression_mode")
     implicit none
