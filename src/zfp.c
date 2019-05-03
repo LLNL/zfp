@@ -31,6 +31,12 @@ type_precision(zfp_type type)
   }
 }
 
+static int
+is_reversible(const zfp_stream* zfp)
+{
+  return zfp->minexp < ZFP_MIN_EXP;
+}
+
 /* shared code across template instances ------------------------------------*/
 
 #include "share/parallel.c"
@@ -438,12 +444,6 @@ zfp_stream_bit_stream(const zfp_stream* zfp)
   return zfp->stream;
 }
 
-int
-zfp_stream_is_reversible(const zfp_stream* zfp)
-{
-  return zfp->minexp < ZFP_MIN_EXP;
-}
-
 zfp_mode
 zfp_stream_compression_mode(const zfp_stream* zfp)
 {
@@ -584,12 +584,12 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
       return 0;
     case zfp_type_float:
       maxbits += 8;
-      if (zfp_stream_is_reversible(zfp))
+      if (is_reversible(zfp))
         maxbits += 5;
       break;
     case zfp_type_double:
       maxbits += 11;
-      if (zfp_stream_is_reversible(zfp))
+      if (is_reversible(zfp))
         maxbits += 6;
       break;
     default:

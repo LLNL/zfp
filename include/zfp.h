@@ -216,11 +216,6 @@ zfp_stream_bit_stream(
   const zfp_stream* stream /* compressed stream */
 );
 
-int                        /* nonzero if lossless compression is enabled */
-zfp_stream_is_reversible(
-  const zfp_stream* stream /* compressed stream */
-);
-
 /* returns enum of compression mode */
 zfp_mode                   /* enum for compression mode */
 zfp_stream_compression_mode(
@@ -301,15 +296,14 @@ zfp_stream_set_accuracy(
   double tolerance    /* desired error tolerance */
 );
 
-/* set all compression parameters from compact representation */
-/* compression params are only set on stream upon success */
-zfp_mode              /* non (zfp_mode_null) upon success */
+/* set parameters from compact encoding; leaves stream intact on failure */
+zfp_mode              /* compression mode or zfp_mode_null upon failure */
 zfp_stream_set_mode(
   zfp_stream* stream, /* compressed stream */
   uint64 mode         /* 12- or 64-bit encoding of parameters */
 );
 
-/* set all compression parameters (expert mode) */
+/* set all parameters (expert mode); leaves stream intact on failure */
 int                   /* nonzero upon success */
 zfp_stream_set_params(
   zfp_stream* stream, /* compressed stream */
