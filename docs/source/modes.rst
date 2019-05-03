@@ -240,7 +240,7 @@ The expert mode parameters corresponding to reversible mode are::
   maxprec = ZFP_MAX_PREC
   minexp < ZFP_MIN_EXP
 
-Reversible mode is enabled via :c:func:`zfp_set_reversible` and through
+Reversible mode is enabled via :c:func:`zfp_stream_set_reversible` and through
 the :option:`-R` command-line option in the :ref:`zfp executable <zfpcmd>`.
 It is supported by both the low- and high-level interfaces and by the serial
 and OpenMP execution policies, but it is not yet implemented in CUDA.

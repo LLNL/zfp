@@ -359,6 +359,10 @@ Compressed Stream
 Compression Parameters
 ^^^^^^^^^^^^^^^^^^^^^^
 
+.. c:function:: void zfp_stream_set_reversible(zfp_stream* stream)
+
+  Enable :ref:`reversible <mode-reversible>` (lossless) compression.
+
 .. c:function:: double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, uint dims, int wra)
 
   Set *rate* for :ref:`fixed-rate mode <mode-fixed-rate>` in compressed bits
