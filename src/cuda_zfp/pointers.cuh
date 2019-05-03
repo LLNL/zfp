@@ -16,7 +16,7 @@ bool is_gpu_ptr(const void *ptr)
   // clear last error so other error checking does
   // not pick it up
   cudaError_t error = cudaGetLastError();
-#if CUDART_VERSION >= 1000
+#if CUDART_VERSION >= 10000
   return perr == cudaSuccess &&
                 (atts.type == cudaMemoryTypeDevice ||
                  atts.type == cudaMemoryTypeManaged);
