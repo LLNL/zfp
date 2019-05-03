@@ -1,13 +1,11 @@
 .. include:: defs.rst
 
 .. index::
-   single: zforp
+   single: zFORp
 .. _zforp:
 
 Fortran Bindings
 ================
-
-.. cpp:namespace:: zfp
 
 |zfp| |zforprelease| adds |zforp|: a Fortran API providing wrappers around
 the :ref:`high-level C API <hl-api>`. Wrappers for
