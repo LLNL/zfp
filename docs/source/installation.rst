@@ -38,13 +38,13 @@ GNU Builds
 To compile |zfp| using `gcc <https://gcc.gnu.org>`_ without
 `OpenMP <http://www.openmp.org>`_, type::
 
-    make
+    gmake
 
 from the |zfp| root directory.  This builds |libzfp| as a static
 library as well as utilities and example programs.  To enable OpenMP
 parallel compression, type::
 
-    make ZFP_WITH_OPENMP=1
+    gmake ZFP_WITH_OPENMP=1
 
 .. note::
 
@@ -91,7 +91,7 @@ Testing
 
 To test that |zfp| is working properly, type::
 
-    make test
+    gmake test
 
 or using CMake::
 
@@ -154,9 +154,12 @@ Regardless of the settings below, |libzfp| will always be built.
 
 .. c:macro:: BUILD_ZFORP
 
-  Build |libzforp| for Fortran bindings to the C API.
+  Build |libzFORp| for Fortran bindings to the C API.  Requires Fortran
+  standard 2003 or later.  GNU make users may specify the Fortran compiler
+  to use via
+  ::
 
-  Requires Fortran standard 2003 or later.
+      gmake BUILD_ZFORP=1 FC=/path/to/fortran-compiler
 
   Default: off.
 
@@ -227,7 +230,8 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   GPU compression and decompression.  When enabled, CUDA and a compatible
   host compiler must be installed.  For a full list of compatible compilers,
   please consult the
-  `NVIDIA documentation <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/>`_.  If a CUDA installation is in the user's path, it will be
+  `NVIDIA documentation <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/>`_.
+  If a CUDA installation is in the user's path, it will be
   automatically found by CMake.  Alternatively, the CUDA binary directory 
   can be specified using the :envvar:`CUDA_BIN_DIR` environment variable.
   CMake default: off.
@@ -295,16 +299,42 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   CMake default: undefined/off.
   GNU make default: off and ignored.
 
-Python Dependencies
--------------------
 
-Minimum Tested Versions:
+Dependencies
+------------
+
+The core |zfp| library and compressed arrays require only a C89 and C++98
+compiler.  The optional components have additional dependencies, as outlined
+in the sections below.
+
+CMake
+^^^^^
+
+CMake builds require version 3.1 or later on Linux and macOS and version
+3.4 or later on Windows.  CMake is available `here <https://cmake.org>`_.
+
+CUDA
+^^^^
+
+CUDA support requires CMake and a compatible host compiler (see
+:c:macro:`ZFP_WITH_CUDA`).
+
+Python
+^^^^^^
+
+The optional Python bindings require CMake and the following minimum
+versions:
 
 * Python: Python 2.7 & Python 3.5
 * Cython: 0.22
 * Numpy: 1.8.0
 
-You can install the necessary dependencies using ``pip`` and the zfp
-``requirements.txt``::
+The necessary dependencies can be installed using ``pip`` and the |zfp|
+:file:requirements.txt::
 
   pip install -r $ZFP_ROOT/python/requirements.txt
+
+Fortran
+^^^^^^^
+
+The optional Fortran bindings require a Fortran 2003 compiler.
