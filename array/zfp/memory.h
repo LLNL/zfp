@@ -40,7 +40,7 @@ allocate_aligned(size_t size, size_t alignment)
   #elif defined(_WIN32)
   ptr = _aligned_malloc(size, alignment);
 
-  #elif defined(__USE_XOPEN2K) || defined(__MACH__)
+  #elif (_POSIX_C_SOURCE >= 200112L) || (_XOPEN_SOURCE >= 600) || defined(__MACH__)
   is_mem_failed = posix_memalign(&ptr, alignment, size);
 
   #else
