@@ -1,4 +1,3 @@
-.. include:: defs.rst
 .. _caching:
 
 Caching
