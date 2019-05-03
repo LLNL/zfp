@@ -55,21 +55,26 @@ OMPFLAGS = -fopenmp
 
 # build targets ---------------------------------------------------------------
 
-ifeq ($(BUILD_ALL),0)
-  BUILD_CFP = 0
-  BUILD_ZFORP = 0
-  BUILD_UTILITIES = 1
-  BUILD_EXAMPLES = 0
-  BUILD_TESTING = 1
-else
-  BUILD_CFP = 1
-  BUILD_ZFORP = 1
-  BUILD_UTILITIES = 1
-  BUILD_EXAMPLES = 1
-  BUILD_TESTING = 1
-endif
+# default targets
+BUILD_CFP = 0
+BUILD_ZFORP = 0
+BUILD_UTILITIES = 1
+BUILD_EXAMPLES = 0
+BUILD_TESTING = 1
 BUILD_SHARED_LIBS = 0
 
+# build all targets?
+ifdef BUILD_ALL
+  ifneq ($(BUILD_ALL),0)
+    BUILD_CFP = 1
+    BUILD_ZFORP = 1
+    BUILD_UTILITIES = 1
+    BUILD_EXAMPLES = 1
+    BUILD_TESTING = 1
+  endif
+endif
+
+# build shared libraries?
 ifneq ($(BUILD_SHARED_LIBS),0)
   LIBRARY = shared
   LIBZFP = libzfp.so
