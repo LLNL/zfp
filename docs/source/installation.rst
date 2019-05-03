@@ -46,6 +46,12 @@ parallel compression, type::
 
     make ZFP_WITH_OPENMP=1
 
+.. note::
+
+  GNU builds expose only limited functionality of |zfp|.  For instance,
+  CUDA and Python support are not included.  For full functionality,
+  build |zfp| using CMake.
+
 .. _cmake_builds:
 
 CMake Builds
@@ -135,14 +141,16 @@ Regardless of the settings below, |libzfp| will always be built.
 
   Build |zfpy| for Python bindings to the C API.
 
-  Cmake will attempt to automatically detect the python installation to use.
-  If cmake finds multiple python installations, it will use the newest one.
-  To specify a specific python installation to use, set ``PYTHON_LIBRARY``
-  and ``PYTHON_INCLUDE_DIR`` in the cmake line. Putting it all together::
+  Cmake will attempt to automatically detect the Python installation to use.
+  If cmake finds multiple Python installations, it will use the newest one.
+  To specify a specific Python installation to use, set
+  :c:macro:`PYTHON_LIBRARY` and :c:macro:`PYTHON_INCLUDE_DIR` in the
+  cmake line. Putting it all together::
 
       cmake -DBUILD_ZFPY=ON -DPYTHON_LIBRARY=/path/to/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=/path/to/include/python2.7 ..
 
-  Default: off.
+  CMake default: off.
+  GNU make default: off and ignored.
 
 .. c:macro:: BUILD_ZFORP
 
@@ -274,6 +282,18 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   Macro for renaming the outermost |cfp| namespace, e.g., to avoid name
   clashes.
   Default: cfp.
+
+.. c:macro:: PYTHON_LIBRARY
+
+  Path to the Python library, e.g., :file:`/usr/lib/libpython2.7.so`.
+  CMake default: undefined/off.
+  GNU make default: off and ignored.
+
+.. c:macro:: PYTHON_INCLUDE_DIR
+
+  Path to the Python include directory, e.g., :file:`/usr/include/python2.7`.
+  CMake default: undefined/off.
+  GNU make default: off and ignored.
 
 Python Dependencies
 -------------------
