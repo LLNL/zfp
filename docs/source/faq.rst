@@ -1,5 +1,7 @@
 .. include:: defs.rst
 
+.. cpp:namespace:: zfp
+
 FAQ
 ===
 
@@ -34,7 +36,7 @@ Questions answered in this FAQ:
   #. :ref:`Are parallel compressed streams identical to serial streams? <q-parallel>`
   #. :ref:`Are zfp arrays and other data structures thread-safe? <q-thread-safety>`
   #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
-  #. :ref:`Why are 1D compressed arrays so slow? <q-1d-speed>`
+  #. :ref:`Why are compressed arrays so slow? <q-1d-speed>`
   #. :ref:`Do compressed arrays use reference counting? <q-ref-count>`
 
 -------------------------------------------------------------------------------
@@ -890,7 +892,7 @@ to offset the overhead of setting up parallel compression.
 
 .. _q-1d-speed:
 
-Q26: *Why are 1D compressed arrays so slow?*
+Q26: *Why are compressed arrays so slow?*
 
 A: This is likely due to the use of a very small cache.  Prior to |zfp|
 |csizerelease|, all arrays used two 'layers' of blocks as default cache
@@ -901,8 +903,19 @@ cache holds only two blocks, which is likely to cause excessive thrashing.
 As of version |csizerelease|, the default cache size is roughly proportional
 to the square root of the total number of array elements, regardless of
 array dimensionality.  While this tends to reduce thrashing, we suggest
-experimenting with larger cache sizes of at least a few KB to ensure
+experimenting with larger cache sizes of at least a few kilobytes to ensure
 acceptable performance.
+
+Note that compressed arrays constructed with the
+:ref:`default constructor <array_ctor_default>` will
+have an initial cache size of only one block.  Therefore, users should call
+:cpp:func:`array::set_cache_size` after :ref:`resizing <array_resize>`
+such arrays to ensure a large enough cache.
+
+Depending on factors such as rate, cache size, array access pattern,
+array access primitive (e.g., indices vs. iterators), and arithmetic
+intensity, we usually observe an application slow-down of 1-10x when
+switching from uncompressed to compressed arrays.
 
 -------------------------------------------------------------------------------
 
