@@ -11,8 +11,10 @@ Python Bindings
 and decompressing `NumPy <https://www.numpy.org>`_ integer and
 floating-point arrays.  The |zfpy| implementation is based on
 `Cython <https://cython.org>`_ and requires both NumPy and Cython
-to be installed.  The |zfpy| API is limited to two functions, for
-compression and decompression, which are described below.
+to be installed.  Currently, |zfpy| supports only serial execution.
+
+The |zfpy| API is limited to two functions, for compression and
+decompression, which are described below.
 
 Compression
 -----------
