@@ -404,10 +404,10 @@ information independently.
 
 Q15: *Must I use the same parameters during compression and decompression?*
 
-A: Not necessarily.  It is possible to use more tightly constrained
-:c:type:`zfp_stream` parameters during decompression than were used during
-compression.  For instance, one may use a larger
-:c:member:`zfp_stream.minbits`, smaller :c:member:`zfp_stream.maxbits`,
+A: Not necessarily.  When decompressing one block at a time, it is possible
+to use more tightly constrained :c:type:`zfp_stream` parameters during
+decompression than were used during compression.  For instance, one may use a
+larger :c:member:`zfp_stream.minbits`, smaller :c:member:`zfp_stream.maxbits`,
 smaller :c:member:`zfp_stream.maxprec`, or larger :c:member:`zfp_stream.minexp`
 during decompression to process fewer compressed bits than are stored, and to
 decompress the array more quickly at a lower precision.  This may be useful
@@ -420,7 +420,9 @@ useful when the stream is stored progressively (see :ref:`Q13 <q-progressive>`).
 
 Note that one may not use less constrained parameters during decompression,
 e.g., one cannot ask for more than :c:member:`zfp_stream.maxprec` bits of
-precision when decompressing.
+precision when decompressing.  Furthermore, the parameters must agree between
+compression and decompression when calling the high-level API function
+:c:func:`zfp_decompress`.
 
 Currently float arrays have a different compressed representation from
 compressed double arrays due to differences in exponent width.  It is not

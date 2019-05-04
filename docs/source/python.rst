@@ -150,6 +150,6 @@ constraint check, use :code:`out = ndarray.data` rather than
 .. warning::
   :py:func:`_decompress` is an "experimental" function currently used
   internally for testing.  It does allow decompression of streams without
-  headers, but providing too small of an output bufffer or incorrectly
+  headers, but providing too small of an output buffer or incorrectly
   specifying the shape or strides can result in segmentation faults.
   Use with care.

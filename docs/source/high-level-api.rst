@@ -81,8 +81,8 @@ Macros
   :c:macro:`ZFP_HEADER_META` in essence encodes the information stored in
   the :c:type:`zfp_field` struct, while :c:macro:`ZFP_HEADER_MODE` encodes
   the compression parameters stored in the :c:type:`zfp_stream` struct.
-  The magic can be used to uniquely identify the stream as a |zfp| stream,
-  and includes the CODEC version.
+  The magic, which includes the CODEC version, can be used to uniquely
+  identify the stream as a |zfp| stream.
 
   See :c:func:`zfp_read_header` and :c:func:`zfp_write_header` for
   how to read and write header information.
@@ -125,7 +125,7 @@ Types
 .. c:type:: zfp_execution
 
   The :c:type:`zfp_stream` also stores information about how to execute
-  compression, e.g. sequentially or in parallel.  The execution is determined
+  compression, e.g., sequentially or in parallel.  The execution is determined
   by the policy and any policy-specific parameters such as number of
   threads.
   ::
@@ -188,7 +188,7 @@ Types
 
   Enumerates the scalar types supported by the compressor, and is used to
   describe the uncompressed array.  The compressor and decompressor must use
-  the same :c:type:`zfp_type`, e.g. one cannot compress doubles and decompress
+  the same :c:type:`zfp_type`, e.g., one cannot compress doubles and decompress
   to floats or integers.
   ::
 
@@ -209,7 +209,7 @@ Types
   ::
 
     typedef struct {
-      zfp_type type;       // scalar type (e.g. int32, double)
+      zfp_type type;       // scalar type (e.g., int32, double)
       uint nx, ny, nz, nw; // sizes (zero for unused dimensions)
       int sx, sy, sz, sw;  // strides (zero for contiguous array a[nw][nz][ny][nx])
       void* data;          // pointer to array data
@@ -286,7 +286,7 @@ Functions
 
 .. c:function:: size_t zfp_type_size(zfp_type type)
 
-  Return byte size of the given scalar type, e.g.
+  Return byte size of the given scalar type, e.g.,
   :code:`zfp_type_size(zfp_type_float) = 4`.
 
 .. _hl-func-bitstream:

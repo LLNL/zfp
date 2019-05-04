@@ -130,7 +130,7 @@ Base Class
   are given by the header *h*.  Return a pointer to the base class upon
   success.  The optional *buffer* points to compressed data that, when passed,
   is copied into the array.  If *buffer* is absent, the array is default
-  intialized with all zeroes.  The optional *buffer_size_bytes* argument
+  initialized with all zeroes.  The optional *buffer_size_bytes* argument
   specifies the buffer length in bytes.  When passed, a comparison is made to
   ensure that the buffer size is at least as large as the size implied by
   the header.  If this function fails for any reason, an
@@ -200,8 +200,8 @@ and methods share obvious similarities regardless of dimensionality, only
 one generic description for all dimensionalities is provided.
 
 Note: In the class declarations below, the class template for the scalar
-type is ommitted for readability, e.g.,
-:code:`class array1` is used as shorhand for
+type is omitted for readability, e.g.,
+:code:`class array1` is used as shorthand for
 :code:`template <typename Scalar> class array1`.  Wherever the type
 :code:`Scalar` appears, it refers to this template argument.
 

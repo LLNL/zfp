@@ -11,26 +11,33 @@ though the user may specify error tolerances to limit the amount of loss.
 Fully :ref:`lossless compression <q-lossless>`, where values are
 represented exactly, is also possible.
 
-The |zfp| software consists of three main components: a C library for
-compressing whole arrays (or smaller pieces of arrays); C++ classes
-(plus C wrappers) that implement compressed arrays; and a command-line
-compression tool and other code examples.  |zfp| has also been incorporated
-into several independently developed plugins for interfacing |zfp| with
-popular I/O libraries and visualization tools such as
+The |zfp| software primarily consists of three components: a C library
+for compressing whole arrays (or smaller pieces of arrays); C++ classes
+that implement random-accessible compressed arrays; and a command-line
+compression tool and other code examples.  Additional language bindings
+are also available for the first two components.
+
+|zfp| has also been incorporated into several independently developed
+plugins for interfacing |zfp| with popular I/O libraries and visualization
+tools such as
 `ADIOS <https://www.olcf.ornl.gov/center-projects/adios/>`_,
-`HDF5 <https://support.hdfgroup.org>`_, and
-`VTK <http://www.vtk.org/>`_.
+`HDF5 <https://www.hdfgroup.org/solutions/hdf5/>`_,
+`Intel IPP <https://software.intel.com/en-us/intel-ipp>`_,
+`TTK <https://topology-tool-kit.github.io>`_, and
+`VTK-m <http://m.vtk.org>`_.
 
 The typical user will interact with |zfp| via one or more of those
 components, specifically
 
 * Via the :ref:`C API <hl-api>` when doing I/O in an application or
-  otherwise performing data (de)compression online.
+  otherwise performing data (de)compression online.  High-speed,
+  parallel compression is supported via OpenMP and CUDA.
 
-* Via |zfp|'s in-memory :ref:`compressed array classes <arrays>` when
+* Via |zfp|'s in-memory :ref:`compressed-array classes <arrays>` when
   performing computations on very large arrays that demand random access to
   array elements, e.g., in visualization, data analysis, or even in numerical
-  simulation.
+  simulation.  These classes can often substitute C/C++ arrays and STL
+  vectors in applications with minimal code changes.
 
 * Via the |zfp| :ref:`command-line tool <zfpcmd>` when compressing
   binary files offline.
@@ -40,7 +47,10 @@ components, specifically
 
   * `ADIOS plugin <https://github.com/suchyta1/AtoZ>`_
   * `HDF5 plugin <https://github.com/LLNL/H5Z-ZFP>`_
+  * `Intel IPP plugin <https://software.intel.com/en-us/ipp-dev-reference-zfp-compression-functions>`_
+  * `TTK plugin <https://topology-tool-kit.github.io/installation.html>`_
   * `VTK plugin <https://gitlab.kitware.com/vtk/vtk/tree/master/ThirdParty/zfp>`_
+  * `VTK-m plugin <http://m.vtk.org/documentation/namespacevtkm_1_1worklet_1_1zfp.html>`_
 
 In all cases, it is important to know how to use |zfp|'s
 :ref:`compression modes <modes>` as well as what the
@@ -67,11 +77,11 @@ in a floating-point number have less significance than the first several bits
 and can often be discarded (zeroed) with limited impact on accuracy.
 
 The next several sections cover information on the |zfp| algorithm and its
-parameters; the C API; the compressed array classes; examples of how to
-perform compression and work with the classes; how to use the binary file
-compressor; and code examples that further illustrate how to use |zfp|.
-The documentation concludes with frequently asked questions and
-troubleshooting, as well as current limitations and future development
+parameters; the C API; the compressed array classes; the Python and Fortran
+APIs; examples of how to perform compression and work with the classes; how
+to use the binary file compressor; and code examples that further illustrate
+how to use |zfp|.  The documentation concludes with frequently asked questions
+and troubleshooting, as well as current limitations and future development
 directions.
 
 For questions not answered here, please contact

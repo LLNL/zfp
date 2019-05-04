@@ -54,9 +54,9 @@ purposes):
   4. The signed integer coefficients are reordered in a manner similar to
      JPEG zig-zag ordering so that statistically they appear in a roughly
      monotonically decreasing order.  Coefficients corresponding to low
-     frequencies tend to have larger magnitude, and are listed first.  In 3D,
+     frequencies tend to have larger magnitude and are listed first.  In 3D,
      coefficients corresponding to frequencies *i*, *j*, *k* in the three
-     dimensions are ordered by *i* + *j* + *k* first, and then by
+     dimensions are ordered by *i* + *j* + *k* first and then by
      *i*\ :sup:`2` + *j*\ :sup:`2` + *k*\ :sup:`2`.
 
   5. The two's complement signed integers are converted to their negabinary
@@ -103,16 +103,16 @@ purposes):
      described above, which potentially results in *n* being increased.
 
   8. The embedded coder emits one bit at a time, with each successive bit
-     potentially improving the quality of the reconstructed signal.  The early
-     bits are most important and have the greatest impact on signal quality,
+     potentially improving the accuracy of the approximation.  The early
+     bits are most important and have the greatest impact on accuracy,
      with the last few bits providing very small changes.  The resulting
-     compressed bit stream can be truncated at any point and still allow for a
-     valid approximate reconstruction of the original signal.  The final step
-     truncates the bit stream in one of three ways: to a fixed number of bits
-     (the fixed-rate mode); after some fixed number of bit planes have been
-     encoded (the fixed-precision mode); or until a lowest bit plane number
-     has been encoded, as expressed in relation to the common floating-point
-     exponent within the block (the fixed-accuracy mode).
+     compressed bit stream can be truncated at any point and still allow for
+     a valid approximate reconstruction of the original block of values.
+     The final step truncates the bit stream in one of three ways: to a fixed
+     number of bits (the fixed-rate mode); after some fixed number of bit
+     planes have been encoded (the fixed-precision mode); or until a lowest
+     bit plane number has been encoded, as expressed in relation to the common
+     floating-point exponent within the block (the fixed-accuracy mode).
 
 Various parameters are exposed for controlling the quality and compressed
 size of a block, and can be specified by the user at a very fine
@@ -135,8 +135,8 @@ subtraction operations only.  Finally, step 8 is modified so that no one-bits
 are truncated in the variable-length bit stream.  However, all least
 significant bit planes with all-zero bits are truncated, and the number of
 encoded bit planes is recorded in step 7.  As with lossy compression, a
-floating-point block consisting of all (positive) zeros is represented as a
-single bit, making it possible to efficiently encode sparse data.
+floating-point block consisting of all ("positive") zeros is represented as
+a single bit, making it possible to efficiently encode sparse data.
 
 If the block-floating-point transform is not lossless, then the reversible
 compression algorithm falls back on a simpler scheme that reinterprets
@@ -146,5 +146,4 @@ algorithm proceeds from there with the modified step 3.  Moreover, this
 conversion ensures that special values like infinities, NaNs, and negative
 zero are preserved.
 
-The lossless algorithm handles integer data also, in which case step 2
-is omitted.
+The lossless algorithm handles integer data also, for which step 2 is omitted.

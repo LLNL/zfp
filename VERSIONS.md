@@ -1,13 +1,13 @@
 # zfp Release Notes
 
-## 0.5.5 (April ??, 2019)
+## 0.5.5 (May 5, 2019)
 
 - Added support for reversible (lossless) compression of floating-point and
   integer data.
 
 - Added methods for serializing and deserializing zfp's compressed arrays.
 
-- Added Python bindings for compressing numpy arrays.
+- Added Python bindings for compressing NumPy arrays.
 
 - Added Fortran bindings to zfp's high-level C API.
 

@@ -532,7 +532,7 @@ blocks upon compression would be a potential solution, this would either
 serialize compression, thus hurting performance, or add a possibly large
 memory overhead by maintaining a lock with each block.
 
-To avoid multiple threads simultanously compressing the same block,
+To avoid multiple threads simultaneously compressing the same block,
 **private mutable views of an array must reference disjoint,
 block-aligned subarrays** for thread-safe access.  Each block of |4powd|
 array elements must be associated with at most one private mutable view,
