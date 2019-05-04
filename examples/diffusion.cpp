@@ -13,6 +13,8 @@
 #include <omp.h>
 #endif
 
+#define unused_(x) ((void)(x))
+
 // constants used in the solution
 class Constants {
 public:
@@ -83,6 +85,9 @@ time_step_parallel(zfp::array2d& u, const Constants& c)
   // take forward Euler step in serial
   for (uint i = 0; i < u.size(); i++)
     u[i] += du[i];
+#else
+  unused_(u);
+  unused_(c);
 #endif
 }
 
@@ -91,6 +96,8 @@ template <>
 inline void
 time_step_parallel(raw::array2d& u, const Constants& c)
 {
+  unused_(u);
+  unused_(c);
 }
 
 // advance solution using integer array indices

@@ -14,7 +14,7 @@ FC = gfortran
 
 # common compiler options -----------------------------------------------------
 
-FLAGS = -O3 -fPIC -Wall -pedantic -I../include
+FLAGS = -O3 -fPIC -Wall -Wextra -pedantic -I../include
 SOFLAGS =
 
 # macOS compiler options (uncomment on macOS) ---------------------------------

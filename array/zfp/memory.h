@@ -15,8 +15,11 @@ extern "C" {
 #include <cstdlib>
 #include "zfp/types.h"
 
+#define unused_(x) ((void)(x))
+
 namespace zfp {
 
+// allocate size bytes
 inline void*
 allocate(size_t size)
 {
@@ -44,11 +47,13 @@ allocate_aligned(size_t size, size_t alignment)
   is_mem_failed = posix_memalign(&ptr, alignment, size);
 
   #else
+  unused_(alignment);
   ptr = malloc(size);
 
   #endif
 
 #else
+  unused_(alignment);
   ptr = malloc(size);
 
 #endif
@@ -134,5 +139,7 @@ clone_aligned(T*& dst, const T* src, size_t count, size_t alignment)
 }
 
 }
+
+#undef unused_
 
 #endif
