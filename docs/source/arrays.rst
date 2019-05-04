@@ -240,6 +240,9 @@ type is ommitted for readability, e.g.,
   time of construction.  Before the array can become usable, however, it must
   be :ref:`resized <array_resize>` and its rate must be set via
   :cpp:func:`array::set_rate`.  These two tasks can be performed in either order.
+  Furthermore, the desired cache size should be set using
+  :cpp:func:`array::set_cache_size`, as the default constructor creates a
+  cache that holds only one |zfp| block, i.e., the minimum possible.
 
 .. _array_ctor:
 .. cpp:function:: array1::array1(uint n, double rate, const Scalar* p = 0, size_t csize = 0)
@@ -300,6 +303,13 @@ type is ommitted for readability, e.g.,
 
   Resize the array (all previously stored data will be lost).  If *clear* is
   true, then the array elements are all initialized to zero.
+
+.. note::
+  It is often desirable (though not a requirement) to also set the cache size
+  when resizing an array, e.g., in proportion to the array size;
+  see :cpp:func:`array::set_cache_size`.  This is particularly important when
+  the array is default constructed, which initializes the cache size to the
+  minimum possible of only one |zfp| block.
 
 .. _array_accessor:
 .. cpp:function:: Scalar array1::operator()(uint i) const
