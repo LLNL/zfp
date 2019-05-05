@@ -5,7 +5,7 @@
 Bit Stream API
 ==============
 
-|zfp| relies on low-level functions for bit stream I/O, e.g. for
+|zfp| relies on low-level functions for bit stream I/O, e.g., for
 reading/writing single bits or groups of bits.  |zfp|'s bit streams
 support random access (with some caveats) and, optionally, strided
 access.  The functions read from and write to main memory allocated
@@ -18,8 +18,8 @@ word size is configured at :ref:`compile time <config>`, and is limited
 to 8, 16, 32, or 64 bits.
 
 The bit stream API is publicly exposed and may be used to write additional
-information such as metadata into the |zfp| compressed stream, as well as
-to manipulate whole or partial bit streams.  Moreover, we envision releasing
+information such as metadata into the |zfp| compressed stream and to
+manipulate whole or partial bit streams.  Moreover, we envision releasing
 the bit stream functions as a separate library in the future that may be
 used, for example, in other compressors.
 
@@ -44,8 +44,8 @@ compressed blocks in order to support progressive access.  To enable
 strided access, which does carry a small performance penalty, the
 macro :c:macro:`BIT_STREAM_STRIDED` must be defined during compilation.
 
-Strides are specified in terms of a *block size*--a power-of-two number
-of contiguous words--and a *delta*, which specifies how many words to
+Strides are specified in terms of a *block size*---a power-of-two number
+of contiguous words---and a *delta*, which specifies how many words to
 advance the stream by to get to the next contiguous block.  These bit
 stream blocks are entirely independent of the |4powd| blocks used for
 compression in |zfp|.  Setting *delta* to zero ensures a non-strided,
@@ -140,8 +140,7 @@ Functions
 
 .. c:function:: uint stream_write_bit(bitstream* stream, uint bit)
 
-  Write the least significant bit of *bit* to *stream*.  *bit* should be
-  one of 0 or 1.
+  Write single *bit* to *stream*.  *bit* must be one of 0 or 1.
 
 .. c:function:: uint64 stream_read_bits(bitstream* stream, uint n)
 
@@ -150,7 +149,7 @@ Functions
 .. c:function:: uint64 stream_write_bits(bitstream* stream, uint64 value, uint n)
 
   Write 0 |leq| *n* |leq| 64 low bits of *value* to *stream*.  Return any
-  remaining bits from *value*, i.e. *value* >> *n*.
+  remaining bits from *value*, i.e., *value* >> *n*.
 
 .. c:function:: size_t stream_rtell(const bitstream* stream)
 
@@ -177,7 +176,7 @@ Functions
 
 .. c:function:: void stream_skip(bitstream* stream, uint n)
 
-  Skip over the next *n* bits, i.e. without reading them.
+  Skip over the next *n* bits, i.e., without reading them.
 
 .. c:function:: void stream_pad(bitstream* stream, uint n)
 
@@ -185,11 +184,15 @@ Functions
 
 .. c:function:: size_t stream_align(bitstream* stream)
 
-  Align stream on next word boundary by skipping bits.
+  Align stream on next word boundary by skipping bits.  No skipping is
+  done if the stream is already word aligned.  Return the number of
+  skipped bits, if any.
 
 .. c:function:: size_t stream_flush(bitstream* stream)
 
-  Write out any remaining buffered bits.
+  Write out any remaining buffered bits.  When one or more bits are
+  buffered, append zero-bits to the stream to align it on a word boundary.
+  Return the number of bits of padding, if any.
 
 .. c:function:: void stream_copy(bitstream* dst, bitstream* src, size_t n)
 
@@ -208,5 +211,5 @@ Functions
 
 .. c:function:: int stream_set_stride(bitstream* stream, size_t block, ptrdiff_t delta)
 
-  Set block size in number of words and spacing in number of blocks for
-  strided access.  Requires :c:macro:`BIT_STREAM_STRIDED`.
+  Set block size, *block*, in number of words and spacing, *delta*, in number
+  of blocks for strided access.  Requires :c:macro:`BIT_STREAM_STRIDED`.

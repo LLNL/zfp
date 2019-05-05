@@ -54,7 +54,7 @@ Using the fixed-accuracy, fixed-rate, or fixed-precision modes simply requires
 setting one of the *tolerance*, *rate*, or *precision* arguments, respectively.
 For example::
 
-  compressed_data = zfpy.compress_numpy(my_array, tolerance=1e-4)
+  compressed_data = zfpy.compress_numpy(my_array, tolerance=1e-3)
   decompressed_array = zfpy.decompress_numpy(compressed_data)
 
   # Note the change from "equal" to "allclose" due to the lossy compression
@@ -117,7 +117,7 @@ compatible shape.
   the stream, it will be incorrectly interpreted as compressed data).
   *ztype* specifies the array scalar type while *shape* specifies the array
   dimensions; both must be known by the caller.  The compression mode is
-  selected by specifying one (or none) or *tolerance*, *rate*, and
+  selected by specifying one (or none) of *tolerance*, *rate*, and
   *precision*, as in :py:func:`compress_numpy`, and also must be known
   by the caller.  If *out = None*, a new NumPy array is allocated.  Otherwise,
   *out* specifies the NumPy array or memory buffer to decompress into.
@@ -138,7 +138,7 @@ from a NumPy *dtype* (e.g., :code:`zfpy.dtype_to_ztype(array.dtype)`).
 
 If *out* is specified, the data is decompressed into the *out* buffer.
 *out* can be a NumPy array or a pointer to memory large enough to hold the
-decompressed data.  Regardless if *out* is provided or its type,
+decompressed data.  Regardless of the type of *out* and whether it is provided,
 :py:func:`_decompress` always returns a NumPy array.  If *out* is not
 provided, then the array is allocated for the user.  If *out* is provided,
 then the returned NumPy array is just a pointer to or wrapper around the

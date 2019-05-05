@@ -16,7 +16,9 @@ and a :ref:`header <header>` that describes the array scalar type,
 dimensions, and rate, obtained via :cpp:func:`array::get_header`.
 The user may concatenate the header and compressed data to form a
 fixed-rate byte stream that can be read by the |zfp|
-:ref:`command-line tool <zfpcmd>`.
+:ref:`command-line tool <zfpcmd>`.  When serializing the array,
+the user should first call :cpp:func:`array::flush_cache()` before
+accessing the raw compressed data.
 
 There are two primary ways to construct a compressed-array object from
 compressed data: via array-specific :ref:`constructors <array_ctor_header>`
@@ -60,6 +62,8 @@ Below is a simple example of serialization of a 3D compressed array of doubles
 (error checking has been omitted for clarity)::
 
   zfp::array3d a(nx, ny, nz, rate);
+  ...
+  a.flush_cache();
   zfp::array::header h = a.get_header();
   fwrite(&h, sizeof(h), 1, file);
   fwrite(a.compressed_data(), a.compressed_size(), 1, file);

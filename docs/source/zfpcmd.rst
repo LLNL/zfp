@@ -40,9 +40,9 @@ So, to compress a file, use :code:`-i file.in -z file.zfp`.  To later
 decompress the file, use :code:`-z file.zfp -o file.out`.  A single dash
 "-" can be used in place of a file name to denote standard input or output.
 
-When reading uncompressed input, the floating-point precision (single or
-double) must be specified using either :option:`-f` (float) or
-:option:`-d` (double).  In addition, the array dimensions must be specified
+When reading uncompressed input, the scalar type must be specified using
+:option:`-f` (float) or :option:`-d` (double), or using :option:`-t`
+for integer-valued data.  In addition, the array dimensions must be specified
 using :option:`-1` (for 1D arrays), :option:`-2` (for 2D arrays),
 :option:`-3` (for 3D arrays), or :option:`-4` (for 4D arrays).
 For multidimensional arrays, *x* varies faster than *y*, which in turn
@@ -86,7 +86,9 @@ and :option:`-a` provide a simpler interface to setting all of the above
 parameters by invoking
 :ref:`fixed-rate <mode-fixed-rate>` (:option:`-r`),
 :ref:`-precision <mode-fixed-precision>` (:option:`-p`), and
-:ref:`-accuracy <mode-fixed-accuracy>` (:option:`-a`).
+:ref:`-accuracy <mode-fixed-accuracy>` (:option:`-a`) mode.
+:ref:`Reversible mode <mode-reversible>` for lossless compression is
+specified using :option:`-R`.
 
 Usage
 -----

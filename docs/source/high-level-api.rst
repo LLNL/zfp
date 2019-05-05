@@ -311,7 +311,7 @@ Compressed Stream
 
 .. c:function:: zfp_mode zfp_stream_compression_mode(const zfp_stream* stream)
 
-  Return compression mode associated with compression parameters. Returns
+  Return compression mode associated with compression parameters. Return
   :code:`zfp_mode_null` when compression parameters are invalid.
 
 .. c:function:: uint64 zfp_stream_mode(const zfp_stream* stream)
@@ -396,7 +396,7 @@ Compression Parameters
 .. c:function:: zfp_mode zfp_stream_set_mode(zfp_stream* stream, uint64 mode)
 
   Set all compression parameters from compact integer representation.
-  See :c:func:`zfp_stream_mode` for how to encode the parameters.  Returns
+  See :c:func:`zfp_stream_mode` for how to encode the parameters.  Return
   the mode associated with the newly-set compression parameters.  If the
   decoded compression parameters are invalid, they are not set and the
   function returns :code:`zfp_mode_null`.
@@ -496,7 +496,7 @@ Array Metadata
 
 .. c:function:: uint zfp_field_precision(const zfp_field* field)
 
-  Return scalar precision in number of bits, e.g. 32 for
+  Return scalar precision in number of bits, e.g., 32 for
   :code:`zfp_type_float`.
 
 .. c:function:: uint zfp_field_dimensionality(const zfp_field* field)
@@ -578,7 +578,7 @@ Array Metadata
 .. c:function:: int zfp_field_set_metadata(zfp_field* field, uint64 meta)
 
   Specify array scalar type and dimensions from compact 52-bit representation.
-  Returns nonzero upon success.  See :c:func:`zfp_field_metadata` for how to
+  Return nonzero upon success.  See :c:func:`zfp_field_metadata` for how to
   encode *meta*.
 
 .. _hl-func-codec:
@@ -600,16 +600,17 @@ Compression and Decompression
   Decompress from *stream* to array described by *field* and align the stream
   on the next word boundary.  Upon success, the nonzero return value is the
   same as would be returned by a corresponding :c:func:`zfp_compress` call,
-  i.e. the current byte offset or the number of compressed bytes consumed.
+  i.e., the current byte offset or the number of compressed bytes consumed.
   Zero is returned if decompression failed.
 
 .. _zfp-header:
 .. c:function:: size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, uint mask)
 
-  Write an optional header to the stream that encodes compression parameters,
-  array metadata, etc.  The header information written is determined by the
-  bit *mask* (see :c:macro:`macros <ZFP_HEADER_MAGIC>`).  The return value is
-  the number of bits written, or zero upon failure.  See the
+  Write an optional variable-length header to the stream that encodes
+  compression parameters, array metadata, etc.  The header information written
+  is determined by the bit *mask* (see :c:macro:`macros <ZFP_HEADER_MAGIC>`).
+  The return value is the number of bits written, or zero upon failure.
+  Unlike in :c:func:`zfp_compress`, no word alignment is enforced.  See the
   :ref:`limitations <limitations>` section for limits on the maximum array
   size supported by the header.
 

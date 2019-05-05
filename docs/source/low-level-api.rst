@@ -9,8 +9,8 @@ The low-level C API provides functionality for compressing individual
 *d*-dimensional blocks of up to |4powd| values.  If a block is not
 complete, i.e., contains fewer than |4powd| values, then |zfp|'s partial
 block support should be favored over padding the block with, say, zeros
-or other fill values.  The blocks (de)compressed need not be contiguous,
-but can be gathered from or scattered to a larger array by setting
+or other fill values.  The blocks (de)compressed need not be contiguous
+and can be gathered from or scattered to a larger array by setting
 appropriate strides.
 
 The following topics are available:

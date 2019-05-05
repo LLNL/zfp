@@ -58,7 +58,7 @@ that will address some of these limitations.
 
 - Complex-valued arrays are not directly supported.  Real and imaginary
   components must be stored as separate arrays, which may result in lost
-  opportunities for compression, e.g. if the complex magnitude is constant
+  opportunities for compression, e.g., if the complex magnitude is constant
   and only the phase varies.
 
 - Version |omprelease| adds support for OpenMP compression.  However,

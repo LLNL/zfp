@@ -30,11 +30,12 @@ array access analogous to the C/C++ nested array syntax :code:`array[i][j]`.
 Finally, |zfp|'s *private views* can be used to ensure thread-safe access
 to its compressed arrays.
 
-Like iterators and proxy references and pointers, a view is valid only
-during the lifetime of the array that it references.  **No reference
-counting** is done to keep the array alive.  It is up to the user to
-ensure that the referenced array object is valid when accessed through
-a view.
+.. note::
+  Like iterators and proxy references and pointers, a view is valid only
+  during the lifetime of the array that it references.  **No reference
+  counting** is done to keep the array alive.  It is up to the user to
+  ensure that the referenced array object is valid when accessed through
+  a view.
 
 There are several types of views distinguished by these attributes:
 
@@ -445,7 +446,7 @@ it were locked upon each and every array access, which would have a
 prohibitive performance cost.
 
 To ensure thread-safe access, |zfp| provides private mutable and
-immutable views of arrays that maintain their own, private caches.
+immutable views of arrays that maintain their own private caches.
 The :code:`private_const_view` immutable view provides read-only
 access to the underlying array.  It is similar to a
 :ref:`const_view <immutable_view>` in this sense, but differs in
@@ -453,11 +454,12 @@ that it maintains its own private cache rather than sharing the
 cache owned by the array.  Multiple threads may thus access the
 same array in parallel through their own private views.
 
-Private views **do not guarantee cache coherence**.  If, for example,
-the array is modified, then already cached data in a private view is
-not automatically updated.  It is up to the user to ensure cache
-coherence by flushing (compressing modified blocks) or clearing
-(emptying) caches when appropriate.
+.. note::
+  Private views **do not guarantee cache coherence**.  If, for example,
+  the array is modified, then already cached data in a private view is
+  not automatically updated.  It is up to the user to ensure cache
+  coherence by flushing (compressing modified blocks) or clearing
+  (emptying) caches when appropriate.
 
 The cache associated with a private view can be manipulated in the
 same way an array's cache can.  For instance, the user may set the
@@ -532,21 +534,22 @@ blocks upon compression would be a potential solution, this would either
 serialize compression, thus hurting performance, or add a possibly large
 memory overhead by maintaining a lock with each block.
 
-To avoid multiple threads simultaneously compressing the same block,
-**private mutable views of an array must reference disjoint,
-block-aligned subarrays** for thread-safe access.  Each block of |4powd|
-array elements must be associated with at most one private mutable view,
-and therefore these views must reference non-overlapping rectangular
-subsets that are aligned on block boundaries, except possibly for partial
-blocks on the array boundary.  (Expert users may alternatively ensure
-serialization of block compression calls and cache coherence in other
-ways, in which case overlapping private views may be permitted.)
+.. note::
+  To avoid multiple threads simultaneously compressing the same block,
+  **private mutable views of an array must reference disjoint,
+  block-aligned subarrays** for thread-safe access.  Each block of |4powd|
+  array elements must be associated with at most one private mutable view,
+  and therefore these views must reference non-overlapping rectangular
+  subsets that are aligned on block boundaries, except possibly for partial
+  blocks on the array boundary.  (Expert users may alternatively ensure
+  serialization of block compression calls and cache coherence in other
+  ways, in which case overlapping private views may be permitted.)
 
 Aside from this requirement, the user may partition the array into
 disjoint views in whatever manner is suitable for the application.
 The :code:`private_view` API supplies a very basic partitioner to
 facilitate this task, but may not result in optimal partitions or
-good load balancing.
+good load balance.
 
 When multithreaded write access is desired, any direct accesses to the
 array itself (i.e., not through a view) could invoke compression.  Even

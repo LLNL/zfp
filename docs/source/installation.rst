@@ -18,7 +18,7 @@ core library can also be built using GNU make on Linux, macOS, and MinGW.
 |zfp| has successfully been built and tested using these compilers:
 
 * gcc versions 4.4.7, 4.7.3, 4.8.5, 4.9.4, 5.5.0, 6.1.0, 6.4.0, 7.1.0, 7.3.0, 8.1.0
-* icc versions 15.0.6, 16.0.4, 17.0.2, 18.0.2, 19.0.0
+* icc versions 14.0.3, 15.0.6, 16.0.4, 17.0.2, 18.0.2, 19.0.3
 * clang versions 3.9.1, 4.0.0, 5.0.0, 6.0.0
 * MinGW version 5.3.0
 * Visual Studio versions 14 (2015), 15 (2017)
@@ -177,7 +177,8 @@ Regardless of the settings below, |libzfp| will always be built.
 
 .. c:macro:: BUILD_TESTING
 
-  Build |testzfp| and (when on the develop branch) unit tests.
+  Build |testzfp| and (when on the GitHub
+  `develop branch <https://github.com/LLNL/zfp/tree/develop>`_) unit tests.
   Default: on.
 
 .. c:macro:: BUILD_SHARED_LIBS

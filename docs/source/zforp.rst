@@ -21,8 +21,9 @@ In addition to the high-level C API, two essential functions from the
 :ref:`bit stream API <bs-api>` for opening and closing bit streams are
 available.
 
-See example code :file:`tests/fortran/testFortran.f` for how the
-Fortran API is used to compress and decompress data.
+See example code :file:`tests/fortran/testFortran.f` (on the GitHub
+`develop branch <https://github.com/LLNL/zfp/tree/develop>`_)
+for how the Fortran API is used to compress and decompress data.
 
 Types
 -----

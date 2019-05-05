@@ -28,7 +28,7 @@ a whole.  Note that the iterator traversal order differs in this respect
 from traversal by :ref:`pointers <pointers>`.
 
 The order of blocks visited is row-major (as in C), and the elements
-within a block are also visited in row-major order, i.e. first by *x*,
+within a block are also visited in row-major order, i.e., first by *x*,
 then by *y*, and finally by *z*.  All |4powd| values in a block are visited
 before moving on to the next block.
 

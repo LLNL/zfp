@@ -118,9 +118,9 @@ Base Class
 
 .. cpp:function:: array::header array::get_header() const
 
-  Return a short :ref:`header <header>` describing the scalar type,
-  dimensions, and rate associated with the array.
-  A :cpp:class:`array::header::exception` is thrown if the header cannot
+  Return a short fixed-length :ref:`header <header>` describing the scalar
+  type, dimensions, and rate associated with the array.
+  An :cpp:class:`array::header::exception` is thrown if the header cannot
   describe the array.
 
 .. _array_factory:
@@ -145,7 +145,7 @@ class.
 
 .. cpp:function:: size_t array::size() const
 
-  Total number of elements in array, e.g. *nx* |times| *ny* |times| *nz* for
+  Total number of elements in array, e.g., *nx* |times| *ny* |times| *nz* for
   3D arrays.
 
 .. cpp:function:: size_t array::cache_size() const
@@ -162,7 +162,7 @@ class.
 
   Decompress entire array and store at *p*, for which sufficient storage must
   have been allocated.  The uncompressed array is assumed to be contiguous
-  (with default strides) and stored in the usual "row-major" order, i.e. with
+  (with default strides) and stored in the usual "row-major" order, i.e., with
   *x* varying faster than *y* and *y* varying faster than *z*.
 
 .. cpp:function:: void array::set(const Scalar* p)
@@ -218,7 +218,7 @@ type is omitted for readability, e.g.,
   :cpp:class:`array` base class.  The template argument, :cpp:type:`Scalar`,
   specifies the floating type returned for array elements.  The suffixes
   :code:`f` and :code:`d` can also be appended to each class to indicate float
-  or double type, e.g. :cpp:class:`array1f` is a synonym for
+  or double type, e.g., :cpp:class:`array1f` is a synonym for
   :cpp:class:`array1\<float>`.
 
 .. cpp:class:: arrayANY : public array

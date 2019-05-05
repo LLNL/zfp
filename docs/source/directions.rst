@@ -68,9 +68,9 @@ important features, including:
 - **Array operations**.  |zfp|'s compressed arrays currently support basic
   indexing and initialization, but lack array-wise operations such as
   arithmetic, reductions, etc.  Some such operations can exploit the
-  higher precision (than IEEE) supported by |zfp|, as well as accelerated
+  higher precision (than IEEE-754) supported by |zfp|, as well as accelerated
   blockwise computations that need not fully decompress and convert the
-  |zfp| representation to IEEE.
+  |zfp| representation to IEEE-754.
 
 - **Language bindings**.  The main compression codec is written in C89 to
   facilitate calls from other languages.  |zfp|'s compressed arrays, on

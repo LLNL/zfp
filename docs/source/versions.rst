@@ -151,11 +151,11 @@ zfp 0.5.0, February 29, 2016
 
   - Changed behavior of zfp_compress and zfp_decompress to not automatically
     rewind the bit stream.  This makes it easier to concatenate multiple
-    compressed bit streams, e.g. when compressing vector fields or multiple
+    compressed bit streams, e.g., when compressing vector fields or multiple
     scalars together.
 
   - Added functions for compactly encoding the compression parameters
-    and field meta data, e.g. for producing self-contained compressed
+    and field meta data, e.g., for producing self-contained compressed
     streams.  Also added functions for reading and writing a header
     containing these parameters.
 
@@ -228,7 +228,7 @@ zfp 0.3.0, March 3, 2015
     faster, also has some theoretical optimality properties and tends to
     improve rate distortion.
 
-  - Added compile-time support for parameterized transforms, e.g. to
+  - Added compile-time support for parameterized transforms, e.g., to
     support other popular transforms like DCT, HCT, and Walsh-Hadamard.
 
   - Made forward transform range preserving: (-1, 1) is mapped to (-1, 1).
@@ -236,7 +236,7 @@ zfp 0.3.0, March 3, 2015
 
   - Changed the order in which bits are emitted within each bit plane
     to be more intelligent.  Group tests are now deferred until they
-    are needed, i.e. just before the value bits for the group being
+    are needed, i.e., just before the value bits for the group being
     tested.  This improves the quality of fixed-rate encodings, but
     has no impact on compressed size.
 
@@ -281,7 +281,7 @@ zfp 0.2.0, December 2, 2014
   - The Array class functionality was expanded:
 
     * Support for accessing the compressed bit stream stored with an
-      array, e.g. for offline compressed storage and for initializing
+      array, e.g., for offline compressed storage and for initializing
       an already compressed array.
 
     * Functions for dynamically specifying the cache size.

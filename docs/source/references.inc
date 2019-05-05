@@ -19,7 +19,7 @@ References
 Array :ref:`indexing operators <lvref>` must return lvalue references that
 alias array elements and serve as vehicles for assigning values to those
 elements.  Unfortunately, |zfp| cannot simply return a standard C++ reference
-(e.g. :code:`float&`) to an uncompressed array element since the element in
+(e.g., :code:`float&`) to an uncompressed array element since the element in
 question may exist only in compressed form or as a transient cached entry that
 may be invalidated (evicted) at any point.
 

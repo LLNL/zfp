@@ -194,10 +194,12 @@ irregular the sampling is.
 
 Q6: *Does zfp handle infinities, NaNs,and subnormal floating-point numbers?*
 
-A: Only finite, valid floating-point values are currently supported.  If a
-block contains a NaN or an infinity, undefined behavior is invoked due to the
-C math function :c:func:`frexp` being undefined for non-numbers.  Subnormal
-numbers are, however, handled correctly.
+A: Yes, but only in :ref:`reversible mode <mode-reversible>`.
+
+|zfp|'s lossy compression modes currently support only finite
+floating-point values.  If a block contains a NaN or an infinity, undefined
+behavior is invoked due to the C math function :c:func:`frexp` being
+undefined for non-numbers.  Subnormal numbers are, however, handled correctly.
 
 -------------------------------------------------------------------------------
 
@@ -250,7 +252,10 @@ Q9: *Can I compress 32-bit integers using zfp?*
 I have some 32-bit integer data.  Can I compress it using |zfp|'s 32-bit
 integer support?
 
-A: Maybe.  zfp compression of 32-bit and 64-bit integers requires that each
+A: Yes, this can safely be done in :ref:`reversible mode <mode-reversible>`.
+
+In other (lossy) modes, the answer depends.
+|zfp| compression of 32-bit and 64-bit integers requires that each
 integer *f* have magnitude \|\ *f*\ \| < 2\ :sup:`30` and
 \|\ *f*\ \| < 2\ :sup:`62`, respectively.  To handle signed integers that
 span the entire range |minus|\ 2\ :sup:`31` |leq| x < 2\ :sup:`31`, or
