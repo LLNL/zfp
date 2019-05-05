@@ -221,13 +221,13 @@ zfp_field_stride(const zfp_field* field, int* stride)
   if (stride)
     switch (zfp_field_dimensionality(field)) {
       case 4:
-        stride[3] = field->sw ? field->sw : field->nx * field->ny * field->nz;
+        stride[3] = field->sw ? field->sw : (int)(field->nx * field->ny * field->nz);
         /* FALLTHROUGH */
       case 3:
-        stride[2] = field->sz ? field->sz : field->nx * field->ny;
+        stride[2] = field->sz ? field->sz : (int)(field->nx * field->ny);
         /* FALLTHROUGH */
       case 2:
-        stride[1] = field->sy ? field->sy : field->nx;
+        stride[1] = field->sy ? field->sy : (int)field->nx;
         /* FALLTHROUGH */
       case 1:
         stride[0] = field->sx ? field->sx : 1;
