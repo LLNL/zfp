@@ -49,7 +49,8 @@ public:
   }
 
   // copy constructor--performs a deep copy
-  array3(const array3& a)
+  array3(const array3& a) :
+    array()
   {
     deep_copy(a);
   }
