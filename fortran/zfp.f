@@ -48,7 +48,7 @@ module zFORp_module
 
   integer, parameter :: const_zFORp_version_major = 0
   integer, parameter :: const_zFORp_version_minor = 5
-  integer, parameter :: const_zFORp_version_patch = 4
+  integer, parameter :: const_zFORp_version_patch = 5
   integer, protected, bind(c, name="zFORp_version_major") :: zFORp_version_major
   integer, protected, bind(c, name="zFORp_version_minor") :: zFORp_version_minor
   integer, protected, bind(c, name="zFORp_version_patch") :: zFORp_version_patch
@@ -60,11 +60,11 @@ module zFORp_module
   integer, protected, bind(c, name="zFORp_codec_version") :: zFORp_codec_version
   data zFORp_codec_version/const_zFORp_codec_version/
 
-  integer, parameter :: const_zFORp_library_version = 84 ! 0x54
+  integer, parameter :: const_zFORp_library_version = 85 ! 0x55
   integer, protected, bind(c, name="zFORp_library_version") :: zFORp_library_version
   data zFORp_library_version/const_zFORp_library_version/
 
-  character(len = 36), parameter :: zFORp_version_string = 'zfp version 0.5.4 (October 1, 2018)'
+  character(len = 36), parameter :: zFORp_version_string = 'zfp version 0.5.5 (May 5, 2019)'
 
   integer, parameter :: const_zFORp_min_bits = 1
   integer, parameter :: const_zFORp_max_bits = 16657
