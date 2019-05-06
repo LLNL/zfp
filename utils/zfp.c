@@ -101,6 +101,7 @@ usage()
   fprintf(stderr, "  -3 <nx> <ny> <nz> : dimensions for 3D array a[nz][ny][nx]\n");
   fprintf(stderr, "  -4 <nx> <ny> <nz> <nw> : dimensions for 4D array a[nw][nz][ny][nx]\n");
   fprintf(stderr, "Compression parameters (needed with -i):\n");
+  fprintf(stderr, "  -R : reversible (lossless) compression\n");
   fprintf(stderr, "  -r <rate> : fixed rate (# compressed bits per floating-point value)\n");
   fprintf(stderr, "  -p <precision> : fixed precision (# uncompressed bits per value)\n");
   fprintf(stderr, "  -a <tolerance> : fixed accuracy (absolute error tolerance)\n");
@@ -253,6 +254,9 @@ int main(int argc, char* argv[])
           usage();
         mode = 'r';
         break;
+      case 'R':
+        mode = 'R';
+        break;
       case 's':
         stats = 1;
         break;
@@ -275,8 +279,6 @@ int main(int argc, char* argv[])
           usage();
         if (!strcmp(argv[i], "serial"))
           exec = zfp_exec_serial;
-        else if (!strcmp(argv[i], "cuda"))
-          exec = zfp_exec_cuda;
         else if (sscanf(argv[i], "omp=%u,%u", &threads, &chunk_size) == 2)
           exec = zfp_exec_omp;
         else if (sscanf(argv[i], "omp=%u", &threads) == 1) {
@@ -288,6 +290,8 @@ int main(int argc, char* argv[])
           threads = 0;
           chunk_size = 0;
         }
+        else if (!strcmp(argv[i], "cuda"))
+          exec = zfp_exec_cuda;
         else
           usage();
         break;
@@ -306,7 +310,7 @@ int main(int argc, char* argv[])
   count = (size_t)nx * (size_t)ny * (size_t)nz * (size_t)nw;
 
   /* make sure one of the array dimensions is not zero */
-  if (!count) {
+  if (!count && dims) {
     fprintf(stderr, "array size must be nonzero\n");
     return EXIT_FAILURE;
   }
@@ -317,22 +321,40 @@ int main(int argc, char* argv[])
     return EXIT_FAILURE;
   }
 
-  /* make sure we know floating-point type */
-  if ((inpath || !header) && !typesize) {
-    fprintf(stderr, "must specify scalar type via -f, -d, or -t or header via -h\n");
-    return EXIT_FAILURE;
+  /* make sure we (will) know scalar type */
+  if (!typesize) {
+    if (inpath) {
+      fprintf(stderr, "must specify scalar type via -f, -d, or -t to compress\n");
+      return EXIT_FAILURE;
+    }
+    else if (!header) {
+      fprintf(stderr, "must specify scalar type via -f, -d, or -t or header via -h to decompress\n");
+      return EXIT_FAILURE;
+    }
   }
 
-  /* make sure we know array dimensions */
-  if ((inpath || !header) && !dims) {
-    fprintf(stderr, "must specify array dimensions via -1, -2, or -3 or header via -h\n");
-    return EXIT_FAILURE;
+  /* make sure we (will) know array dimensions */
+  if (!dims) {
+    if (inpath) {
+      fprintf(stderr, "must specify array dimensions via -1, -2, -3, or -4 to compress\n");
+      return EXIT_FAILURE;
+    }
+    else if (!header) {
+      fprintf(stderr, "must specify array dimensions via -1, -2, -3, or -4 or header via -h to decompress\n");
+      return EXIT_FAILURE;
+    }
   }
 
-  /* make sure we know (de)compression mode and parameters */
-  if ((inpath || !header) && !mode) {
-    fprintf(stderr, "must specify compression parameters via -a, -c, -p, or -r or header via -h\n");
-    return EXIT_FAILURE;
+  /* make sure we (will) know (de)compression mode and parameters */
+  if (!mode) {
+    if (inpath) {
+      fprintf(stderr, "must specify compression parameters via -a, -c, -p, or -r to compress\n");
+      return EXIT_FAILURE;
+    }
+    else if (!header) {
+      fprintf(stderr, "must specify compression parameters via -a, -c, -p, or -r or header via -h to decompress\n");
+      return EXIT_FAILURE;
+    }
   }
 
   /* make sure we have input file for stats */
@@ -424,6 +446,9 @@ int main(int argc, char* argv[])
 
     /* set (de)compression mode */
     switch (mode) {
+      case 'R':
+        zfp_stream_set_reversible(zfp);
+        break;
       case 'a':
         zfp_stream_set_accuracy(zfp, tolerance);
         break;
@@ -448,6 +473,12 @@ int main(int argc, char* argv[])
 
   /* specify execution policy */
   switch (exec) {
+    case zfp_exec_cuda:
+      if (!zfp_stream_set_execution(zfp, exec)) {
+        fprintf(stderr, "cuda execution not available\n");
+        return EXIT_FAILURE;
+      }
+      break;
     case zfp_exec_omp:
       if (!zfp_stream_set_execution(zfp, exec) ||
           !zfp_stream_set_omp_threads(zfp, threads) ||
@@ -486,30 +517,6 @@ int main(int argc, char* argv[])
       return EXIT_FAILURE;
     }
     zfp_stream_set_bit_stream(zfp, stream);
-
-    /* specify execution policy */
-    switch (exec) {
-      case zfp_exec_omp:
-        if (!zfp_stream_set_execution(zfp, exec) ||
-            !zfp_stream_set_omp_threads(zfp, threads) ||
-            !zfp_stream_set_omp_chunk_size(zfp, chunk_size)) {
-          fprintf(stderr, "OpenMP execution not available\n");
-          return EXIT_FAILURE;
-        }
-        break;
-      case zfp_exec_cuda:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "cuda execution not available\n");
-          return EXIT_FAILURE;
-        }
-      case zfp_exec_serial:
-      default:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "serial execution not available\n");
-          return EXIT_FAILURE;
-        }
-        break;
-    }
 
     /* optionally write header */
     if (header && !zfp_write_header(zfp, field, ZFP_HEADER_FULL)) {
@@ -564,25 +571,7 @@ int main(int argc, char* argv[])
       ny = MAX(field->ny, 1u);
       nz = MAX(field->nz, 1u);
       nw = MAX(field->nw, 1u);
-    }
-
-    /* specify execution policy */
-    switch (exec) {
-      case zfp_exec_omp: 
-          fprintf(stderr, "OpenMP decompression not available\n");
-          return EXIT_FAILURE;
-      case zfp_exec_cuda:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "cuda execution not available\n");
-          return EXIT_FAILURE;
-        }
-      case zfp_exec_serial:
-      default:
-        if (!zfp_stream_set_execution(zfp, exec)) {
-          fprintf(stderr, "serial execution not available\n");
-          return EXIT_FAILURE;
-        }
-        break;
+      count = (size_t)nx * (size_t)ny * (size_t)nz * (size_t)nw;
     }
 
     /* allocate memory for decompressed data */

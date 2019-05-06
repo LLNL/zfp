@@ -2,6 +2,7 @@
 
 CC = gcc
 CXX = g++
+FC = gfortran
 
 # language standard -----------------------------------------------------------
 
@@ -9,10 +10,11 @@ CXX = g++
   CSTD = -std=c99
   CXXSTD = -std=c++98
 # CXXSTD = -std=c++11
+  FSTD = -std=f2003 -ffree-form -Wno-c-binding-type
 
 # common compiler options -----------------------------------------------------
 
-FLAGS = -O3 -fPIC -Wall -pedantic -I../include
+FLAGS = -O3 -fPIC -Wall -Wextra -pedantic -I../include
 SOFLAGS =
 
 # macOS compiler options (uncomment on macOS) ---------------------------------
@@ -53,12 +55,26 @@ OMPFLAGS = -fopenmp
 
 # build targets ---------------------------------------------------------------
 
+# default targets
 BUILD_CFP = 0
+BUILD_ZFORP = 0
 BUILD_UTILITIES = 1
 BUILD_EXAMPLES = 0
 BUILD_TESTING = 1
 BUILD_SHARED_LIBS = 0
 
+# build all targets?
+ifdef BUILD_ALL
+  ifneq ($(BUILD_ALL),0)
+    BUILD_CFP = 1
+    BUILD_ZFORP = 1
+    BUILD_UTILITIES = 1
+    BUILD_EXAMPLES = 1
+    BUILD_TESTING = 1
+  endif
+endif
+
+# build shared libraries?
 ifneq ($(BUILD_SHARED_LIBS),0)
   LIBRARY = shared
   LIBZFP = libzfp.so
@@ -84,3 +100,4 @@ endif
 
 CFLAGS = $(CSTD) $(FLAGS) $(DEFS)
 CXXFLAGS = $(CXXSTD) $(FLAGS) $(DEFS)
+FFLAGS = $(FSTD) $(FLAGS) $(DEFS)

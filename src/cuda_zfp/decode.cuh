@@ -127,8 +127,12 @@ void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
       for (; n < (Size - 1) && bits && (bits--, !reader.read_bit()); n++);
     
     // deposit bit plane
+#if (CUDART_VERSION < 8000)
     #pragma unroll
-    for (int i = 0; x; i++, x >>= 1)
+#else
+    #pragma unroll Size
+#endif
+    for (int i = 0; i < Size; i++, x >>= 1)
     {
       data[i] += (UInt)(x & 1u) << k;
     }

@@ -125,13 +125,13 @@ option(ZFP_WITH_CACHE_PROFILE "Count cache misses" OFF)
 # Handle compile-time macros
 
 if((DEFINED ZFP_INT64) AND (DEFINED ZFP_INT64_SUFFIX))
-  list(APPEND zfp_defs ZFP_INT64=${ZFP_INT64})
-  list(APPEND zfp_defs ZFP_INT64_SUFFIX=${ZFP_INT64_SUFFIX})
+  list(APPEND zfp_public_defs ZFP_INT64=${ZFP_INT64})
+  list(APPEND zfp_public_defs ZFP_INT64_SUFFIX=${ZFP_INT64_SUFFIX})
 endif()
 
 if((DEFINED ZFP_UINT64) AND (DEFINED ZFP_UINT64_SUFFIX))
-  list(APPEND zfp_defs ZFP_UINT64=${ZFP_UINT64})
-  list(APPEND zfp_defs ZFP_UINT64_SUFFIX=${ZFP_UINT64_SUFFIX})
+  list(APPEND zfp_public_defs ZFP_UINT64=${ZFP_UINT64})
+  list(APPEND zfp_public_defs ZFP_UINT64_SUFFIX=${ZFP_UINT64_SUFFIX})
 endif()
 
 # This odd cmake pattern here let's the OpenMP feature be either auto-detected,
@@ -168,27 +168,27 @@ if(ZFP_WITH_CUDA)
 endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
-  list(APPEND zfp_defs BIT_STREAM_WORD_TYPE=uint${ZFP_BIT_STREAM_WORD_SIZE})
+  list(APPEND zfp_private_defs BIT_STREAM_WORD_TYPE=uint${ZFP_BIT_STREAM_WORD_SIZE})
 endif()
 
 if(ZFP_WITH_BIT_STREAM_STRIDED)
-  list(APPEND zfp_defs BIT_STREAM_STRIDED)
+  list(APPEND zfp_public_defs BIT_STREAM_STRIDED)
 endif()
 
 if(ZFP_WITH_ALIGNED_ALLOC)
-  list(APPEND zfp_defs ZFP_ALIGNED_ALLOC)
+  list(APPEND zfp_compressed_array_defs ZFP_WITH_ALIGNED_ALLOC)
 endif()
 
 if(ZFP_WITH_CACHE_TWOWAY)
-  list(APPEND zfp_defs ZFP_CACHE_TWOWAY)
+  list(APPEND zfp_compressed_array_defs ZFP_WITH_CACHE_TWOWAY)
 endif()
 
 if(ZFP_WITH_CACHE_FAST_HASH)
-  list(APPEND zfp_defs ZFP_CACHE_FAST_HASH)
+  list(APPEND zfp_compressed_array_defs ZFP_WITH_CACHE_FAST_HASH)
 endif()
 
 if(ZFP_WITH_CACHE_PROFILE)
-  list(APPEND zfp_defs ZFP_CACHE_PROFILE)
+  list(APPEND zfp_compressed_array_defs ZFP_WITH_CACHE_PROFILE)
 endif()
 
 # Link libm only if necessary
@@ -206,15 +206,39 @@ endif()
 #------------------------------------------------------------------------------#
 # Add source code
 #------------------------------------------------------------------------------#
+include(CTest)
+if(BUILD_TESTING)
+  enable_testing()
+endif()
+
 set(ZFP_LIBRARY_PREFIX "" CACHE STRING
   "Prefix to prepend to the output library name")
 mark_as_advanced(ZFP_LIBRARY_PREFIX)
 
 add_subdirectory(src)
 
+option(BUILD_ALL "Build all subdirectories" OFF)
+if(BUILD_ALL)
+  set(BUILD_CFP ON CACHE BOOL "Build CFP arrays library" FORCE)
+  set(BUILD_ZFORP ON CACHE BOOL "Build Fortran library" FORCE)
+  set(BUILD_ZFPY ON CACHE BOOL "Build python bindings for zfp" FORCE)
+  set(BUILD_UTILITIES ON CACHE BOOL "Build command line utilities for zfp" FORCE)
+  set(BUILD_EXAMPLES ON CACHE BOOL "Build Examples" FORCE)
+endif()
+
 option(BUILD_CFP "Build CFP arrays library" OFF)
 if(BUILD_CFP)
   add_subdirectory(cfp)
+endif()
+
+option(BUILD_ZFORP "Build Fortran library" OFF)
+if(BUILD_ZFORP)
+  add_subdirectory(fortran)
+endif()
+
+option(BUILD_ZFPY "Build python bindings for zfp" OFF)
+if(BUILD_ZFPY)
+  add_subdirectory(python)
 endif()
 
 option(BUILD_UTILITIES "Build command line utilities for zfp" ON)
@@ -227,9 +251,7 @@ if(BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-include(CTest)
 if(BUILD_TESTING)
-  enable_testing()
   add_subdirectory(tests)
 endif()
 
@@ -239,6 +261,9 @@ endif()
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+if(BUILD_CFP)
+  install(DIRECTORY cfp/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
 #------------------------------------------------------------------------------#
 # Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel
 #------------------------------------------------------------------------------#
@@ -253,6 +278,12 @@ endif()
 # Add all targets to the build-tree export set
 export(TARGETS zfp NAMESPACE zfp::
   FILE "${PROJECT_BINARY_DIR}/zfp-targets.cmake")
+
+if(BUILD_CFP)
+  export(TARGETS cfp NAMESPACE zfp::
+    APPEND FILE "${PROJECT_BINARY_DIR}/zfp-targets.cmake")
+endif()
+
 configure_file(zfp-config.cmake.in
   "${PROJECT_BINARY_DIR}/zfp-config.cmake" @ONLY)
 configure_file(zfp-config-version.cmake.in
@@ -267,3 +298,8 @@ install(FILES
 # Install the export set for use with the install-tree
 install(EXPORT zfp-targets NAMESPACE zfp::
   DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+
+if(BUILD_CFP)
+  install(EXPORT cfp-targets NAMESPACE zfp::
+    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+endif()
