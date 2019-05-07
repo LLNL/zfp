@@ -985,6 +985,10 @@ common_tests()
     failures++;
   }
   // ensure integer type sizes are correct
+  if (CHAR_BIT != 8) {
+    std::cout << "byte type is not 8 bits wide" << std::endl;
+    failures++;
+  }
   if (sizeof(int8) != 1u || sizeof(uint8) != 1u) {
     std::cout << "8-bit integer type is not one byte wide" << std::endl;
     failures++;

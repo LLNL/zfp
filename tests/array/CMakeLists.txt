@@ -4,6 +4,7 @@ function(zfp_add_cpp_tests dims type bits)
   add_executable(${test_name} ${test_name}.cpp)
   target_link_libraries(${test_name}
     gtest gtest_main zfp zfpHashLib genSmoothRandNumsLib zfpChecksumsLib)
+  target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
   add_test(NAME ${test_name} COMMAND ${test_name})
 
   # test class's references
@@ -11,6 +12,7 @@ function(zfp_add_cpp_tests dims type bits)
   add_executable(${test_name} ${test_name}.cpp)
   target_link_libraries(${test_name}
     gtest gtest_main zfp zfpHashLib rand${bits}Lib)
+  target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
   add_test(NAME ${test_name} COMMAND ${test_name})
 
   # test class's pointers
@@ -18,6 +20,7 @@ function(zfp_add_cpp_tests dims type bits)
   add_executable(${test_name} ${test_name}.cpp)
   target_link_libraries(${test_name}
     gtest gtest_main zfp)
+  target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
   add_test(NAME ${test_name} COMMAND ${test_name})
 
   # test class's iterators
@@ -25,6 +28,7 @@ function(zfp_add_cpp_tests dims type bits)
   add_executable(${test_name} ${test_name}.cpp)
   target_link_libraries(${test_name}
     gtest gtest_main zfp)
+  target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
   add_test(NAME ${test_name} COMMAND ${test_name})
 
   # test class's views
@@ -32,6 +36,7 @@ function(zfp_add_cpp_tests dims type bits)
   add_executable(${test_name} ${test_name}.cpp)
   target_link_libraries(${test_name}
     gtest gtest_main zfp)
+  target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
   add_test(NAME ${test_name} COMMAND ${test_name})
 
 endfunction()
@@ -47,6 +52,7 @@ zfp_add_cpp_tests(3 d 64)
 set(test_name testConstruct)
 add_executable(testConstruct testConstruct.cpp)
 target_link_libraries(testConstruct gtest gtest_main zfp)
+target_compile_definitions(testConstruct PRIVATE ${zfp_compressed_array_defs})
 add_test(NAME testConstruct COMMAND testConstruct)
 
 add_subdirectory(zfp)

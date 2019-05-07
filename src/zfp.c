@@ -10,7 +10,7 @@
 
 export_ const uint zfp_codec_version = ZFP_CODEC;
 export_ const uint zfp_library_version = ZFP_VERSION;
-export_ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (October 1, 2018)";
+export_ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (May 5, 2019)";
 
 /* private functions ------------------------------------------------------- */
 
@@ -29,6 +29,12 @@ type_precision(zfp_type type)
     default:
       return 0;
   }
+}
+
+static int
+is_reversible(const zfp_stream* zfp)
+{
+  return zfp->minexp < ZFP_MIN_EXP;
 }
 
 /* shared code across template instances ------------------------------------*/
@@ -215,13 +221,13 @@ zfp_field_stride(const zfp_field* field, int* stride)
   if (stride)
     switch (zfp_field_dimensionality(field)) {
       case 4:
-        stride[3] = field->sw ? field->sw : field->nx * field->ny * field->nz;
+        stride[3] = field->sw ? field->sw : (int)(field->nx * field->ny * field->nz);
         /* FALLTHROUGH */
       case 3:
-        stride[2] = field->sz ? field->sz : field->nx * field->ny;
+        stride[2] = field->sz ? field->sz : (int)(field->nx * field->ny);
         /* FALLTHROUGH */
       case 2:
-        stride[1] = field->sy ? field->sy : field->nx;
+        stride[1] = field->sy ? field->sy : (int)field->nx;
         /* FALLTHROUGH */
       case 1:
         stride[0] = field->sx ? field->sx : 1;
@@ -438,12 +444,6 @@ zfp_stream_bit_stream(const zfp_stream* zfp)
   return zfp->stream;
 }
 
-int
-zfp_stream_is_reversible(const zfp_stream* zfp)
-{
-  return zfp->minexp < ZFP_MIN_EXP;
-}
-
 zfp_mode
 zfp_stream_compression_mode(const zfp_stream* zfp)
 {
@@ -584,12 +584,12 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
       return 0;
     case zfp_type_float:
       maxbits += 8;
-      if (zfp_stream_is_reversible(zfp))
+      if (is_reversible(zfp))
         maxbits += 5;
       break;
     case zfp_type_double:
       maxbits += 11;
-      if (zfp_stream_is_reversible(zfp))
+      if (is_reversible(zfp))
         maxbits += 6;
       break;
     default:

@@ -434,7 +434,7 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   }
   
   size_t bytes = type_size * field_size;
-  internal::cleanup_device_ptr(stream->stream, d_stream,0, 0, field->type);
+  internal::cleanup_device_ptr(stream->stream->begin, d_stream, 0, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, bytes, offset, field->type);
   
   // this is how zfp determins if this was a success
@@ -442,6 +442,4 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   stream->stream->bits = wsize;
   // set stream pointer to end of stream
   stream->stream->ptr = stream->stream->begin + words_read;
-
 }
-

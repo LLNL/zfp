@@ -19,7 +19,7 @@ INSTANTIATE_TEST_CASE_P(TestManyMemoryAlignments, TEST_FIXTURE, ::testing::Range
 TEST_P(TEST_FIXTURE, when_allocateAlignedMem_expect_addressAligned)
 {
   size_t alignmentBytes = (size_t)(1u << GetParam());
-  void* ptr = allocate_aligned(900, alignmentBytes);
+  void* ptr = allocate_aligned(30, alignmentBytes);
 
   uintptr_t address = (uintptr_t)ptr;
   EXPECT_EQ(address % alignmentBytes, 0);

@@ -19,10 +19,11 @@ can be exploited.  In principle, concurrency is limited only by the number
 of blocks that make up an array, though in practice each thread is
 responsible for compressing a *chunk* of several contiguous blocks.
 
-Note: |zfp| parallel compression is confined to shared memory on a single
-compute node or GPU.  No effort is made to coordinate compression across
-distributed memory on networked compute nodes, although |zfp|'s fine-grained
-partitioning of arrays should facilitate distributed parallel compression.
+.. note::
+  |zfp| parallel compression is confined to shared memory on a single
+  compute node or GPU.  No effort is made to coordinate compression across
+  distributed memory on networked compute nodes, although |zfp|'s fine-grained
+  partitioning of arrays should facilitate distributed parallel compression.
 
 This section describes the |zfp| parallel compression algorithm and explains
 how to configure |libzfp| and enable parallel compression at run time via
@@ -36,9 +37,9 @@ Execution Policies
 |zfp| supports multiple *execution policies*, which dictate how (e.g.,
 sequentially, in parallel) and where (e.g., on the CPU or GPU) arrays are
 compressed.  Currently three execution policies are available:
-:code:`serial`, :code:`omp`, and :code:`cuda`.  The default mode is
-:code:`serial`, which ensures sequential compression on a single thread.
-The :code:`omp` and :code:`cuda` execution policies allow for data-parallel
+``serial``, ``omp``, and ``cuda``.  The default mode is
+``serial``, which ensures sequential compression on a single thread.
+The ``omp`` and ``cuda`` execution policies allow for data-parallel
 compression on multiple threads.
 
 The execution policy is set by :c:func:`zfp_stream_set_execution` and
@@ -57,8 +58,8 @@ Execution Parameters
 
 Each execution policy allows tailoring the execution via its associated
 *execution parameters*.  Examples include number of threads, chunk size,
-scheduling, etc.  The :code:`serial` and :code:`cuda` policies have no
-parameters.  The subsections below discuss the :code:`omp` parameters.
+scheduling, etc.  The ``serial`` and ``cuda`` policies have no
+parameters.  The subsections below discuss the ``omp`` parameters.
 
 Whenever the execution policy is changed via
 :c:func:`zfp_stream_set_execution`, its parameters (if any) are initialized
@@ -72,7 +73,7 @@ By default, the number of threads to use is given by the current setting
 of the OpenMP internal control variable *nthreads-var*.  Unless the
 calling thread has explicitly requested a thread count via the OpenMP
 API, this control variable usually defaults to the number of threads
-supported by the hardware (e.g. the number of available cores).
+supported by the hardware (e.g., the number of available cores).
 
 To set the number of requested threads to be used by |zfp|, which may
 differ from the thread count of encapsulating or surrounding OpenMP
@@ -154,13 +155,13 @@ does not need temporary buffers, regardless of chunk alignment.
 Using OpenMP
 ------------
 
-In order to use OpenMP compression, |zfp| must be compiled with OpenMP
+In order to use OpenMP compression, |zfp| must be built with OpenMP
 support.  If built with CMake, OpenMP support is automatically enabled when
 available.  To manually disable OpenMP support, see the
 :c:macro:`ZFP_WITH_OPENMP` macro.
 
 To avoid compilation errors on systems with spotty OpenMP support
-(e.g. macOS), OpenMP is by default disabled in GNU builds.  To enable
+(e.g., macOS), OpenMP is by default disabled in GNU builds.  To enable
 OpenMP, see :ref:`gnu_builds` and the :c:macro:`ZFP_WITH_OPENMP` macro.
 
 
@@ -222,11 +223,14 @@ The source code for the |zfpcmd| command-line tool includes further examples
 on how to set the execution policy.  To use parallel compression and
 decompression in this tool, see the :option:`-x` command-line option.
 
-Note: As of |zfp| |cudarelease|, the execution policy refers to both
-compression and decompression.  The OpenMP implementation does not
-yet support decompression, and hence :c:func:`zfp_decompress` will
-fail if the execution policy is not reset to :code:`zfp_exec_serial`
-before calling the decompressor.
+.. note::
+  As of |zfp| |cudarelease|, the execution policy refers to both
+  compression and decompression.  The OpenMP implementation does not
+  yet support decompression, and hence :c:func:`zfp_decompress` will
+  fail if the execution policy is not reset to :code:`zfp_exec_serial`
+  before calling the decompressor.  Similarly, the CUDA implementation
+  supports only fixed-rate mode and will fail if other compression modes
+  are specified.
 
 The following table summarizes which execution policies are supported
 with which :ref:`compression modes <modes>`:
@@ -236,15 +240,19 @@ with which :ref:`compression modes <modes>`:
   +===============+=================+========+========+======+
   |               | fixed rate      |    x   |    x   |   x  |
   |               +-----------------+--------+--------+------+
-  | compression   | fixed precision |    x   |    x   |      |
-  |               +-----------------+--------+--------+------+
+  |               | fixed precision |    x   |    x   |      |
+  | compression   +-----------------+--------+--------+------+
   |               | fixed accuracy  |    x   |    x   |      |
+  |               +-----------------+--------+--------+------+
+  |               | reversible      |    x   |    x   |      |
   +---------------+-----------------+--------+--------+------+
   |               | fixed rate      |    x   |        |   x  |
   |               +-----------------+--------+--------+------+
-  | decompression | fixed precision |    x   |        |      |
-  |               +-----------------+--------+--------+------+
+  |               | fixed precision |    x   |        |      |
+  | decompression +-----------------+--------+--------+------+
   |               | fixed accuracy  |    x   |        |      |
+  |               +-----------------+--------+--------+------+
+  |               | reversible      |    x   |        |      |
   +---------------+-----------------+--------+--------+------+
 
 :c:func:`zfp_compress` and :c:func:`zfp_decompress` both return zero if the

@@ -3,6 +3,33 @@
 Release Notes
 =============
 
+zfp 0.5.5, May 5, 2019
+
+  - Added support for reversible (lossless) compression of floating-point and
+    integer data.
+
+  - Added methods for serializing and deserializing zfp's compressed arrays.
+
+  - Added Python bindings for compressing NumPy arrays.
+
+  - Added Fortran bindings to zfp's high-level C API.
+
+  - Change:
+
+    - The default compressed-array cache size is now a function of the total 
+      number of array elements, irrespective of array shape.
+
+  - Bug fixes:
+
+    - Incorrect handling of execution policy in zfp utility.
+    - Incorrect handling of decompression via header in zfp utility.
+    - Incorrect cleanup of device memory in CUDA decompress.
+    - Tests for failing mallocs.
+    - CMake installation of CFP when built.
+    - zfp_write_header and zfp_field_metadata now fail if array dimensions
+      are too large to fit in header.
+
+
 zfp 0.5.4, October 1, 2018
 
   - Added support for CUDA fixed-rate compression and decompression.
@@ -23,7 +50,7 @@ zfp 0.5.4, October 1, 2018
   - Bug fixes:
 
     - Handling of negative strides.
-    - Command line tool handling of arrays with more than 2^32 elements.
+    - Command line tool handling of arrays with more than 2\ :sup:`32` elements.
     - bitstream C++ compatibility.
     - Respect minimum cache size request.
 
@@ -124,11 +151,11 @@ zfp 0.5.0, February 29, 2016
 
   - Changed behavior of zfp_compress and zfp_decompress to not automatically
     rewind the bit stream.  This makes it easier to concatenate multiple
-    compressed bit streams, e.g. when compressing vector fields or multiple
+    compressed bit streams, e.g., when compressing vector fields or multiple
     scalars together.
 
   - Added functions for compactly encoding the compression parameters
-    and field meta data, e.g. for producing self-contained compressed
+    and field meta data, e.g., for producing self-contained compressed
     streams.  Also added functions for reading and writing a header
     containing these parameters.
 
@@ -201,7 +228,7 @@ zfp 0.3.0, March 3, 2015
     faster, also has some theoretical optimality properties and tends to
     improve rate distortion.
 
-  - Added compile-time support for parameterized transforms, e.g. to
+  - Added compile-time support for parameterized transforms, e.g., to
     support other popular transforms like DCT, HCT, and Walsh-Hadamard.
 
   - Made forward transform range preserving: (-1, 1) is mapped to (-1, 1).
@@ -209,7 +236,7 @@ zfp 0.3.0, March 3, 2015
 
   - Changed the order in which bits are emitted within each bit plane
     to be more intelligent.  Group tests are now deferred until they
-    are needed, i.e. just before the value bits for the group being
+    are needed, i.e., just before the value bits for the group being
     tested.  This improves the quality of fixed-rate encodings, but
     has no impact on compressed size.
 
@@ -254,7 +281,7 @@ zfp 0.2.0, December 2, 2014
   - The Array class functionality was expanded:
 
     * Support for accessing the compressed bit stream stored with an
-      array, e.g. for offline compressed storage and for initializing
+      array, e.g., for offline compressed storage and for initializing
       an already compressed array.
 
     * Functions for dynamically specifying the cache size.

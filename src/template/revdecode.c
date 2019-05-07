@@ -31,7 +31,7 @@ _t1(rev_inv_lift, Int)(Int* p, uint s)
 
 /* decode block of integers using reversible algorithm */
 static uint
-_t2(rev_decode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock)
+_t2(rev_decode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, Int* iblock)
 {
   /* decode number of significant bits */
   int bits = PBITS;

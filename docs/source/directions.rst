@@ -26,6 +26,18 @@ important features, including:
   currently result in undefined behavior and loss of data for all values
   within a block that contains non-finite values.
 
+- **Support for more general data types**.  |zfp| currently does not
+  directly support half and quad precision floating point.  Nor is there
+  support for 8- and 16-bit integers.  With the emergence of new number
+  representations like *posits* and *bfloat16*, we envision the need for
+  a more general interface and a single unified |zfp| representation that
+  would allow for *conversion* between |zfp| and *any* number representation.
+  We are working on developing an uncompressed interchange format that acts
+  like an intermediary between |zfp| and other number formats.  This format
+  decouples the |zfp| compression pipeline from the external number type and
+  allows new number formats to be supported via user-defined conversion
+  functions to and from the common interchange format.
+
 - **Progressive decompression**.  Streaming large data sets from remote
   storage for visualization can be time consuming, even when the data is
   compressed.  Progressive streaming allows the data to be reconstructed
@@ -56,15 +68,17 @@ important features, including:
 - **Array operations**.  |zfp|'s compressed arrays currently support basic
   indexing and initialization, but lack array-wise operations such as
   arithmetic, reductions, etc.  Some such operations can exploit the
-  higher precision (than IEEE) supported by |zfp|, as well as accelerated
+  higher precision (than IEEE-754) supported by |zfp|, as well as accelerated
   blockwise computations that need not fully decompress and convert the
-  |zfp| representation to IEEE.
+  |zfp| representation to IEEE-754.
 
 - **Language bindings**.  The main compression codec is written in C89 to
-  facilitate calls from other languages, but would benefit from language
-  wrappers to ease integration.  As of |zfp| |cfprelease|, C wrappers are
-  available for a subset of the C++ compressed array API.  Work is planned
-  to add complete language bindings for C, C++, Fortran, and Python.
+  facilitate calls from other languages.  |zfp|'s compressed arrays, on
+  the other hand, are written in C++.  |zfp| |cfprelease| and |zforprelease|
+  add C wrappers around compressed arrays and Fortran and Python bindings to
+  the high-level C API.  Work is planned to provide additional language
+  bindings for C, C++, Fortran, and Python to expose the majority of |zfp|'s
+  capabilities through all of these programming languages.
 
 Please contact `Peter Lindstrom <mailto:pl@llnl.gov>`__ with requests for
 features not listed above.

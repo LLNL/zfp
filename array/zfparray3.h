@@ -49,7 +49,8 @@ public:
   }
 
   // copy constructor--performs a deep copy
-  array3(const array3& a)
+  array3(const array3& a) :
+    array()
   {
     deep_copy(a);
   }
@@ -322,7 +323,7 @@ protected:
   // number of cache lines corresponding to size (or suggested size if zero)
   static uint lines(size_t size, uint nx, uint ny, uint nz)
   {
-    uint n = uint(((size ? size : 8 * nx * ny * sizeof(Scalar)) + sizeof(CacheLine) - 1) / sizeof(CacheLine));
+    uint n = size ? (size + sizeof(CacheLine) - 1) / sizeof(CacheLine) : array::lines(size_t((nx + 3) / 4) * size_t((ny + 3) / 4) * size_t((nz + 3) / 4));
     return std::max(n, 1u);
   }
 

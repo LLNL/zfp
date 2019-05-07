@@ -129,6 +129,6 @@ if(ZFP_BUILD_TESTING_LARGE)
   endforeach()
 endif()
 
-if(BUILD_PYTHON)
+if(BUILD_ZFPY)
   add_subdirectory(python)
 endif()

@@ -1,5 +1,7 @@
 .. include:: defs.rst
 
+.. cpp:namespace:: zfp
+
 FAQ
 ===
 
@@ -34,7 +36,7 @@ Questions answered in this FAQ:
   #. :ref:`Are parallel compressed streams identical to serial streams? <q-parallel>`
   #. :ref:`Are zfp arrays and other data structures thread-safe? <q-thread-safety>`
   #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
-  #. :ref:`Why are 1D compressed arrays so slow? <q-1d-speed>`
+  #. :ref:`Why are compressed arrays so slow? <q-1d-speed>`
   #. :ref:`Do compressed arrays use reference counting? <q-ref-count>`
 
 -------------------------------------------------------------------------------
@@ -192,10 +194,12 @@ irregular the sampling is.
 
 Q6: *Does zfp handle infinities, NaNs,and subnormal floating-point numbers?*
 
-A: Only finite, valid floating-point values are currently supported.  If a
-block contains a NaN or an infinity, undefined behavior is invoked due to the
-C math function :c:func:`frexp` being undefined for non-numbers.  Subnormal
-numbers are, however, handled correctly.
+A: Yes, but only in :ref:`reversible mode <mode-reversible>`.
+
+|zfp|'s lossy compression modes currently support only finite
+floating-point values.  If a block contains a NaN or an infinity, undefined
+behavior is invoked due to the C math function :c:func:`frexp` being
+undefined for non-numbers.  Subnormal numbers are, however, handled correctly.
 
 -------------------------------------------------------------------------------
 
@@ -248,7 +252,10 @@ Q9: *Can I compress 32-bit integers using zfp?*
 I have some 32-bit integer data.  Can I compress it using |zfp|'s 32-bit
 integer support?
 
-A: Maybe.  zfp compression of 32-bit and 64-bit integers requires that each
+A: Yes, this can safely be done in :ref:`reversible mode <mode-reversible>`.
+
+In other (lossy) modes, the answer depends.
+|zfp| compression of 32-bit and 64-bit integers requires that each
 integer *f* have magnitude \|\ *f*\ \| < 2\ :sup:`30` and
 \|\ *f*\ \| < 2\ :sup:`62`, respectively.  To handle signed integers that
 span the entire range |minus|\ 2\ :sup:`31` |leq| x < 2\ :sup:`31`, or
@@ -402,10 +409,10 @@ information independently.
 
 Q15: *Must I use the same parameters during compression and decompression?*
 
-A: Not necessarily.  It is possible to use more tightly constrained
-:c:type:`zfp_stream` parameters during decompression than were used during
-compression.  For instance, one may use a larger
-:c:member:`zfp_stream.minbits`, smaller :c:member:`zfp_stream.maxbits`,
+A: Not necessarily.  When decompressing one block at a time, it is possible
+to use more tightly constrained :c:type:`zfp_stream` parameters during
+decompression than were used during compression.  For instance, one may use a
+larger :c:member:`zfp_stream.minbits`, smaller :c:member:`zfp_stream.maxbits`,
 smaller :c:member:`zfp_stream.maxprec`, or larger :c:member:`zfp_stream.minexp`
 during decompression to process fewer compressed bits than are stored, and to
 decompress the array more quickly at a lower precision.  This may be useful
@@ -418,7 +425,9 @@ useful when the stream is stored progressively (see :ref:`Q13 <q-progressive>`).
 
 Note that one may not use less constrained parameters during decompression,
 e.g., one cannot ask for more than :c:member:`zfp_stream.maxprec` bits of
-precision when decompressing.
+precision when decompressing.  Furthermore, the parameters must agree between
+compression and decompression when calling the high-level API function
+:c:func:`zfp_decompress`.
 
 Currently float arrays have a different compressed representation from
 compressed double arrays due to differences in exponent width.  It is not
@@ -452,11 +461,17 @@ and :code:`&out[1][0][0]`.
 
 Q17: *Why does zfp sometimes not respect my error tolerance?*
 
-A: |zfp| does not store each floating-point value independently, but represents
-a group of values (4, 16, 64, or 256 values, depending on dimensionality) as
-linear combinations like averages by evaluating arithmetic expressions.  Just
-like in uncompressed IEEE floating-point arithmetic, both representation error
-and roundoff error in the least significant bit(s) often occur.
+A: First, |zfp| does not support
+:ref:`fixed-accuracy mode <mode-fixed-accuracy>` for integer data and
+will ignore any tolerance requested via :c:func:`zfp_stream_set_accuracy`
+or associated :ref:`expert mode <mode-expert>` parameter settings.
+
+For floating-point data, |zfp| does not store each scalar value independently
+but represents a group of values (4, 16, 64, or 256 values, depending on
+dimensionality) as linear combinations like averages by evaluating arithmetic
+expressions.  Just like in uncompressed IEEE floating-point arithmetic, both
+representation error and roundoff error in the least significant bit(s) often
+occur.
 
 To illustrate this, consider compressing the following 1D array of four
 floats::
@@ -884,13 +899,30 @@ to offset the overhead of setting up parallel compression.
 
 .. _q-1d-speed:
 
-Q26: *Why are 1D compressed arrays so slow?*
+Q26: *Why are compressed arrays so slow?*
 
-A: This is likely due to the use of a very small cache.  All arrays use
-two 'layers' of blocks as default cache size, which is reasonable for
-2D and higher-dimensional arrays.  In 1D, this implies that the cache
-holds only two blocks, which is likely to cause excessive thrashing.
-Experiment with larger cache sizes of at least a few KB.
+A: This is likely due to the use of a very small cache.  Prior to |zfp|
+|csizerelease|, all arrays used two 'layers' of blocks as default cache
+size, which is reasonable for 2D and higher-dimensional arrays (as long
+as they are not too 'skinny').  In 1D, however, this implies that the
+cache holds only two blocks, which is likely to cause excessive thrashing.
+
+As of version |csizerelease|, the default cache size is roughly proportional
+to the square root of the total number of array elements, regardless of
+array dimensionality.  While this tends to reduce thrashing, we suggest
+experimenting with larger cache sizes of at least a few kilobytes to ensure
+acceptable performance.
+
+Note that compressed arrays constructed with the
+:ref:`default constructor <array_ctor_default>` will
+have an initial cache size of only one block.  Therefore, users should call
+:cpp:func:`array::set_cache_size` after :ref:`resizing <array_resize>`
+such arrays to ensure a large enough cache.
+
+Depending on factors such as rate, cache size, array access pattern,
+array access primitive (e.g., indices vs. iterators), and arithmetic
+intensity, we usually observe an application slow-down of 1-10x when
+switching from uncompressed to compressed arrays.
 
 -------------------------------------------------------------------------------
 

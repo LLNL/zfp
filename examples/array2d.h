@@ -4,6 +4,8 @@
 #include <climits>
 #include <vector>
 
+#define unused_(x) ((void)(x))
+
 typedef unsigned int uint;
 
 // uncompressed 2D double-precision array (for comparison)
@@ -11,7 +13,12 @@ namespace raw {
 class array2d {
 public:
   array2d() : nx(0), ny(0) {}
-  array2d(uint nx, uint ny, double rate = 0.0, const double* p = 0, size_t csize = 0) : nx(nx), ny(ny), data(nx * ny, 0.0) {}
+  array2d(uint nx, uint ny, double rate = 0.0, const double* p = 0, size_t csize = 0) : nx(nx), ny(ny), data(nx * ny, 0.0)
+  {
+    unused_(rate);
+    unused_(p);
+    unused_(csize);
+  }
   void resize(uint nx, uint ny) { this->nx = nx; this->ny = ny; data.resize(nx * ny, 0.0); }
   size_t size() const { return data.size(); }
   size_t size_x() const { return nx; }
@@ -45,5 +52,7 @@ protected:
   std::vector<double> data;
 };
 }
+
+#undef unused_
 
 #endif

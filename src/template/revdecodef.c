@@ -30,7 +30,7 @@ _t2(rev_decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock)
     bits++;
     if (stream_read_bit(zfp->stream)) {
       /* decode integer block */
-      bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
+      bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, iblock);
       /* reinterpret integers as floating values */
       _t1(rev_inv_reinterpret, Scalar)(iblock, fblock, BLOCK_SIZE);
     }
@@ -39,7 +39,7 @@ _t2(rev_decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock)
       bits += EBITS;
       int emax = (int)stream_read_bits(zfp->stream, EBITS) - EBIAS;
       /* decode integer block */
-      bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
+      bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, iblock);
       /* perform inverse block-floating-point transform */
       _t1(rev_inv_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
     }

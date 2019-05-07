@@ -47,11 +47,13 @@ int main(int argc, char* argv[])
           sscanf(argv[8], "%u", &my) != 1 ||
           sscanf(argv[9], "%u", &mz) != 1)
         return EXIT_FAILURE;
+      // FALLTHROUGH
     case 4:
       if (sscanf(argv[1], "%u", &nx) != 1 ||
           sscanf(argv[2], "%u", &ny) != 1 ||
           sscanf(argv[3], "%u", &nz) != 1)
         return EXIT_FAILURE;
+      // FALLTHROUGH
     case 1:
       break;
   }

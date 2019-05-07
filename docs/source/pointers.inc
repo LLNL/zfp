@@ -18,7 +18,7 @@ Pointers
 
 Similar to :ref:`references <references>`, |zfp| supports proxies for
 pointers to individual array elements.  From the user's perspective, such
-pointers behave much like regular pointers to uncompressed data, e.g.
+pointers behave much like regular pointers to uncompressed data, e.g.,
 instead of
 ::
 
@@ -79,13 +79,13 @@ to the pointer being acted upon.
 .. cpp:function:: pointer& pointer::operator++()
 .. cpp:function:: pointer& pointer::operator--()
 
-  Pre increment (decrement) pointer, e.g. :code:`++p`.  Return reference to
+  Pre increment (decrement) pointer, e.g., :code:`++p`.  Return reference to
   the incremented (decremented) pointer.
 
 .. cpp:function:: pointer pointer::operator++(int)
 .. cpp:function:: pointer pointer::operator--(int)
 
-  Post increment (decrement) pointer, e.g. :code:`p++`.  Return a copy of
+  Post increment (decrement) pointer, e.g., :code:`p++`.  Return a copy of
   the pointer before it was incremented (decremented).
 
 .. cpp:function:: pointer pointer::operator+=(ptrdiff_t d)

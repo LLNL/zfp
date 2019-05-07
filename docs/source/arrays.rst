@@ -44,6 +44,7 @@ The following sections are available:
 
 * :ref:`array_classes`
 * :ref:`caching`
+* :ref:`serialization`
 * :ref:`references`
 * :ref:`pointers`
 * :ref:`iterators`
@@ -107,6 +108,34 @@ Base Class
   Return pointer to compressed data for read or write access.  The size
   of the buffer is given by :cpp:func:`compressed_size`.
 
+.. cpp:function:: uint array::dimensionality() const
+
+  Return the dimensionality (1, 2, or 3) of the array.
+
+.. cpp:function:: zfp_type array::scalar_type() const
+
+  Return the underlying scalar type (:c:type:`zfp_type`) of the array.
+
+.. cpp:function:: array::header array::get_header() const
+
+  Return a short fixed-length :ref:`header <header>` describing the scalar
+  type, dimensions, and rate associated with the array.
+  An :cpp:class:`array::header::exception` is thrown if the header cannot
+  describe the array.
+
+.. _array_factory:
+.. cpp:function:: static array* array::construct(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+
+  Construct a compressed-array object whose scalar type, dimensions, and rate
+  are given by the header *h*.  Return a pointer to the base class upon
+  success.  The optional *buffer* points to compressed data that, when passed,
+  is copied into the array.  If *buffer* is absent, the array is default
+  initialized with all zeroes.  The optional *buffer_size_bytes* argument
+  specifies the buffer length in bytes.  When passed, a comparison is made to
+  ensure that the buffer size is at least as large as the size implied by
+  the header.  If this function fails for any reason, an
+  :cpp:class:`array::header::exception` is thrown.
+
 Common Methods
 ^^^^^^^^^^^^^^
 
@@ -116,7 +145,7 @@ class.
 
 .. cpp:function:: size_t array::size() const
 
-  Total number of elements in array, e.g. *nx* |times| *ny* |times| *nz* for
+  Total number of elements in array, e.g., *nx* |times| *ny* |times| *nz* for
   3D arrays.
 
 .. cpp:function:: size_t array::cache_size() const
@@ -133,7 +162,7 @@ class.
 
   Decompress entire array and store at *p*, for which sufficient storage must
   have been allocated.  The uncompressed array is assumed to be contiguous
-  (with default strides) and stored in the usual "row-major" order, i.e. with
+  (with default strides) and stored in the usual "row-major" order, i.e., with
   *x* varying faster than *y* and *y* varying faster than *z*.
 
 .. cpp:function:: void array::set(const Scalar* p)
@@ -171,8 +200,8 @@ and methods share obvious similarities regardless of dimensionality, only
 one generic description for all dimensionalities is provided.
 
 Note: In the class declarations below, the class template for the scalar
-type is ommitted for readability, e.g.,
-:code:`class array1` is used as shorhand for
+type is omitted for readability, e.g.,
+:code:`class array1` is used as shorthand for
 :code:`template <typename Scalar> class array1`.  Wherever the type
 :code:`Scalar` appears, it refers to this template argument.
 
@@ -189,7 +218,7 @@ type is ommitted for readability, e.g.,
   :cpp:class:`array` base class.  The template argument, :cpp:type:`Scalar`,
   specifies the floating type returned for array elements.  The suffixes
   :code:`f` and :code:`d` can also be appended to each class to indicate float
-  or double type, e.g. :cpp:class:`array1f` is a synonym for
+  or double type, e.g., :cpp:class:`array1f` is a synonym for
   :cpp:class:`array1\<float>`.
 
 .. cpp:class:: arrayANY : public array
@@ -203,7 +232,17 @@ type is ommitted for readability, e.g.,
 .. cpp:function:: array2::array2()
 .. cpp:function:: array3::array3()
 
-  Default constructor.  Creates an empty array.
+  Default constructor.  Creates an empty array whose size and rate are both
+  zero.
+
+.. note::
+  The default constructor is useful when the array size or rate is not known at
+  time of construction.  Before the array can become usable, however, it must
+  be :ref:`resized <array_resize>` and its rate must be set via
+  :cpp:func:`array::set_rate`.  These two tasks can be performed in either order.
+  Furthermore, the desired cache size should be set using
+  :cpp:func:`array::set_cache_size`, as the default constructor creates a
+  cache that holds only one |zfp| block, i.e., the minimum possible.
 
 .. _array_ctor:
 .. cpp:function:: array1::array1(uint n, double rate, const Scalar* p = 0, size_t csize = 0)
@@ -214,6 +253,20 @@ type is ommitted for readability, e.g.,
   *nx* |times| *ny* |times| *nz* (3D) using *rate* bits per value, at least
   *csize* bytes of cache, and optionally initialized from flat, uncompressed
   array *p*.  If *csize* is zero, a default cache size is chosen.
+
+.. _array_ctor_header:
+.. cpp:function:: array1::array1(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array2::array2(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array3::array3(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+
+  Constructor from previously :ref:`serialized <serialization>` compressed
+  array.  Struct :cpp:type:`array::header` contains array metadata, while
+  optional *buffer* points to the compressed data that is to be copied to
+  the array.  The optional *buffer_size_bytes* argument specifies the
+  *buffer* length.  If the constructor fails, an
+  :cpp:class:`array::header::exception` is thrown.
+  See :cpp:func:`array::construct` for further details on the *buffer* and
+  *buffer_size_bytes* arguments.
 
 .. cpp:function:: array1::array1(const array1& a)
 .. cpp:function:: array2::array2(const array2& a)
@@ -251,6 +304,13 @@ type is ommitted for readability, e.g.,
   Resize the array (all previously stored data will be lost).  If *clear* is
   true, then the array elements are all initialized to zero.
 
+.. note::
+  It is often desirable (though not a requirement) to also set the cache size
+  when resizing an array, e.g., in proportion to the array size;
+  see :cpp:func:`array::set_cache_size`.  This is particularly important when
+  the array is default constructed, which initializes the cache size to the
+  minimum possible of only one |zfp| block.
+
 .. _array_accessor:
 .. cpp:function:: Scalar array1::operator()(uint i) const
 .. cpp:function:: Scalar array2::operator()(uint i, uint j) const
@@ -268,6 +328,7 @@ type is ommitted for readability, e.g.,
   multi-dimensional index given by *i*, *j*, and *k* (mutator).
 
 .. include:: caching.inc
+.. include:: serialization.inc
 .. include:: references.inc
 .. include:: pointers.inc
 .. include:: iterators.inc

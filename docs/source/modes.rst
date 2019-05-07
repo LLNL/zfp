@@ -42,7 +42,8 @@ parameters.  Although most users will not directly select this mode,
 we discuss it first since the other modes can be expressed in terms of
 setting expert mode parameters.
 
-The four parameters denote constraints that are applied to each block.
+The four parameters denote constraints that are applied to each block
+in the :ref:`compression algorithm <algorithm-lossy>`.
 Compression is terminated as soon as one of these constraints is not met,
 which has the effect of truncating the compressed bit stream that encodes
 the block.  The four constraints are as follows:
@@ -69,23 +70,24 @@ the block.  The four constraints are as follows:
   of most significant uncompressed bits encoded per transform coefficient.
   It does not directly correspond to the number of uncompressed mantissa bits
   for the floating-point or integer values being compressed, but is closely
-  related.  This is the parameter that specifies the precision in
-  :ref:`fixed-precision mode <mode-fixed-precision>`, and it provides a
-  mechanism for controlling the *relative error*.  Note that this parameter
-  selects how many bits planes to encode regardless of the magnitude of the
-  common floating-point exponent within the block.
+  :ref:`related <q-relerr>`.  This is the parameter that specifies the
+  precision in :ref:`fixed-precision mode <mode-fixed-precision>`, and it
+  provides a mechanism for controlling the *relative error*.  Note that this
+  parameter selects how many bits planes to encode regardless of the magnitude
+  of the common floating-point exponent within the block.
 
 .. c:member:: int zfp_stream.minexp
 
-  The smallest absolute bit plane number encoded.  The place value of each
-  transform coefficient bit depends on the common floating-point exponent,
+  The smallest absolute bit plane number encoded (applies to floating-point
+  data only; this parameter is ignored for integer data).  The place value of
+  each transform coefficient bit depends on the common floating-point exponent,
   *e*, that scales the integer coefficients.  If the most significant
   coefficient bit has place value 2\ :sup:`e`, then the number of bit planes
   encoded is (one plus) the difference between *e* and
   :c:member:`zfp_stream.minexp`.  As an analogy, consider representing
   currency in decimal.  Setting :c:member:`zfp_stream.minexp` to -2 would,
-  if generalized to base-10, ensure that amounts are represented to cent
-  accuracy, i.e. in units of 10\ :sup:`-2` = $0.01.  This parameter governs
+  if generalized to base 10, ensure that amounts are represented to cent
+  accuracy, i.e., in units of 10\ :sup:`-2` = $0.01.  This parameter governs
   the *absolute error* in :ref:`fixed-accuracy mode <mode-fixed-accuracy>`.
   Note that to achieve a certain accuracy in the decompressed values, the
   :c:member:`zfp_stream.minexp` value has to be conservatively lowered since
@@ -105,9 +107,9 @@ allocated, one may in conjunction with other constraints set
 
   maxbits = 4^d * CHAR_BIT * sizeof(Type)
 
-where Type is either float or double.  The minbits parameter is useful only
-in fixed-rate mode--when minbits = maxbits, zero-bits are padded to blocks
-that compress to fewer than maxbits bits.
+where Type is either float or double.  The ``minbits`` parameter is useful
+only in fixed-rate mode; when ``minbits`` = ``maxbits``, zero-bits are
+padded to blocks that compress to fewer than ``maxbits`` bits.
 
 The effects of the above four parameters are best explained in terms of the
 three main compression modes supported by |zfp|, described below.
@@ -147,8 +149,11 @@ the mode used in the implementation of |zfp|'s
 :ref:`compressed arrays <arrays>`.  Fixed-rate mode also ensures a
 predictable memory/storage footprint, but usually results in far worse
 accuracy per bit than the variable-rate fixed-precision and fixed-accuracy
-modes.  **Use fixed-rate mode only if you have to bound the compressed size
-or need random access to blocks**.
+modes.
+
+.. note::
+  Use fixed-rate mode only if you have to bound the compressed size
+  or need random access to blocks.
 
 .. _mode-fixed-precision:
 .. index::
@@ -158,7 +163,7 @@ Fixed-Precision Mode
 --------------------
 
 In fixed-precision mode, the number of bits used to encode a block may
-vary, but the number of bit planes (i.e. the precision) encoded for the
+vary, but the number of bit planes (i.e., the precision) encoded for the
 transform coefficients is fixed.  To achieve the desired precision,
 use option :option:`-p` with the :ref:`zfp executable <zfpcmd>` or call
 :c:func:`zfp_stream_set_precision`.  In expert mode, fixed precision is
@@ -193,7 +198,7 @@ value, *g*, the absolute difference \| *f* |minus| *g* \| is at most
 2\ :sup:`minexp`.
 (Note that it is not possible to guarantee error tolerances smaller than
 machine epsilon relative to the largest value within a block.)  This error
-tolerance is not always tight (especially for 3D arrays), but can
+tolerance is not always tight (especially for 3D and 4D arrays), but can
 conservatively be set so that even for worst-case inputs the error
 tolerance is respected.  To achieve fixed accuracy to within 'tolerance',
 use option :option:`-a` with the :ref:`zfp executable <zfpcmd>` or call
@@ -211,6 +216,10 @@ near-lossless compression (see :ref:`mode-reversible` for guaranteed
 lossless compression).  Fixed-accuracy mode gives the highest quality
 (in terms of absolute error) for a given compression rate, and is
 preferable when random access is not needed.
+
+.. note::
+  Fixed-accuracy mode is available for floating-point (not integer) data
+  only.
 
 .. index::
    single: Compression mode; Reversible mode
@@ -235,7 +244,7 @@ The expert mode parameters corresponding to reversible mode are::
   maxprec = ZFP_MAX_PREC
   minexp < ZFP_MIN_EXP
 
-Reversible mode is enabled via :c:func:`zfp_set_reversible` and through
+Reversible mode is enabled via :c:func:`zfp_stream_set_reversible` and through
 the :option:`-R` command-line option in the :ref:`zfp executable <zfpcmd>`.
 It is supported by both the low- and high-level interfaces and by the serial
 and OpenMP execution policies, but it is not yet implemented in CUDA.

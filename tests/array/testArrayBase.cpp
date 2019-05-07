@@ -74,7 +74,6 @@ void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, ui
   // copy header into aligned memory suitable for bitstream r/w
   size_t num_64bit_entries = DIV_ROUND_UP(ZFP_HEADER_SIZE_BITS, CHAR_BIT * sizeof(uint64));
   uint64* buffer = new uint64[num_64bit_entries];
-  size_t buffer_size_bytes = num_64bit_entries * sizeof(uint64);
 
   memcpy(buffer, &h, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
 

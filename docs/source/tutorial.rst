@@ -41,10 +41,13 @@ Consider compressing the 3D C/C++ array
   // define an uncompressed array
   double a[nz][ny][nx];
 
-where *nx*, *ny*, and *nz* can be any positive dimensions.  To invoke the
-|libzfp| compressor, the dimensions and type must first be specified in a
-:c:type:`zfp_field` parameter object that encapsulates the type, size, and
-memory layout of the array::
+where *nx*, *ny*, and *nz* can be any positive dimensions.
+
+.. include:: disclaimer.inc
+
+To invoke the |libzfp| compressor, the dimensions and type must first be
+specified in a :c:type:`zfp_field` parameter object that encapsulates the
+type, size, and memory layout of the array::
 
   // allocate metadata for the 3D array a[nz][ny][nx]
   uint dims = 3;
@@ -52,7 +55,7 @@ memory layout of the array::
   zfp_field* field = zfp_field_3d(&a[0][0][0], type, nx, ny, nz);
 
 For single-precision data, use :code:`zfp_type_float`.  As of version 0.5.1,
-the the high-level API also supports integer arrays (:code:`zfp_type_int32`
+the high-level API also supports integer arrays (:code:`zfp_type_int32`
 and :code:`zfp_type_int64`).  See FAQs :ref:`#8 <q-integer>` and
 :ref:`#9 <q-int32>` regarding integer compression.
 
@@ -97,7 +100,7 @@ are needed::
   uchar* buffer = new uchar[bufsize];
 
 Note that :c:func:`zfp_stream_maximum_size` returns the smallest buffer
-size necessary to safely compress the data--the *actual* compressed size
+size necessary to safely compress the data---the *actual* compressed size
 may be smaller.  If the members of :code:`zfp` and :code:`field` are for
 whatever reason not initialized correctly, then
 :c:func:`zfp_stream_maximum_size` returns 0.
@@ -136,12 +139,12 @@ location pointed to by *buffer*.
 
 To decompress the data, the field and compression parameters must be
 initialized with the same values as used for compression, either via
-the same sequence of function calls as above, or by recording these
+the same sequence of function calls as above or by recording these
 fields and setting them directly.  Metadata such as array dimensions and
 compression parameters are by default not stored in the compressed stream.
 It is up to the caller to store this information, either separate from
 the compressed data, or via the :c:func:`zfp_write_header` and
-:c:func:`zfp_read_header` calls, which must precede the corresponding
+:c:func:`zfp_read_header` calls, which should precede the corresponding
 :c:func:`zfp_compress` and :c:func:`zfp_decompress` calls, respectively.
 These calls allow the user to specify what information to store in the header,
 including a 'magic' format identifier, the field type and dimensions, and the
@@ -290,25 +293,25 @@ rely on addresses or references to array elements may have to be
 modified to use special proxy classes that implement pointers and
 references; see :ref:`limitations`.
 
-|zfp| does not support special floating-point values like infinities and
-NaNs, although denormalized numbers are handled correctly.  Similarly,
-because the compressor assumes that the array values vary smoothly,
+|zfp|'s compressed arrays do not support special floating-point values like
+infinities and NaNs, although subnormal numbers are handled correctly.
+Similarly, because the compressor assumes that the array values vary smoothly,
 using finite but large values like :c:macro:`HUGE_VAL` in place of
 infinities is not advised, as this will introduce large errors in smaller
 values within the same block.  Future extensions will provide support for
 a bit mask to mark the presence of non-values.
 
 The |zfp| C++ classes are implemented entirely as header files and make
-extensive use of C++ templates to reduce code redundancy.  Most classes
+extensive use of C++ templates to reduce code redundancy.  These classes
 are wrapped in the :cpp:any:`zfp` namespace.
 
-Currently there are six array classes for 1D, 2D, and 3D arrays, each of
+Currently, there are six array classes for 1D, 2D, and 3D arrays, each of
 which can represent single- or double-precision values.  Although these
 arrays store values in a form different from conventional single- and
 double-precision floating point, the user interacts with the arrays via
 floats and doubles.
 
-The description below is for 3D arrays of doubles--the necessary changes
+The description below is for 3D arrays of doubles---the necessary changes
 for other array types should be obvious.  To declare and zero initialize
 an array, use
 ::
@@ -328,13 +331,16 @@ or using STL vectors
 
 but with the user specifying the amount of storage used via the *rate*
 parameter.  (A predefined type :cpp:type:`array3d` also exists, while
-the suffix 'f' is used for floats.)  Note that the array dimensions can
-be arbitrary, and need not be multiples of four (see above for a discussion
-of incomplete blocks).  The *rate* argument specifies how many bits per
-value (amortized) to store in the compressed representation.  By default
-the block size is restricted to a multiple of 64 bits, and therefore the
-rate argument can be specified in increments of 64 / |4powd| bits in *d*
-dimensions, i.e.
+the suffix 'f' is used for floats.)
+
+.. include:: disclaimer.inc
+
+Note that the array dimensions can be arbitrary and need not be multiples
+of four (see above for a discussion of incomplete blocks).  The *rate*
+argument specifies how many bits per value (amortized) to store in the
+compressed representation.  By default, the block size is restricted to a
+multiple of 64 bits, and therefore the rate argument can be specified in
+increments of 64 / |4powd| bits in *d* dimensions, i.e.
 ::
 
   1D arrays: 16-bit granularity
@@ -501,7 +507,7 @@ uninitialized.  Here is an example of initializing a 3D array::
 
 Pointers to array elements are available via a special pointer class.  Such
 pointers may be a useful way of passing (flattened) |zfp| arrays to functions
-that expect uncompressed arrays, e.g. by using the pointer type as template
+that expect uncompressed arrays, e.g., by using the pointer type as template
 argument.  For example::
 
   template <typename double_ptr>
@@ -567,14 +573,16 @@ if it was modified while stored in the cache.
 
 The size cache to use is specified by the user and is an important
 parameter that needs careful consideration in order to balance the extra
-memory usage, performance, and quality (recall that data loss is incurred
+memory usage, performance, and accuracy (recall that data loss is incurred
 only when a block is evicted from the cache and compressed).  Although the
 best choice varies from one application to another, we suggest allocating
 at least two layers of blocks (2 |times| (*nx* / 4) |times| (*ny* / 4)
 blocks) for applications that stream through the array and perform stencil
 computations such as gathering data from neighboring elements.  This allows
 limiting the cache misses to compulsory ones.  If the *cache_size* parameter
-is set to zero bytes, then this default of two layers is used.
+is set to zero bytes, then a default size of |sqrt|\ *n* blocks is used,
+where *n* is the total number of blocks in the array.
+
 
 The cache size can be set during construction, or can be set at a later
 time via

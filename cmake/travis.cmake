@@ -11,7 +11,7 @@ set(cfg_options
   -DCMAKE_C_STANDARD=${C_STANDARD}
   -DCMAKE_CXX_STANDARD=${CXX_STANDARD}
   -DBUILD_CFP=${BUILD_CFP}
-  -DBUILD_PYTHON=${BUILD_PYTHON}
+  -DBUILD_ZFPY=${BUILD_ZFPY}
   -DBUILD_ZFORP=${BUILD_ZFORP}
   -DZFP_WITH_OPENMP=${BUILD_OPENMP}
   -DZFP_WITH_CUDA=${BUILD_CUDA}
@@ -38,8 +38,8 @@ if(BUILD_CFP)
   endif()
 endif()
 
-if(BUILD_PYTHON)
-  set(CTEST_SITE "${CTEST_SITE}_python")
+if(BUILD_ZFPY)
+  set(CTEST_SITE "${CTEST_SITE}_zfpy$ENV{PYTHON_VERSION}")
   list(APPEND cfg_options
     -DPYTHON_INCLUDE_DIR=$ENV{PYTHON_INCLUDE_DIR}
     -DPYTHON_LIBRARY=$ENV{PYTHON_LIBRARY}
@@ -48,13 +48,17 @@ if(BUILD_PYTHON)
 endif()
 
 if(BUILD_ZFORP)
-  set(CTEST_SITE "${CTEST_SITE}_zforp")
+  set(CTEST_SITE "${CTEST_SITE}_zforp$ENV{FORTRAN_STANDARD}")
+  list(APPEND cfg_options
+    -DCMAKE_FORTRAN_FLAGS='-std=f$ENV{FORTRAN_STANDARD}'
+    )
 endif()
 
 if(WITH_COVERAGE)
   list(APPEND cfg_options
     -DCMAKE_C_FLAGS=-coverage
     -DCMAKE_CXX_FLAGS=-coverage
+    -DCMAKE_Fortran_FLAGS=-coverage
     )
   set(CTEST_SITE "${CTEST_SITE}_coverage")
 endif()

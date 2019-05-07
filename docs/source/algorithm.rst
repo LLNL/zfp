@@ -54,15 +54,20 @@ purposes):
   4. The signed integer coefficients are reordered in a manner similar to
      JPEG zig-zag ordering so that statistically they appear in a roughly
      monotonically decreasing order.  Coefficients corresponding to low
-     frequencies tend to have larger magnitude, and are listed first.  In 3D,
+     frequencies tend to have larger magnitude and are listed first.  In 3D,
      coefficients corresponding to frequencies *i*, *j*, *k* in the three
-     dimensions are ordered by *i* + *j* + *k* first, and then by
+     dimensions are ordered by *i* + *j* + *k* first and then by
      *i*\ :sup:`2` + *j*\ :sup:`2` + *k*\ :sup:`2`.
 
   5. The two's complement signed integers are converted to their negabinary
      (base negative two) representation using one addition and one bit-wise
-     exclusive or per integer.  Because negabinary has no dedicated single
-     sign bit, these integers are subsequently treated as unsigned.
+     exclusive or per integer.  Because negabinary has no single dedicated
+     sign bit, these integers are subsequently treated as unsigned.  Unlike
+     sign-magnitude representations, the leftmost one-bit in negabinary
+     simultaneously encodes the sign and approximate magnitude of a number.
+     Moreover, unlike two's complement, numbers small in magnitude have many
+     leading zeros in negabinary regardless of sign, which facilitates
+     encoding.
 
   6. The bits that represent the list of |4powd| integers are transposed so
      that instead of being ordered by coefficient they are ordered by bit
@@ -75,38 +80,39 @@ purposes):
   7. The transform coefficients are compressed losslessly using embedded
      coding by exploiting the property that the coefficients tend to have many
      leading zeros that need not be encoded explicitly.  Each bit plane is
-     encoded in two parts, from lowest to highest bit.  First the *n* lowest
-     bits are emitted verbatim, where *n* depends on previous bit planes and
-     is initially zero.  Then a variable-length representation of the remaining
-     |4powd| |minus| *n* bits, *x*, is encoded.  For such an integer *x*, a single
-     bit is emitted to indicate if *x* = 0, in which case we are done with the
-     current bit plane.  If not, then bits of *x* are emitted, starting from
-     the lowest bit, until a one-bit is emitted.  This triggers another test
-     whether this is the highest set bit of *x*, and the result of this test
-     is output as a single bit.  If not, then the procedure repeats until all
-     *m* of *x*'s value bits have been output, where
+     encoded in two parts, from lowest to highest bit.  First, the *n* lowest
+     bits are emitted verbatim, where *n* is the smallest number such that
+     the |4powd| |minus| *n* highest bits in all previous bit planes are all
+     zero.  Initially, *n* = 0.  Then, a variable-length representation of the
+     remaining |4powd| |minus| *n* bits, *x*, is encoded.  For such an integer
+     *x*, a single bit is emitted to indicate if *x* = 0, in which case we are
+     done with the current bit plane.  If not, then bits of *x* are emitted,
+     starting from the lowest bit, until a one-bit is emitted.  This triggers
+     another test whether this is the highest set bit of *x*, and the result
+     of this test is output as a single bit.  If not, then the procedure
+     repeats until all *m* of *x*'s value bits have been output, where
      2\ :sup:`m-1` |leq| *x* < 2\ :sup:`m`.  This can be thought of as a
      run-length encoding of the zeros of *x*, where the run lengths are
      expressed in unary.  The total number of value bits, *n*, in this bit
      plane is then incremented by *m* before being passed to the next bit
      plane, which is encoded by first emitting its *n* lowest bits.  The
      assumption is that these bits correspond to *n* coefficients whose most
-     significant bits have already been output, i.e. these *n* bits are
+     significant bits have already been output, i.e., these *n* bits are
      essentially random and not compressible.  Following this, the remaining
      |4powd| |minus| *n* bits of the bit plane are run-length encoded as
      described above, which potentially results in *n* being increased.
 
   8. The embedded coder emits one bit at a time, with each successive bit
-     potentially improving the quality of the reconstructed signal.  The early
-     bits are most important and have the greatest impact on signal quality,
+     potentially improving the accuracy of the approximation.  The early
+     bits are most important and have the greatest impact on accuracy,
      with the last few bits providing very small changes.  The resulting
-     compressed bit stream can be truncated at any point and still allow for a
-     valid approximate reconstruction of the original signal.  The final step
-     truncates the bit stream in one of three ways: to a fixed number of bits
-     (the fixed-rate mode); after some fixed number of bit planes have been
-     encoded (the fixed-precision mode); or until a lowest bit plane number
-     has been encoded, as expressed in relation to the common floating-point
-     exponent within the block (the fixed-accuracy mode).
+     compressed bit stream can be truncated at any point and still allow for
+     a valid approximate reconstruction of the original block of values.
+     The final step truncates the bit stream in one of three ways: to a fixed
+     number of bits (the fixed-rate mode); after some fixed number of bit
+     planes have been encoded (the fixed-precision mode); or until a lowest
+     bit plane number has been encoded, as expressed in relation to the common
+     floating-point exponent within the block (the fixed-accuracy mode).
 
 Various parameters are exposed for controlling the quality and compressed
 size of a block, and can be specified by the user at a very fine
@@ -129,8 +135,8 @@ subtraction operations only.  Finally, step 8 is modified so that no one-bits
 are truncated in the variable-length bit stream.  However, all least
 significant bit planes with all-zero bits are truncated, and the number of
 encoded bit planes is recorded in step 7.  As with lossy compression, a
-floating-point block consisting of all (positive) zeros is represented as a
-single bit, making it possible to efficiently encode sparse data.
+floating-point block consisting of all ("positive") zeros is represented as
+a single bit, making it possible to efficiently encode sparse data.
 
 If the block-floating-point transform is not lossless, then the reversible
 compression algorithm falls back on a simpler scheme that reinterprets
@@ -140,5 +146,4 @@ algorithm proceeds from there with the modified step 3.  Moreover, this
 conversion ensures that special values like infinities, NaNs, and negative
 zero are preserved.
 
-The lossless algorithm handles integer data also, in which case step 2
-is omitted.
+The lossless algorithm handles integer data also, for which step 2 is omitted.

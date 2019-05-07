@@ -217,6 +217,15 @@ mark_as_advanced(ZFP_LIBRARY_PREFIX)
 
 add_subdirectory(src)
 
+option(BUILD_ALL "Build all subdirectories" OFF)
+if(BUILD_ALL)
+  set(BUILD_CFP ON CACHE BOOL "Build CFP arrays library" FORCE)
+  set(BUILD_ZFORP ON CACHE BOOL "Build Fortran library" FORCE)
+  set(BUILD_ZFPY ON CACHE BOOL "Build python bindings for zfp" FORCE)
+  set(BUILD_UTILITIES ON CACHE BOOL "Build command line utilities for zfp" FORCE)
+  set(BUILD_EXAMPLES ON CACHE BOOL "Build Examples" FORCE)
+endif()
+
 option(BUILD_CFP "Build CFP arrays library" OFF)
 if(BUILD_CFP)
   add_subdirectory(cfp)
@@ -227,14 +236,14 @@ if(BUILD_ZFORP)
   add_subdirectory(fortran)
 endif()
 
+option(BUILD_ZFPY "Build python bindings for zfp" OFF)
+if(BUILD_ZFPY)
+  add_subdirectory(python)
+endif()
+
 option(BUILD_UTILITIES "Build command line utilities for zfp" ON)
 if(BUILD_UTILITIES)
   add_subdirectory(utils)
-endif()
-
-option(BUILD_PYTHON "Build python bindings for zfp" OFF)
-if(BUILD_PYTHON)
-  add_subdirectory(python)
 endif()
 
 option(BUILD_EXAMPLES "Build Examples" OFF)

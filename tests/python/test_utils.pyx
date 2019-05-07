@@ -4,8 +4,8 @@ cimport libc.stdint as stdint
 from cython cimport view
 from itertools import islice, repeat, chain
 
-import zfp
-cimport zfp
+import zfpy
+cimport zfpy
 
 import numpy as np
 cimport numpy as np
@@ -50,16 +50,16 @@ cdef extern from "stridedOperations.h":
     void reverseArray(void* inputArr,
                       void* outputArr,
                       size_t inputArrLen,
-                      zfp.zfp_type zfpType);
+                      zfpy.zfp_type zfpType);
     void interleaveArray(void* inputArr,
                          void* outputArr,
                          size_t inputArrLen,
-                         zfp.zfp_type zfpType);
+                         zfpy.zfp_type zfpType);
     int permuteSquareArray(void* inputArr,
                            void* outputArr,
                            size_t sideLen,
                            int dims,
-                           zfp.zfp_type zfpType);
+                           zfpy.zfp_type zfpType);
     void getReversedStrides(int dims,
                             size_t n[4],
                             int s[4]);
@@ -77,24 +77,24 @@ cdef extern from "zfpCompressionParams.h":
 
 cdef extern from "zfpChecksums.h":
     uint64_t getChecksumOriginalDataBlock(int dims,
-                                          zfp.zfp_type type);
+                                          zfpy.zfp_type type);
     uint64_t getChecksumEncodedBlock(int dims,
-                                     zfp.zfp_type type);
+                                     zfpy.zfp_type type);
     uint64_t getChecksumEncodedPartialBlock(int dims,
-                                            zfp.zfp_type type);
+                                            zfpy.zfp_type type);
     uint64_t getChecksumDecodedBlock(int dims,
-                                     zfp.zfp_type type);
+                                     zfpy.zfp_type type);
     uint64_t getChecksumDecodedPartialBlock(int dims,
-                                            zfp.zfp_type type);
+                                            zfpy.zfp_type type);
     uint64_t getChecksumOriginalDataArray(int dims,
-                                          zfp.zfp_type type);
+                                          zfpy.zfp_type type);
     uint64_t getChecksumCompressedBitstream(int dims,
-                                            zfp.zfp_type type,
-                                            zfp.zfp_mode mode,
+                                            zfpy.zfp_type type,
+                                            zfpy.zfp_mode mode,
                                             int compressParamNum);
     uint64_t getChecksumDecompressedArray(int dims,
-                                          zfp.zfp_type type,
-                                          zfp.zfp_mode mode,
+                                          zfpy.zfp_type type,
+                                          zfpy.zfp_mode mode,
                                           int compressParamNum);
 
 cdef extern from "zfpHash.h":
@@ -124,20 +124,20 @@ cdef validate_num_dimensions(int dims):
     if dims > 4 or dims < 1:
         raise ValueError("Unsupported number of dimensions: {}".format(dims))
 
-cdef validate_ztype(zfp.zfp_type ztype):
+cdef validate_ztype(zfpy.zfp_type ztype):
     if ztype not in [
-            zfp.type_float,
-            zfp.type_double,
-            zfp.type_int32,
-            zfp.type_int64
+            zfpy.type_float,
+            zfpy.type_double,
+            zfpy.type_int32,
+            zfpy.type_int64
     ]:
         raise ValueError("Unsupported ztype: {}".format(ztype))
 
-cdef validate_mode(zfp.zfp_mode mode):
+cdef validate_mode(zfpy.zfp_mode mode):
     if mode not in [
-            zfp.mode_fixed_rate,
-            zfp.mode_fixed_precision,
-            zfp.mode_fixed_accuracy,
+            zfpy.mode_fixed_rate,
+            zfpy.mode_fixed_precision,
+            zfpy.mode_fixed_accuracy,
     ]:
         raise ValueError("Unsupported mode: {}".format(mode))
 
@@ -149,7 +149,7 @@ cdef validate_compress_param(int comp_param):
 
 cpdef getRandNumpyArray(
     int numDims,
-    zfp.zfp_type ztype,
+    zfpy.zfp_type ztype,
 ):
     validate_num_dimensions(numDims)
     validate_ztype(ztype)
@@ -157,9 +157,9 @@ cpdef getRandNumpyArray(
     cdef size_t minTotalElements = 0
     cdef int amplitudeExp = 0
 
-    if ztype in [zfp.type_float, zfp.type_double]:
+    if ztype in [zfpy.type_float, zfpy.type_double]:
         minTotalElements = 1000000
-    elif ztype in [zfp.type_int32, zfp.type_int64]:
+    elif ztype in [zfpy.type_int32, zfpy.type_int64]:
         minTotalElements = 4096
 
     cdef int64_t* outputArrInt64 = NULL
@@ -170,7 +170,7 @@ cpdef getRandNumpyArray(
     cdef size_t outputTotalLen = 0
     cdef view.array viewArr = None
 
-    if ztype == zfp.type_int64:
+    if ztype == zfpy.type_int64:
         amplitudeExp = 64 - 2
         generateSmoothRandInts64(minTotalElements,
                                  numDims,
@@ -186,7 +186,7 @@ cpdef getRandNumpyArray(
             viewArr = <int64_t[:outputSideLen, :outputSideLen, :outputSideLen]> outputArrInt64
         elif numDims == 4:
             viewArr = <int64_t[:outputSideLen, :outputSideLen, :outputSideLen, :outputSideLen]> outputArrInt64
-    elif ztype == zfp.type_int32:
+    elif ztype == zfpy.type_int32:
         amplitudeExp = 32 - 2
         generateSmoothRandInts32(minTotalElements,
                                  numDims,
@@ -202,7 +202,7 @@ cpdef getRandNumpyArray(
             viewArr = <int32_t[:outputSideLen, :outputSideLen, :outputSideLen]> outputArrInt32
         elif numDims == 4:
             viewArr = <int32_t[:outputSideLen, :outputSideLen, :outputSideLen, :outputSideLen]> outputArrInt32
-    elif ztype == zfp.type_float:
+    elif ztype == zfpy.type_float:
         generateSmoothRandFloats(minTotalElements,
                                  numDims,
                                  &outputArrFloat,
@@ -216,7 +216,7 @@ cpdef getRandNumpyArray(
             viewArr = <float[:outputSideLen, :outputSideLen, :outputSideLen]> outputArrFloat
         elif numDims == 4:
             viewArr = <float[:outputSideLen, :outputSideLen, :outputSideLen, :outputSideLen]> outputArrFloat
-    elif ztype == zfp.type_double:
+    elif ztype == zfpy.type_double:
         generateSmoothRandDoubles(minTotalElements,
                                  numDims,
                                  &outputArrDouble,
@@ -237,7 +237,7 @@ cpdef getRandNumpyArray(
 
 cpdef uint64_t getChecksumOrigArray(
     int dims,
-    zfp.zfp_type ztype
+    zfpy.zfp_type ztype
 ):
     validate_num_dimensions(dims)
     validate_ztype(ztype)
@@ -246,8 +246,8 @@ cpdef uint64_t getChecksumOrigArray(
 
 cpdef uint64_t getChecksumCompArray(
     int dims,
-    zfp.zfp_type ztype,
-    zfp.zfp_mode mode,
+    zfpy.zfp_type ztype,
+    zfpy.zfp_mode mode,
     int compressParamNum
 ):
     validate_num_dimensions(dims)
@@ -259,8 +259,8 @@ cpdef uint64_t getChecksumCompArray(
 
 cpdef uint64_t getChecksumDecompArray(
     int dims,
-    zfp.zfp_type ztype,
-    zfp.zfp_mode mode,
+    zfpy.zfp_type ztype,
+    zfpy.zfp_mode mode,
     int compressParamNum
 ):
     validate_num_dimensions(dims)
@@ -270,30 +270,30 @@ cpdef uint64_t getChecksumDecompArray(
 
     return getChecksumDecompressedArray(dims, ztype, mode, compressParamNum)
 
-cpdef computeParameterValue(zfp.zfp_mode mode, int param):
+cpdef computeParameterValue(zfpy.zfp_mode mode, int param):
     validate_mode(mode)
     validate_compress_param(param)
 
-    if mode == zfp.mode_fixed_accuracy:
+    if mode == zfpy.mode_fixed_accuracy:
         return computeFixedAccuracyParam(param)
-    elif mode == zfp.mode_fixed_precision:
+    elif mode == zfpy.mode_fixed_precision:
         return computeFixedPrecisionParam(param)
-    elif mode == zfp.mode_fixed_rate:
+    elif mode == zfpy.mode_fixed_rate:
         return computeFixedRateParam(param)
 
 cpdef hashStridedArray(
     bytes inarray,
-    zfp.zfp_type ztype,
+    zfpy.zfp_type ztype,
     shape,
     strides,
 ):
     cdef char* array = inarray
-    cdef size_t[4] padded_shape = zfp.gen_padded_int_list(shape)
-    cdef int[4] padded_strides = zfp.gen_padded_int_list(strides)
+    cdef size_t[4] padded_shape = zfpy.gen_padded_int_list(shape)
+    cdef int[4] padded_strides = zfpy.gen_padded_int_list(strides)
 
-    if ztype == zfp.type_int32 or ztype == zfp.type_float:
+    if ztype == zfpy.type_int32 or ztype == zfpy.type_float:
         return hashStridedArray32(<uint32_t*>array, padded_shape, padded_strides)
-    elif ztype == zfp.type_int64 or ztype == zfp.type_double:
+    elif ztype == zfpy.type_int64 or ztype == zfpy.type_double:
         return hashStridedArray64(<uint64_t*>array, padded_shape, padded_strides)
 
 cpdef hashNumpyArray(
@@ -316,10 +316,10 @@ cpdef hashNumpyArray(
         elif dtype == np.int64 or dtype == np.float64:
             return hashArray64(<uint64_t*>nparray.data, size, stride_width)
     elif stride_conf in [REVERSED, PERMUTED]:
-        strides = zfp.gen_padded_int_list(
+        strides = zfpy.gen_padded_int_list(
             [x for x in nparray.strides[:nparray.ndim]]
         )
-        shape = zfp.gen_padded_int_list(
+        shape = zfpy.gen_padded_int_list(
             [x for x in nparray.shape[:nparray.ndim]]
         )
         if dtype == np.int32 or dtype == np.float32:
@@ -342,9 +342,9 @@ cpdef generateStridedRandomNumpyArray(
     cdef int ndim = randomArray.ndim
     shape = [int(x) for x in randomArray.shape[:ndim]]
     dtype = randomArray.dtype
-    cdef zfp.zfp_type ztype = zfp.dtype_to_ztype(dtype)
+    cdef zfpy.zfp_type ztype = zfpy.dtype_to_ztype(dtype)
     cdef int[4] strides = [0, 0, 0, 0]
-    cdef size_t[4] dims = zfp.gen_padded_int_list(shape)
+    cdef size_t[4] dims = zfpy.gen_padded_int_list(shape)
     cdef size_t inputLen = len(randomArray)
     cdef void* output_array_ptr = NULL
     cdef np.ndarray output_array = None
@@ -379,7 +379,7 @@ cpdef generateStridedRandomNumpyArray(
         num_elements = np.prod(shape)
         new_shape = [x for x in dims if x > 0]
         new_shape[-1] *= 2
-        dims = tuple(zfp.gen_padded_int_list(new_shape, pad=0, length=4))
+        dims = tuple(zfpy.gen_padded_int_list(new_shape, pad=0, length=4))
 
         output_array = np.empty(
             new_shape,

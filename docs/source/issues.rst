@@ -44,7 +44,7 @@ images (of the same size) could be represented in C as a 3D array::
   imstack[count][ny][nx]
 
 but since in this case the images are unrelated, no correlation would be
-expected along the third dimension--the underlying dimensionality of the data
+expected along the third dimension---the underlying dimensionality of the data
 is here two.  In this case, the images could be compressed one at a time, or
 they could be compressed together by treating the array dimensions as::
 
@@ -364,8 +364,9 @@ metadata may be embedded in the file.
 
 P13: *Has the appropriate compression mode been set?*
 
-|zfp| provides three different
-:ref:`modes of compression <modes>` that trade storage and accuracy.  In
+|zfp| provides three different lossy
+:ref:`modes of compression <modes>` that trade storage and accuracy,
+plus one :ref:`lossless mode <mode-reversible>`.  In
 fixed-rate mode, the user specifies the exact number of bits (often in
 increments of a fraction of a bit) of compressed storage per value (but see
 FAQ :ref:`#18 <q-rate>` for caveats).  From the user's perspective, this
@@ -394,7 +395,7 @@ returned by |zfp| in its fixed-precision mode may in fact vary.  In practice,
 the precision requested is only an upper bound, though typically at least one
 value within a block has the requested precision.
 
-Finally, |zfp| supports a fixed-accuracy mode, which except in rare
+|zfp| supports a fixed-accuracy mode, which except in rare
 circumstances (see FAQ :ref:`#17 <q-tolerance>`) ensures that the absolute
 error is bounded, i.e., the difference between any decompressed and original
 value is at most the tolerance specified by the user (but usually several
@@ -402,6 +403,12 @@ times smaller).  Whenever possible, we recommend using this compression mode,
 which depending on how easy the data is to compress results in the smallest
 compressed stream that respects the error tolerance.
 
-There is also an expert mode that allows the user to combine the constraints
-of fixed rate, precision, and accuracy.  See the section on
+As of |zfp| |revrelease|, reversible (lossless) compression is available.
+The amount of lossless reduction of floating-point data is usually quite
+limited, however, especially for double-precision data.  Unless a bit-for-bit
+exact reconstruction is needed, we strongly advocate the use of lossy
+compression.
+
+Finally, there is also an expert mode that allows the user to combine the
+constraints of fixed rate, precision, and accuracy.  See the section on
 :ref:`compression modes <modes>` for more details.

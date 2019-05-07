@@ -11,8 +11,18 @@ run_all () {
 mkdir build
 cd build
 
+# technically, flags are passed on to cmake/* and actually set there
 # config without OpenMP, with CFP (and custom namespace), with aligned allocations (compressed arrays)
-run_all " -DBUILD_CFP=ON -DCFP_NAMESPACE=cfp2 -DZFP_WITH_ALIGNED_ALLOC=1 -DBUILD_ZFORP=OFF -DBUILD_OPENMP=OFF -DBUILD_CUDA=OFF"
+BUILD_FLAGS=""
+BUILD_FLAGS="$BUILD_FLAGS -DBUILD_UTILITIES=ON"
+BUILD_FLAGS="$BUILD_FLAGS -DBUILD_EXAMPLES=ON"
+BUILD_FLAGS="$BUILD_FLAGS -DBUILD_CFP=ON"
+BUILD_FLAGS="$BUILD_FLAGS -DCFP_NAMESPACE=cfp2"
+BUILD_FLAGS="$BUILD_FLAGS -DZFP_WITH_ALIGNED_ALLOC=ON"
+BUILD_FLAGS="$BUILD_FLAGS -DBUILD_OPENMP=OFF"
+BUILD_FLAGS="$BUILD_FLAGS -DBUILD_CUDA=OFF"
+
+run_all "$BUILD_FLAGS"
 
 # build empty project requiring OpenMP, in a temp directory that ZFP is oblivious to
 mkdir tmpBuild
@@ -33,7 +43,14 @@ if [ $? -eq 0 ]; then
   rm CMakeCache.txt
 
   # only run tests not run in previous build, due to appveyor time limit (1 hour)
-  run_all " -DBUILD_OPENMP=ON -DOMP_TESTS_ONLY=1"
+  # but continue to build utilities & examples because some support OpenMP
+  BUILD_FLAGS=""
+  BUILD_FLAGS="$BUILD_FLAGS -DBUILD_UTILITIES=ON"
+  BUILD_FLAGS="$BUILD_FLAGS -DBUILD_EXAMPLES=ON"
+  BUILD_FLAGS="$BUILD_FLAGS -DBUILD_OPENMP=ON"
+  BUILD_FLAGS="$BUILD_FLAGS -DOMP_TESTS_ONLY=ON"
+
+  run_all "$BUILD_FLAGS"
 else
   echo "OpenMP not found, build completed."
 fi

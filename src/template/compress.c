@@ -41,7 +41,7 @@ _t2(compress_strided, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
   uint nx = field->nx;
   uint ny = field->ny;
   int sx = field->sx ? field->sx : 1;
-  int sy = field->sy ? field->sy : nx;
+  int sy = field->sy ? field->sy : (int)nx;
   uint x, y;
 
   /* compress array one block of 4x4 values at a time */
@@ -64,8 +64,8 @@ _t2(compress_strided, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
   uint ny = field->ny;
   uint nz = field->nz;
   int sx = field->sx ? field->sx : 1;
-  int sy = field->sy ? field->sy : nx;
-  int sz = field->sz ? field->sz : nx * ny;
+  int sy = field->sy ? field->sy : (int)nx;
+  int sz = field->sz ? field->sz : (int)(nx * ny);
   uint x, y, z;
 
   /* compress array one block of 4x4x4 values at a time */
@@ -90,9 +90,9 @@ _t2(compress_strided, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
   uint nz = field->nz;
   uint nw = field->nw;
   int sx = field->sx ? field->sx : 1;
-  int sy = field->sy ? field->sy : nx;
-  int sz = field->sz ? field->sz : (ptrdiff_t)nx * ny;
-  int sw = field->sw ? field->sw : (ptrdiff_t)nx * ny * nz;
+  int sy = field->sy ? field->sy : (int)nx;
+  int sz = field->sz ? field->sz : (int)(nx * ny);
+  int sw = field->sw ? field->sw : (int)(nx * ny * nz);
   uint x, y, z, w;
 
   /* compress array one block of 4x4x4x4 values at a time */

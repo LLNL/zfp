@@ -13,16 +13,16 @@ program main
   integer error, max_abs_error
 
   ! zfp_field
-  type(zFORp_field_type) :: zfp_field
+  type(zFORp_field) :: field
 
   ! bitstream
   character, dimension(:), allocatable, target :: buffer
   type(c_ptr) :: buffer_c_ptr
-  integer buffer_size_bytes, bitstream_offset_bytes
-  type(zFORp_bitstream_type) :: bitstream, queried_bitstream
+  integer (kind=8) buffer_size_bytes, bitstream_offset_bytes
+  type(zFORp_bitstream) :: bitstream, queried_bitstream
 
   ! zfp_stream
-  type(zFORp_stream_type) :: zfp_stream
+  type(zFORp_stream) :: stream
   real (kind=8) :: desired_rate, rate_result
   integer :: dims, wra
   integer :: zfp_type
@@ -42,7 +42,7 @@ program main
   ! setup zfp_field
   array_c_ptr = c_loc(input_array)
   zfp_type = zFORp_type_int32
-  zfp_field = zFORp_field_2d(array_c_ptr, zfp_type, xLen, yLen)
+  field = zFORp_field_2d(array_c_ptr, zfp_type, xLen, yLen)
 
   ! setup bitstream
   buffer_size_bytes = 256
@@ -51,27 +51,27 @@ program main
   bitstream = zFORp_bitstream_stream_open(buffer_c_ptr, buffer_size_bytes)
 
   ! setup zfp_stream
-  zfp_stream = zFORp_stream_open(bitstream)
+  stream = zFORp_stream_open(bitstream)
 
   desired_rate = 8.0
   dims = 2
   wra = 0
   zfp_type = zFORp_type_float
-  rate_result = zFORp_stream_set_rate(zfp_stream, desired_rate, zfp_type, dims, wra)
+  rate_result = zFORp_stream_set_rate(stream, desired_rate, zfp_type, dims, wra)
 
-  queried_bitstream = zFORp_stream_bit_stream(zfp_stream)
+  queried_bitstream = zFORp_stream_bit_stream(stream)
 
   ! compress
-  bitstream_offset_bytes = zFORp_compress(zfp_stream, zfp_field)
+  bitstream_offset_bytes = zFORp_compress(stream, field)
   write(*, *) "After compression, bitstream offset at "
   write(*, *) bitstream_offset_bytes
 
   ! decompress
-  call zFORp_stream_rewind(zfp_stream)
+  call zFORp_stream_rewind(stream)
   array_c_ptr = c_loc(decompressed_array)
-  call zFORp_field_set_pointer(zfp_field, array_c_ptr)
+  call zFORp_field_set_pointer(field, array_c_ptr)
 
-  bitstream_offset_bytes = zFORp_decompress(zfp_stream, zfp_field)
+  bitstream_offset_bytes = zFORp_decompress(stream, field)
   write(*, *) "After decompression, bitstream offset at "
   write(*, *) bitstream_offset_bytes
 
@@ -93,9 +93,9 @@ program main
   write(*, *) zFORp_meta_null
 
   ! deallocations
-  call zFORp_stream_close(zfp_stream)
+  call zFORp_stream_close(stream)
   call zFORp_bitstream_stream_close(queried_bitstream)
-  call zFORp_field_free(zfp_field)
+  call zFORp_field_free(field)
 
   deallocate(buffer)
   deallocate(input_array)

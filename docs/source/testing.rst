@@ -14,5 +14,5 @@ used, the (de)compression throughput is also measured and reported in number
 of uncompressed bytes per second.
 
 More extensive unit and functional tests are available on the |zfp| GitHub
-`develop <https://github.com/LLNL/zfp/tree/develop>`_ branch in the
+`develop branch <https://github.com/LLNL/zfp/tree/develop>`_ in the
 :file:`tests` directory.
