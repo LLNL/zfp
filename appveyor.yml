@@ -2,73 +2,87 @@ version: 0.5.5-{build}
 
 environment:
   matrix:
-    - COMPILER: mingw
-      GENERATOR: MinGW Makefiles
-      PLATFORM: Win32
-      BUILD_TYPE: Debug
-
-    - COMPILER: mingw
-      GENERATOR: MinGW Makefiles
-      PLATFORM: Win32
-      BUILD_TYPE: Release
-
-    - COMPILER: mingw-w64
-      GENERATOR: MinGW Makefiles
-      PLATFORM: x64
-      BUILD_TYPE: Debug
-
-    - COMPILER: mingw-w64
-      GENERATOR: MinGW Makefiles
-      PLATFORM: x64
-      BUILD_TYPE: Release
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 15 2017 Win64
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PLATFORM: x64
-      BUILD_TYPE: Debug
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 15 2017 Win64
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PLATFORM: x64
-      BUILD_TYPE: Release
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 15 2017
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PLATFORM: Win32
-      BUILD_TYPE: Debug
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 15 2017
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PLATFORM: Win32
-      BUILD_TYPE: Release
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 14 2015 Win64
-      PLATFORM: x64
-      BUILD_TYPE: Debug
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 14 2015 Win64
-      PLATFORM: x64
-      BUILD_TYPE: Release
+#    - COMPILER: mingw
+#      GENERATOR: MinGW Makefiles
+#      PLATFORM: Win32
+#      BUILD_TYPE: Debug
+#
+#    - COMPILER: mingw
+#      GENERATOR: MinGW Makefiles
+#      PLATFORM: Win32
+#      BUILD_TYPE: Release
+#
+#    - COMPILER: mingw-w64
+#      GENERATOR: MinGW Makefiles
+#      PLATFORM: x64
+#      BUILD_TYPE: Debug
+#
+#    - COMPILER: mingw-w64
+#      GENERATOR: MinGW Makefiles
+#      PLATFORM: x64
+#      BUILD_TYPE: Release
+#
+#    - COMPILER: msvc
+#      GENERATOR: Visual Studio 15 2017 Win64
+#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+#      PLATFORM: x64
+#      BUILD_TYPE: Debug
+#
+#    - COMPILER: msvc
+#      GENERATOR: Visual Studio 15 2017 Win64
+#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+#      PLATFORM: x64
+#      BUILD_TYPE: Release
+#
+#    - COMPILER: msvc
+#      GENERATOR: Visual Studio 15 2017
+#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+#      PLATFORM: Win32
+#      BUILD_TYPE: Debug
+#
+#    - COMPILER: msvc
+#      GENERATOR: Visual Studio 15 2017
+#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+#      PLATFORM: Win32
+#      BUILD_TYPE: Release
+#
+#    - COMPILER: msvc
+#      GENERATOR: Visual Studio 14 2015 Win64
+#      PLATFORM: x64
+#      BUILD_TYPE: Debug
+#
+#    - COMPILER: msvc
+#      GENERATOR: Visual Studio 14 2015 Win64
+#      PLATFORM: x64
+#      BUILD_TYPE: Release
+#
+#    - COMPILER: msvc
+#      GENERATOR: Visual Studio 14 2015
+#      PLATFORM: Win32
+#      BUILD_TYPE: Debug
 
     - COMPILER: msvc
       GENERATOR: Visual Studio 14 2015
       PLATFORM: Win32
-      BUILD_TYPE: Debug
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 14 2015
-      PLATFORM: Win32
       BUILD_TYPE: Release
+      PYTHON_DIR: "C:\\Python27"
 
 install:
-  - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
-  - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
+#  - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
+#  - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
+  - "python --version"
+  - "SET PATH=%PYTHON_DIR%;%PYTHON_DIR%\\Scripts;%PATH%"
+  - "pip install virtualenv"
 
 build_script:
-  - sh appveyor.sh
+  - "python --version"
+  - "virtualenv pyVirtualEnv"
+  - "pyVirtualEnv\\Scripts\\activate.bat"
+  - "pip install -r python\\requirements.txt"
+  - "python --version"
+#  - sh appveyor.sh
+  - mkdir build
+  - cd build
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DZFP_WITH_OPENMP=OFF -DBUILD_ZFPY=ON -DPYTHON_LIBRARY="../pyVirtualEnv/Lib" -DPYTHON_INCLUDE_DIR="../pyVirtualEnv/Include" ..
+  - cmake --build . --config "%BUILD_TYPE%"
+  - ctest -V -C "%BUILD_TYPE%" -R test_numpy
