@@ -66,6 +66,7 @@ environment:
       PLATFORM: Win32
       BUILD_TYPE: Release
       PYTHON_DIR: "C:\\Python27"
+      PYTHON_LIB_PATH: "%PYTHON_DIR%\\libs\\python27.lib"
 
 install:
 #  - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
@@ -83,6 +84,6 @@ build_script:
 #  - sh appveyor.sh
   - mkdir build
   - cd build
-  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DZFP_WITH_OPENMP=OFF -DBUILD_ZFPY=ON -DPYTHON_LIBRARY="../pyVirtualEnv/Lib" -DPYTHON_INCLUDE_DIR="../pyVirtualEnv/Include" ..
+  - cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DZFP_WITH_OPENMP=OFF -DBUILD_ZFPY=ON -DPYTHON_LIBRARY="%PYTHON_LIB_PATH%" -DPYTHON_INCLUDE_DIR="../pyVirtualEnv/Include" ..
   - cmake --build . --config "%BUILD_TYPE%"
   - ctest -V -C "%BUILD_TYPE%" -R test_numpy
