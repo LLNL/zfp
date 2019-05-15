@@ -19,7 +19,7 @@ target_link_libraries(zfpy zfp)
 python_extension_module(zfpy)
 
 # Build to the currrent binary dir to avoid conflicts with other libraries named zfp
-set(PYLIB_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib" CACHE PATH "Directory where zfp python library will be built")
+set(PYLIB_BUILD_DIR "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Directory where zfp python library will be built")
 set_target_properties(zfpy PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYLIB_BUILD_DIR})
 # Install to the typical python module directory
 set(python_install_lib_dir "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/")

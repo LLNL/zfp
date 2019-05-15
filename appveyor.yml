@@ -1,6 +1,7 @@
 version: 0.5.5-{build}
 
 environment:
+  # zfpy only build for Release builds (otherwise need debug python libs python27_d.lib)
   matrix:
     - COMPILER: mingw
       GENERATOR: MinGW Makefiles
@@ -33,6 +34,7 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       PLATFORM: x64
       BUILD_TYPE: Release
+      PYTHON_VERSION: 35
 
     - COMPILER: msvc
       GENERATOR: Visual Studio 15 2017
@@ -45,6 +47,7 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       PLATFORM: Win32
       BUILD_TYPE: Release
+      PYTHON_VERSION: 35
 
     - COMPILER: msvc
       GENERATOR: Visual Studio 14 2015 Win64
@@ -55,6 +58,7 @@ environment:
       GENERATOR: Visual Studio 14 2015 Win64
       PLATFORM: x64
       BUILD_TYPE: Release
+      PYTHON_VERSION: 35
 
     - COMPILER: msvc
       GENERATOR: Visual Studio 14 2015
@@ -65,10 +69,31 @@ environment:
       GENERATOR: Visual Studio 14 2015
       PLATFORM: Win32
       BUILD_TYPE: Release
+      PYTHON_VERSION: 27
 
 install:
   - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
   - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
+
+  # set env vars for Python system dir (assumed to always be MSVC)
+  - ps: |
+      if ($env:PYTHON_VERSION) {
+        $env:PYTHON_DIR = "C:\Python$env:PYTHON_VERSION"
+        if ($env:PLATFORM -eq "x64") {
+          $env:PYTHON_DIR = "$env:PYTHON_DIR-x64"
+        }
+
+        $env:PYTHON_LIB_PATH = "$env:PYTHON_DIR\libs\python$env:PYTHON_VERSION.lib"
+      }
+
+  # placing these behind a conditional for some reason prevents CMake from picking up the virtualenv
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" pip install virtualenv
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" set VIRTUALENV_NAME=pyVirtualEnv
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" virtualenv %VIRTUALENV_NAME%
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" "%VIRTUALENV_NAME%\\Scripts\\activate.bat"
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" pip install -r python\requirements.txt
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python --version
 
 build_script:
   - sh appveyor.sh

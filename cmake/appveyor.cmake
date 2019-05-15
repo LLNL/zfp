@@ -11,7 +11,9 @@ set(CTEST_SITE "appveyor")
 set(CTEST_CMAKE_GENERATOR "${GENERATOR}")
 set(CTEST_BUILD_NAME "$ENV{APPVEYOR_REPO_BRANCH}-${job_details}")
 set(cfg_options
+  -DCMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
   -DBUILD_CFP=${BUILD_CFP}
+  -DBUILD_ZFPY=${BUILD_ZFPY}
   -DZFP_WITH_OPENMP=${BUILD_OPENMP}
   -DZFP_WITH_CUDA=${BUILD_CUDA}
   )
@@ -44,6 +46,19 @@ if(BUILD_CFP)
       )
     set(CTEST_SITE "${CTEST_SITE}namespace")
   endif()
+endif()
+
+if(BUILD_ZFPY)
+  set(CTEST_SITE "${CTEST_SITE}_zfpy$ENV{PYTHON_VERSION}")
+
+  # sanitize python include dir path (ex. windows vs linux slashes)
+  set(PYTHON_INCLUDE_DIR "")
+  file(TO_CMAKE_PATH "${CTEST_SOURCE_DIRECTORY}\\$ENV{VIRTUALENV_NAME}\\Include" PYTHON_INCLUDE_DIR)
+
+  list(APPEND cfg_options
+    -DPYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR}
+    -DPYTHON_LIBRARY=$ENV{PYTHON_LIB_PATH}
+    )
 endif()
 
 if(OMP_TESTS_ONLY)
