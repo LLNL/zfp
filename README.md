@@ -46,8 +46,8 @@ compressors, please see the
 [zfp website](https://computation.llnl.gov/projects/floating-point-compression).
 For bug reports, please consult the
 [GitHub issue tracker](https://github.com/LLNL/zfp/issues).
-For questions, comments, and requests, please contact
-[Peter Lindstrom](mailto:pl@llnl.gov).
+For questions, comments, and requests, please send e-mail to
+[zfp@llnl.gov](mailto:zfp@llnl.gov).
 
 
 DOCUMENTATION

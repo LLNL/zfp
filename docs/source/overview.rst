@@ -84,5 +84,5 @@ how to use |zfp|.  The documentation concludes with frequently asked questions
 and troubleshooting, as well as current limitations and future development
 directions.
 
-For questions not answered here, please contact
-`Peter Lindstrom <mailto:pl@llnl.gov>`_.
+For questions not answered here, please
+`e-mail us <mailto:zfp@llnl.gov>`_.

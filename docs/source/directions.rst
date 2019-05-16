@@ -80,5 +80,5 @@ important features, including:
   bindings for C, C++, Fortran, and Python to expose the majority of |zfp|'s
   capabilities through all of these programming languages.
 
-Please contact `Peter Lindstrom <mailto:pl@llnl.gov>`__ with requests for
+Please `contact us <mailto:zfp@llnl.gov>`__ with requests for
 features not listed above.
