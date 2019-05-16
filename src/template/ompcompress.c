@@ -12,6 +12,7 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
   uint threads = thread_count_omp(stream);
   uint blocks = (nx + 3) / 4;
   uint chunks = chunk_count_omp(stream, blocks, threads);
+  int chunk;
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -19,7 +20,6 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
     return;
 
   /* compress chunks of blocks in parallel */
-  int chunk;
   #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
@@ -60,6 +60,7 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
   uint threads = thread_count_omp(stream);
   uint blocks = (nx + 3) / 4;
   uint chunks = chunk_count_omp(stream, blocks, threads);
+  int chunk;
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -67,7 +68,6 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
     return;
 
   /* compress chunks of blocks in parallel */
-  int chunk;
   #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
@@ -112,6 +112,7 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
   uint by = (ny + 3) / 4;
   uint blocks = bx * by;
   uint chunks = chunk_count_omp(stream, blocks, threads);
+  int chunk;
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -119,7 +120,6 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
     return;
 
   /* compress chunks of blocks in parallel */
-  int chunk;
   #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
@@ -170,6 +170,7 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
   uint bz = (nz + 3) / 4;
   uint blocks = bx * by * bz;
   uint chunks = chunk_count_omp(stream, blocks, threads);
+  int chunk;
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -177,7 +178,6 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
     return;
 
   /* compress chunks of blocks in parallel */
-  int chunk;
   #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
@@ -232,6 +232,7 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
   uint bw = (nw + 3) / 4;
   uint blocks = bx * by * bz * bw;
   uint chunks = chunk_count_omp(stream, blocks, threads);
+  int chunk;
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -239,7 +240,6 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
     return;
 
   /* compress chunks of blocks in parallel */
-  int chunk;
   #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */

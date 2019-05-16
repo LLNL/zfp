@@ -36,8 +36,9 @@ _t2(rev_decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock)
     }
     else {
       /* decode common exponent */
+      int emax;
       bits += EBITS;
-      int emax = (int)stream_read_bits(zfp->stream, EBITS) - EBIAS;
+      emax = (int)stream_read_bits(zfp->stream, EBITS) - EBIAS;
       /* decode integer block */
       bits += _t2(rev_decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, iblock);
       /* perform inverse block-floating-point transform */
