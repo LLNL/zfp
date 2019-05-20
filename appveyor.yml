@@ -94,14 +94,14 @@ install:
         }
       }
 
-  - "SET PATH=%PYTHON_DIR%;%PYTHON_DIR%\\Scripts;%PATH%"
-  - "pip install virtualenv"
+  - SET PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
+  - pip install virtualenv
 
 build_script:
-  - "virtualenv pyVirtualEnv"
-  - "pyVirtualEnv\\Scripts\\activate.bat"
-  - "pip install -r python\\requirements.txt"
-  - "python --version"
+  - virtualenv pyVirtualEnv
+  - pyVirtualEnv\Scripts\activate.bat
+  - pip install -r python\requirements.txt
+  - python --version
 #  - sh appveyor.sh
   - mkdir build
   - cd build
