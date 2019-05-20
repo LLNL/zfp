@@ -27,25 +27,27 @@ environment:
 #      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 #      PLATFORM: x64
 #      BUILD_TYPE: Debug
-#
-#    - COMPILER: msvc
-#      GENERATOR: Visual Studio 15 2017 Win64
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-#      PLATFORM: x64
-#      BUILD_TYPE: Release
-#
+
+    - COMPILER: msvc
+      GENERATOR: Visual Studio 15 2017 Win64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      PLATFORM: x64
+      BUILD_TYPE: Release
+      PYTHON_VERSION: 27
+
 #    - COMPILER: msvc
 #      GENERATOR: Visual Studio 15 2017
 #      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 #      PLATFORM: Win32
 #      BUILD_TYPE: Debug
-#
-#    - COMPILER: msvc
-#      GENERATOR: Visual Studio 15 2017
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-#      PLATFORM: Win32
-#      BUILD_TYPE: Release
-#
+
+    - COMPILER: msvc
+      GENERATOR: Visual Studio 15 2017
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      PLATFORM: Win32
+      BUILD_TYPE: Release
+      PYTHON_VERSION: 35
+
 #    - COMPILER: msvc
 #      GENERATOR: Visual Studio 14 2015 Win64
 #      PLATFORM: x64
@@ -81,12 +83,10 @@ install:
 
         $env:PYTHON_LIB_PATH = "$env:PYTHON_DIR\libs\python$env:PYTHON_VERSION.lib"
       }
-  - "python --version"
   - "SET PATH=%PYTHON_DIR%;%PYTHON_DIR%\\Scripts;%PATH%"
   - "pip install virtualenv"
 
 build_script:
-  - "python --version"
   - "virtualenv pyVirtualEnv"
   - "pyVirtualEnv\\Scripts\\activate.bat"
   - "pip install -r python\\requirements.txt"
