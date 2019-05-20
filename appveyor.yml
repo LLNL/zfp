@@ -84,8 +84,17 @@ install:
           $env:PYTHON_DIR = "$env:PYTHON_DIR-x64"
         }
 
-        $env:PYTHON_LIB_PATH = "$env:PYTHON_DIR\libs\python$env:PYTHON_VERSION.lib"
+        $env:PYTHON_LIB_PATH = "$env:PYTHON_DIR\libs"
+        if ($env:COMPILER -eq "msvc") {
+          $env:PYTHON_LIB_PATH = "$env:PYTHON_LIB_PATH\python$env:PYTHON_VERSION.lib"
+        } else {
+          # mingw
+          $env:PYTHON_LIB_PATH = "$env:PYTHON_LIB_PATH\libpython$env:PYTHON_VERSION.a"
+        }
       }
+
+  - sh findPython.sh
+
   - "SET PATH=%PYTHON_DIR%;%PYTHON_DIR%\\Scripts;%PATH%"
   - "pip install virtualenv"
 
