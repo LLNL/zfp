@@ -73,8 +73,8 @@ environment:
       PYTHON_VERSION: 27
 
 install:
-  - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
-  - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
+  - if "%COMPILER%"=="mingw" set PATH=C:\msys64\mingw32\bin;%PATH%
+  - if "%COMPILER%"=="mingw-w64" set PATH=C:\msys64\mingw64\bin;%PATH%
 
   # set env vars for Python system dir
   - ps: |
