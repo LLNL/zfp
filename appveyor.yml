@@ -55,8 +55,7 @@ environment:
       GENERATOR: Visual Studio 14 2015 Win64
       PLATFORM: x64
       BUILD_TYPE: Release
-      PYTHON_DIR: "C:\\Python35-x64"
-      PYTHON_LIB_PATH: "%PYTHON_DIR%\\libs\\python35.lib"
+      PYTHON_VERSION: 35
 
 #    - COMPILER: msvc
 #      GENERATOR: Visual Studio 14 2015
@@ -67,12 +66,21 @@ environment:
       GENERATOR: Visual Studio 14 2015
       PLATFORM: Win32
       BUILD_TYPE: Release
-      PYTHON_DIR: "C:\\Python27"
-      PYTHON_LIB_PATH: "%PYTHON_DIR%\\libs\\python27.lib"
+      PYTHON_VERSION: 27
 
 install:
 #  - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
 #  - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
+  - ps: |
+      # set env vars for Python system dir
+      if ($env:PYTHON_VERSION) {
+        $env:PYTHON_DIR = "C:\Python$env:PYTHON_VERSION"
+        if ($env:PLATFORM -eq "x64") {
+          $env:PYTHON_DIR = "$env:PYTHON_DIR-x64"
+        }
+
+        $env:PYTHON_LIB_PATH = "$env:PYTHON_DIR\libs\python$env:PYTHON_VERSION.lib"
+      }
   - "python --version"
   - "SET PATH=%PYTHON_DIR%;%PYTHON_DIR%\\Scripts;%PATH%"
   - "pip install virtualenv"
