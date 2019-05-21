@@ -29,6 +29,17 @@ BUILD_FLAGS=""
 
 # zfpy only built for Release builds
 if [ $BUILD_TYPE == "Release" ]; then
+  # fetch python version X.Y (single digits only)
+  ACTIVE_PY_VERSION=$(python -c 'import platform; print(platform.python_version())' | cut -c1-3)
+  # $PYTHON_VERSION comes from appveyor.yml and has form XY (no dot separating major and minor versions)
+  ACTIVE_PY_VERSION=${ACTIVE_PY_VERSION:0:1}${ACTIVE_PY_VERSION:2:1}
+
+  # verify python version specified in appveyor.yml matches active version
+  if [ $ACTIVE_PY_VERSION != $PYTHON_VERSION ]; then
+    exit 1
+  fi
+
+  # add build flags for zfpy
   BUILD_FLAGS="$BUILD_FLAGS -DBUILD_ZFPY=ON -DPYTHON_LIBRARY=\"$PYTHON_LIB_PATH\" -DPYTHON_INCLUDE_DIR=\"../$VIRTUALENV_NAME/Include\""
 
   # cython bug on mingw-w64
