@@ -53,7 +53,6 @@ if(BUILD_ZFPY)
   # sanitize python include dir path (ex. windows vs linux slashes)
   set(PYTHON_INCLUDE_DIR "")
   file(TO_CMAKE_PATH "${CTEST_SOURCE_DIRECTORY}\\$ENV{VIRTUALENV_NAME}\\Include" PYTHON_INCLUDE_DIR)
-  message(STATUS "!@#!@#!@ ${PYTHON_INCLUDE_DIR}")
 
   list(APPEND cfg_options
     -DPYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR}
@@ -84,12 +83,7 @@ if(BUILD_OPENMP)
   # only run tests not run in previous build, due to appveyor time limit (1 hour)
   ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv INCLUDE ".*Omp.*")
 else()
-  # temporarily only run python test
-  if(BUILD_ZFPY)
-    ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv INCLUDE "test_numpy")
-  else()
-    ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv INCLUDE ".*Omp.*")
-  endif()
+  ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv)
 endif()
 ctest_submit(PARTS Test)
 

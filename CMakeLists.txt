@@ -303,8 +303,3 @@ if(BUILD_CFP)
   install(EXPORT cfp-targets NAMESPACE zfp::
     DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 endif()
-
-message(STATUS "!@#!@#!@#!@#")
-message(STATUS "virtualenv_name = $ENV{VIRTUALENV_NAME}")
-message(STATUS "compiler = $ENV{COMPILER}")
-message(STATUS "build_zfpy = $ENV{BUILD_ZFPY}")
