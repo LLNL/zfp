@@ -94,12 +94,15 @@ install:
         }
       }
 
-  - if "%BUILD_TYPE%" == "Release" set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
-  - if "%BUILD_TYPE%" == "Release" pip install virtualenv
-  - if "%BUILD_TYPE%" == "Release" virtualenv pyVirtualEnv
-  - if "%BUILD_TYPE%" == "Release" pyVirtualEnv\Scripts\activate.bat
-  - if "%BUILD_TYPE%" == "Release" pip install -r python\requirements.txt
-  - if "%BUILD_TYPE%" == "Release" python --version
+  # placing these behind a conditional for some reason prevents CMake from picking up the virtualEnv
+  - set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
+  - pip install virtualenv
+
+  - set VIRTUALENV_NAME=pyVirtualEnv
+  - virtualenv %VIRTUALENV_NAME%
+  - %VIRTUALENV_NAME%\Scripts\activate.bat
+  - pip install -r python\requirements.txt
+  - python --version
 
 build_script:
 #  - sh appveyor.sh
