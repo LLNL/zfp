@@ -49,15 +49,21 @@ endif()
 
 if(BUILD_ZFPY)
   set(CTEST_SITE "${CTEST_SITE}_zfpy${PYTHON_VERSION}")
+
+  # sanitize python include dir path (ex. windows vs linux slashes)
+  set(PYTHON_INCLUDE_DIR "")
+  file(TO_CMAKE_PATH "${CTEST_SOURCE_DIRECTORY}\\$ENV{VIRTUALENV_NAME}\\Include" PYTHON_INCLUDE_DIR)
+  message(STATUS "!@#!@#!@ ${PYTHON_INCLUDE_DIR}")
+
   list(APPEND cfg_options
-    -DPYTHON_INCLUDE_DIR="${CTEST_SOURCE_DIRECTORY}\$ENV{VIRTUALENV_NAME}\Include"
+    -DPYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR}
     -DPYTHON_LIBRARY=$ENV{PYTHON_LIB_PATH}
     )
 
   # cython bug on mingw-w64
   if($ENV{COMPILER} STREQUAL "mingw-w64")
     list(APPEND cfg_options
-      -DCMAKE_C_FLAGS="-DMS_WIN64"
+      -DCMAKE_C_FLAGS=-DMS_WIN64
       )
   endif()
 endif()
@@ -79,7 +85,11 @@ if(BUILD_OPENMP)
   ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv INCLUDE ".*Omp.*")
 else()
   # temporarily only run python test
-  ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv INCLUDE "*numpy*")
+  if(BUILD_ZFPY)
+    ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv INCLUDE "test_numpy")
+  else()
+    ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv INCLUDE ".*Omp.*")
+  endif()
 endif()
 ctest_submit(PARTS Test)
 
