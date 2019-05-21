@@ -19,11 +19,11 @@ environment:
 #      PLATFORM: x64
 #      BUILD_TYPE: Debug
 #
-#    - COMPILER: mingw-w64
-#      GENERATOR: MinGW Makefiles
-#      PLATFORM: x64
-#      BUILD_TYPE: Release
-#      PYTHON_VERSION: 35
+    - COMPILER: mingw-w64
+      GENERATOR: MinGW Makefiles
+      PLATFORM: x64
+      BUILD_TYPE: Release
+      PYTHON_VERSION: 35
 #
 #    - COMPILER: msvc
 #      GENERATOR: Visual Studio 15 2017 Win64

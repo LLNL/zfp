@@ -20,11 +20,13 @@ target_link_libraries(test_utils zfp genSmoothRandNumsLib stridedOperationsLib z
 python_extension_module(test_utils)
 set_target_properties(test_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYLIB_BUILD_DIR})
 
+message(STATUS "!@#!@#!@# CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
+message(STATUS "!@#!@#!@# BUILD_TYPE is ${BUILD_TYPE}")
+message(STATUS "!@#!@#!@# CMAKE_CFG_INTDIR is ${CMAKE_CFG_INTDIR}")
+
 set(TEST_PYTHON_PATH "${PYLIB_BUILD_DIR}")
 if(MSVC)
   set(TEST_PYTHON_PATH "${TEST_PYTHON_PATH}/${CMAKE_BUILD_TYPE}")
-  message(STATUS "!@#!@#!@# CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
-  message(STATUS "!@#!@#!@# BUILD_TYPE is ${BUILD_TYPE}")
 endif()
 
 if(DEFINED ENV{PYTHONPATH})
