@@ -11,6 +11,13 @@ run_all () {
 mkdir build
 cd build
 
+# zfpy only built for Release builds
+if [ $BUILD_TYPE == "Release" ]; then
+  BUILD_ZFPY="ON"
+else
+  BUILD_ZFPY="OFF"
+fi
+
 # technically, flags are passed on to cmake/* and actually set there
 # config without OpenMP, with CFP (and custom namespace), with aligned allocations (compressed arrays)
 BUILD_FLAGS=""
@@ -18,6 +25,7 @@ BUILD_FLAGS="$BUILD_FLAGS -DBUILD_UTILITIES=ON"
 BUILD_FLAGS="$BUILD_FLAGS -DBUILD_EXAMPLES=ON"
 BUILD_FLAGS="$BUILD_FLAGS -DBUILD_CFP=ON"
 BUILD_FLAGS="$BUILD_FLAGS -DCFP_NAMESPACE=cfp2"
+BUILD_FLAGS="$BUILD_FLAGS -DBUILD_ZFPY=$BUILD_ZFPY"
 BUILD_FLAGS="$BUILD_FLAGS -DZFP_WITH_ALIGNED_ALLOC=ON"
 BUILD_FLAGS="$BUILD_FLAGS -DBUILD_OPENMP=OFF"
 BUILD_FLAGS="$BUILD_FLAGS -DBUILD_CUDA=OFF"

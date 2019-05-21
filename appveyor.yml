@@ -100,19 +100,9 @@ install:
 
   - set VIRTUALENV_NAME=pyVirtualEnv
   - virtualenv %VIRTUALENV_NAME%
-  - %VIRTUALENV_NAME%\Scripts\activate.bat
+  - "%VIRTUALENV_NAME%\\Scripts\\activate.bat"
   - pip install -r python\requirements.txt
   - python --version
 
 build_script:
-#  - sh appveyor.sh
-  - mkdir build
-  - cd build
-
-  - if "%COMPILER%" == "msvc" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DZFP_WITH_OPENMP=OFF -DBUILD_ZFPY=ON -DPYTHON_LIBRARY="%PYTHON_LIB_PATH%" -DPYTHON_INCLUDE_DIR="../%VIRTUALENV_NAME/Include" ..
-  - if "%COMPILER%" == "mingw" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_OPENMP=OFF -DBUILD_ZFPY=ON -DPYTHON_LIBRARY="%PYTHON_LIB_PATH%" -DPYTHON_INCLUDE_DIR="../%VIRTUALENV_NAME%/Include" ..
-  # pass MS_WIN64 for cython bug on mingw-w64
-  - if "%COMPILER%" == "mingw-w64" cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE="%BUILD_TYPE%" -DCMAKE_SH=CMAKE_SH-NOTFOUND -DZFP_WITH_OPENMP=OFF -DBUILD_ZFPY=ON -DPYTHON_LIBRARY="%PYTHON_LIB_PATH%" -DPYTHON_INCLUDE_DIR="../%VIRTUALENV_NAME%/Include" -DCMAKE_C_FLAGS="-DMS_WIN64" ..
-
-  - cmake --build . --config "%BUILD_TYPE%"
-  - ctest -V -C "%BUILD_TYPE%" -R test_numpy
+  - sh appveyor.sh

@@ -12,6 +12,7 @@ set(CTEST_CMAKE_GENERATOR "${GENERATOR}")
 set(CTEST_BUILD_NAME "$ENV{APPVEYOR_REPO_BRANCH}-${job_details}")
 set(cfg_options
   -DBUILD_CFP=${BUILD_CFP}
+  -DBUILD_ZFPY=${BUILD_ZFPY}
   -DZFP_WITH_OPENMP=${BUILD_OPENMP}
   -DZFP_WITH_CUDA=${BUILD_CUDA}
   )
@@ -46,6 +47,21 @@ if(BUILD_CFP)
   endif()
 endif()
 
+if(BUILD_ZFPY)
+  set(CTEST_SITE "${CTEST_SITE}_zfpy${PYTHON_VERSION}")
+  list(APPEND cfg_options
+    -DPYTHON_INCLUDE_DIR="${CTEST_SOURCE_DIRECTORY}/$ENV{VIRTUALENV_NAME}/Include"
+    -DPYTHON_LIBRARY=$ENV{PYTHON_LIB_PATH}
+    )
+
+  # cython bug on mingw-w64
+  if($ENV{COMPILER} STREQUAL "mingw-w64")
+    list(APPEND cfg_options
+      -DCMAKE_C_FLAGS="-DMS_WIN64"
+      )
+  endif()
+endif()
+
 if(OMP_TESTS_ONLY)
   list(APPEND cfg_options
     -DZFP_OMP_TESTS_ONLY=1
@@ -62,7 +78,8 @@ if(BUILD_OPENMP)
   # only run tests not run in previous build, due to appveyor time limit (1 hour)
   ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv INCLUDE ".*Omp.*")
 else()
-  ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv)
+  # temporarily only run python test
+  ctest_test(PARALLEL_LEVEL 6 RETURN_VALUE rv INCLUDE "*numpy*")
 endif()
 ctest_submit(PARTS Test)
 
