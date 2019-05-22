@@ -21,8 +21,9 @@ python_extension_module(test_utils)
 set_target_properties(test_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYLIB_BUILD_DIR})
 
 message(STATUS "!@#!@#!@# CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
-message(STATUS "!@#!@#!@# BUILD_TYPE is ${BUILD_TYPE}")
+message(STATUS "!@#!@#!@# env var BUILD_TYPE is $ENV{BUILD_TYPE}")
 message(STATUS "!@#!@#!@# CMAKE_CFG_INTDIR is ${CMAKE_CFG_INTDIR}")
+message(STATUS "!@#!@#!@# CMAKE_RUNTIME_OUTPUT_DIRECTORY is ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
 set(TEST_PYTHON_PATH "${PYLIB_BUILD_DIR}")
 if(MSVC)
