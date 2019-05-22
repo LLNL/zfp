@@ -3,33 +3,33 @@ version: 0.5.5-{build}
 environment:
   # zfpy only build for Release builds (otherwise need debug python libs python27_d.lib)
   matrix:
-#    - COMPILER: mingw
-#      GENERATOR: MinGW Makefiles
-#      PLATFORM: Win32
-#      BUILD_TYPE: Debug
-#
-#    - COMPILER: mingw
-#      GENERATOR: MinGW Makefiles
-#      PLATFORM: Win32
-#      BUILD_TYPE: Release
-#      PYTHON_VERSION: 27
-#
-#    - COMPILER: mingw-w64
-#      GENERATOR: MinGW Makefiles
-#      PLATFORM: x64
-#      BUILD_TYPE: Debug
-#
+    - COMPILER: mingw
+      GENERATOR: MinGW Makefiles
+      PLATFORM: Win32
+      BUILD_TYPE: Debug
+
+    - COMPILER: mingw
+      GENERATOR: MinGW Makefiles
+      PLATFORM: Win32
+      BUILD_TYPE: Release
+      PYTHON_VERSION: 27
+
+    - COMPILER: mingw-w64
+      GENERATOR: MinGW Makefiles
+      PLATFORM: x64
+      BUILD_TYPE: Debug
+
     - COMPILER: mingw-w64
       GENERATOR: MinGW Makefiles
       PLATFORM: x64
       BUILD_TYPE: Release
       PYTHON_VERSION: 35
-#
-#    - COMPILER: msvc
-#      GENERATOR: Visual Studio 15 2017 Win64
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-#      PLATFORM: x64
-#      BUILD_TYPE: Debug
+
+    - COMPILER: msvc
+      GENERATOR: Visual Studio 15 2017 Win64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      PLATFORM: x64
+      BUILD_TYPE: Debug
 
     - COMPILER: msvc
       GENERATOR: Visual Studio 15 2017 Win64

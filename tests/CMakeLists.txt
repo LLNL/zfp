@@ -36,12 +36,12 @@
 #
 #add_dependencies(cmocka cmocka_cloned)
 #include_directories(${source_dir}/include)
-#
+
 # include home dir so #include statements are clear in test files
 include_directories(${ZFP_SOURCE_DIR} ${ZFP_SOURCE_DIR}/include)
 # access to constants/ and utils/
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-#
+
 ## suppress warnings for all targets
 #if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 #  add_compile_options(-Wno-unused-function)
@@ -50,8 +50,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 #if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 #  add_compile_options(-Wno-gnu-zero-variadic-macro-arguments)
 #endif()
-#
-#
+
+
 add_subdirectory(utils)
 #add_subdirectory(src)
 #
@@ -105,30 +105,30 @@ add_subdirectory(utils)
 #
 #  add_subdirectory(array)
 #endif()
-#
-#
-#add_executable(testzfp testzfp.cpp)
-#target_link_libraries(testzfp zfp)
-#target_compile_definitions(testzfp PRIVATE ${zfp_compressed_array_defs})
-#
-#option(ZFP_BUILD_TESTING_SMALL "Enable small-sized array testing" ON)
-#if(ZFP_BUILD_TESTING_SMALL)
-#  foreach(D IN ITEMS 1 2 3 4)
-#    foreach(P IN ITEMS 32 64)
-#      add_test(NAME small-arrays-${D}d-fp${P} COMMAND testzfp small ${D}d fp${P})
-#    endforeach()
-#  endforeach()
-#endif()
-#
-#option(ZFP_BUILD_TESTING_LARGE "Enable large-sized array testing" OFF)
-#if(ZFP_BUILD_TESTING_LARGE)
-#  foreach(D IN ITEMS 1 2 3 4)
-#    foreach(P IN ITEMS 32 64)
-#      add_test(NAME large-arrays-${D}d-fp${P} COMMAND testzfp large ${D}d fp${P})
-#    endforeach()
-#  endforeach()
-#endif()
-#
+
+
+add_executable(testzfp testzfp.cpp)
+target_link_libraries(testzfp zfp)
+target_compile_definitions(testzfp PRIVATE ${zfp_compressed_array_defs})
+
+option(ZFP_BUILD_TESTING_SMALL "Enable small-sized array testing" ON)
+if(ZFP_BUILD_TESTING_SMALL)
+  foreach(D IN ITEMS 1 2 3 4)
+    foreach(P IN ITEMS 32 64)
+      add_test(NAME small-arrays-${D}d-fp${P} COMMAND testzfp small ${D}d fp${P})
+    endforeach()
+  endforeach()
+endif()
+
+option(ZFP_BUILD_TESTING_LARGE "Enable large-sized array testing" OFF)
+if(ZFP_BUILD_TESTING_LARGE)
+  foreach(D IN ITEMS 1 2 3 4)
+    foreach(P IN ITEMS 32 64)
+      add_test(NAME large-arrays-${D}d-fp${P} COMMAND testzfp large ${D}d fp${P})
+    endforeach()
+  endforeach()
+endif()
+
 if(BUILD_ZFPY)
   add_subdirectory(python)
 endif()
