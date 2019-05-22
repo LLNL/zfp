@@ -20,11 +20,6 @@ target_link_libraries(test_utils zfp genSmoothRandNumsLib stridedOperationsLib z
 python_extension_module(test_utils)
 set_target_properties(test_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYLIB_BUILD_DIR})
 
-message(STATUS "!@#!@#!@# CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
-message(STATUS "!@#!@#!@# env var BUILD_TYPE is $ENV{BUILD_TYPE}")
-message(STATUS "!@#!@#!@# CMAKE_CFG_INTDIR is ${CMAKE_CFG_INTDIR}")
-message(STATUS "!@#!@#!@# CMAKE_RUNTIME_OUTPUT_DIRECTORY is ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-
 set(TEST_PYTHON_PATH "${PYLIB_BUILD_DIR}")
 if(MSVC)
   set(TEST_PYTHON_PATH "${TEST_PYTHON_PATH}/${CMAKE_BUILD_TYPE}")
@@ -33,7 +28,6 @@ endif()
 if(DEFINED ENV{PYTHONPATH})
   set(TEST_PYTHON_PATH "${TEST_PYTHON_PATH}:$ENV{PYTHONPATH}")
 endif()
-message(STATUS "!@#!@# ${TEST_PYTHON_PATH}")
 
 add_test(NAME test_numpy
   COMMAND ${PYTHON_EXECUTABLE} test_numpy.py
