@@ -4,6 +4,7 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
@@ -75,6 +76,12 @@ populateInitialArraySpecial(Scalar** dataArrPtr, int index)
           break;
         case zfp_type_double:
           memcpy((*dataArrPtr) + i, &special_double_values[index], sizeof(Scalar));
+
+          if (index == 2 || index == 3) {
+            printf("!@#!@#!@# %llx\n", special_double_values[index]);
+            printf("!@#!@#!@# %lf\n", special_double_values[index]);
+          }
+
           break;
       }
     }

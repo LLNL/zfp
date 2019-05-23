@@ -13,7 +13,7 @@ run_all () {
   eval "${run_all_cmd}$FLAGS"
 
   cmake --build . --config $BUILD_TYPE
-  ctest -V -C $BUILD_TYPE
+  ctest -V -C $BUILD_TYPE -R "testZfpEncode*"
 }
 
 # create build dir for out-of-source build
