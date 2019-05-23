@@ -67,8 +67,8 @@ environment:
       BUILD_TYPE: Release
 
 install:
-  - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
-  - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
+  - if "%COMPILER%"=="mingw" set PATH=C:\msys64\mingw32\bin;%PATH%
+  - if "%COMPILER%"=="mingw-w64" set PATH=C:\msys64\mingw64\bin;%PATH%
 
 build_script:
   - sh appveyor.sh
