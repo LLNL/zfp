@@ -2,15 +2,15 @@ version: 0.5.5-{build}
 
 environment:
   matrix:
-    - COMPILER: mingw
-      GENERATOR: MinGW Makefiles
-      PLATFORM: Win32
-      BUILD_TYPE: Debug
-
-    - COMPILER: mingw
-      GENERATOR: MinGW Makefiles
-      PLATFORM: Win32
-      BUILD_TYPE: Release
+#    - COMPILER: mingw
+#      GENERATOR: MinGW Makefiles
+#      PLATFORM: Win32
+#      BUILD_TYPE: Debug
+#
+#    - COMPILER: mingw
+#      GENERATOR: MinGW Makefiles
+#      PLATFORM: Win32
+#      BUILD_TYPE: Release
 
     - COMPILER: mingw-w64
       GENERATOR: MinGW Makefiles
@@ -69,6 +69,10 @@ environment:
 install:
   - if "%COMPILER%"=="mingw" set PATH=C:\msys64\mingw32\bin;%PATH%
   - if "%COMPILER%"=="mingw-w64" set PATH=C:\msys64\mingw64\bin;%PATH%
+
+  - if "%COMPILER%"=="mingw-w64" mingw-get update
+  - if "%COMPILER%"=="mingw-w64" mingw-get upgrade mingw32-libstdc++
+
 
 build_script:
   - sh appveyor.sh
