@@ -1,3 +1,7 @@
+branches:
+  except:
+    - misc/add-zfpy-appveyor
+
 language:
   - generic
 
