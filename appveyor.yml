@@ -7,13 +7,13 @@ environment:
 #      GENERATOR: MinGW Makefiles
 #      PLATFORM: Win32
 #      BUILD_TYPE: Debug
-
-    - COMPILER: mingw
-      GENERATOR: MinGW Makefiles
-      PLATFORM: Win32
-      BUILD_TYPE: Release
-      PYTHON_VERSION: 27
-
+#
+#    - COMPILER: mingw
+#      GENERATOR: MinGW Makefiles
+#      PLATFORM: Win32
+#      BUILD_TYPE: Release
+#      PYTHON_VERSION: 27
+#
 #    - COMPILER: mingw-w64
 #      GENERATOR: MinGW Makefiles
 #      PLATFORM: x64
@@ -75,7 +75,8 @@ environment:
 
 install:
   - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
-  - if "%COMPILER%"=="mingw-w64" set PATH=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%
+  - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
+#  - if "%COMPILER%"=="mingw-w64" set PATH=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%
 
   # set env vars for Python system dir
   - ps: |
