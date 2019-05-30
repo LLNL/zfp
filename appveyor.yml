@@ -75,8 +75,7 @@ environment:
 
 install:
   - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
-  - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
-#  - if "%COMPILER%"=="mingw-w64" set PATH=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%
+  - if "%COMPILER%"=="mingw-w64" set PATH=C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin;%PATH%
 
   # set env vars for Python system dir
   - ps: |
