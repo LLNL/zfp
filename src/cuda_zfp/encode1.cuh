@@ -17,8 +17,8 @@ __device__ __host__ inline
 void gather_partial1(Scalar* q, const Scalar* p, int nx, int sx)
 {
   uint x;
-  for (x = 0; x < nx; x++, p += sx)
-    q[x] = *p;
+  for (x = 0; x < 4; x++, p += sx)
+    if (x < nx) q[x] = *p;
   pad_block(q, nx, 1);
 }
 
