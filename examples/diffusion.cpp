@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 #include "zfparray2.h"
+#include "ieeecodec.h"
 #include "array2d.h"
 
 #ifdef _OPENMP
@@ -89,6 +90,15 @@ time_step_parallel(zfp::array2d& u, const Constants& c)
   unused_(u);
   unused_(c);
 #endif
+}
+
+// dummy template instantiation; never executed
+template <>
+inline void
+time_step_parallel(zfp::array2< double, zfp::ieee_codec<double, float> >& u, const Constants& c)
+{
+  unused_(u);
+  unused_(c);
 }
 
 // dummy template instantiation; never executed
@@ -220,6 +230,7 @@ int main(int argc, char* argv[])
   double rate = 64;
   bool iterator = false;
   bool compression = false;
+  bool cached = false;
   bool parallel = false;
   int cache = 0;
 
@@ -244,10 +255,12 @@ int main(int argc, char* argv[])
       if (++i == argc || sscanf(argv[i], "%lf", &rate) != 1)
         return usage();
       compression = true;
+      cached = true;
     }
     else if (std::string(argv[i]) == "-c") {
       if (++i == argc || sscanf(argv[i], "%i", &cache) != 1)
         return usage();
+      cached = true;
     }
     else
       return usage();
@@ -273,8 +286,16 @@ int main(int argc, char* argv[])
     sum = total(u);
     err = error(u, c, t);
   }
+  else if (cached) {
+    // solve problem using single-precision cached arrays
+    rate = 32;
+    zfp::array2< double, zfp::ieee_codec<double, float> > u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
+    double t = solve(u, c, iterator, parallel);
+    sum = total(u);
+    err = error(u, c, t);
+  }
   else {
-    // solve problem using uncompressed arrays
+    // solve problem using uncompressed double-precision arrays
     raw::array2d u(nx, ny);
     double t = solve(u, c, iterator, parallel);
     sum = total(u);
