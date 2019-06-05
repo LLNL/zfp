@@ -113,6 +113,10 @@ option(ZFP_WITH_CUDA "Enable CUDA parallel compression" OFF)
 option(ZFP_WITH_BIT_STREAM_STRIDED
   "Enable strided access for progressive zfp streams" OFF)
 
+option(ZFP_WITH_UNBIASED_ERROR "Enforce unbiased error distribution" OFF)
+
+option(ZFP_WITH_TIGHT_ERROR "Reduce slack in absolute errors" OFF)
+
 option(ZFP_WITH_ALIGNED_ALLOC "Enable aligned memory allocation" OFF)
 
 option(ZFP_WITH_CACHE_TWOWAY "Use two-way skew-associative cache" OFF)
@@ -173,6 +177,14 @@ endif()
 
 if(ZFP_WITH_BIT_STREAM_STRIDED)
   list(APPEND zfp_public_defs BIT_STREAM_STRIDED)
+endif()
+
+if(ZFP_WITH_UNBIASED_ERROR)
+  list(APPEND zfp_private_defs ZFP_WITH_UNBIASED_ERROR)
+endif()
+
+if(ZFP_WITH_TIGHT_ERROR)
+  list(APPEND zfp_private_defs ZFP_WITH_TIGHT_ERROR)
 endif()
 
 if(ZFP_WITH_ALIGNED_ALLOC)

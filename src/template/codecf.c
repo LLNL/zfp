@@ -5,7 +5,11 @@
 static uint
 precision(int maxexp, uint maxprec, int minexp, int dims)
 {
-  return MIN(maxprec, (uint)MAX(0, maxexp - minexp + 2 * (dims + 1)));
+#if defined(ZFP_WITH_UNBIASED_ERROR) && defined(ZFP_WITH_TIGHT_ERROR)
+  return MIN(maxprec, (uint)MAX(0, maxexp - minexp + 2 * dims + 1));
+#else
+  return MIN(maxprec, (uint)MAX(0, maxexp - minexp + 2 * dims + 2));
+#endif
 }
 
 /* map integer x relative to exponent e to floating-point number */

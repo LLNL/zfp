@@ -53,6 +53,10 @@ OMPFLAGS = -fopenmp
 # count cache misses
 # DEFS += -DZFP_WITH_CACHE_PROFILE
 
+# reduce bias and slack in errors
+# DEFS += -DZFP_WITH_UNBIASED_ERROR
+# DEFS += -DZFP_WITH_TIGHT_ERROR
+
 # build targets ---------------------------------------------------------------
 
 # default targets

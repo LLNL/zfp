@@ -66,19 +66,31 @@ _t1(decode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, 
     data[i] = 0;
 
   /* decode one bit plane at a time from MSB to LSB */
-  for (k = intprec, n = 0; bits && k-- > kmin;) {
+  for (k = intprec, m = n = 0; bits && (m = 0, k-- > kmin);) {
     /* decode first n bits of bit plane #k */
     m = MIN(n, bits);
     bits -= m;
     x = stream_read_bits(&s, m);
     /* unary run-length decode remainder of bit plane */
-    for (; n < size && bits && (bits--, stream_read_bit(&s)); x += (uint64)1 << n++)
+    for (; n < size && bits && (bits--, stream_read_bit(&s) || (m = size, 0)); x += (uint64)1 << n++, m = n)
       for (; n < size - 1 && bits && (bits--, !stream_read_bit(&s)); n++)
         ;
     /* deposit bit plane from x */
     for (i = 0; x; i++, x >>= 1)
       data[i] += (UInt)(x & 1u) << k;
   }
+
+#ifdef ZFP_WITH_UNBIASED_ERROR
+  /* add offset to properly round truncated coefficients and center errors */
+  if (k + 1 > 2) {
+    /* the first m coefficients have k LSBs truncated */
+    for (i = 0; i < m; i++)
+      data[i] += (NBMASK >> 2) >> (intprec - k);
+    /* the remaining coefficients have k + 1 LSBs truncated */
+    for (k++; i < size; i++)
+      data[i] += (NBMASK >> 2) >> (intprec - k);
+  }
+#endif
 
   *stream = s;
   return maxbits - bits;
@@ -100,7 +112,7 @@ _t1(decode_many_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxp
     data[i] = 0;
 
   /* decode one bit plane at a time from MSB to LSB */
-  for (k = intprec, n = 0; bits && k-- > kmin;) {
+  for (k = intprec, m = n = 0; bits && (m = 0, k-- > kmin);) {
     /* decode first n bits of bit plane #k */
     m = MIN(n, bits);
     bits -= m;
@@ -108,10 +120,22 @@ _t1(decode_many_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxp
       if (stream_read_bit(&s))
         data[i] += (UInt)1 << k;
     /* unary run-length decode remainder of bit plane */
-    for (; n < size && bits && (--bits, stream_read_bit(&s)); data[n] += (UInt)1 << k, n++)
+    for (; n < size && bits && (--bits, stream_read_bit(&s) || (m = size, 0)); data[n] += (UInt)1 << k, n++, m = n)
       for (; n < size - 1 && bits && (--bits, !stream_read_bit(&s)); n++)
         ;
   }
+
+#ifdef ZFP_WITH_UNBIASED_ERROR
+  /* add offset to properly round truncated coefficients and center errors */
+  if (k + 1 > 2) {
+    /* the first m coefficients have k LSBs truncated */
+    for (i = 0; i < m; i++)
+      data[i] += (NBMASK >> 2) >> (intprec - k);
+    /* the remaining coefficients have k + 1 LSBs truncated */
+    for (k++; i < size; i++)
+      data[i] += (NBMASK >> 2) >> (intprec - k);
+  }
+#endif
 
   *stream = s;
   return maxbits - bits;
