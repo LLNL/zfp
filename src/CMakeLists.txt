@@ -36,7 +36,7 @@ if(HAVE_LIBM_MATH)
   target_link_libraries(zfp PRIVATE m)
 endif()
 
-if(WIN32)
+if(WIN32 AND BUILD_SHARED_LIBS)
   # Define ZFP_SOURCE when compiling libzfp to export symbols to Windows DLL
   list(APPEND zfp_private_defs ZFP_SOURCE)
 endif()
