@@ -14,16 +14,21 @@ __device__ __host__ inline
 void gather_partial3(Scalar* q, const Scalar* p, int nx, int ny, int nz, int sx, int sy, int sz)
 {
   uint x, y, z;
-  for (z = 0; z < 4; z++, p += sz - ny * sy)
+  for (z = 0; z < 4; z++)
     if (z < nz) {
-      for (y = 0; y < 4; y++, p += sy - nx * sx)
+      for (y = 0; y < 4; y++)
         if (y < ny) {
-          for (x = 0; x < 4; x++, p += sx)
-            if (x < nx) q[16 * z + 4 * y + x] = *p;
+          for (x = 0; x < 4; x++)
+            if (x < nx) {
+              q[16 * z + 4 * y + x] = *p;
+              p += sx;
+          }
+          p += sy - nx * sx;
           pad_block(q + 16 * z + 4 * y, nx, 1);
         }
       for (x = 0; x < 4; x++)
         pad_block(q + 16 * z + x, ny, 4);
+      p += sz - ny * sy;
     }
   for (y = 0; y < 4; y++)
     for (x = 0; x < 4; x++)

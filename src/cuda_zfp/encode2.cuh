@@ -17,11 +17,15 @@ __device__ __host__ inline
 void gather_partial2(Scalar* q, const Scalar* p, int nx, int ny, int sx, int sy)
 {
   uint x, y;
-  for (y = 0; y < 4; y++, p += sy - nx * sx)
+  for (y = 0; y < 4; y++)
     if (y < ny) {
-      for (x = 0; x < 4; x++, p += sx)
-        if (x < nx) q[4 * y + x] = *p;
+      for (x = 0; x < 4; x++)
+        if (x < nx) {
+          q[4 * y + x] = *p;//[x * sx];
+          p += sx;
+        }
       pad_block(q + 4 * y, nx, 1);
+      p += sy - nx * sx;
     }
   for (x = 0; x < 4; x++)
     pad_block(q + x, ny, 4);
@@ -144,7 +148,7 @@ size_t encode2launch(uint2 dims,
   cudaEventRecord(start);
 #endif
 
-	cudaEncode2<Scalar> << <grid_size, block_size>> >
+  cudaEncode2<Scalar> <<<grid_size, block_size>>>
     (maxbits,
      d_data,
      stream,
