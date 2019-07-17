@@ -12,7 +12,6 @@
 
 #include "ErrorCheck.h"
 
-#include "constant_setup.cuh"
 #include "pointers.cuh"
 #include "type_info.cuh"
 #include <iostream>
@@ -119,7 +118,6 @@ size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_
   {
     int dim = dims[0];
     int sx = stride.x;
-    cuZFP::ConstantSetup::setup_1d();
     stream_size = cuZFP::encode1<T>(dim, sx, d_data, d_stream, bits_per_block); 
   }
   else if(d == 2)
@@ -128,7 +126,6 @@ size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_
     int2 s;
     s.x = stride.x; 
     s.y = stride.y; 
-    cuZFP::ConstantSetup::setup_2d();
     stream_size = cuZFP::encode2<T>(ndims, s, d_data, d_stream, bits_per_block); 
   }
   else if(d == 3)
@@ -138,7 +135,6 @@ size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_
     s.y = stride.y; 
     s.z = stride.z; 
     uint3 ndims = make_uint3(dims[0], dims[1], dims[2]);
-    cuZFP::ConstantSetup::setup_3d();
     stream_size = cuZFP::encode<T>(ndims, s, d_data, d_stream, bits_per_block); 
   }
 
@@ -172,7 +168,6 @@ size_t decode(uint ndims[3], int3 stride, int bits_per_block, Word *stream, T *o
     s.y = stride.y; 
     s.z = stride.z; 
 
-    cuZFP::ConstantSetup::setup_3d();
     stream_bytes = cuZFP::decode3<T>(dims, s, stream, out, bits_per_block); 
   }
   else if(d == 1)
@@ -180,7 +175,6 @@ size_t decode(uint ndims[3], int3 stride, int bits_per_block, Word *stream, T *o
     uint dim = ndims[0];
     int sx = stride.x;
 
-    cuZFP::ConstantSetup::setup_1d();
     stream_bytes = cuZFP::decode1<T>(dim, sx, stream, out, bits_per_block); 
 
   }
@@ -194,7 +188,6 @@ size_t decode(uint ndims[3], int3 stride, int bits_per_block, Word *stream, T *o
     s.x = stride.x; 
     s.y = stride.y; 
 
-    cuZFP::ConstantSetup::setup_2d();
     stream_bytes = cuZFP::decode2<T>(dims, s, stream, out, bits_per_block); 
   }
   else std::cerr<<" d ==  "<<d<<" not implemented\n";
