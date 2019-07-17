@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 #include "zfparray2.h"
+#include "zfpvarray2.h"
 #include "array2d.h"
 
 #ifdef _OPENMP
@@ -94,6 +95,15 @@ time_step_parallel(zfp::array2d& u, const Constants& c)
 // dummy template instantiation; never executed
 template <>
 inline void
+time_step_parallel(zfp::varray2d& u, const Constants& c)
+{
+  unused_(u);
+  unused_(c);
+}
+
+// dummy template instantiation; never executed
+template <>
+inline void
 time_step_parallel(raw::array2d& u, const Constants& c)
 {
   unused_(u);
@@ -106,7 +116,9 @@ inline void
 time_step_indexed(array2d& u, const Constants& c)
 {
   // compute du/dt
-  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
+//  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
+#warning "fix this"
+  raw::array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
   for (int y = 1; y < c.ny - 1; y++) {
     for (int x = 1; x < c.nx - 1; x++) {
       double uxx = (u(x - 1, y) - 2 * u(x, y) + u(x + 1, y)) / (c.dx * c.dx);
@@ -267,7 +279,8 @@ int main(int argc, char* argv[])
   double err;
   if (compression) {
     // solve problem using compressed arrays
-    zfp::array2d u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
+//    zfp::array2d u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
+    zfp::varray2d u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
     rate = u.rate();
     double t = solve(u, c, iterator, parallel);
     sum = total(u);

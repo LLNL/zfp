@@ -11,7 +11,9 @@ The following assumptions and restrictions apply:
    whether for reading, writing, or both.  This buffer is associated with the
    bit stream via stream_open(buffer, bytes), which allocates and returns a
    pointer to an opaque bit stream struct.  Call stream_close(stream) to
-   deallocate this struct.
+   deallocate this struct.  If the location or size of the buffer changes,
+   the bit stream can be reopened via stream_reopen(stream, buffer, bytes),
+   which also rewinds the stream.
 
 2. The stream is either in a read or write state (or, initially, in both
    states).  When done writing, call stream_flush(stream) before entering
@@ -435,6 +437,15 @@ stream_open(void* buffer, size_t bytes)
     stream_rewind(s);
   }
   return s;
+}
+
+/* point bit stream to new buffer */
+inline_ void
+stream_reopen(bitstream* stream, void* buffer, size_t bytes)
+{
+  stream->begin = (word*)buffer;
+  stream->end = stream->begin + bytes / sizeof(word);
+  stream_rewind(stream);
 }
 
 /* close and deallocate bit stream */

@@ -18,6 +18,9 @@ extern "C" {
 /* allocate and initialize bit stream */
 bitstream* stream_open(void* buffer, size_t bytes);
 
+/* point bit stream to new buffer */
+void stream_reopen(bitstream* stream, void* buffer, size_t bytes);
+
 /* close and deallocate bit stream */
 void stream_close(bitstream* stream);
 
