@@ -16,6 +16,22 @@
 #include "utils/zfpHash.h"
 #include "utils/zfpTimer.h"
 
+#ifdef PRINT_CHECKSUMS
+  #include "utils/checksumKeyGen.h"
+
+  // for both, x is freshly computed checksum from current compression-lib implementation
+  // where-as y is the stored constant checksum
+
+  // a pair (key, value) is printed
+  // key: identifies what kind of compression occurred, on what input, etc
+  // value: checksum
+  #define ASSERT_EQ_CHECKSUM(bundle, testType, currSubject, x, y) printf("{0x%"PRIx64", 0x%"PRIx64"},\n", computeKey(testType, currSubject, bundle->mode, bundle->compressParamNum), x)
+  #define COMPARE_NEQ_CHECKSUM(bundle, testType, currSubject, x, y) printf("{0x%"PRIx64", 0x%"PRIx64"},\n", computeKey(testType, currSubject, bundle->mode, bundle->compressParamNum), x)
+#else
+  #define ASSERT_EQ_CHECKSUM(bundle, testType, currSubject, x, y) assert_int_equal(x, y)
+  #define COMPARE_NEQ_CHECKSUM(bundle, testType, currSubject, x, y) (x != y)
+#endif
+
 #ifdef FL_PT_DATA
   #define MIN_TOTAL_ELEMENTS 1000000
 #else
@@ -39,6 +55,7 @@ struct setupVars {
   zfp_field* field;
   zfp_field* decompressField;
   zfp_stream* stream;
+  zfp_mode mode;
 
   // compressParamNum is 0, 1, or 2
   //   used to compute fixed mode param
@@ -261,6 +278,8 @@ setupZfpStream(struct setupVars* bundle)
 static int
 setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParamNum)
 {
+  bundle->mode = zfpMode;
+
   // set compression mode for this compressParamNum
   if (compressParamNum > 2 || compressParamNum < 0) {
     printf("ERROR: Unknown compressParamNum %d during setupCompressParam()\n", compressParamNum);
@@ -351,8 +370,7 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->randomGenArr, bundle->totalRandomGenArrLen, 1);
-  uint64 expectedChecksum = getChecksumOriginalDataArray(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  ASSERT_EQ_CHECKSUM(bundle, ARRAY_TEST, ORIGINAL_INPUT, checksum, getChecksumOriginalDataArray(DIMS, ZFP_TYPE));
 }
 
 // returns 1 on failure, 0 on success
@@ -449,7 +467,7 @@ isDecompressedArrayChecksumsMatch(struct setupVars* bundle)
   }
 
   uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
-  if (checksum != expectedChecksum) {
+  if (COMPARE_NEQ_CHECKSUM(bundle, ARRAY_TEST, DECOMPRESSED_ARRAY, checksum, getChecksumDecompressedArray(DIMS, ZFP_TYPE, bundle->mode, bundle->compressParamNum))) {
     printf("ERROR: Decompressed array checksums were different: 0x%"UINT64PRIx" != 0x%"UINT64PRIx"\n", checksum, expectedChecksum);
     return 1;
   } else {
