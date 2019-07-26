@@ -1,4 +1,4 @@
-#include "utils/testMacros.h"
+// requires #include "utils/testMacros.h", do outside of main()
 
 _cmocka_unit_test(when_seededRandomSmoothDataGenerated_expect_ChecksumMatches),
 

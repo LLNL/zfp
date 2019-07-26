@@ -213,7 +213,8 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
   struct setupVars *bundle = *state;
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->dataArr, BLOCK_SIZE, 1);
   uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  // random data checksum only run for full block, and for non-special values
+  ASSERT_EQ_CHECKSUM(BLOCK_FULL_TEST, ORIGINAL_INPUT, zfp_mode_fixed_rate, 0, checksum, expectedChecksum);
 }
 
 static void
@@ -241,7 +242,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlock_expect_BitstreamChecksumMa
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
   uint64 expectedChecksum = getChecksumEncodedBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  ASSERT_EQ_CHECKSUM(BLOCK_FULL_TEST, COMPRESSED_BITSTREAM, zfp_mode_fixed_rate, 0, checksum, expectedChecksum);
 }
 
 static void
@@ -260,8 +261,8 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeSpecialBlocks_expect_BitstreamCh
     zfp_stream_flush(stream);
 
     uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-    uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_mode_reversible, i+1);
-    if (checksum != expectedChecksum) {
+    uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_mode_reversible, i + 1);
+    if (COMPARE_NEQ_CHECKSUM(BLOCK_FULL_TEST, COMPRESSED_BITSTREAM, zfp_mode_reversible, i + 1, checksum, expectedChecksum)) {
       printf("Special Block testcase %d failed\n", i);
       failures++;
     }

@@ -272,7 +272,8 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 
   UInt checksum = _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)bundle->dataArr, n, s);
   uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  // entire block is populated, but later tests restrict to reading partial block
+  ASSERT_EQ_CHECKSUM(BLOCK_FULL_TEST, ORIGINAL_INPUT, 0, 0, checksum, expectedChecksum);
 }
 
 static void
@@ -316,7 +317,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_OnlyStridedE
   zfp_stream_flush(stream);
   uint64 newChecksum = hashBitstream(stream_data(s), stream_size(s));
 
-  assert_int_equal(newChecksum, originalChecksum);
+  ASSERT_EQ_CHECKSUM(BLOCK_FULL_TEST, COMPRESSED_BITSTREAM, zfp_mode_fixed_rate, 0, newChecksum, originalChecksum);
 }
 
 static void
@@ -331,7 +332,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_BitstreamChe
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
   uint64 expectedChecksum = getChecksumEncodedBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  ASSERT_EQ_CHECKSUM(BLOCK_FULL_TEST, COMPRESSED_BITSTREAM, zfp_mode_fixed_rate, 0, checksum, expectedChecksum);
 }
 
 static void
@@ -375,7 +376,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyS
   zfp_stream_flush(stream);
   uint64 newChecksum = hashBitstream(stream_data(s), stream_size(s));
 
-  assert_int_equal(newChecksum, originalChecksum);
+  ASSERT_EQ_CHECKSUM(BLOCK_PARTIAL_TEST, COMPRESSED_BITSTREAM, zfp_mode_fixed_rate, 0, newChecksum, originalChecksum);
 }
 
 static void
@@ -448,7 +449,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyE
   zfp_stream_flush(stream);
   uint64 newChecksum = hashBitstream(stream_data(s), stream_size(s));
 
-  assert_int_equal(newChecksum, originalChecksum);
+  ASSERT_EQ_CHECKSUM(BLOCK_PARTIAL_TEST, COMPRESSED_BITSTREAM, zfp_mode_fixed_rate, 0, newChecksum, originalChecksum);
 }
 
 static void
@@ -463,5 +464,5 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_Bitst
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
   uint64 expectedChecksum = getChecksumEncodedPartialBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  ASSERT_EQ_CHECKSUM(BLOCK_PARTIAL_TEST, COMPRESSED_BITSTREAM, zfp_mode_fixed_rate, 0, checksum, expectedChecksum);
 }
