@@ -489,7 +489,7 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
   struct setupVars *bundle = *state;
   UInt checksum = hashStridedBlock(bundle->dataArr);
   uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  ASSERT_EQ_CHECKSUM(BLOCK_FULL_TEST, ORIGINAL_INPUT, 0, 0, checksum, expectedChecksum);
 }
 
 static void
@@ -536,7 +536,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlockStrided_expect_ArrayChecksu
 
   UInt checksum = hashStridedBlock(bundle->decodedDataArr);
   uint64 expectedChecksum = getChecksumDecodedBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  ASSERT_EQ_CHECKSUM(BLOCK_FULL_TEST, DECOMPRESSED_ARRAY, zfp_mode_fixed_rate, 0, checksum, expectedChecksum);
 }
 
 static void
@@ -597,5 +597,5 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_Array
 
   UInt checksum = hashStridedBlock(bundle->decodedDataArr);
   uint64 expectedChecksum = getChecksumDecodedPartialBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  ASSERT_EQ_CHECKSUM(BLOCK_PARTIAL_TEST, DECOMPRESSED_ARRAY, zfp_mode_fixed_rate, 0, checksum, expectedChecksum);
 }

@@ -2,19 +2,29 @@ function(zfp_add_block_tests dims type bits)
   set(block_test_name testZfpEncodeBlock${dims}d${type})
   add_executable(${block_test_name} ${block_test_name}.c)
   target_link_libraries(${block_test_name}
-    cmocka zfp rand${bits}Lib zfpHashLib zfpChecksumsLib)
+    cmocka zfp rand${bits}Lib zfpHashLib zfpChecksumsLib checksumKeyGenLib)
   if(HAVE_LIBM_MATH)
     target_link_libraries(${block_test_name} m)
   endif()
+
+  if(PRINT_CHECKSUMS)
+    target_compile_definitions(${block_test_name} PUBLIC PRINT_CHECKSUMS)
+  endif()
+
   add_test(NAME ${block_test_name} COMMAND ${block_test_name})
 
   set(strided_block_test_name testZfpEncodeBlockStrided${dims}d${type})
   add_executable(${strided_block_test_name} ${strided_block_test_name}.c)
   target_link_libraries(${strided_block_test_name}
-    cmocka zfp rand${bits}Lib zfpHashLib zfpChecksumsLib)
+    cmocka zfp rand${bits}Lib zfpHashLib zfpChecksumsLib checksumKeyGenLib)
   if(HAVE_LIBM_MATH)
     target_link_libraries(${strided_block_test_name} m)
   endif()
+
+  if(PRINT_CHECKSUMS)
+    target_compile_definitions(${strided_block_test_name} PUBLIC PRINT_CHECKSUMS)
+  endif()
+
   add_test(NAME ${strided_block_test_name} COMMAND ${strided_block_test_name})
 endfunction()
 
