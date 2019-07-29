@@ -94,21 +94,41 @@ deallocate_aligned(T* ptr)
 #endif
 }
 
-// reallocate size bytes
+// reallocate size bytes with optional preservation of previous contents
 template <typename T>
 inline void
-reallocate(T*& ptr, size_t size)
+reallocate(T*& ptr, size_t size, size_t old_size = 0)
 {
-  zfp::deallocate(ptr);
-  ptr = static_cast<T*>(zfp::allocate(size));
+  if (old_size) {
+    // reallocate and copy previous contents
+    uchar* old_ptr = (uchar*)ptr;
+    ptr = static_cast<T*>(zfp::allocate(size));
+    std::copy(old_ptr, old_ptr + std::min(old_size, size), (uchar*)ptr);
+    zfp::deallocate(old_ptr);
+  }
+  else {
+    // reallocate and destroy previous contents
+    zfp::deallocate(ptr);
+    ptr = static_cast<T*>(zfp::allocate(size));
+  }
 }
 
 template <typename T>
 inline void
-reallocate_aligned(T*& ptr, size_t size, size_t alignment)
+reallocate_aligned(T*& ptr, size_t size, size_t alignment, size_t old_size = 0)
 {
-  zfp::deallocate_aligned(ptr);
-  ptr = static_cast<T*>(zfp::allocate_aligned(size, alignment));
+  if (old_size) {
+    // reallocate and copy previous contents
+    uchar* old_ptr = (uchar*)ptr;
+    ptr = static_cast<T*>(zfp::allocate_aligned(size, alignment));
+    std::copy(old_ptr, old_ptr + std::min(old_size, size), (uchar*)ptr);
+    zfp::deallocate_aligned(old_ptr);
+  }
+  else {
+    // reallocate and destroy previous contents
+    zfp::deallocate_aligned(ptr);
+    ptr = static_cast<T*>(zfp::allocate_aligned(size, alignment));
+  }
 }
 
 // clone array 'T src[count]'
