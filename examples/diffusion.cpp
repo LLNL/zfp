@@ -164,7 +164,7 @@ solve(array2d& u, const Constants& c, bool iterator, bool parallel)
   // iterate until final time
   double t;
   for (t = 0; t < c.tfinal; t += c.dt) {
-    std::cerr << "t=" << std::setprecision(6) << std::fixed << t << std::endl;
+    std::cerr << "t=" << std::setprecision(6) << std::fixed << t << " r=" << std::setprecision(3) << std::fixed << u.rate() << std::endl;
     if (parallel)
       time_step_parallel(u, c);
     else if (iterator)
