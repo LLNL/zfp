@@ -104,6 +104,15 @@
 #define ZFP_HEADER_MODE   0x4u /* embed 12- or 64-bit compression mode */
 #define ZFP_HEADER_FULL   0x7u /* embed all of the above */
 
+/* bit masks for specifying storage class */
+#define ZFP_DATA_UNUSED  0x01u /* allocated but unused storage */
+#define ZFP_DATA_META    0x02u /* class members and other fixed-size storage */
+#define ZFP_DATA_PAYLOAD 0x04u /* compressed data */
+#define ZFP_DATA_SHAPE   0x08u /* block shape information */
+#define ZFP_DATA_INDEX   0x10u /* variable-rate block index information */
+#define ZFP_DATA_CACHE   0x20u /* uncompressed cached data */
+#define ZFP_DATA_ALL     0x2fu /* all storage */
+
 /* field metadata indeterminate state and error code */
 #define ZFP_META_NULL (UINT64C(-1))
 
