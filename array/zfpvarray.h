@@ -61,13 +61,13 @@ public:
     zfp_stream_close(zfp);
   }
 
+  // total number of elements in array
+  virtual size_t size() const = 0;
+
   // rate in bits per value
-  double rate() const
+  double rate(uint mask = ZFP_DATA_ALL) const
   {
-    size_t size = 0;
-    for (uint t = 0; t < tiles; t++)
-      size += tile[t]->size();
-    return double(size) * CHAR_BIT / (nx * ny * nz);
+    return double(storage_size(mask)) * CHAR_BIT / size();
   }
 
   // set precision in uncompressed bits per value
@@ -95,11 +95,15 @@ public:
   virtual void flush_cache() const = 0;
 
   // number of bytes of compressed data
-  size_t compressed_size() const
+  virtual size_t storage_size(uint mask = ZFP_DATA_ALL) const
   {
     size_t size = 0;
+    if (mask & ZFP_DATA_META)
+      size += sizeof(varray) + tiles * sizeof(*tile) + sizeof(*zfp); // + sizeof(*zfp->stream);
+    if ((mask & ZFP_DATA_SHAPE) && shape)
+      size += sizeof(uchar) * blocks;
     for (uint t = 0; t < tiles; t++)
-      size += tile[t]->size();
+      size += tile[t]->size(mask);
     return size;
   }
 
@@ -113,9 +117,19 @@ protected:
   // number of values per block
   uint block_size() const { return 1u << (2 * dims); }
 
+  // allocate memory for bit stream buffer
+  void alloc()
+  {
+    size_t bytes = (ZFP_MAX_BITS + CHAR_BIT - 1) / CHAR_BIT;
+    uchar* buffer = (uchar*)zfp::allocate(bytes);
+    stream_close(zfp->stream);
+    zfp_stream_set_bit_stream(zfp, stream_open(buffer, bytes));
+  }
+
   // free memory associated with compressed data
   void free()
   {
+    zfp::deallocate((uchar*)stream_data(zfp->stream));
     stream_close(zfp->stream);
     zfp_stream_set_bit_stream(zfp, 0);
     nx = ny = nz = 0;

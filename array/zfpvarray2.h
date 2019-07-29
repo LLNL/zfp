@@ -12,19 +12,16 @@
 namespace zfp {
 
 // compressed 2D array of scalars
-template < typename Scalar, class Codec = zfp::codec<Scalar> >
+template < typename Scalar, double minrate = 4.0, class Codec = zfp::codec<Scalar> >
 class varray2 : public varray {
 public:
   // forward declarations
   class reference;
   class pointer;
   class iterator;
-//#warning "no views yet"
-//  class view;
   #include "zfp/vreference2.h"
   #include "zfp/vpointer2.h"
   #include "zfp/viterator2.h"
-//  #include "zfp/view2.h"
 
   // default constructor
   varray2() : varray(2, Codec::type) {}
@@ -36,7 +33,7 @@ public:
     cache(lines(csize, nx, ny))
   {
     set_precision(prec);
-    resize(nx, ny, p == 0);
+    resize(nx, ny);
     if (p)
       set(p);
   }
@@ -67,7 +64,7 @@ public:
   uint size_y() const { return ny; }
 
   // resize the array (all previously stored data will be lost)
-  void resize(uint nx, uint ny, bool clear = true)
+  void resize(uint nx, uint ny)
   {
     if (nx == 0 || ny == 0)
       free();
@@ -81,7 +78,7 @@ public:
       tx = (bx + Tile2<Scalar>::bx - 1) / Tile2<Scalar>::bx;
       ty = (by + Tile2<Scalar>::by - 1) / Tile2<Scalar>::by;
       tiles = tx * ty;
-      alloc(clear);
+      alloc();
     }
   }
 
@@ -102,12 +99,19 @@ public:
   void flush_cache() const
   {
     for (typename zfp::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
-      if (p->tag.dirty()) {
+      if (p->tag.index() && (true || p->tag.dirty())) {
         uint b = p->tag.index() - 1;
         encode(b, p->line->data());
       }
       cache.flush(p->line);
     }
+  }
+
+  virtual size_t storage_size(uint mask = ZFP_DATA_ALL) const
+  {
+    size_t size = varray::storage_size(mask);
+    if (mask & ZFP_DATA_CACHE)
+      size += cache.size() * (sizeof(CacheLine) + sizeof(cache::Tag));
   }
 
   // decompress array and store at p
@@ -202,16 +206,17 @@ protected:
   };
 
   // allocate memory for compressed data
-  void alloc(bool clear = true)
+  void alloc()
   {
-//#warning "what does clear do?"
-    (void)clear;
-//#warning "assert"
-    assert(!tile);
+    varray::alloc();
+    if (tile) {
+      for (uint t = 0; t < tiles; t++)
+        delete tile[t];
+      delete[] tile;
+    }
     tile = new Tile*[tiles];
-//#warning "where does minrate come from?"
     for (uint t = 0; t < tiles; t++)
-      tile[t] = new Tile2<Scalar>();
+      tile[t] = new Tile2<Scalar>(minrate);
   }
 
   // free memory associated with compressed data
@@ -261,8 +266,8 @@ protected:
     typename zfp::Cache<CacheLine>::Tag t = cache.access(p, b + 1, write);
     uint c = t.index() - 1;
     if (c != b) {
-      // write back occupied cache line if it is dirty
-      if (t.dirty())
+      // write back occupied cache line (done even if not dirty)
+      if (t.index())
         encode(c, p->data());
       // fetch cache line
       decode(b, p->data());
@@ -270,14 +275,7 @@ protected:
     return p;
   }
 
-//#warning "avoid dynamic casts; move tile[] to derived classes?"
-/*
-  const Tile2<Scalar>* tile_ptr(uint t) const
-  {
-    return dynamic_cast<const Tile2<Scalar>*>(tile[t]);
-  }
-*/
-
+#warning "avoid dynamic casts; move tile[] to derived classes?"
   Tile2<Scalar>* tile_ptr(uint t) const
   {
     return dynamic_cast<Tile2<Scalar>*>(tile[t]);
@@ -286,6 +284,7 @@ protected:
   // encode block with given index
   void encode(uint index, const Scalar* block) const
   {
+#warning "these ID computations seem expensive"
     uint t = tile_id(index);
     uint b = block_id(index);
     tile_ptr(t)->compress(zfp, block, b, shape ? shape[index] : 0);
@@ -317,8 +316,8 @@ protected:
   {
     uint x = block % bx;
     uint y = block / bx;
-    uint xx = x & (Tile2<Scalar>::bx - 1);
-    uint yy = y & (Tile2<Scalar>::by - 1);
+    uint xx = x % Tile2<Scalar>::bx;
+    uint yy = y % Tile2<Scalar>::by;
     return xx + Tile2<Scalar>::bx * yy;
   }
 
@@ -338,6 +337,7 @@ protected:
   }
 
   mutable zfp::Cache<CacheLine> cache; // cache of decompressed blocks
+  Tile2<Scalar>** tile;                // tiles of compressed blocks
 };
 
 typedef varray2<float> varray2f;
