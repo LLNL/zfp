@@ -214,8 +214,8 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->dataArr, BLOCK_SIZE, 1);
-  uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
-  ASSERT_EQ_CHECKSUM(BLOCK_FULL_TEST, ORIGINAL_INPUT, 0, 0, checksum, expectedChecksum);
+  uint64 checksumKey = computeKey(BLOCK_FULL_TEST, ORIGINAL_INPUT, zfp_mode_fixed_rate, 0);
+  ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, checksumKey);
 }
 
 static void
@@ -251,8 +251,8 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatche
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)decodedDataArr, BLOCK_SIZE, 1);
   free(decodedDataArr);
 
-  uint64 expectedChecksum = getChecksumDecodedBlock(DIMS, ZFP_TYPE);
-  ASSERT_EQ_CHECKSUM(BLOCK_FULL_TEST, DECOMPRESSED_ARRAY, zfp_mode_fixed_rate, 0, checksum, expectedChecksum);
+  uint64 checksumKey = computeKey(BLOCK_FULL_TEST, DECOMPRESSED_ARRAY, zfp_mode_fixed_rate, 0);
+  ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, checksumKey);
 }
 
 static void
