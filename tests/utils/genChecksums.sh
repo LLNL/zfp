@@ -37,7 +37,7 @@ do
     ctest -V -R "testZfpSerial${DIM_STR}${SCALAR_STR}" -O $TEMP_FILE
     cat "$TEMP_FILE" >> "$TEST_OUTPUT_FILE"
 
-    grep -o '{0x.*' $TEST_OUTPUT_FILE > $TEMP_CHECKSUMS_FILE
+    grep -o '{UINT64C(0x.*' $TEST_OUTPUT_FILE > $TEMP_CHECKSUMS_FILE
     NUM_CHECKSUMS=$(wc -l < "$TEMP_CHECKSUMS_FILE")
 
     # create valid .h file
