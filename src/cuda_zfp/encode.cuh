@@ -117,7 +117,7 @@ quantize_factor<double>(const int &exponent, double)
 template<typename Scalar, typename Int, int BlockSize>
 void __device__ fwd_cast(Int *iblock, const Scalar *fblock, int emax)
 {
-	Scalar s = quantize_factor(emax, Scalar());
+  Scalar s = quantize_factor(emax, Scalar());
   for(int i = 0; i < BlockSize; ++i)
   {
     iblock[i] = (Int) (s * fblock[i]);
@@ -184,7 +184,8 @@ struct transform<4>
 template<typename Int, typename UInt, int BlockSize>
 __device__ void fwd_order(UInt *ublock, const Int *iblock)
 {
-  unsigned char *perm = get_perm<BlockSize>();
+  const unsigned char *perm = get_perm<BlockSize>();
+
   for(int i = 0; i < BlockSize; ++i)
   {
     ublock[i] = int2uint(iblock[perm[i]]);
