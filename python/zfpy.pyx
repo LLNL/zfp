@@ -51,11 +51,11 @@ cpdef dtype_to_ztype(dtype):
 
 cpdef dtype_to_format(dtype):
     # format characters detailed here:
-    # https://docs.python.org/2/library/array.html#module-array
+    # https://docs.python.org/3/library/array.html
     if dtype == np.int32:
         return 'i' # signed int
     elif dtype == np.int64:
-        return 'l' # signed long
+        return 'q' # signed long long
     elif dtype == np.float32:
         return 'f' # float
     elif dtype == np.float64:

@@ -234,7 +234,7 @@ __device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint 
     decode_ints<Scalar, BlockSize, UInt>(reader, maxbits, ublock);
 
     Int iblock[BlockSize];
-    unsigned char *perm = get_perm<BlockSize>();
+    const unsigned char *perm = get_perm<BlockSize>();
 #if (CUDART_VERSION < 8000)
     #pragma unroll 
 #else

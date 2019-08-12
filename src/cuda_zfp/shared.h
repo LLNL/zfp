@@ -7,6 +7,7 @@ typedef unsigned long long Word;
 
 #include "type_info.cuh"
 #include "zfp.h"
+#include "constants.h"
 #include <stdio.h>
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
@@ -16,10 +17,6 @@ typedef unsigned long long Word;
 #define LDEXP(x, e) ldexp(x, e)
 
 #define NBMASK 0xaaaaaaaaaaaaaaaaull
-
-__constant__ unsigned char c_perm_1[4];
-__constant__ unsigned char c_perm_2[16];
-__constant__ unsigned char c_perm[64];
 
 namespace cuZFP
 {
@@ -245,28 +242,28 @@ inv_lift(Int* p)
 
 
 template<int BlockSize>
-__device__
-unsigned char* get_perm();
+__device__ inline
+const unsigned char* get_perm();
 
 template<>
-__device__
-unsigned char* get_perm<64>()
+__device__ inline
+const unsigned char* get_perm<64>()
 {
-  return c_perm;
+  return perm_3d;
 }
 
 template<>
-__device__
-unsigned char* get_perm<16>()
+__device__ inline
+const unsigned char* get_perm<16>()
 {
-  return c_perm_2;
+  return perm_2;
 }
 
 template<>
-__device__
-unsigned char* get_perm<4>()
+__device__ inline
+const unsigned char* get_perm<4>()
 {
-  return c_perm_1;
+  return perm_1;
 }
 
 
