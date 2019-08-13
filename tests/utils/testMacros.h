@@ -18,13 +18,14 @@
   // for both, x is freshly computed checksum from current compression-lib implementation
   // where-as y is the stored constant checksum
 
-  // a pair (key, value) is printed
-  // key: identifies what kind of compression occurred, on what input, etc
+  // a triplet (key1, key2, value) is printed
+  // key1: identifies what kind of compression occurred, on what input, etc
+  // key2: identifies array dimensions
   // value: checksum
   // (macro substitutes "printf() && 0" because we want conditional to fail after executing printf)
-  #define ASSERT_EQ_CHECKSUM(dims, zfpType, computedChecksum, key) printf("{UINT64C(0x%"PRIx64"), UINT64C(0x%"PRIx64")},\n", key, computedChecksum)
-  #define COMPARE_NEQ_CHECKSUM(dims, zfpType, computedChecksum, key) printf("{UINT64C(0x%"PRIx64"), UINT64C(0x%"PRIx64")},\n", key, computedChecksum) && 0
+  #define ASSERT_EQ_CHECKSUM(dims, zfpType, computedChecksum, key1, key2) printf("{UINT64C(0x%"PRIx64"), UINT64C(0x%"PRIx64"), UINT64C(0x%"PRIx64")},\n", key1, key2, computedChecksum)
+  #define COMPARE_NEQ_CHECKSUM(dims, zfpType, computedChecksum, key1, key2) printf("{UINT64C(0x%"PRIx64"), UINT64C(0x%"PRIx64"), UINT64C(0x%"PRIx64")},\n", key1, key2, computedChecksum) && 0
 #else
-  #define ASSERT_EQ_CHECKSUM(dims, zfpType, computedChecksum, key) assert_int_equal(computedChecksum, getChecksumByKey(dims, zfpType, key))
-  #define COMPARE_NEQ_CHECKSUM(dims, zfpType, computedChecksum, key) (computedChecksum != getChecksumByKey(dims, zfpType, key))
+  #define ASSERT_EQ_CHECKSUM(dims, zfpType, computedChecksum, key1, key2) assert_int_equal(computedChecksum, getChecksumByKey(dims, zfpType, key1, key2))
+  #define COMPARE_NEQ_CHECKSUM(dims, zfpType, computedChecksum, key1, key2) (computedChecksum != getChecksumByKey(dims, zfpType, key1, key2))
 #endif
