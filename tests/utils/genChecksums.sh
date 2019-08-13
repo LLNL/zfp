@@ -42,7 +42,7 @@ do
 
     # create valid .h file
 
-    echo "static const checksum_pairs _${DIM_STR}${SCALAR_STR}Checksums[${NUM_CHECKSUMS}] = {" > $OUTPUT_FILE
+    echo "static const checksum_tuples _${DIM_STR}${SCALAR_STR}Checksums[${NUM_CHECKSUMS}] = {" > $OUTPUT_FILE
     cat $TEMP_CHECKSUMS_FILE >> $OUTPUT_FILE
     echo "};" >> $OUTPUT_FILE
 

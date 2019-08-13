@@ -15,15 +15,18 @@ typedef enum {
   DECOMPRESSED_ARRAY = 2,
 } subject;
 
+// key1 holds data about test type
+// key2 holds dimension lengths
 typedef struct {
-  uint64 key;
+  uint64 key1;
+  uint64 key2;
   uint64 checksum;
-} checksum_pairs;
+} checksum_tuples;
+
+void
+computeKey(test_type tt, subject sjt, uint n[4], zfp_mode mode, int miscParam, uint64* key1, uint64* key2);
 
 uint64
-computeKey(test_type tt, subject sjt, zfp_mode mode, int miscParam);
-
-uint64
-getChecksumByKey(int dims, zfp_type type, uint64 key);
+getChecksumByKey(int dims, zfp_type type, uint64 key1, uint64 key2);
 
 #endif

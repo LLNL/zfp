@@ -6,6 +6,8 @@
 
 #define FAILED_CHECKSUM (UINT64C(0xffffffffffffffff))
 
+#ifndef PRINT_CHECKSUMS
+
 // raw checksums as static arrays
 #include "constants/checksums/1dDouble.h"
 #include "constants/checksums/1dFloat.h"
@@ -28,7 +30,7 @@
 #include "constants/checksums/4dInt64.h"
 
 // [dimensionality][zfp_type]
-static const checksum_pairs* checksums[4][4] = {
+static const checksum_tuples* checksums[4][4] = {
   {
     _1dInt32Checksums,
     _1dInt64Checksums,
@@ -55,14 +57,16 @@ static const checksum_pairs* checksums[4][4] = {
   },
 };
 
-static const checksum_pairs*
+static const checksum_tuples*
 getChecksumPtr(int dims, zfp_type type)
 {
   return checksums[dims - 1][type - zfp_type_int32];
 }
 
-uint64
-computeKey(test_type tt, subject sjt, zfp_mode mode, int miscParam)
+#endif
+
+void
+computeKey(test_type tt, subject sjt, uint n[4], zfp_mode mode, int miscParam, uint64* key1, uint64* key2)
 {
   uint64 result = 0;
 
@@ -85,13 +89,50 @@ computeKey(test_type tt, subject sjt, zfp_mode mode, int miscParam)
   result <<= 4;
   result += miscParam;
 
-  return result;
+  *key1 = result;
+
+  // key2 stores dimensions only (64 bits total, like zfp_field_metadata()
+  result = 0;
+
+  uint dims = n[1] ? n[2] ? n[3] ? 4 : 3 : 2 : 1;
+  switch (dims) {
+    case 1:
+      result += n[0] - 1;
+      break;
+
+    case 2:
+      result += n[0] - 1;
+      result <<= 24;
+      result += n[1] - 1;
+      break;
+
+    case 3:
+      result += n[0] - 1;
+      result <<= 16;
+      result += n[1] - 1;
+      result <<= 16;
+      result += n[2] - 1;
+      break;
+
+    case 4:
+      result += n[0] - 1;
+      result <<= 12;
+      result += n[1] - 1;
+      result <<= 12;
+      result += n[2] - 1;
+      result <<= 12;
+      result += n[3] - 1;
+      break;
+  }
+
+  *key2 = result;
 }
 
 uint64
-getChecksumByKey(int dims, zfp_type type, uint64 inputKey)
+getChecksumByKey(int dims, zfp_type type, uint64 key1, uint64 key2)
 {
-  const checksum_pairs* keyChecksumsArr = getChecksumPtr(dims, type);
+#ifndef PRINT_CHECKSUMS
+  const checksum_tuples* keyChecksumsArr = getChecksumPtr(dims, type);
 
   size_t arrLen;
   switch (type) {
@@ -111,10 +152,13 @@ getChecksumByKey(int dims, zfp_type type, uint64 inputKey)
 
   size_t i;
   for (i = 0; i < arrLen; i++) {
-    if (keyChecksumsArr[i].key == inputKey) {
+    if (keyChecksumsArr[i].key1 == key1 && keyChecksumsArr[i].key2 == key2) {
       return keyChecksumsArr[i].checksum;
     }
   }
 
   return FAILED_CHECKSUM;
+#else
+  return FAILED_CHECKSUM;
+#endif
 }
