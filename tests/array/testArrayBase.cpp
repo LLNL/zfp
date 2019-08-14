@@ -136,7 +136,10 @@ TEST_F(TEST_FIXTURE, when_writeHeader_then_cCompatibleHeaderWritten)
 
 TEST_F(TEST_FIXTURE, when_generateRandomData_then_checksumMatches)
 {
-  EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, getChecksumOriginalDataArray(DIMS, ZFP_TYPE), _catFunc2(hashArray, SCALAR_BITS)((UINT*)inputDataArr, inputDataTotalLen, 1));
+  uint64 key1, key2;
+  computeKeyOriginalInput(ARRAY_TEST, dimLens, &key1, &key2);
+
+  EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, getChecksumByKey(DIMS, ZFP_TYPE, key1, key2), _catFunc2(hashArray, SCALAR_BITS)((UINT*)inputDataArr, inputDataTotalLen, 1));
 }
 
 void FailWhenNoExceptionThrown()
@@ -549,7 +552,10 @@ TEST_P(TEST_FIXTURE, given_dataset_when_set_then_underlyingBitstreamChecksumMatc
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate());
 #endif
 
-  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, GetParam());
+  uint64 key1, key2;
+  computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, dimLens, zfp_mode_fixed_rate, GetParam(), &key1, &key2);
+  uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
+
   uint64 checksum = hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size());
   EXPECT_PRED_FORMAT2(ExpectNeqPrintHexPred, expectedChecksum, checksum);
 
@@ -572,7 +578,10 @@ TEST_P(TEST_FIXTURE, given_setArray_when_get_then_decompressedValsReturned)
   SCALAR* decompressedArr = new SCALAR[inputDataTotalLen];
   arr.get(decompressedArr);
 
-  uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, GetParam());
+  uint64 key1, key2;
+  computeKey(ARRAY_TEST, DECOMPRESSED_ARRAY, dimLens, zfp_mode_fixed_rate, GetParam(), &key1, &key2);
+  uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
+
   uint64 checksum = _catFunc2(hashArray, SCALAR_BITS)((UINT*)decompressedArr, inputDataTotalLen, 1);
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, expectedChecksum, checksum);
 
@@ -618,7 +627,10 @@ TEST_P(TEST_FIXTURE, when_configureCompressedArrayFromDefaultConstructor_then_bi
   arr.set_rate(getRate());
   arr.set(inputDataArr);
 
-  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, GetParam());
+  uint64 key1, key2;
+  computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, dimLens, zfp_mode_fixed_rate, GetParam(), &key1, &key2);
+  uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
+
   uint64 checksum = hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size());
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, expectedChecksum, checksum);
 }
