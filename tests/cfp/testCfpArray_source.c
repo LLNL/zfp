@@ -30,6 +30,9 @@ struct setupVars {
   Scalar* dataArr;
   Scalar* decompressedArr;
 
+  // dimensions of data that gets compressed (currently same as dataSideLen)
+  uint dimLens[4];
+
   CFP_ARRAY_TYPE* cfpArr;
 
   int paramNum;
@@ -57,6 +60,12 @@ setupRandomData(void** state)
       break;
   }
   assert_non_null(bundle->dataArr);
+
+  // for now, entire randomly generated array always entirely compressed
+  int i;
+  for (i = 0; i < 4; i++) {
+    bundle->dimLens[i] = (i < DIMS) ? bundle->dataSideLen : 0;
+  }
 
   bundle->decompressedArr = malloc(bundle->totalDataLen * sizeof(Scalar));
   assert_non_null(bundle->decompressedArr);
@@ -227,7 +236,11 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->dataArr, bundle->totalDataLen, 1);
-  uint64 expectedChecksum = getChecksumOriginalDataArray(DIMS, ZFP_TYPE);
+
+  uint64 key1, key2;
+  computeKeyOriginalInput(ARRAY_TEST, bundle->dimLens, &key1, &key2);
+  uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
+
   assert_int_equal(checksum, expectedChecksum);
 }
 
@@ -406,7 +419,11 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_setArray_expect_compressedStreamChecksum
 
   size_t compressedSize = CFP_NAMESPACE.SUB_NAMESPACE.compressed_size(cfpArr);
   uint64 checksum = hashBitstream((uint64*)compressedPtr, compressedSize);
-  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, bundle->paramNum);
+
+  uint64 key1, key2;
+  computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, bundle->dimLens, zfp_mode_fixed_rate, bundle->paramNum, &key1, &key2);
+  uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
+
   assert_int_equal(checksum, expectedChecksum);
 }
 
@@ -420,6 +437,10 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getArray_expect_decompressedArrChecksumM
   CFP_NAMESPACE.SUB_NAMESPACE.get_array(cfpArr, bundle->decompressedArr);
 
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((UInt*)bundle->decompressedArr, bundle->totalDataLen, 1);
-  uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_mode_fixed_rate, bundle->paramNum);
+
+  uint64 key1, key2;
+  computeKey(ARRAY_TEST, DECOMPRESSED_ARRAY, bundle->dimLens, zfp_mode_fixed_rate, bundle->paramNum, &key1, &key2);
+  uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
+
   assert_int_equal(checksum, expectedChecksum);
 }

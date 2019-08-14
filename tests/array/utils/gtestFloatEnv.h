@@ -12,6 +12,7 @@ extern "C" {
 const size_t MIN_TOTAL_ELEMENTS = 1000000;
 
 size_t inputDataSideLen, inputDataTotalLen;
+uint dimLens[4];
 float* inputDataArr;
 
 uint64* buffer;
@@ -25,6 +26,11 @@ public:
 
   virtual void SetUp() {
     generateSmoothRandFloats(MIN_TOTAL_ELEMENTS, getDims(), &inputDataArr, &inputDataSideLen, &inputDataTotalLen);
+
+    size_t i;
+    for (i = 0; i < 4; i++) {
+      dimLens[i] = (i < getDims()) ? inputDataSideLen : 0;
+    }
 
     size_t num_64bit_entries = DIV_ROUND_UP(ZFP_HEADER_SIZE_BITS, CHAR_BIT * sizeof(uint64));
     buffer = new uint64[num_64bit_entries];
