@@ -66,6 +66,12 @@ getChecksumPtr(int dims, zfp_type type)
 #endif
 
 void
+computeKeyOriginalInput(test_type tt, uint n[4], uint64* key1, uint64* key2)
+{
+  computeKey(tt, ORIGINAL_INPUT, n, 0, 0, key1, key2);
+}
+
+void
 computeKey(test_type tt, subject sjt, uint n[4], zfp_mode mode, int miscParam, uint64* key1, uint64* key2)
 {
   uint64 result = 0;
@@ -79,6 +85,7 @@ computeKey(test_type tt, subject sjt, uint n[4], zfp_mode mode, int miscParam, u
   result += (uint64)sjt;
 
   // mode is 3 bits
+  // passing zfp_mode_null implies no compression applied
   result <<= 3;
   result += mode;
 

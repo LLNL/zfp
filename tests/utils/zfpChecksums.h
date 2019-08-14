@@ -24,6 +24,9 @@ typedef struct {
 } checksum_tuples;
 
 void
+computeKeyOriginalInput(test_type tt, uint n[4], uint64* key1, uint64* key2);
+
+void
 computeKey(test_type tt, subject sjt, uint n[4], zfp_mode mode, int miscParam, uint64* key1, uint64* key2);
 
 uint64

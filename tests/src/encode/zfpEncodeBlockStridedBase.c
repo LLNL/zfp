@@ -289,7 +289,7 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 
   UInt checksum = _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)bundle->dataArr, n, s);
   uint64 key1, key2;
-  computeKey(BLOCK_FULL_TEST, ORIGINAL_INPUT, bundle->dimLens, zfp_mode_fixed_rate, 0, &key1, &key2);
+  computeKeyOriginalInput(BLOCK_FULL_TEST, bundle->dimLens, &key1, &key2);
   // entire block is populated, but later tests restrict to reading partial block
   ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2);
 }
