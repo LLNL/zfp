@@ -2,8 +2,8 @@
 
 .. _zfpcmd:
 
-File Compressor
-===============
+File Compression
+================
 
 The |zfpcmd| executable in the :file:`bin` directory is primarily
 intended for evaluating the rate-distortion (compression ratio and quality)
@@ -252,3 +252,9 @@ Examples
   * :code:`-d -1 1000000 -a 1e-9` : compression of 1,000,000 doubles with < 10\ :sup:`-9` max error
   * :code:`-d -1 1000000 -c 64 64 0 -1074` : 4x fixed-rate compression of 1,000,000 doubles
   * :code:`-x omp=16,256` : parallel compression with 16 threads, 256-block chunks
+
+HDF5 Files and H5Z-ZFP Filter
+-----------------------------
+Users may also find the `H5Z-ZFP <https://github.com/LLNL/H5Z-ZFP>`_ compression
+filter for `HDF5 <https://portal.hdfgroup.org/display/support`_ files useful in
+managing |zfp| compression within files.
