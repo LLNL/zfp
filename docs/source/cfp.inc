@@ -61,149 +61,151 @@ and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
 
   Opaque types for 1D, 2D, and 3D compressed arrays of floats and doubles.
 
-.. c:function:: cfp_array1f* cfp_array1f.ctor(uint nx, double rate, const float* p, size_t csize)
-.. c:function:: cfp_array2d* cfp_array1d.ctor(uint nx, double rate, const double* p, size_t csize)
-.. c:function:: cfp_array2f* cfp_array2f.ctor(uint nx, uint ny, double rate, const float* p, size_t csize)
-.. c:function:: cfp_array2d* cfp_array2d.ctor(uint nx, uint ny, double rate, const double* p, size_t csize)
-.. c:function:: cfp_array3f* cfp_array3f.ctor(uint nx, uint ny, uint nz, double rate, const float* p, size_t csize)
-.. c:function:: cfp_array3d* cfp_array3d.ctor(uint nx, uint ny, uint nz, double rate, const double* p, size_t csize)
+.. c:function:: cfp_array1f* cfp.array1f.ctor(uint nx, double rate, const float* p, size_t csize)
+.. c:function:: cfp_array1d* cfp.array1d.ctor(uint nx, double rate, const double* p, size_t csize)
+.. c:function:: cfp_array2f* cfp.array2f.ctor(uint nx, uint ny, double rate, const float* p, size_t csize)
+.. c:function:: cfp_array2d* cfp.array2d.ctor(uint nx, uint ny, double rate, const double* p, size_t csize)
+.. c:function:: cfp_array3f* cfp.array3f.ctor(uint nx, uint ny, uint nz, double rate, const float* p, size_t csize)
+.. c:function:: cfp_array3d* cfp.array3d.ctor(uint nx, uint ny, uint nz, double rate, const double* p, size_t csize)
 
   :ref:`Array constructors <array_ctor>`.
   If *p* is not :code:`NULL`, then the array is initialized from uncompressed
   storage; otherwise the array is zero initialized.  *csize* is the minimum
   size cache (in bytes) to use.  If *csize* is zero, a default size is chosen.
 
-.. c:function:: float cfp_array1f.get(const cfp_array1f* a, uint i)
-.. c:function:: float cfp_array2f.get(const cfp_array2f* a, uint i, uint j)
-.. c:function:: float cfp_array3f.get(const cfp_array3f* a, uint i, uint j, uint k)
-.. c:function:: double cfp_array1d.get(const cfp_array1d* a, uint i)
-.. c:function:: double cfp_array2d.get(const cfp_array2d* a, uint i, uint j)
-.. c:function:: double cfp_array3d.get(const cfp_array3d* a, uint i, uint j, uint k)
+.. c:function:: float cfp.array1f.get(const cfp_array1f* a, uint i)
+.. c:function:: float cfp.array2f.get(const cfp_array2f* a, uint i, uint j)
+.. c:function:: float cfp.array3f.get(const cfp_array3f* a, uint i, uint j, uint k)
+.. c:function:: double cfp.array1d.get(const cfp_array1d* a, uint i)
+.. c:function:: double cfp.array2d.get(const cfp_array2d* a, uint i, uint j)
+.. c:function:: double cfp.array3d.get(const cfp_array3d* a, uint i, uint j, uint k)
 
   :ref:`Array accessors <array_accessor>` via multidimensional indexing.
 
-.. c:function:: void cfp_array1f.set(const cfp_array1f* a, uint i, float val)
-.. c:function:: void cfp_array2f.set(const cfp_array2f* a, uint i, uint j, float val)
-.. c:function:: void cfp_array3f.set(const cfp_array3f* a, uint i, uint j, uint k, float val)
-.. c:function:: void cfp_array1d.set(const cfp_array1d* a, uint i, double val)
-.. c:function:: void cfp_array2d.set(const cfp_array2d* a, uint i, uint j, double val)
-.. c:function:: void cfp_array3d.set(const cfp_array3d* a, uint i, uint j, uint k, double val)
+.. c:function:: void cfp.array1f.set(const cfp_array1f* a, uint i, float val)
+.. c:function:: void cfp.array2f.set(const cfp_array2f* a, uint i, uint j, float val)
+.. c:function:: void cfp.array3f.set(const cfp_array3f* a, uint i, uint j, uint k, float val)
+.. c:function:: void cfp.array1d.set(const cfp_array1d* a, uint i, double val)
+.. c:function:: void cfp.array2d.set(const cfp_array2d* a, uint i, uint j, double val)
+.. c:function:: void cfp.array3d.set(const cfp_array3d* a, uint i, uint j, uint k, double val)
 
   Array mutators for assigning values to array elements via multidimensional
   indexing.
 
-.. c:function:: void cfp_array1f.get_array(const cfp_array1f* self, float* p)
-.. c:function:: void cfp_array1d.get_array(const cfp_array1d* self, double* p)
-.. c:function:: void cfp_array2f.get_array(const cfp_array2f* self, float* p)
-.. c:function:: void cfp_array2d.get_array(const cfp_array2d* self, double* p)
-.. c:function:: void cfp_array3f.get_array(const cfp_array3f* self, float* p)
-.. c:function:: void cfp_array3d.get_array(const cfp_array3d* self, double* p)
+.. c:function:: void cfp.array1f.get_array(const cfp_array1f* self, float* p)
+.. c:function:: void cfp.array1d.get_array(const cfp_array1d* self, double* p)
+.. c:function:: void cfp.array2f.get_array(const cfp_array2f* self, float* p)
+.. c:function:: void cfp.array2d.get_array(const cfp_array2d* self, double* p)
+.. c:function:: void cfp.array3f.get_array(const cfp_array3f* self, float* p)
+.. c:function:: void cfp.array3d.get_array(const cfp_array3d* self, double* p)
 
   Decompress entire array; see :cpp:func:`array::get`.
 
-.. c:function:: void cfp_array1f.set_array(cfp_array1f* self, const float* p)
-.. c:function:: void cfp_array1d.set_array(cfp_array1d* self, const double* p)
-.. c:function:: void cfp_array2f.set_array(cfp_array2f* self, const float* p)
-.. c:function:: void cfp_array2d.set_array(cfp_array2d* self, const double* p)
-.. c:function:: void cfp_array3f.set_array(cfp_array3f* self, const float* p)
-.. c:function:: void cfp_array3d.set_array(cfp_array3d* self, const double* p)
+.. c:function:: void cfp.array1f.set_array(cfp_array1f* self, const float* p)
+.. c:function:: void cfp.array1d.set_array(cfp_array1d* self, const double* p)
+.. c:function:: void cfp.array2f.set_array(cfp_array2f* self, const float* p)
+.. c:function:: void cfp.array2d.set_array(cfp_array2d* self, const double* p)
+.. c:function:: void cfp.array3f.set_array(cfp_array3f* self, const float* p)
+.. c:function:: void cfp.array3d.set_array(cfp_array3d* self, const double* p)
 
   Initialize entire array; see :cpp:func:`array::set`.
 
-.. c:function:: uint cfp_array2f.size_x(const cfp_array2f* self)
-.. c:function:: uint cfp_array2f.size_y(const cfp_array2f* self)
-.. c:function:: uint cfp_array3f.size_x(const cfp_array3f* self)
-.. c:function:: uint cfp_array3f.size_y(const cfp_array3f* self)
-.. c:function:: uint cfp_array3f.size_z(const cfp_array3f* self)
+.. c:function:: uint cfp.array2f.size_x(const cfp_array2f* self)
+.. c:function:: uint cfp.array2f.size_y(const cfp_array2f* self)
+.. c:function:: uint cfp.array3f.size_x(const cfp_array3f* self)
+.. c:function:: uint cfp.array3f.size_y(const cfp_array3f* self)
+.. c:function:: uint cfp.array3f.size_z(const cfp_array3f* self)
 
-.. c:function:: uint cfp_array2d.size_x(const cfp_array2d* self)
-.. c:function:: uint cfp_array2d.size_y(const cfp_array2d* self)
-.. c:function:: uint cfp_array3d.size_x(const cfp_array3d* self)
-.. c:function:: uint cfp_array3d.size_y(const cfp_array3d* self)
-.. c:function:: uint cfp_array3d.size_z(const cfp_array3d* self)
+.. c:function:: uint cfp.array2d.size_x(const cfp_array2d* self)
+.. c:function:: uint cfp.array2d.size_y(const cfp_array2d* self)
+.. c:function:: uint cfp.array3d.size_x(const cfp_array3d* self)
+.. c:function:: uint cfp.array3d.size_y(const cfp_array3d* self)
+.. c:function:: uint cfp.array3d.size_z(const cfp_array3d* self)
 
   :ref:`Array dimensions <array_dims>`.
 
 .. _cfp_resize:
-.. c:function:: void cfp_array1f.resize(cfp_array1f* self, uint n, int clear)
-.. c:function:: void cfp_array2f.resize(cfp_array2f* self, uint nx, uint ny, int clear)
-.. c:function:: void cfp_array3f.resize(cfp_array3f* self, uint nx, uint ny, uint nz, int clear)
-.. c:function:: void cfp_array1d.resize(cfp_array1d* self, uint n, int clear)
-.. c:function:: void cfp_array2d.resize(cfp_array2d* self, uint nx, uint ny, int clear)
-.. c:function:: void cfp_array3d.resize(cfp_array3d* self, uint nx, uint ny, uint nz, int clear)
+.. c:function:: void cfp.array1f.resize(cfp_array1f* self, uint n, int clear)
+.. c:function:: void cfp.array2f.resize(cfp_array2f* self, uint nx, uint ny, int clear)
+.. c:function:: void cfp.array3f.resize(cfp_array3f* self, uint nx, uint ny, uint nz, int clear)
+.. c:function:: void cfp.array1d.resize(cfp_array1d* self, uint n, int clear)
+.. c:function:: void cfp.array2d.resize(cfp_array2d* self, uint nx, uint ny, int clear)
+.. c:function:: void cfp.array3d.resize(cfp_array3d* self, uint nx, uint ny, uint nz, int clear)
 
   :ref:`Resize array <array_resize>`.
 
 The six array types share many functions that have the same signature.
 Below, each instance of :code:`cfp_array` generically refers to one of
-those six types.
+those six types (ex. :code:`cfp_array1f`). Similarly, each instance of
+:code:`cfp.array` refers to navigating the CFP API namespace for a given cfp
+type, to reach the function call (ex. :code:`cfp.array2f`).
 
-.. c:function:: cfp_array* cfp_array.ctor_default()
+.. c:function:: cfp_array* cfp.array.ctor_default()
   
   Default constructor.  Allocate an empty array that later can be
   :ref:`resized <cfp_resize>` and whose rate and cache size can be
-  set by :c:func:`cfp_array.set_rate` and :c:func:`cfp_array.set_cache_size`.
+  set by :c:func:`cfp.array.set_rate` and :c:func:`cfp.array.set_cache_size`.
   Return a pointer to the constructed array.
 
-.. c:function:: cfp_array* cfp_array.ctor_copy(const cfp_array* src)
+.. c:function:: cfp_array* cfp.array.ctor_copy(const cfp_array* src)
 
   :ref:`Copy constructor <array_ctor_default>`.  Return a pointer to
   the constructed array.
 
-.. c:function:: void cfp_array.dtor(cfp_array* self)
+.. c:function:: void cfp.array.dtor(cfp_array* self)
 
   Destructor.  The destructor not only deallocates any compressed data
   owned by the array, but also frees memory for itself, invalidating
   the *self* pointer upon return.  Note that the user must explicitly
   call the destructor to avoid memory leaks.
 
-.. c:function:: void cfp_array.deep_copy(cfp_array* self, const cfp_array* src)
+.. c:function:: void cfp.array.deep_copy(cfp_array* self, const cfp_array* src)
 
   Perform a deep copy of *src* analogous to the
   :ref:`C++ assignment operator <array_copy>`.
 
-.. c:function:: double cfp_array.rate(const cfp_array* self)
+.. c:function:: double cfp.array.rate(const cfp_array* self)
 
   See :cpp:func:`array::rate`.
 
-.. c:function:: double cfp_array.set_rate(cfp_array* self, double rate)
+.. c:function:: double cfp.array.set_rate(cfp_array* self, double rate)
 
   See :cpp:func:`array::set_rate`.
 
-.. c:function:: size_t cfp_array.cache_size(const cfp_array* self)
+.. c:function:: size_t cfp.array.cache_size(const cfp_array* self)
 
   See :cpp:func:`array::cache_size`.
 
-.. c:function:: void cfp_array.set_cache_size(cfp_array* self, size_t csize)
+.. c:function:: void cfp.array.set_cache_size(cfp_array* self, size_t csize)
 
   See :cpp:func:`array::set_cache_size`.
 
-.. c:function:: void cfp_array.clear_cache(const cfp_array* self)
+.. c:function:: void cfp.array.clear_cache(const cfp_array* self)
 
   See :cpp:func:`array::clear_cache`.
 
-.. c:function:: void cfp_array.flush_cache(const cfp_array* self)
+.. c:function:: void cfp.array.flush_cache(const cfp_array* self)
 
   See :cpp:func:`array::flush_cache`.
 
-.. c:function:: size_t cfp_array.compressed_size(const cfp_array* self)
+.. c:function:: size_t cfp.array.compressed_size(const cfp_array* self)
 
   See :cpp:func:`array::compressed_size`.
 
-.. c:function:: uchar* cfp_array.compressed_data(const cfp_array* self)
+.. c:function:: uchar* cfp.array.compressed_data(const cfp_array* self)
 
   See :cpp:func:`array::compressed_data`.
 
-.. c:function:: size_t cfp_array.size(const cfp_array* self)
+.. c:function:: size_t cfp.array.size(const cfp_array* self)
 
   See :cpp:func:`array::size`.
 
-.. c:function:: float cfp_array.get_flat(const cfp_array* a, uint index)
-.. c:function:: double cfp_array.get_flat(const cfp_array* a, uint index)
+.. c:function:: float cfp.array.get_flat(const cfp_array* a, uint index)
+.. c:function:: double cfp.array.get_flat(const cfp_array* a, uint index)
 
   Flat index array accessors; see :cpp:func:`array::operator[]`.
 
-.. c:function:: void cfp_array.set_flat(const cfp_array* a, uint index, float val)
-.. c:function:: void cfp_array.set_flat(const cfp_array* a, uint index, double val)
+.. c:function:: void cfp.array.set_flat(const cfp_array* a, uint index, float val)
+.. c:function:: void cfp.array.set_flat(const cfp_array* a, uint index, double val)
 
   Flat index array mutators; set array element with flat *index* to *val*.
