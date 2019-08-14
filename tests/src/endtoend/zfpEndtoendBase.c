@@ -91,8 +91,10 @@ setupRandomData(void** state)
 
   // set remaining indices (square for now)
   int i;
-  for (i = 1; i < 4; i++) {
+  for (i = 0; i < 4; i++) {
     bundle->randomGenArrSideLen[i] = (i < DIMS) ? bundle->randomGenArrSideLen[0] : 0;
+    // for now, entire randomly generated array always entirely compressed
+    bundle->dimLens[i] = (uint)bundle->randomGenArrSideLen[i];
   }
 
   *state = bundle;
@@ -113,10 +115,6 @@ teardownRandomData(void** state)
 static void
 setupZfpFields(struct setupVars* bundle, int s[4])
 {
-  bundle->dimLens[0] = (uint)bundle->randomGenArrSideLen[0];
-  bundle->dimLens[1] = (uint)bundle->randomGenArrSideLen[1];
-  bundle->dimLens[2] = (uint)bundle->randomGenArrSideLen[2];
-  bundle->dimLens[3] = (uint)bundle->randomGenArrSideLen[3];
   uint* n = bundle->dimLens;
 
   // setup zfp_fields: source/destination arrays for compression/decompression
@@ -358,7 +356,7 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
   struct setupVars *bundle = *state;
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->randomGenArr, bundle->totalRandomGenArrLen, 1);
   uint64 key1, key2;
-  computeKey(ARRAY_TEST, ORIGINAL_INPUT, bundle->dimLens, 0, 0, &key1, &key2);
+  computeKeyOriginalInput(ARRAY_TEST, bundle->dimLens, &key1, &key2);
   ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2);
 }
 
