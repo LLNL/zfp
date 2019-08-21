@@ -10,18 +10,18 @@ _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, PermutedArray_wh
 #endif
 
 /* fixed-precision */
-_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch), setupFixedPrec, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch), setupDefaultStride, teardown),
 
 /* fixed-rate */
 _cmocka_unit_test(_catFunc3(given_, DIM_INT_STR, ZfpStream_when_SetRateWithWriteRandomAccess_expect_RateRoundedUpProperly)),
-_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressDecompressFixedRate_expect_BitstreamAndArrayChecksumsMatch), setupFixedRate, teardown),
-_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate), setupFixedRate, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressDecompressFixedRate_expect_BitstreamAndArrayChecksumsMatch), setupDefaultStride, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate), setupDefaultStride, teardown),
 
 #ifdef FL_PT_DATA
 /* fixed-accuracy */
-_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressDecompressFixedAccuracy_expect_BitstreamAndArrayChecksumsMatch), setupFixedAccuracy, teardown),
-_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy), setupFixedAccuracy, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressDecompressFixedAccuracy_expect_BitstreamAndArrayChecksumsMatch), setupDefaultStride, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy), setupDefaultStride, teardown),
 #endif
 
 /* reversible */
-_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressDecompressReversible_expect_BitstreamAndArrayChecksumsMatch), setupReversible, teardown),
+_cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, Array_when_ZfpCompressDecompressReversible_expect_BitstreamAndArrayChecksumsMatch), setupDefaultStride, teardown),

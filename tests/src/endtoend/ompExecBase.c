@@ -190,75 +190,43 @@ _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedPrecision_expec
 }
 
 
-// setup functions (pre-test)
+/* setup functions (pre-test) */
 
 static int
-setupZfpOmp(void **state)
+setupOmpConfig(void **state, stride_config stride)
 {
+  int result = initZfpStreamAndField(state, stride);
+
   struct setupVars *bundle = *state;
   assert_int_equal(zfp_stream_set_execution(bundle->stream, zfp_exec_omp), 1);
 
-  return 0;
-}
-
-static int
-setupOmpConfig(void **state, zfp_mode zfpMode, stride_config stride)
-{
-  return setupChosenZfpMode(state, zfpMode, stride);
+  return result;
 }
 
 /* entry functions */
 
-/* strided always uses fixed-precision & compressParamNum=1 */
 static int
 setupPermuted(void **state)
 {
-  return setupOmpConfig(state, zfp_mode_fixed_precision, PERMUTED);
+  return setupOmpConfig(state, PERMUTED);
 }
 
 static int
 setupInterleaved(void **state)
 {
-  return setupOmpConfig(state, zfp_mode_fixed_precision, INTERLEAVED);
+  return setupOmpConfig(state, INTERLEAVED);
 }
 
 static int
 setupReversed(void **state)
 {
-  return setupOmpConfig(state, zfp_mode_fixed_precision, REVERSED);
+  return setupOmpConfig(state, REVERSED);
 }
 
-/* non-strided functions always use stride=AS_IS */
-
-/* fixed-precision */
 static int
-setupFixedPrec(void **state)
+setupDefaultStride(void **state)
 {
-  return setupOmpConfig(state, zfp_mode_fixed_precision, AS_IS);
-}
-
-/* fixed-rate */
-static int
-setupFixedRate(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, AS_IS);
-}
-
-#ifdef FL_PT_DATA
-/* fixed-accuracy */
-static int
-setupFixedAccuracy(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, AS_IS);
-}
-
-#endif
-
-/* reversible */
-static int
-setupReversible(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, AS_IS);
+  return setupOmpConfig(state, AS_IS);
 }
 
 // end #ifdef _OPENMP
