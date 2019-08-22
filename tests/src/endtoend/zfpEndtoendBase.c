@@ -356,7 +356,7 @@ runZfpCompress(zfp_stream* stream, const zfp_field* field, zfp_timer* timer, siz
 {
   // perform compression and time it
   if (zfp_timer_start(timer)) {
-    printf("Unknown platform (none of linux, win, osx)\n");
+    printf("ERROR: Unknown platform (none of linux, win, osx) when starting timer\n");
     return 1;
   }
 
@@ -365,7 +365,7 @@ runZfpCompress(zfp_stream* stream, const zfp_field* field, zfp_timer* timer, siz
   printf("\t\t\t\t\tCompress time (s): %lf\n", time);
 
   if (compressedBytes == 0) {
-    printf("Compression failed, nothing was written to bitstream\n");
+    printf("ERROR: Compression failed, nothing was written to bitstream\n");
     return 1;
   } else {
     return 0;
@@ -380,7 +380,7 @@ isCompressedBitstreamChecksumsMatch(zfp_stream* stream, bitstream* bs, int compr
   uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), compressParamNum);
 
   if (checksum != expectedChecksum) {
-    printf("Compressed bitstream checksums were different: 0x%"PRIu64" != 0x%"PRIu64"\n", checksum, expectedChecksum);
+    printf("ERROR: Compressed bitstream checksums were different: 0x%"UINT64PRIx" != 0x%"UINT64PRIx"\n", checksum, expectedChecksum);
     return 1;
   } else {
     return 0;
@@ -394,7 +394,7 @@ runZfpDecompress(zfp_stream* stream, zfp_field* decompressField, zfp_timer* time
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location
   if (zfp_timer_start(timer)) {
-    printf("Unknown platform (none of linux, win, osx)\n");
+    printf("ERROR: Unknown platform (none of linux, win, osx)\n");
     return 1;
   }
 
@@ -403,7 +403,7 @@ runZfpDecompress(zfp_stream* stream, zfp_field* decompressField, zfp_timer* time
   printf("\t\t\t\t\tDecompress time (s): %lf\n", time);
 
   if (compressedBytes != result) {
-    printf("Decompression advanced the bitstream to a different position than after compression: %zu != %zu\n", result, compressedBytes);
+    printf("ERROR: Decompression advanced the bitstream to a different position than after compression: %zu != %zu\n", result, compressedBytes);
     return 1;
   } else {
     return 0;
@@ -445,7 +445,7 @@ isDecompressedArrayChecksumsMatch(struct setupVars* bundle)
 
   uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
   if (checksum != expectedChecksum) {
-    printf("Decompressed array checksums were different: 0x%"PRIu64" != 0x%"PRIu64"\n", checksum, expectedChecksum);
+    printf("ERROR: Decompressed array checksums were different: 0x%"UINT64PRIx" != 0x%"UINT64PRIx"\n", checksum, expectedChecksum);
     return 1;
   } else {
     return 0;
@@ -548,6 +548,7 @@ runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
 }
 
 // returns number of testcase failures
+// (not allowed to call fail_msg() because all tests must run before signaling test failure)
 static int
 runCompressDecompressAcrossParamsGivenMode(void** state, int doDecompress, zfp_mode mode, int numCompressParams)
 {
