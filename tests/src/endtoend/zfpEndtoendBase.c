@@ -350,56 +350,72 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
   assert_int_equal(checksum, expectedChecksum);
 }
 
-// returns 0 on all tests pass, 1 on test failure
-// will skip decompression if compression fails
+// returns 1 on failure, 0 on success
 static int
-isZfpCompressDecompressChecksumsMatch(void **state, int doDecompress)
+runZfpCompress(zfp_stream* stream, const zfp_field* field, zfp_timer* timer, size_t* compressedBytes)
 {
-  struct setupVars *bundle = *state;
-  zfp_field* field = bundle->field;
-  zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
-
   // perform compression and time it
-  if (zfp_timer_start(bundle->timer)) {
+  if (zfp_timer_start(timer)) {
     printf("Unknown platform (none of linux, win, osx)\n");
     return 1;
   }
-  size_t compressedBytes = zfp_compress(stream, field);
-  double time = zfp_timer_stop(bundle->timer);
+
+  *compressedBytes = zfp_compress(stream, field);
+  double time = zfp_timer_stop(timer);
   printf("\t\t\t\t\tCompress time (s): %lf\n", time);
+
   if (compressedBytes == 0) {
     printf("Compression failed, nothing was written to bitstream\n");
     return 1;
+  } else {
+    return 0;
   }
+}
 
-  uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
+// returns 1 on failure, 0 on success
+static int
+isCompressedBitstreamChecksumsMatch(zfp_stream* stream, bitstream* bs, int compressParamNum)
+{
+  uint64 checksum = hashBitstream(stream_data(bs), stream_size(bs));
+  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), compressParamNum);
+
   if (checksum != expectedChecksum) {
     printf("Compressed bitstream checksums were different: 0x%"PRIu64" != 0x%"PRIu64"\n", checksum, expectedChecksum);
     return 1;
-  }
-
-  if (doDecompress == 0) {
+  } else {
     return 0;
   }
+}
 
-  // rewind stream for decompression
-  zfp_stream_rewind(stream);
-
+// returns 1 on failure, 0 on success
+static int
+runZfpDecompress(zfp_stream* stream, zfp_field* decompressField, zfp_timer* timer, size_t compressedBytes)
+{
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location
-  if (zfp_timer_start(bundle->timer)) {
+  if (zfp_timer_start(timer)) {
     printf("Unknown platform (none of linux, win, osx)\n");
     return 1;
   }
-  size_t result = zfp_decompress(stream, bundle->decompressField);
-  time = zfp_timer_stop(bundle->timer);
+
+  size_t result = zfp_decompress(stream, decompressField);
+  double time = zfp_timer_stop(timer);
   printf("\t\t\t\t\tDecompress time (s): %lf\n", time);
+
   if (compressedBytes != result) {
     printf("Decompression advanced the bitstream to a different position than after compression: %zu != %zu\n", result, compressedBytes);
     return 1;
+  } else {
+    return 0;
   }
+}
+
+// returns 1 on failure, 0 on success
+static int
+isDecompressedArrayChecksumsMatch(struct setupVars* bundle)
+{
+  zfp_field* field = bundle->field;
+  zfp_stream* stream = bundle->stream;
 
   // hash decompressedArr
   const UInt* arr = (const UInt*)bundle->decompressedArr;
@@ -407,7 +423,7 @@ isZfpCompressDecompressChecksumsMatch(void **state, int doDecompress)
   zfp_field_stride(field, strides);
   size_t* n = bundle->randomGenArrSideLen;
 
-  checksum = 0;
+  uint64 checksum = 0;
   switch(bundle->stride) {
     case REVERSED:
       // arr already points to last element (so strided traverse is legal)
@@ -427,41 +443,32 @@ isZfpCompressDecompressChecksumsMatch(void **state, int doDecompress)
       break;
   }
 
-  expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
+  uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
   if (checksum != expectedChecksum) {
     printf("Decompressed array checksums were different: 0x%"PRIu64" != 0x%"PRIu64"\n", checksum, expectedChecksum);
     return 1;
+  } else {
+    return 0;
   }
-
-  return 0;
 }
 
 // returns 0 on all tests pass, 1 on test failure
 // will skip decompression if compression fails
 static int
-runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
+isZfpCompressDecompressChecksumsMatch(void **state, int doDecompress)
 {
-  zfp_field* field = bundle->field;
+  struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
+  zfp_field* field = bundle->field;
+  zfp_timer* timer = bundle->timer;
 
-  // perform compression and time it
-  if (zfp_timer_start(bundle->timer)) {
-    printf("Unknown platform (none of linux, win, osx)\n");
-    return 1;
-  }
-  size_t compressedBytes = zfp_compress(stream, field);
-  double time = zfp_timer_stop(bundle->timer);
-  printf("\t\t\t\t\tCompress time (s): %lf\n", time);
-  if (compressedBytes == 0) {
-    printf("Compression failed, nothing was written to bitstream\n");
+  size_t compressedBytes;
+  if (runZfpCompress(stream, field, timer, &compressedBytes) == 1) {
     return 1;
   }
 
-  uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
-  if (checksum != expectedChecksum) {
-    printf("Compressed bitstream checksums were different: 0x%"PRIu64" != 0x%"PRIu64"\n", checksum, expectedChecksum);
+  bitstream* bs = zfp_stream_bit_stream(stream);
+  if (isCompressedBitstreamChecksumsMatch(stream, bs, bundle->compressParamNum) == 1) {
     return 1;
   }
 
@@ -471,19 +478,44 @@ runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
 
   // rewind stream for decompression
   zfp_stream_rewind(stream);
-
-  // zfp_decompress() will write to bundle->decompressedArr
-  // assert bitstream ends in same location
-  if (zfp_timer_start(bundle->timer)) {
-    printf("Unknown platform (none of linux, win, osx)\n");
+  if (runZfpDecompress(stream, bundle->decompressField, timer, compressedBytes) == 1) {
     return 1;
   }
-  size_t result = zfp_decompress(stream, bundle->decompressField);
-  time = zfp_timer_stop(bundle->timer);
-  printf("\t\t\t\t\tDecompress time (s): %lf\n", time);
-  if (compressedBytes != result) {
-    printf("Decompression advanced the bitstream to a different position than after compression: %zu != %zu\n", result, compressedBytes);
+
+  if (isDecompressedArrayChecksumsMatch(bundle) == 1) {
     return 1;
+  }
+
+  return 0;
+}
+
+// this test is run by itself as its own test case, so it can use fail_msg() instead of accumulating error counts
+// will skip decompression if compression fails
+static void
+runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
+{
+  zfp_stream* stream = bundle->stream;
+  zfp_field* field = bundle->field;
+  zfp_timer* timer = bundle->timer;
+
+  size_t compressedBytes;
+  if (runZfpCompress(stream, field, timer, &compressedBytes) == 1) {
+    fail_msg("Reversible test failed.");
+  }
+
+  bitstream* bs = zfp_stream_bit_stream(stream);
+  if (isCompressedBitstreamChecksumsMatch(stream, bs, bundle->compressParamNum) == 1) {
+    fail_msg("Reversible test failed.");
+  }
+
+  if (doDecompress == 0) {
+    return;
+  }
+
+  // rewind stream for decompression
+  zfp_stream_rewind(stream);
+  if (runZfpDecompress(stream, bundle->decompressField, timer, compressedBytes) == 1) {
+    fail_msg("Reversible test failed.");
   }
 
   // verify that uncompressed and decompressed arrays match bit for bit
@@ -513,8 +545,6 @@ runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
       assert_memory_equal(bundle->compressedArr, bundle->decompressedArr, bundle->totalRandomGenArrLen * sizeof(Scalar));
       break;
   }
-
-  return 0;
 }
 
 // returns number of testcase failures
