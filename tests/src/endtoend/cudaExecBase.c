@@ -84,7 +84,9 @@ static void
 runCompressDecompressNoopTest(void **state, zfp_mode mode)
 {
   struct setupVars *bundle = *state;
-  setupCompressParam(bundle, mode, 1);
+  if (setupCompressParam(bundle, mode, 1) == 1) {
+    fail_msg("ERROR while setting zfp mode");
+  }
 
   if (runZfpCompressDecompressIsNoop(state) == 1) {
     fail_msg("Compression/Decompression no-op test failed");
@@ -118,7 +120,10 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressNonFixedRate_expec
       continue;
     }
 
-    setupCompressParam(bundle, mode, 1);
+    if (setupCompressParam(bundle, mode, 1) == 1) {
+      failures++;
+      continue;
+    }
 
     if (runZfpCompressDecompressIsNoop(state) == 1) {
       failures++;

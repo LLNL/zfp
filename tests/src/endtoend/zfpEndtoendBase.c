@@ -257,12 +257,14 @@ setupZfpStream(struct setupVars* bundle)
   bundle->buffer = buffer;
 }
 
-static void
+// returns 1 on failure, 0 on success
+static int
 setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParamNum)
 {
   // set compression mode for this compressParamNum
   if (compressParamNum > 2 || compressParamNum < 0) {
-    fail_msg("Unknown compressParamNum during initZfpStreamAndField()");
+    printf("ERROR: Unknown compressParamNum %d during setupCompressParam()\n", compressParamNum);
+    return 1;
   }
   bundle->compressParamNum = compressParamNum;
 
@@ -292,13 +294,16 @@ setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParam
 
     case zfp_mode_reversible:
       zfp_stream_set_reversible(bundle->stream);
+      printf("\t\t\t\tReversible mode\n");
 
       break;
 
     default:
-      fail_msg("Invalid zfp mode during setupCompressParam()");
-      break;
+      printf("ERROR: Invalid zfp mode %d during setupCompressParam()\n", zfpMode);
+      return 1;
   }
+
+  return 0;
 }
 
 // assumes setupRandomData() already run (having set some setupVars members)
@@ -557,7 +562,11 @@ runCompressDecompressAcrossParamsGivenMode(void** state, int doDecompress, zfp_m
   int failures = 0;
   int compressParam;
   for (compressParam = 0; compressParam < numCompressParams; compressParam++) {
-    setupCompressParam(bundle, mode, compressParam);
+    if (setupCompressParam(bundle, mode, compressParam) == 1) {
+      failures++;
+      continue;
+    }
+
     failures += isZfpCompressDecompressChecksumsMatch(state, doDecompress);
 
     zfp_stream_rewind(bundle->stream);

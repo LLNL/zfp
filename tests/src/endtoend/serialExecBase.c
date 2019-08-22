@@ -27,7 +27,10 @@ static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressReversible_expect_BitstreamAndArrayChecksumsMatch)(void **state)
 {
   struct setupVars *bundle = *state;
-  setupCompressParam(bundle, zfp_mode_reversible, 0);
+  if (setupCompressParam(bundle, zfp_mode_reversible, 0) == 1) {
+    fail_msg("ERROR setting zfp mode");
+  }
+
   runCompressDecompressReversible(bundle, 1);
 }
 
@@ -138,7 +141,11 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedB
   int failures = 0;
   int compressParam;
   for (compressParam = 0; compressParam < 3; compressParam++) {
-    setupCompressParam(bundle, zfp_mode_fixed_rate, compressParam);
+    if (setupCompressParam(bundle, zfp_mode_fixed_rate, compressParam) == 1) {
+      failures++;
+      continue;
+    }
+
     failures += isCompressedBitrateComparableToChosenRate(bundle);
 
     zfp_stream_rewind(bundle->stream);
@@ -246,7 +253,11 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
   int failures = 0;
   int compressParam;
   for (compressParam = 0; compressParam < 3; compressParam++) {
-    setupCompressParam(bundle, zfp_mode_fixed_accuracy, compressParam);
+    if (setupCompressParam(bundle, zfp_mode_fixed_accuracy, compressParam) == 1) {
+      failures++;
+      continue;
+    }
+
     failures += isCompressedValuesWithinAccuracy(bundle);
 
     zfp_stream_rewind(bundle->stream);
