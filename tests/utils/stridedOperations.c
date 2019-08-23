@@ -82,6 +82,7 @@ permuteSquareArray(void* inputArr, void* outputArr, size_t sideLen, int dims, zf
       }
       break;
 
+    // considered an error if requested to permute a 1 dimensional array
     case 1:
     default:
       return 1;

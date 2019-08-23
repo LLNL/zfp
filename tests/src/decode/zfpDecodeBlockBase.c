@@ -4,6 +4,8 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
@@ -12,8 +14,8 @@
 struct setupVars {
   Scalar* dataArr;
   void* buffer;
+  size_t bufsizeBytes;
   zfp_stream* stream;
-  int specialValueIndex;
 };
 
 static void
@@ -34,7 +36,7 @@ populateInitialArray(Scalar** dataArrPtr)
 }
 
 static void
-populateInitialArraySpecial(Scalar** dataArrPtr, int index)
+populateInitialArraySpecial(Scalar* dataArr, int index)
 {
   // IEEE-754 special values
   static const uint32 special_float_values[] = {
@@ -62,9 +64,6 @@ populateInitialArraySpecial(Scalar** dataArrPtr, int index)
     UINT64C(0x7ff4000000000000), // sNaN
   };
 
-  *dataArrPtr = malloc(sizeof(Scalar) * BLOCK_SIZE);
-  assert_non_null(*dataArrPtr);
-
   size_t i;
   for (i = 0; i < BLOCK_SIZE; i++) {
 #ifdef FL_PT_DATA
@@ -72,17 +71,17 @@ populateInitialArraySpecial(Scalar** dataArrPtr, int index)
     if ((i & 3u) == 0) {
       switch(ZFP_TYPE) {
         case zfp_type_float:
-          memcpy((*dataArrPtr) + i, &special_float_values[index], sizeof(Scalar));
+          memcpy(dataArr + i, &special_float_values[index], sizeof(Scalar));
           break;
         case zfp_type_double:
-          memcpy((*dataArrPtr) + i, &special_double_values[index], sizeof(Scalar));
+          memcpy(dataArr + i, &special_double_values[index], sizeof(Scalar));
           break;
       }
     }
     else
-      (*dataArrPtr)[i] = 0;
+      dataArr[i] = 0;
 #else
-    (*dataArrPtr)[i] = nextSignedRandInt();
+    dataArr[i] = nextSignedRandInt();
 #endif
   }
 }
@@ -126,7 +125,7 @@ setupZfpStream(struct setupVars* bundle)
 }
 
 static void
-setupZfpStreamSpecial(struct setupVars* bundle, int index)
+setupZfpStreamSpecial(struct setupVars* bundle)
 {
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
@@ -159,9 +158,9 @@ setupZfpStreamSpecial(struct setupVars* bundle, int index)
   zfp_stream_rewind(stream);
   zfp_field_free(field);
 
+  bundle->bufsizeBytes = bufsizeBytes;
   bundle->buffer = buffer;
   bundle->stream = stream;
-  bundle->specialValueIndex = index;
 }
 
 static int
@@ -180,78 +179,20 @@ setup(void **state)
 }
 
 static int
-setupSpecial(void **state, int specialValueIndex)
+setupSpecial(void **state)
 {
   struct setupVars *bundle = malloc(sizeof(struct setupVars));
   assert_non_null(bundle);
 
+  bundle->dataArr = malloc(sizeof(Scalar) * BLOCK_SIZE);
+  assert_non_null(bundle->dataArr);
+
   resetRandGen();
-  populateInitialArraySpecial(&bundle->dataArr, specialValueIndex);
-  setupZfpStreamSpecial(bundle, specialValueIndex);
+  setupZfpStreamSpecial(bundle);
 
   *state = bundle;
 
   return 0;
-}
-
-static int
-setupSpecial0(void **state)
-{
-  return setupSpecial(state, 0);
-}
-
-static int
-setupSpecial1(void **state)
-{
-  return setupSpecial(state, 1);
-}
-
-static int
-setupSpecial2(void **state)
-{
-  return setupSpecial(state, 2);
-}
-
-static int
-setupSpecial3(void **state)
-{
-  return setupSpecial(state, 3);
-}
-
-static int
-setupSpecial4(void **state)
-{
-  return setupSpecial(state, 4);
-}
-
-static int
-setupSpecial5(void **state)
-{
-  return setupSpecial(state, 5);
-}
-
-static int
-setupSpecial6(void **state)
-{
-  return setupSpecial(state, 6);
-}
-
-static int
-setupSpecial7(void **state)
-{
-  return setupSpecial(state, 7);
-}
-
-static int
-setupSpecial8(void **state)
-{
-  return setupSpecial(state, 8);
-}
-
-static int
-setupSpecial9(void **state)
-{
-  return setupSpecial(state, 9);
 }
 
 static int
@@ -315,20 +256,37 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatche
 }
 
 static void
-_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlock_expect_ArrayMatchesBitForBit)(void **state)
+_catFunc3(given_, DIM_INT_STR, Block_when_DecodeSpecialBlocks_expect_ArraysMatchBitForBit)(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
 
-  _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
-  zfp_stream_flush(stream);
-  zfp_stream_rewind(stream);
+  int failures = 0;
+  int i;
+  for (i = 0; i < 10; i++) {
+    populateInitialArraySpecial(bundle->dataArr, i);
 
-  Scalar* decodedDataArr = calloc(BLOCK_SIZE, sizeof(Scalar));
-  assert_non_null(decodedDataArr);
-  _t2(zfp_decode_block, Scalar, DIMS)(stream, decodedDataArr);
+    _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
+    zfp_stream_flush(stream);
+    zfp_stream_rewind(stream);
 
-  assert_memory_equal(bundle->dataArr, decodedDataArr, BLOCK_SIZE * sizeof(Scalar));
+    Scalar* decodedDataArr = calloc(BLOCK_SIZE, sizeof(Scalar));
+    assert_non_null(decodedDataArr);
+    _t2(zfp_decode_block, Scalar, DIMS)(stream, decodedDataArr);
 
-  free(decodedDataArr);
+    if (memcmp(bundle->dataArr, decodedDataArr, BLOCK_SIZE * sizeof(Scalar)) != 0) {
+      printf("Decode special Block testcase %d failed\n", i);
+      failures++;
+    }
+
+    free(decodedDataArr);
+
+    // reset/zero bitstream, rewind for next iteration
+    memset(bundle->buffer, bundle->bufsizeBytes, 0);
+    zfp_stream_rewind(stream);
+  }
+
+  if (failures > 0) {
+    fail_msg("At least 1 special block testcase failed\n");
+  }
 }

@@ -27,9 +27,6 @@ computeTotalBlocks(zfp_field* field)
     case 1:
       bx = (field->nx + 3) / 4;
       return bx * by * bz * bw;
-
-    default:
-      fail_msg("ERROR: Unsupported dimensionality\n");
   }
 
   return 0;
@@ -47,778 +44,189 @@ setChunkSize(void **state, uint threadCount, int param)
     case 2:
       // largest chunk size: total num blocks
       chunk_size = computeTotalBlocks(bundle->field);
-      assert_int_equal(zfp_stream_set_omp_chunk_size(stream, chunk_size), 1);
       break;
 
     case 1:
       // smallest chunk size: 1 block
       chunk_size = 1u;
-      assert_int_equal(zfp_stream_set_omp_chunk_size(stream, chunk_size), 1);
       break;
 
     case 0:
       // default chunk size (0 implies 1 chunk per thread)
       chunk_size = (computeTotalBlocks(bundle->field) + threadCount - 1) / threadCount;
-      assert_int_equal(zfp_stream_set_omp_chunk_size(stream, 0u), 1);
       break;
 
     default:
-      fail_msg("ERROR: Unsupported chunkParam\n");
+      printf("Unsupported chunkParam\n");
+      return 0;
+  }
+
+  if (chunk_size == 0) {
+    printf("Chunk size was computed to be 0 blocks\n");
+    return 0;
+  } else if (zfp_stream_set_omp_chunk_size(stream, chunk_size) == 0) {
+    printf("zfp_stream_set_omp_chunk_size(stream, %u) failed (returned 0)\n", chunk_size);
+    return 0;
   }
 
   return chunk_size;
 }
 
 static uint
-setThreadCount(void **state, int param)
+setThreadCount(struct setupVars *bundle, int param)
 {
-  struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
 
   uint threadParam = (uint)param;
   uint actualThreadCount = threadParam ? threadParam : omp_get_max_threads();
 
-  assert_int_equal(zfp_stream_set_omp_threads(stream, threadParam), 1);
-  printf("\t\tThread count: %u\n", actualThreadCount);
-
-  return actualThreadCount;
+  if (zfp_stream_set_omp_threads(stream, threadParam) == 0) {
+    return 0;
+  } else {
+    return actualThreadCount;
+  }
 }
 
+// OpenMP endtoend entry functions
+// pass doDecompress=0 because decompression not yet supported
+// loop across 3 compression parameters
+
+// returns 0 on success, 1 on test failure
 static int
-setupZfpOmp(void **state, uint threadParam, uint chunkParam)
+runCompressAcrossThreadsChunks(void **state, zfp_mode mode)
 {
   struct setupVars *bundle = *state;
 
-  assert_int_equal(zfp_stream_set_execution(bundle->stream, zfp_exec_omp), 1);
+  int failures = 0;
+  int threadParam, chunkParam;
+  // run across 3 thread counts
+  for (threadParam = 0; threadParam < 3; threadParam++) {
+    uint threadCount = setThreadCount(bundle, threadParam);
+    if (threadCount == 0) {
+      printf("Threadcount was 0\n");
+      failures += 3;
+      continue;
+    } else {
+      printf("\t\tThread count: %u\n", threadCount);
+    }
 
-  uint threadCount = setThreadCount(state, threadParam);
-  uint chunk_size = setChunkSize(state, threadCount, chunkParam);
+    for (chunkParam = 0; chunkParam < 3; chunkParam++) {
+      uint chunkSize = setChunkSize(state, threadCount, chunkParam);
+      if (chunkSize == 0) {
+        printf("ERROR: Computed chunk size was 0 blocks\n");
+        failures++;
+        continue;
+      } else {
+        printf("\t\t\tChunk size: %u blocks\n", chunkSize);
+      }
 
-  printf("\t\tChunk size (blocks): %u\n", chunk_size);
+      int numCompressParams = (mode == zfp_mode_reversible) ? 1 : 3;
+      failures += runCompressDecompressAcrossParamsGivenMode(state, 0, mode, numCompressParams);
+    }
+  }
 
-  return 0;
+  if (failures > 0) {
+    fail_msg("Overall compress/decompress test failure\n");
+  }
 }
 
-static int
-setupOmpConfig(void **state, zfp_mode zfpMode, int compressParamNum, int threadParam, int chunkParam, stride_config stride)
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumsMatch)(void **state)
 {
-  int result = setupChosenZfpMode(state, zfpMode, compressParamNum, stride);
-  return result | setupZfpOmp(state, threadParam, chunkParam);
+  runCompressAcrossThreadsChunks(state, zfp_mode_fixed_precision);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumsMatch)(void **state)
+{
+  runCompressAcrossThreadsChunks(state, zfp_mode_fixed_rate);
+}
+
+#ifdef FL_PT_DATA
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumsMatch)(void **state)
+{
+  runCompressAcrossThreadsChunks(state, zfp_mode_fixed_accuracy);
+}
+#endif
+
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressReversible_expect_BitstreamChecksumsMatch)(void **state)
+{
+  runCompressAcrossThreadsChunks(state, zfp_mode_reversible);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != REVERSED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressAcrossThreadsChunks(state, zfp_mode_fixed_precision);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != INTERLEAVED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressAcrossThreadsChunks(state, zfp_mode_fixed_precision);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != PERMUTED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressAcrossThreadsChunks(state, zfp_mode_fixed_precision);
+}
+
+
+/* setup functions (pre-test) */
+
+static int
+setupOmpConfig(void **state, stride_config stride)
+{
+  int result = initZfpStreamAndField(state, stride);
+
+  struct setupVars *bundle = *state;
+  assert_int_equal(zfp_stream_set_execution(bundle->stream, zfp_exec_omp), 1);
+
+  return result;
 }
 
 /* entry functions */
 
-/* strided always uses fixed-precision & compressParamNum=1 */
-/* with variation on threadcount, chunksize, and stride=PERMUTED, INTERLEAVED, or REVERSED */
 static int
-setupPermuted0Thread0Chunk(void **state)
+setupPermuted(void **state)
 {
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 0, PERMUTED);
+  return setupOmpConfig(state, PERMUTED);
 }
 
 static int
-setupInterleaved0Thread0Chunk(void **state)
+setupInterleaved(void **state)
 {
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 0, INTERLEAVED);
+  return setupOmpConfig(state, INTERLEAVED);
 }
 
 static int
-setupReversed0Thread0Chunk(void **state)
+setupReversed(void **state)
 {
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 0, REVERSED);
+  return setupOmpConfig(state, REVERSED);
 }
 
 static int
-setupPermuted0Thread1Chunk(void **state)
+setupDefaultStride(void **state)
 {
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 1, PERMUTED);
-}
-
-static int
-setupInterleaved0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 1, INTERLEAVED);
-}
-
-static int
-setupReversed0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 1, REVERSED);
-}
-
-static int
-setupPermuted0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 2, PERMUTED);
-}
-
-static int
-setupInterleaved0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 2, INTERLEAVED);
-}
-
-static int
-setupReversed0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 2, REVERSED);
-}
-
-static int
-setupPermuted1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 0, PERMUTED);
-}
-
-static int
-setupInterleaved1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 0, INTERLEAVED);
-}
-
-static int
-setupReversed1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 0, REVERSED);
-}
-
-static int
-setupPermuted1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, PERMUTED);
-}
-
-static int
-setupInterleaved1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, INTERLEAVED);
-}
-
-static int
-setupReversed1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, REVERSED);
-}
-
-static int
-setupPermuted1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 2, PERMUTED);
-}
-
-static int
-setupInterleaved1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 2, INTERLEAVED);
-}
-
-static int
-setupReversed1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 2, REVERSED);
-}
-
-static int
-setupPermuted2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, PERMUTED);
-}
-
-static int
-setupInterleaved2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, INTERLEAVED);
-}
-
-static int
-setupReversed2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, REVERSED);
-}
-
-static int
-setupPermuted2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 1, PERMUTED);
-}
-
-static int
-setupInterleaved2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 1, INTERLEAVED);
-}
-
-static int
-setupReversed2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 1, REVERSED);
-}
-
-static int
-setupPermuted2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, PERMUTED);
-}
-
-static int
-setupInterleaved2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, INTERLEAVED);
-}
-
-static int
-setupReversed2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, REVERSED);
-}
-
-/* non-strided functions always use stride=AS_IS */
-/* with variation on compressParamNum, threadcount, and chunksize */
-
-/* fixed-precision */
-static int
-setupFixedPrec0Param0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 0, 0, AS_IS);
-}
-
-static int
-setupFixedPrec0Param0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 0, 1, AS_IS);
-}
-
-static int
-setupFixedPrec0Param0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 0, 2, AS_IS);
-}
-
-static int
-setupFixedPrec0Param1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 1, 0, AS_IS);
-}
-
-static int
-setupFixedPrec0Param1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 1, 1, AS_IS);
-}
-
-static int
-setupFixedPrec0Param1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 1, 2, AS_IS);
-}
-
-static int
-setupFixedPrec0Param2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 2, 0, AS_IS);
-}
-
-static int
-setupFixedPrec0Param2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 2, 1, AS_IS);
-}
-
-static int
-setupFixedPrec0Param2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 0, 2, 2, AS_IS);
-}
-
-static int
-setupFixedPrec1Param0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 0, AS_IS);
-}
-
-static int
-setupFixedPrec1Param0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 1, AS_IS);
-}
-
-static int
-setupFixedPrec1Param0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 0, 2, AS_IS);
-}
-
-static int
-setupFixedPrec1Param1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 0, AS_IS);
-}
-
-static int
-setupFixedPrec1Param1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 1, AS_IS);
-}
-
-static int
-setupFixedPrec1Param1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 1, 2, AS_IS);
-}
-
-static int
-setupFixedPrec1Param2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 0, AS_IS);
-}
-
-static int
-setupFixedPrec1Param2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 1, AS_IS);
-}
-
-static int
-setupFixedPrec1Param2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 1, 2, 2, AS_IS);
-}
-
-static int
-setupFixedPrec2Param0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 0, 0, AS_IS);
-}
-
-static int
-setupFixedPrec2Param0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 0, 1, AS_IS);
-}
-
-static int
-setupFixedPrec2Param0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 0, 2, AS_IS);
-}
-
-static int
-setupFixedPrec2Param1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 1, 0, AS_IS);
-}
-
-static int
-setupFixedPrec2Param1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 1, 1, AS_IS);
-}
-
-static int
-setupFixedPrec2Param1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 1, 2, AS_IS);
-}
-
-static int
-setupFixedPrec2Param2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 2, 0, AS_IS);
-}
-
-static int
-setupFixedPrec2Param2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 2, 1, AS_IS);
-}
-
-static int
-setupFixedPrec2Param2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_precision, 2, 2, 2, AS_IS);
-}
-
-/* fixed-rate */
-static int
-setupFixedRate0Param0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 0, 0, AS_IS);
-}
-
-static int
-setupFixedRate0Param0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 0, 1, AS_IS);
-}
-
-static int
-setupFixedRate0Param0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 0, 2, AS_IS);
-}
-
-static int
-setupFixedRate0Param1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 1, 0, AS_IS);
-}
-
-static int
-setupFixedRate0Param1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 1, 1, AS_IS);
-}
-
-static int
-setupFixedRate0Param1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 1, 2, AS_IS);
-}
-
-static int
-setupFixedRate0Param2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 2, 0, AS_IS);
-}
-
-static int
-setupFixedRate0Param2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 2, 1, AS_IS);
-}
-
-static int
-setupFixedRate0Param2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 0, 2, 2, AS_IS);
-}
-
-static int
-setupFixedRate1Param0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 0, 0, AS_IS);
-}
-
-static int
-setupFixedRate1Param0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 0, 1, AS_IS);
-}
-
-static int
-setupFixedRate1Param0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 0, 2, AS_IS);
-}
-
-static int
-setupFixedRate1Param1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 1, 0, AS_IS);
-}
-
-static int
-setupFixedRate1Param1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 1, 1, AS_IS);
-}
-
-static int
-setupFixedRate1Param1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 1, 2, AS_IS);
-}
-
-static int
-setupFixedRate1Param2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 2, 0, AS_IS);
-}
-
-static int
-setupFixedRate1Param2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 2, 1, AS_IS);
-}
-
-static int
-setupFixedRate1Param2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 1, 2, 2, AS_IS);
-}
-
-static int
-setupFixedRate2Param0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 0, 0, AS_IS);
-}
-
-static int
-setupFixedRate2Param0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 0, 1, AS_IS);
-}
-
-static int
-setupFixedRate2Param0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 0, 2, AS_IS);
-}
-
-static int
-setupFixedRate2Param1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 1, 0, AS_IS);
-}
-
-static int
-setupFixedRate2Param1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 1, 1, AS_IS);
-}
-
-static int
-setupFixedRate2Param1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 1, 2, AS_IS);
-}
-
-static int
-setupFixedRate2Param2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 2, 0, AS_IS);
-}
-
-static int
-setupFixedRate2Param2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 2, 1, AS_IS);
-}
-
-static int
-setupFixedRate2Param2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_rate, 2, 2, 2, AS_IS);
-}
-
-#ifdef FL_PT_DATA
-/* fixed-accuracy */
-static int
-setupFixedAccuracy0Param0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 0, 0, AS_IS);
-}
-
-static int
-setupFixedAccuracy0Param0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 0, 1, AS_IS);
-}
-
-static int
-setupFixedAccuracy0Param0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 0, 2, AS_IS);
-}
-
-static int
-setupFixedAccuracy0Param1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 1, 0, AS_IS);
-}
-
-static int
-setupFixedAccuracy0Param1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 1, 1, AS_IS);
-}
-
-static int
-setupFixedAccuracy0Param1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 1, 2, AS_IS);
-}
-
-static int
-setupFixedAccuracy0Param2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 2, 0, AS_IS);
-}
-
-static int
-setupFixedAccuracy0Param2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 2, 1, AS_IS);
-}
-
-static int
-setupFixedAccuracy0Param2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 0, 2, 2, AS_IS);
-}
-static int
-setupFixedAccuracy1Param0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 0, 0, AS_IS);
-}
-
-static int
-setupFixedAccuracy1Param0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 0, 1, AS_IS);
-}
-
-static int
-setupFixedAccuracy1Param0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 0, 2, AS_IS);
-}
-
-static int
-setupFixedAccuracy1Param1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 1, 0, AS_IS);
-}
-
-static int
-setupFixedAccuracy1Param1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 1, 1, AS_IS);
-}
-
-static int
-setupFixedAccuracy1Param1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 1, 2, AS_IS);
-}
-
-static int
-setupFixedAccuracy1Param2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 2, 0, AS_IS);
-}
-
-static int
-setupFixedAccuracy1Param2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 2, 1, AS_IS);
-}
-
-static int
-setupFixedAccuracy1Param2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 1, 2, 2, AS_IS);
-}
-
-static int
-setupFixedAccuracy2Param0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 0, 0, AS_IS);
-}
-
-static int
-setupFixedAccuracy2Param0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 0, 1, AS_IS);
-}
-
-static int
-setupFixedAccuracy2Param0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 0, 2, AS_IS);
-}
-
-static int
-setupFixedAccuracy2Param1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 1, 0, AS_IS);
-}
-
-static int
-setupFixedAccuracy2Param1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 1, 1, AS_IS);
-}
-
-static int
-setupFixedAccuracy2Param1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 1, 2, AS_IS);
-}
-
-static int
-setupFixedAccuracy2Param2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 2, 0, AS_IS);
-}
-
-static int
-setupFixedAccuracy2Param2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 2, 1, AS_IS);
-}
-
-static int
-setupFixedAccuracy2Param2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_fixed_accuracy, 2, 2, 2, AS_IS);
-}
-
-#endif
-
-/* reversible */
-static int
-setupReversible0Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, 0, 0, 0, AS_IS);
-}
-
-static int
-setupReversible0Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, 0, 0, 1, AS_IS);
-}
-
-static int
-setupReversible0Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, 0, 0, 2, AS_IS);
-}
-
-static int
-setupReversible1Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, 0, 1, 0, AS_IS);
-}
-
-static int
-setupReversible1Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, 0, 1, 1, AS_IS);
-}
-
-static int
-setupReversible1Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, 0, 1, 2, AS_IS);
-}
-
-static int
-setupReversible2Thread0Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, 0, 2, 0, AS_IS);
-}
-
-static int
-setupReversible2Thread1Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, 0, 2, 1, AS_IS);
-}
-
-static int
-setupReversible2Thread2Chunk(void **state)
-{
-  return setupOmpConfig(state, zfp_mode_reversible, 0, 2, 2, AS_IS);
+  return setupOmpConfig(state, AS_IS);
 }
 
 // end #ifdef _OPENMP

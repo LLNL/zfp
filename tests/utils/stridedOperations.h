@@ -21,6 +21,7 @@ interleaveArray(void* inputArr, void* outputArr, size_t inputArrLen, zfp_type zf
 
 // ijkl -> lkji, or for lower dims (ex. ij -> ji)
 // returns 0 on success, 1 on failure
+// (defined to fail if dims == 1)
 int
 permuteSquareArray(void* inputArr, void* outputArr, size_t sideLen, int dims, zfp_type zfpType);
 
