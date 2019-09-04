@@ -2,6 +2,10 @@
 class pointer {
 public:
   pointer() : ref(0, 0) {}
+#if  __cplusplus >= 201103L
+  pointer(std::nullptr_t n) : ref(0, 0) {}
+#endif
+
   pointer operator=(const pointer& p) { ref.array = p.ref.array; ref.i = p.ref.i; return *this; }
   reference operator*() const { return ref; }
   reference operator[](ptrdiff_t d) const { return *operator+(d); }
@@ -27,4 +31,7 @@ protected:
   void increment() { ref.i++; }
   void decrement() { ref.i--; }
   reference ref;
+
+public:
+  array1 const & data() const { return *(ref.array); }
 };
