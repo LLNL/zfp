@@ -104,6 +104,12 @@ _catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressDecompressFixedRa
   runCompressDecompressNoopTest(state, zfp_mode_fixed_rate);
 }
 
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedRate_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  runCompressDecompressTests(state, zfp_mode_fixed_rate, 3);
+}
+
 // cover all non=fixed-rate modes (except expert)
 static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
