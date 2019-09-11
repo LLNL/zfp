@@ -1,3 +1,4 @@
+# TODO: update zfpChecksums cython
 import cython
 from libc.stdlib cimport malloc, free
 cimport libc.stdint as stdint
