@@ -8,7 +8,7 @@
 #endif
 
 /* macros for exporting and importing symbols */
-#if defined _MSC_VER && defined ZFP_SOURCE
+#if defined _MSC_VER && defined ZFP_SHARED_LIBS
   #define export_ __declspec(dllexport)
   /* export (import) symbols when ZFP_SOURCE is (is not) defined */
   #ifdef ZFP_SOURCE
@@ -24,7 +24,7 @@
       #define extern_ extern     __declspec(dllimport)
     #endif
   #endif
-#else /* !_MSC_VER || !ZFP_SOURCE */
+#else /* !_MSC_VER || !ZFP_SHARED_LIBS */
   #define export_
   #ifdef __cplusplus
     #define extern_ extern "C"

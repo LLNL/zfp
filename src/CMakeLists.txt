@@ -38,6 +38,7 @@ endif()
 
 if(WIN32 AND BUILD_SHARED_LIBS)
   # Define ZFP_SOURCE when compiling libzfp to export symbols to Windows DLL
+  list(APPEND zfp_public_defs ZFP_SHARED_LIBS)
   list(APPEND zfp_private_defs ZFP_SOURCE)
 endif()
 
