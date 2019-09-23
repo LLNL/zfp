@@ -18,10 +18,12 @@ protected:
   // default constructor
   varray() :
     dims(0), type(zfp_type_none),
+    minbits(64),
     nx(0), ny(0), nz(0),
     bx(0), by(0), bz(0),
+    tx(0), ty(0), tz(0),
     blocks(0),
-    tiles(0), tile(0),
+    tiles(0),
     zfp(0),
     shape(0)
   {}
@@ -29,17 +31,18 @@ protected:
   // generic array with 'dims' dimensions and scalar type 'type'
   varray(uint dims, zfp_type type) :
     dims(dims), type(type),
+    minbits(64),
     nx(0), ny(0), nz(0),
     bx(0), by(0), bz(0),
+    tx(0), ty(0), tz(0),
     blocks(0),
-    tiles(0), tile(0),
+    tiles(0),
     zfp(zfp_stream_open(0)),
     shape(0)
   {}
 
   // copy constructor--performs a deep copy
   varray(const varray& a) :
-    tile(0),
     zfp(0),
     shape(0)
   {
@@ -54,11 +57,16 @@ protected:
   }
 
 public:
+  typedef Tile::storage storage;
+
   // public virtual destructor (can delete array through base class pointer)
   virtual ~varray()
   {
     free();
-    zfp_stream_close(zfp);
+    if (zfp) {
+      zfp_stream_close(zfp);
+      zfp = 0;
+    }
   }
 
   // total number of elements in array
@@ -99,11 +107,9 @@ public:
   {
     size_t size = 0;
     if (mask & ZFP_DATA_META)
-      size += sizeof(varray) + tiles * sizeof(*tile) + sizeof(*zfp); // + sizeof(*zfp->stream);
+      size += sizeof(varray) + sizeof(*zfp); // + sizeof(*zfp->stream);
     if ((mask & ZFP_DATA_SHAPE) && shape)
       size += sizeof(uchar) * blocks;
-    for (uint t = 0; t < tiles; t++)
-      size += tile[t]->size(mask);
     return size;
   }
 
@@ -129,11 +135,14 @@ protected:
   // free memory associated with compressed data
   void free()
   {
-    zfp::deallocate((uchar*)stream_data(zfp->stream));
-    stream_close(zfp->stream);
-    zfp_stream_set_bit_stream(zfp, 0);
+    if (zfp && zfp->stream) {
+      zfp::deallocate((uchar*)stream_data(zfp->stream));
+      stream_close(zfp->stream);
+      zfp_stream_set_bit_stream(zfp, 0);
+    }
     nx = ny = nz = 0;
     bx = by = bz = 0;
+    tx = ty = tz = 0;
     blocks = 0;
     tiles = 0;
   }
@@ -169,12 +178,12 @@ protected:
 
   uint dims;        // array dimensionality (1, 2, or 3)
   zfp_type type;    // scalar type
+  uint minbits;     // smallest non-empty block size in bits
   uint nx, ny, nz;  // array dimensions
   uint bx, by, bz;  // array dimensions in number of blocks
   uint tx, ty, tz;  // array dimensions in number of tiles
   uint blocks;      // number of blocks
   uint tiles;       // number of tiles
-  zfp::Tile** tile; // pointers to tiles
   zfp_stream* zfp;  // compression parameters and buffer shared among tiles
   uchar* shape;     // precomputed block dimensions (or null if uniform)
 };

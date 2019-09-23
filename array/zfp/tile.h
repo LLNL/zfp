@@ -11,6 +11,18 @@ namespace zfp {
 // tile comprising 2^12 = 4096 variable-length blocks
 class Tile {
 public:
+  // block storage
+  enum storage {
+    storage_unused = -1, // outside array domain
+    storage_empty =   0, // empty/all-zero (no compressed storage)
+    storage_xs =      1, // extra small 
+    storage_s =       2, // small = 2 * xs
+    storage_m =       3, // medium = 4 * xs
+    storage_l =       4, // large = 8 * xs
+    storage_xl =      5, // extra large = 16 * xs
+    storage_cached =  6  // uncompressed and cached
+  };
+
   // destruct tile
   virtual ~Tile()
   {
@@ -31,6 +43,21 @@ public:
       size += sizeof(pos);
     return size;
   }
+
+#ifdef DEBUG
+  // print free lists
+  void print_lists(FILE* file = stderr) const
+  {
+    for (uint s = 0; (int)s < end; s++) {
+      uint n = 0;
+      fprintf(file, "%2u :", s);
+      for (offset p = head[s]; p != null; p = get_next_slot(p), n++)
+        fprintf(file, " %5u", p);
+      fprintf(file, " null (%u)\n", n);
+    }
+    fprintf(file, "\n");
+  }
+#endif
 
 protected:
   typedef uint16 offset; // storage offset of block in number of quanta
@@ -67,26 +94,13 @@ protected:
   // amount of compressed data allocated in bytes
   size_t capacity() const { return end < 0 ? 0u : quantum_bytes() << end; }
 
-#ifdef DEBUG
-  void print_lists() const
-  {
-    for (uint s = 0; s < sizes; s++) {
-      uint n = 0;
-      printf("%2u :", s);
-      for (offset p = head[s]; p != null; p = get_next_slot(p), n++)
-        printf(" %5u", p);
-      printf(" null (%u)\n", n);
-    }
-  }
-#endif
-
   // buddy slot to slot of size s at offset p
   static offset buddy_slot(uint s, offset p) { return p ^ (1u << s); }
 
   // parent slot to two buddy slots
   static offset parent_slot(uint p, uint q) { return p & q; }
 
-#warning "what if word is a byte?"
+//#warning "what if word is a byte?"
   // return next free slot stored at offset p
   offset get_next_slot(offset p) const { return data[offset_words(p)]; }
 
@@ -112,7 +126,8 @@ protected:
   void put_slot(uint s, offset p, bool free)
   {
     offset b = buddy_slot(s, p);
-    assert(p != null && b != null);
+    assert(p != null);
+    assert(b != null);
     if (head[s] == b) {
       // merge with buddy slot
       head[s] = get_next_slot(b);
@@ -171,7 +186,7 @@ protected:
         }
       }
       // no free slot was found; allocate more memory and try again
-      size_t old_cap = capacity();
+      size_t cap = capacity();
       uint s = size;
       if (end < 0) {
         p = 0;
@@ -183,7 +198,7 @@ protected:
       }
       assert(end < (int)sizes);
       // allocate more memory
-      zfp::reallocate(data, capacity(), old_cap);
+      zfp::reallocate(data, capacity(), cap);
       put_slot(s, p, false);
     }
   }
@@ -193,7 +208,21 @@ protected:
   {
     uint s = slot_size(words);
     put_slot(s, p, true);
-#warning "attempt to free memory here"
+    // attempt to free unused space
+    if (!bytes) {
+      // all blocks are empty; free all allocated storage
+      head[end] = null;
+      end = -1;
+      zfp::deallocate(data);
+      data = 0;
+    }
+    else if (end > 0 && head[end - 1] == (1u << (end - 1))) {
+      // the top half of allocated space is unused; free it
+      size_t cap = capacity();
+      end--;
+      head[end] = null;
+      zfp::reallocate(data, capacity(), cap);
+    }
   }
 
   static const uint blocks = 0x1000u;   // number of blocks per tile

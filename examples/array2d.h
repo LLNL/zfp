@@ -23,7 +23,17 @@ public:
   size_t size() const { return data.size(); }
   size_t size_x() const { return nx; }
   size_t size_y() const { return ny; }
-  double rate() const { return CHAR_BIT * sizeof(double); }
+  double rate(uint mask = 0) const
+  {
+    unused_(mask);
+    return CHAR_BIT * sizeof(double);
+  }
+  uint element_storage(uint i, uint j) const
+  {
+    unused_(i);
+    unused_(j);
+    return 7;
+  }
   size_t cache_size() const { return 0; }
   double& operator()(uint x, uint y) { return data[x + nx * y]; }
   const double& operator()(uint x, uint y) const { return data[x + nx * y]; }

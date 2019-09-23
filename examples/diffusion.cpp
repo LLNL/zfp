@@ -1,4 +1,4 @@
-// forward Euler finite difference solution to the heat equation on a 2D grid
+// FTCS: forward Euler finite difference solution to the 2D heat equation
 
 #include <algorithm>
 #include <cmath>
@@ -119,10 +119,21 @@ time_step_indexed(array2d& u, const Constants& c)
 //  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
 #warning "fix this"
   raw::array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
-  for (int y = 1; y < c.ny - 1; y++) {
-    for (int x = 1; x < c.nx - 1; x++) {
-      double uxx = (u(x - 1, y) - 2 * u(x, y) + u(x + 1, y)) / (c.dx * c.dx);
-      double uyy = (u(x, y - 1) - 2 * u(x, y) + u(x, y + 1)) / (c.dy * c.dy);
+  for (int y = 0; y < c.ny; y++) {
+    for (int x = 0; x < c.nx; x++) {
+      double uxx = 0;
+      double uyy = 0;
+      double uval = u(x, y);
+      if (x > 0)
+        uxx += u(x - 1, y) - uval;
+      if (x < c.nx - 1)
+        uxx += u(x + 1, y) - uval;
+      if (y > 0)
+        uyy += u(x, y - 1) - uval;
+      if (y < c.ny - 1)
+        uyy += u(x, y + 1) - uval;
+      uxx /= c.dx * c.dx;
+      uyy /= c.dy * c.dy;
       du(x, y) = c.dt * c.k * (uxx + uyy);
     }
   }
@@ -164,7 +175,14 @@ solve(array2d& u, const Constants& c, bool iterator, bool parallel)
   // iterate until final time
   double t;
   for (t = 0; t < c.tfinal; t += c.dt) {
-    std::cerr << "t=" << std::setprecision(6) << std::fixed << t << " r=" << std::setprecision(3) << std::fixed << u.rate() << std::endl;
+    std::cerr << "t=" << std::setprecision(6) << std::fixed << t << " r=" << std::setprecision(3) << std::fixed << u.rate(ZFP_DATA_PAYLOAD) << " (" << u.rate(ZFP_DATA_ALL) << ")" << std::endl;
+for (uint y = 0; y < u.size_y(); y += 4) {
+for (uint x = 0; x < u.size_x(); x += 4) {
+uint s = u.element_storage(x, y);
+fprintf(stderr, "%c", '0' + s);
+}
+fprintf(stderr, "\n");
+}
     if (parallel)
       time_step_parallel(u, c);
     else if (iterator)

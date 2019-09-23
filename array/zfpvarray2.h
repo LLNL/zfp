@@ -12,7 +12,7 @@
 namespace zfp {
 
 // compressed 2D array of scalars
-template < typename Scalar, double minrate = 4.0, class Codec = zfp::codec<Scalar> >
+template < typename Scalar, class Codec = zfp::codec<Scalar> >
 class varray2 : public varray {
 public:
   // forward declarations
@@ -23,16 +23,32 @@ public:
   #include "zfp/vpointer2.h"
   #include "zfp/viterator2.h"
 
-  // default constructor
-  varray2() : varray(2, Codec::type) {}
+  typedef varray::storage storage;
 
-  // constructor of nx * ny array using rate bits per value, at least
+  // default constructor
+  varray2() : varray(2, Codec::type), tile(0) {}
+
+  // constructor of nx * ny array using prec bits of precision, at least
   // csize bytes of cache, and optionally initialized from flat array p
   varray2(uint nx, uint ny, uint prec, const Scalar* p = 0, size_t csize = 0) :
     varray(2, Codec::type),
-    cache(lines(csize, nx, ny))
+    cache(lines(csize, nx, ny)),
+    tile(0)
   {
     set_precision(prec);
+    resize(nx, ny);
+    if (p)
+      set(p);
+  }
+
+  // constructor of nx * ny array using error tolerance tol, at least
+  // csize bytes of cache, and optionally initialized from flat array p
+  varray2(uint nx, uint ny, double tol, const Scalar* p = 0, size_t csize = 0) :
+    varray(2, Codec::type),
+    cache(lines(csize, nx, ny)),
+    tile(0)
+  {
+    set_accuracy(tol);
     resize(nx, ny);
     if (p)
       set(p);
@@ -46,7 +62,10 @@ public:
   }
 
   // virtual destructor
-  virtual ~varray2() {}
+  virtual ~varray2()
+  {
+    free();
+  }
 
   // assignment operator--performs a deep copy
   varray2& operator=(const varray2& a)
@@ -69,6 +88,7 @@ public:
     if (nx == 0 || ny == 0)
       free();
     else {
+      assert(!(nx & 3u) && !(ny & 3u) && !"only multiples of four supported");
       // precompute block dimensions
       this->nx = nx;
       this->ny = ny;
@@ -110,27 +130,44 @@ public:
   virtual size_t storage_size(uint mask = ZFP_DATA_ALL) const
   {
     size_t size = varray::storage_size(mask);
+    for (uint t = 0; t < tiles; t++)
+      size += tile[t]->size(mask);
+//    if (mask & ZFP_DATA_META)
+//      size += tiles * sizeof(*tile);
+    if (mask & ZFP_DATA_META)
+      size += sizeof(varray2) - sizeof(varray);
     if (mask & ZFP_DATA_CACHE)
-      size += cache.size() * (sizeof(CacheLine) + sizeof(cache::Tag));
+      size += cache.size() * (sizeof(CacheLine) + sizeof(typename Cache<CacheLine>::Tag));
+    return size;
+  }
+
+  storage element_storage(uint i, uint j) const
+  {
+    uint index = block(i, j);
+    uint t = tile_id(index);
+    uint b = block_id(index);
+    return tile[t]->block_storage(zfp, b);
   }
 
   // decompress array and store at p
   void get(Scalar* p) const
   {
-#if 0
-    uint b = 0;
-    for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
-      for (uint i = 0; i < bx; i++, p += 4, b++) {
-        const CacheLine* line = cache.lookup(b + 1);
+    uint index = 0;
+    for (uint y = 0; y < by; y++, p += 4 * (nx - bx))
+      for (uint x = 0; x < bx; x++, p += 4, index++) {
+        const CacheLine* line = cache.lookup(index + 1);
         if (line)
-          line->get(p, 1, nx, shape ? shape[b] : 0);
-        else
-          decode(b, p, 1, nx);
+          line->get(p, 1, nx, shape ? shape[index] : 0);
+        else {
+          Scalar block[4 * 4];
+          uint t = tile_id(index);
+          uint b = block_id(index);
+          tile[t]->decompress(zfp, block, b, shape ? shape[index] : 0, false);
+          for (uint j = 0; j < 4; j++)
+            for (uint i = 0; i < 4; i++)
+              p[i + nx * j] = block[i + 4 * j];
+        }
       }
-#endif
-//#warning "get not implemented"
-    (void)p;
-    abort();
   }
 
   // initialize array by copying and compressing data stored at p
@@ -214,9 +251,9 @@ protected:
         delete tile[t];
       delete[] tile;
     }
-    tile = new Tile*[tiles];
+    tile = new Tile2<Scalar>*[tiles];
     for (uint t = 0; t < tiles; t++)
-      tile[t] = new Tile2<Scalar>(minrate);
+      tile[t] = new Tile2<Scalar>(minbits);
   }
 
   // free memory associated with compressed data
@@ -275,19 +312,13 @@ protected:
     return p;
   }
 
-#warning "avoid dynamic casts; move tile[] to derived classes?"
-  Tile2<Scalar>* tile_ptr(uint t) const
-  {
-    return dynamic_cast<Tile2<Scalar>*>(tile[t]);
-  }
-
   // encode block with given index
   void encode(uint index, const Scalar* block) const
   {
-#warning "these ID computations seem expensive"
+// #warning "these ID computations seem expensive"
     uint t = tile_id(index);
     uint b = block_id(index);
-    tile_ptr(t)->compress(zfp, block, b, shape ? shape[index] : 0);
+    tile[t]->compress(zfp, block, b, shape ? shape[index] : 0);
   }
 
   // decode block with given index
@@ -295,7 +326,7 @@ protected:
   {
     uint t = tile_id(index);
     uint b = block_id(index);
-    tile_ptr(t)->decompress(zfp, block, b, shape ? shape[index] : 0);
+    tile[t]->decompress(zfp, block, b, shape ? shape[index] : 0);
   }
 
   // block index for (i, j)

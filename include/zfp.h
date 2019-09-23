@@ -111,7 +111,7 @@
 #define ZFP_DATA_SHAPE   0x08u /* block shape information */
 #define ZFP_DATA_INDEX   0x10u /* variable-rate block index information */
 #define ZFP_DATA_CACHE   0x20u /* uncompressed cached data */
-#define ZFP_DATA_ALL     0x2fu /* all storage */
+#define ZFP_DATA_ALL     0x3fu /* all storage */
 
 /* field metadata indeterminate state and error code */
 #define ZFP_META_NULL (UINT64C(-1))

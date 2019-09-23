@@ -1,7 +1,6 @@
 #ifndef ZFP_TILE2_H
 #define ZFP_TILE2_H
 
-#include <cmath>
 #include "tile.h"
 
 namespace zfp {
@@ -10,11 +9,49 @@ namespace zfp {
 template <typename Scalar>
 class Tile2 : public Tile {
 public:
-  Tile2(double minrate = 4u) :
-    Tile((uint)std::lrint(4 * 4 * minrate))
+  Tile2(uint minbits = 64) :
+    Tile(minbits)
   {}
 
 #ifdef DEBUG
+  void fragmentation(zfp_stream* zfp, FILE* file = stderr) const
+  {
+    uchar* slot = new uchar[0x10000];
+    std::fill(slot, slot + 0x10000, 0xff);
+    size_t usage = 0;
+    size_t zeros = 0;
+    // process compressed blocks
+    for (uint b = 0; b < blocks; b++) {
+      offset p = pos[b];
+      if (p == null)
+        zeros++;
+      else if (p != cached) {
+        Scalar block[block_size];
+        uint bits = decode_block(zfp, block, p);
+        uint words = word_size(bits);
+        uint s = slot_size(words);
+        usage += quantum_bytes() << s;
+        for (uint i = 0; i < (1u << s); i++)
+          slot[p + i] = s;
+      }
+    }
+    // process free slots
+    for (uint s = 0; s < sizes; s++) {
+      for (offset p = head[s]; p != null; p = get_next_slot(p))
+        for (uint i = 0; i < (1u << s); i++)
+          slot[p + i] = 0x80 + s;
+    }
+    // print 
+    for (uint i = 0; i < 0x10000; i++)
+      fprintf(file, "%02x ", slot[i]);
+    fprintf(file, "\n");
+    delete[] slot;
+    fprintf(file, "bytes=%zu vs %zu\n", bytes, usage);
+    fprintf(file, "zeros=%zu\n", zeros);
+  }
+#endif
+
+#if 0
   void fragmentation(zfp_stream* zfp)
   {
     uchar* slot = new uchar[0x10000];
@@ -53,7 +90,6 @@ public:
     stream_reopen(zfp->stream, buffer, size);
     delete[] slot;
     printf("bytes=%zu vs %zu\n", bytes, usage);
-    printf("words=%zu\n", totwords);
     printf("zeros=%zu\n", zeros);
   }
 #endif
@@ -62,16 +98,16 @@ public:
   void compress(zfp_stream* zfp, const Scalar* block, uint id, uchar shape = 0)
   {
     offset p = null;
-    // compress block and determine its size in bits
-    stream_rewind(zfp->stream);
-    uint bits = zfp::codec<Scalar>::encode_block_2(zfp, block, shape);
+    // compress block
+    uint bits = encode_block(zfp, block, shape);
     // if block is empty, no storage is needed; otherwise, find space for it
     if (bits > 1u) {
-      // flush stream and determine block size in words
-      bits += stream_flush(zfp->stream);
+      // allocate memory for compressed block
       size_t words = word_size(bits);
-      // allocate memory for and copy block to persistent storage
       p = allocate(words);
+      assert(p != null);
+      assert(p != cached);
+      // copy compressed data to persistent storage
       const word* buffer = static_cast<const word*>(stream_data(zfp->stream));
       std::copy(buffer, buffer + words, data + offset_words(p));
     }
@@ -79,48 +115,74 @@ public:
   }
 
   // decompress block with tile-local index 'id' and free compressed data
-  void decompress(zfp_stream* zfp, Scalar* block, uint id, uchar shape = 0)
+  void decompress(zfp_stream* zfp, Scalar* block, uint id, uchar shape = 0, bool cache = true)
   {
     offset p = pos[id];
-    pos[id] = cached;
+    assert(p != cached);
+    if (cache)
+      pos[id] = cached;
     if (p == null) {
       // empty block; fill with zeros
-      std::fill(block, block + 4 * 4, Scalar(0));
+      std::fill(block, block + block_size, Scalar(0));
     }
     else {
-      // save current buffer
-      void* buffer = stream_data(zfp->stream);
-      size_t size = stream_capacity(zfp->stream);
-      // decompress block to cache
-      stream_reopen(zfp->stream, data, capacity());
-      stream_rseek(zfp->stream, offset_bits(p));
-      uint bits = zfp::codec<Scalar>::decode_block_2(zfp, block, shape);
-      bits += stream_align(zfp->stream);
-      // free space occupied by compressed data
-      size_t words = word_size(bits);
-      deallocate(p, words);
-      // restore buffer
-      stream_reopen(zfp->stream, buffer, size);
+      // decompress block
+      uint bits = decode_block(zfp, block, p, shape);
+      if (cache) {
+        // free space occupied by compressed data
+        size_t words = word_size(bits);
+        deallocate(p, words);
+      }
     }
   }
 
-  static const uint bx = 64; // number of blocks per tile along x
-  static const uint by = 64; // number of blocks per tile along y
+  // storage class for block with given id
+  Tile::storage block_storage(zfp_stream* zfp, uint id, uchar shape = 0) const
+  {
+    offset p = pos[id];
+    if (p == null)
+      return storage_empty;
+    if (p == cached)
+      return storage_cached;
+    if (p & 1u)
+      return storage_xs;
+    Scalar block[block_size];
+    uint bits = decode_block(zfp, block, p, shape);
+    return storage(slot_size(word_size(bits)));
+  }
+
+  static const uint bx = 64;            // number of blocks per tile along x
+  static const uint by = 64;            // number of blocks per tile along y
+  static const uint block_size = 4 * 4; // number of scalars per block
 
 protected:
-/*
-  using Tile::blocks;
-  using Tile::null;
-  using Tile::zfp;
-  using Tile::stream;
-  using Tile::pos;
-  using Tile::head;
-  using Tile::quantum;
-  using Tile::capacity;
-  using Tile::size;
-  using Tile::data;
-  using Tile::buffer;
-*/
+  // compress block to beginning of stream and return its storage size in bits
+  uint encode_block(zfp_stream* zfp, const Scalar* block, uchar shape = 0) const
+  {
+    // compress block to temporary storage
+    stream_rewind(zfp->stream);
+    uint bits = zfp::codec<Scalar>::encode_block_2(zfp, block, shape);
+    // if block is non-empty (i.e., stored), make sure stream is flushed
+    if (bits > 1u)
+      bits += stream_flush(zfp->stream);
+    return bits;
+  }
+
+  // decompress block stored at offset p
+  uint decode_block(zfp_stream* zfp, Scalar* block, offset p, uchar shape = 0) const
+  {
+    // save current buffer
+    void* buffer = stream_data(zfp->stream);
+    size_t size = stream_capacity(zfp->stream);
+    // decompress block to cache
+    stream_reopen(zfp->stream, data, capacity());
+    stream_rseek(zfp->stream, offset_bits(p));
+    uint bits = zfp::codec<Scalar>::decode_block_2(zfp, block, shape);
+    bits += stream_align(zfp->stream);
+    // restore buffer
+    stream_reopen(zfp->stream, buffer, size);
+    return bits;
+  }
 };
 
 }
