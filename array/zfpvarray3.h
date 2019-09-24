@@ -89,7 +89,7 @@ public:
     if (nx == 0 || ny == 0 || nz == 0)
       free();
     else {
-      assert(!(nx & 3u) && !(ny & 3u) && !(nz & 3u) && !"only multiples of four supported");
+      assert((!(nx & 3u) && !(ny & 3u) && !(nz & 3u)) || !"only multiples of four supported");
       // precompute block dimensions
       this->nx = nx;
       this->ny = ny;
