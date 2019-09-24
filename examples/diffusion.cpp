@@ -117,7 +117,7 @@ time_step_indexed(array2d& u, const Constants& c)
 {
   // compute du/dt
 //  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
-#warning "fix this"
+//#warning "fix this"
   raw::array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
   for (int y = 0; y < c.ny; y++) {
     for (int x = 0; x < c.nx; x++) {
@@ -176,13 +176,16 @@ solve(array2d& u, const Constants& c, bool iterator, bool parallel)
   double t;
   for (t = 0; t < c.tfinal; t += c.dt) {
     std::cerr << "t=" << std::setprecision(6) << std::fixed << t << " r=" << std::setprecision(3) << std::fixed << u.rate(ZFP_DATA_PAYLOAD) << " (" << u.rate(ZFP_DATA_ALL) << ")" << std::endl;
-for (uint y = 0; y < u.size_y(); y += 4) {
-for (uint x = 0; x < u.size_x(); x += 4) {
-uint s = u.element_storage(x, y);
-fprintf(stderr, "%c", '0' + s);
-}
-fprintf(stderr, "\n");
-}
+#if 0
+    // print block storage size
+    for (uint y = 0; y < u.size_y(); y += 4) {
+      for (uint x = 0; x < u.size_x(); x += 4) {
+        uint s = u.element_storage(x, y);
+        fprintf(stderr, "%c", '0' + s);
+      }
+      fprintf(stderr, "\n");
+    }
+#endif
     if (parallel)
       time_step_parallel(u, c);
     else if (iterator)
@@ -234,10 +237,12 @@ usage()
   std::cerr << "-i : traverse arrays using iterators" << std::endl;
   std::cerr << "-n <nx> <ny> : number of grid points" << std::endl;
 #ifdef _OPENMP
-  std::cerr << "-p : use multithreading (only with compressed arrays)" << std::endl;
+  std::cerr << "-P : use multithreading (only with compressed arrays)" << std::endl;
 #endif
   std::cerr << "-t <nt> : number of time steps" << std::endl;
   std::cerr << "-r <rate> : use compressed arrays with 'rate' bits/value" << std::endl;
+  std::cerr << "-p <precision> : use compressed arrays with 'prec' bits of precision" << std::endl;
+  std::cerr << "-a <tolerance> : use compressed arrays with 'tolerance' error tolerance" << std::endl;
   std::cerr << "-c <blocks> : use 'blocks' 4x4 blocks of cache" << std::endl;
   return EXIT_FAILURE;
 }
@@ -248,8 +253,10 @@ int main(int argc, char* argv[])
   int ny = 100;
   int nt = 0;
   double rate = 64;
+  double tolerance = 0;
+  uint precision = 64;
+  zfp_mode mode = zfp_mode_null;
   bool iterator = false;
-  bool compression = false;
   bool parallel = false;
   int cache = 0;
 
@@ -263,7 +270,7 @@ int main(int argc, char* argv[])
         return usage();
     }
 #ifdef _OPENMP
-    else if (std::string(argv[i]) == "-p")
+    else if (std::string(argv[i]) == "-P")
       parallel = true;
 #endif
     else if (std::string(argv[i]) == "-t") {
@@ -273,7 +280,17 @@ int main(int argc, char* argv[])
     else if (std::string(argv[i]) == "-r") {
       if (++i == argc || sscanf(argv[i], "%lf", &rate) != 1)
         return usage();
-      compression = true;
+      mode = zfp_mode_fixed_rate;
+    }
+    else if (std::string(argv[i]) == "-a") {
+      if (++i == argc || sscanf(argv[i], "%lf", &tolerance) != 1)
+        return usage();
+      mode = zfp_mode_fixed_accuracy;
+    }
+    else if (std::string(argv[i]) == "-p") {
+      if (++i == argc || sscanf(argv[i], "%u", &precision) != 1)
+        return usage();
+      mode = zfp_mode_fixed_precision;
     }
     else if (std::string(argv[i]) == "-c") {
       if (++i == argc || sscanf(argv[i], "%i", &cache) != 1)
@@ -282,7 +299,7 @@ int main(int argc, char* argv[])
     else
       return usage();
 
-  if (parallel && !compression) {
+  if (parallel && (mode == zfp_mode_null)) {
     fprintf(stderr, "multithreading requires compressed arrays\n");
     return EXIT_FAILURE;
   }
@@ -295,21 +312,48 @@ int main(int argc, char* argv[])
 
   double sum;
   double err;
-  if (compression) {
-    // solve problem using compressed arrays
-//    zfp::array2d u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
-    zfp::varray2d u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
-    rate = u.rate();
-    double t = solve(u, c, iterator, parallel);
-    sum = total(u);
-    err = error(u, c, t);
-  }
-  else {
-    // solve problem using uncompressed arrays
-    raw::array2d u(nx, ny);
-    double t = solve(u, c, iterator, parallel);
-    sum = total(u);
-    err = error(u, c, t);
+  switch (mode) {
+    case zfp_mode_null:
+      {
+        // solve problem using uncompressed arrays
+        raw::array2d u(nx, ny);
+        double t = solve(u, c, iterator, parallel);
+        sum = total(u);
+        err = error(u, c, t);
+      }
+      break;
+    case zfp_mode_fixed_rate:
+      {
+        // solve problem using fixed-rate compressed arrays
+        zfp::array2d u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
+        rate = u.rate();
+        double t = solve(u, c, iterator, parallel);
+        sum = total(u);
+        err = error(u, c, t);
+      }
+      break;
+    case zfp_mode_fixed_precision:
+      {
+        // solve problem using fixed-precision compressed arrays
+        zfp::varray2d u(nx, ny, precision, 0, cache * 4 * 4 * sizeof(double));
+        rate = u.rate();
+        double t = solve(u, c, iterator, parallel);
+        sum = total(u);
+        err = error(u, c, t);
+      }
+      break;
+    case zfp_mode_fixed_accuracy:
+      {
+        // solve problem using fixed-accuracy compressed arrays
+        zfp::varray2d u(nx, ny, tolerance, 0, cache * 4 * 4 * sizeof(double));
+        rate = u.rate();
+        double t = solve(u, c, iterator, parallel);
+        sum = total(u);
+        err = error(u, c, t);
+      }
+      break;
+    default:
+      break;
   }
 
   std::cerr.unsetf(std::ios::fixed);

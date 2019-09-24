@@ -97,7 +97,21 @@ public:
   }
 
   // rate in bits per value
-  double rate() const { return double(blkbits) / block_size(); }
+  double rate(uint mask = ZFP_DATA_PAYLOAD) const
+  {
+    double r = 0;
+    if (mask & ZFP_DATA_PAYLOAD)
+      r += double(blkbits) / block_size();
+    if (mask & ZFP_DATA_SHAPE)
+      r += shape ? double(CHAR_BIT) / block_size() : 0.0;
+    if ((mask & ZFP_DATA_CACHE) && shape)
+      r += double(CHAR_BIT) / block_size();
+    if (mask & ZFP_DATA_META)
+      r += double(CHAR_BIT) * sizeof(array) / (blocks * block_size());
+//    if (mask & ZFP_DATA_CACHE)
+//      r += double(CHAR_BIT) * cache.size() * (sizeof(CacheLine) + sizeof(typename Cache<CacheLine>::Tag)) / (blocks * block_size());
+    return r;
+  }
 
   // set compression rate in bits per value
   double set_rate(double rate)
