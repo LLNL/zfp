@@ -13,8 +13,8 @@ __device__ __host__ inline
 void scatter_partial1(const Scalar* q, Scalar* p, int nx, int sx)
 {
   uint x;
-  for (x = 0; x < nx; x++, p += sx)
-   *p = *q++;
+  for (x = 0; x < 4; x++)
+    if (x < nx) p[x * sx] = q[x];
 }
 
 template<typename Scalar> 
