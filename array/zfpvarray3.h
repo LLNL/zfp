@@ -89,7 +89,6 @@ public:
     if (nx == 0 || ny == 0 || nz == 0)
       free();
     else {
-      assert((!(nx & 3u) && !(ny & 3u) && !(nz & 3u)) || !"only multiples of four supported");
       // precompute block dimensions
       this->nx = nx;
       this->ny = ny;
@@ -134,14 +133,12 @@ public:
   virtual size_t storage_size(uint mask = ZFP_DATA_ALL) const
   {
     size_t size = varray::storage_size(mask);
-    for (uint t = 0; t < tiles; t++)
-      size += tile[t]->size(mask);
-//    if (mask & ZFP_DATA_META)
-//      size += tiles * sizeof(*tile);
     if (mask & ZFP_DATA_META)
       size += sizeof(varray3) - sizeof(varray);
     if (mask & ZFP_DATA_CACHE)
       size += cache.size() * (sizeof(CacheLine) + sizeof(typename Cache<CacheLine>::Tag));
+    for (uint t = 0; t < tiles; t++)
+      size += tile[t]->size(mask);
     return size;
   }
 
@@ -157,20 +154,20 @@ public:
   void get(Scalar* p) const
   {
     uint index = 0;
-    for (uint z = 0; z < bz; z++, p += 4 * (ny - by))
-      for (uint y = 0; y < by; y++, p += 4 * (nx - bx))
-        for (uint x = 0; x < bx; x++, p += 4, index++) {
+    for (uint z = 0; z < nz; z += 4, p += 4 * (ny - by))
+      for (uint y = 0; y < ny; y += 4, p += 4 * (nx - bx))
+        for (uint x = 0; x < nx; x += 4, p += 4, index++) {
           const CacheLine* line = cache.lookup(index + 1);
           if (line)
-            line->get(p, 1, nx, nx * ny, shape ? shape[index] : 0);
+            line->get(p, 1, nx, nx * ny, shape(x, y, z));
           else {
             Scalar block[4 * 4 * 4];
-            uint t = tile_id(index);
-            uint b = block_id(index);
-            tile[t]->decompress(zfp, block, b, shape ? shape[index] : 0, false);
-            for (uint k = 0; k < 4; k++)
-              for (uint j = 0; j < 4; j++)
-                for (uint i = 0; i < 4; i++)
+            decode(index, block, false);
+            uint sx, sy, sz;
+            shape(sx, sy, sz, x, y, z);
+            for (uint k = 0; k < sz; k++)
+              for (uint j = 0; j < sy; j++)
+                for (uint i = 0; i < sx; i++)
                   p[i + nx * (j + ny * k)] = block[i + 4 * (j + 4 * k)];
           }
         }
@@ -179,16 +176,20 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
-#if 0
-    uint b = 0;
-    for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
-      for (uint i = 0; i < bx; i++, p += 4, b++)
-        encode(b, p, 1, nx); // error: no strided encode
+    uint index = 0;
+    for (uint z = 0; z < nz; z += 4, p += 4 * (ny - by))
+      for (uint y = 0; y < ny; y += 4, p += 4 * (nx - bx))
+        for (uint x = 0; x < nx; x += 4, p += 4, index++) {
+          Scalar block[4 * 4 * 4];
+          uint sx, sy, sz;
+          shape(sx, sy, sz, x, y, z);
+          for (uint k = 0; k < sz; k++)
+            for (uint j = 0; j < sy; j++)
+              for (uint i = 0; i < sx; i++)
+                block[i + 4 * (j + 4 * k)] = p[i + nx * (j + ny * k)];
+          encode(index, block);
+        }
     cache.clear();
-#endif
-//#warning "set not implemented"
-    (void)p;
-    abort();
   }
 
   // (i, j, k) accessors
@@ -326,15 +327,15 @@ protected:
   {
     uint t = tile_id(index);
     uint b = block_id(index);
-    tile[t]->compress(zfp, block, b, shape ? shape[index] : 0);
+    tile[t]->compress(zfp, block, b, shape(index));
   }
 
   // decode block with given index
-  void decode(uint index, Scalar* block) const
+  void decode(uint index, Scalar* block, bool cache = true) const
   {
     uint t = tile_id(index);
     uint b = block_id(index);
-    tile[t]->decompress(zfp, block, b, shape ? shape[index] : 0);
+    tile[t]->decompress(zfp, block, b, shape(index), cache);
   }
 
   // block index for (i, j, k)
@@ -362,6 +363,31 @@ protected:
     uint yy = y % Tile3<Scalar>::by;
     uint zz = z % Tile3<Scalar>::bz;
     return xx + Tile3<Scalar>::bx * (yy + Tile3<Scalar>::by * zz);
+  }
+
+  // shape (sx, sy, sz) of block containing array index (i, j, k)
+  void shape(uint& sx, uint& sy, uint& sz, uint i, uint j, uint k) const
+  {
+    sx = -nx & (((i ^ nx) - 4) >> (CHAR_BIT * sizeof(uint) - 2));
+    sy = -ny & (((j ^ ny) - 4) >> (CHAR_BIT * sizeof(uint) - 2));
+    sz = -nz & (((k ^ nz) - 4) >> (CHAR_BIT * sizeof(uint) - 2));
+  }
+
+  // shape of block containing array index (i, j, k)
+  uint shape(uint i, uint j, uint k) const
+  {
+    uint sx, sy, sz;
+    shape(sx, sy, sz, i, j, k);
+    return sx + 4 * sy + 16 * sz;
+  }
+
+  // shape of block with given global block index
+  uint shape(uint block) const
+  {
+    uint i = 4 * (block % bx); block /= bx;
+    uint j = 4 * (block % by); block /= by;
+    uint k = 4 * block;
+    return shape(i, j, k);
   }
 
   // convert flat index to (i, j)

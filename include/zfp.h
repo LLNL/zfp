@@ -106,12 +106,14 @@
 
 /* bit masks for specifying storage class */
 #define ZFP_DATA_UNUSED  0x01u /* allocated but unused storage */
-#define ZFP_DATA_META    0x02u /* class members and other fixed-size storage */
-#define ZFP_DATA_PAYLOAD 0x04u /* compressed data */
-#define ZFP_DATA_SHAPE   0x08u /* block shape information */
-#define ZFP_DATA_INDEX   0x10u /* variable-rate block index information */
-#define ZFP_DATA_CACHE   0x20u /* uncompressed cached data */
-#define ZFP_DATA_ALL     0x3fu /* all storage */
+#define ZFP_DATA_PADDING 0x02u /* padding for alignment purposes */
+#define ZFP_DATA_META    0x04u /* class members and other fixed-size storage */
+#define ZFP_DATA_MISC    0x08u /* miscellaneous uncategorized storage */
+#define ZFP_DATA_PAYLOAD 0x10u /* compressed data */
+#define ZFP_DATA_INDEX   0x20u /* variable-rate block index information */
+#define ZFP_DATA_SHAPE   0x40u /* block shape information */
+#define ZFP_DATA_CACHE   0x80u /* uncompressed cached data */
+#define ZFP_DATA_ALL     0xffu /* all storage */
 
 /* field metadata indeterminate state and error code */
 #define ZFP_META_NULL (UINT64C(-1))

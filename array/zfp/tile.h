@@ -35,6 +35,8 @@ public:
     size_t size = 0;
     if (mask & ZFP_DATA_UNUSED)
       size += capacity() - bytes;
+//    if (mask & ZFP_DATA_PADDING)
+//      size += ;
     if (mask & ZFP_DATA_META)
       size += sizeof(Tile) - sizeof(pos);
     if (mask & ZFP_DATA_PAYLOAD)
@@ -61,8 +63,14 @@ public:
 
 protected:
   typedef uint16 offset; // storage offset of block in number of quanta
-//#warning "need to rethink this"
+
+#ifdef BIT_STREAM_WORD_TYPE
+  // may be 8-, 16-, 32-, or 64-bit unsigned integer type
+  typedef BIT_STREAM_WORD_TYPE word;
+#else
+  // use maximum word size by default for highest speed
   typedef uint64 word;
+#endif
 
 //#warning "quantum must be at least 16 bits to store offsets"
   // construct tile with smallest block size 'minbits' rounded up to whole words
@@ -77,7 +85,7 @@ protected:
     std::fill(head, head + sizes, +null);
   }
 
-  // number of words in 'bits' bits
+  // number of words in 'bits' bits (bits must be a multiple of word size)
   static size_t word_size(size_t bits) { return bits / stream_word_bits; }
 
   // quantum size in bits, bytes, and words
@@ -225,15 +233,16 @@ protected:
     }
   }
 
+  // constants
   static const uint blocks = 0x1000u;   // number of blocks per tile
   static const uint sizes = 17;         // number of distinct slot sizes
   static const offset null = 0xffffu;   // null offset
   static const offset cached = 0xfffeu; // decompressed and cached block
-  static const uint max_size = 4;       // largest compressed block size
+//  static const uint max_size = 4;       // largest compressed block size
 
   const size_t quantum; // smallest slot size in bytes
-  size_t bytes;         // amount of compressed data used in bytes
-// rename to maxsize? (max_size exists above) or lgcap?
+  size_t bits;          // amount of compressed data in bits
+  size_t bytes;         // amount of compressed data and padding in bytes
   int end;              // largest slot size (index) supported (initially -1)
   word* data;           // pointer to compressed data
   offset head[sizes];   // free lists for slots of increasing size

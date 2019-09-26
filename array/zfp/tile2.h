@@ -51,49 +51,6 @@ public:
   }
 #endif
 
-#if 0
-  void fragmentation(zfp_stream* zfp)
-  {
-    uchar* slot = new uchar[0x10000];
-    std::fill(slot, slot + 0x10000, 0xff);
-    void* buffer = stream_data(zfp->stream);
-    size_t size = stream_capacity(zfp->stream);
-    size_t usage = 0;
-    size_t zeros = 0;
-    stream_reopen(zfp->stream, data, capacity());
-    // process compressed blocks
-    for (uint b = 0; b < blocks; b++) {
-      offset p = pos[b];
-      if (p < 0xfffe) {
-        Scalar block[16];
-        stream_rseek(zfp->stream, offset_bits(p));
-        uint bits = zfp::codec<Scalar>::decode_block_2(zfp, block, 0);
-        bits += stream_align(zfp->stream);
-        uint words = word_size(bits);
-        uint s = slot_size(words);
-        usage += quantum_bytes() << s;
-        for (uint i = 0; i < (1u << s); i++)
-          slot[p + i] = s;
-      }
-      else if (p == null)
-        zeros++;
-    }
-    // process free slots
-    for (uint s = 0; s < sizes; s++) {
-      for (offset p = head[s]; p != null; p = get_next_slot(p))
-        for (uint i = 0; i < (1u << s); i++)
-          slot[p + i] = 0x80 + s;
-    }
-    for (uint i = 0; i < 0x10000; i++)
-      printf("%02x ", slot[i]);
-    printf("\n");
-    stream_reopen(zfp->stream, buffer, size);
-    delete[] slot;
-    printf("bytes=%zu vs %zu\n", bytes, usage);
-    printf("zeros=%zu\n", zeros);
-  }
-#endif
-
   // allocate compressed data and compress block with tile-local index 'id'
   void compress(zfp_stream* zfp, const Scalar* block, uint id, uchar shape = 0)
   {

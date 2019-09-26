@@ -24,8 +24,7 @@ protected:
     tx(0), ty(0), tz(0),
     blocks(0),
     tiles(0),
-    zfp(0),
-    shape(0)
+    zfp(0)
   {}
 
   // generic array with 'dims' dimensions and scalar type 'type'
@@ -37,14 +36,12 @@ protected:
     tx(0), ty(0), tz(0),
     blocks(0),
     tiles(0),
-    zfp(zfp_stream_open(0)),
-    shape(0)
+    zfp(zfp_stream_open(0))
   {}
 
   // copy constructor--performs a deep copy
   varray(const varray& a) :
-    zfp(0),
-    shape(0)
+    zfp(0)
   {
     deep_copy(a);
   }
@@ -73,7 +70,7 @@ public:
   virtual size_t size() const = 0;
 
   // rate in bits per value
-  double rate(uint mask = ZFP_DATA_ALL) const
+  double rate(uint mask = ZFP_DATA_PAYLOAD) const
   {
     return double(storage_size(mask)) * CHAR_BIT / size();
   }
@@ -103,13 +100,11 @@ public:
   virtual void flush_cache() const = 0;
 
   // number of bytes of compressed data
-  virtual size_t storage_size(uint mask = ZFP_DATA_ALL) const
+  virtual size_t storage_size(uint mask = ZFP_DATA_PAYLOAD) const
   {
     size_t size = 0;
     if (mask & ZFP_DATA_META)
       size += sizeof(varray) + sizeof(*zfp); // + sizeof(*zfp->stream);
-    if ((mask & ZFP_DATA_SHAPE) && shape)
-      size += sizeof(uchar) * blocks;
     return size;
   }
 
@@ -185,7 +180,6 @@ protected:
   uint blocks;      // number of blocks
   uint tiles;       // number of tiles
   zfp_stream* zfp;  // compression parameters and buffer shared among tiles
-  uchar* shape;     // precomputed block dimensions (or null if uniform)
 };
 
 }
