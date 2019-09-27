@@ -147,7 +147,7 @@ public:
     uint index = block(i, j, k);
     uint t = tile_id(index);
     uint b = block_id(index);
-    return tile[t]->block_storage(zfp, b);
+    return tile[t]->block_storage(zfp, b, shape(i, j, k));
   }
 
   // decompress array and store at p
