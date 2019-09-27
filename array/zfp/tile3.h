@@ -61,6 +61,7 @@ public:
     if (bits > 1u) {
       // allocate memory for compressed block
       size_t words = word_size(bits);
+      assert(words <= (quantum_words() << 4));
       p = allocate(words);
       assert(p != null);
       assert(p != cached);
@@ -105,7 +106,7 @@ public:
       return storage_xs;
     Scalar block[block_size];
     uint bits = decode_block(zfp, block, p, shape);
-    return storage(slot_size(word_size(bits)));
+    return storage(storage_xs + slot_size(word_size(bits)));
   }
 
   static const uint bx = 16;                // number of blocks per tile along x
