@@ -78,13 +78,17 @@ public:
   // set precision in uncompressed bits per value
   uint set_precision(uint precision)
   {
-    return zfp_stream_set_precision(zfp, precision);
+    precision = zfp_stream_set_precision(zfp, precision);
+    zfp->maxbits = minbits << 4;
+    return precision;
   }
 
   // set compression rate in bits per value
   double set_accuracy(double tolerance)
   {
-    return zfp_stream_set_accuracy(zfp, tolerance);
+    tolerance = zfp_stream_set_accuracy(zfp, tolerance);
+    zfp->maxbits = minbits << 4;
+    return tolerance;
   }
 
   // enable reversible (lossless) mode
