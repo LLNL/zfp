@@ -10,7 +10,7 @@ _t1(rev_inv_lift, Int)(Int* p, uint s)
   x = *p; p += s;
   y = *p; p += s;
   z = *p; p += s;
-  w = *p; p += s;
+  w = *p;
 
   /*
   ** high-order Lorenzo transform (P4 Pascal matrix)
@@ -23,7 +23,7 @@ _t1(rev_inv_lift, Int)(Int* p, uint s)
   z += y; w += z;
   y += x; z += y; w += z;
 
-  p -= s; *p = w;
+          *p = w;
   p -= s; *p = z;
   p -= s; *p = y;
   p -= s; *p = x;

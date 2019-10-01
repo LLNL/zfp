@@ -222,7 +222,7 @@ inv_lift(Int* p)
 	x = *p; p += s;
 	y = *p; p += s;
 	z = *p; p += s;
-	w = *p; p += s;
+	w = *p;
 
 	/*
 	** non-orthogonal transform
@@ -237,7 +237,7 @@ inv_lift(Int* p)
 	y += z; z <<= 1; z -= y;
 	w += x; x <<= 1; x -= w;
 
-	p -= s; *p = w;
+	        *p = w;
 	p -= s; *p = z;
 	p -= s; *p = y;
 	p -= s; *p = x;
