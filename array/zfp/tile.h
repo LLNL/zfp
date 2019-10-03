@@ -136,7 +136,11 @@ protected:
     // cached and null offsets are reserved
     if (p < cached) {
       offset b = buddy_slot(s, p);
-      if (head[s] == b) {
+      if (b == cached) {
+        // special rule: slot at offset 'cached' is always free and mergeable
+        put_slot(s + 1, p, false);
+      }
+      else if (head[s] == b) {
         // merge with buddy slot
         head[s] = get_next_slot(b);
         put_slot(s + 1, parent_slot(p, b), false);
