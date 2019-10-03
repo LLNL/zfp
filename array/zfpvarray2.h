@@ -118,7 +118,7 @@ public:
   void flush_cache() const
   {
     for (typename zfp::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
-      if (p->tag.index() && (true || p->tag.dirty())) {
+      if (p->tag.index()) {
         uint b = p->tag.index() - 1;
         encode(b, p->line->data());
       }
