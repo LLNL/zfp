@@ -133,36 +133,37 @@ protected:
   // insert slot at offset p of size s into free list s
   void put_slot(uint s, offset p, bool free)
   {
-    offset b = buddy_slot(s, p);
-    assert(p != null);
-    assert(b != null);
-    if (head[s] == b) {
-      // merge with buddy slot
-      head[s] = get_next_slot(b);
-      put_slot(s + 1, parent_slot(p, b), false);
-    }
-    else if (head[s] > p) {
-      // insert p at head when head is null or larger than p
-      set_next_slot(p, head[s]);
-      head[s] = p;
-    }
-    else {
-      // linearly scan for buddy or place to insert p
-      offset q, r;
-      for (q = head[s], r = get_next_slot(q); r != b && r < p; q = r, r = get_next_slot(r));
-      if (r == b) {
+    // cached and null offsets are reserved
+    if (p < cached) {
+      offset b = buddy_slot(s, p);
+      if (head[s] == b) {
         // merge with buddy slot
-        set_next_slot(q, get_next_slot(r));
+        head[s] = get_next_slot(b);
         put_slot(s + 1, parent_slot(p, b), false);
       }
-      else {
-        // insert p between q and r
-        set_next_slot(q, p);
-        set_next_slot(p, r);
+      else if (head[s] > p) {
+        // insert p at head when head is null or larger than p
+        set_next_slot(p, head[s]);
+        head[s] = p;
       }
+      else {
+        // linearly scan for buddy or place to insert p
+        offset q, r;
+        for (q = head[s], r = get_next_slot(q); r != b && r < p; q = r, r = get_next_slot(r));
+        if (r == b) {
+          // merge with buddy slot
+          set_next_slot(q, get_next_slot(r));
+          put_slot(s + 1, parent_slot(p, b), false);
+        }
+        else {
+          // insert p between q and r
+          set_next_slot(q, p);
+          set_next_slot(p, r);
+        }
+      }
+      if (free)
+        bytes -= quantum_bytes() << s;
     }
-    if (free)
-      bytes -= quantum_bytes() << s;
   }
 
   // return storage size needed for 'words' words
