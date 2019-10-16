@@ -74,7 +74,7 @@ fwd_lift(Int* p)
   Int x = *p; p += s;
   Int y = *p; p += s;
   Int z = *p; p += s;
-  Int w = *p;
+  Int w = *p; p += s;
 
   // default, non-orthogonal transform (preferred due to speed and quality)
   //        ( 4  4  4  4) (x)
@@ -87,7 +87,7 @@ fwd_lift(Int* p)
   w += y; w >>= 1; y -= w;
   w += y >> 1; y -= w >> 1;
 
-          *p = w;
+  p -= s; *p = w;
   p -= s; *p = z;
   p -= s; *p = y;
   p -= s; *p = x;

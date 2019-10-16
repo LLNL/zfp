@@ -34,7 +34,7 @@ _t1(fwd_lift, Int)(Int* p, uint s)
   x = *p; p += s;
   y = *p; p += s;
   z = *p; p += s;
-  w = *p;
+  w = *p; p += s;
 
   /*
   ** non-orthogonal transform
@@ -49,7 +49,7 @@ _t1(fwd_lift, Int)(Int* p, uint s)
   w += y; w >>= 1; y -= w;
   w += y >> 1; y -= w >> 1;
 
-          *p = w;
+  p -= s; *p = w;
   p -= s; *p = z;
   p -= s; *p = y;
   p -= s; *p = x;
