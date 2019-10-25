@@ -76,7 +76,40 @@ cdef extern from "zfpCompressionParams.h":
     size_t computeFixedRateParam(int param);
     double computeFixedAccuracyParam(int param);
 
+cdef extern from "zfp.h":
+    ctypedef enum zfp_type:
+        zfp_type_none = 0,
+        zfp_type_int32 = 1,
+        zfp_type_int64 = 2,
+        zfp_type_float = 3,
+        zfp_type_double = 4 
+
 cdef extern from "zfpChecksums.h":
+    ctypedef enum test_type:
+        BLOCK_FULL_TEST = 0,
+        BLOCK_PARTIAL_TEST = 1,
+        ARRAY_TEST = 2
+
+    ctypedef enum subject:
+        ORIGINAL_INPUT = 0,
+        COMPRESSED_BITSTREAM = 1,
+        DECOMPRESSED_ARRAY = 2,
+
+    void computeKeyOriginalInput(test_type tt,
+                                 unsigned int n[4],
+                                 uint64_t* key1,
+                                 uint64_t* key2);
+    void computeKey(test_type tt,
+                    subject sjt,
+                    unsigned int n[4],
+                    zfpy.zfp_mode mode,
+                    int miscParam,
+                    uint64_t* key1,
+                    uint64_t* key2);
+    uint64_t getChecksumByKey(int dims,
+                              zfp_type type,
+                              uint64_t key1,
+                              uint64_t key2);
     uint64_t getChecksumOriginalDataBlock(int dims,
                                           zfpy.zfp_type type);
     uint64_t getChecksumEncodedBlock(int dims,
@@ -87,14 +120,17 @@ cdef extern from "zfpChecksums.h":
                                      zfpy.zfp_type type);
     uint64_t getChecksumDecodedPartialBlock(int dims,
                                             zfpy.zfp_type type);
-    uint64_t getChecksumOriginalDataArray(int dims,
+    uint64_t getChecksumOriginalDataArray(int ndims,
+                                          unsigned int[4] dims,
                                           zfpy.zfp_type type);
-    uint64_t getChecksumCompressedBitstream(int dims,
+    uint64_t getChecksumCompressedBitstream(int ndims,
+                                            unsigned int[4] dims,
                                             zfpy.zfp_type type,
                                             zfpy.zfp_mode mode,
                                             int compressParamNum);
-    uint64_t getChecksumDecompressedArray(int dims,
-                                          zfpy.zfp_type type,
+    uint64_t getChecksumDecompressedArray(int ndims,
+                                          unsigned int[4] dims,
+                                          zfpy.zfp_type ztype,
                                           zfpy.zfp_mode mode,
                                           int compressParamNum);
 
@@ -236,40 +272,122 @@ cpdef getRandNumpyArray(
 
     return np.asarray(viewArr)
 
-cpdef uint64_t getChecksumOrigArray(
+# ======================================================
+# TODO: examine best way to add python block level support
+cdef uint64_t getChecksumOriginalDataBlock(
     int dims,
     zfpy.zfp_type ztype
 ):
-    validate_num_dimensions(dims)
+    return 0
+
+
+cdef uint64_t getChecksumEncodedBlock(
+    int dims,
+    zfpy.zfp_type ztype
+):
+    return 0
+
+
+cdef uint64_t getChecksumEncodedPartialBlock(
+    int dims,
+    zfpy.zfp_type ztype
+):
+    return 0
+
+
+cdef uint64_t getChecksumDecodedBlock(
+    int dims,
+    zfpy.zfp_type ztype
+):
+    return 0
+
+
+cdef uint64_t getChecksumDecodedPartialBlock(
+    int dims,
+    zfpy.zfp_type ztype
+):
+    return 0
+# ======================================================
+
+cdef uint64_t getChecksumOriginalDataArray(
+    int ndims,
+    unsigned int[4] dims,
+    zfpy.zfp_type ztype
+):
+    cdef uint64_t[1] key1, key2
+    computeKeyOriginalInput(ARRAY_TEST, dims, key1, key2)
+    return getChecksumByKey(ndims, ztype, key1[0], key2[0])
+
+cdef  uint64_t getChecksumCompressedBitstream(
+    int ndims,
+    unsigned int[4] dims,
+    zfpy.zfp_type ztype,
+    zfpy.zfp_mode mode,
+    int compressParamNum
+):
+    cdef uint64_t[1] key1, key2
+    computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, dims, mode, compressParamNum, key1, key2)
+    return getChecksumByKey(ndims, ztype, key1[0], key2[0])
+
+cdef uint64_t getChecksumDecompressedArray(
+    int ndims,
+    unsigned int[4] dims,
+    zfpy.zfp_type ztype,
+    zfpy.zfp_mode mode,
+    int compressParamNum
+):
+    cdef uint64_t[1] key1, key2
+    computeKey(ARRAY_TEST, DECOMPRESSED_ARRAY, dims, mode, compressParamNum, key1, key2)
+    return getChecksumByKey(ndims, ztype, key1[0], key2[0])
+
+
+cpdef uint64_t getChecksumOrigArray(
+    dims,
+    zfpy.zfp_type ztype
+):
+    cdef int ndims = 4-dims.count(0)
+    validate_num_dimensions(ndims)
     validate_ztype(ztype)
 
-    return getChecksumOriginalDataArray(dims, ztype)
+    cdef unsigned int[4] d
+    for i in range(len(dims)):
+        d[i] = dims[i]
+    return getChecksumOriginalDataArray(ndims, d, ztype)
 
 cpdef uint64_t getChecksumCompArray(
-    int dims,
+    dims,
     zfpy.zfp_type ztype,
     zfpy.zfp_mode mode,
     int compressParamNum
 ):
-    validate_num_dimensions(dims)
+    cdef int ndims = 4-dims.count(0)
+    validate_num_dimensions(ndims)
     validate_ztype(ztype)
     validate_mode(mode)
     validate_compress_param(compressParamNum)
 
-    return getChecksumCompressedBitstream(dims, ztype, mode, compressParamNum)
+    cdef unsigned int[4] d
+    for i in range(len(dims)):
+        d[i] = dims[i]
+    return getChecksumCompressedBitstream(ndims, d, ztype, mode, compressParamNum)
 
 cpdef uint64_t getChecksumDecompArray(
-    int dims,
+    dims,
     zfpy.zfp_type ztype,
     zfpy.zfp_mode mode,
     int compressParamNum
 ):
-    validate_num_dimensions(dims)
+    cdef int ndims = 4-dims.count(0)
+    validate_num_dimensions(ndims)
     validate_ztype(ztype)
     validate_mode(mode)
     validate_compress_param(compressParamNum)
 
-    return getChecksumDecompressedArray(dims, ztype, mode, compressParamNum)
+    cdef unsigned int[4] d
+    for i in range(len(dims)):
+        d[i] = dims[i]
+    return getChecksumDecompressedArray(ndims, d, ztype, mode, compressParamNum)
+
 
 cpdef computeParameterValue(zfpy.zfp_mode mode, int param):
     validate_mode(mode)
