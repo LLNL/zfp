@@ -43,7 +43,7 @@ supports compression of 4D arrays.
 |zfp| is freely available as open source under a :ref:`BSD license <license>`.
 For more information on |zfp| and comparisons with other compressors, please
 see the |zfp|
-`website <https://computation.llnl.gov/projects/floating-point-compression>`_.
+`website <https://computing.llnl.gov/projects/floating-point-compression>`_.
 For bug reports, please consult the
 `GitHub issue tracker <https://github.com/LLNL/zfp/issues>`_.
 For questions, comments, and requests, please

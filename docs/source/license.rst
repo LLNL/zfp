@@ -10,7 +10,7 @@ License
 | All rights reserved.
 
 This file is part of the zfp library.
-For details, see http://computation.llnl.gov/casc/zfp/.
+For details, see http://computing.llnl.gov/casc/zfp/.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

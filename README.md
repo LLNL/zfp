@@ -43,7 +43,7 @@ designed specifically for 1D streams.  zfp also supports compression of
 zfp is freely available as open source under a BSD license, as outlined in
 the file 'LICENSE'.  For more information on zfp and comparisons with other
 compressors, please see the
-[zfp website](https://computation.llnl.gov/projects/floating-point-compression).
+[zfp website](https://computing.llnl.gov/projects/floating-point-compression).
 For bug reports, please consult the
 [GitHub issue tracker](https://github.com/LLNL/zfp/issues).
 For questions, comments, and requests, please send e-mail to
