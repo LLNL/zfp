@@ -12,6 +12,7 @@
 #include "utils/zfpHash.h"
 
 struct setupVars {
+  uint dimLens[4];
   Scalar* dataArr;
   void* buffer;
   size_t bufsizeBytes;
@@ -87,65 +88,46 @@ populateInitialArraySpecial(Scalar* dataArr, int index)
 }
 
 static void
-setupZfpStream(struct setupVars* bundle)
+setupZfpStream(struct setupVars* bundle, int specialValueIndex)
 {
+  memset(bundle->dimLens, 0, sizeof(bundle->dimLens));
+#if DIMS >= 1
+  bundle->dimLens[0] = BLOCK_SIDE_LEN;
+#endif
+#if DIMS >= 2
+  bundle->dimLens[1] = BLOCK_SIDE_LEN;
+#endif
+#if DIMS >= 3
+  bundle->dimLens[2] = BLOCK_SIDE_LEN;
+#endif
+#if DIMS >= 4
+  bundle->dimLens[3] = BLOCK_SIDE_LEN;
+#endif
+  uint* n = bundle->dimLens;
+
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   switch(DIMS) {
     case 1:
-      field = zfp_field_1d(bundle->dataArr, type, BLOCK_SIDE_LEN);
+      field = zfp_field_1d(bundle->dataArr, type, n[0]);
       break;
     case 2:
-      field = zfp_field_2d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      field = zfp_field_2d(bundle->dataArr, type, n[0], n[1]);
       break;
     case 3:
-      field = zfp_field_3d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      field = zfp_field_3d(bundle->dataArr, type, n[0], n[1], n[2]);
       break;
     case 4:
-      field = zfp_field_4d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      field = zfp_field_4d(bundle->dataArr, type, n[0], n[1], n[2], n[3]);
       break;
   }
 
   zfp_stream* stream = zfp_stream_open(NULL);
-  zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
-
-  size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
-  char* buffer = calloc(bufsizeBytes, sizeof(char));
-  assert_non_null(buffer);
-
-  bitstream* s = stream_open(buffer, bufsizeBytes);
-  assert_non_null(s);
-
-  zfp_stream_set_bit_stream(stream, s);
-  zfp_stream_rewind(stream);
-  zfp_field_free(field);
-
-  bundle->buffer = buffer;
-  bundle->stream = stream;
-}
-
-static void
-setupZfpStreamSpecial(struct setupVars* bundle)
-{
-  zfp_type type = ZFP_TYPE;
-  zfp_field* field;
-  switch(DIMS) {
-    case 1:
-      field = zfp_field_1d(bundle->dataArr, type, BLOCK_SIDE_LEN);
-      break;
-    case 2:
-      field = zfp_field_2d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
-      break;
-    case 3:
-      field = zfp_field_3d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
-      break;
-    case 4:
-      field = zfp_field_4d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
-      break;
+  if (specialValueIndex >= 0) {
+    zfp_stream_set_reversible(stream);
+  } else {
+    zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
   }
-
-  zfp_stream* stream = zfp_stream_open(NULL);
-  zfp_stream_set_reversible(stream);
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
   char* buffer = calloc(bufsizeBytes, sizeof(char));
@@ -171,7 +153,7 @@ setup(void **state)
 
   resetRandGen();
   populateInitialArray(&bundle->dataArr);
-  setupZfpStream(bundle);
+  setupZfpStream(bundle, -1);
 
   *state = bundle;
 
@@ -188,7 +170,7 @@ setupSpecial(void **state)
   assert_non_null(bundle->dataArr);
 
   resetRandGen();
-  setupZfpStreamSpecial(bundle);
+  setupZfpStream(bundle, 0);
 
   *state = bundle;
 
@@ -214,8 +196,9 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->dataArr, BLOCK_SIZE, 1);
-  uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  uint64 key1, key2;
+  computeKeyOriginalInput(BLOCK_FULL_TEST, bundle->dimLens, &key1, &key2);
+  ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2);
 }
 
 static void
@@ -251,8 +234,9 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ArrayChecksumMatche
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)decodedDataArr, BLOCK_SIZE, 1);
   free(decodedDataArr);
 
-  uint64 expectedChecksum = getChecksumDecodedBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  uint64 key1, key2;
+  computeKey(BLOCK_FULL_TEST, DECOMPRESSED_ARRAY, bundle->dimLens, zfp_mode_fixed_rate, 0, &key1, &key2);
+  ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2);
 }
 
 static void

@@ -6,6 +6,11 @@ function(zfp_add_block_tests dims type bits)
   if(HAVE_LIBM_MATH)
     target_link_libraries(${block_test_name} m)
   endif()
+
+  if(PRINT_CHECKSUMS)
+    target_compile_definitions(${block_test_name} PUBLIC PRINT_CHECKSUMS)
+  endif()
+
   add_test(NAME ${block_test_name} COMMAND ${block_test_name})
 
   set(strided_block_test_name testZfpDecodeBlockStrided${dims}d${type})
@@ -15,6 +20,11 @@ function(zfp_add_block_tests dims type bits)
   if(HAVE_LIBM_MATH)
     target_link_libraries(${strided_block_test_name} m)
   endif()
+
+  if(PRINT_CHECKSUMS)
+    target_compile_definitions(${strided_block_test_name} PUBLIC PRINT_CHECKSUMS)
+  endif()
+
   add_test(NAME ${strided_block_test_name} COMMAND ${strided_block_test_name})
 endfunction()
 

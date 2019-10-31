@@ -31,6 +31,9 @@ add_library(zfpTimerLib zfpTimer.c zfpTimer.h)
 
 # checksums API
 add_library(zfpChecksumsLib zfpChecksums.c zfpChecksums.h)
+if(PRINT_CHECKSUMS)
+  target_compile_definitions(zfpChecksumsLib PUBLIC PRINT_CHECKSUMS)
+endif()
 
 if(HAVE_LIBM_MATH)
   target_link_libraries(rand32Lib PRIVATE m)

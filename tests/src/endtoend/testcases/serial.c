@@ -1,12 +1,16 @@
-#include "utils/testMacros.h"
+// requires #include "utils/testMacros.h", do outside of main()
 
 _cmocka_unit_test(when_seededRandomSmoothDataGenerated_expect_ChecksumMatches),
+
+#ifndef PRINT_CHECKSUMS
 
 /* strided tests */
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, ReversedArray_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch), setupReversed, teardown),
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, InterleavedArray_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch), setupInterleaved, teardown),
 #if DIMS >= 2
 _cmocka_unit_test_setup_teardown(_catFunc3(given_, DIM_INT_STR, PermutedArray_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch), setupPermuted, teardown),
+#endif
+
 #endif
 
 /* fixed-precision */

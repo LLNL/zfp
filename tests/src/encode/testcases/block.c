@@ -1,4 +1,4 @@
-#include "utils/testMacros.h"
+// requires #include "utils/testMacros.h", do outside of main()
 
 _cmocka_unit_test_setup_teardown(when_seededRandomDataGenerated_expect_ChecksumMatches, setup, teardown),
 

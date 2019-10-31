@@ -4,6 +4,7 @@
 #include <cmocka.h>
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "utils/testMacros.h"
 #include "utils/zfpChecksums.h"
@@ -21,6 +22,7 @@
 #define DUMMY_VAL 99
 
 struct setupVars {
+  uint dimLens[4];
   Scalar* dataArr;
   void* buffer;
   zfp_stream* stream;
@@ -145,23 +147,38 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
 static void
 setupZfpStream(struct setupVars* bundle)
 {
+  memset(bundle->dimLens, 0, sizeof(bundle->dimLens));
+#if DIMS >= 1
+  bundle->dimLens[0] = BLOCK_SIDE_LEN;
+#endif
+#if DIMS >= 2
+  bundle->dimLens[1] = BLOCK_SIDE_LEN;
+#endif
+#if DIMS >= 3
+  bundle->dimLens[2] = BLOCK_SIDE_LEN;
+#endif
+#if DIMS >= 4
+  bundle->dimLens[3] = BLOCK_SIDE_LEN;
+#endif
+  uint* n = bundle->dimLens;
+
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   switch(DIMS) {
     case 1:
-      field = zfp_field_1d(bundle->dataArr, type, BLOCK_SIDE_LEN);
+      field = zfp_field_1d(bundle->dataArr, type, n[0]);
       zfp_field_set_stride_1d(field, SX);
       break;
     case 2:
-      field = zfp_field_2d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      field = zfp_field_2d(bundle->dataArr, type, n[0], n[1]);
       zfp_field_set_stride_2d(field, SX, SY);
       break;
     case 3:
-      field = zfp_field_3d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      field = zfp_field_3d(bundle->dataArr, type, n[0], n[1], n[2]);
       zfp_field_set_stride_3d(field, SX, SY, SZ);
       break;
     case 4:
-      field = zfp_field_4d(bundle->dataArr, type, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN, BLOCK_SIDE_LEN);
+      field = zfp_field_4d(bundle->dataArr, type, n[0], n[1], n[2], n[3]);
       zfp_field_set_stride_4d(field, SX, SY, SZ, SW);
       break;
   }
@@ -271,8 +288,10 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
   int s[4] = {SX, SY, SZ, SW};
 
   UInt checksum = _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)bundle->dataArr, n, s);
-  uint64 expectedChecksum = getChecksumOriginalDataBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  uint64 key1, key2;
+  computeKeyOriginalInput(BLOCK_FULL_TEST, bundle->dimLens, &key1, &key2);
+  // entire block is populated, but later tests restrict to reading partial block
+  ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2);
 }
 
 static void
@@ -316,6 +335,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_OnlyStridedE
   zfp_stream_flush(stream);
   uint64 newChecksum = hashBitstream(stream_data(s), stream_size(s));
 
+  // do not use ASSERT_CHECKSUM macro because both always computed locally
   assert_int_equal(newChecksum, originalChecksum);
 }
 
@@ -330,8 +350,9 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_BitstreamChe
   zfp_stream_flush(stream);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  uint64 expectedChecksum = getChecksumEncodedBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  uint64 key1, key2;
+  computeKey(BLOCK_FULL_TEST, COMPRESSED_BITSTREAM, bundle->dimLens, zfp_mode_fixed_rate, 0, &key1, &key2);
+  ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2);
 }
 
 static void
@@ -375,6 +396,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyS
   zfp_stream_flush(stream);
   uint64 newChecksum = hashBitstream(stream_data(s), stream_size(s));
 
+  // do not use ASSERT_CHECKSUM macro because both always computed locally
   assert_int_equal(newChecksum, originalChecksum);
 }
 
@@ -448,6 +470,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_OnlyE
   zfp_stream_flush(stream);
   uint64 newChecksum = hashBitstream(stream_data(s), stream_size(s));
 
+  // do not use ASSERT_CHECKSUM macro because both always computed locally
   assert_int_equal(newChecksum, originalChecksum);
 }
 
@@ -462,6 +485,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_Bitst
   zfp_stream_flush(stream);
 
   uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  uint64 expectedChecksum = getChecksumEncodedPartialBlock(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  uint64 key1, key2;
+  computeKey(BLOCK_PARTIAL_TEST, COMPRESSED_BITSTREAM, bundle->dimLens, zfp_mode_fixed_rate, 0, &key1, &key2);
+  ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2);
 }

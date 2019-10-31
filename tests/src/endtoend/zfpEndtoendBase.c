@@ -36,9 +36,12 @@ struct setupVars {
 
   size_t bufsizeBytes;
   void* buffer;
+  // dimensions of data that gets compressed (currently same as randomGenArrSideLen)
+  uint dimLens[4];
   zfp_field* field;
   zfp_field* decompressField;
   zfp_stream* stream;
+  zfp_mode mode;
 
   // compressParamNum is 0, 1, or 2
   //   used to compute fixed mode param
@@ -88,8 +91,10 @@ setupRandomData(void** state)
 
   // set remaining indices (square for now)
   int i;
-  for (i = 1; i < 4; i++) {
+  for (i = 0; i < 4; i++) {
     bundle->randomGenArrSideLen[i] = (i < DIMS) ? bundle->randomGenArrSideLen[0] : 0;
+    // for now, entire randomly generated array always entirely compressed
+    bundle->dimLens[i] = (uint)bundle->randomGenArrSideLen[i];
   }
 
   *state = bundle;
@@ -110,10 +115,7 @@ teardownRandomData(void** state)
 static void
 setupZfpFields(struct setupVars* bundle, int s[4])
 {
-  uint nx = (uint)bundle->randomGenArrSideLen[0];
-  uint ny = (uint)bundle->randomGenArrSideLen[1];
-  uint nz = (uint)bundle->randomGenArrSideLen[2];
-  uint nw = (uint)bundle->randomGenArrSideLen[3];
+  uint* n = bundle->dimLens;
 
   // setup zfp_fields: source/destination arrays for compression/decompression
   zfp_type type = ZFP_TYPE;
@@ -122,34 +124,34 @@ setupZfpFields(struct setupVars* bundle, int s[4])
 
   switch(DIMS) {
     case 1:
-      field = zfp_field_1d(bundle->compressedArr, type, nx);
+      field = zfp_field_1d(bundle->compressedArr, type, n[0]);
       zfp_field_set_stride_1d(field, s[0]);
 
-      decompressField = zfp_field_1d(bundle->decompressedArr, type, nx);
+      decompressField = zfp_field_1d(bundle->decompressedArr, type, n[0]);
       zfp_field_set_stride_1d(decompressField, s[0]);
       break;
 
     case 2:
-      field = zfp_field_2d(bundle->compressedArr, type, nx, ny);
+      field = zfp_field_2d(bundle->compressedArr, type, n[0], n[1]);
       zfp_field_set_stride_2d(field, s[0], s[1]);
 
-      decompressField = zfp_field_2d(bundle->decompressedArr, type, nx, ny);
+      decompressField = zfp_field_2d(bundle->decompressedArr, type, n[0], n[1]);
       zfp_field_set_stride_2d(decompressField, s[0], s[1]);
       break;
 
     case 3:
-      field = zfp_field_3d(bundle->compressedArr, type, nx, ny, nz);
+      field = zfp_field_3d(bundle->compressedArr, type, n[0], n[1], n[2]);
       zfp_field_set_stride_3d(field, s[0], s[1], s[2]);
 
-      decompressField = zfp_field_3d(bundle->decompressedArr, type, nx, ny, nz);
+      decompressField = zfp_field_3d(bundle->decompressedArr, type, n[0], n[1], n[2]);
       zfp_field_set_stride_3d(decompressField, s[0], s[1], s[2]);
       break;
 
     case 4:
-      field = zfp_field_4d(bundle->compressedArr, type, nx, ny, nz, nw);
+      field = zfp_field_4d(bundle->compressedArr, type, n[0], n[1], n[2], n[3]);
       zfp_field_set_stride_4d(field, s[0], s[1], s[2], s[3]);
 
-      decompressField = zfp_field_4d(bundle->decompressedArr, type, nx, ny, nz, nw);
+      decompressField = zfp_field_4d(bundle->decompressedArr, type, n[0], n[1], n[2], n[3]);
       zfp_field_set_stride_4d(decompressField, s[0], s[1], s[2], s[3]);
       break;
   }
@@ -261,6 +263,8 @@ setupZfpStream(struct setupVars* bundle)
 static int
 setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParamNum)
 {
+  bundle->mode = zfpMode;
+
   // set compression mode for this compressParamNum
   if (compressParamNum > 2 || compressParamNum < 0) {
     printf("ERROR: Unknown compressParamNum %d during setupCompressParam()\n", compressParamNum);
@@ -351,8 +355,9 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->randomGenArr, bundle->totalRandomGenArrLen, 1);
-  uint64 expectedChecksum = getChecksumOriginalDataArray(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  uint64 key1, key2;
+  computeKeyOriginalInput(ARRAY_TEST, bundle->dimLens, &key1, &key2);
+  ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2);
 }
 
 // returns 1 on failure, 0 on success
@@ -379,13 +384,14 @@ runZfpCompress(zfp_stream* stream, const zfp_field* field, zfp_timer* timer, siz
 
 // returns 1 on failure, 0 on success
 static int
-isCompressedBitstreamChecksumsMatch(zfp_stream* stream, bitstream* bs, int compressParamNum)
+isCompressedBitstreamChecksumsMatch(zfp_stream* stream, bitstream* bs, uint dimLens[4], zfp_mode mode, int compressParamNum)
 {
   uint64 checksum = hashBitstream(stream_data(bs), stream_size(bs));
-  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), compressParamNum);
+  uint64 key1, key2;
+  computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, dimLens, mode, compressParamNum, &key1, &key2);
 
-  if (checksum != expectedChecksum) {
-    printf("ERROR: Compressed bitstream checksums were different: 0x%"UINT64PRIx" != 0x%"UINT64PRIx"\n", checksum, expectedChecksum);
+  if (COMPARE_NEQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2)) {
+    printf("ERROR: Compressed bitstream checksums were different: 0x%"UINT64PRIx" != 0x%"UINT64PRIx"\n", checksum, getChecksumByKey(DIMS, ZFP_TYPE, key1, key2));
     return 1;
   } else {
     return 0;
@@ -426,7 +432,6 @@ isDecompressedArrayChecksumsMatch(struct setupVars* bundle)
   const UInt* arr = (const UInt*)bundle->decompressedArr;
   int strides[4] = {0, 0, 0, 0};
   zfp_field_stride(field, strides);
-  size_t* n = bundle->randomGenArrSideLen;
 
   uint64 checksum = 0;
   switch(bundle->stride) {
@@ -448,9 +453,11 @@ isDecompressedArrayChecksumsMatch(struct setupVars* bundle)
       break;
   }
 
-  uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
-  if (checksum != expectedChecksum) {
-    printf("ERROR: Decompressed array checksums were different: 0x%"UINT64PRIx" != 0x%"UINT64PRIx"\n", checksum, expectedChecksum);
+  uint64 key1, key2;
+  computeKey(ARRAY_TEST, DECOMPRESSED_ARRAY, bundle->dimLens, bundle->mode, bundle->compressParamNum, &key1, &key2);
+
+  if (COMPARE_NEQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2)) {
+    printf("ERROR: Decompressed array checksums were different: 0x%"UINT64PRIx" != 0x%"UINT64PRIx"\n", checksum, getChecksumByKey(DIMS, ZFP_TYPE, key1, key2));
     return 1;
   } else {
     return 0;
@@ -473,7 +480,7 @@ isZfpCompressDecompressChecksumsMatch(void **state, int doDecompress)
   }
 
   bitstream* bs = zfp_stream_bit_stream(stream);
-  if (isCompressedBitstreamChecksumsMatch(stream, bs, bundle->compressParamNum) == 1) {
+  if (isCompressedBitstreamChecksumsMatch(stream, bs, bundle->dimLens, bundle->mode, bundle->compressParamNum) == 1) {
     return 1;
   }
 
@@ -509,7 +516,7 @@ runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
   }
 
   bitstream* bs = zfp_stream_bit_stream(stream);
-  if (isCompressedBitstreamChecksumsMatch(stream, bs, bundle->compressParamNum) == 1) {
+  if (isCompressedBitstreamChecksumsMatch(stream, bs, bundle->dimLens, zfp_mode_reversible, bundle->compressParamNum) == 1) {
     fail_msg("Reversible test failed.");
   }
 
