@@ -2,13 +2,13 @@
 
 .. _zfpcmd:
 
-File Compression
-================
+File Compressor
+===============
 
 This section describes a simple, file-based |zfp| compression tool that is
-part of the |zfp| distribution named |zfpcmd|. If you are interested in
-other, third-party, file-based compression options, please be sure to read
-about those mentioned in the :ref:`Overview <overview>` section.
+part of the |zfp| distribution named |zfpcmd|.  Other, third-party,
+file-based compression options are discussed in the
+:ref:`Overview <overview>` section.
 
 The |zfpcmd| executable in the :file:`bin` directory is primarily
 intended for evaluating the rate-distortion (compression ratio and quality)
@@ -257,8 +257,3 @@ Examples
   * :code:`-d -1 1000000 -a 1e-9` : compression of 1,000,000 doubles with < 10\ :sup:`-9` max error
   * :code:`-d -1 1000000 -c 64 64 0 -1074` : 4x fixed-rate compression of 1,000,000 doubles
   * :code:`-x omp=16,256` : parallel compression with 16 threads, 256-block chunks
-
-Third party, file-based |zfp| compression
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Several additional, third-party options for using |zfp| to compress data to files
-are described in the :ref:`Overview <overview>` section.
