@@ -33,7 +33,8 @@ public:
   // csize bytes of cache, and optionally initialized from flat array p
   const_array3(uint nx, uint ny, uint nz, double rate, const Scalar* p = 0, size_t csize = 0) :
     const_array(3, Codec::type),
-    cache(lines(csize, nx, ny, nz))
+    cache(lines(csize, nx, ny, nz)),
+    block_index(blocks)
   {
     set_rate(rate);
     resize(nx, ny, nz, p == 0);
@@ -75,6 +76,7 @@ public:
   // virtual destructor
   virtual ~const_array3() {}
 
+#if 0
   // assignment operator--performs a deep copy
   array3& operator=(const array3& a)
   {
@@ -82,6 +84,7 @@ public:
       deep_copy(a);
     return *this;
   }
+#endif
 
   // total number of elements in array
   size_t size() const { return size_t(nx) * size_t(ny) * size_t(nz); }
@@ -91,7 +94,6 @@ public:
   uint size_y() const { return ny; }
   uint size_z() const { return nz; }
 
-#if 0
   // resize the array (all previously stored data will be lost)
   void resize(uint nx, uint ny, uint nz, bool clear = true)
   {
@@ -119,9 +121,11 @@ public:
       }
       else
         shape = 0;
+
+      // reset block index
+      block_index.resize(blocks);
     }
   }
-#endif
 
   // cache size in number of bytes
   size_t cache_size() const { return cache.size() * sizeof(CacheLine); }
@@ -129,7 +133,6 @@ public:
   // set minimum cache size in bytes (array dimensions must be known)
   void set_cache_size(size_t csize)
   {
-    flush_cache();
     cache.resize(lines(csize, nx, ny, nz));
   }
 
@@ -154,12 +157,16 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
+    stream_rewind(zfp->stream);
+    block_index.clear();
     uint b = 0;
     for (uint k = 0; k < bz; k++, p += 4 * nx * (ny - by))
       for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
-        for (uint i = 0; i < bx; i++, p += 4, b++)
-#error here
-          encode(b, p, 1, nx, nx * ny);
+        for (uint i = 0; i < bx; i++, p += 4, b++) {
+          size_t size = encode(b, p, 1, nx, nx * ny);
+          block_index.push(size);
+        }
+    block_index.flush();
     stream_flush(zfp->stream); // flush final block
     cache.clear();
   }
@@ -190,6 +197,7 @@ protected:
   public:
     Scalar operator()(uint i, uint j, uint k) const { return a[index(i, j, k)]; }
     const Scalar* data() const { return a; }
+    Scalar* data() { return a; }
     // copy cache line
     void get(Scalar* p, int sx, int sy, int sz) const
     {
@@ -220,6 +228,74 @@ protected:
     Scalar a[64];
   };
 
+  class Index { // templetize?
+  public:
+    // constructor for given nbumber of blocks
+    Index(uint blocks) :
+      data(0),
+      block(0) 
+    {
+      resize(blocks);
+    }
+
+    // reset index
+    void clear() { block = 0; }
+
+    void resize(uint blocks)
+    {
+//      data = new uint64[2 * ((blocks + 7) / 8)];
+      delete[] data;
+      data = new uint64[blocks + 1];
+      clear();
+    }
+
+    // push block bit size
+    void push(size_t size)
+    {
+      if (block)
+        data[block + 1] = data[block] + size;
+      else {
+        data[0] = 0;
+        data[1] = size;
+      }
+      block++;
+    }
+
+    // flush any buffered data
+    void flush()
+    {
+    }
+
+    // bit offset of given block id
+    size_t operator()(uint block) const
+    {
+#if 0
+      uint chunk = block / 8;
+      uint which = block % 8;
+      return offset(data[2 * chunk + 0], data[2 * chunk + 1], which);
+#else
+      return data[block];
+#endif
+    }
+
+  protected:
+#if 0
+    // kth offset in chunk, 0 <= k <= 7
+    static uint64 offset(uint64 h, uint64 l, uint k)
+    {
+      uint64 base = h >> 32;
+      h &= UINT64C(0xffffffff);
+      uint64 hi = sum4(h >> (4 * (7 - k)));
+      uint64 lo = sum8(l >> (8 * (7 - k)));
+      return (base << 12) + (hi << 8) + lo;
+    }
+#endif
+
+    uint64* data;
+    uint block;
+//    size_t size[8];
+  };
+
 #if 0
   // perform a deep copy
   void deep_copy(const array3& a)
@@ -234,7 +310,7 @@ protected:
   // inspector
   Scalar get(uint i, uint j, uint k) const
   {
-    const CacheLine* p = line(i, j, k, false);
+    const CacheLine* p = line(i, j, k);
     return (*p)(i, j, k);
   }
 
@@ -258,32 +334,28 @@ protected:
   }
 
   // encode block with given index
-  void encode(uint index, const Scalar* block) const
+  size_t encode(uint index, const Scalar* block) const
   {
-    stream_wseek(zfp->stream, index * blkbits);
-    Codec::encode_block_3(zfp, block, shape ? shape[index] : 0);
-    stream_flush(zfp->stream);
+    return Codec::encode_block_3(zfp, block, shape ? shape[index] : 0);
   }
 
   // encode block with given index from strided array
-  void encode(uint index, const Scalar* p, int sx, int sy, int sz) const
+  size_t encode(uint index, const Scalar* p, int sx, int sy, int sz) const
   {
-    stream_wseek(zfp->stream, index * blkbits);
-    Codec::encode_block_strided_3(zfp, p, shape ? shape[index] : 0, sx, sy, sz);
-    stream_flush(zfp->stream);
+    return Codec::encode_block_strided_3(zfp, p, shape ? shape[index] : 0, sx, sy, sz);
   }
 
   // decode block with given index
   void decode(uint index, Scalar* block) const
   {
-    stream_rseek(zfp->stream, index * blkbits);
+    stream_rseek(zfp->stream, block_index(index));
     Codec::decode_block_3(zfp, block, shape ? shape[index] : 0);
   }
 
   // decode block with given index to strided array
   void decode(uint index, Scalar* p, int sx, int sy, int sz) const
   {
-    stream_rseek(zfp->stream, index * blkbits);
+    stream_rseek(zfp->stream, block_index(index));
     Codec::decode_block_strided_3(zfp, p, shape ? shape[index] : 0, sx, sy, sz);
   }
 
@@ -303,11 +375,12 @@ protected:
   // number of cache lines corresponding to size (or suggested size if zero)
   static uint lines(size_t size, uint nx, uint ny, uint nz)
   {
-    uint n = size ? (size + sizeof(CacheLine) - 1) / sizeof(CacheLine) : array::lines(size_t((nx + 3) / 4) * size_t((ny + 3) / 4) * size_t((nz + 3) / 4));
+    uint n = size ? (size + sizeof(CacheLine) - 1) / sizeof(CacheLine) : const_array::lines(size_t((nx + 3) / 4) * size_t((ny + 3) / 4) * size_t((nz + 3) / 4));
     return std::max(n, 1u);
   }
 
   mutable zfp::Cache<CacheLine> cache; // cache of decompressed blocks
+  Index block_index; // block index
 };
 
 typedef const_array3<float> const_array3f;

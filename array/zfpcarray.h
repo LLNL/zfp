@@ -95,7 +95,7 @@ protected:
   // allocate memory for compressed data
   void alloc(bool clear = true)
   {
-abort();
+#warning "implement"
     bytes = blocks * blkbits / CHAR_BIT;
     zfp::reallocate_aligned(data, bytes, 0x100u);
     if (clear)
@@ -108,7 +108,7 @@ abort();
   // free memory associated with compressed data
   void free()
   {
-abort();
+#warning "implement"
     nx = ny = nz = 0;
     bx = by = bz = 0;
     blocks = 0;
