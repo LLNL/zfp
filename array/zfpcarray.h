@@ -20,7 +20,7 @@ protected:
     dims(0), type(zfp_type_none),
     nx(0), ny(0), nz(0),
     bx(0), by(0), bz(0),
-    blocks(0), blkbits(0),
+    blocks(0),
     bytes(0), data(0),
     zfp(0),
     shape(0)
@@ -31,7 +31,7 @@ protected:
     dims(dims), type(type),
     nx(0), ny(0), nz(0),
     bx(0), by(0), bz(0),
-    blocks(0), blkbits(0),
+    blocks(0),
     bytes(0), data(0),
     zfp(zfp_stream_open(0)),
     shape(0)
@@ -62,15 +62,41 @@ public:
   }
 
   // rate in bits per value
-  double rate() const { return double(blkbits) / block_size(); }
+  double rate() const { return CHAR_BIT * double(bytes) / (nx * ny * nz); }
 
   // set compression rate in bits per value
   double set_rate(double rate)
   {
     rate = zfp_stream_set_rate(zfp, rate, type, dims, 1);
-    blkbits = zfp->maxbits;
-    alloc();
+    if (blocks)
+      alloc();
     return rate;
+  }
+
+  // set precision in uncompressed bits per value
+  uint set_precision(uint precision)
+  {
+    precision = zfp_stream_set_precision(zfp, precision);
+    if (blocks)
+      alloc(false);
+    return precision;
+  }
+
+  // set compression rate in bits per value
+  double set_accuracy(double tolerance)
+  {
+    tolerance = zfp_stream_set_accuracy(zfp, tolerance);
+    if (blocks)
+      alloc(false);
+    return tolerance;
+  }
+
+  // enable reversible (lossless) mode
+  void set_reversible()
+  {
+    zfp_stream_set_reversible(zfp);
+    if (blocks)
+      alloc(false);
   }
 
   // empty cache without compressing modified cached blocks
@@ -95,8 +121,13 @@ protected:
   // allocate memory for compressed data
   void alloc(bool clear = true)
   {
-#warning "implement"
-    bytes = blocks * blkbits / CHAR_BIT;
+    zfp_field field;
+    field.type = type;
+    field.nx = nx;
+    field.ny = ny;
+    field.nz = nz;
+    field.nw = 0;
+    bytes = zfp_stream_maximum_size(zfp, &field);
     zfp::reallocate_aligned(data, bytes, 0x100u);
     if (clear)
       std::fill(data, data + bytes, 0);
@@ -135,7 +166,6 @@ abort();
     by = a.by;
     bz = a.bz;
     blocks = a.blocks;
-    blkbits = a.blkbits;
     bytes = a.bytes;
 
     // copy dynamically allocated data
@@ -165,7 +195,6 @@ abort();
   uint nx, ny, nz;     // array dimensions
   uint bx, by, bz;     // array dimensions in number of blocks
   uint blocks;         // number of blocks
-  size_t blkbits;      // number of bits per compressed block
   size_t bytes;        // total bytes of compressed data
   mutable uchar* data; // pointer to compressed data
   zfp_stream* zfp;     // compressed stream of blocks

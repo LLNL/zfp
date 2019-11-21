@@ -157,6 +157,7 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
+fprintf(stderr, "hERE\n");
     stream_rewind(zfp->stream);
     block_index.clear();
     uint b = 0;
@@ -164,11 +165,16 @@ public:
       for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
         for (uint i = 0; i < bx; i++, p += 4, b++) {
           size_t size = encode(b, p, 1, nx, nx * ny);
+fprintf(stderr, "%zu\n", size);
           block_index.push(size);
         }
+    // flush final block
     block_index.flush();
-    stream_flush(zfp->stream); // flush final block
+    stream_flush(zfp->stream);
+    bytes = stream_size(zfp->stream);
+#warning "should reallocate memory here"
     cache.clear();
+fprintf(stderr, "DONE\n");
   }
 
   // (i, j, k) accessors
