@@ -77,6 +77,7 @@ public:
   uint set_precision(uint precision)
   {
     precision = zfp_stream_set_precision(zfp, precision);
+    zfp->maxbits = maxbits;
     if (blocks)
       alloc(false);
     return precision;
@@ -86,6 +87,7 @@ public:
   double set_accuracy(double tolerance)
   {
     tolerance = zfp_stream_set_accuracy(zfp, tolerance);
+    zfp->maxbits = maxbits;
     if (blocks)
       alloc(false);
     return tolerance;
@@ -95,6 +97,7 @@ public:
   void set_reversible()
   {
     zfp_stream_set_reversible(zfp);
+    zfp->maxbits = maxbits;
     if (blocks)
       alloc(false);
   }
@@ -189,6 +192,8 @@ abort();
     for (m = 1; m * m < n; m *= 2);
     return static_cast<uint>(m);
   }
+
+  static const uint maxbits = 0x1000u; // maximum supported block size
 
   uint dims;           // array dimensionality (1, 2, or 3)
   zfp_type type;       // scalar type

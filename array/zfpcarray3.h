@@ -157,7 +157,6 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
-fprintf(stderr, "hERE\n");
     stream_rewind(zfp->stream);
     block_index.clear();
     uint b = 0;
@@ -165,16 +164,20 @@ fprintf(stderr, "hERE\n");
       for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
         for (uint i = 0; i < bx; i++, p += 4, b++) {
           size_t size = encode(b, p, 1, nx, nx * ny);
-fprintf(stderr, "%zu\n", size);
+#if DEBUG
+    fprintf(stderr, "size=%zu\n", size);
+#endif
           block_index.push(size);
         }
     // flush final block
     block_index.flush();
+//for (uint i = 0; i < blocks; i++)
+//printf("block=%i offset=%lu\n", i, block_index(i));
+//exit(0);
     stream_flush(zfp->stream);
     bytes = stream_size(zfp->stream);
 #warning "should reallocate memory here"
     cache.clear();
-fprintf(stderr, "DONE\n");
   }
 
   // (i, j, k) accessors
@@ -234,6 +237,8 @@ protected:
     Scalar a[64];
   };
 
+#if 0
+  // uncompressed index
   class Index { // templetize?
   public:
     // constructor for given nbumber of blocks
@@ -249,7 +254,6 @@ protected:
 
     void resize(uint blocks)
     {
-//      data = new uint64[2 * ((blocks + 7) / 8)];
       delete[] data;
       data = new uint64[blocks + 1];
       clear();
@@ -268,39 +272,121 @@ protected:
     }
 
     // flush any buffered data
+    void flush() {}
+
+    // bit offset of given block id
+    size_t operator()(uint id) const { return data[id]; }
+
+  protected:
+    uint64* data;
+    uint block;
+  };
+#else
+  // compressed index
+  class Index { // templetize?
+  public:
+    // constructor for given nbumber of blocks
+    Index(uint blocks) :
+      data(0),
+      block(0) 
+    {
+      resize(blocks);
+    }
+
+    // reset index
+    void clear()
+    {
+      block = 0;
+      ptr = 0;
+    }
+
+    void resize(uint blocks)
+    {
+      delete[] data;
+      data = new uint64[2 * ((blocks + 7) / 8)];
+      clear();
+    }
+
+    // push block bit size
+    void push(size_t size)
+    {
+      uint chunk = block / 8;
+      buffer[block & 0x7u] = size;
+      block++;
+      if (!(block & 0x7u)) {
+        // store all but low 8-bits of offset
+        uint64 hi = (ptr >> 8) << 28;
+        uint64 lo = (ptr & UINT64C(0xff)) << 56;
+        for (uint k = 0; k < 7; k++) {
+          // partition block size into 4 high and 8 low bits
+          hi += (buffer[k] >> 8) << (4 * (6 - k));
+          lo += (buffer[k] & 0xffu) << (8 * (6 - k));
+          ptr += buffer[k];
+        }
+//fprintf(stderr, "hi=%016lx lo=%016lx\n", hi, lo);
+        ptr += buffer[7];
+        data[2 * chunk + 0] = hi;
+        data[2 * chunk + 1] = lo;
+      }
+    }
+
+    // flush any buffered data
     void flush()
     {
+      while (block & 0x7u)
+        push(0);
     }
 
     // bit offset of given block id
-    size_t operator()(uint block) const
+    size_t operator()(uint id) const
     {
-#if 0
-      uint chunk = block / 8;
-      uint which = block % 8;
+      uint chunk = id / 8;
+      uint which = id % 8;
+//fprintf(stderr, "offset(%u) ", id);
       return offset(data[2 * chunk + 0], data[2 * chunk + 1], which);
-#else
-      return data[block];
-#endif
     }
 
   protected:
-#if 0
     // kth offset in chunk, 0 <= k <= 7
     static uint64 offset(uint64 h, uint64 l, uint k)
     {
+//fprintf(stderr, "(%016lx %016lx %u) ", h, l, k);
       uint64 base = h >> 32;
       h &= UINT64C(0xffffffff);
       uint64 hi = sum4(h >> (4 * (7 - k)));
       uint64 lo = sum8(l >> (8 * (7 - k)));
+//fprintf(stderr, "(%016lx %016lx %016lx)\n", base, hi, lo);
       return (base << 12) + (hi << 8) + lo;
     }
-#endif
+
+    // sum of eight packed 4-bit numbers
+    static uint64 sum4(uint64 x)
+    {
+      uint64 y = x & UINT64C(0xf0f0f0f0);
+      x -= y;
+      x += y >> 4;
+      x += x >> 16;
+      x += x >> 8;
+      return x & UINT64C(0xff);
+    }
+  
+    // sum of eight packed 8-bit numbers
+    static uint64 sum8(uint64 x)
+    {
+      uint64 y = x & UINT64C(0xff00ff00ff00ff00);
+      x -= y;
+      x += y >> 8;
+      x += x >> 32;
+      x += x >> 16;
+      return x & UINT64C(0xffff);
+    }
 
     uint64* data;
     uint block;
-//    size_t size[8];
+    uint64 ptr;
+    size_t buffer[8];
   };
+#endif
 
 #if 0
   // perform a deep copy
