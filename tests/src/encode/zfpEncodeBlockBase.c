@@ -254,7 +254,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeSpecialBlocks_expect_BitstreamCh
     }
 
     // reset/zero bitstream, rewind for next iteration
-    memset(bundle->buffer, bundle->bufsizeBytes, 0);
+    memset(bundle->buffer, 0, bundle->bufsizeBytes);
     zfp_stream_rewind(stream);
   }
 
