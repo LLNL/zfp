@@ -35,6 +35,8 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_get_ref_expect_arrayObjectValid, setupCfpArrSmall, teardownCfpArr),
 
     cmocka_unit_test_setup_teardown(given_cfp_ref2f_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ref2f_when_set_expect_arrayUpdated, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ref2f_when_copy_expect_arrayUpdated, setupCfpArrSmall, teardownCfpArr),
 
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate0, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate1, teardownCfpArr),

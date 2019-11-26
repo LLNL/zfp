@@ -39,3 +39,16 @@ _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, get)(CFP_REF_TYPE self)
 {
   return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i);
 }
+
+static void
+_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, set)(CFP_REF_TYPE self, ZFP_SCALAR_TYPE val)
+{
+  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) = val;
+}
+
+static void
+_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
+{
+  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) =
+    reinterpret_cast<ZFP_ARRAY_TYPE*>(src.array.object)->operator()(src.i);
+}

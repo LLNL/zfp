@@ -43,10 +43,10 @@ init_constants(constants* c, int nx, int ny, int nt)
 
 // advance solution using integer array indices
 static void
-time_step_indexed_compressed(cfp_array2d* u, const constants* c)
+time_step_indexed_compressed(cfp_array2d u, const constants* c)
 {
   // compute du/dt
-  cfp_array2d* du = _.ctor(c->nx, c->ny, _.rate(u), 0, _.cache_size(u));
+  cfp_array2d du = _.ctor(c->nx, c->ny, _.rate(u), 0, _.cache_size(u));
   int x, y;
   for (y = 1; y < c->ny - 1; y++) {
     for (x = 1; x < c->nx - 1; x++) {
@@ -92,7 +92,7 @@ time_step_indexed(double* u, const constants* c)
 
 // solve heat equation using 
 static double
-solve_compressed(cfp_array2d* u, const constants* c)
+solve_compressed(cfp_array2d u, const constants* c)
 {
   // initialize u with point heat source (u is assumed to be zero initialized)
   _.set(u, c->x0, c->y0, 1);
@@ -125,7 +125,7 @@ solve(double* u, const constants* c)
 
 // compute sum of array values
 static double
-total_compressed(const cfp_array2d* u)
+total_compressed(const cfp_array2d u)
 {
   double s = 0;
   const int nx = _.size_x(u);
@@ -151,7 +151,7 @@ total(const double* u, const int nx, const int ny)
 
 // compute root mean square error with respect to exact solution
 static double
-error_compressed(const cfp_array2d* u, const constants* c, double t)
+error_compressed(const cfp_array2d u, const constants* c, double t)
 {
   double e = 0;
   int x, y;
@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
   double err;
   if (compression) {
     // solve problem using compressed arrays
-    cfp_array2d* u = _.ctor(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
+    cfp_array2d u = _.ctor(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
 
     rate = _.rate(u);
     double t = solve_compressed(u, c);

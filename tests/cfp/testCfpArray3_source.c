@@ -91,3 +91,29 @@ _catFunc3(given_, CFP_REF_TYPE, _when_get_expect_entryReturned)(void **state)
 
   assert_true(CFP_NAMESPACE.SUB_NAMESPACE.ref.get(cfpArrRef) == (SCALAR)VAL);
 }
+
+static void
+_catFunc3(given_, CFP_REF_TYPE, _when_set_expect_arrayUpdated)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+  uint i = 1, j = 2, k = 1;
+  CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.get_ref(cfpArr, i, j, k);
+  CFP_NAMESPACE.SUB_NAMESPACE.ref.set(cfpArrRef, VAL);
+
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get(cfpArr, i, j, k) == (SCALAR)VAL);
+}
+
+static void
+_catFunc3(given_, CFP_REF_TYPE, _when_copy_expect_arrayUpdated)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+  uint i1 = 1, j1 = 2, k1 = 1, i2 = 2, j2 = 1, k2 = 2;
+  CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, i1, j1, k1, VAL);
+  CFP_REF_TYPE cfpArrRef_a = CFP_NAMESPACE.SUB_NAMESPACE.get_ref(cfpArr, i1, j1, k1);
+  CFP_REF_TYPE cfpArrRef_b = CFP_NAMESPACE.SUB_NAMESPACE.get_ref(cfpArr, i2, j2, k2);
+  CFP_NAMESPACE.SUB_NAMESPACE.ref.copy(cfpArrRef_b, cfpArrRef_a);
+
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get(cfpArr, i2, j2, k2) == (SCALAR)VAL);
+}

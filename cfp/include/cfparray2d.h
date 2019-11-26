@@ -16,6 +16,8 @@ typedef struct {
 
 typedef struct {
   double (*get)(cfp_ref2d self);
+  void (*set)(cfp_ref2d self, double val);
+  void (*copy)(cfp_ref2d self, cfp_ref2d src);
 } cfp_ref2d_api;
 
 typedef struct {
