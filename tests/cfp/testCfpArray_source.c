@@ -33,7 +33,7 @@ struct setupVars {
   // dimensions of data that gets compressed (currently same as dataSideLen)
   uint dimLens[4];
 
-  CFP_ARRAY_TYPE* cfpArr;
+  CFP_ARRAY_TYPE cfpArr;
 
   int paramNum;
   double rate;
@@ -117,7 +117,7 @@ setupCfpArrMinimal(void** state)
   struct setupVars *bundle = *state;
 
   bundle->cfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor_default();
-  assert_non_null(bundle->cfpArr);
+  assert_non_null(bundle->cfpArr.object);
 
   return 0;
 }
@@ -137,7 +137,7 @@ setupCfpArrSizeRate(void** state, uint sizeX, uint sizeY, uint sizeZ)
   fail_msg("unexpected value for macro DIMS");
 #endif
 
-  assert_non_null(bundle->cfpArr);
+  assert_non_null(bundle->cfpArr.object);
 
   return 0;
 }
@@ -157,7 +157,7 @@ setupCfpArrLargeComplete(void **state)
   fail_msg("unexpected value for macro DIMS");
 #endif
 
-  assert_non_null(bundle->cfpArr);
+  assert_non_null(bundle->cfpArr.object);
 
   return 0;
 }
@@ -247,8 +247,8 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_defaultCtor_expect_returnsNonNullPtr)(void **state)
 {
-  CFP_ARRAY_TYPE* cfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor_default();
-  assert_non_null(cfpArr);
+  CFP_ARRAY_TYPE cfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor_default();
+  assert_non_null(cfpArr.object);
 
   CFP_NAMESPACE.SUB_NAMESPACE.dtor(cfpArr);
 }
@@ -257,8 +257,8 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_copyCtor_expect_paramsCopied)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE* srcCfpArr = bundle->cfpArr;
-  CFP_ARRAY_TYPE* newCfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor_copy(srcCfpArr);
+  CFP_ARRAY_TYPE srcCfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE newCfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor_copy(srcCfpArr);
 
   // verify size
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.size(newCfpArr), CFP_NAMESPACE.SUB_NAMESPACE.size(srcCfpArr));
@@ -285,7 +285,7 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_copyCtor_expect_cacheCopied)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE* srcCfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE srcCfpArr = bundle->cfpArr;
 
   // get ptr to compressed data (automatically flushes cache)
   uchar* srcData = CFP_NAMESPACE.SUB_NAMESPACE.compressed_data(srcCfpArr);
@@ -295,7 +295,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_copyCtor_expect_cacheCopied)(void **stat
   CFP_NAMESPACE.SUB_NAMESPACE.set_flat(srcCfpArr, i, (SCALAR)VAL);
 
   // exec copy constructor
-  CFP_ARRAY_TYPE* newCfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor_copy(srcCfpArr);
+  CFP_ARRAY_TYPE newCfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor_copy(srcCfpArr);
 
   size_t newDataSize = CFP_NAMESPACE.SUB_NAMESPACE.compressed_size(newCfpArr);
   size_t srcDataSize = CFP_NAMESPACE.SUB_NAMESPACE.compressed_size(srcCfpArr);
@@ -319,7 +319,7 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_setRate_expect_rateSet)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.rate(cfpArr), 0);
 
   double rate = CFP_NAMESPACE.SUB_NAMESPACE.set_rate(cfpArr, bundle->rate);
@@ -331,7 +331,7 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_setCacheSize_expect_cacheSizeSet)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
   size_t oldCsize = CFP_NAMESPACE.SUB_NAMESPACE.cache_size(cfpArr);
   size_t newCsize = oldCsize + 999;
@@ -345,7 +345,7 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _with_dirtyCache_when_flushCache_expect_cacheEntriesPersistedToMemory)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
   // getting the ptr automatically flushes cache, so do this before setting an entry
   uchar* compressedDataPtr = CFP_NAMESPACE.SUB_NAMESPACE.compressed_data(cfpArr);
@@ -366,7 +366,7 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_clearCache_expect_cacheCleared)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
   SCALAR prevVal = CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, 0);
   CFP_NAMESPACE.SUB_NAMESPACE.set_flat(cfpArr, 0, (SCALAR)VAL);
@@ -382,7 +382,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_setFlat_expect_entryWrittenToCacheOnly)(
 {
   struct setupVars *bundle = *state;
 
-  CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
   // getting the ptr automatically flushes cache, so do this before setting an entry
   uchar* compressedDataPtr = CFP_NAMESPACE.SUB_NAMESPACE.compressed_data(cfpArr);
@@ -401,7 +401,7 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlat_expect_entryReturned)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
   CFP_NAMESPACE.SUB_NAMESPACE.set_flat(cfpArr, 0, (SCALAR)VAL);
 
   // dirty cache preserves exact value (compression not applied until flush)
@@ -412,7 +412,7 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_setArray_expect_compressedStreamChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
   uchar* compressedPtr = CFP_NAMESPACE.SUB_NAMESPACE.compressed_data(cfpArr);
   CFP_NAMESPACE.SUB_NAMESPACE.set_array(cfpArr, bundle->dataArr);
@@ -431,7 +431,7 @@ static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_getArray_expect_decompressedArrChecksumMatches)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE* cfpArr = bundle->cfpArr;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
   CFP_NAMESPACE.SUB_NAMESPACE.set_array(cfpArr, bundle->dataArr);
   CFP_NAMESPACE.SUB_NAMESPACE.get_array(cfpArr, bundle->decompressedArr);
