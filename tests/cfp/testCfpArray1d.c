@@ -4,6 +4,7 @@
 #include "constants/1dDouble.h"
 
 #define CFP_ARRAY_TYPE cfp_array1d
+#define CFP_REF_TYPE cfp_ref1d
 #define SUB_NAMESPACE array1d
 #define SCALAR double
 
@@ -31,6 +32,9 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_array1d_when_getFlat_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array1d_when_set_expect_entryWrittenToCacheOnly, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array1d_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array1d_when_get_ref_expect_arrayObjectValid, setupCfpArrSmall, teardownCfpArr),
+
+    cmocka_unit_test_setup_teardown(given_cfp_ref1d_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
 
     // fixed rate rounds up to multiples of 16 (omit fixed rate 8)
     cmocka_unit_test_setup_teardown(given_cfp_array1d_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate1, teardownCfpArr),

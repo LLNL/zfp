@@ -9,6 +9,16 @@ typedef struct {
 } cfp_array2d;
 
 typedef struct {
+  uint i;
+  uint j;
+  cfp_array2d array;
+} cfp_ref2d;
+
+typedef struct {
+  double (*get)(cfp_ref2d self);
+} cfp_ref2d_api;
+
+typedef struct {
   cfp_array2d (*ctor_default)();
   cfp_array2d (*ctor)(uint nx, uint ny, double rate, const double* p, size_t csize);
   cfp_array2d (*ctor_copy)(const cfp_array2d src);
@@ -35,6 +45,9 @@ typedef struct {
   void (*set_flat)(cfp_array2d self, uint i, double val);
   double (*get)(const cfp_array2d self, uint i, uint j);
   void (*set)(cfp_array2d self, uint i, uint j, double val);
+
+  cfp_ref2d (*get_ref)(cfp_array2d self, uint i, uint j);
+  cfp_ref2d_api ref;
 } cfp_array2d_api;
 
 #endif

@@ -34,6 +34,9 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array1f_set_flat,
     cfp_array1f_get,
     cfp_array1f_set,
+
+    cfp_array1f_get_ref,
+    cfp_array1f_cfp_ref1f_get,
   },
   // array1d
   {
@@ -61,6 +64,9 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array1d_set_flat,
     cfp_array1d_get,
     cfp_array1d_set,
+
+    cfp_array1d_get_ref,
+    cfp_array1d_cfp_ref1d_get,
   },
   // array2f
   {
@@ -90,6 +96,9 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array2f_set_flat,
     cfp_array2f_get,
     cfp_array2f_set,
+
+    cfp_array2f_get_ref,
+    cfp_array2f_cfp_ref2f_get,
   },
   // array2d
   {
@@ -119,6 +128,9 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array2d_set_flat,
     cfp_array2d_get,
     cfp_array2d_set,
+
+    cfp_array2d_get_ref,
+    cfp_array2d_cfp_ref2d_get,
   },
   // array3f
   {
@@ -149,6 +161,9 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array3f_set_flat,
     cfp_array3f_get,
     cfp_array3f_set,
+
+    cfp_array3f_get_ref,
+    cfp_array3f_cfp_ref3f_get,
   },
   // array3d
   {
@@ -179,5 +194,8 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array3d_set_flat,
     cfp_array3d_get,
     cfp_array3d_set,
+
+    cfp_array3d_get_ref,
+    cfp_array3d_cfp_ref3d_get,
   },
 };

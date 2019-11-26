@@ -4,6 +4,7 @@
 #include "constants/2dFloat.h"
 
 #define CFP_ARRAY_TYPE cfp_array2f
+#define CFP_REF_TYPE cfp_ref2f
 #define SUB_NAMESPACE array2f
 #define SCALAR float
 
@@ -31,6 +32,9 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_getFlat_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_set_expect_entryWrittenToCacheOnly, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array2f_when_get_ref_expect_arrayObjectValid, setupCfpArrSmall, teardownCfpArr),
+
+    cmocka_unit_test_setup_teardown(given_cfp_ref2f_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
 
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate0, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate1, teardownCfpArr),

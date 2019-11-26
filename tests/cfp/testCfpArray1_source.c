@@ -61,3 +61,26 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_get_expect_entryReturned)(void **state)
   // dirty cache doesn't immediately apply compression
   assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get(cfpArr, i) == (SCALAR)VAL);
 }
+
+static void
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_get_ref_expect_arrayObjectValid)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+  uint i = 1;
+  CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.get_ref(cfpArr, i);
+
+  assert_ptr_equal(cfpArrRef.array.object, cfpArr.object);
+}
+
+static void
+_catFunc3(given_, CFP_REF_TYPE, _when_get_expect_entryReturned)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+  uint i = 1;
+  CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.get_ref(cfpArr, i);
+  CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, i, VAL);
+
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.ref.get(cfpArrRef) == (SCALAR)VAL);
+}

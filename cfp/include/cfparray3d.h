@@ -9,6 +9,17 @@ typedef struct {
 } cfp_array3d;
 
 typedef struct {
+  uint i;
+  uint j;
+  uint k;
+  cfp_array3d array;
+} cfp_ref3d;
+
+typedef struct {
+  double (*get)(cfp_ref3d self);
+} cfp_ref3d_api;
+
+typedef struct {
   cfp_array3d (*ctor_default)();
   cfp_array3d (*ctor)(uint nx, uint ny, uint nz, double rate, const double* p, size_t csize);
   cfp_array3d (*ctor_copy)(const cfp_array3d src);
@@ -36,6 +47,10 @@ typedef struct {
   void (*set_flat)(cfp_array3d self, uint i, double val);
   double (*get)(const cfp_array3d self, uint i, uint j, uint k);
   void (*set)(cfp_array3d self, uint i, uint j, uint k, double val);
+
+  cfp_ref3d (*get_ref)(cfp_array3d self, uint i, uint j, uint k);
+
+  cfp_ref3d_api ref;
 } cfp_array3d_api;
 
 #endif
