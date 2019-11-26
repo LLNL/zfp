@@ -1,7 +1,9 @@
 static CFP_ARRAY_TYPE
 _t1(CFP_ARRAY_TYPE, ctor)(uint n, double rate, const ZFP_SCALAR_TYPE * p, size_t csize)
 {
-  return (CFP_ARRAY_TYPE){reinterpret_cast<void*>(new ZFP_ARRAY_TYPE(n, rate, p, csize))};
+  CFP_ARRAY_TYPE a;
+  a.object = reinterpret_cast<void*>(new ZFP_ARRAY_TYPE(n, rate, p, csize));
+  return a;
 }
 
 static void

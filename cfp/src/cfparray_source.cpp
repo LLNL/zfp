@@ -2,15 +2,17 @@
 static CFP_ARRAY_TYPE
 _t1(CFP_ARRAY_TYPE, ctor_default)()
 {
-  return (CFP_ARRAY_TYPE){reinterpret_cast<void*>(new ZFP_ARRAY_TYPE())};
+  CFP_ARRAY_TYPE a;
+  a.object = reinterpret_cast<void*>(new ZFP_ARRAY_TYPE());
+  return a;
 }
 
 static CFP_ARRAY_TYPE
 _t1(CFP_ARRAY_TYPE, ctor_copy)(CFP_ARRAY_TYPE src)
 {
-  return (CFP_ARRAY_TYPE){
-    reinterpret_cast<void*>(new ZFP_ARRAY_TYPE(*reinterpret_cast<const ZFP_ARRAY_TYPE *>(src.object)))
-  };
+  CFP_ARRAY_TYPE a;
+  a.object = reinterpret_cast<void*>(new ZFP_ARRAY_TYPE(*reinterpret_cast<const ZFP_ARRAY_TYPE *>(src.object)));
+  return a;
 }
 
 static void
