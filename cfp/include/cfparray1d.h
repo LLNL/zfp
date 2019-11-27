@@ -14,10 +14,27 @@ typedef struct {
 } cfp_ref1d;
 
 typedef struct {
+  cfp_ref1d reference;
+} cfp_ptr1d;
+
+typedef struct {
   double (*get)(cfp_ref1d self);
   void (*set)(cfp_ref1d self, double val);
   void (*copy)(cfp_ref1d self, cfp_ref1d src);
+  cfp_ptr1d (*get_ptr)(cfp_ref1d self);
 } cfp_ref1d_api;
+
+typedef struct {
+  cfp_ref1d (*get_ref)(cfp_ptr1d self);
+  //cfp_ref1d (*get_offset_ref)(cfp_ptr1d self, int i);
+  int (*is_equal)(cfp_ptr1d self, cfp_ptr1d src);
+  //int (*diff)(cfp_ptr1d self, cfp_ptr1d src);
+  //cfp_ptr1d (*shift)(cfp_ptr1d self, int i);
+  //cfp_ptr1d (*inc)(cfp_ptr1d self);
+  //cfp_ptr1d (*dec)(cfp_ptr1d self);
+  //cfp_ptr1d (*post_inc)(cfp_ptr1d self);
+  //cfp_ptr1d (*post_dec)(cfp_ptr1d self);
+} cfp_ptr1d_api;
 
 typedef struct {
   cfp_array1d (*ctor_default)();
@@ -46,8 +63,10 @@ typedef struct {
   void (*set)(cfp_array1d self, uint i, double val);
 
   cfp_ref1d (*get_ref)(cfp_array1d self, uint i);
+  cfp_ptr1d (*get_ptr)(cfp_array1d self, uint i);
 
   cfp_ref1d_api ref;
+  cfp_ptr1d_api ptr;
 } cfp_array1d_api;
 
 #endif

@@ -36,10 +36,22 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array1f_set,
 
     cfp_array1f_get_ref,
+    cfp_array1f_get_ptr,
 
     cfp_array1f_cfp_ref1f_get,
     cfp_array1f_cfp_ref1f_set,
     cfp_array1f_cfp_ref1f_copy,
+    cfp_array1f_cfp_ref1f_get_ptr,
+
+    cfp_array1f_cfp_ptr1f_get_ref,
+    //cfp_array1f_cfp_ptr1f_get_offset_ref,
+    cfp_array1f_cfp_ptr1f_is_equal,
+    //cfp_array1f_cfp_ptr1f_diff,
+    //cfp_array1f_cfp_ptr1f_shift,
+    //cfp_array1f_cfp_ptr1f_inc,
+    //cfp_array1f_cfp_ptr1f_dec,
+    //cfp_array1f_cfp_ptr1f_post_inc,
+    //cfp_array1f_cfp_ptr1f_post_dec,
   },
   // array1d
   {
@@ -69,10 +81,22 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array1d_set,
 
     cfp_array1d_get_ref,
+    cfp_array1d_get_ptr,
 
     cfp_array1d_cfp_ref1d_get,
     cfp_array1d_cfp_ref1d_set,
     cfp_array1d_cfp_ref1d_copy,
+    cfp_array1d_cfp_ref1d_get_ptr,
+
+    cfp_array1d_cfp_ptr1d_get_ref,
+    //cfp_array1d_cfp_ptr1d_get_offset_ref,
+    cfp_array1d_cfp_ptr1d_is_equal,
+    //cfp_array1d_cfp_ptr1d_diff,
+    //cfp_array1d_cfp_ptr1d_shift,
+    //cfp_array1d_cfp_ptr1d_inc,
+    //cfp_array1d_cfp_ptr1d_dec,
+    //cfp_array1d_cfp_ptr1d_post_inc,
+    //cfp_array1d_cfp_ptr1d_post_dec,
   },
   // array2f
   {
@@ -104,10 +128,22 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array2f_set,
 
     cfp_array2f_get_ref,
+    cfp_array2f_get_ptr,
 
     cfp_array2f_cfp_ref2f_get,
     cfp_array2f_cfp_ref2f_set,
     cfp_array2f_cfp_ref2f_copy,
+    cfp_array2f_cfp_ref2f_get_ptr,
+
+    cfp_array2f_cfp_ptr2f_get_ref,
+    //cfp_array2f_cfp_ptr2f_get_offset_ref,
+    cfp_array2f_cfp_ptr2f_is_equal,
+    //cfp_array2f_cfp_ptr2f_diff,
+    //cfp_array2f_cfp_ptr2f_shift,
+    //cfp_array2f_cfp_ptr2f_inc,
+    //cfp_array2f_cfp_ptr2f_dec,
+    //cfp_array2f_cfp_ptr2f_post_inc,
+    //cfp_array2f_cfp_ptr2f_post_dec,
   },
   // array2d
   {
@@ -139,10 +175,22 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array2d_set,
 
     cfp_array2d_get_ref,
+    cfp_array2d_get_ptr,
 
     cfp_array2d_cfp_ref2d_get,
     cfp_array2d_cfp_ref2d_set,
     cfp_array2d_cfp_ref2d_copy,
+    cfp_array2d_cfp_ref2d_get_ptr,
+
+    cfp_array2d_cfp_ptr2d_get_ref,
+    //cfp_array2d_cfp_ptr2d_get_offset_ref,
+    cfp_array2d_cfp_ptr2d_is_equal,
+    //cfp_array2d_cfp_ptr2d_diff,
+    //cfp_array2d_cfp_ptr2d_shift,
+    //cfp_array2d_cfp_ptr2d_inc,
+    //cfp_array2d_cfp_ptr2d_dec,
+    //cfp_array2d_cfp_ptr2d_post_inc,
+    //cfp_array2d_cfp_ptr2d_post_dec,
   },
   // array3f
   {
@@ -175,10 +223,22 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array3f_set,
 
     cfp_array3f_get_ref,
+    cfp_array3f_get_ptr,
 
     cfp_array3f_cfp_ref3f_get,
     cfp_array3f_cfp_ref3f_set,
     cfp_array3f_cfp_ref3f_copy,
+    cfp_array3f_cfp_ref3f_get_ptr,
+
+    cfp_array3f_cfp_ptr3f_get_ref,
+    //cfp_array3f_cfp_ptr3f_get_offset_ref,
+    cfp_array3f_cfp_ptr3f_is_equal,
+    //cfp_array3f_cfp_ptr3f_diff,
+    //cfp_array3f_cfp_ptr3f_shift,
+    //cfp_array3f_cfp_ptr3f_inc,
+    //cfp_array3f_cfp_ptr3f_dec,
+    //cfp_array3f_cfp_ptr3f_post_inc,
+    //cfp_array3f_cfp_ptr3f_post_dec,
   },
   // array3d
   {
@@ -211,9 +271,21 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array3d_set,
 
     cfp_array3d_get_ref,
+    cfp_array3d_get_ptr,
 
     cfp_array3d_cfp_ref3d_get,
     cfp_array3d_cfp_ref3d_set,
     cfp_array3d_cfp_ref3d_copy,
+    cfp_array3d_cfp_ref3d_get_ptr,
+
+    cfp_array3d_cfp_ptr3d_get_ref,
+    //cfp_array3d_cfp_ptr3d_get_offset_ref,
+    cfp_array3d_cfp_ptr3d_is_equal,
+    //cfp_array3d_cfp_ptr3d_diff,
+    //cfp_array3d_cfp_ptr3d_shift,
+    //cfp_array3d_cfp_ptr3d_inc,
+    //cfp_array3d_cfp_ptr3d_dec,
+    //cfp_array3d_cfp_ptr3d_post_inc,
+    //cfp_array3d_cfp_ptr3d_post_dec,
   },
 };
