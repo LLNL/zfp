@@ -37,7 +37,7 @@ _t1(CFP_ARRAY_TYPE, set)(CFP_ARRAY_TYPE self, uint i, uint j, ZFP_SCALAR_TYPE va
 }
 
 static CFP_REF_TYPE
-_t1(CFP_ARRAY_TYPE, get_ref)(CFP_ARRAY_TYPE self, uint i, uint j)
+_t1(CFP_ARRAY_TYPE, ref)(CFP_ARRAY_TYPE self, uint i, uint j)
 {
   CFP_REF_TYPE r;
   r.idx = i + j * reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.object)->size_x();
@@ -46,9 +46,9 @@ _t1(CFP_ARRAY_TYPE, get_ref)(CFP_ARRAY_TYPE self, uint i, uint j)
 }
 
 static CFP_PTR_TYPE
-_t1(CFP_ARRAY_TYPE, get_ptr)(CFP_ARRAY_TYPE self, uint i, uint j)
+_t1(CFP_ARRAY_TYPE, ptr)(CFP_ARRAY_TYPE self, uint i, uint j)
 {
   CFP_PTR_TYPE p;
-  p.reference = _t1(CFP_ARRAY_TYPE, get_ref)(self, i, j);
+  p.reference = _t1(CFP_ARRAY_TYPE, ref)(self, i, j);
   return p;
 }

@@ -107,9 +107,26 @@ _t1(CFP_ARRAY_TYPE, set_flat)(CFP_ARRAY_TYPE self, uint i, ZFP_SCALAR_TYPE val)
   reinterpret_cast<ZFP_ARRAY_TYPE*>(self.object)->operator[](i) = val;
 }
 
+static CFP_REF_TYPE
+_t1(CFP_ARRAY_TYPE, flat_ref)(CFP_ARRAY_TYPE self, uint i)
+{
+  CFP_REF_TYPE r;
+  r.idx = i;
+  r.array = self;
+  return r;
+}
+
+static CFP_PTR_TYPE
+_t1(CFP_ARRAY_TYPE, flat_ptr)(CFP_ARRAY_TYPE self, uint i)
+{
+  CFP_PTR_TYPE p;
+  p.reference = _t1(CFP_ARRAY_TYPE, flat_ref)(self, i);
+  return p;
+}
+
 // functions defined in accessors
 static CFP_PTR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, get_ptr)(CFP_REF_TYPE self)
+_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, ptr)(CFP_REF_TYPE self)
 {
   CFP_PTR_TYPE p;
   p.reference = self;
@@ -117,11 +134,18 @@ _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, get_ptr)(CFP_REF_TYPE self)
 }
 
 static CFP_REF_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, get_ref)(CFP_PTR_TYPE self)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, ref)(CFP_PTR_TYPE self)
 {
   return self.reference;
 }
 
+static CFP_REF_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, offset_ref)(CFP_PTR_TYPE self, int i)
+{
+  CFP_REF_TYPE r = self.reference;
+  r.idx = i;
+  return r;
+}
 
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, get)(CFP_REF_TYPE self)
@@ -142,7 +166,6 @@ _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
     reinterpret_cast<ZFP_ARRAY_TYPE*>(src.array.object)->operator[](src.idx);
 }
 
-
 static int
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, is_equal)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
 {
@@ -153,5 +176,26 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, is_equal)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
 static int
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, diff)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
 {
-  return 0; //TODO
+   return self.reference.idx - src.reference.idx;
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, shift)(CFP_PTR_TYPE self, int i)
+{
+  self.reference.idx += i;
+  return self;  
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, inc)(CFP_PTR_TYPE self)
+{
+  self.reference.idx++;
+  return self;  
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, dec)(CFP_PTR_TYPE self)
+{
+  self.reference.idx--;
+  return self;  
 }

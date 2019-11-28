@@ -25,7 +25,7 @@ _t1(CFP_ARRAY_TYPE, set)(CFP_ARRAY_TYPE self, uint i, ZFP_SCALAR_TYPE val)
 }
 
 static CFP_REF_TYPE
-_t1(CFP_ARRAY_TYPE, get_ref)(CFP_ARRAY_TYPE self, uint i)
+_t1(CFP_ARRAY_TYPE, ref)(CFP_ARRAY_TYPE self, uint i)
 {
   CFP_REF_TYPE r;
   r.idx = i;
@@ -34,9 +34,9 @@ _t1(CFP_ARRAY_TYPE, get_ref)(CFP_ARRAY_TYPE self, uint i)
 }
 
 static CFP_PTR_TYPE
-_t1(CFP_ARRAY_TYPE, get_ptr)(CFP_ARRAY_TYPE self, uint i)
+_t1(CFP_ARRAY_TYPE, ptr)(CFP_ARRAY_TYPE self, uint i)
 {
   CFP_PTR_TYPE p;
-  p.reference = _t1(CFP_ARRAY_TYPE, get_ref)(self, i);
+  p.reference = _t1(CFP_ARRAY_TYPE, ref)(self, i);
   return p;
 }
