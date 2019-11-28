@@ -9,7 +9,7 @@ typedef struct {
 } cfp_array1d;
 
 typedef struct {
-  uint i;
+  uint idx;
   cfp_array1d array;
 } cfp_ref1d;
 
@@ -28,7 +28,7 @@ typedef struct {
   cfp_ref1d (*get_ref)(cfp_ptr1d self);
   //cfp_ref1d (*get_offset_ref)(cfp_ptr1d self, int i);
   int (*is_equal)(cfp_ptr1d self, cfp_ptr1d src);
-  //int (*diff)(cfp_ptr1d self, cfp_ptr1d src);
+  int (*diff)(cfp_ptr1d self, cfp_ptr1d src);
   //cfp_ptr1d (*shift)(cfp_ptr1d self, int i);
   //cfp_ptr1d (*inc)(cfp_ptr1d self);
   //cfp_ptr1d (*dec)(cfp_ptr1d self);

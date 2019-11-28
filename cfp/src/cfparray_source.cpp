@@ -121,3 +121,37 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, get_ref)(CFP_PTR_TYPE self)
 {
   return self.reference;
 }
+
+
+static ZFP_SCALAR_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, get)(CFP_REF_TYPE self)
+{
+  return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator[](self.idx);
+}
+
+static void
+_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, set)(CFP_REF_TYPE self, ZFP_SCALAR_TYPE val)
+{
+  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator[](self.idx) = val;
+}
+
+static void
+_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
+{
+  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator[](self.idx) =
+    reinterpret_cast<ZFP_ARRAY_TYPE*>(src.array.object)->operator[](src.idx);
+}
+
+
+static int
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, is_equal)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+{
+  return self.reference.idx == src.reference.idx && 
+         self.reference.array.object == src.reference.array.object;
+}
+
+static int
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, diff)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+{
+  return 0; //TODO
+}

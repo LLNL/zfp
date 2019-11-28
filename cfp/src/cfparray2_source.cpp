@@ -40,8 +40,7 @@ static CFP_REF_TYPE
 _t1(CFP_ARRAY_TYPE, get_ref)(CFP_ARRAY_TYPE self, uint i, uint j)
 {
   CFP_REF_TYPE r;
-  r.i = i;
-  r.j = j;
+  r.idx = i + j * reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.object)->size_x();
   r.array = self;
   return r;
 }
@@ -52,33 +51,4 @@ _t1(CFP_ARRAY_TYPE, get_ptr)(CFP_ARRAY_TYPE self, uint i, uint j)
   CFP_PTR_TYPE p;
   p.reference = _t1(CFP_ARRAY_TYPE, get_ref)(self, i, j);
   return p;
-}
-
-/* References */
-static ZFP_SCALAR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, get)(CFP_REF_TYPE self)
-{
-  return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i, self.j);
-}
-
-static void
-_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, set)(CFP_REF_TYPE self, ZFP_SCALAR_TYPE val)
-{
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i, self.j) = val;
-}
-
-static void
-_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
-{
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i, self.j) =
-    reinterpret_cast<ZFP_ARRAY_TYPE*>(src.array.object)->operator()(src.i, src.j);
-}
-
-/* Pointers */
-static int
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, is_equal)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
-{
-  return self.reference.i == src.reference.i && 
-         self.reference.j == src.reference.j && 
-         self.reference.array.object == src.reference.array.object;
 }
