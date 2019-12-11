@@ -160,6 +160,8 @@ public:
           decode(index, block, false);
           uint sx, sy;
           shape(sx, sy, x, y);
+          sx = 4 - sx;
+          sy = 4 - sy;
           for (uint j = 0; j < sy; j++)
             for (uint i = 0; i < sx; i++)
               p[i + nx * j] = block[i + 4 * j];
@@ -176,6 +178,8 @@ public:
         Scalar block[4 * 4];
         uint sx, sy;
         shape(sx, sy, x, y);
+        sx = 4 - sx;
+        sy = 4 - sy;
         for (uint j = 0; j < sy; j++)
           for (uint i = 0; i < sx; i++)
             block[i + 4 * j] = p[i + nx * j];

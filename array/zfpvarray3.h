@@ -165,6 +165,9 @@ public:
             decode(index, block, false);
             uint sx, sy, sz;
             shape(sx, sy, sz, x, y, z);
+            sx = 4 - sx;
+            sy = 4 - sy;
+            sz = 4 - sz;
             for (uint k = 0; k < sz; k++)
               for (uint j = 0; j < sy; j++)
                 for (uint i = 0; i < sx; i++)
@@ -183,7 +186,9 @@ public:
           Scalar block[4 * 4 * 4];
           uint sx, sy, sz;
           shape(sx, sy, sz, x, y, z);
-fprintf(stderr, "i=%u (%u, %u, %u)\n", index, sx, sy, sz);
+          sx = 4 - sx;
+          sy = 4 - sy;
+          sz = 4 - sz;
           for (uint k = 0; k < sz; k++)
             for (uint j = 0; j < sy; j++)
               for (uint i = 0; i < sx; i++)
