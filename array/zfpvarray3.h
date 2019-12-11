@@ -154,7 +154,7 @@ public:
   void get(Scalar* p) const
   {
     uint index = 0;
-    for (uint z = 0; z < nz; z += 4, p += 4 * (ny - by))
+    for (uint z = 0; z < nz; z += 4, p += 4 * nx * (ny - by))
       for (uint y = 0; y < ny; y += 4, p += 4 * (nx - bx))
         for (uint x = 0; x < nx; x += 4, p += 4, index++) {
           const CacheLine* line = cache.lookup(index + 1);
@@ -177,12 +177,13 @@ public:
   void set(const Scalar* p)
   {
     uint index = 0;
-    for (uint z = 0; z < nz; z += 4, p += 4 * (ny - by))
+    for (uint z = 0; z < nz; z += 4, p += 4 * nx * (ny - by))
       for (uint y = 0; y < ny; y += 4, p += 4 * (nx - bx))
         for (uint x = 0; x < nx; x += 4, p += 4, index++) {
           Scalar block[4 * 4 * 4];
           uint sx, sy, sz;
           shape(sx, sy, sz, x, y, z);
+fprintf(stderr, "i=%u (%u, %u, %u)\n", index, sx, sy, sz);
           for (uint k = 0; k < sz; k++)
             for (uint j = 0; j < sy; j++)
               for (uint i = 0; i < sx; i++)
