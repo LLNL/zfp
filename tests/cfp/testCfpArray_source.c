@@ -444,3 +444,27 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getArray_expect_decompressedArrChecksumM
 
   assert_int_equal(checksum, expectedChecksum);
 }
+
+static void
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlatRef_expect_entryReturned)(void **state)
+{
+    struct setupVars *bundle = *state;
+    CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+
+    uint i = 10;
+    CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.flat_ref(cfpArr, i);
+
+    assert_true(CFP_NAMESPACE.SUB_NAMESPACE.reference.get(cfpArrRef) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, i));
+}
+
+static void
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlatPtr_expect_entryReturned)(void **state)
+{
+    struct setupVars *bundle = *state;
+    CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+
+    uint i = 10;
+    CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.flat_ptr(cfpArr, i);
+
+    assert_true(CFP_NAMESPACE.SUB_NAMESPACE.reference.get(cfpArrPtr.reference) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, i));
+}

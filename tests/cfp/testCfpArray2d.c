@@ -5,6 +5,7 @@
 
 #define CFP_ARRAY_TYPE cfp_array2d
 #define CFP_REF_TYPE cfp_ref2d
+#define CFP_PTR_TYPE cfp_ptr2d
 #define SUB_NAMESPACE array2d
 #define SCALAR double
 
@@ -33,10 +34,22 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_array2d_when_set_expect_entryWrittenToCacheOnly, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array2d_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array2d_when_get_ref_expect_arrayObjectValid, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array2d_when_get_ptr_expect_arrayObjectValid, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array2d_when_getFlatRef_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array2d_when_getFlatPtr_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
 
     cmocka_unit_test_setup_teardown(given_cfp_ref2d_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_ref2d_when_set_expect_arrayUpdated, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_ref2d_when_copy_expect_arrayUpdated, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ref2d_when_get_ptr_expect_addressMatches, setupCfpArrSmall, teardownCfpArr),
+
+    cmocka_unit_test_setup_teardown(given_cfp_ptr2d_when_get_ref_expect_addressMatches, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr2d_when_get_offset_ref_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr2d_when_compare_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr2d_when_diff_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr2d_when_shift_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr2d_when_inc_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr2d_when_dec_expect_correct, setupCfpArrSmall, teardownCfpArr),
 
     cmocka_unit_test_setup_teardown(given_cfp_array2d_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate0, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array2d_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate1, teardownCfpArr),

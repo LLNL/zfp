@@ -143,7 +143,7 @@ static CFP_REF_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, offset_ref)(CFP_PTR_TYPE self, int i)
 {
   CFP_REF_TYPE r = self.reference;
-  r.idx = i;
+  r.idx += i;
   return r;
 }
 
