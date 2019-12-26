@@ -70,7 +70,7 @@ public:
   virtual size_t size() const = 0;
 
   // rate in bits per value
-  double rate(uint mask = ZFP_DATA_PAYLOAD) const
+  virtual double rate(uint mask = ZFP_DATA_PAYLOAD) const
   {
     return double(storage_size(mask)) * CHAR_BIT / size();
   }
@@ -102,15 +102,6 @@ public:
 
   // flush cache by compressing all modified cached blocks
   virtual void flush_cache() const = 0;
-
-  // number of bytes of compressed data
-  virtual size_t storage_size(uint mask = ZFP_DATA_PAYLOAD) const
-  {
-    size_t size = 0;
-    if (mask & ZFP_DATA_META)
-      size += sizeof(varray) + sizeof(*zfp); // + sizeof(*zfp->stream);
-    return size;
-  }
 
   // dimensionality
   uint dimensionality() const { return dims; }
@@ -164,6 +155,15 @@ protected:
 //#warning "deep copy not implemented"
     // copy dynamically allocated data
     abort(); // need to copy tiles
+  }
+
+  // number of bytes of compressed data
+  virtual size_t storage_size(uint mask = ZFP_DATA_PAYLOAD) const
+  {
+    size_t size = 0;
+    if (mask & ZFP_DATA_META)
+      size += sizeof(varray) + sizeof(*zfp); // + sizeof(*zfp->stream);
+    return size;
   }
 
   // default number of cache lines for array with n blocks
