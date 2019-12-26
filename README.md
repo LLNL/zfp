@@ -140,3 +140,15 @@ compressed, which will be indicated by checksum errors.  If most tests
 succeed and the failures result in byte sizes and error values reasonably
 close to the expected values, then it is likely that the compressor is
 working correctly.
+
+
+LICENSE
+-------
+
+zfp is distributed under the terms of the BSD 3-Clause license.  See the
+files [LICENSE](https://github.com/LLNL/zfp/blob/develop/LICENSE) and
+[NOTICE](https://github.com/LLNL/zfp/blob/develop/NOTICE) for details.
+
+SPDX-License-Identifier: BSD-3-Clause
+
+LLNL-CODE-663824
