@@ -43,7 +43,7 @@ zfp may be built using either [CMake](https://cmake.org/) or
     ctest
 
 This builds the zfp library in the `build/lib` directory and the zfp
-command-line executable in the `build/bin` directory and then runs
+command-line executable in the `build/bin` directory.  It then runs
 the regression tests.
 
 zfp may also be built using GNU make:
@@ -84,7 +84,7 @@ of releases.
 Authors
 -------
 
-zfp was originally developed by [Peter Lindstrom](https://people/llnl.gov/pl)
+zfp was originally developed by [Peter Lindstrom](https://people.llnl.gov/pl)
 at [Lawrence Livermore National Laboratory](https://www.llnl.gov/).  Please
 see the [Contributors Page](https://github.com/LLNL/zfp/graphs/contributors)
 for a full list of contributors.
@@ -107,7 +107,7 @@ For more information on zfp, please see the
 For bug reports and feature requests, please consult the
 [GitHub issue tracker](https://github.com/LLNL/zfp/issues/).
 For questions and comments not answered here or in the
-[documentation](http://zfp.readthedocs.io/en/latest/),
+[documentation](http://zfp.readthedocs.io),
 please send e-mail to [zfp@llnl.gov](mailto:zfp@llnl.gov).
 
 
