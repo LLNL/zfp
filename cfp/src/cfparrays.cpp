@@ -37,8 +37,12 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array1f_ref,
     cfp_array1f_flat_ref,
+
     cfp_array1f_ptr,
     cfp_array1f_flat_ptr,
+
+    cfp_array1f_begin,
+    cfp_array1f_end,
 
     cfp_array1f_cfp_ref1f_get,
     cfp_array1f_cfp_ref1f_set,
@@ -47,11 +51,24 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array1f_cfp_ptr1f_ref,
     cfp_array1f_cfp_ptr1f_offset_ref,
-    cfp_array1f_cfp_ptr1f_is_equal,
+    cfp_array1f_cfp_ptr1f_eq,
     cfp_array1f_cfp_ptr1f_diff,
     cfp_array1f_cfp_ptr1f_shift,
     cfp_array1f_cfp_ptr1f_inc,
     cfp_array1f_cfp_ptr1f_dec,
+
+    cfp_array1f_cfp_iter1f_ref,
+    cfp_array1f_cfp_iter1f_inc,
+    cfp_array1f_cfp_iter1f_dec,
+    cfp_array1f_cfp_iter1f_shift,
+    cfp_array1f_cfp_iter1f_diff,
+    cfp_array1f_cfp_iter1f_lt,
+    cfp_array1f_cfp_iter1f_gt,
+    cfp_array1f_cfp_iter1f_leq,
+    cfp_array1f_cfp_iter1f_geq,
+    cfp_array1f_cfp_iter1f_eq,
+    cfp_array1f_cfp_iter1f_i,
+    cfp_array1f_cfp_iter1f_offset_ref,
   },
   // array1d
   {
@@ -82,8 +99,12 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array1d_ref,
     cfp_array1d_flat_ref,
+
     cfp_array1d_ptr,
     cfp_array1d_flat_ptr,
+
+    cfp_array1d_begin,
+    cfp_array1d_end,
 
     cfp_array1d_cfp_ref1d_get,
     cfp_array1d_cfp_ref1d_set,
@@ -92,11 +113,24 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array1d_cfp_ptr1d_ref,
     cfp_array1d_cfp_ptr1d_offset_ref,
-    cfp_array1d_cfp_ptr1d_is_equal,
+    cfp_array1d_cfp_ptr1d_eq,
     cfp_array1d_cfp_ptr1d_diff,
     cfp_array1d_cfp_ptr1d_shift,
     cfp_array1d_cfp_ptr1d_inc,
     cfp_array1d_cfp_ptr1d_dec,
+
+    cfp_array1d_cfp_iter1d_ref,
+    cfp_array1d_cfp_iter1d_inc,
+    cfp_array1d_cfp_iter1d_dec,
+    cfp_array1d_cfp_iter1d_shift,
+    cfp_array1d_cfp_iter1d_diff,
+    cfp_array1d_cfp_iter1d_lt,
+    cfp_array1d_cfp_iter1d_gt,
+    cfp_array1d_cfp_iter1d_leq,
+    cfp_array1d_cfp_iter1d_geq,
+    cfp_array1d_cfp_iter1d_eq,
+    cfp_array1d_cfp_iter1d_i,
+    cfp_array1d_cfp_iter1d_offset_ref,
   },
   // array2f
   {
@@ -129,8 +163,12 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array2f_ref,
     cfp_array2f_flat_ref,
+
     cfp_array2f_ptr,
     cfp_array2f_flat_ptr,
+
+    cfp_array2f_begin,
+    cfp_array2f_end,
 
     cfp_array2f_cfp_ref2f_get,
     cfp_array2f_cfp_ref2f_set,
@@ -139,11 +177,17 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array2f_cfp_ptr2f_ref,
     cfp_array2f_cfp_ptr2f_offset_ref,
-    cfp_array2f_cfp_ptr2f_is_equal,
+    cfp_array2f_cfp_ptr2f_eq,
     cfp_array2f_cfp_ptr2f_diff,
     cfp_array2f_cfp_ptr2f_shift,
     cfp_array2f_cfp_ptr2f_inc,
     cfp_array2f_cfp_ptr2f_dec,
+
+    cfp_array2f_cfp_iter2f_ref,
+    cfp_array2f_cfp_iter2f_inc,
+    cfp_array2f_cfp_iter2f_eq,
+    cfp_array2f_cfp_iter2f_i,
+    cfp_array2f_cfp_iter2f_j,
   },
   // array2d
   {
@@ -176,8 +220,12 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array2d_ref,
     cfp_array2d_flat_ref,
+
     cfp_array2d_ptr,
     cfp_array2d_flat_ptr,
+
+    cfp_array2d_begin,
+    cfp_array2d_end,
 
     cfp_array2d_cfp_ref2d_get,
     cfp_array2d_cfp_ref2d_set,
@@ -186,11 +234,17 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array2d_cfp_ptr2d_ref,
     cfp_array2d_cfp_ptr2d_offset_ref,
-    cfp_array2d_cfp_ptr2d_is_equal,
+    cfp_array2d_cfp_ptr2d_eq,
     cfp_array2d_cfp_ptr2d_diff,
     cfp_array2d_cfp_ptr2d_shift,
     cfp_array2d_cfp_ptr2d_inc,
     cfp_array2d_cfp_ptr2d_dec,
+
+    cfp_array2d_cfp_iter2d_ref,
+    cfp_array2d_cfp_iter2d_inc,
+    cfp_array2d_cfp_iter2d_eq,
+    cfp_array2d_cfp_iter2d_i,
+    cfp_array2d_cfp_iter2d_j,
   },
   // array3f
   {
@@ -224,8 +278,12 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array3f_ref,
     cfp_array3f_flat_ref,
+
     cfp_array3f_ptr,
     cfp_array3f_flat_ptr,
+
+    cfp_array3f_begin,
+    cfp_array3f_end,
 
     cfp_array3f_cfp_ref3f_get,
     cfp_array3f_cfp_ref3f_set,
@@ -234,11 +292,18 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array3f_cfp_ptr3f_ref,
     cfp_array3f_cfp_ptr3f_offset_ref,
-    cfp_array3f_cfp_ptr3f_is_equal,
+    cfp_array3f_cfp_ptr3f_eq,
     cfp_array3f_cfp_ptr3f_diff,
     cfp_array3f_cfp_ptr3f_shift,
     cfp_array3f_cfp_ptr3f_inc,
     cfp_array3f_cfp_ptr3f_dec,
+
+    cfp_array3f_cfp_iter3f_ref,
+    cfp_array3f_cfp_iter3f_inc,
+    cfp_array3f_cfp_iter3f_eq,
+    cfp_array3f_cfp_iter3f_i,
+    cfp_array3f_cfp_iter3f_j,
+    cfp_array3f_cfp_iter3f_k,
   },
   // array3d
   {
@@ -272,8 +337,12 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array3d_ref,
     cfp_array3d_flat_ref,
+
     cfp_array3d_ptr,
     cfp_array3d_flat_ptr,
+
+    cfp_array3d_begin,
+    cfp_array3d_end,
 
     cfp_array3d_cfp_ref3d_get,
     cfp_array3d_cfp_ref3d_set,
@@ -282,10 +351,17 @@ export_ const cfp_api CFP_NAMESPACE = {
 
     cfp_array3d_cfp_ptr3d_ref,
     cfp_array3d_cfp_ptr3d_offset_ref,
-    cfp_array3d_cfp_ptr3d_is_equal,
+    cfp_array3d_cfp_ptr3d_eq,
     cfp_array3d_cfp_ptr3d_diff,
     cfp_array3d_cfp_ptr3d_shift,
     cfp_array3d_cfp_ptr3d_inc,
     cfp_array3d_cfp_ptr3d_dec,
+
+    cfp_array3d_cfp_iter3d_ref,
+    cfp_array3d_cfp_iter3d_inc,
+    cfp_array3d_cfp_iter3d_eq,
+    cfp_array3d_cfp_iter3d_i,
+    cfp_array3d_cfp_iter3d_j,
+    cfp_array3d_cfp_iter3d_k,
   },
 };

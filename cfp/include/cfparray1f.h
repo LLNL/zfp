@@ -18,6 +18,11 @@ typedef struct {
 } cfp_ptr1f;
 
 typedef struct {
+  uint i;
+  cfp_array1f array;
+} cfp_iter1f;
+
+typedef struct {
   float (*get)(cfp_ref1f self);
   void (*set)(cfp_ref1f self, float val);
   void (*copy)(cfp_ref1f self, cfp_ref1f src);
@@ -27,12 +32,27 @@ typedef struct {
 typedef struct {
   cfp_ref1f (*ref)(cfp_ptr1f self);
   cfp_ref1f (*offset_ref)(cfp_ptr1f self, int i);
-  int (*is_equal)(cfp_ptr1f self, cfp_ptr1f src);
+  int (*eq)(cfp_ptr1f self, cfp_ptr1f src);
   int (*diff)(cfp_ptr1f self, cfp_ptr1f src);
   cfp_ptr1f (*shift)(cfp_ptr1f self, int i);
   cfp_ptr1f (*inc)(cfp_ptr1f self);
   cfp_ptr1f (*dec)(cfp_ptr1f self);
 } cfp_ptr1f_api;
+
+typedef struct {
+  cfp_ref1f (*ref)(cfp_iter1f self);
+  cfp_iter1f (*inc)(cfp_iter1f self);
+  cfp_iter1f (*dec)(cfp_iter1f self);
+  cfp_iter1f (*shift)(cfp_iter1f self, int i);
+  int (*diff)(cfp_iter1f self, cfp_iter1f src);
+  int (*lt)(cfp_iter1f self, cfp_iter1f src);
+  int (*gt)(cfp_iter1f self, cfp_iter1f src);
+  int (*leq)(cfp_iter1f self, cfp_iter1f src);
+  int (*geq)(cfp_iter1f self, cfp_iter1f src);
+  int (*eq)(cfp_iter1f self, cfp_iter1f src);
+  uint (*i)(cfp_iter1f self);
+  cfp_ref1f (*offset_ref)(cfp_iter1f self, int i);
+} cfp_iter1f_api;
 
 typedef struct {
   cfp_array1f (*ctor_default)();
@@ -62,11 +82,16 @@ typedef struct {
 
   cfp_ref1f (*ref)(cfp_array1f self, uint i);
   cfp_ref1f (*flat_ref)(cfp_array1f self, uint i);
+
   cfp_ptr1f (*ptr)(cfp_array1f self, uint i);
   cfp_ptr1f (*flat_ptr)(cfp_array1f self, uint i);
 
+  cfp_iter1f (*begin)(cfp_array1f self);
+  cfp_iter1f (*end)(cfp_array1f self);
+
   cfp_ref1f_api reference;
   cfp_ptr1f_api pointer;
+  cfp_iter1f_api iterator;
 } cfp_array1f_api;
 
 #endif

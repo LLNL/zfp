@@ -18,6 +18,13 @@ typedef struct {
 } cfp_ptr3d;
 
 typedef struct {
+  uint i;
+  uint j;
+  uint k;
+  cfp_array3d array;
+} cfp_iter3d;
+
+typedef struct {
   double (*get)(cfp_ref3d self);
   void (*set)(cfp_ref3d self, double val);
   void (*copy)(cfp_ref3d self, cfp_ref3d src);
@@ -27,12 +34,21 @@ typedef struct {
 typedef struct {
   cfp_ref3d (*ref)(cfp_ptr3d self);
   cfp_ref3d (*offset_ref)(cfp_ptr3d self, int i);
-  int (*is_equal)(cfp_ptr3d self, cfp_ptr3d src);
+  int (*eq)(cfp_ptr3d self, cfp_ptr3d src);
   int (*diff)(cfp_ptr3d self, cfp_ptr3d src);
   cfp_ptr3d (*shift)(cfp_ptr3d self, int i);
   cfp_ptr3d (*inc)(cfp_ptr3d self);
   cfp_ptr3d (*dec)(cfp_ptr3d self);
 } cfp_ptr3d_api;
+
+typedef struct {
+  cfp_ref3d (*ref)(cfp_iter3d self);
+  cfp_iter3d (*inc)(cfp_iter3d self);
+  int (*eq)(cfp_iter3d self, cfp_iter3d src);
+  uint (*i)(cfp_iter3d self);
+  uint (*j)(cfp_iter3d self);
+  uint (*k)(cfp_iter3d self);
+} cfp_iter3d_api;
 
 typedef struct {
   cfp_array3d (*ctor_default)();
@@ -65,11 +81,16 @@ typedef struct {
 
   cfp_ref3d (*ref)(cfp_array3d self, uint i, uint j, uint k);
   cfp_ref3d (*flat_ref)(cfp_array3d self, uint i);
+
   cfp_ptr3d (*ptr)(cfp_array3d self, uint i, uint j, uint k);
   cfp_ptr3d (*flat_ptr)(cfp_array3d self, uint i);
 
+  cfp_iter3d (*begin)(cfp_array3d self);
+  cfp_iter3d (*end)(cfp_array3d self);
+
   cfp_ref3d_api reference;
   cfp_ptr3d_api pointer;
+  cfp_iter3d_api iterator;
 } cfp_array3d_api;
 
 #endif

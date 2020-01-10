@@ -18,6 +18,12 @@ typedef struct {
 } cfp_ptr2d;
 
 typedef struct {
+  uint i;
+  uint j;
+  cfp_array2d array;
+} cfp_iter2d;
+
+typedef struct {
   double (*get)(cfp_ref2d self);
   void (*set)(cfp_ref2d self, double val);
   void (*copy)(cfp_ref2d self, cfp_ref2d src);
@@ -27,12 +33,20 @@ typedef struct {
 typedef struct {
   cfp_ref2d (*ref)(cfp_ptr2d self);
   cfp_ref2d (*offset_ref)(cfp_ptr2d self, int i);
-  int (*is_equal)(cfp_ptr2d self, cfp_ptr2d src);
+  int (*eq)(cfp_ptr2d self, cfp_ptr2d src);
   int (*diff)(cfp_ptr2d self, cfp_ptr2d src);
   cfp_ptr2d (*shift)(cfp_ptr2d self, int i);
   cfp_ptr2d (*inc)(cfp_ptr2d self);
   cfp_ptr2d (*dec)(cfp_ptr2d self);
 } cfp_ptr2d_api;
+
+typedef struct {
+  cfp_ref2d (*ref)(cfp_iter2d self);
+  cfp_iter2d (*inc)(cfp_iter2d self);
+  int (*eq)(cfp_iter2d self, cfp_iter2d src);
+  uint (*i)(cfp_iter2d self);
+  uint (*j)(cfp_iter2d self);
+} cfp_iter2d_api;
 
 typedef struct {
   cfp_array2d (*ctor_default)();
@@ -64,11 +78,16 @@ typedef struct {
 
   cfp_ref2d (*ref)(cfp_array2d self, uint i, uint j);
   cfp_ref2d (*flat_ref)(cfp_array2d self, uint i);
+
   cfp_ptr2d (*ptr)(cfp_array2d self, uint i, uint j);
   cfp_ptr2d (*flat_ptr)(cfp_array2d self, uint i);
 
+  cfp_iter2d (*begin)(cfp_array2d self);
+  cfp_iter2d (*end)(cfp_array2d self);
+
   cfp_ref2d_api reference;
   cfp_ptr2d_api pointer;
+  cfp_iter2d_api iterator;
 } cfp_array2d_api;
 
 #endif

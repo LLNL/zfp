@@ -169,8 +169,8 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_compare_expect_correct)(void **state)
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2);
 
-  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.pointer.is_equal(cfpArrPtrA, cfpArrPtrA));
-  assert_false(CFP_NAMESPACE.SUB_NAMESPACE.pointer.is_equal(cfpArrPtrA, cfpArrPtrB));
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.pointer.eq(cfpArrPtrA, cfpArrPtrA));
+  assert_false(CFP_NAMESPACE.SUB_NAMESPACE.pointer.eq(cfpArrPtrA, cfpArrPtrB));
 }
 
 static void

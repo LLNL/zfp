@@ -167,7 +167,7 @@ _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
 }
 
 static int
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, is_equal)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, eq)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
 {
   return self.reference.idx == src.reference.idx && 
          self.reference.array.object == src.reference.array.object;
