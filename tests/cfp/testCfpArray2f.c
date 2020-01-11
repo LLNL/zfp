@@ -6,6 +6,7 @@
 #define CFP_ARRAY_TYPE cfp_array2f
 #define CFP_REF_TYPE cfp_ref2f
 #define CFP_PTR_TYPE cfp_ptr2f
+#define CFP_ITER_TYPE cfp_iter2f
 #define SUB_NAMESPACE array2f
 #define SCALAR float
 
@@ -50,6 +51,11 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_ptr2f_when_shift_expect_correct, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_ptr2f_when_inc_expect_correct, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_ptr2f_when_dec_expect_correct, setupCfpArrSmall, teardownCfpArr),
+
+    cmocka_unit_test_setup_teardown(given_cfp_iter2f_when_get_ref_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter2f_when_inc_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter2f_when_compare_expect_valid, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter2f_when_get_index_expect_correct, setupCfpArrSmall, teardownCfpArr),
 
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate0, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array2f_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate1, teardownCfpArr),
