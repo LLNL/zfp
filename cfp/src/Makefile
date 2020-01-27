@@ -19,7 +19,7 @@ $(LIBDIR)/libcfp.a: $(OBJECTS)
 
 $(LIBDIR)/libcfp.so: $(OBJECTS)
 	mkdir -p $(LIBDIR)
-	$(CXX) $(CXXLAGS) -shared $(SOFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) -shared $(SOFLAGS) $^ -o $@
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
