@@ -14,6 +14,11 @@ add_executable(iterator iterator.cpp)
 target_link_libraries(iterator zfp)
 target_compile_definitions(iterator PRIVATE ${zfp_compressed_array_defs})
 
+if(BUILD_CFP)
+  add_executable(iteratorC iteratorC.c)
+  target_link_libraries(iteratorC cfp)
+endif()
+
 add_executable(pgm pgm.c)
 target_link_libraries(pgm zfp)
 
