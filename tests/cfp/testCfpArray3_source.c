@@ -163,7 +163,7 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_get_offset_ref_expect_correct)(void **stat
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k);
   CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.pointer.offset_ref(cfpArrPtr, oi);
 
-  assert_int_equal(cfpArrPtr.reference.idx + oi, cfpArrRef.idx);
+  assert_int_equal(cfpArrPtr.reference.i + oi, cfpArrRef.i);
   assert_ptr_equal(cfpArrPtr.reference.array.object, cfpArrRef.array.object);
 }
 
@@ -191,7 +191,13 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_diff_expect_correct)(void **state)
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1, k1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2, j2, k2);
 
-  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.pointer.diff(cfpArrPtrB, cfpArrPtrA), (int)cfpArrPtrB.reference.idx - (int)cfpArrPtrA.reference.idx);
+  assert_int_equal((int)CFP_NAMESPACE.SUB_NAMESPACE.pointer.diff(cfpArrPtrB, cfpArrPtrA),
+                   (int)(i2 +
+                         j2*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) +
+                         k2*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)) -
+                   (int)(i1 +
+                         j1*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) +
+                         k1*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)));
   assert_ptr_equal(cfpArrPtrA.reference.array.object, cfpArrPtrB.reference.array.object);
 }
 
@@ -204,7 +210,14 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_shift_expect_correct)(void **state)
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k);
   cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.shift(cfpArrPtr, oi);
 
-  assert_int_equal(cfpArrPtr.reference.idx, CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k).reference.idx + oi);
+  uint idx = (int)(i + j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) + k*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)) + oi;
+  uint x = (idx) % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
+  uint y = (idx / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) % CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
+  uint z = idx / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr));
+
+  assert_int_equal(cfpArrPtr.reference.i, x);
+  assert_int_equal(cfpArrPtr.reference.j, y);
+  assert_int_equal(cfpArrPtr.reference.k, z);
   assert_ptr_equal(cfpArrPtr.reference.array.object, CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k).reference.array.object);
 }
 
@@ -217,7 +230,14 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_inc_expect_correct)(void **state)
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k);
   cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.inc(cfpArrPtr);
 
-  assert_int_equal(cfpArrPtr.reference.idx, CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k).reference.idx + 1);
+  uint idx = (int)(i + j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) + k*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)) + 1;
+  uint x = (idx) % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
+  uint y = (idx / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) % CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
+  uint z = idx / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr));
+
+  assert_int_equal(cfpArrPtr.reference.i, x);
+  assert_int_equal(cfpArrPtr.reference.j, y);
+  assert_int_equal(cfpArrPtr.reference.k, z);
   assert_ptr_equal(cfpArrPtr.reference.array.object, CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k).reference.array.object);
 }
 
@@ -230,7 +250,14 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_dec_expect_correct)(void **state)
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k);
   cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.dec(cfpArrPtr);
 
-  assert_int_equal(cfpArrPtr.reference.idx, CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k).reference.idx - 1);
+  uint idx = (int)(i + j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) + k*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)) - 1;
+  uint x = (idx) % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
+  uint y = (idx / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) % CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
+  uint z = idx / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr));
+
+  assert_int_equal(cfpArrPtr.reference.i, x);
+  assert_int_equal(cfpArrPtr.reference.j, y);
+  assert_int_equal(cfpArrPtr.reference.k, z);
   assert_ptr_equal(cfpArrPtr.reference.array.object, CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k).reference.array.object);
 }
 
@@ -243,7 +270,7 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_get_ref_expect_correct)(void **state)
   CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
   CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.iterator.ref(cfpArrIter);
 
-  assert_int_equal(cfpArrRef.idx, 0);
+  assert_int_equal(cfpArrRef.i, 0);
   assert_ptr_equal(cfpArrRef.array.object, cfpArr.object);
 }
 

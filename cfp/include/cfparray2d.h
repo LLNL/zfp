@@ -9,7 +9,8 @@ typedef struct {
 } cfp_array2d;
 
 typedef struct {
-  uint idx;
+  uint i;
+  uint j;
   cfp_array2d array;
 } cfp_ref2d;
 
