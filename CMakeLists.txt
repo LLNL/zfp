@@ -252,6 +252,10 @@ if(BUILD_EXAMPLES)
 endif()
 
 if(BUILD_TESTING)
+  # Disable gtest install to prevent clobbering existing installations 
+  option(INSTALL_GMOCK "Install Googlemock" OFF)
+  option(INSTALL_GTEST "Install Googletest" OFF)
+
   add_subdirectory(tests)
 endif()
 

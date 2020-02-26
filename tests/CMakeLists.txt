@@ -17,6 +17,8 @@ ExternalProject_Add(
   CMAKE_ARGS        ${CMOCKA_ARGS}
   BUILD_COMMAND     ${CMAKE_COMMAND} --build . WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
   INSTALL_COMMAND   ""
+  STEP_TARGETS build
+  EXCLUDE_FROM_ALL TRUE
 )
 ExternalProject_Get_Property(cmocka_cloned source_dir binary_dir)
 
