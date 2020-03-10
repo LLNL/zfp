@@ -142,8 +142,8 @@ cpdef bytes compress_numpy(
     cdef zfp_field* field = _init_field(arr)
     cdef zfp_stream* stream = zfp_stream_open(NULL)
 
-    cdef zfp_type ztype = zfp_type_none;
-    cdef int ndim = arr.ndim;
+    cdef zfp_type ztype = zfp_type_none
+    cdef int ndim = arr.ndim
     _set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
 
     # Allocate space based on the maximum size potentially required by zfp to

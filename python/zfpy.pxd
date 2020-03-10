@@ -4,8 +4,8 @@ cimport libc.stdint as stdint
 cdef extern from "bitstream.h":
     cdef struct bitstream:
         pass
-    bitstream* stream_open(void* data, size_t);
-    void stream_close(bitstream* stream);
+    bitstream* stream_open(void* data, size_t)
+    void stream_close(bitstream* stream)
 
 cdef extern from "zfp.h":
     # enums
@@ -39,33 +39,33 @@ cdef extern from "zfp.h":
     cython.uint ZFP_HEADER_FULL
 
     # function definitions
-    zfp_stream* zfp_stream_open(bitstream* stream);
-    void zfp_stream_close(zfp_stream* stream);
-    size_t zfp_stream_maximum_size(const zfp_stream* stream, const zfp_field* field);
-    void zfp_stream_set_bit_stream(zfp_stream* stream, bitstream* bs);
-    cython.uint zfp_stream_set_precision(zfp_stream* stream, cython.uint precision);
-    double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance);
-    double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, cython.uint dims, int wra);
-    void zfp_stream_set_reversible(zfp_stream* stream);
-    stdint.uint64_t zfp_stream_mode(const zfp_stream* zfp);
-    zfp_mode zfp_stream_set_mode(zfp_stream* stream, stdint.uint64_t mode);
-    zfp_field* zfp_field_alloc();
-    zfp_field* zfp_field_1d(void* pointer, zfp_type, cython.uint nx);
-    zfp_field* zfp_field_2d(void* pointer, zfp_type, cython.uint nx, cython.uint ny);
-    zfp_field* zfp_field_3d(void* pointer, zfp_type, cython.uint nx, cython.uint ny, cython.uint nz);
-    zfp_field* zfp_field_4d(void* pointer, zfp_type, cython.uint nx, cython.uint ny, cython.uint nz, cython.uint nw);
-    void zfp_field_set_stride_1d(zfp_field* field, int sx);
-    void zfp_field_set_stride_2d(zfp_field* field, int sx, int sy);
-    void zfp_field_set_stride_3d(zfp_field* field, int sx, int sy, int sz);
-    void zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw);
+    zfp_stream* zfp_stream_open(bitstream* stream)
+    void zfp_stream_close(zfp_stream* stream)
+    size_t zfp_stream_maximum_size(const zfp_stream* stream, const zfp_field* field)
+    void zfp_stream_set_bit_stream(zfp_stream* stream, bitstream* bs)
+    cython.uint zfp_stream_set_precision(zfp_stream* stream, cython.uint precision)
+    double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance)
+    double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, cython.uint dims, int wra)
+    void zfp_stream_set_reversible(zfp_stream* stream)
+    stdint.uint64_t zfp_stream_mode(const zfp_stream* zfp)
+    zfp_mode zfp_stream_set_mode(zfp_stream* stream, stdint.uint64_t mode)
+    zfp_field* zfp_field_alloc()
+    zfp_field* zfp_field_1d(void* pointer, zfp_type, cython.uint nx)
+    zfp_field* zfp_field_2d(void* pointer, zfp_type, cython.uint nx, cython.uint ny)
+    zfp_field* zfp_field_3d(void* pointer, zfp_type, cython.uint nx, cython.uint ny, cython.uint nz)
+    zfp_field* zfp_field_4d(void* pointer, zfp_type, cython.uint nx, cython.uint ny, cython.uint nz, cython.uint nw)
+    void zfp_field_set_stride_1d(zfp_field* field, int sx)
+    void zfp_field_set_stride_2d(zfp_field* field, int sx, int sy)
+    void zfp_field_set_stride_3d(zfp_field* field, int sx, int sy, int sz)
+    void zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw)
     int zfp_field_stride(const zfp_field* field, int* stride)
-    void zfp_field_free(zfp_field* field);
-    zfp_type zfp_field_set_type(zfp_field* field, zfp_type type);
-    size_t zfp_compress(zfp_stream* stream, const zfp_field* field) nogil;
-    size_t zfp_decompress(zfp_stream* stream, zfp_field* field) nogil;
-    size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, cython.uint mask);
-    size_t zfp_read_header(zfp_stream* stream, zfp_field* field, cython.uint mask);
-    void zfp_stream_rewind(zfp_stream* stream);
-    void zfp_field_set_pointer(zfp_field* field, void* pointer) nogil;
+    void zfp_field_free(zfp_field* field)
+    zfp_type zfp_field_set_type(zfp_field* field, zfp_type type)
+    size_t zfp_compress(zfp_stream* stream, const zfp_field* field) nogil
+    size_t zfp_decompress(zfp_stream* stream, zfp_field* field) nogil
+    size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, cython.uint mask)
+    size_t zfp_read_header(zfp_stream* stream, zfp_field* field, cython.uint mask)
+    void zfp_stream_rewind(zfp_stream* stream)
+    void zfp_field_set_pointer(zfp_field* field, void* pointer) nogil
 
 cdef gen_padded_int_list(orig_array, pad=*, length=*)
