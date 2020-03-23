@@ -3,3 +3,7 @@
 bin
 build
 lib
+dist
+wheelhouse
+zfpy.egg-info
+
