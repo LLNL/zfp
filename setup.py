@@ -1,4 +1,4 @@
-from setuptools import setup, Extension, Command
+from setuptools import setup, Extension
 import numpy as np
 
 setup(
@@ -6,6 +6,7 @@ setup(
     version="0.5.5",
     author="Peter Lindstrom",
     author_email="zfp@llnl.gov",
+    url="https://computing.llnl.gov/projects/floating-point-compression",
     description="zfp compression in Python",
     long_description="zfp compression in Python",
     ext_modules = [Extension('zfpy', ['build/python/zfpy.c'], 
