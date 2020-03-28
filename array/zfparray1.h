@@ -14,11 +14,18 @@ namespace zfp {
 template < typename Scalar, class Codec = zfp::codec<Scalar> >
 class array1 : public array {
 public:
+  typedef Scalar value_type;
+  typedef array1 container_type;
+
   // forward declarations
+  class const_reference;
+  class const_pointer;
+  class const_iterator;
   class reference;
   class pointer;
   class iterator;
   class view;
+  #include "zfp/handle1.h"
   #include "zfp/reference1.h"
   #include "zfp/pointer1.h"
   #include "zfp/iterator1.h"
@@ -165,6 +172,10 @@ public:
   reference operator[](uint index) { return reference(this, index); }
 
   // random access iterators
+  const_iterator cbegin() const { return const_iterator(this, 0); }
+  const_iterator cend() const { return const_iterator(this, nx); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
   iterator begin() { return iterator(this, 0); }
   iterator end() { return iterator(this, nx); }
 

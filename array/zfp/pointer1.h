@@ -1,30 +1,91 @@
-// pointer to a 1D array element; this class is nested within zfp::array1
-class pointer {
+// const pointer to a 1D array or view element; this class is nested within container_type
+class const_pointer : public const_handle {
 public:
-  pointer() : ref(0, 0) {}
-  pointer operator=(const pointer& p) { ref.array = p.ref.array; ref.i = p.ref.i; return *this; }
-  reference operator*() const { return ref; }
-  reference operator[](ptrdiff_t d) const { return *operator+(d); }
+  // default constructor
+  const_pointer() : const_handle(0, 0) {}
+
+  // constructor
+  explicit const_pointer(container_type* container, uint i) : const_handle(container, i) {}
+
+  // dereference pointer
+  const_reference operator*() const { return const_reference(container, i); }
+  const_reference operator[](ptrdiff_t d) const { return const_reference(container, i + d); }
+
+  // pointer arithmetic
+  const_pointer operator+(ptrdiff_t d) const { return const_pointer(container, i + d); }
+  const_pointer operator-(ptrdiff_t d) const { return const_pointer(container, i - d); }
+  ptrdiff_t operator-(const const_pointer& p) const { return index() - p.index(); }
+
+  // equality operators
+  bool operator==(const const_pointer& p) const { return container == p.container && i == p.i; }
+  bool operator!=(const const_pointer& p) const { return !operator==(p); }
+
+  // relational operators
+  bool operator<=(const const_pointer& p) const { return container == p.container && i <= p.i; }
+  bool operator>=(const const_pointer& p) const { return container == p.container && i >= p.i; }
+  bool operator<(const const_pointer& p) const { return !operator>=(p); }
+  bool operator>(const const_pointer& p) const { return !operator<=(p); }
+
+  // increment and decrement
+  const_pointer& operator++() { increment(); return *this; }
+  const_pointer& operator--() { decrement(); return *this; }
+  const_pointer operator++(int) { const_pointer p = *this; increment(); return p; }
+  const_pointer operator--(int) { const_pointer p = *this; decrement(); return p; }
+  const_pointer operator+=(ptrdiff_t d) { advance(+d); return *this; }
+  const_pointer operator-=(ptrdiff_t d) { advance(-d); return *this; }
+
+protected:
+  ptrdiff_t index() const { return static_cast<ptrdiff_t>(i); }
+  void advance(ptrdiff_t d) { i += d; }
+  void increment() { ++i; }
+  void decrement() { --i; }
+
+  using const_handle::container;
+  using const_handle::i;
+};
+
+// pointer to a 1D array or view element; this class is nested within container_type
+class pointer : public const_pointer {
+public:
+  // default constructor
+  pointer() : const_pointer(0, 0) {}
+
+  // constructor
+  explicit pointer(container_type* container, uint i) : const_pointer(container, i) {}
+
+  // dereference pointer
+  reference operator*() const { return reference(container, i); }
+  reference operator[](ptrdiff_t d) const { return reference(container, i + d); }
+
+  // pointer arithmetic
+  pointer operator+(ptrdiff_t d) const { return pointer(container, i + d); }
+  pointer operator-(ptrdiff_t d) const { return pointer(container, i - d); }
+  ptrdiff_t operator-(const pointer& p) const { return index() - p.index(); }
+
+  // equality operators
+  bool operator==(const pointer& p) const { return container == p.container && i == p.i; }
+  bool operator!=(const pointer& p) const { return !operator==(p); }
+
+  // relational operators
+  bool operator<=(const pointer& p) const { return container == p.container && i <= p.i; }
+  bool operator>=(const pointer& p) const { return container == p.container && i >= p.i; }
+  bool operator<(const pointer& p) const { return !operator>=(p); }
+  bool operator>(const pointer& p) const { return !operator<=(p); }
+
+  // increment and decrement
   pointer& operator++() { increment(); return *this; }
   pointer& operator--() { decrement(); return *this; }
   pointer operator++(int) { pointer p = *this; increment(); return p; }
   pointer operator--(int) { pointer p = *this; decrement(); return p; }
-  pointer operator+=(ptrdiff_t d) { ref.i += d; return *this; }
-  pointer operator-=(ptrdiff_t d) { ref.i -= d; return *this; }
-  pointer operator+(ptrdiff_t d) const { pointer p = *this; p += d; return p; }
-  pointer operator-(ptrdiff_t d) const { pointer p = *this; p -= d; return p; }
-  ptrdiff_t operator-(const pointer& p) const { return index() - p.index(); }
-  bool operator==(const pointer& p) const { return ref.array == p.ref.array && ref.i == p.ref.i; }
-  bool operator!=(const pointer& p) const { return !operator==(p); }
+  pointer operator+=(ptrdiff_t d) { advance(+d); return *this; }
+  pointer operator-=(ptrdiff_t d) { advance(-d); return *this; }
 
 protected:
-  friend class array1;
-  friend class reference;
-  explicit pointer(reference r) : ref(r) {}
-  explicit pointer(array1* array, uint i) : ref(array, i) {}
-  ptrdiff_t index() const { return ref.i; }
-  void set(ptrdiff_t index) { ref.i = index; }
-  void increment() { ref.i++; }
-  void decrement() { ref.i--; }
-  reference ref;
+  using const_pointer::index;
+  using const_pointer::advance;
+  using const_pointer::increment;
+  using const_pointer::decrement;
+
+  using const_handle::container;
+  using const_handle::i;
 };
