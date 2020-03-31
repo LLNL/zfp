@@ -283,9 +283,13 @@ protected:
   using private_const_view::cache;
   using private_const_view::init;
   using private_const_view::decode;
-  class view_reference;
   typedef typename private_const_view::CacheLine CacheLine;
 public:
+  typedef Scalar value_type;
+  typedef private_view container_type;
+  #include "zfp/handle2.h"
+  #include "zfp/reference2.h"
+
   // construction--perform shallow copy of (sub)array
   private_view(array2* array) : private_const_view(array) {}
   private_view(array2* array, uint x, uint y, uint nx, uint ny) : private_const_view(array, x, y, nx, ny) {}
@@ -315,34 +319,9 @@ public:
   using private_const_view::operator();
 
   // (i, j) mutator
-  view_reference operator()(uint i, uint j) { return view_reference(this, x + i, y + j); }
+  reference operator()(uint i, uint j) { return reference(this, x + i, y + j); }
 
 protected:
-  class view_reference {
-  public:
-    operator Scalar() const { return view->get(i, j); }
-    view_reference operator=(const view_reference& r) { view->set(i, j, r.operator Scalar()); return *this; }
-    view_reference operator=(Scalar val) { view->set(i, j, val); return *this; }
-    view_reference operator+=(Scalar val) { view->add(i, j, val); return *this; }
-    view_reference operator-=(Scalar val) { view->sub(i, j, val); return *this; }
-    view_reference operator*=(Scalar val) { view->mul(i, j, val); return *this; }
-    view_reference operator/=(Scalar val) { view->div(i, j, val); return *this; }
-    // swap two array elements via proxy references
-    friend void swap(view_reference a, view_reference b)
-    {
-      Scalar x = a.operator Scalar();
-      Scalar y = b.operator Scalar();
-      b.operator=(x);
-      a.operator=(y);
-    }
-
-  protected:
-    friend class private_view;
-    explicit view_reference(private_view* view, uint i, uint j) : view(view), i(i), j(j) {}
-    private_view* view;
-    uint i, j;
-  };
-
   // block-aligned partition of [offset, offset + size): index out of count
   static void partition(uint& offset, uint& size, uint index, uint count)
   {
