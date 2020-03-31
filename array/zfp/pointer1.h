@@ -14,7 +14,7 @@ public:
   // pointer arithmetic
   const_pointer operator+(ptrdiff_t d) const { return const_pointer(container, i + d); }
   const_pointer operator-(ptrdiff_t d) const { return const_pointer(container, i - d); }
-  ptrdiff_t operator-(const const_pointer& p) const { return index() - p.index(); }
+  ptrdiff_t operator-(const const_pointer& p) const { return offset() - p.offset(); }
 
   // equality operators
   bool operator==(const const_pointer& p) const { return container == p.container && i == p.i; }
@@ -23,8 +23,8 @@ public:
   // relational operators
   bool operator<=(const const_pointer& p) const { return container == p.container && i <= p.i; }
   bool operator>=(const const_pointer& p) const { return container == p.container && i >= p.i; }
-  bool operator<(const const_pointer& p) const { return !operator>=(p); }
-  bool operator>(const const_pointer& p) const { return !operator<=(p); }
+  bool operator<(const const_pointer& p) const { return container == p.container && i < p.i; }
+  bool operator>(const const_pointer& p) const { return container == p.container && i > p.i; }
 
   // increment and decrement
   const_pointer& operator++() { increment(); return *this; }
@@ -35,7 +35,7 @@ public:
   const_pointer operator-=(ptrdiff_t d) { advance(-d); return *this; }
 
 protected:
-  ptrdiff_t index() const { return static_cast<ptrdiff_t>(i); }
+  ptrdiff_t offset() const { return static_cast<ptrdiff_t>(i); }
   void advance(ptrdiff_t d) { i += d; }
   void increment() { ++i; }
   void decrement() { --i; }
@@ -60,7 +60,7 @@ public:
   // pointer arithmetic
   pointer operator+(ptrdiff_t d) const { return pointer(container, i + d); }
   pointer operator-(ptrdiff_t d) const { return pointer(container, i - d); }
-  ptrdiff_t operator-(const pointer& p) const { return index() - p.index(); }
+  ptrdiff_t operator-(const pointer& p) const { return offset() - p.offset(); }
 
   // equality operators
   bool operator==(const pointer& p) const { return container == p.container && i == p.i; }
@@ -69,8 +69,8 @@ public:
   // relational operators
   bool operator<=(const pointer& p) const { return container == p.container && i <= p.i; }
   bool operator>=(const pointer& p) const { return container == p.container && i >= p.i; }
-  bool operator<(const pointer& p) const { return !operator>=(p); }
-  bool operator>(const pointer& p) const { return !operator<=(p); }
+  bool operator<(const pointer& p) const { return container == p.container && i < p.i; }
+  bool operator>(const pointer& p) const { return container == p.container && i > p.i; }
 
   // increment and decrement
   pointer& operator++() { increment(); return *this; }
@@ -81,7 +81,7 @@ public:
   pointer operator-=(ptrdiff_t d) { advance(-d); return *this; }
 
 protected:
-  using const_pointer::index;
+  using const_pointer::offset;
   using const_pointer::advance;
   using const_pointer::increment;
   using const_pointer::decrement;

@@ -24,7 +24,7 @@ public:
   // iterator arithmetic
   const_iterator operator+(difference_type d) const { return const_iterator(container, i() + d); }
   const_iterator operator-(difference_type d) const { return const_iterator(container, i() - d); }
-  difference_type operator-(const const_iterator& it) const { return index() - it.index(); }
+  difference_type operator-(const const_iterator& it) const { return offset() - it.offset(); }
 
   // equality operators
   bool operator==(const const_iterator& it) const { return container == it.container && i() == it.i(); }
@@ -33,8 +33,8 @@ public:
   // relational operators
   bool operator<=(const const_iterator& it) const { return container == it.container && i() <= it.i(); }
   bool operator>=(const const_iterator& it) const { return container == it.container && i() >= it.i(); }
-  bool operator<(const const_iterator& it) const { return !operator>=(it); }
-  bool operator>(const const_iterator& it) const { return !operator<=(it); }
+  bool operator<(const const_iterator& it) const { return container == it.container && i() < it.i(); }
+  bool operator>(const const_iterator& it) const { return container == it.container && i() > it.i(); }
 
   // increment and decrement
   const_iterator& operator++() { increment(); return *this; }
@@ -48,7 +48,7 @@ public:
   uint i() const { return const_handle::i; }
 
 protected:
-  difference_type index() const { return static_cast<difference_type>(i()); }
+  difference_type offset() const { return static_cast<difference_type>(i()); }
   void advance(difference_type d) { const_handle::i += d; }
   void increment() { ++const_handle::i; }
   void decrement() { --const_handle::i; }
@@ -79,7 +79,7 @@ public:
   // iterator arithmetic
   iterator operator+(difference_type d) const { return iterator(container, i() + d); }
   iterator operator-(difference_type d) const { return iterator(container, i() - d); }
-  difference_type operator-(const iterator& it) const { return index() - it.index(); }
+  difference_type operator-(const iterator& it) const { return offset() - it.offset(); }
 
   // equality operators
   bool operator==(const iterator& it) const { return container == it.container && i() == it.i(); }
@@ -88,8 +88,8 @@ public:
   // relational operators
   bool operator<=(const iterator& it) const { return container == it.container && i() <= it.i(); }
   bool operator>=(const iterator& it) const { return container == it.container && i() >= it.i(); }
-  bool operator<(const iterator& it) const { return !operator>=(it); }
-  bool operator>(const iterator& it) const { return !operator<=(it); }
+  bool operator<(const iterator& it) const { return container == it.container && i() < it.i(); }
+  bool operator>(const iterator& it) const { return container == it.container && i() > it.i(); }
 
   // increment and decrement
   iterator& operator++() { increment(); return *this; }
@@ -102,7 +102,7 @@ public:
   using const_iterator::i;
 
 protected:
-  using const_iterator::index;
+  using const_iterator::offset;
   using const_iterator::advance;
   using const_iterator::increment;
   using const_iterator::decrement;
