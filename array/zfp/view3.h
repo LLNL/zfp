@@ -333,9 +333,13 @@ protected:
   using private_const_view::cache;
   using private_const_view::init;
   using private_const_view::decode;
-  class view_reference;
   typedef typename private_const_view::CacheLine CacheLine;
 public:
+  typedef Scalar value_type;
+  typedef private_view container_type;
+  #include "zfp/handle3.h"
+  #include "zfp/reference3.h"
+
   // construction--perform shallow copy of (sub)array
   private_view(array3* array) : private_const_view(array) {}
   private_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : private_const_view(array, x, y, z, nx, ny, nz) {}
@@ -367,34 +371,9 @@ public:
   using private_const_view::operator();
 
   // (i, j, k) mutator
-  view_reference operator()(uint i, uint j, uint k) { return view_reference(this, x + i, y + j, z + k); }
+  reference operator()(uint i, uint j, uint k) { return reference(this, x + i, y + j, z + k); }
 
 protected:
-  class view_reference {
-  public:
-    operator Scalar() const { return view->get(i, j, k); }
-    view_reference operator=(const view_reference& r) { view->set(i, j, k, r.operator Scalar()); return *this; }
-    view_reference operator=(Scalar val) { view->set(i, j, k, val); return *this; }
-    view_reference operator+=(Scalar val) { view->add(i, j, k, val); return *this; }
-    view_reference operator-=(Scalar val) { view->sub(i, j, k, val); return *this; }
-    view_reference operator*=(Scalar val) { view->mul(i, j, k, val); return *this; }
-    view_reference operator/=(Scalar val) { view->div(i, j, k, val); return *this; }
-    // swap two array elements via proxy references
-    friend void swap(view_reference a, view_reference b)
-    {
-      Scalar x = a.operator Scalar();
-      Scalar y = b.operator Scalar();
-      b.operator=(x);
-      a.operator=(y);
-    }
-
-  protected:
-    friend class private_view;
-    explicit view_reference(private_view* view, uint i, uint j, uint k) : view(view), i(i), j(j), k(k) {}
-    private_view* view;
-    uint i, j, k;
-  };
-
   // block-aligned partition of [offset, offset + size): index out of count
   static void partition(uint& offset, uint& size, uint index, uint count)
   {

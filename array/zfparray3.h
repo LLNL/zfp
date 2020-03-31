@@ -14,11 +14,18 @@ namespace zfp {
 template < typename Scalar, class Codec = zfp::codec<Scalar> >
 class array3 : public array {
 public:
+  typedef Scalar value_type;
+  typedef array3 container_type;
+
   // forward declarations
+  class const_reference;
+  class const_pointer;
+  class const_iterator;
   class reference;
   class pointer;
   class iterator;
   class view;
+  #include "zfp/handle3.h"
   #include "zfp/reference3.h"
   #include "zfp/pointer3.h"
   #include "zfp/iterator3.h"

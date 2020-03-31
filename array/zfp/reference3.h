@@ -1,27 +1,60 @@
-// reference to a 3D array element; this class is nested within zfp::array3
-class reference {
+// const reference to a 3D array or view element; this class is nested within container_type
+class const_reference : const_handle {
 public:
-  operator Scalar() const { return array->get(i, j, k); }
-  reference operator=(const reference& r) { array->set(i, j, k, r.operator Scalar()); return *this; }
-  reference operator=(Scalar val) { array->set(i, j, k, val); return *this; }
-  reference operator+=(Scalar val) { array->add(i, j, k, val); return *this; }
-  reference operator-=(Scalar val) { array->sub(i, j, k, val); return *this; }
-  reference operator*=(Scalar val) { array->mul(i, j, k, val); return *this; }
-  reference operator/=(Scalar val) { array->div(i, j, k, val); return *this; }
-  pointer operator&() const { return pointer(*this); }
+  typedef container_type::value_type value_type;
+
+  // constructor
+  explicit const_reference(container_type* container, uint i, uint j, uint k) : const_handle(container, i, j, k) {}
+
+  // inspector
+  operator value_type() const { return get(); }
+
+  // pointer to referenced element
+  const_pointer operator&() const { return const_pointer(container, i, j, k); }
+
+protected:
+  using const_handle::get;
+  using const_handle::container;
+  using const_handle::i;
+  using const_handle::j;
+  using const_handle::k;
+};
+
+// reference to a 3D array or view element; this class is nested within container_type
+class reference : public const_reference {
+public:
+  // constructor
+  explicit reference(container_type* container, uint i, uint j, uint k) : const_reference(container, i, j, k) {}
+
+  // assignment
+  reference operator=(const reference& r) { set(r.get()); return *this; }
+  reference operator=(value_type val) { set(val); return *this; }
+
+  // compound assignment
+  reference operator+=(value_type val) { container->add(i, j, k, val); return *this; }
+  reference operator-=(value_type val) { container->sub(i, j, k, val); return *this; }
+  reference operator*=(value_type val) { container->mul(i, j, k, val); return *this; }
+  reference operator/=(value_type val) { container->div(i, j, k, val); return *this; }
+
+  // pointer to referenced element
+  pointer operator&() const { return pointer(container, i, j, k); }
+
   // swap two array elements via proxy references
   friend void swap(reference a, reference b)
   {
-    Scalar x = a.operator Scalar();
-    Scalar y = b.operator Scalar();
-    b.operator=(x);
-    a.operator=(y);
+    value_type x = a.get();
+    value_type y = b.get();
+    b.set(x);
+    a.set(y);
   }
 
 protected:
-  friend class array3;
-  friend class iterator;
-  explicit reference(array3* array, uint i, uint j, uint k) : array(array), i(i), j(j), k(k) {}
-  array3* array;
-  uint i, j, k;
+  // assign value through reference
+  void set(value_type val) { container->set(i, j, k, val); }
+
+  using const_handle::get;
+  using const_handle::container;
+  using const_handle::i;
+  using const_handle::j;
+  using const_handle::k;
 };
