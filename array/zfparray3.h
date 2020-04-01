@@ -197,6 +197,10 @@ public:
   }
 
   // sequential iterators
+  const_iterator cbegin() const { return const_iterator(this, 0, 0, 0); }
+  const_iterator cend() const { return const_iterator(this, 0, 0, nz); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
   iterator begin() { return iterator(this, 0, 0, 0); }
   iterator end() { return iterator(this, 0, 0, nz); }
 
