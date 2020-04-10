@@ -129,8 +129,8 @@ public:
   void resize(uint minsize)
   {
     for (mask = minsize ? minsize - 1 : 1; mask & (mask + 1); mask |= mask + 1);
-    zfp::reallocate_aligned(tag, ((size_t)mask + 1) * sizeof(Tag), 0x100);
-    zfp::reallocate_aligned(line, ((size_t)mask + 1) * sizeof(Line), 0x100);
+    zfp::reallocate_aligned(tag, ((size_t)mask + 1) * sizeof(Tag), ZFP_MEMORY_ALIGNMENT);
+    zfp::reallocate_aligned(line, ((size_t)mask + 1) * sizeof(Line), ZFP_MEMORY_ALIGNMENT);
     clear();
   }
 
@@ -211,8 +211,8 @@ protected:
   void deep_copy(const Cache& c)
   {
     mask = c.mask;
-    zfp::clone_aligned(tag, c.tag, mask + 1, 0x100u);
-    zfp::clone_aligned(line, c.line, mask + 1, 0x100u);
+    zfp::clone_aligned(tag, c.tag, mask + 1, ZFP_MEMORY_ALIGNMENT);
+    zfp::clone_aligned(line, c.line, mask + 1, ZFP_MEMORY_ALIGNMENT);
 #ifdef ZFP_WITH_CACHE_PROFILE
     hit[0][0] = c.hit[0][0];
     hit[0][1] = c.hit[0][1];

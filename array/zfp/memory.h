@@ -15,6 +15,11 @@ extern "C" {
 #include <cstdlib>
 #include "zfp/types.h"
 
+// byte alignment of compressed data
+#ifndef ZFP_MEMORY_ALIGNMENT
+  #define ZFP_MEMORY_ALIGNMENT 0x100u
+#endif
+
 #define unused_(x) ((void)(x))
 
 namespace zfp {
