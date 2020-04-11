@@ -637,7 +637,7 @@ TEST_P(TEST_FIXTURE, when_configureCompressedArrayFromDefaultConstructor_then_bi
 
 // assumes arr1 was given a dirty cache
 // this irreversibly changes arr1 (clears entries)
-void CheckDeepCopyPerformedViaDirtyCache(ZFP_ARRAY_TYPE& arr1, ZFP_ARRAY_TYPE& arr2, uchar* arr1UnflushedBitstreamPtr)
+void CheckDeepCopyPerformedViaDirtyCache(ZFP_ARRAY_TYPE& arr1, ZFP_ARRAY_TYPE& arr2, void* arr1UnflushedBitstreamPtr)
 {
   // flush arr2 first, to ensure arr1 remains unflushed
   uint64 checksum = hashBitstream((uint64*)arr2.compressed_data(), arr2.compressed_size());
@@ -730,7 +730,7 @@ TEST_P(TEST_FIXTURE, given_compressedArray_when_copyConstructor_then_deepCopyPer
 #endif
 
   // create arr with dirty cache
-  uchar* arrUnflushedBitstreamPtr = arr.compressed_data();
+  void* arrUnflushedBitstreamPtr = arr.compressed_data();
   arr[0] = 999;
 
   ZFP_ARRAY_TYPE arr2(arr);
@@ -764,7 +764,7 @@ TEST_P(TEST_FIXTURE, given_compressedArray_when_setSecondArrayEqualToFirst_then_
 #endif
 
   // create arr with dirty cache
-  uchar* arrUnflushedBitstreamPtr = arr.compressed_data();
+  void* arrUnflushedBitstreamPtr = arr.compressed_data();
   arr[0] = 999;
 
   ZFP_ARRAY_TYPE arr2 = arr;

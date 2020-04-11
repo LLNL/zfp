@@ -718,7 +718,7 @@ test(uint dims, ArraySize array_size)
   // determine array size
   uint nx, ny, nz ,nw;
   zfp_field* field = zfp_field_alloc();
-  zfp_field_set_type(field, zfp::codec<Scalar>::type);
+  zfp_field_set_type(field, zfp::scalar_type<Scalar>());
   zfp_field_set_pointer(field, f);
   switch (dims) {
     case 1:

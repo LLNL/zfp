@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
     }
 
   // 2D array constructed from 2D slice (exercises deep copy via iterator)
-  printf("\n3D array from 2D slice\n");
+  printf("\n2D array from 2D slice\n");
   zfp::array2<double> b(slice2);
   for (uint y = 0; y < b.size_y(); y++)
     for (uint x = 0; x < b.size_x(); x++) {
@@ -136,12 +136,14 @@ int main(int argc, char* argv[])
     }
 
   // 2D thread-safe view of c
+#if 0
   zfp::array2<double>::private_const_view d(&c);
   for (uint y = 0; y < c.size_y(); y++)
     for (uint x = 0; x < c.size_x(); x++) {
       printf("%u %u: %g %g\n", x, y, (double)c(x, y), (double)d(x, y));
       verify(c(x, y), d(x, y));
     }
+#endif
 
   printf("\nall tests passed\n");
 
