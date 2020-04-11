@@ -143,6 +143,19 @@ clone_aligned(T*& dst, const T* src, size_t count, size_t alignment)
     dst = 0;
 }
 
+template <>
+inline void
+clone_aligned(void*& dst, const void* src, size_t bytes, size_t alignment)
+{
+  zfp::deallocate_aligned(dst);
+  if (src) {
+    dst = zfp::allocate_aligned(bytes, alignment);
+    std::memcpy(dst, src, bytes);
+  }
+  else
+    dst = 0;
+}
+
 }
 
 #undef unused_
