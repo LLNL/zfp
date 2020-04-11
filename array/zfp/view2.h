@@ -3,6 +3,8 @@
 // abstract view of 2D array (base class)
 class preview {
 public:
+  typedef container_type::value_type value_type;
+
   // rate in bits per value
   double rate() const { return array->rate(); }
 
@@ -49,7 +51,7 @@ public:
   uint size_y() const { return ny; }
 
   // (i, j) accessor
-  Scalar operator()(uint i, uint j) const { return array->get(x + i, y + j); }
+  value_type operator()(uint i, uint j) const { return array->get(x + i, y + j); }
 };
 
 // generic read-write view into a rectangular subset of a 2D array
@@ -96,7 +98,7 @@ public:
   }
 
   // flat index accessors
-  Scalar operator[](uint index) const
+  value_type operator[](uint index) const
   {
     uint i, j;
     ij(i, j, index);
@@ -127,11 +129,11 @@ public:
   uint size_x() const { return nx; }
 
   // [i] accessor and mutator
-  Scalar operator[](uint index) const { return array->get(x + index, y); }
+  value_type operator[](uint index) const { return array->get(x + index, y); }
   reference operator[](uint index) { return reference(array, x + index, y); }
 
   // (i) accessor and mutator
-  Scalar operator()(uint i) const { return array->get(x + i, y); }
+  value_type operator()(uint i) const { return array->get(x + i, y); }
   reference operator()(uint i) { return reference(array, x + i, y); }
 
 protected:
@@ -162,7 +164,7 @@ public:
   nested_view1 operator[](uint index) const { return nested_view1(array, x, y + index, nx, 1); }
 
   // (i, j) accessor and mutator
-  Scalar operator()(uint i, uint j) const { return array->get(x + i, y + j); }
+  value_type operator()(uint i, uint j) const { return array->get(x + i, y + j); }
   reference operator()(uint i, uint j) { return reference(array, x + i, y + j); }
 };
 
@@ -178,15 +180,15 @@ protected:
   using preview::ny;
 public:
   // construction--perform shallow copy of (sub)array
-  private_const_view(array2* array) :
+  private_const_view(array2* array, size_t cache_size = 0) :
     preview(array),
-    cache(array->cache.size())
+    cache(array->storage, cache_size ? cache_size : array->cache.size())
   {
     init();
   }
-  private_const_view(array2* array, uint x, uint y, uint nx, uint ny) :
+  private_const_view(array2* array, uint x, uint y, uint nx, uint ny, size_t cache_size = 0) :
     preview(array, x, y, nx, ny),
-    cache(array->cache.size())
+    cache(array->storage, cache_size ? cache_size : array->cache.size())
   {
     init();
   }
@@ -194,8 +196,7 @@ public:
   // destructor
   ~private_const_view()
   {
-    stream_close(zfp->stream);
-    zfp_stream_close(zfp);
+    // deallocate private codec
   }
 
   // dimensions of (sub)array
@@ -203,72 +204,29 @@ public:
   uint size_y() const { return ny; }
 
   // cache size in number of bytes
-  size_t cache_size() const { return cache.size() * sizeof(CacheLine); }
+  size_t cache_size() const { return cache.size(); }
 
   // set minimum cache size in bytes (array dimensions must be known)
-  void set_cache_size(size_t csize)
-  {
-    cache.resize(array->lines(csize, nx, ny));
-  }
+  void set_cache_size(size_t bytes) { cache.resize(bytes); }
 
   // empty cache without compressing modified cached blocks
   void clear_cache() const { cache.clear(); }
 
   // (i, j) accessor
-  Scalar operator()(uint i, uint j) const { return get(x + i, y + j); }
+  value_type operator()(uint i, uint j) const { return get(x + i, y + j); }
 
 protected:
-  // cache line representing one block of decompressed values
-  class CacheLine {
-  public:
-    const Scalar& operator()(uint i, uint j) const { return a[index(i, j)]; }
-    Scalar& operator()(uint i, uint j) { return a[index(i, j)]; }
-    const Scalar* data() const { return a; }
-    Scalar* data() { return a; }
-  protected:
-    static uint index(uint i, uint j) { return (i & 3u) + 4 * (j & 3u); }
-    Scalar a[16];
-  };
-
   // copy private data
   void init()
   {
-    // copy compressed stream
-    zfp = zfp_stream_open(0);
-    *zfp = *array->zfp;
-    // copy bit stream
-    zfp->stream = stream_clone(array->zfp->stream);
+    // need private codec to avoid race conditions
+    throw std::runtime_error("private views not supported");
   }
 
   // inspector
-  const Scalar& get(uint i, uint j) const
-  {
-    const CacheLine* p = line(i, j);
-    return (*p)(i, j);
-  }
+  value_type get(uint i, uint j) const { return cache.get(i, j); }
 
-  // return cache line for (i, j); may require write-back and fetch
-  CacheLine* line(uint i, uint j) const
-  {
-    CacheLine* p = 0;
-    uint b = array->block(i, j);
-    typename Cache<CacheLine>::Tag t = cache.access(p, b + 1, false);
-    uint c = t.index() - 1;
-    // fetch cache line; no writeback possible since view is read-only
-    if (c != b)
-      decode(b, p->data());
-    return p;
-  }
-
-  // decode block with given index
-  void decode(uint index, Scalar* block) const
-  {
-    stream_rseek(zfp->stream, index * array->blkbits);
-    Codec::decode_block_2(zfp, block, array->shape ? array->shape[index] : 0);
-  }
-
-  zfp_stream* zfp;                // stream of compressed blocks
-  mutable Cache<CacheLine> cache; // cache of decompressed blocks
+  mutable BlockCache2<value_type, codec_type> cache; // cache of decompressed blocks
 };
 
 // thread-safe read-write view of private 2D (sub)array
@@ -279,20 +237,18 @@ protected:
   using preview::y;
   using preview::nx;
   using preview::ny;
-  using private_const_view::zfp;
   using private_const_view::cache;
   using private_const_view::init;
-  using private_const_view::decode;
-  typedef typename private_const_view::CacheLine CacheLine;
 public:
-  typedef Scalar value_type;
+  // private view uses its own references to access private cache
   typedef private_view container_type;
+  typedef typename preview::value_type value_type;
   #include "zfp/handle2.h"
   #include "zfp/reference2.h"
 
   // construction--perform shallow copy of (sub)array
-  private_view(array2* array) : private_const_view(array) {}
-  private_view(array2* array, uint x, uint y, uint nx, uint ny) : private_const_view(array, x, y, nx, ny) {}
+  private_view(array2* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
+  private_view(array2* array, uint x, uint y, uint nx, uint ny, size_t cache_size = 0) : private_const_view(array, x, y, nx, ny, cache_size) {}
 
   // partition view into count block-aligned pieces, with 0 <= index < count
   void partition(uint index, uint count)
@@ -304,16 +260,7 @@ public:
   }
 
   // flush cache by compressing all modified cached blocks
-  void flush_cache() const
-  {
-    for (typename Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
-      if (p->tag.dirty()) {
-        uint b = p->tag.index() - 1;
-        encode(b, p->line->data());
-      }
-      cache.flush(p->line);
-    }
-  }
+  void flush_cache() const { cache.flush(); }
 
   // (i, j) accessor from base class
   using private_const_view::operator();
@@ -334,39 +281,11 @@ protected:
   }
 
   // mutator
-  void set(uint i, uint j, Scalar val)
-  {
-    CacheLine* p = line(i, j, true);
-    (*p)(i, j) = val;
-  }
+  void set(uint i, uint j, value_type val) { cache.set(i, j, val); }
 
   // in-place updates
-  void add(uint i, uint j, Scalar val) { (*line(i, j, true))(i, j) += val; }
-  void sub(uint i, uint j, Scalar val) { (*line(i, j, true))(i, j) -= val; }
-  void mul(uint i, uint j, Scalar val) { (*line(i, j, true))(i, j) *= val; }
-  void div(uint i, uint j, Scalar val) { (*line(i, j, true))(i, j) /= val; }
-
-  // return cache line for (i, j); may require write-back and fetch
-  CacheLine* line(uint i, uint j, bool write) const
-  {
-    CacheLine* p = 0;
-    uint b = array->block(i, j);
-    typename Cache<CacheLine>::Tag t = cache.access(p, b + 1, write);
-    uint c = t.index() - 1;
-    if (c != b) {
-      // write back occupied cache line if it is dirty
-      if (t.dirty())
-        encode(c, p->data());
-      decode(b, p->data());
-    }
-    return p;
-  }
-
-  // encode block with given index
-  void encode(uint index, const Scalar* block) const
-  {
-    stream_wseek(zfp->stream, index * array->blkbits);
-    Codec::encode_block_2(zfp, block, array->shape ? array->shape[index] : 0);
-    stream_flush(zfp->stream);
-  }
+  void add(uint i, uint j, value_type val) { cache.ref(i, j) += val; }
+  void sub(uint i, uint j, value_type val) { cache.ref(i, j) -= val; }
+  void mul(uint i, uint j, value_type val) { cache.ref(i, j) *= val; }
+  void div(uint i, uint j, value_type val) { cache.ref(i, j) /= val; }
 };

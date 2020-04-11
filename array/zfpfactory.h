@@ -3,7 +3,7 @@
 
 // (assumes zfparray.h already included)
 
-zfp::array* zfp::array::construct(const zfp::array::header& header, const uchar* buffer, size_t buffer_size_bytes)
+zfp::array* zfp::array::construct(const zfp::array::header& header, const void* buffer, size_t buffer_size_bytes)
 {
   // gather array metadata via C API, then construct with metadata
   uint dims = 0;
@@ -90,7 +90,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const uchar*
     throw zfp::array::header::exception(err_msg);
 
   if (buffer)
-    memcpy(arr->compressed_data(), buffer, arr->compressed_size());
+    std::memcpy(arr->compressed_data(), buffer, arr->compressed_size());
 
   return arr;
 }

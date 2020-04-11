@@ -3,12 +3,10 @@
 
 #include <algorithm>
 #include <climits>
-#include <cstring>
+//#include <cstring>
 #include <stdexcept>
 #include <string>
-
 #include "zfp.h"
-#include "zfp/memory.h"
 
 // all undefined at end
 #define DIV_ROUND_UP(x, y) (((x) + (y) - 1) / (y))
@@ -18,46 +16,43 @@
 
 namespace zfp {
 
+// utility functions
+template <typename Scalar>
+inline zfp_type scalar_type();
+
+template <>
+inline zfp_type scalar_type<float>() { return zfp_type_float; }
+
+template <>
+inline zfp_type scalar_type<double>() { return zfp_type_double; }
+
 // abstract base class for compressed array of scalars
 class array {
 public:
   #include "zfp/header.h"
 
-  static zfp::array* construct(const zfp::array::header& header, const uchar* buffer = 0, size_t buffer_size_bytes = 0);
+  static zfp::array* construct(const zfp::array::header& header, const void* buffer = 0, size_t buffer_size_bytes = 0);
 
 protected:
   // default constructor
   array() :
     dims(0), type(zfp_type_none),
-    nx(0), ny(0), nz(0),
-    bx(0), by(0), bz(0),
-    blocks(0), blkbits(0),
-    bytes(0), data(0),
-    zfp(0),
-    shape(0)
+    nx(0), ny(0), nz(0)
   {}
 
   // generic array with 'dims' dimensions and scalar type 'type'
-  array(uint dims, zfp_type type) :
+  explicit array(uint dims, zfp_type type) :
     dims(dims), type(type),
-    nx(0), ny(0), nz(0),
-    bx(0), by(0), bz(0),
-    blocks(0), blkbits(0),
-    bytes(0), data(0),
-    zfp(zfp_stream_open(0)),
-    shape(0)
+    nx(0), ny(0), nz(0)
   {}
 
   // constructor, from previously-serialized compressed array
-  array(uint dims, zfp_type type, const zfp::array::header& h, size_t expected_buffer_size_bytes) :
+//  array(uint dims, zfp_type type, const zfp::array::header& h, size_t expected_buffer_size_bytes) :
+  array(uint dims, zfp_type type, const zfp::array::header&, size_t) :
     dims(dims), type(type),
-    nx(0), ny(0), nz(0),
-    bx(0), by(0), bz(0),
-    blocks(0), blkbits(0),
-    bytes(0), data(0),
-    zfp(zfp_stream_open(0)),
-    shape(0)
+    nx(0), ny(0), nz(0)
   {
+#if 0
     // read header to populate member variables associated with zfp_stream
     try {
       read_from_header(h);
@@ -70,13 +65,13 @@ protected:
       zfp_stream_close(zfp);
       throw zfp::array::header::exception("ZFP header expects a longer buffer than what was passed in.");
     }
+#else
+    throw std::runtime_error("(de)serialization not supported");
+#endif
   }
 
   // copy constructor--performs a deep copy
-  array(const array& a) :
-    data(0),
-    zfp(0),
-    shape(0)
+  array(const array& a)
   {
     deep_copy(a);
   }
@@ -90,40 +85,7 @@ protected:
 
 public:
   // public virtual destructor (can delete array through base class pointer)
-  virtual ~array()
-  {
-    free();
-    zfp_stream_close(zfp);
-  }
-
-  // rate in bits per value
-  double rate() const { return double(blkbits) / block_size(); }
-
-  // set compression rate in bits per value
-  double set_rate(double rate)
-  {
-    rate = zfp_stream_set_rate(zfp, rate, type, dims, 1);
-    blkbits = zfp->maxbits;
-    alloc();
-    return rate;
-  }
-
-  // empty cache without compressing modified cached blocks
-  virtual void clear_cache() const = 0;
-
-  // flush cache by compressing all modified cached blocks
-  virtual void flush_cache() const = 0;
-
-  // number of bytes of compressed data
-  size_t compressed_size() const { return bytes; }
-
-  // pointer to compressed data for read or write access
-  uchar* compressed_data() const
-  {
-    // first write back any modified cached data
-    flush_cache();
-    return data;
-  }
+  virtual ~array() {}
 
   // dimensionality
   uint dimensionality() const { return dims; }
@@ -131,9 +93,14 @@ public:
   // underlying scalar type
   zfp_type scalar_type() const { return type; }
 
+  // compressed data size and buffer
+  virtual size_t compressed_size() const = 0;
+  virtual void* compressed_data() const = 0;
+
   // write header with latest metadata
   zfp::array::header get_header() const
   {
+#if 0
     // intermediate buffer needed (bitstream accesses multiples of wordsize)
     AlignedBufferHandle abh;
     DualBitstreamHandle dbh(zfp, abh);
@@ -152,6 +119,9 @@ public:
     abh.copy_to_header(&h);
 
     return h;
+#else
+    throw std::runtime_error("(de)serialization not supported");
+#endif
   }
 
 private:
@@ -159,36 +129,6 @@ private:
   #include "zfp/headerHelpers.h"
 
 protected:
-  // number of values per block
-  uint block_size() const { return 1u << (2 * dims); }
-
-  // allocate memory for compressed data
-  void alloc(bool clear = true)
-  {
-    bytes = blocks * blkbits / CHAR_BIT;
-    zfp::reallocate_aligned(data, bytes, 0x100u);
-    if (clear)
-      std::fill(data, data + bytes, 0);
-    stream_close(zfp->stream);
-    zfp_stream_set_bit_stream(zfp, stream_open(data, bytes));
-    clear_cache();
-  }
-
-  // free memory associated with compressed data
-  void free()
-  {
-    nx = ny = nz = 0;
-    bx = by = bz = 0;
-    blocks = 0;
-    stream_close(zfp->stream);
-    zfp_stream_set_bit_stream(zfp, 0);
-    bytes = 0;
-    zfp::deallocate_aligned(data);
-    data = 0;
-    zfp::deallocate(shape);
-    shape = 0;
-  }
-
   // perform a deep copy
   void deep_copy(const array& a)
   {
@@ -198,30 +138,14 @@ protected:
     nx = a.nx;
     ny = a.ny;
     nz = a.nz;
-    bx = a.bx;
-    by = a.by;
-    bz = a.bz;
-    blocks = a.blocks;
-    blkbits = a.blkbits;
-    bytes = a.bytes;
-
-    // copy dynamically allocated data
-    zfp::clone_aligned(data, a.data, bytes, 0x100u);
-    if (zfp) {
-      if (zfp->stream)
-        stream_close(zfp->stream);
-      zfp_stream_close(zfp);
-    }
-    zfp = zfp_stream_open(0);
-    *zfp = *a.zfp;
-    zfp_stream_set_bit_stream(zfp, stream_open(data, bytes));
-    zfp::clone(shape, a.shape, blocks);
   }
 
   // attempt reading header from zfp::array::header
   // and verify header contents (throws exceptions upon failure)
-  void read_from_header(const zfp::array::header& h)
+//  void read_from_header(const zfp::array::header& h)
+  void read_from_header(const zfp::array::header&)
   {
+#if 0
     // copy header into aligned buffer
     AlignedBufferHandle abh(&h);
     DualBitstreamHandle dbh(zfp, abh);
@@ -253,27 +177,14 @@ protected:
     nz = zfh.field->nz;
     type = zfh.field->type;
     blkbits = zfp->maxbits;
+#else
+    throw std::runtime_error("(de)serialization not supported");
+#endif
   }
 
-  // default number of cache lines for array with n blocks
-  static uint lines(size_t n)
-  {
-    // compute m = O(sqrt(n))
-    size_t m;
-    for (m = 1; m * m < n; m *= 2);
-    return static_cast<uint>(m);
-  }
-
-  uint dims;           // array dimensionality (1, 2, or 3)
-  zfp_type type;       // scalar type
-  uint nx, ny, nz;     // array dimensions
-  uint bx, by, bz;     // array dimensions in number of blocks
-  uint blocks;         // number of blocks
-  size_t blkbits;      // number of bits per compressed block
-  size_t bytes;        // total bytes of compressed data
-  mutable uchar* data; // pointer to compressed data
-  zfp_stream* zfp;     // compressed stream of blocks
-  uchar* shape;        // precomputed block dimensions (or null if uniform)
+  uint dims;       // array dimensionality (1, 2, or 3)
+  zfp_type type;   // scalar type
+  uint nx, ny, nz; // array dimensions
 };
 
 #undef DIV_ROUND_UP
