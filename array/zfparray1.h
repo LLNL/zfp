@@ -6,7 +6,7 @@
 #include <iterator>
 #include "zfparray.h"
 #include "zfp/cache1.h"
-#include "zfp/block1.h"
+#include "zfp/store1.h"
 
 namespace zfp {
 
@@ -37,15 +37,15 @@ public:
   // default constructor
   array1() :
     array(1, Codec::type),
-    cache(storage, 0)
+    cache(store, 0)
   {}
 
   // constructor of nx-element array using rate bits per value, at least
   // cache_size bytes of cache, and optionally initialized from flat array p
   array1(uint nx, double rate, const Scalar* p = 0, size_t cache_size = 0) :
     array(1, Codec::type),
-    storage(nx, rate),
-    cache(storage, cache_size)
+    store(nx, rate),
+    cache(store, cache_size)
   {
     this->nx = nx;
     if (p)
@@ -55,21 +55,21 @@ public:
   // constructor, from previously-serialized compressed array
   array1(const zfp::array::header& h, const void* = 0, size_t buffer_size_bytes = 0) :
     array(1, Codec::type, h, buffer_size_bytes),
-    cache(storage)
+    cache(store)
   {
 #if 0
     resize(nx, false);
     if (buffer)
       std::memcpy(data, buffer, bytes);
 #else
-    // must construct storage and cache
+    // must construct store and cache
     throw std::runtime_error("(de)serialization not supported");
 #endif
   }
 
   // copy constructor--performs a deep copy
   array1(const array1& a) :
-    cache(storage)
+    cache(store)
   {
     deep_copy(a);
   }
@@ -78,8 +78,8 @@ public:
   template <class View>
   array1(const View& v) :
     array(1, Codec::type),
-    storage(v.size_x(), v.rate()),
-    cache(storage, 0)
+    store(v.size_x(), v.rate()),
+    cache(store, 0)
   {
     // initialize array in its preferred order
     for (iterator it = begin(); it != end(); ++it)
@@ -107,29 +107,29 @@ public:
   void resize(uint nx, bool clear = true)
   {
     this->nx = nx;
-    storage.resize(nx, clear);
+    store.resize(nx, clear);
     cache.clear();
   }
 
   // rate in bits per value
-  double rate() const { return storage.rate(); }
+  double rate() const { return store.rate(); }
 
   // set rate in bits per value
   double set_rate(double rate)
   {
-    rate = storage.set_rate(rate);
+    rate = store.set_rate(rate);
     cache.clear();
     return rate;
   }
 
   // number of bytes of compressed data
-  size_t compressed_size() const { return storage.compressed_size(); }
+  size_t compressed_size() const { return store.compressed_size(); }
 
   // pointer to compressed data for read or write access
   void* compressed_data() const
   {
     cache.flush();
-    return storage.compressed_data();
+    return store.compressed_data();
   }
 
   // cache size in number of bytes
@@ -151,7 +151,7 @@ public:
   // decompress array and store at p
   void get(Scalar* p) const
   {
-    const uint bx = storage.block_size_x();
+    const uint bx = store.block_size_x();
     uint block_index = 0;
     for (uint i = 0; i < bx; i++, p += 4)
       cache.get_block(block_index++, p, 1);
@@ -160,10 +160,10 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
-    const uint bx = storage.block_size_x();
+    const uint bx = store.block_size_x();
     uint block_index = 0;
     for (uint i = 0; i < bx; i++, p += 4)
-      storage.encode(block_index++, p, 1);
+      store.encode(block_index++, p, 1);
     cache.clear();
   }
 
@@ -190,7 +190,7 @@ protected:
     // copy base class members
     array::deep_copy(a);
     // copy persistent storage
-    storage.deep_copy(a.storage);
+    store.deep_copy(a.store);
     // copy cached data
     cache.deep_copy(a.cache);
   }
@@ -205,8 +205,8 @@ protected:
   void mul(uint i, Scalar val) { cache.ref(i) *= val; }
   void div(uint i, Scalar val) { cache.ref(i) /= val; }
 
-  BlockStorage1<Scalar, Codec> storage; // persistent storage of compressed blocks
-  BlockCache1<Scalar, Codec> cache;     // cache of decompressed blocks
+  BlockStore1<Scalar, Codec> store; // persistent storage of compressed blocks
+  BlockCache1<Scalar, Codec> cache; // cache of decompressed blocks
 };
 
 typedef array1<float> array1f;

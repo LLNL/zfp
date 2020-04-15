@@ -6,7 +6,7 @@
 #include <iterator>
 #include "zfparray.h"
 #include "zfp/cache3.h"
-#include "zfp/block3.h"
+#include "zfp/store3.h"
 
 namespace zfp {
 
@@ -37,15 +37,15 @@ public:
   // default constructor
   array3() :
     array(3, Codec::type),
-    cache(storage, 0)
+    cache(store, 0)
   {}
 
   // constructor of nx * ny * nz array using rate bits per value, at least
   // cache_size bytes of cache, and optionally initialized from flat array p
   array3(uint nx, uint ny, uint nz, double rate, const Scalar* p = 0, size_t cache_size = 0) :
     array(3, Codec::type),
-    storage(nx, ny, nz, rate),
-    cache(storage, cache_size)
+    store(nx, ny, nz, rate),
+    cache(store, cache_size)
   {
     this->nx = nx;
     this->ny = ny;
@@ -57,21 +57,21 @@ public:
   // constructor, from previously-serialized compressed array
   array3(const zfp::array::header& h, const void* = 0, size_t buffer_size_bytes = 0) :
     array(3, Codec::type, h, buffer_size_bytes),
-    cache(storage)
+    cache(store)
   {
 #if 0
     resize(nx, ny, nz, false);
     if (buffer)
       std::memcpy(data, buffer, bytes);
 #else
-    // must construct storage and cache
+    // must construct store and cache
     throw std::runtime_error("(de)serialization not supported");
 #endif
   }
 
   // copy constructor--performs a deep copy
   array3(const array3& a) :
-    cache(storage)
+    cache(store)
   {
     deep_copy(a);
   }
@@ -80,8 +80,8 @@ public:
   template <class View>
   array3(const View& v) :
     array(3, Codec::type),
-    storage(v.size_x(), v.size_y(), v.size_z(), v.rate()),
-    cache(storage, 0)
+    store(v.size_x(), v.size_y(), v.size_z(), v.rate()),
+    cache(store, 0)
   {
     // initialize array in its preferred order
     for (iterator it = begin(); it != end(); ++it)
@@ -113,29 +113,29 @@ public:
     this->nx = nx;
     this->ny = ny;
     this->nz = nz;
-    storage.resize(nx, ny, nz, clear);
+    store.resize(nx, ny, nz, clear);
     cache.clear();
   }
 
   // rate in bits per value
-  double rate() const { return storage.rate(); }
+  double rate() const { return store.rate(); }
 
   // set rate in bits per value
   double set_rate(double rate)
   {
-    rate = storage.set_rate(rate);
+    rate = store.set_rate(rate);
     cache.clear();
     return rate;
   }
 
   // number of bytes of compressed data
-  size_t compressed_size() const { return storage.compressed_size(); }
+  size_t compressed_size() const { return store.compressed_size(); }
 
   // pointer to compressed data for read or write access
   void* compressed_data() const
   {
     cache.flush();
-    return storage.compressed_data();
+    return store.compressed_data();
   }
 
   // cache size in number of bytes
@@ -157,9 +157,9 @@ public:
   // decompress array and store at p
   void get(Scalar* p) const
   {
-    const uint bx = storage.block_size_x();
-    const uint by = storage.block_size_y();
-    const uint bz = storage.block_size_z();
+    const uint bx = store.block_size_x();
+    const uint by = store.block_size_y();
+    const uint bz = store.block_size_z();
     uint block_index = 0;
     for (uint k = 0; k < bz; k++, p += 4 * nx * (ny - by))
       for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
@@ -170,14 +170,14 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
-    const uint bx = storage.block_size_x();
-    const uint by = storage.block_size_y();
-    const uint bz = storage.block_size_z();
+    const uint bx = store.block_size_x();
+    const uint by = store.block_size_y();
+    const uint bz = store.block_size_z();
     uint block_index = 0;
     for (uint k = 0; k < bz; k++, p += 4 * nx * (ny - by))
       for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
         for (uint i = 0; i < bx; i++, p += 4)
-          storage.encode(block_index++, p, 1, nx, nx * ny);
+          store.encode(block_index++, p, 1, nx, nx * ny);
     cache.clear();
   }
 
@@ -214,7 +214,7 @@ protected:
     // copy base class members
     array::deep_copy(a);
     // copy persistent storage
-    storage.deep_copy(a.storage);
+    store.deep_copy(a.store);
     // copy cached data
     cache.deep_copy(a.cache);
   }
@@ -237,8 +237,8 @@ protected:
     k = index;
   }
 
-  BlockStorage3<Scalar, Codec> storage; // persistent storage of compressed blocks
-  BlockCache3<Scalar, Codec> cache;     // cache of decompressed blocks
+  BlockStore3<Scalar, Codec> store; // persistent storage of compressed blocks
+  BlockCache3<Scalar, Codec> cache; // cache of decompressed blocks
 };
 
 typedef array3<float> array3f;

@@ -1,9 +1,8 @@
 #ifndef ZFP_CACHE3_H
 #define ZFP_CACHE3_H
 
-#include "zfp.h"
 #include "cache.h"
-#include "block3.h"
+#include "store3.h"
 
 namespace zfp {
 
@@ -11,7 +10,7 @@ template <typename Scalar, class Codec>
 class BlockCache3 {
 public:
   // constructor of cache of given size
-  BlockCache3(BlockStorage3<Scalar, Codec>& storage, size_t bytes = 0) : cache(bytes), storage(storage) {}
+  BlockCache3(BlockStore3<Scalar, Codec>& store, size_t bytes = 0) : cache(bytes), store(store) {}
 
   // cache size in number of bytes
   size_t size() const { return cache.size() * sizeof(CacheLine); }
@@ -20,7 +19,7 @@ public:
   void resize(size_t bytes)
   {
     flush();
-    cache.resize(lines(bytes, storage.blocks()));
+    cache.resize(lines(bytes, store.blocks()));
   }
 
   // empty cache without compressing modified cached blocks
@@ -32,7 +31,7 @@ public:
     for (typename zfp::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
       if (p->tag.dirty()) {
         uint block_index = p->tag.index() - 1;
-        storage.encode(block_index, p->line->data());
+        store.encode(block_index, p->line->data());
       }
       cache.flush(p->line);
     }
@@ -67,9 +66,9 @@ public:
   {
     const CacheLine* line = cache.lookup(block_index);
     if (line)
-      line->get(p, sx, sy, sz, storage.block_shape(block_index));
+      line->get(p, sx, sy, sz, store.block_shape(block_index));
     else
-      storage.decode(block_index, p, sx, sy, sz);
+      store.decode(block_index, p, sx, sy, sz);
   }
 
 protected:
@@ -121,15 +120,15 @@ protected:
   CacheLine* line(uint i, uint j, uint k, bool write) const
   {
     CacheLine* p = 0;
-    uint block_index = storage.block_index(i, j, k);
+    uint block_index = store.block_index(i, j, k);
     typename zfp::Cache<CacheLine>::Tag tag = cache.access(p, block_index + 1, write);
     uint stored_block_index = tag.index() - 1;
     if (stored_block_index != block_index) {
       // write back occupied cache line if it is dirty
       if (tag.dirty())
-        storage.encode(stored_block_index, p->data());
+        store.encode(stored_block_index, p->data());
       // fetch cache line
-      storage.decode(block_index, p->data());
+      store.decode(block_index, p->data());
     }
     return p;
   }
@@ -150,8 +149,8 @@ protected:
     return std::max(n, 1u);
   }
 
-  mutable Cache<CacheLine> cache;        // cache of decompressed blocks
-  BlockStorage3<Scalar, Codec>& storage; // storage backed by cache
+  mutable Cache<CacheLine> cache;    // cache of decompressed blocks
+  BlockStore3<Scalar, Codec>& store; // store backed by cache
 };
 
 }
