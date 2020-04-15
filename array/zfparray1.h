@@ -81,6 +81,7 @@ public:
     store(v.size_x(), v.rate()),
     cache(store)
   {
+    this->nx = v.size_x();
     // initialize array in its preferred order
     for (iterator it = begin(); it != end(); ++it)
       *it = v(it.i());
