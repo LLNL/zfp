@@ -1,8 +1,7 @@
 #ifndef ZFP_BLOCK1_H
 #define ZFP_BLOCK1_H
 
-//#include "zfpcodec.h"
-#include "zfpcdc.h"
+#include "zfpcodec.h"
 #include "zfp/memory.h"
 
 namespace zfp {

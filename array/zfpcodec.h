@@ -70,8 +70,8 @@ protected:
 template <typename Scalar, uint dims>
 class codec {};
 
-#include "zfpcdcf.h"
-#include "zfpcdcd.h"
+#include "zfpcodecf.h"
+#include "zfpcodecd.h"
 
 }
 
