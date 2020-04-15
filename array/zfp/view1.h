@@ -86,13 +86,13 @@ public:
   // construction--perform shallow copy of (sub)array
   private_const_view(array1* array, size_t cache_size = 0) :
     preview(array),
-    cache(array->storage, cache_size ? cache_size : array->cache.size())
+    cache(array->store, cache_size ? cache_size : array->cache.size())
   {
     init();
   }
   private_const_view(array1* array, uint x, uint nx, size_t cache_size = 0) :
     preview(array, x, nx),
-    cache(array->storage, cache_size ? cache_size : array->cache.size())
+    cache(array->store, cache_size ? cache_size : array->cache.size())
   {
     init();
   }

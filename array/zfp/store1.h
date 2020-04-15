@@ -16,8 +16,7 @@ public:
     bx(0),
     bits_per_block(0),
     data(0),
-    bytes(0),
-    codec(0)
+    bytes(0)
   {}
 
   // block store for array of size nx and given rate
@@ -26,8 +25,7 @@ public:
     bx((nx + 3) / 4),
     bits_per_block(0),
     data(0),
-    bytes(0),
-    codec(0)
+    bytes(0)
   {
     set_rate(rate);
   }
@@ -41,7 +39,6 @@ public:
     bits_per_block = s.bits_per_block;
     bytes = s.bytes;
     zfp::clone_aligned(data, s.data, s.bytes, ZFP_MEMORY_ALIGNMENT);
-    codec = s.codec->clone();
   }
 
   // rate in bits per value
@@ -91,25 +88,25 @@ public:
   uint block_shape(uint block_index) const { return shape(block_index); }
 
   // encode contiguous block with given index
-  size_t encode(uint block_index, const Scalar* block) const
+  size_t encode(Codec* codec, uint block_index, const Scalar* block) const
   {
     return codec->encode_block(offset(block_index), shape(block_index), block);
   }
 
   // encode block with given index from strided array
-  size_t encode(uint block_index, const Scalar* p, ptrdiff_t sx) const
+  size_t encode(Codec* codec, uint block_index, const Scalar* p, ptrdiff_t sx) const
   {
     return codec->encode_block_strided(offset(block_index), shape(block_index), p, sx);
   }
 
   // decode contiguous block with given index
-  size_t decode(uint block_index, Scalar* block) const
+  size_t decode(Codec* codec, uint block_index, Scalar* block) const
   {
     return codec->decode_block(offset(block_index), shape(block_index), block);
   }
 
   // decode block with given index to strided array
-  size_t decode(uint block_index, Scalar* p, ptrdiff_t sx) const
+  size_t decode(Codec* codec, uint block_index, Scalar* p, ptrdiff_t sx) const
   {
     return codec->decode_block_strided(offset(block_index), shape(block_index), p, sx);
   }
@@ -123,17 +120,11 @@ protected:
     zfp::reallocate_aligned(data, bytes, ZFP_MEMORY_ALIGNMENT);
     if (clear)
       std::fill(static_cast<uint64*>(data), static_cast<uint64*>(data) + words, uint64(0));
-    codec = new Codec(data, bytes);
-    codec->set_rate(rate());
   }
 
   // free block store
   void free()
   {
-    if (codec) {
-      delete codec;
-      codec = 0;
-    }
     if (data) {
       zfp::deallocate_aligned(data);
       data = 0;
@@ -159,7 +150,6 @@ protected:
   uint bits_per_block; // number of bits of compressed storage per block
   void* data;          // pointer to compressed blocks
   size_t bytes;        // compressed data size
-  Codec* codec;        // compression codec
 };
 
 }

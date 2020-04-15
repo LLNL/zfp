@@ -37,7 +37,7 @@ public:
   // default constructor
   array3() :
     array(3, Codec::type),
-    cache(store, 0)
+    cache(store)
   {}
 
   // constructor of nx * ny * nz array using rate bits per value, at least
@@ -81,7 +81,7 @@ public:
   array3(const View& v) :
     array(3, Codec::type),
     store(v.size_x(), v.size_y(), v.size_z(), v.rate()),
-    cache(store, 0)
+    cache(store)
   {
     // initialize array in its preferred order
     for (iterator it = begin(); it != end(); ++it)
@@ -118,15 +118,10 @@ public:
   }
 
   // rate in bits per value
-  double rate() const { return store.rate(); }
+  double rate() const { return cache.rate(); }
 
   // set rate in bits per value
-  double set_rate(double rate)
-  {
-    rate = store.set_rate(rate);
-    cache.clear();
-    return rate;
-  }
+  double set_rate(double rate) { return cache.set_rate(rate); }
 
   // number of bytes of compressed data
   size_t compressed_size() const { return store.compressed_size(); }
@@ -177,8 +172,7 @@ public:
     for (uint k = 0; k < bz; k++, p += 4 * nx * (ny - by))
       for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
         for (uint i = 0; i < bx; i++, p += 4)
-          store.encode(block_index++, p, 1, nx, nx * ny);
-    cache.clear();
+          cache.put_block(block_index++, p, 1, nx, nx * ny);
   }
 
   // (i, j, k) accessors

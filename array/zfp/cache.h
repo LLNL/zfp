@@ -136,15 +136,21 @@ public:
 
   // look up cache line #x and return pointer to it if in the cache;
   // otherwise return null
-  const Line* lookup(Index x) const
+  Line* lookup(Index x, bool write)
   {
     uint i = primary(x);
-    if (tag[i].index() == x)
+    if (tag[i].index() == x) {
+      if (write)
+        tag[i].mark();
       return line + i;
+    }
 #ifdef ZFP_WITH_CACHE_TWOWAY
     uint j = secondary(x);
-    if (tag[j].index() == x)
+    if (tag[j].index() == x) {
+      if (write)
+        tag[i].mark();
       return line + j;
+    }
 #endif
     return 0;
   }
