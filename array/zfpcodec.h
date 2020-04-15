@@ -26,23 +26,17 @@ public:
     stream_close(stream);
   }
 
+#if 0
   codec_base* clone() const
   {
-#if 0
-    // copy dynamically allocated data
-    zfp::clone_aligned(data, a.data, bytes, ZFP_MEMORY_ALIGNMENT);
-    if (zfp) {
-      if (zfp->stream)
-        stream_close(zfp->stream);
-      zfp_stream_close(zfp);
-    }
-    zfp = zfp_stream_open(0);
-    *zfp = *a.zfp;
-    zfp_stream_set_bit_stream(zfp, stream_open(data, bytes));
-#else
-    return 0;
-#endif
+    const bitstream* stream = zfp_stream_bit_stream(zfp);
+    codec_base* c = new codec_base(stream_begin(stream), stream_capacity(stream));
+    stream = zfp_stream_bit_stream(c->zfp);
+    *c->zfp = *zfp;
+    zfp_stream_set_bit_stream(c->zfp, stream);
+    return c;
   }
+#endif
 
   // return nearest rate supported
   static double nearest_rate(double target_rate)

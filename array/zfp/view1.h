@@ -87,21 +87,11 @@ public:
   private_const_view(array1* array, size_t cache_size = 0) :
     preview(array),
     cache(array->store, cache_size ? cache_size : array->cache.size())
-  {
-    init();
-  }
+  {}
   private_const_view(array1* array, uint x, uint nx, size_t cache_size = 0) :
     preview(array, x, nx),
     cache(array->store, cache_size ? cache_size : array->cache.size())
-  {
-    init();
-  }
-
-  // destructor
-  ~private_const_view()
-  {
-    // deallocate private codec
-  }
+  {}
 
   // dimensions of (sub)array
   uint size_x() const { return nx; }
@@ -119,13 +109,6 @@ public:
   value_type operator()(uint i) const { return get(x + i); }
 
 protected:
-  // copy private data
-  void init()
-  {
-    // need private codec to avoid race conditions
-    throw std::runtime_error("private views not supported");
-  }
-
   // inspector
   value_type get(uint i) const { return cache.get(i); }
 
@@ -139,7 +122,6 @@ protected:
   using preview::x;
   using preview::nx;
   using private_const_view::cache;
-  using private_const_view::init;
 public:
   // private view uses its own references to access private cache
   typedef private_view container_type;
