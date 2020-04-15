@@ -11,7 +11,7 @@ class BlockCache2 {
 public:
   // constructor of cache of given size
   BlockCache2(BlockStore2<Scalar, Codec>& store, size_t bytes = 0) :
-    cache(bytes),
+    cache(bytes / sizeof(CacheLine)),
     store(store),
     codec(0)
   {
@@ -64,7 +64,7 @@ public:
   {
     free();
     cache = c.cache;
-    codec = c.codec->clone();
+    alloc();
   }
 
   // inspector
