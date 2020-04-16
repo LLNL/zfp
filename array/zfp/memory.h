@@ -36,7 +36,6 @@ inline void*
 allocate_aligned(size_t size, size_t alignment)
 {
   void* ptr;
-  bool is_mem_failed = false;
 
 #ifdef ZFP_WITH_ALIGNED_ALLOC
   #ifdef __INTEL_COMPILER
@@ -49,21 +48,22 @@ allocate_aligned(size_t size, size_t alignment)
   ptr = _aligned_malloc(size, alignment);
 
   #elif (_POSIX_C_SOURCE >= 200112L) || (_XOPEN_SOURCE >= 600) || defined(__MACH__)
-  is_mem_failed = posix_memalign(&ptr, alignment, size);
+  if (posix_memalign(&ptr, alignment, size))
+    ptr = 0;
 
   #else
   unused_(alignment);
-  ptr = malloc(size);
+  ptr = std::malloc(size);
 
   #endif
 
 #else
   unused_(alignment);
-  ptr = malloc(size);
+  ptr = std::malloc(size);
 
 #endif
 
-  if (is_mem_failed || (ptr == NULL))
+  if (!ptr)
     throw std::bad_alloc();
 
   return ptr;
@@ -90,12 +90,12 @@ deallocate_aligned(T* ptr)
   #elif defined(_WIN32)
     _aligned_free(ptr);
   #else
-    free(ptr);
+    std::free(ptr);
   #endif
 
 #else
   if (ptr)
-    free(ptr);
+    std::free(ptr);
 #endif
 }
 
