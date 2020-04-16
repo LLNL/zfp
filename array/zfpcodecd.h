@@ -1,6 +1,6 @@
 // double-precision 1D codec
 template <>
-class codec<double, 1> : public codec_base<double, 1, zfp_type_double> {
+class codec<double, 1> : public codec_base<double, 1> {
 public:
   // constructor takes pre-allocated buffer of compressed blocks
   codec(void* data, size_t size) : codec_base(data, size) {}
@@ -68,7 +68,7 @@ public:
 
 // double-precision 2D codec
 template <>
-class codec<double, 2> : public codec_base<double, 2, zfp_type_double> {
+class codec<double, 2> : public codec_base<double, 2> {
 public:
   // constructor takes pre-allocated buffer of compressed blocks
   codec(void* data, size_t size) : codec_base(data, size) {}
@@ -143,7 +143,7 @@ public:
 
 // double-precision 3D codec
 template <>
-class codec<double, 3> : public codec_base<double, 3, zfp_type_double> {
+class codec<double, 3> : public codec_base<double, 3> {
 public:
   // constructor takes pre-allocated buffer of compressed blocks
   codec(void* data, size_t size) : codec_base(data, size) {}

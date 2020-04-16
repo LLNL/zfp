@@ -3,11 +3,12 @@
 
 #include <algorithm>
 #include "zfp.h"
+#include "zfp/traits.h"
 
 namespace zfp {
 
 // base class for coding {float, double} x {1D, 2D, 3D} data
-template <typename Scalar, uint dims, zfp_type ztype>
+template <typename Scalar, uint dims>
 class codec_base {
 protected:
   // constructor takes pre-allocated buffer of compressed blocks
@@ -52,7 +53,7 @@ public:
   // set rate in bits/value
   double set_rate(double rate) { return zfp_stream_set_rate(zfp, rate, type, dims, 1); }
 
-  static const zfp_type type = ztype; // scalar type
+  static const zfp_type type = zfp::trait<Scalar>::type; // scalar type
 
 protected:
   static const size_t block_size = 1u << (2 * dims); // block size in number of scalars
