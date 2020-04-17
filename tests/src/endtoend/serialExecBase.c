@@ -72,16 +72,16 @@ _catFunc3(given_, DESCRIPTOR, ZfpStream_when_SetRateWithWriteRandomAccess_expect
 {
   zfp_stream* zfp = zfp_stream_open(NULL);
 
-  // wra currently requires blocks to start at the beginning of a word
+  // align currently requires blocks to start at the beginning of a word
   // rate will be rounded up such that a block fills the rest of the word
   // (would be wasted space otherwise, padded with zeros)
-  double rateWithoutWra = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 0);
-  double rateWithWra = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 1);
-  if (!(rateWithWra >= rateWithoutWra)) {
-    fail_msg("rateWithWra (%lf) >= rateWithoutWra (%lf) failed\n", rateWithWra, rateWithoutWra);
+  double rateWithoutAlign = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, zfp_false);
+  double rateWithAlign = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, zfp_true);
+  if (!(rateWithAlign >= rateWithoutAlign)) {
+    fail_msg("rateWithAlign (%lf) >= rateWithoutAlign (%lf) failed\n", rateWithAlign, rateWithoutAlign);
   }
 
-  uint bitsPerBlock = (uint)floor(rateWithWra * intPow(4, DIMS) + 0.5);
+  uint bitsPerBlock = (uint)floor(rateWithAlign * intPow(4, DIMS) + 0.5);
   assert_int_equal(0, bitsPerBlock % stream_word_bits);
 
   zfp_stream_close(zfp);

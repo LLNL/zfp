@@ -1,96 +1,95 @@
 #ifndef ZFP_FACTORY_H
 #define ZFP_FACTORY_H
 
-// (assumes zfparray.h already included)
+// ensure zfparray.h has already been included
+#ifndef ZFP_ARRAY_H
+  #error "zfparray.h must be included before zfpfactory.h"
+#endif
 
-zfp::array* zfp::array::construct(const zfp::array::header& header, const void* buffer, size_t buffer_size_bytes)
+zfp::array* zfp::array::construct(const zfp::header& header, const void* buffer, size_t buffer_size_bytes)
 {
-  // gather array metadata via C API, then construct with metadata
-  uint dims = 0;
-  zfp_type type = zfp_type_none;
-  double rate = 0;
-  uint n[4] = {0};
-
-  // read once (will throw if reads a noncompatible header)
-  zfp::array::read_header_contents(header, buffer_size_bytes, dims, type, rate, n);
+  // extract metadata from header
+  const uint dims = header.dimensionality();
+  const zfp_type type = header.scalar_type();
+  const double rate = header.rate();
+  const uint nx = header.size_x();
+  const uint ny = header.size_y();
+  const uint nz = header.size_z();
 
   // construct once (passing zfp::array::header will read it again)
   zfp::array* arr = 0;
-  std::string err_msg = "";
+  std::string error;
   switch (dims) {
     case 3:
 #ifdef ZFP_ARRAY3_H
       switch (type) {
-        case zfp_type_double:
-          arr = new zfp::array3d(n[0], n[1], n[2], rate);
-          break;
-
         case zfp_type_float:
-          arr = new zfp::array3f(n[0], n[1], n[2], rate);
+          arr = new zfp::array3f(nx, ny, nz, rate);
           break;
-
+        case zfp_type_double:
+          arr = new zfp::array3d(nx, ny, nz, rate);
+          break;
         default:
           /* NOTREACHED */
-          err_msg = "Unexpected ZFP type.";
+          error = "zfp scalar type not supported";
           break;
       }
 #else
-      err_msg = "Header files for 3 dimensional ZFP compressed arrays were not included.";
+      error = "zfparray3 not supported; include zfparray3.h before zfpfactory.h";
 #endif
       break;
 
     case 2:
 #ifdef ZFP_ARRAY2_H
       switch (type) {
-        case zfp_type_double:
-          arr = new zfp::array2d(n[0], n[1], rate);
-          break;
-
         case zfp_type_float:
-          arr = new zfp::array2f(n[0], n[1], rate);
+          arr = new zfp::array2f(nx, ny, rate);
           break;
-
+        case zfp_type_double:
+          arr = new zfp::array2d(nx, ny, rate);
+          break;
         default:
           /* NOTREACHED */
-          err_msg = "Unexpected ZFP type.";
+          error = "zfp scalar type not supported";
           break;
       }
 #else
-      err_msg = "Header files for 2 dimensional ZFP compressed arrays were not included.";
+      error = "zfparray2 not supported; include zfparray2.h before zfpfactory.h";
 #endif
       break;
 
     case 1:
 #ifdef ZFP_ARRAY1_H
       switch (type) {
-        case zfp_type_double:
-          arr = new zfp::array1d(n[0], rate);
-          break;
-
         case zfp_type_float:
-          arr = new zfp::array1f(n[0], rate);
+          arr = new zfp::array1f(nx, rate);
           break;
-
+        case zfp_type_double:
+          arr = new zfp::array1d(nx, rate);
+          break;
         default:
           /* NOTREACHED */
-          err_msg = "Unexpected ZFP type.";
+          error = "zfp scalar type not supported";
           break;
       }
 #else
-      err_msg = "Header files for 1 dimensional ZFP compressed arrays were not included.";
+      error = "zfparray1 not supported; include zfparray1.h before zfpfactory.h";
 #endif
       break;
 
     default:
-      err_msg = "ZFP compressed arrays do not yet support dimensionalities beyond 1, 2, and 3.";
+      error = "zfp array dimensionality other than {1, 2, 3} not supported";
       break;
   }
 
-  if (!err_msg.empty())
-    throw zfp::array::header::exception(err_msg);
+  if (!error.empty())
+    throw zfp::exception(error);
 
-  if (buffer)
+  if (buffer) {
+    if (buffer_size_bytes && buffer_size_bytes < arr->compressed_size())
+      throw zfp::exception("buffer size is smaller than required");
     std::memcpy(arr->compressed_data(), buffer, arr->compressed_size());
+  }
 
   return arr;
 }

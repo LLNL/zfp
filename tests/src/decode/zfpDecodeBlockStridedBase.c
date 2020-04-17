@@ -197,7 +197,7 @@ setupZfpStream(struct setupVars* bundle)
   }
 
   zfp_stream* stream = zfp_stream_open(NULL);
-  zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
+  zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, zfp_false);
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
   char* buffer = calloc(bufsizeBytes, sizeof(char));

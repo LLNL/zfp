@@ -1,19 +1,35 @@
+#ifndef ZFP_HEADER_H
+#define ZFP_HEADER_H
+
+namespace zfp {
+
+// abstract base class for array header
 class header {
 public:
-  class exception : public std::runtime_error {
-  public:
-    exception(const std::string& msg) : runtime_error(msg) {}
+  virtual ~header() {}
 
-    virtual ~exception() throw (){}
-  };
+  // array scalar type
+  virtual zfp_type scalar_type() const = 0;
 
-  static void concat_sentence(std::string& s, const std::string& msg)
+  // array dimensionality
+  virtual uint dimensionality() const
   {
-    if (!s.empty())
-      s += " ";
-    s += msg;
+    return size_z() ? 3 : size_y() ? 2 : size_x() ? 1 : 0;
   }
 
-  uchar buffer[BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS)];
+  // array dimensions
+  virtual size_t size_x() const = 0;
+  virtual size_t size_y() const = 0;
+  virtual size_t size_z() const = 0;
+
+  // rate in bits per value
+  virtual double rate() const = 0;
+
+  // header payload: data pointer and byte size
+  virtual const void* data() const = 0;
+  virtual size_t size() const = 0;
 };
 
+}
+
+#endif

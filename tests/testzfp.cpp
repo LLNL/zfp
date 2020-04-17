@@ -317,7 +317,7 @@ test_rate(zfp_stream* stream, const zfp_field* input, double rate, Scalar tolera
   zfp_type type = zfp_field_type(input);
 
   // allocate memory for compressed data
-  rate = zfp_stream_set_rate(stream, rate, type, dims, 0);
+  rate = zfp_stream_set_rate(stream, rate, type, dims, zfp_false);
   size_t bufsize = zfp_stream_maximum_size(stream, input);
   uchar* buffer = new uchar[bufsize];
   bitstream* s = stream_open(buffer, bufsize);

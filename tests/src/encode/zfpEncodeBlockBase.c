@@ -126,7 +126,7 @@ setupZfpStream(struct setupVars* bundle, int specialValueIndex)
   if (specialValueIndex >= 0) {
     zfp_stream_set_reversible(stream);
   } else {
-    zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
+    zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, zfp_false);
   }
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);

@@ -282,7 +282,7 @@ setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParam
 
     case zfp_mode_fixed_rate:
       bundle->rateParam = computeFixedRateParam(bundle->compressParamNum);
-      zfp_stream_set_rate(bundle->stream, (double)bundle->rateParam, ZFP_TYPE, DIMS, 0);
+      zfp_stream_set_rate(bundle->stream, (double)bundle->rateParam, ZFP_TYPE, DIMS, zfp_false);
       printf("\t\t\t\tFixed rate param: %lu\n", (unsigned long)bundle->rateParam);
 
       break;

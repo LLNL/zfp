@@ -19,7 +19,7 @@ TEST_F(TEST_FIXTURE, when_constructorCalled_then_rateSetWithWriteRandomAccess)
   EXPECT_LT(rate, arr.rate());
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, rate);
-  // wra in 3D supports integer fixed-rates [1, 64] (use <=)
+  // alignment in 3D supports integer fixed-rates [1, 64] (use <=)
   EXPECT_LE(rate, arr.rate());
 #endif
 }
@@ -69,19 +69,19 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
   EXPECT_GT(oldCompressedSize, newCompressedSize);
 }
 
-void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, uint chosenSizeY, uint chosenSizeZ, double chosenRate)
+void VerifyProperHeaderWritten(const zfp::header& h, uint chosenSizeX, uint chosenSizeY, uint chosenSizeZ, double chosenRate)
 {
   // copy header into aligned memory suitable for bitstream r/w
-  size_t num_64bit_entries = DIV_ROUND_UP(ZFP_HEADER_SIZE_BITS, CHAR_BIT * sizeof(uint64));
+  size_t byte_size = h.size();
+  size_t num_64bit_entries = (byte_size + sizeof(uint64) - 1) / sizeof(uint64);
   uint64* buffer = new uint64[num_64bit_entries];
 
-  memcpy(buffer, &h, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
+  memcpy(buffer, h.data(), h.size());
 
   // verify valid header (manually through C API)
-  bitstream* stream = stream_open(buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
-
-  zfp_field* field = zfp_field_alloc();
+  bitstream* stream = stream_open(buffer, byte_size);
   zfp_stream* zfp = zfp_stream_open(stream);
+  zfp_field* field = zfp_field_alloc();
   EXPECT_EQ(ZFP_HEADER_SIZE_BITS, zfp_read_header(zfp, field, ZFP_HEADER_FULL));
 
   // verify header contents
@@ -93,7 +93,7 @@ void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, ui
 
   // to verify rate, we can only compare the 4 compression-param basis
   zfp_stream* expectedZfpStream = zfp_stream_open(0);
-  zfp_stream_set_rate(expectedZfpStream, chosenRate, ZFP_TYPE, testEnv->getDims(), 1);
+  zfp_stream_set_rate(expectedZfpStream, chosenRate, ZFP_TYPE, testEnv->getDims(), zfp_true);
   EXPECT_EQ(expectedZfpStream->minbits, zfp->minbits);
   EXPECT_EQ(expectedZfpStream->maxbits, zfp->maxbits);
   EXPECT_EQ(expectedZfpStream->maxprec, zfp->maxprec);
@@ -129,9 +129,12 @@ TEST_F(TEST_FIXTURE, when_writeHeader_then_cCompatibleHeaderWritten)
   ZFP_ARRAY_TYPE arr(chosenSizeX, chosenSizeY, chosenSizeZ, chosenRate);
 #endif
 
-  zfp::array::header h = arr.get_header();
+  zfp::header* h = arr.header();
+  chosenRate = arr.rate();
 
-  VerifyProperHeaderWritten(h, chosenSizeX, chosenSizeY, chosenSizeZ, chosenRate);
+  VerifyProperHeaderWritten(*h, chosenSizeX, chosenSizeY, chosenSizeZ, chosenRate);
+
+  delete h;
 }
 
 TEST_F(TEST_FIXTURE, when_generateRandomData_then_checksumMatches)
@@ -154,13 +157,13 @@ void FailAndPrintException(std::exception const & e)
 
 TEST_F(TEST_FIXTURE, when_constructorFromSerializedWithInvalidHeader_then_exceptionThrown)
 {
-  zfp::array::header h = {0};
-
+  uchar buffer[0x100] = {};
   try {
+    ZFP_ARRAY_TYPE::header_type h(buffer);
     ZFP_ARRAY_TYPE arr(h, NULL);
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header::exception const & e) {
-    EXPECT_EQ(e.what(), std::string("Invalid ZFP header."));
+  } catch (zfp::exception const & e) {
+    EXPECT_EQ(e.what(), std::string("zfp header is corrupt"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
@@ -169,7 +172,7 @@ TEST_F(TEST_FIXTURE, when_constructorFromSerializedWithInvalidHeader_then_except
 TEST_F(TEST_FIXTURE, given_zfpHeaderForCertainDimensionalityButHeaderMissing_when_construct_expect_zfpArrayHeaderExceptionThrown)
 {
   uint missingDim = ((DIMS + 1) % 3) + 1;
-  zfp_stream_set_rate(stream, 12, ZFP_TYPE, missingDim, 1);
+  zfp_stream_set_rate(stream, 12, ZFP_TYPE, missingDim, zfp_true);
 
   zfp_field_set_type(field, ZFP_TYPE);
   switch(missingDim) {
@@ -191,17 +194,15 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForCertainDimensionalityButHeaderMissing_whe
   EXPECT_EQ(ZFP_HEADER_SIZE_BITS, zfp_write_header(stream, field, ZFP_HEADER_FULL));
   zfp_stream_flush(stream);
 
-  zfp::array::header h;
-  // zfp::array::header collects header up to next byte
-  memcpy(h.buffer, buffer, BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
+  ZFP_ARRAY_TYPE::header_type h(buffer);
 
   try {
     zfp::array* arr = zfp::array::construct(h);
     FailWhenNoExceptionThrown();
 
-  } catch (zfp::array::header::exception const & e) {
+  } catch (zfp::exception const & e) {
     std::stringstream ss;
-    ss << "Header files for " << missingDim << " dimensional ZFP compressed arrays were not included.";
+    ss << "zfparray" << missingDim << " not supported; include zfparray" << missingDim << ".h before zfpfactory.h";
     EXPECT_EQ(e.what(), ss.str());
 
   } catch (std::exception const & e) {
@@ -219,16 +220,18 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayFromWrongScalarType_when_con
   ZFP_ARRAY_TYPE_WRONG_SCALAR arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #endif
 
-  zfp::array::header h = arr.get_header();
+  zfp::header* h = arr.header();
 
   try {
-    ZFP_ARRAY_TYPE arr2(h, arr.compressed_data());
+    ZFP_ARRAY_TYPE arr2(*h, arr.compressed_data());
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header::exception const & e) {
-    EXPECT_EQ(e.what(), std::string("ZFP header specified an underlying scalar type different than that for this object."));
+  } catch (zfp::exception const & e) {
+    EXPECT_EQ(e.what(), std::string("zfp array scalar type does not match header"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
+
+  delete h;
 }
 
 TEST_F(TEST_FIXTURE, given_serializedCompressedArrayFromWrongDimensionality_when_constructorFromSerialized_then_exceptionThrown)
@@ -241,16 +244,18 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayFromWrongDimensionality_when
   ZFP_ARRAY_TYPE_WRONG_DIM arr(100, ZFP_RATE_PARAM_BITS);
 #endif
 
-  zfp::array::header h = arr.get_header();
+  zfp::header* h = arr.header();
 
   try {
-    ZFP_ARRAY_TYPE arr2(h, arr.compressed_data());
+    ZFP_ARRAY_TYPE arr2(*h, arr.compressed_data());
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header::exception const & e) {
-    EXPECT_EQ(e.what(), std::string("ZFP header specified a dimensionality different than that for this object."));
+  } catch (zfp::exception const & e) {
+    EXPECT_EQ(e.what(), std::string("zfp array dimensionality does not match header"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
+
+  delete h;
 }
 
 TEST_F(TEST_FIXTURE, given_serializedNonFixedRateHeader_when_constructorFromSerialized_then_exceptionThrown)
@@ -286,8 +291,6 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateHeader_when_constructorFromSeri
 
   // copy header into header
   size_t headerSizeBytes = DIV_ROUND_UP(writtenBits, CHAR_BIT);
-  zfp::array::header h;
-  memcpy(h.buffer, buffer, headerSizeBytes);
 
   // compress data
   uchar* compressedDataPtr = (uchar*)stream_data(bs) + headerSizeBytes;
@@ -299,10 +302,11 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateHeader_when_constructorFromSeri
   stream_close(bs);
 
   try {
+    ZFP_ARRAY_TYPE::header_type h(buffer, headerSizeBytes);
     ZFP_ARRAY_TYPE arr2(h, compressedDataPtr, bufsizeBytes - headerSizeBytes);
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header::exception const & e) {
-    EXPECT_EQ(e.what(), std::string("ZFP header specified a non fixed-rate mode, unsupported by this object."));
+  } catch (zfp::exception const & e) {
+    EXPECT_EQ(e.what(), std::string("zfp deserialization supports only fixed-rate mode"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
@@ -344,8 +348,6 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateWrongScalarTypeWrongDimensional
 
   // copy header into header
   size_t headerSizeBytes = (writtenBits + CHAR_BIT - 1) / CHAR_BIT;
-  zfp::array::header h;
-  memcpy(h.buffer, buffer, headerSizeBytes);
 
   // compress data
   uchar* compressedDataPtr = (uchar*)stream_data(bs) + headerSizeBytes;
@@ -357,14 +359,18 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateWrongScalarTypeWrongDimensional
   stream_close(bs);
 
   try {
+    ZFP_ARRAY_TYPE::header_type h(buffer, headerSizeBytes);
     ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM arr2(h, compressedDataPtr, bufsizeBytes - headerSizeBytes);
     FailWhenNoExceptionThrown();
 
-  } catch (zfp::array::header::exception const & e) {
-    EXPECT_TRUE(strstr(e.what(), "ZFP header specified an underlying scalar type different than that for this object.") != NULL);
-    EXPECT_TRUE(strstr(e.what(), "ZFP header specified a dimensionality different than that for this object.") != NULL);
-    EXPECT_TRUE(strstr(e.what(), "ZFP compressed arrays do not yet support scalar types beyond floats and doubles.") != NULL);
-    EXPECT_TRUE(strstr(e.what(), "ZFP header specified a non fixed-rate mode, unsupported by this object.") != NULL);
+  } catch (zfp::exception const & e) {
+    // exception must match one of these
+    EXPECT_TRUE(
+      e.what() == std::string("zfp array scalar type does not match header") ||
+      e.what() == std::string("zfp array dimensionality does not match header") ||
+      e.what() == std::string("zfp serialization supports only float and double") ||
+      e.what() == std::string("zfp deserialization supports only fixed-rate mode")
+    );
 
     // print exception if any of above were not met
     if (HasFailure()) {
@@ -392,6 +398,8 @@ TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSe
 #endif
 
   zfp_stream* stream = zfp_stream_open(NULL);
+  double rate = zfp_stream_set_rate(stream, 10, ZFP_TYPE, DIMS, zfp_true);
+  EXPECT_EQ(zfp_mode_fixed_rate, zfp_stream_compression_mode(stream));
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
   uchar* buffer = new uchar[bufsizeBytes];
@@ -401,9 +409,6 @@ TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSe
   zfp_stream_set_bit_stream(stream, bs);
   zfp_stream_rewind(stream);
 
-  double rate = zfp_stream_set_rate(stream, 10, ZFP_TYPE, DIMS, 1);
-  EXPECT_EQ(zfp_mode_fixed_rate, zfp_stream_compression_mode(stream));
-
   // write header
   size_t writtenBits = zfp_write_header(stream, field, ZFP_HEADER_FULL);
   EXPECT_EQ(ZFP_HEADER_SIZE_BITS, writtenBits);
@@ -411,14 +416,13 @@ TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSe
 
   // copy header into header
   size_t headerSizeBytes = (writtenBits + CHAR_BIT - 1) / CHAR_BIT;
-  zfp::array::header h;
-  memcpy(h.buffer, buffer, headerSizeBytes);
 
   // compress data
   uchar* compressedDataPtr = (uchar*)stream_data(bs) + headerSizeBytes;
   zfp_compress(stream, field);
 
   try {
+    ZFP_ARRAY_TYPE::header_type h(buffer, headerSizeBytes);
     ZFP_ARRAY_TYPE arr2(h, compressedDataPtr, bufsizeBytes - headerSizeBytes);
 
     EXPECT_EQ(arr2.dimensionality(), zfp_field_dimensionality(field));
@@ -460,16 +464,18 @@ TEST_F(TEST_FIXTURE, given_incompleteChunkOfSerializedCompressedArray_when_const
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #endif
 
-  zfp::array::header h = arr.get_header();
+  zfp::header* h = arr.header();
 
   try {
-    ZFP_ARRAY_TYPE arr2(h, arr.compressed_data(), arr.compressed_size() - 1);
+    ZFP_ARRAY_TYPE arr2(*h, arr.compressed_data(), arr.compressed_size() - 1);
     FailWhenNoExceptionThrown();
-  } catch (zfp::array::header::exception const & e) {
-    EXPECT_EQ(e.what(), std::string("ZFP header expects a longer buffer than what was passed in."));
+  } catch (zfp::exception const & e) {
+    EXPECT_EQ(e.what(), std::string("buffer size is smaller than required"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
+
+  delete h;
 }
 
 TEST_F(TEST_FIXTURE, given_serializedCompressedArrayHeader_when_factoryFuncConstruct_then_correctTypeConstructed)
@@ -482,15 +488,16 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayHeader_when_factoryFuncConst
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #endif
 
-  zfp::array::header h = arr.get_header();
+  zfp::header* h = arr.header();
 
-  array* arr2 = zfp::array::construct(h);
+  array* arr2 = zfp::array::construct(*h);
 
   ASSERT_TRUE(arr2 != 0);
   ASSERT_TRUE(dynamic_cast<ZFP_ARRAY_TYPE *>(arr2) != NULL);
   ASSERT_TRUE(dynamic_cast<ZFP_ARRAY_TYPE_WRONG_DIM *>(arr2) == NULL);
 
   delete arr2;
+  delete h;
 }
 
 TEST_F(TEST_FIXTURE, given_serializedCompressedArray_when_factoryFuncConstruct_then_correctTypeConstructedWithPopulatedEntries)
@@ -505,29 +512,29 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArray_when_factoryFuncConstruct_t
 
   arr[1] = 999.;
 
-  zfp::array::header h = arr.get_header();
+  zfp::header* h = arr.header();
 
-  array* arr2 = zfp::array::construct(h, arr.compressed_data(), arr.compressed_size());
+  array* arr2 = zfp::array::construct(*h, arr.compressed_data(), arr.compressed_size());
 
   ASSERT_TRUE(arr2 != 0);
   EXPECT_EQ(arr.compressed_size(), arr2->compressed_size());
   ASSERT_TRUE(std::memcmp(arr.compressed_data(), arr2->compressed_data(), arr.compressed_size()) == 0);
 
   delete arr2;
+  delete h;
 }
 
 TEST_F(TEST_FIXTURE, given_uncompatibleSerializedMem_when_factoryFuncConstruct_then_throwsZfpHeaderException)
 {
-  zfp::array::header h = {0};
-
   size_t dummyLen = 1024;
   uchar* dummyMem = new uchar[dummyLen];
   memset(dummyMem, 0, dummyLen);
 
   try {
+    ZFP_ARRAY_TYPE::header_type h(dummyMem);
     array* arr = zfp::array::construct(h, dummyMem, dummyLen);
-  } catch (zfp::array::header::exception const & e) {
-    EXPECT_EQ(e.what(), std::string("Invalid ZFP header."));
+  } catch (zfp::exception const & e) {
+    EXPECT_EQ(e.what(), std::string("zfp header is corrupt"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
@@ -774,13 +781,16 @@ TEST_P(TEST_FIXTURE, given_compressedArray_when_setSecondArrayEqualToFirst_then_
 
 void CheckHeadersEquivalent(const ZFP_ARRAY_TYPE& arr1, const ZFP_ARRAY_TYPE& arr2)
 {
-  zfp::array::header h[2];
-  h[0] = arr1.get_header();
-  h[1] = arr2.get_header();
+  zfp::header* h[2];
+  h[0] = arr1.header();
+  h[1] = arr2.header();
 
-  uint64 header1Checksum = hashBitstream((uint64*)(h + 0), BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
-  uint64 header2Checksum = hashBitstream((uint64*)(h + 1), BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
+  uint64 header1Checksum = hashBitstream((uint64*)(h[0]->data()), BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
+  uint64 header2Checksum = hashBitstream((uint64*)(h[1]->data()), BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS));
   EXPECT_PRED_FORMAT2(ExpectEqPrintHexPred, header1Checksum, header2Checksum);
+
+  delete h[0];
+  delete h[1];
 }
 
 // this clears arr1's entries
@@ -811,12 +821,14 @@ TEST_P(TEST_FIXTURE, given_serializedCompressedArray_when_constructorFromSeriali
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #endif
 
-  zfp::array::header h = arr.get_header();
+  zfp::header* h = arr.header();
 
-  ZFP_ARRAY_TYPE arr2(h, arr.compressed_data(), arr.compressed_size());
+  ZFP_ARRAY_TYPE arr2(*h, arr.compressed_data(), arr.compressed_size());
 
   CheckHeadersEquivalent(arr, arr2);
   CheckDeepCopyPerformed(arr, arr2);
   // cache size not preserved
   CheckMemberVarsCopied(arr, arr2, false);
+
+  delete h;
 }
