@@ -3,7 +3,7 @@ template <>
 class codec<double, 1> : public codec_base<double, 1> {
 public:
   // constructor takes pre-allocated buffer of compressed blocks
-  codec(void* data, size_t size) : codec_base(data, size) {}
+  codec(void* data, size_t size) : codec_base<double, 1>(data, size) {}
 
   // encode contiguous 1D block
   size_t encode_block(size_t offset, uint shape, const double* block)
@@ -71,7 +71,7 @@ template <>
 class codec<double, 2> : public codec_base<double, 2> {
 public:
   // constructor takes pre-allocated buffer of compressed blocks
-  codec(void* data, size_t size) : codec_base(data, size) {}
+  codec(void* data, size_t size) : codec_base<double, 2>(data, size) {}
 
   // clone object
   codec* clone() const { return 0; }
@@ -146,7 +146,7 @@ template <>
 class codec<double, 3> : public codec_base<double, 3> {
 public:
   // constructor takes pre-allocated buffer of compressed blocks
-  codec(void* data, size_t size) : codec_base(data, size) {}
+  codec(void* data, size_t size) : codec_base<double, 3>(data, size) {}
 
   // clone object
   codec* clone() const { return 0; }
