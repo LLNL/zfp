@@ -63,6 +63,12 @@
 
 /* types ------------------------------------------------------------------- */
 
+/* Booleans */
+typedef enum {
+  zfp_false = 0,         /* false */
+  zfp_true  = !zfp_false /* true */
+} zfp_bool;
+
 /* execution policy */
 typedef enum {
   zfp_exec_serial = 0, /* serial execution (default) */
@@ -225,7 +231,7 @@ zfp_stream_set_rate(
   double rate,        /* desired rate in compressed bits/scalar */
   zfp_type type,      /* scalar type to compress */
   uint dims,          /* array dimensionality (1, 2, 3, or 4) */
-  int wra             /* nonzero if write random access is needed */
+  zfp_bool align      /* word-aligned blocks, e.g., for write random access */
 );
 
 /* set precision in uncompressed bits/scalar (fixed-precision mode) */

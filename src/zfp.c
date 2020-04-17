@@ -617,7 +617,7 @@ zfp_stream_set_reversible(zfp_stream* zfp)
 }
 
 double
-zfp_stream_set_rate(zfp_stream* zfp, double rate, zfp_type type, uint dims, int wra)
+zfp_stream_set_rate(zfp_stream* zfp, double rate, zfp_type type, uint dims, zfp_bool align)
 {
   uint n = 1u << (2 * dims);
   uint bits = (uint)floor(n * rate + 0.5);
@@ -631,7 +631,7 @@ zfp_stream_set_rate(zfp_stream* zfp, double rate, zfp_type type, uint dims, int 
     default:
       break;
   }
-  if (wra) {
+  if (align) {
     /* for write random access, round up to next multiple of stream word size */
     bits += (uint)stream_word_bits - 1;
     bits &= ~(stream_word_bits - 1);
