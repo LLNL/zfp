@@ -74,7 +74,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_incrementIterator_then_positionTravers
     }
   }
 
-  EXPECT_EQ(arr.end(), iter);
+//  EXPECT_EQ(arr.end(), iter); // triggers googletest issue #742
+  EXPECT_TRUE(arr.end() == iter);
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_decrementIterator_then_positionTraversesCorrectly)
@@ -98,7 +99,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_decrementIterator_then_positionTravers
     }
   }
 
-  EXPECT_EQ(arr.begin(), iter);
+//  EXPECT_EQ(arr.begin(), iter); // triggers googletest issue #742
+  EXPECT_TRUE(arr.begin() == iter);
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_subtractTwoIterators_then_resultIsDifference)

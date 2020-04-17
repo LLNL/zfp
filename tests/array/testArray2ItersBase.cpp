@@ -30,5 +30,6 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, given_partialBlocks_when_incrementIterator_
     }
   }
 
-  EXPECT_EQ(arr.end(), iter);
+//  EXPECT_EQ(arr.end(), iter); // triggers googletest issue #742
+  EXPECT_TRUE(arr.end() == iter);
 }
