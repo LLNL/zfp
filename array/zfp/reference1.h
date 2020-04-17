@@ -50,7 +50,7 @@ protected:
   // assign value through reference
   void set(value_type val) { container->set(i, val); }
 
-  using const_handle::get;
-  using const_handle::container;
-  using const_handle::i;
+  using const_reference::get;
+  using const_reference::container;
+  using const_reference::i;
 };

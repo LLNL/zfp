@@ -88,6 +88,5 @@ public:
 
 protected:
   using const_iterator::increment;
-
-  using const_handle::container;
+  using const_iterator::container;
 };

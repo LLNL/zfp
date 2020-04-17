@@ -103,8 +103,7 @@ protected:
   using const_pointer::advance;
   using const_pointer::increment;
   using const_pointer::decrement;
-
-  using const_handle::container;
-  using const_handle::i;
-  using const_handle::j;
+  using const_pointer::container;
+  using const_pointer::i;
+  using const_pointer::j;
 };
