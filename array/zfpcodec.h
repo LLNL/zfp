@@ -2,7 +2,10 @@
 #define ZFP_CODEC_H
 
 #include <algorithm>
+#include <climits>
+#include <cstring>
 #include "zfp.h"
+#include "zfp/header.h"
 #include "zfp/traits.h"
 
 namespace zfp {
@@ -51,9 +54,12 @@ public:
   double rate() const { return double(zfp->maxbits) / block_size; }
 
   // set rate in bits/value
-  double set_rate(double rate) { return zfp_stream_set_rate(zfp, rate, type, dims, 1); }
+  double set_rate(double rate) { return zfp_stream_set_rate(zfp, rate, type, dims, zfp_true); }
 
   static const zfp_type type = zfp::trait<Scalar>::type; // scalar type
+
+  // zfp::codec_base::header class for array (de)serialization
+  #include "zfp/zfpheader.h"
 
 protected:
   static const size_t block_size = 1u << (2 * dims); // block size in number of scalars
@@ -65,8 +71,8 @@ protected:
 template <typename Scalar, uint dims>
 class codec {};
 
-#include "zfpcodecf.h"
-#include "zfpcodecd.h"
+#include "zfp/zfpcodecf.h"
+#include "zfp/zfpcodecd.h"
 
 }
 
