@@ -162,6 +162,13 @@ stream_write_word(bitstream* s, word value)
 
 /* public functions -------------------------------------------------------- */
 
+/* word size in bits (equals stream_word_bits) */
+inline_ size_t
+stream_alignment()
+{
+  return wsize;
+}
+
 /* pointer to beginning of stream */
 inline_ void*
 stream_data(const bitstream* s)
