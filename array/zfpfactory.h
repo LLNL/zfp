@@ -86,8 +86,10 @@ zfp::array* zfp::array::construct(const zfp::header& header, const void* buffer,
     throw zfp::exception(error);
 
   if (buffer) {
-    if (buffer_size_bytes && buffer_size_bytes < arr->compressed_size())
-      throw zfp::exception("buffer size is smaller than required");
+    if (buffer_size_bytes && buffer_size_bytes < arr->compressed_size()) {
+      delete arr;
+      throw zfp::exception("zfp buffer size is smaller than required");
+    }
     std::memcpy(arr->compressed_data(), buffer, arr->compressed_size());
   }
 

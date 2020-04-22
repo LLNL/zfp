@@ -112,8 +112,7 @@ TEST_F(TEST_FIXTURE, given_validHeaderBuffer_withBufferSizeTooLow_when_construct
     zfp::array* arr2 = zfp::array::construct(*h, arr.compressed_data(), 1);
     FailWhenNoExceptionThrown();
   } catch (zfp::exception const & e) {
-    // TODO: update string
-    EXPECT_EQ(e.what(), std::string("buffer size is smaller than required"));
+    EXPECT_EQ(e.what(), std::string("zfp buffer size is smaller than required"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
