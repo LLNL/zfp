@@ -73,9 +73,6 @@ public:
   // constructor takes pre-allocated buffer of compressed blocks
   codec(void* data, size_t size) : codec_base<float, 2>(data, size) {}
 
-  // clone object
-  codec* clone() const { return 0; }
-
   // encode contiguous 2D block
   size_t encode_block(size_t offset, uint shape, const float* block)
   {
@@ -147,9 +144,6 @@ class codec<float, 3> : public codec_base<float, 3> {
 public:
   // constructor takes pre-allocated buffer of compressed blocks
   codec(void* data, size_t size) : codec_base<float, 3>(data, size) {}
-
-  // clone object
-  codec* clone() const { return 0; }
 
   // encode contiguous 3D block
   size_t encode_block(size_t offset, uint shape, const float* block)

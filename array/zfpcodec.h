@@ -30,24 +30,13 @@ public:
     stream_close(stream);
   }
 
-#if 0
-  codec_base* clone() const
-  {
-    const bitstream* stream = zfp_stream_bit_stream(zfp);
-    codec_base* c = new codec_base(stream_begin(stream), stream_capacity(stream));
-    stream = zfp_stream_bit_stream(c->zfp);
-    *c->zfp = *zfp;
-    zfp_stream_set_bit_stream(c->zfp, stream);
-    return c;
-  }
-#endif
-
   // return nearest rate supported
   static double nearest_rate(double target_rate)
   {
-    size_t bits = size_t(target_rate * block_size);
-    size_t words = (bits + stream_word_bits - 1) / stream_word_bits;
-    return std::max(words, size_t(1)) * stream_word_bits / block_size;
+    size_t bits = static_cast<size_t>(target_rate * block_size);
+    size_t words = (bits + stream_alignment() - 1) / stream_alignment();
+    words = std::max(words, size_t(1));
+    return static_cast<double>(words) * stream_word_bits / block_size;
   }
 
   // rate in bits/value
