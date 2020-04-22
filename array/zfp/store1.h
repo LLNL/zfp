@@ -30,6 +30,9 @@ public:
     set_rate(rate);
   }
 
+  // destructor
+  ~BlockStore1() { free(); }
+
   // perform a deep copy
   void deep_copy(const BlockStore1& s)
   {
