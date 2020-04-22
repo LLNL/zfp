@@ -33,10 +33,10 @@ public:
   // return nearest rate supported
   static double nearest_rate(double target_rate)
   {
-    size_t bits = static_cast<size_t>(target_rate * block_size);
-    size_t words = (bits + stream_alignment() - 1) / stream_alignment();
-    words = std::max(words, size_t(1));
-    return static_cast<double>(words) * stream_word_bits / block_size;
+    size_t block_bits = static_cast<size_t>(target_rate * block_size);
+    size_t word_bits = stream_alignment();
+    size_t words = std::max((block_bits + word_bits - 1) / word_bits, size_t(1));
+    return static_cast<double>(words * word_bits) / block_size;
   }
 
   // rate in bits/value
