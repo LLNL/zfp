@@ -5,7 +5,6 @@
 #include <climits>
 #include <cstring>
 #include "zfp.h"
-#include "zfp/header.h"
 #include "zfp/traits.h"
 
 namespace zfp {

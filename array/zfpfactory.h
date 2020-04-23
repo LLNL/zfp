@@ -6,7 +6,7 @@
   #error "zfparray.h must be included before zfpfactory.h"
 #endif
 
-zfp::array* zfp::array::construct(const zfp::header& header, const void* buffer, size_t buffer_size_bytes)
+zfp::array* zfp::array::construct(const zfp::array::header& header, const void* buffer, size_t buffer_size_bytes)
 {
   // extract metadata from header
   const uint dims = header.dimensionality();

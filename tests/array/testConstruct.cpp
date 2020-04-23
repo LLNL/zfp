@@ -106,18 +106,16 @@ TEST_F(TEST_FIXTURE, given_validHeaderBuffer_withBufferSizeTooLow_when_construct
 {
   zfp::array3d arr(12, 12, 12, 32);
 
-  zfp::header* h = arr.header();
+  zfp::array3d::header h(arr);
 
   try {
-    zfp::array* arr2 = zfp::array::construct(*h, arr.compressed_data(), 1);
+    zfp::array* arr2 = zfp::array::construct(h, arr.compressed_data(), 1);
     FailWhenNoExceptionThrown();
   } catch (zfp::exception const & e) {
     EXPECT_EQ(e.what(), std::string("zfp buffer size is smaller than required"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
-
-  delete h;
 }
 
 TEST_F(TEST_FIXTURE, given_compressedArrayWithLongHeader_when_writeHeader_expect_zfpArrayHeaderExceptionThrown)
@@ -125,7 +123,7 @@ TEST_F(TEST_FIXTURE, given_compressedArrayWithLongHeader_when_writeHeader_expect
   zfp::array3d arr(12, 12, 12, 33);
 
   try {
-    zfp::header* h = arr.header();
+    zfp::array3d::header h(arr);
     FailWhenNoExceptionThrown();
   } catch (zfp::exception const & e) {
     EXPECT_EQ(e.what(), std::string("zfp serialization supports only short headers"));

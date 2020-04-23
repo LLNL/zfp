@@ -19,7 +19,7 @@ public:
   typedef array2 container_type;
   typedef Scalar value_type;
   typedef Codec codec_type;
-  typedef typename Codec::header header_type;
+  typedef typename Codec::header header;
 
   // forward declarations
   class const_reference;
@@ -56,7 +56,7 @@ public:
   }
 
   // constructor, from previously-serialized compressed array
-  array2(const zfp::header& header, const void* buffer = 0, size_t buffer_size_bytes = 0) :
+  array2(const zfp::array::header& header, const void* buffer = 0, size_t buffer_size_bytes = 0) :
     array(2, Codec::type, header),
     store(header.size_x(), header.size_y(), header.rate()),
     cache(store)
@@ -131,9 +131,6 @@ public:
     cache.flush();
     return store.compressed_data();
   }
-
-  // header for array serialization
-  zfp::header* header() const { return new typename Codec::header(type, nx, ny, rate()); }
 
   // cache size in number of bytes
   size_t cache_size() const { return cache.size(); }
