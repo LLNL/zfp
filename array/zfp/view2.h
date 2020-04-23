@@ -3,7 +3,7 @@
 // abstract view of 2D array (base class)
 class preview {
 public:
-  typedef container_type::value_type value_type;
+  typedef typename container_type::value_type value_type;
 
   // rate in bits per value
   double rate() const { return array->rate(); }

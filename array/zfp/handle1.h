@@ -1,7 +1,7 @@
 // const handle to a 1D array or view element; this class is nested within container_type
 class const_handle {
 public:
-  typedef container_type::value_type value_type;
+  typedef typename container_type::value_type value_type;
 
 protected:
   // protected constructor

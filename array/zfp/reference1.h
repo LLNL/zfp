@@ -1,7 +1,7 @@
 // const reference to a 1D array or view element; this class is nested within container_type
 class const_reference : const_handle {
 public:
-  typedef container_type::value_type value_type;
+  typedef typename container_type::value_type value_type;
 
   // constructor
   explicit const_reference(container_type* container, uint i) : const_handle(container, i) {}

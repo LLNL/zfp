@@ -2,14 +2,14 @@
 class const_iterator : public const_handle {
 public:
   // typedefs for STL compatibility
-  typedef container_type::value_type value_type;
+  typedef typename container_type::value_type value_type;
   typedef ptrdiff_t difference_type;
-  typedef container_type::reference reference;
-  typedef container_type::pointer pointer;
+  typedef typename container_type::reference reference;
+  typedef typename container_type::pointer pointer;
   typedef std::forward_iterator_tag iterator_category;
 
-  typedef container_type::const_reference const_reference;
-  typedef container_type::const_pointer const_pointer;
+  typedef typename container_type::const_reference const_reference;
+  typedef typename container_type::const_pointer const_pointer;
 
   // default constructor
   const_iterator() : const_handle(0, 0, 0) {}
@@ -60,10 +60,10 @@ protected:
 class iterator : public const_iterator {
 public:
   // typedefs for STL compatibility
-  typedef container_type::value_type value_type;
+  typedef typename container_type::value_type value_type;
   typedef ptrdiff_t difference_type;
-  typedef container_type::reference reference;
-  typedef container_type::pointer pointer;
+  typedef typename container_type::reference reference;
+  typedef typename container_type::pointer pointer;
   typedef std::forward_iterator_tag iterator_category;
 
   // default constructor
