@@ -52,7 +52,7 @@ public:
   {
     for (typename zfp::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
       if (p->tag.dirty()) {
-        uint block_index = p->tag.index() - 1;
+        size_t block_index = p->tag.index() - 1;
         store.encode(codec, block_index, p->line->data());
       }
       cache.flush(p->line);
@@ -68,30 +68,30 @@ public:
   }
 
   // inspector
-  Scalar get(uint i, uint j) const
+  Scalar get(size_t i, size_t j) const
   {
     const CacheLine* p = line(i, j, false);
     return (*p)(i, j);
   }
 
   // mutator
-  void set(uint i, uint j, Scalar val)
+  void set(size_t i, size_t j, Scalar val)
   {
     CacheLine* p = line(i, j, true);
     (*p)(i, j) = val;
   }
 
   // reference to cached element
-  Scalar& ref(uint i, uint j)
+  Scalar& ref(size_t i, size_t j)
   {
     CacheLine* p = line(i, j, true);
     return (*p)(i, j);
   }
 
   // copy block from cache, if cached, or fetch from persistent storage without caching
-  void get_block(uint block_index, Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
+  void get_block(size_t block_index, Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
   {
-    const CacheLine* line = cache.lookup(block_index + 1, false);
+    const CacheLine* line = cache.lookup((uint)block_index + 1, false);
     if (line)
       line->get(p, sx, sy, store.block_shape(block_index));
     else
@@ -99,9 +99,9 @@ public:
   }
 
   // copy block to cache, if cached, or store to persistent storage without caching
-  void put_block(uint block_index, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
+  void put_block(size_t block_index, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
   {
-    CacheLine* line = cache.lookup(block_index + 1, true);
+    CacheLine* line = cache.lookup((uint)block_index + 1, true);
     if (line)
       line->put(p, sx, sy, store.block_shape(block_index));
     else
@@ -129,8 +129,8 @@ protected:
   class CacheLine {
   public:
     // accessors
-    Scalar operator()(uint i, uint j) const { return a[index(i, j)]; }
-    Scalar& operator()(uint i, uint j) { return a[index(i, j)]; }
+    Scalar operator()(size_t i, size_t j) const { return a[index(i, j)]; }
+    Scalar& operator()(size_t i, size_t j) { return a[index(i, j)]; }
 
     // pointer to decompressed block data
     const Scalar* data() const { return a; }
@@ -187,17 +187,17 @@ protected:
     }
 
   protected:
-    static uint index(uint i, uint j) { return (i & 3u) + 4 * (j & 3u); }
+    static size_t index(size_t i, size_t j) { return (i & 3u) + 4 * (j & 3u); }
     Scalar a[4 * 4];
   };
 
   // return cache line for (i, j); may require write-back and fetch
-  CacheLine* line(uint i, uint j, bool write) const
+  CacheLine* line(size_t i, size_t j, bool write) const
   {
     CacheLine* p = 0;
-    uint block_index = store.block_index(i, j);
-    typename zfp::Cache<CacheLine>::Tag tag = cache.access(p, block_index + 1, write);
-    uint stored_block_index = tag.index() - 1;
+    size_t block_index = store.block_index(i, j);
+    typename zfp::Cache<CacheLine>::Tag tag = cache.access(p, (uint)block_index + 1, write);
+    size_t stored_block_index = tag.index() - 1;
     if (stored_block_index != block_index) {
       // write back occupied cache line if it is dirty
       if (tag.dirty())
@@ -220,7 +220,7 @@ protected:
   // number of cache lines corresponding to size (or suggested size if zero)
   static uint lines(size_t bytes, size_t blocks)
   {
-    uint n = bytes ? uint((bytes + sizeof(CacheLine) - 1) / sizeof(CacheLine)) : lines(blocks);
+    uint n = bytes ? static_cast<uint>((bytes + sizeof(CacheLine) - 1) / sizeof(CacheLine)) : lines(blocks);
     return std::max(n, 1u);
   }
 

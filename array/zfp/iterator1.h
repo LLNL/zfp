@@ -15,7 +15,7 @@ public:
   const_iterator() : const_handle(0, 0) {}
 
   // constructor
-  explicit const_iterator(container_type* container, uint i) : const_handle(container, i) {}
+  explicit const_iterator(container_type* container, size_t i) : const_handle(container, i) {}
 
   // dereference iterator
   const_reference operator*() const { return const_reference(container, i()); }
@@ -45,7 +45,7 @@ public:
   const_iterator operator-=(difference_type d) { advance(-d); return *this; }
 
   // container index of value referenced by iterator
-  uint i() const { return const_handle::i; }
+  size_t i() const { return const_handle::i; }
 
 protected:
   difference_type offset() const { return static_cast<difference_type>(i()); }
@@ -70,7 +70,7 @@ public:
   iterator() : const_iterator(0, 0) {}
 
   // constructor
-  explicit iterator(container_type* container, uint i) : const_iterator(container, i) {}
+  explicit iterator(container_type* container, size_t i) : const_iterator(container, i) {}
 
   // dereference iterator
   reference operator*() const { return reference(container, i()); }

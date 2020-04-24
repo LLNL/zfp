@@ -44,7 +44,7 @@ public:
 
   // constructor of nx * ny array using rate bits per value, at least
   // cache_size bytes of cache, and optionally initialized from flat array p
-  array2(uint nx, uint ny, double rate, const Scalar* p = 0, size_t cache_size = 0) :
+  array2(size_t nx, size_t ny, double rate, const Scalar* p = 0, size_t cache_size = 0) :
     array(2, Codec::type),
     store(nx, ny, rate),
     cache(store, cache_size)
@@ -101,14 +101,14 @@ public:
   }
 
   // total number of elements in array
-  size_t size() const { return size_t(nx) * size_t(ny); }
+  size_t size() const { return nx * ny; }
 
   // array dimensions
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
+  size_t size_x() const { return nx; }
+  size_t size_y() const { return ny; }
 
   // resize the array (all previously stored data will be lost)
-  void resize(uint nx, uint ny, bool clear = true)
+  void resize(size_t nx, size_t ny, bool clear = true)
   {
     this->nx = nx;
     this->ny = ny;
@@ -151,39 +151,43 @@ public:
   // decompress array and store at p
   void get(Scalar* p) const
   {
-    const uint bx = (uint)store.block_size_x();
-    const uint by = (uint)store.block_size_y();
-    uint block_index = 0;
-    for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
-      for (uint i = 0; i < bx; i++, p += 4)
-        cache.get_block(block_index++, p, 1, nx);
+    const size_t bx = store.block_size_x();
+    const size_t by = store.block_size_y();
+    const ptrdiff_t sx = 1;
+    const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
+    size_t block_index = 0;
+    for (size_t j = 0; j < by; j++, p += 4 * (nx - bx))
+      for (size_t i = 0; i < bx; i++, p += 4)
+        cache.get_block(block_index++, p, sx, sy);
   }
 
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
-    const uint bx = (uint)store.block_size_x();
-    const uint by = (uint)store.block_size_y();
-    uint block_index = 0;
-    for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
-      for (uint i = 0; i < bx; i++, p += 4)
-        cache.put_block(block_index++, p, 1, nx);
+    const size_t bx = store.block_size_x();
+    const size_t by = store.block_size_y();
+    const ptrdiff_t sx = 1;
+    const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
+    size_t block_index = 0;
+    for (size_t j = 0; j < by; j++, p += 4 * (nx - bx))
+      for (size_t i = 0; i < bx; i++, p += 4)
+        cache.put_block(block_index++, p, sx, sy);
   }
 
   // (i, j) accessors
-  Scalar operator()(uint i, uint j) const { return get(i, j); }
-  reference operator()(uint i, uint j) { return reference(this, i, j); }
+  Scalar operator()(size_t i, size_t j) const { return get(i, j); }
+  reference operator()(size_t i, size_t j) { return reference(this, i, j); }
 
   // flat index accessors
-  Scalar operator[](uint index) const
+  Scalar operator[](size_t index) const
   {
-    uint i, j;
+    size_t i, j;
     ij(i, j, index);
     return get(i, j);
   }
-  reference operator[](uint index)
+  reference operator[](size_t index)
   {
-    uint i, j;
+    size_t i, j;
     ij(i, j, index);
     return reference(this, i, j);
   }
@@ -209,17 +213,17 @@ protected:
   }
 
   // inspector
-  Scalar get(uint i, uint j) const { return cache.get(i, j); }
+  Scalar get(size_t i, size_t j) const { return cache.get(i, j); }
 
   // mutators (called from proxy reference)
-  void set(uint i, uint j, Scalar val) { cache.set(i, j, val); }
-  void add(uint i, uint j, Scalar val) { cache.ref(i, j) += val; }
-  void sub(uint i, uint j, Scalar val) { cache.ref(i, j) -= val; }
-  void mul(uint i, uint j, Scalar val) { cache.ref(i, j) *= val; }
-  void div(uint i, uint j, Scalar val) { cache.ref(i, j) /= val; }
+  void set(size_t i, size_t j, Scalar val) { cache.set(i, j, val); }
+  void add(size_t i, size_t j, Scalar val) { cache.ref(i, j) += val; }
+  void sub(size_t i, size_t j, Scalar val) { cache.ref(i, j) -= val; }
+  void mul(size_t i, size_t j, Scalar val) { cache.ref(i, j) *= val; }
+  void div(size_t i, size_t j, Scalar val) { cache.ref(i, j) /= val; }
 
   // convert flat index to (i, j)
-  void ij(uint& i, uint& j, uint index) const
+  void ij(size_t& i, size_t& j, size_t index) const
   {
     i = index % nx; index /= nx;
     j = index;

@@ -9,12 +9,12 @@
 zfp::array* zfp::array::construct(const zfp::array::header& header, const void* buffer, size_t buffer_size_bytes)
 {
   // extract metadata from header
-  const uint dims = header.dimensionality();
   const zfp_type type = header.scalar_type();
   const double rate = header.rate();
-  const uint nx = header.size_x();
-  const uint ny = header.size_y();
-  const uint nz = header.size_z();
+  const uint dims = header.dimensionality();
+  const size_t nx = header.size_x();
+  const size_t ny = header.size_y();
+  const size_t nz = header.size_z();
 
   // construct once (passing zfp::array::header will read it again)
   zfp::array* arr = 0;

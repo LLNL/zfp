@@ -5,7 +5,7 @@ public:
   const_pointer() : const_handle(0, 0, 0) {}
 
   // constructor
-  explicit const_pointer(container_type* container, uint i, uint j) : const_handle(container, i, j) {}
+  explicit const_pointer(container_type* container, size_t i, size_t j) : const_handle(container, i, j) {}
 
   // dereference pointer
   const_reference operator*() const { return const_reference(container, i, j); }
@@ -39,8 +39,8 @@ protected:
   void advance(ptrdiff_t d)
   {
     size_t idx = offset() + d;
-    i = static_cast<uint>(idx % container->size_x());
-    j = static_cast<uint>(idx / container->size_x());
+    i = idx % container->size_x(); idx /= container->size_x();
+    j = idx;
   }
   void increment()
   {
@@ -69,7 +69,7 @@ public:
   pointer() : const_pointer(0, 0, 0) {}
 
   // constructor
-  explicit pointer(container_type* container, uint i, uint j) : const_pointer(container, i, j) {}
+  explicit pointer(container_type* container, size_t i, size_t j) : const_pointer(container, i, j) {}
 
   // dereference pointer
   reference operator*() const { return reference(container, i, j); }

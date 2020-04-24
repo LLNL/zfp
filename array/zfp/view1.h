@@ -9,15 +9,15 @@ public:
   double rate() const { return array->rate(); }
 
   // dimensions of (sub)array
-  size_t size() const { return size_t(nx); }
+  size_t size() const { return nx; }
 
   // local to global array index
-  uint global_x(uint i) const { return x + i; }
+  size_t global_x(size_t i) const { return x + i; }
 
 protected:
   // construction and assignment--perform shallow copy of (sub)array
   explicit preview(array1* array) : array(array), x(0), nx(array->nx) {}
-  explicit preview(array1* array, uint x, uint nx) : array(array), x(x), nx(nx) {}
+  explicit preview(array1* array, size_t x, size_t nx) : array(array), x(x), nx(nx) {}
   preview& operator=(array1* a)
   {
     array = a;
@@ -27,8 +27,8 @@ protected:
   }
 
   array1* array; // underlying container
-  uint x;        // offset into array
-  uint nx;       // dimensions of subarray
+  size_t x;      // offset into array
+  size_t nx;     // dimensions of subarray
 };
 
 // generic read-only view into a rectangular subset of a 1D array
@@ -40,16 +40,16 @@ protected:
 public:
   // construction--perform shallow copy of (sub)array
   const_view(array1* array) : preview(array) {}
-  const_view(array1* array, uint x, uint nx) : preview(array, x, nx) {}
+  const_view(array1* array, size_t x, size_t nx) : preview(array, x, nx) {}
 
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
+  size_t size_x() const { return nx; }
 
   // [i] accessor
-  value_type operator[](uint index) const { return array->get(x + index); }
+  value_type operator[](size_t index) const { return array->get(x + index); }
 
   // (i) accessor
-  value_type operator()(uint i) const { return array->get(x + i); }
+  value_type operator()(size_t i) const { return array->get(x + i); }
 };
 
 // generic read-write view into a rectangular subset of a 1D array
@@ -61,7 +61,7 @@ protected:
 public:
   // construction--perform shallow copy of (sub)array
   view(array1* array) : const_view(array) {}
-  view(array1* array, uint x, uint nx) : const_view(array, x, nx) {}
+  view(array1* array, size_t x, size_t nx) : const_view(array, x, nx) {}
 
   // [i] accessor from base class
   using const_view::operator[];
@@ -70,10 +70,10 @@ public:
   using const_view::operator();
 
   // [i] mutator
-  reference operator[](uint index) { return reference(array, x + index); }
+  reference operator[](size_t index) { return reference(array, x + index); }
 
   // (i) mutator
-  reference operator()(uint i) { return reference(array, x + i); }
+  reference operator()(size_t i) { return reference(array, x + i); }
 };
 
 // thread-safe read-only view of 1D (sub)array with private cache
@@ -88,13 +88,13 @@ public:
     preview(array),
     cache(array->store, cache_size ? cache_size : array->cache.size())
   {}
-  private_const_view(array1* array, uint x, uint nx, size_t cache_size = 0) :
+  private_const_view(array1* array, size_t x, size_t nx, size_t cache_size = 0) :
     preview(array, x, nx),
     cache(array->store, cache_size ? cache_size : array->cache.size())
   {}
 
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
+  size_t size_x() const { return nx; }
 
   // cache size in number of bytes
   size_t cache_size() const { return cache.size(); }
@@ -106,11 +106,11 @@ public:
   void clear_cache() const { cache.clear(); }
 
   // (i) accessor
-  value_type operator()(uint i) const { return get(x + i); }
+  value_type operator()(size_t i) const { return get(x + i); }
 
 protected:
   // inspector
-  value_type get(uint i) const { return cache.get(i); }
+  value_type get(size_t i) const { return cache.get(i); }
 
   mutable BlockCache1<value_type, codec_type> cache; // cache of decompressed blocks
 };
@@ -131,10 +131,10 @@ public:
 
   // construction--perform shallow copy of (sub)array
   private_view(array1* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
-  private_view(array1* array, uint x, uint nx, size_t cache_size = 0) : private_const_view(array, x, nx, cache_size) {}
+  private_view(array1* array, size_t x, size_t nx, size_t cache_size = 0) : private_const_view(array, x, nx, cache_size) {}
 
   // partition view into count block-aligned pieces, with 0 <= index < count
-  void partition(uint index, uint count)
+  void partition(size_t index, size_t count)
   {
     partition(x, nx, index, count);
   }
@@ -146,26 +146,26 @@ public:
   using private_const_view::operator();
 
   // (i) mutator
-  reference operator()(uint i) { return reference(this, x + i); }
+  reference operator()(size_t i) { return reference(this, x + i); }
 
 protected:
   // block-aligned partition of [offset, offset + size): index out of count
-  static void partition(uint& offset, uint& size, uint index, uint count)
+  static void partition(size_t& offset, size_t& size, size_t index, size_t count)
   {
-    uint bmin = offset / 4;
-    uint bmax = (offset + size + 3) / 4;
-    uint xmin = std::max(offset +    0, 4 * (bmin + (bmax - bmin) * (index + 0) / count));
-    uint xmax = std::min(offset + size, 4 * (bmin + (bmax - bmin) * (index + 1) / count));
+    size_t bmin = offset / 4;
+    size_t bmax = (offset + size + 3) / 4;
+    size_t xmin = std::max(offset +    0, 4 * (bmin + (bmax - bmin) * (index + 0) / count));
+    size_t xmax = std::min(offset + size, 4 * (bmin + (bmax - bmin) * (index + 1) / count));
     offset = xmin;
     size = xmax - xmin;
   }
 
   // mutator
-  void set(uint i, value_type val) { cache.set(i, val); }
+  void set(size_t i, value_type val) { cache.set(i, val); }
 
   // in-place updates
-  void add(uint i, value_type val) { cache.ref(i) += val; }
-  void sub(uint i, value_type val) { cache.ref(i) -= val; }
-  void mul(uint i, value_type val) { cache.ref(i) *= val; }
-  void div(uint i, value_type val) { cache.ref(i) /= val; }
+  void add(size_t i, value_type val) { cache.ref(i) += val; }
+  void sub(size_t i, value_type val) { cache.ref(i) -= val; }
+  void mul(size_t i, value_type val) { cache.ref(i) *= val; }
+  void div(size_t i, value_type val) { cache.ref(i) /= val; }
 };

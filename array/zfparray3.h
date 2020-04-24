@@ -44,7 +44,7 @@ public:
 
   // constructor of nx * ny * nz array using rate bits per value, at least
   // cache_size bytes of cache, and optionally initialized from flat array p
-  array3(uint nx, uint ny, uint nz, double rate, const Scalar* p = 0, size_t cache_size = 0) :
+  array3(size_t nx, size_t ny, size_t nz, double rate, const Scalar* p = 0, size_t cache_size = 0) :
     array(3, Codec::type),
     store(nx, ny, nz, rate),
     cache(store, cache_size)
@@ -103,15 +103,15 @@ public:
   }
 
   // total number of elements in array
-  size_t size() const { return size_t(nx) * size_t(ny) * size_t(nz); }
+  size_t size() const { return nx * ny * nz; }
 
   // array dimensions
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
-  uint size_z() const { return nz; }
+  size_t size_x() const { return nx; }
+  size_t size_y() const { return ny; }
+  size_t size_z() const { return nz; }
 
   // resize the array (all previously stored data will be lost)
-  void resize(uint nx, uint ny, uint nz, bool clear = true)
+  void resize(size_t nx, size_t ny, size_t nz, bool clear = true)
   {
     this->nx = nx;
     this->ny = ny;
@@ -155,43 +155,49 @@ public:
   // decompress array and store at p
   void get(Scalar* p) const
   {
-    const uint bx = (uint)store.block_size_x();
-    const uint by = (uint)store.block_size_y();
-    const uint bz = (uint)store.block_size_z();
-    uint block_index = 0;
-    for (uint k = 0; k < bz; k++, p += 4 * nx * (ny - by))
-      for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
-        for (uint i = 0; i < bx; i++, p += 4)
-          cache.get_block(block_index++, p, 1, nx, nx * ny);
+    const size_t bx = store.block_size_x();
+    const size_t by = store.block_size_y();
+    const size_t bz = store.block_size_z();
+    const ptrdiff_t sx = 1;
+    const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
+    const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
+    size_t block_index = 0;
+    for (size_t k = 0; k < bz; k++, p += 4 * nx * (ny - by))
+      for (size_t j = 0; j < by; j++, p += 4 * (nx - bx))
+        for (size_t i = 0; i < bx; i++, p += 4)
+          cache.get_block(block_index++, p, sx, sy, sz);
   }
 
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
-    const uint bx = (uint)store.block_size_x();
-    const uint by = (uint)store.block_size_y();
-    const uint bz = (uint)store.block_size_z();
-    uint block_index = 0;
-    for (uint k = 0; k < bz; k++, p += 4 * nx * (ny - by))
-      for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
-        for (uint i = 0; i < bx; i++, p += 4)
-          cache.put_block(block_index++, p, 1, nx, nx * ny);
+    const size_t bx = store.block_size_x();
+    const size_t by = store.block_size_y();
+    const size_t bz = store.block_size_z();
+    const ptrdiff_t sx = 1;
+    const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
+    const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
+    size_t block_index = 0;
+    for (size_t k = 0; k < bz; k++, p += 4 * nx * (ny - by))
+      for (size_t j = 0; j < by; j++, p += 4 * (nx - bx))
+        for (size_t i = 0; i < bx; i++, p += 4)
+          cache.put_block(block_index++, p, sx, sy, sz);
   }
 
   // (i, j, k) accessors
-  Scalar operator()(uint i, uint j, uint k) const { return get(i, j, k); }
-  reference operator()(uint i, uint j, uint k) { return reference(this, i, j, k); }
+  Scalar operator()(size_t i, size_t j, size_t k) const { return get(i, j, k); }
+  reference operator()(size_t i, size_t j, size_t k) { return reference(this, i, j, k); }
 
   // flat index accessors
-  Scalar operator[](uint index) const
+  Scalar operator[](size_t index) const
   {
-    uint i, j, k;
+    size_t i, j, k;
     ijk(i, j, k, index);
     return get(i, j, k);
   }
-  reference operator[](uint index)
+  reference operator[](size_t index)
   {
-    uint i, j, k;
+    size_t i, j, k;
     ijk(i, j, k, index);
     return reference(this, i, j, k);
   }
@@ -217,17 +223,17 @@ protected:
   }
 
   // inspector
-  Scalar get(uint i, uint j, uint k) const { return cache.get(i, j, k); }
+  Scalar get(size_t i, size_t j, size_t k) const { return cache.get(i, j, k); }
 
   // mutators (called from proxy reference)
-  void set(uint i, uint j, uint k, Scalar val) { cache.set(i, j, k, val); }
-  void add(uint i, uint j, uint k, Scalar val) { cache.ref(i, j, k) += val; }
-  void sub(uint i, uint j, uint k, Scalar val) { cache.ref(i, j, k) -= val; }
-  void mul(uint i, uint j, uint k, Scalar val) { cache.ref(i, j, k) *= val; }
-  void div(uint i, uint j, uint k, Scalar val) { cache.ref(i, j, k) /= val; }
+  void set(size_t i, size_t j, size_t k, Scalar val) { cache.set(i, j, k, val); }
+  void add(size_t i, size_t j, size_t k, Scalar val) { cache.ref(i, j, k) += val; }
+  void sub(size_t i, size_t j, size_t k, Scalar val) { cache.ref(i, j, k) -= val; }
+  void mul(size_t i, size_t j, size_t k, Scalar val) { cache.ref(i, j, k) *= val; }
+  void div(size_t i, size_t j, size_t k, Scalar val) { cache.ref(i, j, k) /= val; }
 
   // convert flat index to (i, j, k)
-  void ijk(uint& i, uint& j, uint& k, uint index) const
+  void ijk(size_t& i, size_t& j, size_t& k, size_t index) const
   {
     i = index % nx; index /= nx;
     j = index % ny; index /= ny;

@@ -38,7 +38,7 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForIntegerData_when_construct_expect_zfpArra
   EXPECT_EQ(ZFP_HEADER_SIZE_BITS, zfp_write_header(stream, field, ZFP_HEADER_FULL));
   zfp_stream_flush(stream);
 
-  zfp::codec<double, 2>::header h(buffer);
+  zfp::zfp_codec<double, 2>::header h(buffer);
 
   try {
     zfp::array* arr = zfp::array::construct(h);
@@ -66,7 +66,7 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForHigherDimensionalData_when_construct_expe
 
   try {
     // warning: there is no way to construct a 4D array header; using array1f
-    zfp::codec<float, 1>::header h(buffer);
+    zfp::zfp_codec<float, 1>::header h(buffer);
     zfp::array* arr = zfp::array::construct(h);
     FailWhenNoExceptionThrown();
   } catch (zfp::exception const & e) {
@@ -90,7 +90,7 @@ TEST_F(TEST_FIXTURE, given_onlyInclude2D3D_and_zfpHeaderFor1D_when_construct_exp
   EXPECT_EQ(ZFP_HEADER_SIZE_BITS, zfp_write_header(stream, field, ZFP_HEADER_FULL));
   zfp_stream_flush(stream);
 
-  zfp::codec<float, 1>::header h(buffer);
+  zfp::zfp_codec<float, 1>::header h(buffer);
 
   try {
     zfp::array* arr = zfp::array::construct(h);

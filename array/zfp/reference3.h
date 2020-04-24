@@ -4,7 +4,7 @@ public:
   typedef typename container_type::value_type value_type;
 
   // constructor
-  explicit const_reference(container_type* container, uint i, uint j, uint k) : const_handle(container, i, j, k) {}
+  explicit const_reference(container_type* container, size_t i, size_t j, size_t k) : const_handle(container, i, j, k) {}
 
   // inspector
   operator value_type() const { return get(); }
@@ -24,7 +24,7 @@ protected:
 class reference : public const_reference {
 public:
   // constructor
-  explicit reference(container_type* container, uint i, uint j, uint k) : const_reference(container, i, j, k) {}
+  explicit reference(container_type* container, size_t i, size_t j, size_t k) : const_reference(container, i, j, k) {}
 
   // assignment
   reference operator=(const reference& r) { set(r.get()); return *this; }

@@ -160,7 +160,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_flatView_when_ijk_then_returnsUnflatI
   uint i = 2, j = 1, k = 2;
   uint flatIndex = v.index(i, j, k);
 
-  uint vI, vJ, vK;
+  size_t vI, vJ, vK;
   v.ijk(vI, vJ, vK, flatIndex);
   EXPECT_EQ(i, vI);
   EXPECT_EQ(j, vJ);

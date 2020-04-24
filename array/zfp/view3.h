@@ -9,17 +9,17 @@ public:
   double rate() const { return array->rate(); }
 
   // dimensions of (sub)array
-  size_t size() const { return size_t(nx) * size_t(ny) * size_t(nz); }
+  size_t size() const { return nx * ny * nz; }
 
   // local to global array indices
-  uint global_x(uint i) const { return x + i; }
-  uint global_y(uint j) const { return y + j; }
-  uint global_z(uint k) const { return z + k; }
+  size_t global_x(size_t i) const { return x + i; }
+  size_t global_y(size_t j) const { return y + j; }
+  size_t global_z(size_t k) const { return z + k; }
 
 protected:
   // construction and assignment--perform shallow copy of (sub)array
   explicit preview(array3* array) : array(array), x(0), y(0), z(0), nx(array->nx), ny(array->ny), nz(array->nz) {}
-  explicit preview(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : array(array), x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {}
+  explicit preview(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz) : array(array), x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {}
   preview& operator=(array3* a)
   {
     array = a;
@@ -30,9 +30,9 @@ protected:
     return *this;
   }
 
-  array3* array;   // underlying container
-  uint x, y, z;    // offset into array
-  uint nx, ny, nz; // dimensions of subarray
+  array3* array;     // underlying container
+  size_t x, y, z;    // offset into array
+  size_t nx, ny, nz; // dimensions of subarray
 };
 
 // generic read-only view into a rectangular subset of a 3D array
@@ -48,15 +48,15 @@ protected:
 public:
   // construction--perform shallow copy of (sub)array
   const_view(array3* array) : preview(array) {}
-  const_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : preview(array, x, y, z, nx, ny, nz) {}
+  const_view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz) : preview(array, x, y, z, nx, ny, nz) {}
 
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
-  uint size_z() const { return nz; }
+  size_t size_x() const { return nx; }
+  size_t size_y() const { return ny; }
+  size_t size_z() const { return nz; }
 
   // (i, j, k) accessor
-  value_type operator()(uint i, uint j, uint k) const { return array->get(x + i, y + j, z + k); }
+  value_type operator()(size_t i, size_t j, size_t k) const { return array->get(x + i, y + j, z + k); }
 };
 
 // generic read-write view into a rectangular subset of a 3D array
@@ -72,13 +72,13 @@ protected:
 public:
   // construction--perform shallow copy of (sub)array
   view(array3* array) : const_view(array) {}
-  view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : const_view(array, x, y, z, nx, ny, nz) {}
+  view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz) : const_view(array, x, y, z, nx, ny, nz) {}
 
   // (i, j, k) accessor from base class
   using const_view::operator();
 
   // (i, j, k) mutator
-  reference operator()(uint i, uint j, uint k) { return reference(array, x + i, y + j, z + k); }
+  reference operator()(size_t i, size_t j, size_t k) { return reference(array, x + i, y + j, z + k); }
 };
 
 // flat view of 3D array (operator[] returns scalar)
@@ -94,13 +94,13 @@ protected:
 public:
   // construction--perform shallow copy of (sub)array
   flat_view(array3* array) : view(array) {}
-  flat_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : view(array, x, y, z, nx, ny, nz) {}
+  flat_view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz) : view(array, x, y, z, nx, ny, nz) {}
 
   // convert (i, j, k) index to flat index
-  uint index(uint i, uint j, uint k) const { return i + nx * (j + ny * k); }
+  size_t index(size_t i, size_t j, size_t k) const { return i + nx * (j + ny * k); }
 
   // convert flat index to (i, j, k) index
-  void ijk(uint& i, uint& j, uint& k, uint index) const
+  void ijk(size_t& i, size_t& j, size_t& k, size_t index) const
   {
     i = index % nx; index /= nx;
     j = index % ny; index /= ny;
@@ -108,15 +108,15 @@ public:
   }
 
   // flat index accessors
-  value_type operator[](uint index) const
+  value_type operator[](size_t index) const
   {
-    uint i, j, k;
+    size_t i, j, k;
     ijk(i, j, k, index);
     return array->get(x + i, y + j, z + k);
   }
-  reference operator[](uint index)
+  reference operator[](size_t index)
   {
-    uint i, j, k;
+    size_t i, j, k;
     ijk(i, j, k, index);
     return reference(array, x + i, y + j, z + k);
   }
@@ -139,21 +139,21 @@ protected:
   using preview::nz;
 public:
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
+  size_t size_x() const { return nx; }
 
   // [i] accessor and mutator
-  value_type operator[](uint index) const { return array->get(x + index, y, z); }
-  reference operator[](uint index) { return reference(array, x + index, y, z); }
+  value_type operator[](size_t index) const { return array->get(x + index, y, z); }
+  reference operator[](size_t index) { return reference(array, x + index, y, z); }
 
   // (i) accessor and mutator
-  value_type operator()(uint i) const { return array->get(x + i, y, z); }
-  reference operator()(uint i) { return reference(array, x + i, y, z); }
+  value_type operator()(size_t i) const { return array->get(x + i, y, z); }
+  reference operator()(size_t i) { return reference(array, x + i, y, z); }
 
 protected:
   // construction--perform shallow copy of (sub)array
   friend class nested_view2;
   explicit nested_view1(array3* array) : preview(array) {}
-  explicit nested_view1(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : preview(array, x, y, z, nx, ny, nz) {}
+  explicit nested_view1(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz) : preview(array, x, y, z, nx, ny, nz) {}
 };
 
 // nested view into a 2D rectangular subset of a 3D array
@@ -168,21 +168,21 @@ protected:
   using preview::nz;
 public:
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
+  size_t size_x() const { return nx; }
+  size_t size_y() const { return ny; }
 
   // 1D view
-  nested_view1 operator[](uint index) const { return nested_view1(array, x, y + index, z, nx, 1, 1); }
+  nested_view1 operator[](size_t index) const { return nested_view1(array, x, y + index, z, nx, 1, 1); }
 
   // (i, j) accessor and mutator
-  value_type operator()(uint i, uint j) const { return array->get(x + i, y + j, z); }
-  reference operator()(uint i, uint j) { return reference(array, x + i, y + j, z); }
+  value_type operator()(size_t i, size_t j) const { return array->get(x + i, y + j, z); }
+  reference operator()(size_t i, size_t j) { return reference(array, x + i, y + j, z); }
 
 protected:
   // construction--perform shallow copy of (sub)array
   friend class nested_view3;
   explicit nested_view2(array3* array) : preview(array) {}
-  explicit nested_view2(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : preview(array, x, y, z, nx, ny, nz) {}
+  explicit nested_view2(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz) : preview(array, x, y, z, nx, ny, nz) {}
 };
 
 // nested view into a 3D rectangular subset of a 3D array
@@ -198,19 +198,19 @@ protected:
 public:
   // construction--perform shallow copy of (sub)array
   nested_view3(array3* array) : preview(array) {}
-  nested_view3(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz) : preview(array, x, y, z, nx, ny, nz) {}
+  nested_view3(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz) : preview(array, x, y, z, nx, ny, nz) {}
 
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
-  uint size_z() const { return nz; }
+  size_t size_x() const { return nx; }
+  size_t size_y() const { return ny; }
+  size_t size_z() const { return nz; }
 
   // 2D view
-  nested_view2 operator[](uint index) const { return nested_view2(array, x, y, z + index, nx, ny, 1); }
+  nested_view2 operator[](size_t index) const { return nested_view2(array, x, y, z + index, nx, ny, 1); }
 
   // (i, j, k) accessor and mutator
-  value_type operator()(uint i, uint j, uint k) const { return array->get(x + i, y + j, z + k); }
-  reference operator()(uint i, uint j, uint k) { return reference(array, x + i, y + j, z + k); }
+  value_type operator()(size_t i, size_t j, size_t k) const { return array->get(x + i, y + j, z + k); }
+  reference operator()(size_t i, size_t j, size_t k) { return reference(array, x + i, y + j, z + k); }
 };
 
 typedef nested_view3 nested_view;
@@ -231,15 +231,15 @@ public:
     preview(array),
     cache(array->store, cache_size ? cache_size : array->cache.size())
   {}
-  private_const_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz, size_t cache_size = 0) :
+  private_const_view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz, size_t cache_size = 0) :
     preview(array, x, y, z, nx, ny, nz),
     cache(array->store, cache_size ? cache_size : array->cache.size())
   {}
 
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
-  uint size_z() const { return nz; }
+  size_t size_x() const { return nx; }
+  size_t size_y() const { return ny; }
+  size_t size_z() const { return nz; }
 
   // cache size in number of bytes
   size_t cache_size() const { return cache.size(); }
@@ -251,11 +251,11 @@ public:
   void clear_cache() const { cache.clear(); }
 
   // (i, j, k) accessor
-  value_type operator()(uint i, uint j, uint k) const { return get(x + i, y + j, z + k); }
+  value_type operator()(size_t i, size_t j, size_t k) const { return get(x + i, y + j, z + k); }
 
 protected:
   // inspector
-  value_type get(uint i, uint j, uint k) const { return cache.get(i, j, k); }
+  value_type get(size_t i, size_t j, size_t k) const { return cache.get(i, j, k); }
 
   mutable BlockCache3<value_type, codec_type> cache; // cache of decompressed blocks
 };
@@ -280,10 +280,10 @@ public:
 
   // construction--perform shallow copy of (sub)array
   private_view(array3* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
-  private_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz, size_t cache_size = 0) : private_const_view(array, x, y, z, nx, ny, nz, cache_size) {}
+  private_view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz, size_t cache_size = 0) : private_const_view(array, x, y, z, nx, ny, nz, cache_size) {}
 
   // partition view into count block-aligned pieces, with 0 <= index < count
-  void partition(uint index, uint count)
+  void partition(size_t index, size_t count)
   {
     if (nx > std::max(ny, nz))
       partition(x, nx, index, count);
@@ -300,26 +300,26 @@ public:
   using private_const_view::operator();
 
   // (i, j, k) mutator
-  reference operator()(uint i, uint j, uint k) { return reference(this, x + i, y + j, z + k); }
+  reference operator()(size_t i, size_t j, size_t k) { return reference(this, x + i, y + j, z + k); }
 
 protected:
   // block-aligned partition of [offset, offset + size): index out of count
-  static void partition(uint& offset, uint& size, uint index, uint count)
+  static void partition(size_t& offset, size_t& size, size_t index, size_t count)
   {
-    uint bmin = offset / 4;
-    uint bmax = (offset + size + 3) / 4;
-    uint xmin = std::max(offset +    0, 4 * (bmin + (bmax - bmin) * (index + 0) / count));
-    uint xmax = std::min(offset + size, 4 * (bmin + (bmax - bmin) * (index + 1) / count));
+    size_t bmin = offset / 4;
+    size_t bmax = (offset + size + 3) / 4;
+    size_t xmin = std::max(offset +    0, 4 * (bmin + (bmax - bmin) * (index + 0) / count));
+    size_t xmax = std::min(offset + size, 4 * (bmin + (bmax - bmin) * (index + 1) / count));
     offset = xmin;
     size = xmax - xmin;
   }
 
   // mutator
-  void set(uint i, uint j, uint k, value_type val) { cache.set(i, j, k, val); }
+  void set(size_t i, size_t j, size_t k, value_type val) { cache.set(i, j, k, val); }
 
   // in-place updates
-  void add(uint i, uint j, uint k, value_type val) { cache.ref(i, j, k) += val; }
-  void sub(uint i, uint j, uint k, value_type val) { cache.ref(i, j, k) -= val; }
-  void mul(uint i, uint j, uint k, value_type val) { cache.ref(i, j, k) *= val; }
-  void div(uint i, uint j, uint k, value_type val) { cache.ref(i, j, k) /= val; }
+  void add(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) += val; }
+  void sub(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) -= val; }
+  void mul(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) *= val; }
+  void div(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) /= val; }
 };

@@ -4,7 +4,8 @@
 namespace zfp {
 
 // useful type traits
-template <typename Scalar> struct trait;
+template <typename Scalar>
+struct trait;
 /*
   static const zfp_type type;    // corresponding zfp type
   static const size_t precision; // precision in number of bits

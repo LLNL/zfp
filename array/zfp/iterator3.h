@@ -15,7 +15,7 @@ public:
   const_iterator() : const_handle(0, 0, 0, 0) {}
 
   // constructor
-  explicit const_iterator(container_type* container, uint i, uint j, uint k) : const_handle(container, i, j, k) {}
+  explicit const_iterator(container_type* container, size_t i, size_t j, size_t k) : const_handle(container, i, j, k) {}
 
   // dereference iterator
   const_reference operator*() const { return const_reference(container, i(), j(), k()); }
@@ -29,9 +29,9 @@ public:
   const_iterator operator++(int) { const_iterator it = *this; increment(); return it; }
 
   // container indices of value referenced by iterator
-  uint i() const { return const_handle::i; }
-  uint j() const { return const_handle::j; }
-  uint k() const { return const_handle::k; }
+  size_t i() const { return const_handle::i; }
+  size_t j() const { return const_handle::j; }
+  size_t k() const { return const_handle::k; }
 
 protected:
   void increment()
@@ -79,7 +79,7 @@ public:
   iterator() : const_iterator(0, 0, 0, 0) {}
 
   // constructor
-  explicit iterator(container_type* container, uint i, uint j, uint k) : const_iterator(container, i, j, k) {}
+  explicit iterator(container_type* container, size_t i, size_t j, size_t k) : const_iterator(container, i, j, k) {}
 
   // dereference iterator
   reference operator*() const { return reference(container, i(), j(), k()); }

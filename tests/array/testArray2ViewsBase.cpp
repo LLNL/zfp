@@ -148,9 +148,9 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_flatView_when_ij_then_returnsUnflatIn
   ZFP_ARRAY_TYPE::flat_view v(&arr, offsetX, offsetY, viewLenX, viewLenY);
 
   uint i = 2, j = 1;
-  uint flatIndex = v.index(i, j);
+  size_t flatIndex = v.index(i, j);
 
-  uint vI, vJ;
+  size_t vI, vJ;
   v.ij(vI, vJ, flatIndex);
   EXPECT_EQ(i, vI);
   EXPECT_EQ(j, vJ);

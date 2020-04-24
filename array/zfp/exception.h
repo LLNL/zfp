@@ -7,7 +7,7 @@ namespace zfp {
 class exception : public std::runtime_error {
 public:
   exception(const std::string& msg) : runtime_error(msg) {}
-  virtual ~exception() throw (){}
+  virtual ~exception() throw() {}
 };
 
 }
