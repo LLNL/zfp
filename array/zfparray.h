@@ -53,7 +53,7 @@ protected:
   explicit array(uint dims, zfp_type type, const zfp::array::header& header) :
     type(type),
     dims(dims),
-    nx(header.size_x()), ny(header.size_y()), nz(header.size_z())
+    nx((uint)header.size_x()), ny((uint)header.size_y()), nz((uint)header.size_z())
   {
     if (header.scalar_type() != type)
       throw zfp::exception("zfp array scalar type does not match header");

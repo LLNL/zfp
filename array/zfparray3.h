@@ -155,9 +155,9 @@ public:
   // decompress array and store at p
   void get(Scalar* p) const
   {
-    const uint bx = store.block_size_x();
-    const uint by = store.block_size_y();
-    const uint bz = store.block_size_z();
+    const uint bx = (uint)store.block_size_x();
+    const uint by = (uint)store.block_size_y();
+    const uint bz = (uint)store.block_size_z();
     uint block_index = 0;
     for (uint k = 0; k < bz; k++, p += 4 * nx * (ny - by))
       for (uint j = 0; j < by; j++, p += 4 * (nx - bx))
@@ -168,9 +168,9 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
-    const uint bx = store.block_size_x();
-    const uint by = store.block_size_y();
-    const uint bz = store.block_size_z();
+    const uint bx = (uint)store.block_size_x();
+    const uint by = (uint)store.block_size_y();
+    const uint bz = (uint)store.block_size_z();
     uint block_index = 0;
     for (uint k = 0; k < bz; k++, p += 4 * nx * (ny - by))
       for (uint j = 0; j < by; j++, p += 4 * (nx - bx))

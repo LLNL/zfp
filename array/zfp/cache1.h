@@ -11,7 +11,7 @@ class BlockCache1 {
 public:
   // constructor of cache of given size
   BlockCache1(BlockStore1<Scalar, Codec>& store, size_t bytes = 0) :
-    cache((bytes + sizeof(CacheLine) - 1) / sizeof(CacheLine)),
+    cache((uint)((bytes + sizeof(CacheLine) - 1) / sizeof(CacheLine))),
     store(store),
     codec(0)
   {

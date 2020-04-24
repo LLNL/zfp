@@ -48,7 +48,7 @@ refine1d(int* g, const int* f, size_t m)
 
   for (size_t x = 0; x < n; x++) {
     int s = 0;
-    for (int i = 0; i < 4; i++) {
+    for (size_t i = 0; i < 4; i++) {
       size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
       s += weight[i] * f[xx];
     }
@@ -66,9 +66,9 @@ refine2d(int* g, const int* f, size_t m)
   for (size_t y = 0; y < n; y++)
     for (size_t x = 0; x < n; x++) {
       int s = 0;
-      for (int j = 0; j < 4; j++) {
+      for (size_t j = 0; j < 4; j++) {
         size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
-        for (int i = 0; i < 4; i++) {
+        for (size_t i = 0; i < 4; i++) {
           size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
           s += weight[i] * weight[j] * f[xx + m * yy];
         }
@@ -88,11 +88,11 @@ refine3d(int* g, const int* f, size_t m)
     for (size_t y = 0; y < n; y++)
       for (size_t x = 0; x < n; x++) {
         int s = 0;
-        for (int k = 0; k < 4; k++) {
+        for (size_t k = 0; k < 4; k++) {
           size_t zz = z & 1u ? (z / 2 + k - 1 + m) % m : z / 2;
-          for (int j = 0; j < 4; j++) {
+          for (size_t j = 0; j < 4; j++) {
             size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
-            for (int i = 0; i < 4; i++) {
+            for (size_t i = 0; i < 4; i++) {
               size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
               s += weight[i] * weight[j] * weight[k] * f[xx + m * (yy + m * zz)];
             }
@@ -114,13 +114,13 @@ refine4d(int* g, const int* f, size_t m)
       for (size_t y = 0; y < n; y++)
         for (size_t x = 0; x < n; x++) {
           int s = 0;
-          for (int l = 0; l < 4; l++) {
+          for (size_t l = 0; l < 4; l++) {
             size_t ww = w & 1u ? (w / 2 + l - 1 + m) % m : w / 2;
-            for (int k = 0; k < 4; k++) {
+            for (size_t k = 0; k < 4; k++) {
               size_t zz = z & 1u ? (z / 2 + k - 1 + m) % m : z / 2;
-              for (int j = 0; j < 4; j++) {
+              for (size_t j = 0; j < 4; j++) {
                 size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
-                for (int i = 0; i < 4; i++) {
+                for (size_t i = 0; i < 4; i++) {
                   size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
                   s += weight[i] * weight[j] * weight[k] * weight[l] * f[xx + m * (yy + m * (zz + m * ww))];
                 }

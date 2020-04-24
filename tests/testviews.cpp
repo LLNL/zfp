@@ -11,7 +11,7 @@
 static uint
 rand(uint begin, uint end)
 {
-  return begin + rand() % (end - begin);
+  return begin + (uint)rand() % (end - begin);
 }
 
 // ensure f and g are sufficiently close

@@ -147,7 +147,7 @@ public:
   // decompress array and store at p
   void get(Scalar* p) const
   {
-    const uint bx = store.block_size_x();
+    const uint bx = (uint)store.block_size_x();
     uint block_index = 0;
     for (uint i = 0; i < bx; i++, p += 4)
       cache.get_block(block_index++, p, 1);
@@ -156,7 +156,7 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const Scalar* p)
   {
-    const uint bx = store.block_size_x();
+    const uint bx = (uint)store.block_size_x();
     uint block_index = 0;
     for (uint i = 0; i < bx; i++, p += 4)
       cache.put_block(block_index++, p, 1);
