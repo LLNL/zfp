@@ -1,13 +1,12 @@
 #ifndef ZFP_BLOCK3_H
 #define ZFP_BLOCK3_H
 
-#include "zfpcodec.h"
 #include "zfp/memory.h"
 
 namespace zfp {
 
 // compressed 3D array of scalars
-template < typename Scalar, class Codec = zfp::codec<Scalar, 3> >
+template <typename Scalar, class Codec>
 class BlockStore3 {
 public:
   // default constructor

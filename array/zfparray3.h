@@ -12,7 +12,7 @@
 namespace zfp {
 
 // compressed 3D array of scalars
-template < typename Scalar, class Codec = zfp::codec<Scalar, 3> >
+template < typename Scalar, class Codec = zfp::zfp_codec<Scalar, 3> >
 class array3 : public array {
 public:
   // types utilized by nested classes
