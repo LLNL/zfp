@@ -16,7 +16,7 @@ References
 .. cpp:class:: array2::reference
 .. cpp:class:: array3::reference
 
-Array :ref:`indexing operators <lvref>` must return lvalue references that
+Array :ref:`indexing operators <lvref_idx>` must return lvalue references that
 alias array elements and serve as vehicles for assigning values to those
 elements.  Unfortunately, |zfp| cannot simply return a standard C++ reference
 (e.g., :code:`float&`) to an uncompressed array element since the element in

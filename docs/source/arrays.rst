@@ -176,6 +176,7 @@ class.
   Return scalar stored at given flat index (inspector).  For a 3D array,
   :code:`index = x + nx * (y + ny * z)`.
 
+.. _lvref_idx:
 .. cpp:function:: reference array::operator[](uint index)
 
   Return :ref:`proxy reference <references>` to scalar stored at given flat
@@ -319,7 +320,7 @@ type is omitted for readability, e.g.,
   Return scalar stored at multi-dimensional index given by *i*, *j*, and *k*
   (inspector).
 
-.. _lvref:
+.. _lvref_bidx:
 .. cpp:function:: reference array1::operator()(uint i)
 .. cpp:function:: reference array2::operator()(uint i, uint j)
 .. cpp:function:: reference array3::operator()(uint i, uint j, uint k)
