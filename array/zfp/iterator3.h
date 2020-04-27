@@ -38,13 +38,13 @@ protected:
   {
     ++const_handle::i;
     if (!(const_handle::i & 3u) || const_handle::i == container->size_x()) {
-      const_handle::i = (const_handle::i - 1) & ~3u;
+      const_handle::i = (const_handle::i - 1) & ~size_t(3);
       ++const_handle::j;
       if (!(const_handle::j & 3u) || const_handle::j == container->size_y()) {
-        const_handle::j = (const_handle::j - 1) & ~3u;
+        const_handle::j = (const_handle::j - 1) & ~size_t(3);
         ++const_handle::k;
         if (!(const_handle::k & 3u) || const_handle::k == container->size_z()) {
-          const_handle::k = (const_handle::k - 1) & ~3u;
+          const_handle::k = (const_handle::k - 1) & ~size_t(3);
           // done with block; advance to next
           const_handle::i += 4;
           if (const_handle::i >= container->size_x()) {
