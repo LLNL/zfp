@@ -14,6 +14,8 @@ public:
   size_t global_y(size_t j) const { return y + j; }
 
 protected:
+  typedef container_type array_type; // used by private views
+
   // construction and assignment--perform shallow copy of (sub)array
   explicit preview(container_type* array) : array(array), x(0), y(0), nx(array->nx), ny(array->ny) {}
   explicit preview(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : array(array), x(x), y(y), nx(nx), ny(ny) {}
@@ -203,16 +205,6 @@ protected:
   using preview::nx;
   using preview::ny;
 public:
-  // construction--perform shallow copy of (sub)array
-  private_const_view(container_type* array, size_t cache_size = 0) :
-    preview(array),
-    cache(array->store, cache_size ? cache_size : array->cache.size())
-  {}
-  private_const_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) :
-    preview(array, x, y, nx, ny),
-    cache(array->store, cache_size ? cache_size : array->cache.size())
-  {}
-
   // private view uses its own references to access private cache
   typedef typename container_type::value_type value_type;
   typedef private_const_view container_type;
@@ -220,6 +212,16 @@ public:
   #include "zfp/handle2.h"
   #include "zfp/reference2.h"
   #include "zfp/pointer2.h"
+
+  // construction--perform shallow copy of (sub)array
+  private_const_view(typename preview::array_type* array, size_t cache_size = 0) :
+    preview(array),
+    cache(array->store, cache_size ? cache_size : array->cache.size())
+  {}
+  private_const_view(typename preview::array_type* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) :
+    preview(array, x, y, nx, ny),
+    cache(array->store, cache_size ? cache_size : array->cache.size())
+  {}
 
   // dimensions of (sub)array
   size_t size_x() const { return nx; }
@@ -254,10 +256,6 @@ protected:
   using preview::ny;
   using private_const_view::cache;
 public:
-  // construction--perform shallow copy of (sub)array
-  private_view(container_type* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
-  private_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) : private_const_view(array, x, y, nx, ny, cache_size) {}
-
   // private view uses its own references to access private cache
   typedef typename container_type::value_type value_type;
   typedef private_view container_type;
@@ -266,6 +264,10 @@ public:
   #include "zfp/handle2.h"
   #include "zfp/reference2.h"
   #include "zfp/pointer2.h"
+
+  // construction--perform shallow copy of (sub)array
+  private_view(typename preview::array_type* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
+  private_view(typename preview::array_type* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) : private_const_view(array, x, y, nx, ny, cache_size) {}
 
   // partition view into count block-aligned pieces, with 0 <= index < count
   void partition(size_t index, size_t count)
