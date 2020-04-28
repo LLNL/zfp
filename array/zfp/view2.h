@@ -1,4 +1,4 @@
-// 2D array views; these classes are nested within zfp::array2
+// 2D array views; these classes are nested within zfp::container_type
 
 // abstract view of 2D array (base class)
 class preview {
@@ -15,9 +15,9 @@ public:
 
 protected:
   // construction and assignment--perform shallow copy of (sub)array
-  explicit preview(array2* array) : array(array), x(0), y(0), nx(array->nx), ny(array->ny) {}
-  explicit preview(array2* array, size_t x, size_t y, size_t nx, size_t ny) : array(array), x(x), y(y), nx(nx), ny(ny) {}
-  preview& operator=(array2* a)
+  explicit preview(container_type* array) : array(array), x(0), y(0), nx(array->nx), ny(array->ny) {}
+  explicit preview(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : array(array), x(x), y(y), nx(nx), ny(ny) {}
+  preview& operator=(container_type* a)
   {
     array = a;
     x = y = 0;
@@ -26,9 +26,9 @@ protected:
     return *this;
   }
 
-  array2* array; // underlying container
-  size_t x, y;   // offset into array
-  size_t nx, ny; // dimensions of subarray
+  container_type* array; // underlying container
+  size_t x, y;           // offset into array
+  size_t nx, ny;         // dimensions of subarray
 };
 
 // generic read-only view into a rectangular subset of a 2D array
@@ -45,8 +45,8 @@ public:
   typedef typename container_type::const_pointer const_pointer;
 
   // construction--perform shallow copy of (sub)array
-  const_view(array2* array) : preview(array) {}
-  const_view(array2* array, size_t x, size_t y, size_t nx, size_t ny) : preview(array, x, y, nx, ny) {}
+  const_view(container_type* array) : preview(array) {}
+  const_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : preview(array, x, y, nx, ny) {}
 
   // dimensions of (sub)array
   size_t size_x() const { return nx; }
@@ -70,8 +70,8 @@ public:
   typedef typename container_type::pointer pointer;
 
   // construction--perform shallow copy of (sub)array
-  view(array2* array) : const_view(array) {}
-  view(array2* array, size_t x, size_t y, size_t nx, size_t ny) : const_view(array, x, y, nx, ny) {}
+  view(container_type* array) : const_view(array) {}
+  view(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : const_view(array, x, y, nx, ny) {}
 
   // (i, j) accessor from base class
   using const_view::operator();
@@ -96,8 +96,8 @@ public:
   typedef typename container_type::pointer pointer;
 
   // construction--perform shallow copy of (sub)array
-  flat_view(array2* array) : view(array) {}
-  flat_view(array2* array, size_t x, size_t y, size_t nx, size_t ny) : view(array, x, y, nx, ny) {}
+  flat_view(container_type* array) : view(array) {}
+  flat_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : view(array, x, y, nx, ny) {}
 
   // convert (i, j) index to flat index
   size_t index(size_t i, size_t j) const { return i + nx * j; }
@@ -157,8 +157,8 @@ public:
 protected:
   // construction--perform shallow copy of (sub)array
   friend class nested_view2;
-  explicit nested_view1(array2* array) : preview(array) {}
-  explicit nested_view1(array2* array, size_t x, size_t y, size_t nx, size_t ny) : preview(array, x, y, nx, ny) {}
+  explicit nested_view1(container_type* array) : preview(array) {}
+  explicit nested_view1(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : preview(array, x, y, nx, ny) {}
 };
 
 // nested view into a 2D rectangular subset of a 2D array
@@ -177,8 +177,8 @@ public:
   typedef typename container_type::pointer pointer;
 
   // construction--perform shallow copy of (sub)array
-  nested_view2(array2* array) : preview(array) {}
-  nested_view2(array2* array, size_t x, size_t y, size_t nx, size_t ny) : preview(array, x, y, nx, ny) {}
+  nested_view2(container_type* array) : preview(array) {}
+  nested_view2(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : preview(array, x, y, nx, ny) {}
 
   // dimensions of (sub)array
   size_t size_x() const { return nx; }
@@ -203,6 +203,16 @@ protected:
   using preview::nx;
   using preview::ny;
 public:
+  // construction--perform shallow copy of (sub)array
+  private_const_view(container_type* array, size_t cache_size = 0) :
+    preview(array),
+    cache(array->store, cache_size ? cache_size : array->cache.size())
+  {}
+  private_const_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) :
+    preview(array, x, y, nx, ny),
+    cache(array->store, cache_size ? cache_size : array->cache.size())
+  {}
+
   // private view uses its own references to access private cache
   typedef typename container_type::value_type value_type;
   typedef private_const_view container_type;
@@ -210,16 +220,6 @@ public:
   #include "zfp/handle2.h"
   #include "zfp/reference2.h"
   #include "zfp/pointer2.h"
-
-  // construction--perform shallow copy of (sub)array
-  private_const_view(array2* array, size_t cache_size = 0) :
-    preview(array),
-    cache(array->store, cache_size ? cache_size : array->cache.size())
-  {}
-  private_const_view(array2* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) :
-    preview(array, x, y, nx, ny),
-    cache(array->store, cache_size ? cache_size : array->cache.size())
-  {}
 
   // dimensions of (sub)array
   size_t size_x() const { return nx; }
@@ -254,6 +254,10 @@ protected:
   using preview::ny;
   using private_const_view::cache;
 public:
+  // construction--perform shallow copy of (sub)array
+  private_view(container_type* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
+  private_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) : private_const_view(array, x, y, nx, ny, cache_size) {}
+
   // private view uses its own references to access private cache
   typedef typename container_type::value_type value_type;
   typedef private_view container_type;
@@ -262,10 +266,6 @@ public:
   #include "zfp/handle2.h"
   #include "zfp/reference2.h"
   #include "zfp/pointer2.h"
-
-  // construction--perform shallow copy of (sub)array
-  private_view(array2* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
-  private_view(array2* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) : private_const_view(array, x, y, nx, ny, cache_size) {}
 
   // partition view into count block-aligned pieces, with 0 <= index < count
   void partition(size_t index, size_t count)

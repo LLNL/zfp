@@ -1,4 +1,4 @@
-// 1D array views; these classes are nested within zfp::array1
+// 1D array views; these classes are nested within zfp::container_type
 
 // abstract view of 1D array (base class)
 class preview {
@@ -14,9 +14,9 @@ public:
 
 protected:
   // construction and assignment--perform shallow copy of (sub)array
-  explicit preview(array1* array) : array(array), x(0), nx(array->nx) {}
-  explicit preview(array1* array, size_t x, size_t nx) : array(array), x(x), nx(nx) {}
-  preview& operator=(array1* a)
+  explicit preview(container_type* array) : array(array), x(0), nx(array->nx) {}
+  explicit preview(container_type* array, size_t x, size_t nx) : array(array), x(x), nx(nx) {}
+  preview& operator=(container_type* a)
   {
     array = a;
     x = 0;
@@ -24,9 +24,9 @@ protected:
     return *this;
   }
 
-  array1* array; // underlying container
-  size_t x;      // offset into array
-  size_t nx;     // dimensions of subarray
+  container_type* array; // underlying container
+  size_t x;              // offset into array
+  size_t nx;             // dimensions of subarray
 };
 
 // generic read-only view into a rectangular subset of a 1D array
@@ -41,8 +41,8 @@ public:
   typedef typename container_type::const_pointer const_pointer;
 
   // construction--perform shallow copy of (sub)array
-  const_view(array1* array) : preview(array) {}
-  const_view(array1* array, size_t x, size_t nx) : preview(array, x, nx) {}
+  const_view(container_type* array) : preview(array) {}
+  const_view(container_type* array, size_t x, size_t nx) : preview(array, x, nx) {}
 
   // dimensions of (sub)array
   size_t size_x() const { return nx; }
@@ -66,8 +66,8 @@ public:
   typedef typename container_type::pointer pointer;
 
   // construction--perform shallow copy of (sub)array
-  view(array1* array) : const_view(array) {}
-  view(array1* array, size_t x, size_t nx) : const_view(array, x, nx) {}
+  view(container_type* array) : const_view(array) {}
+  view(container_type* array, size_t x, size_t nx) : const_view(array, x, nx) {}
 
   // [i] accessor from base class
   using const_view::operator[];
@@ -89,6 +89,16 @@ protected:
   using preview::x;
   using preview::nx;
 public:
+  // construction--perform shallow copy of (sub)array
+  private_const_view(container_type* array, size_t cache_size = 0) :
+    preview(array),
+    cache(array->store, cache_size ? cache_size : array->cache.size())
+  {}
+  private_const_view(container_type* array, size_t x, size_t nx, size_t cache_size = 0) :
+    preview(array, x, nx),
+    cache(array->store, cache_size ? cache_size : array->cache.size())
+  {}
+
   // private view uses its own references to access private cache
   typedef typename container_type::value_type value_type;
   typedef private_const_view container_type;
@@ -96,16 +106,6 @@ public:
   #include "zfp/handle1.h"
   #include "zfp/reference1.h"
   #include "zfp/pointer1.h"
-
-  // construction--perform shallow copy of (sub)array
-  private_const_view(array1* array, size_t cache_size = 0) :
-    preview(array),
-    cache(array->store, cache_size ? cache_size : array->cache.size())
-  {}
-  private_const_view(array1* array, size_t x, size_t nx, size_t cache_size = 0) :
-    preview(array, x, nx),
-    cache(array->store, cache_size ? cache_size : array->cache.size())
-  {}
 
   // dimensions of (sub)array
   size_t size_x() const { return nx; }
@@ -137,6 +137,10 @@ protected:
   using preview::nx;
   using private_const_view::cache;
 public:
+  // construction--perform shallow copy of (sub)array
+  private_view(container_type* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
+  private_view(container_type* array, size_t x, size_t nx, size_t cache_size = 0) : private_const_view(array, x, nx, cache_size) {}
+
   // private view uses its own references to access private cache
   typedef typename container_type::value_type value_type;
   typedef private_view container_type;
@@ -145,10 +149,6 @@ public:
   #include "zfp/handle1.h"
   #include "zfp/reference1.h"
   #include "zfp/pointer1.h"
-
-  // construction--perform shallow copy of (sub)array
-  private_view(array1* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
-  private_view(array1* array, size_t x, size_t nx, size_t cache_size = 0) : private_const_view(array, x, nx, cache_size) {}
 
   // partition view into count block-aligned pieces, with 0 <= index < count
   void partition(size_t index, size_t count)
