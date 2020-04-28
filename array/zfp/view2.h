@@ -14,7 +14,9 @@ public:
   size_t global_y(size_t j) const { return y + j; }
 
 protected:
-  typedef container_type array_type; // used by private views
+  // used by private views
+  typedef container_type array_type;
+  typedef typename container_type::value_type value_type;
 
   // construction and assignment--perform shallow copy of (sub)array
   explicit preview(container_type* array) : array(array), x(0), y(0), nx(array->nx), ny(array->ny) {}
@@ -206,8 +208,8 @@ protected:
   using preview::ny;
 public:
   // private view uses its own references to access private cache
-  typedef typename container_type::value_type value_type;
   typedef private_const_view container_type;
+  typedef typename preview::value_type value_type;
   class const_pointer;
   #include "zfp/handle2.h"
   #include "zfp/reference2.h"
@@ -257,8 +259,8 @@ protected:
   using private_const_view::cache;
 public:
   // private view uses its own references to access private cache
-  typedef typename container_type::value_type value_type;
   typedef private_view container_type;
+  typedef typename preview::value_type value_type;
   class const_pointer;
   class pointer;
   #include "zfp/handle2.h"
