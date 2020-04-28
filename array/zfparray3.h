@@ -44,7 +44,7 @@ public:
 
   // constructor of nx * ny * nz array using rate bits per value, at least
   // cache_size bytes of cache, and optionally initialized from flat array p
-  array3(size_t nx, size_t ny, size_t nz, double rate, const Scalar* p = 0, size_t cache_size = 0) :
+  array3(size_t nx, size_t ny, size_t nz, double rate, const value_type* p = 0, size_t cache_size = 0) :
     array(3, Codec::type),
     store(nx, ny, nz, rate),
     cache(store, cache_size)
@@ -153,7 +153,7 @@ public:
   void flush_cache() const { cache.flush(); }
 
   // decompress array and store at p
-  void get(Scalar* p) const
+  void get(value_type* p) const
   {
     const size_t bx = store.block_size_x();
     const size_t by = store.block_size_y();
@@ -169,7 +169,7 @@ public:
   }
 
   // initialize array by copying and compressing data stored at p
-  void set(const Scalar* p)
+  void set(const value_type* p)
   {
     const size_t bx = store.block_size_x();
     const size_t by = store.block_size_y();
@@ -185,15 +185,15 @@ public:
   }
 
   // (i, j, k) accessors
-  Scalar operator()(size_t i, size_t j, size_t k) const { return get(i, j, k); }
+  const_reference operator()(size_t i, size_t j, size_t k) const { return const_reference(const_cast<container_type*>(this), i, j, k); }
   reference operator()(size_t i, size_t j, size_t k) { return reference(this, i, j, k); }
 
   // flat index accessors
-  Scalar operator[](size_t index) const
+  const_reference operator[](size_t index) const
   {
     size_t i, j, k;
     ijk(i, j, k, index);
-    return get(i, j, k);
+    return const_reference(const_cast<container_type*>(this), i, j, k);
   }
   reference operator[](size_t index)
   {
@@ -223,14 +223,14 @@ protected:
   }
 
   // inspector
-  Scalar get(size_t i, size_t j, size_t k) const { return cache.get(i, j, k); }
+  value_type get(size_t i, size_t j, size_t k) const { return cache.get(i, j, k); }
 
   // mutators (called from proxy reference)
-  void set(size_t i, size_t j, size_t k, Scalar val) { cache.set(i, j, k, val); }
-  void add(size_t i, size_t j, size_t k, Scalar val) { cache.ref(i, j, k) += val; }
-  void sub(size_t i, size_t j, size_t k, Scalar val) { cache.ref(i, j, k) -= val; }
-  void mul(size_t i, size_t j, size_t k, Scalar val) { cache.ref(i, j, k) *= val; }
-  void div(size_t i, size_t j, size_t k, Scalar val) { cache.ref(i, j, k) /= val; }
+  void set(size_t i, size_t j, size_t k, value_type val) { cache.set(i, j, k, val); }
+  void add(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) += val; }
+  void sub(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) -= val; }
+  void mul(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) *= val; }
+  void div(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) /= val; }
 
   // convert flat index to (i, j, k)
   void ijk(size_t& i, size_t& j, size_t& k, size_t index) const
@@ -240,8 +240,8 @@ protected:
     k = index;
   }
 
-  BlockStore3<Scalar, Codec> store; // persistent storage of compressed blocks
-  BlockCache3<Scalar, Codec> cache; // cache of decompressed blocks
+  BlockStore3<value_type, codec_type> store; // persistent storage of compressed blocks
+  BlockCache3<value_type, codec_type> cache; // cache of decompressed blocks
 };
 
 typedef array3<float> array3f;

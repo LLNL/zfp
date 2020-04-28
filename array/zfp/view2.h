@@ -3,8 +3,6 @@
 // abstract view of 2D array (base class)
 class preview {
 public:
-  typedef typename container_type::value_type value_type;
-
   // rate in bits per value
   double rate() const { return array->rate(); }
 
@@ -42,6 +40,10 @@ protected:
   using preview::nx;
   using preview::ny;
 public:
+  typedef typename container_type::value_type value_type;
+  typedef typename container_type::const_reference const_reference;
+  typedef typename container_type::const_pointer const_pointer;
+
   // construction--perform shallow copy of (sub)array
   const_view(array2* array) : preview(array) {}
   const_view(array2* array, size_t x, size_t y, size_t nx, size_t ny) : preview(array, x, y, nx, ny) {}
@@ -51,7 +53,7 @@ public:
   size_t size_y() const { return ny; }
 
   // (i, j) accessor
-  value_type operator()(size_t i, size_t j) const { return array->get(x + i, y + j); }
+  const_reference operator()(size_t i, size_t j) const { return const_reference(array, x + i, y + j); }
 };
 
 // generic read-write view into a rectangular subset of a 2D array
@@ -63,6 +65,10 @@ protected:
   using preview::nx;
   using preview::ny;
 public:
+  typedef typename container_type::value_type value_type;
+  typedef typename container_type::reference reference;
+  typedef typename container_type::pointer pointer;
+
   // construction--perform shallow copy of (sub)array
   view(array2* array) : const_view(array) {}
   view(array2* array, size_t x, size_t y, size_t nx, size_t ny) : const_view(array, x, y, nx, ny) {}
@@ -83,6 +89,12 @@ protected:
   using preview::nx;
   using preview::ny;
 public:
+  typedef typename container_type::value_type value_type;
+  typedef typename container_type::const_reference const_reference;
+  typedef typename container_type::reference reference;
+  typedef typename container_type::const_pointer const_pointer;
+  typedef typename container_type::pointer pointer;
+
   // construction--perform shallow copy of (sub)array
   flat_view(array2* array) : view(array) {}
   flat_view(array2* array, size_t x, size_t y, size_t nx, size_t ny) : view(array, x, y, nx, ny) {}
@@ -98,11 +110,11 @@ public:
   }
 
   // flat index accessors
-  value_type operator[](size_t index) const
+  const_reference operator[](size_t index) const
   {
     size_t i, j;
     ij(i, j, index);
-    return array->get(x + i, y + j);
+    return const_reference(array, x + i, y + j);
   }
   reference operator[](size_t index)
   {
@@ -125,15 +137,21 @@ protected:
   using preview::nx;
   using preview::ny;
 public:
+  typedef typename container_type::value_type value_type;
+  typedef typename container_type::const_reference const_reference;
+  typedef typename container_type::reference reference;
+  typedef typename container_type::const_pointer const_pointer;
+  typedef typename container_type::pointer pointer;
+
   // dimensions of (sub)array
   size_t size_x() const { return nx; }
 
   // [i] accessor and mutator
-  value_type operator[](size_t index) const { return array->get(x + index, y); }
+  const_reference operator[](size_t index) const { return const_reference(array, x + index, y); }
   reference operator[](size_t index) { return reference(array, x + index, y); }
 
   // (i) accessor and mutator
-  value_type operator()(size_t i) const { return array->get(x + i, y); }
+  const_reference operator()(size_t i) const { return const_reference(array, x + i, y); }
   reference operator()(size_t i) { return reference(array, x + i, y); }
 
 protected:
@@ -152,6 +170,12 @@ protected:
   using preview::nx;
   using preview::ny;
 public:
+  typedef typename container_type::value_type value_type;
+  typedef typename container_type::const_reference const_reference;
+  typedef typename container_type::reference reference;
+  typedef typename container_type::const_pointer const_pointer;
+  typedef typename container_type::pointer pointer;
+
   // construction--perform shallow copy of (sub)array
   nested_view2(array2* array) : preview(array) {}
   nested_view2(array2* array, size_t x, size_t y, size_t nx, size_t ny) : preview(array, x, y, nx, ny) {}
@@ -164,7 +188,7 @@ public:
   nested_view1 operator[](size_t index) const { return nested_view1(array, x, y + index, nx, 1); }
 
   // (i, j) accessor and mutator
-  value_type operator()(size_t i, size_t j) const { return array->get(x + i, y + j); }
+  const_reference operator()(size_t i, size_t j) const { return const_reference(array, x + i, y + j); }
   reference operator()(size_t i, size_t j) { return reference(array, x + i, y + j); }
 };
 
@@ -179,6 +203,14 @@ protected:
   using preview::nx;
   using preview::ny;
 public:
+  // private view uses its own references to access private cache
+  typedef typename container_type::value_type value_type;
+  typedef private_const_view container_type;
+  class const_pointer;
+  #include "zfp/handle2.h"
+  #include "zfp/reference2.h"
+  #include "zfp/pointer2.h"
+
   // construction--perform shallow copy of (sub)array
   private_const_view(array2* array, size_t cache_size = 0) :
     preview(array),
@@ -203,13 +235,13 @@ public:
   void clear_cache() const { cache.clear(); }
 
   // (i, j) accessor
-  value_type operator()(size_t i, size_t j) const { return get(x + i, y + j); }
+  const_reference operator()(size_t i, size_t j) const { return const_reference(const_cast<container_type*>(this), x + i, y + j); }
 
 protected:
   // inspector
   value_type get(size_t i, size_t j) const { return cache.get(i, j); }
 
-  mutable BlockCache2<value_type, codec_type> cache; // cache of decompressed blocks
+  BlockCache2<value_type, codec_type> cache; // cache of decompressed blocks
 };
 
 // thread-safe read-write view of private 2D (sub)array
@@ -223,10 +255,13 @@ protected:
   using private_const_view::cache;
 public:
   // private view uses its own references to access private cache
+  typedef typename container_type::value_type value_type;
   typedef private_view container_type;
-  typedef typename preview::value_type value_type;
+  class const_pointer;
+  class pointer;
   #include "zfp/handle2.h"
   #include "zfp/reference2.h"
+  #include "zfp/pointer2.h"
 
   // construction--perform shallow copy of (sub)array
   private_view(array2* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}

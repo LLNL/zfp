@@ -3,8 +3,6 @@
 // abstract view of 1D array (base class)
 class preview {
 public:
-  typedef typename container_type::value_type value_type;
-
   // rate in bits per value
   double rate() const { return array->rate(); }
 
@@ -38,6 +36,10 @@ protected:
   using preview::x;
   using preview::nx;
 public:
+  typedef typename container_type::value_type value_type;
+  typedef typename container_type::const_reference const_reference;
+  typedef typename container_type::const_pointer const_pointer;
+
   // construction--perform shallow copy of (sub)array
   const_view(array1* array) : preview(array) {}
   const_view(array1* array, size_t x, size_t nx) : preview(array, x, nx) {}
@@ -46,10 +48,10 @@ public:
   size_t size_x() const { return nx; }
 
   // [i] accessor
-  value_type operator[](size_t index) const { return array->get(x + index); }
+  const_reference operator[](size_t index) const { return const_reference(array, x + index); }
 
   // (i) accessor
-  value_type operator()(size_t i) const { return array->get(x + i); }
+  const_reference operator()(size_t i) const { return const_reference(array, x + i); }
 };
 
 // generic read-write view into a rectangular subset of a 1D array
@@ -59,6 +61,10 @@ protected:
   using preview::x;
   using preview::nx;
 public:
+  typedef typename container_type::value_type value_type;
+  typedef typename container_type::reference reference;
+  typedef typename container_type::pointer pointer;
+
   // construction--perform shallow copy of (sub)array
   view(array1* array) : const_view(array) {}
   view(array1* array, size_t x, size_t nx) : const_view(array, x, nx) {}
@@ -83,6 +89,14 @@ protected:
   using preview::x;
   using preview::nx;
 public:
+  // private view uses its own references to access private cache
+  typedef typename container_type::value_type value_type;
+  typedef private_const_view container_type;
+  class const_pointer;
+  #include "zfp/handle1.h"
+  #include "zfp/reference1.h"
+  #include "zfp/pointer1.h"
+
   // construction--perform shallow copy of (sub)array
   private_const_view(array1* array, size_t cache_size = 0) :
     preview(array),
@@ -106,13 +120,13 @@ public:
   void clear_cache() const { cache.clear(); }
 
   // (i) accessor
-  value_type operator()(size_t i) const { return get(x + i); }
+  const_reference operator()(size_t i) const { return const_reference(const_cast<container_type*>(this), x + i); }
 
 protected:
   // inspector
   value_type get(size_t i) const { return cache.get(i); }
 
-  mutable BlockCache1<value_type, codec_type> cache; // cache of decompressed blocks
+  BlockCache1<value_type, codec_type> cache; // cache of decompressed blocks
 };
 
 // thread-safe read-write view of private 1D (sub)array
@@ -124,10 +138,13 @@ protected:
   using private_const_view::cache;
 public:
   // private view uses its own references to access private cache
+  typedef typename container_type::value_type value_type;
   typedef private_view container_type;
-  typedef typename preview::value_type value_type;
+  class const_pointer;
+  class pointer;
   #include "zfp/handle1.h"
   #include "zfp/reference1.h"
+  #include "zfp/pointer1.h"
 
   // construction--perform shallow copy of (sub)array
   private_view(array1* array, size_t cache_size = 0) : private_const_view(array, cache_size) {}
