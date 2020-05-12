@@ -42,11 +42,13 @@ conventional C++ references.
 
 .. cpp:namespace:: zfp::arrayANY
 
+.. _ref_copy:
 .. cpp:function:: reference reference::operator=(const reference& ref)
 
   Assignment (copy) operator.  The referenced element, *elem*, is assigned the
   value stored at the element referenced by *ref*.  Return :code:`*this`.
 
+.. _ref_mutators:
 .. cpp:function:: reference reference::operator=(Scalar val)
 .. cpp:function:: reference reference::operator+=(Scalar val)
 .. cpp:function:: reference reference::operator-=(Scalar val)

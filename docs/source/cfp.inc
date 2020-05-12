@@ -8,7 +8,8 @@ C bindings
 .. cpp:namespace:: zfp
 
 |zfp| |cfprelease| adds |cfp|: C language bindings for compressed arrays
-via wrappers around the C++ classes.
+via wrappers around the C++ classes.  |zfp| |cfprpirelease| modifies its
+API (see below).
 
 The C API has been designed to facilitate working with compressed arrays
 without the benefits of C++ operator overloading and self-aware objects,
@@ -37,24 +38,56 @@ which is a substitute for the C++ code
   double value = a(i, j, k);
   a(i, j, k) = value + 1;
 
-Because the underlying C++ objects have no corresponding C representation,
-and because C objects are not self aware (they have no implicit :code:`this`
-pointer), the C interface interacts with compressed arrays through
-*pointers* to opaque types that |cfp| converts to pointers to
-the corresponding C++ objects.  As a consequence, |cfp| compressed arrays
-must be allocated on the heap and explicitly freed via designated
-destructor functions to avoid memory leaks.  The C++ constructors
-are mapped to C by allocating objects via C++ :code:`new`.  Moreover, the
-C API requires passing an array *self pointer* (wrapped within a cfp array 
-struct) in order to manipulate the array.
+Because the underlying C++ array objects have no corresponding C
+representation, and because C objects are not self aware (they have no
+implicit :code:`this` pointer), the C interface interacts with compressed
+arrays through array object *pointers*, wrapped in structs, that |cfp|
+converts to pointers to the corresponding C++ objects.  As a consequence,
+|cfp| compressed arrays must be allocated on the heap and must be explicitly
+freed via designated destructor functions to avoid memory leaks (this is
+not necessary for references, pointers, and iterators, which have their
+own C representation).  The C++ constructors are mapped to C by allocating
+objects via C++ :code:`new`.  Moreover, the C API requires passing an array
+*self pointer* (wrapped within a cfp array struct) in order to manipulate
+the array.
 
 As with the :ref:`C++ classes <array_classes>`, array elements can be
 accessed via multidimensional array indexing, e.g., :code:`get(array, i, j)`,
 and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
 
+.. note::
+
+  The |cfp| API changed in |zfp| |cfprpirelease| by wrapping array
+  *self pointers* in structs to align the interface more closely with the
+  C++ API and to avoid confusion when discussing arrays (now
+  :code:`cfp.array` rather than :code:`cfp.array*`) and pointers to
+  arrays (now :code:`cfp.array*` rather than :code:`cfp.array**`).
+  Furthermore, |zfp| |cfprpirelease| adds support for proxy references,
+  proxy pointers, and iterators that also wrap C++ classes.  Manipulating
+  those indirectly via pointers (like the old |cfp| arrays) would require
+  additional user effort to destroy dynamically allocated lightweight objects
+  and would also reduce code readability, e.g., :code:`cfp_ptr1d*` (whose
+  corresponding C++ type is :code:`zfp::array1d::pointer*`) reads more
+  naturally as a raw pointer to a proxy pointer than an indirectly referenced
+  proxy pointer object that the user must remember to implicitly dereference.
+
+
+.. _cfp_arrays:
 
 Arrays
 ^^^^^^
+
+|cfp| implements six array types for 1D, 2D, and 3D arrays of floats and
+doubles.  These array types share many functions that have the same signature.
+To reduce redundancy in the documentation, we define fictitious types
+:c:type:`cfp_arrayf` and :c:type:`cfp_arrayd` for *N*-dimensional
+(1 |leq| *N* |leq| 3) arrays of floats or doubles, :c:type:`cfp_array1`,
+:c:type:`cfp_array2`, and :c:type:`cfp_array3` for 1D, 2D, and 3D arrays
+of either floats or doubles, and :c:type:`cfp_array` for arrays of any
+dimensionality and type.  We also make use of corresponding namespaces,
+e.g., :c:struct:`cfp.array1` refers to the API common to one-dimensional
+arrays of floats or doubles.  These types and namespaces are not actually
+part of the |cfp| API.
 
 .. c:type:: cfp_array1f
 .. c:type:: cfp_array2f
@@ -64,6 +97,35 @@ Arrays
 .. c:type:: cfp_array3d
 
   Opaque types for 1D, 2D, and 3D compressed arrays of floats and doubles.
+
+.. c:type:: cfp_array1
+.. c:type:: cfp_array2
+.. c:type:: cfp_array3
+
+  Fictitious types denoting 1D, 2D, and 3D arrays of any scalar type.
+
+.. c:type:: cfp_arrayf
+.. c:type:: cfp_arrayd
+
+  Fictitious types denoting any-dimensional arrays of floats and doubles.
+
+.. c:type:: cfp_array
+
+  Fictitious type denoting array of any dimensionality and scalar type.
+
+.. c:struct:: cfp
+
+  .. c:struct:: array1f
+  .. c:struct:: array1d
+  .. c:struct:: array2f
+  .. c:struct:: array2d
+  .. c:struct:: array3f
+  .. c:struct:: array3d
+
+  Nested C "namespaces" for encapsulating the |cfp| API.  The outer
+  :c:struct:`cfp` namespace may be redefined at compile-time via the macro
+  :c:macro:`CFP_NAMESPACE`, e.g., to avoid symbol clashes.  The inner
+  namespaces hold function pointers to the |cfp| wrappers documented below.
 
 .. c:function:: cfp_array1f cfp.array1f.ctor(uint nx, double rate, const float* p, size_t csize)
 .. c:function:: cfp_array1d cfp.array1d.ctor(uint nx, double rate, const double* p, size_t csize)
@@ -76,6 +138,29 @@ Arrays
   If *p* is not :code:`NULL`, then the array is initialized from uncompressed
   storage; otherwise the array is zero initialized.  *csize* is the minimum
   size cache (in bytes) to use.  If *csize* is zero, a default size is chosen.
+
+.. c:function:: cfp_array cfp.array.ctor_default()
+  
+  Default constructor.  Allocate an empty array that later can be
+  :ref:`resized <cfp_resize>` and whose rate and cache size can be
+  set by :c:func:`cfp.array.set_rate` and
+  :c:func:`cfp.array.set_cache_size`.
+
+.. c:function:: cfp_array cfp.array.ctor_copy(const cfp_array src)
+
+  :ref:`Copy constructor <array_ctor_default>`.
+
+.. c:function:: void cfp.array.dtor(cfp_array self)
+
+  Destructor.  The destructor not only deallocates any compressed data
+  owned by the array, but also frees memory for itself, invalidating
+  the *self* object upon return.  Note that the user must explicitly
+  call the destructor to avoid memory leaks.
+
+.. c:function:: void cfp.array.deep_copy(cfp_array self, const cfp_array src)
+
+  Perform a deep copy of *src* analogous to the
+  :ref:`C++ assignment operator <array_copy>`.
 
 .. c:function:: float cfp.array1f.get(const cfp_array1f a, uint i)
 .. c:function:: float cfp.array2f.get(const cfp_array2f a, uint i, uint j)
@@ -96,75 +181,44 @@ Arrays
   Array mutators for assigning values to array elements via multidimensional
   indexing.
 
-.. c:function:: void cfp.array1f.get_array(const cfp_array1f self, float* p)
-.. c:function:: void cfp.array1d.get_array(const cfp_array1d self, double* p)
-.. c:function:: void cfp.array2f.get_array(const cfp_array2f self, float* p)
-.. c:function:: void cfp.array2d.get_array(const cfp_array2d self, double* p)
-.. c:function:: void cfp.array3f.get_array(const cfp_array3f self, float* p)
-.. c:function:: void cfp.array3d.get_array(const cfp_array3d self, double* p)
+.. c:function:: float cfp.arrayf.get_flat(const cfp_arrayf self, uint index)
+.. c:function:: double cfp.arrayd.get_flat(const cfp_arrayd self, uint index)
+
+  Flat index array accessors; see :cpp:func:`array::operator[]`.
+
+.. c:function:: void cfp.arrayf.set_flat(cfp_arrayf self, uint index, float val)
+.. c:function:: void cfp.arrayd.set_flat(cfp_arrayd self, uint index, double val)
+
+  Flat index array mutators; set array element with flat *index* to *val*.
+
+.. c:function:: void cfp.arrayf.get_array(const cfp_arrayf self, float* p)
+.. c:function:: void cfp.arrayd.get_array(const cfp_arrayd self, double* p)
 
   Decompress entire array; see :cpp:func:`array::get`.
 
-.. c:function:: void cfp.array1f.set_array(cfp_array1f self, const float* p)
-.. c:function:: void cfp.array1d.set_array(cfp_array1d self, const double* p)
-.. c:function:: void cfp.array2f.set_array(cfp_array2f self, const float* p)
-.. c:function:: void cfp.array2d.set_array(cfp_array2d self, const double* p)
-.. c:function:: void cfp.array3f.set_array(cfp_array3f self, const float* p)
-.. c:function:: void cfp.array3d.set_array(cfp_array3d self, const double* p)
+.. c:function:: void cfp.arrayf.set_array(cfp_arrayf self, const float* p)
+.. c:function:: void cfp.arrayd.set_array(cfp_arrayd self, const double* p)
 
   Initialize entire array; see :cpp:func:`array::set`.
 
-.. c:function:: uint cfp.array2f.size_x(const cfp_array2f self)
-.. c:function:: uint cfp.array2f.size_y(const cfp_array2f self)
-.. c:function:: uint cfp.array3f.size_x(const cfp_array3f self)
-.. c:function:: uint cfp.array3f.size_y(const cfp_array3f self)
-.. c:function:: uint cfp.array3f.size_z(const cfp_array3f self)
-
-.. c:function:: uint cfp.array2d.size_x(const cfp_array2d self)
-.. c:function:: uint cfp.array2d.size_y(const cfp_array2d self)
-.. c:function:: uint cfp.array3d.size_x(const cfp_array3d self)
-.. c:function:: uint cfp.array3d.size_y(const cfp_array3d self)
-.. c:function:: uint cfp.array3d.size_z(const cfp_array3d self)
+.. c:function:: uint cfp.array2.size_x(const cfp_array2 self)
+.. c:function:: uint cfp.array2.size_y(const cfp_array2 self)
+.. c:function:: uint cfp.array3.size_x(const cfp_array3 self)
+.. c:function:: uint cfp.array3.size_y(const cfp_array3 self)
+.. c:function:: uint cfp.array3.size_z(const cfp_array3 self)
 
   :ref:`Array dimensions <array_dims>`.
 
 .. _cfp_resize:
-.. c:function:: void cfp.array1f.resize(cfp_array1f self, uint n, int clear)
-.. c:function:: void cfp.array2f.resize(cfp_array2f self, uint nx, uint ny, int clear)
-.. c:function:: void cfp.array3f.resize(cfp_array3f self, uint nx, uint ny, uint nz, int clear)
-.. c:function:: void cfp.array1d.resize(cfp_array1d self, uint n, int clear)
-.. c:function:: void cfp.array2d.resize(cfp_array2d self, uint nx, uint ny, int clear)
-.. c:function:: void cfp.array3d.resize(cfp_array3d self, uint nx, uint ny, uint nz, int clear)
+.. c:function:: void cfp.array1.resize(cfp_array1 self, uint n, int clear)
+.. c:function:: void cfp.array2.resize(cfp_array2 self, uint nx, uint ny, int clear)
+.. c:function:: void cfp.array3.resize(cfp_array3 self, uint nx, uint ny, uint nz, int clear)
 
   :ref:`Resize array <array_resize>`.
 
-The six array types share many functions that have the same signature.
-Below, each instance of :code:`cfp_array` generically refers to one of
-those six types (ex. :code:`cfp_array1f`). Similarly, each instance of
-:code:`cfp.array` refers to navigating the CFP API namespace for a given cfp
-type, to reach the function call (ex. :code:`cfp.array2f`).
+.. c:function:: size_t cfp.array.size(const cfp_array self)
 
-.. c:function:: cfp_array cfp.array.ctor_default()
-  
-  Default constructor.  Allocate an empty array that later can be
-  :ref:`resized <cfp_resize>` and whose rate and cache size can be
-  set by :c:func:`cfp.array.set_rate` and :c:func:`cfp.array.set_cache_size`.
-
-.. c:function:: cfp_array cfp.array.ctor_copy(const cfp_array src)
-
-  :ref:`Copy constructor <array_ctor_default>`.
-
-.. c:function:: void cfp.array.dtor(cfp_array self)
-
-  Destructor.  The destructor not only deallocates any compressed data
-  owned by the array, but also frees memory for itself, invalidating
-  the *self* pointer upon return.  Note that the user must explicitly
-  call the destructor to avoid memory leaks.
-
-.. c:function:: void cfp.array.deep_copy(cfp_array self, const cfp_array* src)
-
-  Perform a deep copy of *src* analogous to the
-  :ref:`C++ assignment operator <array_copy>`.
+  See :cpp:func:`array::size`.
 
 .. c:function:: double cfp.array.rate(const cfp_array self)
 
@@ -198,24 +252,32 @@ type, to reach the function call (ex. :code:`cfp.array2f`).
 
   See :cpp:func:`array::compressed_data`.
 
-.. c:function:: size_t cfp.array.size(const cfp_array self)
-
-  See :cpp:func:`array::size`.
-
-.. c:function:: float cfp.array.get_flat(const cfp_array a, uint index)
-.. c:function:: double cfp.array.get_flat(const cfp_array a, uint index)
-
-  Flat index array accessors; see :cpp:func:`array::operator[]`.
-
-.. c:function:: void cfp.array.set_flat(const cfp_array a, uint index, float val)
-.. c:function:: void cfp.array.set_flat(const cfp_array a, uint index, double val)
-
-  Flat index array mutators; set array element with flat *index* to *val*.
-
 
 
 References
 ^^^^^^^^^^
+
+.. cpp:namespace:: zfp::arrayANY
+
+|zfp| |cfprpirelease| adds |cfp| support for proxy
+:ref:`references <references>` and :ref:`pointers <pointers>` to individual
+array elements, as well as :ref:`iterators <iterators>` for traversing arrays.
+These are analogues to the corresponding C++ classes.  As with
+:ref:`arrays <cfp_arrays>`, fictitious types and namespaces are used to
+shorten the documentation.
+
+.. _cfp_rpi_value_semantics:
+.. note::
+
+  Unlike the case of arrays, for which the surrounding struct stores a pointer
+  to the underlying array object to allow modifications of the array, the
+  |cfp| proxy reference, proxy pointer, and iterator objects are all passed
+  by value, and hence none of the functions below modify the *self* argument.
+  To increment a pointer, for instance, one should call
+  :c:expr:`p = cfp.array.pointer.inc(p)`.  Note that while the references,
+  pointers, and iterators are not themselves modified, the array elements
+  that they reference can be modified.
+
 .. c:type:: cfp_ref1f
 .. c:type:: cfp_ref2f
 .. c:type:: cfp_ref3f
@@ -223,66 +285,71 @@ References
 .. c:type:: cfp_ref2d
 .. c:type:: cfp_ref3d
 
-  Opaque types for references to 1D, 2D, and 3D compressed float or double array elements.
+  Opaque types for proxy references to 1D, 2D, and 3D compressed float or
+  double array elements.
 
-.. c:function:: cfp_ref1f cfp.array1f.ref(cfp_array1f self, uint i)
-.. c:function:: cfp_ref1d cfp.array1d.ref(cfp_array1d self, uint i)
-.. c:function:: cfp_ref2f cfp.array2f.ref(cfp_array2f self, uint i, uint j)
-.. c:function:: cfp_ref2d cfp.array2d.ref(cfp_array2d self, uint i, uint j)
-.. c:function:: cfp_ref3f cfp.array3f.ref(cfp_array3f self, uint i, uint j, uint k)
-.. c:function:: cfp_ref3d cfp.array3d.ref(cfp_array3d self, uint i, uint j, uint k)
+.. c:type:: cfp_ref1
+.. c:type:: cfp_ref2
+.. c:type:: cfp_ref3
+
+  Fictitious types denoting references into 1D, 2D, and 3D arrays of any
+  scalar type.
+
+.. c:type:: cfp_reff
+.. c:type:: cfp_refd
+
+  Fictitious types denoting references into float or double arrays of any
+  dimensionality.
+
+.. c:type:: cfp_ref
+
+  Fictitious type denoting reference into array of any dimensionality and
+  scalar type.
+
+.. c:function:: cfp_ref1 cfp.array1.ref(cfp_array1 self, uint i)
+.. c:function:: cfp_ref2 cfp.array2.ref(cfp_array2 self, uint i, uint j)
+.. c:function:: cfp_ref3 cfp.array3.ref(cfp_array3 self, uint i, uint j, uint k)
 
   Reference :ref:`constructor <lvref_bidx>` via multidimensional indexing.
 
-.. c:function:: cfp_ref1f cfp.array1f.flat_ref(cfp_array1f self, uint i)
-.. c:function:: cfp_ref1d cfp.array1d.flat_ref(cfp_array1d self, uint i)
-.. c:function:: cfp_ref2f cfp.array2f.flat_ref(cfp_array2f self, uint i)
-.. c:function:: cfp_ref2d cfp.array2d.flat_ref(cfp_array2d self, uint i)
-.. c:function:: cfp_ref3f cfp.array3f.flat_ref(cfp_array3f self, uint i)
-.. c:function:: cfp_ref3d cfp.array3d.flat_ref(cfp_array3d self, uint i)
+.. c:function:: cfp_ref cfp.array.ref_flat(cfp_array self, uint i)
 
   Reference :ref:`constructor <lvref_idx>` via flat indexing.
 
-.. c:function:: float  cfp.array1f.reference.get(cfp_ref1f self)
-.. c:function:: double cfp.array1d.reference.get(cfp_ref1d self)
-.. c:function:: float  cfp.array2f.reference.get(cfp_ref2f self)
-.. c:function:: double cfp.array2d.reference.get(cfp_ref2d self)
-.. c:function:: float  cfp.array3f.reference.get(cfp_ref3f self)
-.. c:function:: double cfp.array3d.reference.get(cfp_ref3d self)
+.. c:function:: void cfp.array.reference.copy(cfp_ref self, cfp_ref src)
 
-  Retrieve value from reference.
+  Copy value referenced by *src* to value referenced by *self*;
+  see :cpp:func:`reference::operator=()`.  This performs a
+  deep copy.  This is in contrast to :code:`self = src;`, which performs
+  only a shallow copy.
 
-.. c:function:: void cfp.array1f.reference.set(cfp_ref1f self, float  val)
-.. c:function:: void cfp.array1d.reference.set(cfp_ref1d self, double val)
-.. c:function:: void cfp.array2f.reference.set(cfp_ref2f self, float  val)
-.. c:function:: void cfp.array2d.reference.set(cfp_ref2d self, double val)
-.. c:function:: void cfp.array3f.reference.set(cfp_ref3f self, float  val)
-.. c:function:: void cfp.array3d.reference.set(cfp_ref3d self, double val)
+.. c:function:: float  cfp.arrayf.reference.get(cfp_reff self)
+.. c:function:: double cfp.arrayd.reference.get(cfp_refd self)
 
-  Update value pointed to by reference; see :cpp:func:`reference reference::operator=(Scalar val)`.
+  Retrieve value referenced by *self*.
 
-.. c:function:: void cfp.array1f.reference.copy(cfp_ref1f self, cfp_ref1f src)
-.. c:function:: void cfp.array1d.reference.copy(cfp_ref1d self, cfp_ref1d src)
-.. c:function:: void cfp.array2f.reference.copy(cfp_ref2f self, cfp_ref2f src)
-.. c:function:: void cfp.array2d.reference.copy(cfp_ref2d self, cfp_ref2d src)
-.. c:function:: void cfp.array3f.reference.copy(cfp_ref3f self, cfp_ref3f src)
-.. c:function:: void cfp.array3d.reference.copy(cfp_ref3d self, cfp_ref3d src)
+.. c:function:: void cfp.arrayf.reference.set(cfp_reff self, float  val)
+.. c:function:: void cfp.arrayd.reference.set(cfp_refd self, double val)
 
-  Copy value pointed to by source reference to value of self reference; see :cpp:func:`reference reference::operator=(const reference &ref)`.
+  Update value referenced by *self*;
+  see :cpp:func:`reference::operator=()`.
 
-.. c:function:: cfp_ptr1f cfp.array1f.reference.ptr(cfp_ref1f self)
-.. c:function:: cfp_ptr1d cfp.array1d.reference.ptr(cfp_ref1d self)
-.. c:function:: cfp_ptr2f cfp.array2f.reference.ptr(cfp_ref2f self)
-.. c:function:: cfp_ptr2d cfp.array2d.reference.ptr(cfp_ref2d self)
-.. c:function:: cfp_ptr3f cfp.array3f.reference.ptr(cfp_ref3f self)
-.. c:function:: cfp_ptr3d cfp.array3d.reference.ptr(cfp_ref3d self)
+.. c:function:: cfp_ptr cfp.array.reference.ptr(cfp_ref self)
 
-  Obtain proxy pointer to reference value; see :cpp:func:`pointer reference::operator&()`.
+  Obtain proxy pointer to value referenced by *self*;
+  see :cpp:func:`reference::operator&()`.
 
 
 
 Pointers
 ^^^^^^^^
+
+|cfp| proxy pointers wrap the C++ :ref:`pointer <pointers>` classes.
+Pointers are constructed via :c:func:`cfp.array.ptr` and
+:c:func:`cfp.array.reference.ptr`.  All pointers are
+:ref:`passed by value <cfp_rpi_value_semantics>` and
+are themselves not modified by these functions.
+
 .. c:type:: cfp_ptr1f
 .. c:type:: cfp_ptr2f
 .. c:type:: cfp_ptr3f
@@ -290,75 +357,113 @@ Pointers
 .. c:type:: cfp_ptr2d
 .. c:type:: cfp_ptr3d
 
-  Opaque types for pointers to 1D, 2D, and 3D compressed float or double array elements.
+  Opaque types for proxy pointers to 1D, 2D, and 3D compressed float or
+  double array elements.
 
-.. c:function:: cfp_ref1f (*ref)(cfp_ptr1f self)
-.. c:function:: cfp_ref1d (*ref)(cfp_ptr1d self)
-.. c:function:: cfp_ref2f (*ref)(cfp_ptr2f self)
-.. c:function:: cfp_ref2d (*ref)(cfp_ptr2d self)
-.. c:function:: cfp_ref3f (*ref)(cfp_ptr3f self)
-.. c:function:: cfp_ref3d (*ref)(cfp_ptr3d self)
+.. c:type:: cfp_ptr1
+.. c:type:: cfp_ptr2
+.. c:type:: cfp_ptr3
 
-  Get proxy reference associated with proxy pointer; see :cpp:func:`reference pointer::operator*() const`.
+  Fictitious types denoting pointers into 1D, 2D, and 3D arrays of any
+  scalar type.
 
-.. c:function:: cfp_ref1f (*offset_ref)(cfp_ptr1f self, int i)
-.. c:function:: cfp_ref1d (*offset_ref)(cfp_ptr1d self, int i)
-.. c:function:: cfp_ref2f (*offset_ref)(cfp_ptr2f self, int i)
-.. c:function:: cfp_ref2d (*offset_ref)(cfp_ptr2d self, int i)
-.. c:function:: cfp_ref3f (*offset_ref)(cfp_ptr3f self, int i)
-.. c:function:: cfp_ref3d (*offset_ref)(cfp_ptr3d self, int i)
+.. c:type:: cfp_ptrf
+.. c:type:: cfp_ptrd
 
-  Get proxy reference associated with an offset from proxy pointer; see :cpp:func:`reference pointer::operator[](ptrdiff_t d) const`.
+  Fictitious types denoting pointers into float or double arrays of any
+  dimensionality.
 
-.. c:function:: int (*eq)(cfp_ptr1f self, cfp_ptr1f src)
-.. c:function:: int (*eq)(cfp_ptr1d self, cfp_ptr1d src)
-.. c:function:: int (*eq)(cfp_ptr2f self, cfp_ptr2f src)
-.. c:function:: int (*eq)(cfp_ptr2d self, cfp_ptr2d src)
-.. c:function:: int (*eq)(cfp_ptr3f self, cfp_ptr3f src)
-.. c:function:: int (*eq)(cfp_ptr3d self, cfp_ptr3d src)
+.. c:type:: cfp_ptr
 
-  Return whether the addresses of two proxy pointers are equal; see :cpp:func:`pointer pointer::operator==(int)` and :cpp:func:`pointer pointer::operator!=(int)`.
+  Fictitious type denoting pointer into array of any dimensionality and
+  scalar type.
 
-.. c:function:: int (*diff)(cfp_ptr1f self, cfp_ptr1f src)
-.. c:function:: int (*diff)(cfp_ptr1d self, cfp_ptr1d src)
-.. c:function:: int (*diff)(cfp_ptr2f self, cfp_ptr2f src)
-.. c:function:: int (*diff)(cfp_ptr2d self, cfp_ptr2d src)
-.. c:function:: int (*diff)(cfp_ptr3f self, cfp_ptr3f src)
-.. c:function:: int (*diff)(cfp_ptr3d self, cfp_ptr3d src)
+.. c:function:: cfp_ptr1 cfp.array1.ptr(cfp_array1 self, uint i)
+.. c:function:: cfp_ptr2 cfp.array2.ptr(cfp_array2 self, uint i, uint j)
+.. c:function:: cfp_ptr3 cfp.array3.ptr(cfp_array3 self, uint i, uint j, uint k)
 
-  Get the difference between two proxy pointer addresses; see :cpp:func:`ptrdiff_t pointer::operator-(const pointer &q) const`.
+  Obtain pointer to array element via multidimensional indexing.
 
-.. c:function:: cfp_ptr1f (*shift)(cfp_ptr1f self, int i)
-.. c:function:: cfp_ptr1d (*shift)(cfp_ptr1d self, int i)
-.. c:function:: cfp_ptr2f (*shift)(cfp_ptr2f self, int i)
-.. c:function:: cfp_ptr2d (*shift)(cfp_ptr2d self, int i)
-.. c:function:: cfp_ptr3f (*shift)(cfp_ptr3f self, int i)
-.. c:function:: cfp_ptr3d (*shift)(cfp_ptr3d self, int i)
+.. c:function:: cfp_ptr cfp.array.ptr_flat(cfp_array self, uint i)
 
-  Shift a proxy pointer address by a given offset; see :cpp:func:`pointer pointer::operator+(ptrdiff_t d) const` and :cpp:func:`pointer::operator-(ptrdiff_t d) const`.
+  Obtain pointer to array element via flat indexing.
 
-.. c:function:: cfp_ptr1f (*inc)(cfp_ptr1f self)
-.. c:function:: cfp_ptr1d (*inc)(cfp_ptr1d self)
-.. c:function:: cfp_ptr2f (*inc)(cfp_ptr2f self)
-.. c:function:: cfp_ptr2d (*inc)(cfp_ptr2d self)
-.. c:function:: cfp_ptr3f (*inc)(cfp_ptr3f self)
-.. c:function:: cfp_ptr3d (*inc)(cfp_ptr3d self)
+.. c:function:: float cfp.arrayf.pointer.get(cfp_ptrf self)
+.. c:function:: double cfp.arrayd.pointer.get(cfp_ptrd self)
 
-  Return proxy pointer incremented by one; see :cpp:func:`pointer pointer::operator++(int)`.
+  Dereference operator; :c:expr:`*self`.
+  See :cpp:func:`pointer::operator*()`.
 
-.. c:function:: cfp_ptr1f (*dec)(cfp_ptr1f self)
-.. c:function:: cfp_ptr1d (*dec)(cfp_ptr1d self)
-.. c:function:: cfp_ptr2f (*dec)(cfp_ptr2f self)
-.. c:function:: cfp_ptr2d (*dec)(cfp_ptr2d self)
-.. c:function:: cfp_ptr3f (*dec)(cfp_ptr3f self)
-.. c:function:: cfp_ptr3d (*dec)(cfp_ptr3d self)
+.. c:function:: float cfp.arrayf.pointer.get_at(cfp_ptrf self, ptrdiff_t d)
+.. c:function:: double cfp.arrayd.pointer.get_at(cfp_ptrd self, ptrdiff_t d)
 
-  Return proxy pointer decremented by one; see :cpp:func:`pointer pointer::operator--(int)`.
+  Offset dereference operator; :c:expr:`self[d]`.
+  See :cpp:func:`pointer::operator[]()`.
+
+.. c:function:: void cfp.arrayf.pointer.set(cfp_ptrf self, float val)
+.. c:function:: void cfp.arrayd.pointer.set(cfp_ptrd self, double val)
+
+  Dereference operator; :c:expr:`*self = val`.
+  See :cpp:func:`pointer::operator*()`.
+
+.. c:function:: void cfp.arrayf.pointer.set_at(cfp_ptrf self, ptrdiff_t d, float val)
+.. c:function:: void cfp.arrayd.pointer.set_at(cfp_ptrd self, ptrdiff_t d, double val)
+
+  Offset dereference operator; :c:expr:`self[d] = val`.
+  See :cpp:func:`pointer::operator[]()`.
+
+.. c:function:: cfp_ref cfp.array.pointer.ref(cfp_ptr self)
+
+  Get proxy reference to element stored at :code:`*self`.
+  See :cpp:func:`pointer::operator*()`.
+
+.. c:function:: cfp_ref cfp.array.pointer.ref_at(cfp_ptr self, ptrdiff_t d)
+
+  Get proxy reference to element stored at :code:`self[d]`.
+  See :cpp:func:`pointer::operator[]()`.
+
+.. c:function:: int cfp.array.pointer.eq(cfp_ptr self, cfp_ptr src)
+
+  Compare two proxy pointers for equality; :c:expr:`self == src`.
+  The pointers must be to elements with the same index within the same
+  array to satisfy equality.  See :cpp:func:`pointer::operator==()`.
+
+.. c:function:: int cfp.array.pointer.neq(cfp_ptr self, cfp_ptr src)
+
+  Compare two proxy pointers for inequality; :c:expr:`self != src`.
+  The pointers are not equal if they point to different arrays or to
+  elements with different index within the same array.  See
+  :cpp:func:`pointer::operator!=()`.
+
+.. c:function:: ptrdiff_t cfp.array.pointer.diff(cfp_ptr self, cfp_ptr src)
+
+  Difference between two proxy pointers in number of array elements;
+  :c:expr:`self - src`.  See :cpp:func:`pointer::operator-()`.
+
+.. c:function:: cfp_ptr cfp.array.pointer.advance(cfp_ptr self, ptrdiff_t d)
+
+  Advance proxy pointer by a given distance (may be negative);
+  :c:expr:`self + d`.  See :cpp:func:`pointer::operator+()`.
+
+.. c:function:: cfp_ptr cfp.array.pointer.inc(cfp_ptr self)
+
+  Increment proxy pointer and return the result; :c:expr:`self + 1`.
+  See :cpp:func:`pointer::operator++()`.
+
+.. c:function:: cfp_ptr cfp.array.pointer.dec(cfp_ptr self)
+
+  Decrement proxy pointer and return the result; :c:expr:`self - 1`.
+  See :cpp:func:`pointer::operator--()`.
 
 
 
 Iterators
 ^^^^^^^^^
+
+|cfp| iterators wrap the C++ :ref:`iterator <iterators>` classes.
+All iterators are :ref:`passed by value <cfp_rpi_value_semantics>` and
+are themselves not modified by these functions.
+
 .. c:type:: cfp_iter1f
 .. c:type:: cfp_iter2f
 .. c:type:: cfp_iter3f
@@ -366,84 +471,130 @@ Iterators
 .. c:type:: cfp_iter2d
 .. c:type:: cfp_iter3d
 
-  Opaque types for block iterators over 1D, 2D, and 3D compressed float or double array elements.
+  Opaque types for block iterators over 1D, 2D, and 3D compressed float
+  or double array elements.
 
-.. c:function:: cfp_iter1f (*dec)(cfp_iter1f self)
-.. c:function:: cfp_iter1d (*dec)(cfp_iter1d self)
+.. c:type:: cfp_iter1
+.. c:type:: cfp_iter2
+.. c:type:: cfp_iter3
 
-  Decrement proxy iterator by one (only supported for one dimensional array iterators); see :cpp:func:`iterator iterator::operator--(int)`.
+  Fictitious types denoting iterators over 1D, 2D, and 3D arrays of any
+  scalar type.
 
-.. c:function:: cfp_iter1f (*shift)(cfp_iter1f self, int i)
-.. c:function:: cfp_iter1d (*shift)(cfp_iter1d self, int i)
+.. c:type:: cfp_iterf
+.. c:type:: cfp_iterd
 
-  Shift proxy iterator by an offset (only supported for one dimensional array iterators); see :cpp:func:`array1::iterator array1::iterator::operator+=(difference_type d)`.
+  Fictitious types denoting iterators over float or double arrays of any
+  dimensionality.
 
-.. c:function:: int (*diff)(cfp_iter1f self, cfp_iter1f src)
-.. c:function:: int (*diff)(cfp_iter1d self, cfp_iter1d src)
+.. c:type:: cfp_iter
 
-  Get the difference between two iterators (only supported for one dimensional array iterators); see :cpp:func:`difference_type array1::iterator::operator-(const array1::iterator &it) const`.
+  Fictitious type denoting iterator over array of any dimensionality and
+  scalar type.
 
-.. c:function:: int (*lt)(cfp_iter1f self, cfp_iter1f src)
-.. c:function:: int (*lt)(cfp_iter1d self, cfp_iter1d src)
-.. c:function:: int (*gt)(cfp_iter1f self, cfp_iter1f src)
-.. c:function:: int (*gt)(cfp_iter1d self, cfp_iter1d src)
-.. c:function:: int (*leq)(cfp_iter1f self, cfp_iter1f src)
-.. c:function:: int (*leq)(cfp_iter1d self, cfp_iter1d src)
-.. c:function:: int (*geq)(cfp_iter1f self, cfp_iter1f src)
-.. c:function:: int (*geq)(cfp_iter1d self, cfp_iter1d src)
+.. c:function:: cfp_iter cfp.array.begin(cfp_array self)
 
-  Return true if the two iterators satisfy the given relationship (only supported for one dimensional array iterators). 
+  Return iterator to beginning of array;
+  see :cpp:func:`array::begin()`.
 
-.. c:function:: cfp_ref1f (*offset_ref)(cfp_iter1f self, int i)
-.. c:function:: cfp_ref1d (*offset_ref)(cfp_iter1d self, int i)
+.. c:function:: cfp_iter cfp.array.end(cfp_array self)
 
-  Return reference associated with an offset from iterator (only supported for one dimensional array iterators); see :cpp:func:`array1::reference array1::iterator::operator[](difference_type d) const`.
+  Return iterator to end of array;
+  see :cpp:func:`array::end()`.
 
+.. c:function:: float cfp.arrayf.iterator.get(cfp_iterf self)
+.. c:function:: double cfp.arrayd.iterator.get(cfp_iterd self)
 
-.. c:function:: cfp_ref1f (*ref)(cfp_iter1f self)
-.. c:function:: cfp_ref1d (*ref)(cfp_iter1d self)
-.. c:function:: cfp_ref2f (*ref)(cfp_iter2f self)
-.. c:function:: cfp_ref2d (*ref)(cfp_iter2d self)
-.. c:function:: cfp_ref3f (*ref)(cfp_iter3f self)
-.. c:function:: cfp_ref3d (*ref)(cfp_iter3d self)
+  Return element referenced by iterator; :c:expr:`*self`.
+  See :cpp:func:`iterator::operator*()`.
 
-  Return reference associated with iterator; see :cpp:func:`reference iterator::operator*() const`.
+.. c:function:: float cfp.array1f.iterator.get_at(cfp_iter1f self, ptrdiff_t d)
+.. c:function:: double cfp.array1d.iterator.get_at(cfp_iter1d self, ptrdiff_t d)
 
-.. c:function:: cfp_iter1f (*inc)(cfp_iter1f self)
-.. c:function:: cfp_iter1d (*inc)(cfp_iter1d self)
-.. c:function:: cfp_iter2f (*inc)(cfp_iter2f self)
-.. c:function:: cfp_iter2d (*inc)(cfp_iter2d self)
-.. c:function:: cfp_iter3f (*inc)(cfp_iter3f self)
-.. c:function:: cfp_iter3d (*inc)(cfp_iter3d self)
+  Return element *d* elements (may be negative) from iterator (only
+  supported for one-dimensional array iterators); :c:expr:`self[d]`.
+  See :cpp:func:`array1::iterator::operator[]()`.
 
-  Increment iterator by one; see :cpp:func`iterator iterator::operator++(int)`.
+.. c:function:: void cfp.arrayf.iterator.set(cfp_iterf self, float val)
+.. c:function:: void cfp.arrayd.iterator.set(cfp_iterd self, double val)
 
-.. c:function:: int (*eq)(cfp_iter1f self, cfp_iter1f src)
-.. c:function:: int (*eq)(cfp_iter1d self, cfp_iter1d src)
-.. c:function:: int (*eq)(cfp_iter2f self, cfp_iter2f src)
-.. c:function:: int (*eq)(cfp_iter2d self, cfp_iter2d src)
-.. c:function:: int (*eq)(cfp_iter3f self, cfp_iter3f src)
-.. c:function:: int (*eq)(cfp_iter3d self, cfp_iter3d src)
+  Update element referenced by iterator; :c:expr:`*self = val`.
+  See :cpp:func:`iterator::operator*()`.
 
-  Return whether two iterators point to the same location; see :cpp:func:`bool iterator::operator==(const iterator &it) const` and :cpp:func:`bool iterator::operator!=(const iterator &it) const`.
+.. c:function:: void cfp.arrayf.iterator.set_at(cfp_iterf self, ptrdiff_t d, float val)
+.. c:function:: void cfp.arrayd.iterator.set_at(cfp_iterd self, ptrdiff_t d, double val)
 
-.. c:function:: uint (*i)(cfp_iter1f self)
-.. c:function:: uint (*i)(cfp_iter1d self)
-.. c:function:: uint (*i)(cfp_iter2f self)
-.. c:function:: uint (*i)(cfp_iter2d self)
-.. c:function:: uint (*i)(cfp_iter3f self)
-.. c:function:: uint (*i)(cfp_iter3d self)
+  Update element *d* elements (may be negative) from iterator only supported
+  for one-dimensional array iterators); :c:expr:`self[d] = val`.
+  See :cpp:func:`iterator::operator[]()`.
 
-  Get i component of iterator index; see :cpp:func:`uint iterator::i() const`.
+.. c:function:: cfp_ref cfp.array.iterator.ref(cfp_iter self)
 
-.. c:function:: uint (*j)(cfp_iter2f self)
-.. c:function:: uint (*j)(cfp_iter2d self)
-.. c:function:: uint (*j)(cfp_iter3f self)
-.. c:function:: uint (*j)(cfp_iter3d self)
+  Return reference to element referenced by iterator; :c:expr:`*self`.
+  See :cpp:func:`iterator::operator*()`.
 
-  Get j component of iterator index; see :cpp:func:`uint iterator::j() const`.
+.. c:function:: cfp_ref1 cfp.array1.iterator.ref_at(cfp_iter1 self, ptrdiff_t d)
 
-.. c:function:: uint (*k)(cfp_iter3f self)
-.. c:function:: uint (*k)(cfp_iter3d self)
+  Return reference to an element offset *d* elements (may be negative) from
+  iterator (only supported for one-dimensional array iterators);
+  :c:expr:`self[d]`.  See :cpp:func:`array1::iterator::operator[]()`.
 
-  Get k component of iterator index; see :cpp:func:`uint iterator::k() const`.
+.. c:function:: int cfp.array1.iterator.lt(cfp_iter1 self, cfp_iter1 it)
+.. c:function:: int cfp.array1.iterator.gt(cfp_iter1 self, cfp_iter1 it)
+.. c:function:: int cfp.array1.iterator.leq(cfp_iter1 self, cfp_iter1 it)
+.. c:function:: int cfp.array1.iterator.geq(cfp_iter1 self, cfp_iter1 it)
+
+  Return true if the two iterators satisfy the given relationship (only
+  supported for one-dimensional array iterators); :c:expr:`self < it`,
+  :c:expr:`self > it`, :c:expr:`self <= it`, :c:expr:`self >= it`.
+
+.. c:function:: int cfp.array.iterator.eq(cfp_iter self, cfp_iter it)
+
+  Return whether two iterators are equal; :c:expr:`self == it`.
+  See :cpp:func:`iterator::operator==()`.
+
+.. c:function:: int cfp.array.iterator.neq(cfp_iter self, cfp_iter it)
+
+  Return whether two iterators are unequal; :c:expr:`self != it`.
+  See :cpp:func:`iterator::operator!=()`.
+
+.. c:function:: ptrdiff_t cfp.array1.iterator.distance(cfp_iter1 self, cfp_iter1 it)
+
+  Return the difference between two iterators (only supported for
+  one-dimensional array iterators); :c:expr:`it - self`.
+  See :cpp:func:`array1::iterator::operator-()`.
+
+.. c:function:: cfp_iter1 cfp.array1.iterator.advance(cfp_iter1 self, ptrdiff_t d)
+
+  Advance iterator by *d* elements (only supported for one-dimensional array
+  iterators) and return the result; :c:expr:`self + d`.
+  See :cpp:func:`array1::iterator::operator+()`.
+
+.. c:function:: cfp_iter cfp.array.iterator.inc(cfp_iter self)
+
+  Increment iterator by one and return the resulting iterator;
+  :c:expr:`self + 1`.  See :cpp:func:`iterator::operator++()`.
+
+.. c:function:: cfp_iter cfp.array.iterator.dec(cfp_iter self)
+
+  Decrement iterator by one and return the resulting iterator (only supported
+  for one-dimensional array iterators); :c:expr:`self - 1`.
+  See :cpp:func:`iterator iterator::operator--()`.
+
+.. c:function:: uint cfp.array1.iterator.i(cfp_iter1 self)
+.. c:function:: uint cfp.array2.iterator.i(cfp_iter2 self)
+.. c:function:: uint cfp.array3.iterator.i(cfp_iter3 self)
+
+  Get *i* component of array element referenced by iterator; see
+  :cpp:func:`iterator::i()`.
+
+.. c:function:: uint cfp.array2.iterator.j(cfp_iter2 self)
+.. c:function:: uint cfp.array3.iterator.j(cfp_iter3 self)
+
+  Get *j* component of array element referenced by iterator; see
+  :cpp:func:`iterator::j()`.
+
+.. c:function:: uint cfp.array3.iterator.k(cfp_iter3 self)
+
+  Get *k* component of array element referenced by iterator; see
+  :cpp:func:`iterator::k()`.
