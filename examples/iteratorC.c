@@ -84,7 +84,7 @@ int main()
   /* pointer arithmetic */
   cfp_ptr3d pb3 = _3d.reference.ptr(_3d.iterator.ref(_3d.begin(b)));
   cfp_ptr3d pe3 = _3d.reference.ptr(_3d.iterator.ref(_3d.end(b)));
-  printf("%u * %u = %u\n", _3d.size_x(b), _3d.size_y(b), _3d.pointer.diff(pe3, pb3));
+  printf("%u * %u * %u = %u\n", _3d.size_x(b), _3d.size_y(b), _3d.size_z(b), _3d.pointer.diff(pe3, pb3));
 
   return 0;
 }
