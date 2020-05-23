@@ -229,7 +229,7 @@ digital elevation models?
 
 A: Yes (as of version 0.4.0), but the data has to be promoted to 32-bit signed
 integers first.  This should be done one block at a time using an appropriate
-:c:func:`zfp_promote_*_to_int32` function call (see :file:`zfp.h`).  Future
+:code:`zfp_promote_*_to_int32` function call (see :ref:`ll-utilities`).  Future
 versions of |zfp| may provide a high-level interface that automatically
 performs promotion and demotion.
 

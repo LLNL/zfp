@@ -30,6 +30,17 @@ array access analogous to the C/C++ nested array syntax :code:`array[i][j]`.
 Finally, |zfp|'s *private views* can be used to ensure thread-safe access
 to its compressed arrays.
 
+Access to array elements through a view is via inspectors and mutators
+that return a :code:`const_reference` or :code:`reference`, respectively
+(see :ref:`references`).  As of |zfp| |crpirelease|, it is also possible
+to obtain pointers to array elements through views.  View pointers allow
+referencing only the elements visible through the view, e.g., a rectangular
+subset of an array.  Those elements are indexed as if the view were a
+contiguous array, and pointer arithmetic assumes that the possibly smaller
+view and not the underlying array is flattened.
+:ref:`Private views <private_immutable_view>` maintain their own cache
+and therefore implement their own proxy references and pointers.
+
 .. note::
   Like iterators and proxy references and pointers, a view is valid only
   during the lifetime of the array that it references.  **No reference
@@ -447,9 +458,9 @@ prohibitive performance cost.
 
 To ensure thread-safe access, |zfp| provides private mutable and
 immutable views of arrays that maintain their own private caches.
-The :code:`private_const_view` immutable view provides read-only
-access to the underlying array.  It is similar to a
-:ref:`const_view <immutable_view>` in this sense, but differs in
+The :code:`private_const_view` immutable view
+provides read-only access to the underlying array.  It is similar
+to a :ref:`const_view <immutable_view>` in this sense, but differs in
 that it maintains its own private cache rather than sharing the
 cache owned by the array.  Multiple threads may thus access the
 same array in parallel through their own private views.
@@ -480,6 +491,7 @@ are neither flat nor nested.
   .. cpp:class:: template<typename Scalar> array2::private_const_view
   .. cpp:class:: template<typename Scalar> array3::private_const_view
 
+.. _private_const_view:
 .. cpp:class:: array1::private_const_view
 .. cpp:class:: array2::private_const_view
 .. cpp:class:: array3::private_const_view

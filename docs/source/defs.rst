@@ -26,3 +26,4 @@
 .. |zforprelease| replace:: 0.5.5
 .. |zfpyrelease| replace:: 0.5.5
 .. |csizerelease| replace:: 0.5.5
+.. |crpirelease| replace:: 0.5.6

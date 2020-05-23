@@ -1,8 +1,8 @@
 .. include:: defs.rst
 .. _arrays:
 
-Compressed Arrays
-=================
+Compressed-Array Classes
+========================
 
 .. cpp:namespace:: zfp
 
@@ -103,10 +103,17 @@ Base Class
   of the cache.  Rather, it reflects the size of the memory buffer
   returned by :cpp:func:`compressed_data`.
 
-.. cpp:function:: uchar* array::compressed_data() const
+.. cpp:function:: void* array::compressed_data() const
 
   Return pointer to compressed data for read or write access.  The size
   of the buffer is given by :cpp:func:`compressed_size`.
+
+.. note::
+  As of |zfp| |crpirelease|, the return value is :code:`void*` rather than
+  :code:`uchar*` to simplify pointer conversion and to dispel any misconception
+  that the compressed data needs only :code:`uchar` alignment.  Compressed
+  streams are always word aligned (see :c:var:`stream_word_bits` and
+  :c:macro:`BIT_STREAM_WORD_TYPE`).
 
 .. cpp:function:: uint array::dimensionality() const
 
@@ -118,13 +125,11 @@ Base Class
 
 .. cpp:function:: array::header array::get_header() const
 
-  Return a short fixed-length :ref:`header <header>` describing the scalar
-  type, dimensions, and rate associated with the array.
-  An :cpp:class:`array::header::exception` is thrown if the header cannot
-  describe the array.
+  Deprecated function as of |zfp| |crpirelease|.  See the :ref:`header`
+  section on how to construct a header.
 
 .. _array_factory:
-.. cpp:function:: static array* array::construct(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: static array* array::construct(const array::header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
 
   Construct a compressed-array object whose scalar type, dimensions, and rate
   are given by the header *h*.  Return a pointer to the base class upon
@@ -134,7 +139,7 @@ Base Class
   specifies the buffer length in bytes.  When passed, a comparison is made to
   ensure that the buffer size is at least as large as the size implied by
   the header.  If this function fails for any reason, an
-  :cpp:class:`array::header::exception` is thrown.
+  :cpp:class:`exception` is thrown.
 
 Common Methods
 ^^^^^^^^^^^^^^
@@ -171,10 +176,17 @@ class.
   uncompressed data is assumed to be stored as in the :cpp:func:`get`
   method.
 
-.. cpp:function:: Scalar array::operator[](uint index) const
+.. cpp:function:: const_reference array::operator[](uint index) const
 
-  Return scalar stored at given flat index (inspector).  For a 3D array,
-  :code:`index = x + nx * (y + ny * z)`.
+  Return :ref:`const reference <references>` to scalar stored at given flat
+  index (inspector).  For a 3D array, :code:`index = x + nx * (y + ny * z)`.
+
+.. note::
+  As of |zfp| |crpirelease|, the return value is no longer :code:`Scalar` but
+  is a :ref:`const reference <references>` to the corresponding array element
+  (conceptually equivalent to :code:`const Scalar&`).  This API change was
+  necessary to allow obtaining a const pointer to the element when the array
+  itself is const qualified, e.g., :code:`const_pointer p = &a[index];`.
 
 .. cpp:function:: reference array::operator[](uint index)
 
@@ -183,12 +195,26 @@ class.
 
 .. cpp:function:: iterator array::begin()
 
-  Return iterator to beginning of array.
+  Return mutable iterator to beginning of array.
 
 .. cpp:function:: iterator array::end()
 
-  Return iterator to end of array.  As with STL iterators, the end points
-  to a virtual element just past the last valid array element.
+  Return mutable iterator to end of array.  As with STL iterators, the end
+  points to a virtual element just past the last valid array element.
+
+.. cpp:function:: const_iterator array::begin() const
+.. cpp:function:: const_iterator array::cbegin() const
+
+  Return const iterator to beginning of array.
+
+.. cpp:function:: const_iterator array::end() const
+.. cpp:function:: const_iterator array::cend() const
+
+  Return const iterator to end of array.
+
+.. note::
+  Const :ref:`references <references>` and :ref:`iterators <iterators>` are
+  available as of |zfp| |crpirelease|.  
 
 
 1D, 2D, and 3D Arrays
@@ -264,7 +290,7 @@ type is omitted for readability, e.g.,
   optional *buffer* points to the compressed data that is to be copied to
   the array.  The optional *buffer_size_bytes* argument specifies the
   *buffer* length.  If the constructor fails, an
-  :cpp:class:`array::header::exception` is thrown.
+  :cpp:class:`exception` is thrown.
   See :cpp:func:`array::construct` for further details on the *buffer* and
   *buffer_size_bytes* arguments.
 
@@ -312,12 +338,20 @@ type is omitted for readability, e.g.,
   minimum possible of only one |zfp| block.
 
 .. _array_accessor:
-.. cpp:function:: Scalar array1::operator()(uint i) const
-.. cpp:function:: Scalar array2::operator()(uint i, uint j) const
-.. cpp:function:: Scalar array3::operator()(uint i, uint j, uint k) const
+.. cpp:function:: const_reference array1::operator()(uint i) const
+.. cpp:function:: const_reference array2::operator()(uint i, uint j) const
+.. cpp:function:: const_reference array3::operator()(uint i, uint j, uint k) const
 
-  Return scalar stored at multi-dimensional index given by *i*, *j*, and *k*
-  (inspector).
+  Return const reference to element stored at multi-dimensional index given by
+  *i*, *j*, and *k* (inspector).
+
+.. note::
+  As of |zfp| |crpirelease|, the return value is no longer :code:`Scalar` but
+  is a :ref:`const reference <references>` to the corresponding array element
+  (essentially equivalent to :code:`const Scalar&`).  This API change was
+  necessary to allow obtaining a const pointer to the element when the array
+  itself is const qualified, e.g.,
+  :code:`const_pointer p = &a(i, j, k);`.
 
 .. _lvref:
 .. cpp:function:: reference array1::operator()(uint i)
