@@ -4,7 +4,7 @@ public:
   typedef typename container_type::value_type value_type;
 
   // constructor
-  explicit const_reference(container_type* container, size_t i, size_t j) : const_handle(container, i, j) {}
+  explicit const_reference(const container_type* container, size_t i, size_t j) : const_handle(container, i, j) {}
 
   // inspector
   operator value_type() const { return get(); }

@@ -15,7 +15,7 @@ public:
   const_iterator() : const_handle(0, 0, 0) {}
 
   // constructor
-  explicit const_iterator(container_type* container, size_t i, size_t j) : const_handle(container, i, j) {}
+  explicit const_iterator(const container_type* container, size_t i, size_t j) : const_handle(container, i, j) {}
 
   // dereference iterator
   const_reference operator*() const { return const_reference(container, i(), j()); }

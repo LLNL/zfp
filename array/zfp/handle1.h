@@ -5,7 +5,7 @@ public:
 
 protected:
   // protected constructor
-  explicit const_handle(container_type* container, size_t i) : container(container), i(i) {}
+  explicit const_handle(const container_type* container, size_t i) : container(const_cast<container_type*>(container)), i(i) {}
 
   // derefence handle
   value_type get() const { return container->get(i); }

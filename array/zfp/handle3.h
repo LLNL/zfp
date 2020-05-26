@@ -4,8 +4,8 @@ public:
   typedef typename container_type::value_type value_type;
 
 protected:
-  // protected constructor
-  explicit const_handle(container_type* container, size_t i, size_t j, size_t k) : container(container), i(i), j(j), k(k) {}
+  // protected constructors
+  explicit const_handle(const container_type* container, size_t i, size_t j, size_t k) : container(const_cast<container_type*>(container)), i(i), j(j), k(k) {}
 
   // derefence handle
   value_type get() const { return container->get(i, j, k); }

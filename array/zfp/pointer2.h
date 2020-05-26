@@ -5,7 +5,7 @@ public:
   const_pointer() : const_handle(0, 0, 0) {}
 
   // constructor
-  explicit const_pointer(container_type* container, size_t i, size_t j) : const_handle(container, i, j) {}
+  explicit const_pointer(const container_type* container, size_t i, size_t j) : const_handle(container, i, j) {}
 
   // dereference pointer
   const_reference operator*() const { return const_reference(container, i, j); }
