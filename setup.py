@@ -3,7 +3,7 @@ import numpy as np
 
 setup(
     name="zfpy",
-    version="0.5.5-rc3",
+    version="0.5.5-rc4",
     author="Peter Lindstrom",
     author_email="zfp@llnl.gov",
     url="https://computing.llnl.gov/projects/floating-point-compression",
