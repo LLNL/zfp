@@ -141,6 +141,53 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_differentEntryPointers_when_compareFor
   EXPECT_TRUE(ptr != ptr2);
 }
 
+TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_differentArrayPointers_when_compareForInequality_then_resultTrue)
+{
+  int i = 0;
+  ptr = &arr[i];
+  ptr2 = &arr2[i];
+
+  EXPECT_TRUE(ptr != ptr2);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_increasingEntryPointers_when_compareForLessThan_then_resultTrue)
+{
+  int i = 0;
+  ptr = &arr[i];
+  ptr2 = &arr[i + 2];
+
+  EXPECT_TRUE(ptr < ptr2);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_increasingEntryPointers_when_compareForLessThanOrEqual_then_resultTrue)
+{
+  int i = 0;
+  ptr = &arr[i];
+  ptr2 = &arr[i + 2];
+
+  EXPECT_TRUE(ptr <= ptr);
+  EXPECT_TRUE(ptr <= ptr2);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_decreasingEntryPointers_when_compareForGreaterThan_then_resultTrue)
+{
+  int i = 0;
+  ptr = &arr[i];
+  ptr2 = &arr[i + 2];
+
+  EXPECT_TRUE(ptr2 > ptr);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_decreasingEntryPointers_when_compareForGreaterThanOrEqual_then_resultTrue)
+{
+  int i = 0;
+  ptr = &arr[i];
+  ptr2 = &arr[i + 2];
+
+  EXPECT_TRUE(ptr >= ptr);
+  EXPECT_TRUE(ptr2 >= ptr);
+}
+
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
