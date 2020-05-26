@@ -132,6 +132,33 @@ TEST_F(TEST_FIXTURE, given_compressedArrayWithLongHeader_when_writeHeader_expect
   }
 }
 
+TEST_F(TEST_FIXTURE, when_headerFrom2DArray_expect_MatchingMetadata)
+{
+  zfp::array2d arr(7, 8, 32);
+
+  zfp::array2d::header h(arr);
+
+  EXPECT_EQ(h.scalar_type(), arr.scalar_type());
+  EXPECT_EQ(h.rate(), arr.rate());
+  EXPECT_EQ(h.dimensionality(), arr.dimensionality());
+  EXPECT_EQ(h.size_x(), arr.size_x());
+  EXPECT_EQ(h.size_y(), arr.size_y());
+}
+
+TEST_F(TEST_FIXTURE, when_headerFrom3DArray_expect_MatchingMetadata)
+{
+  zfp::array3d arr(7, 8, 9, 32);
+
+  zfp::array3d::header h(arr);
+
+  EXPECT_EQ(h.scalar_type(), arr.scalar_type());
+  EXPECT_EQ(h.rate(), arr.rate());
+  EXPECT_EQ(h.dimensionality(), arr.dimensionality());
+  EXPECT_EQ(h.size_x(), arr.size_x());
+  EXPECT_EQ(h.size_y(), arr.size_y());
+  EXPECT_EQ(h.size_z(), arr.size_z());
+}
+
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   static_cast<void>(::testing::AddGlobalTestEnvironment(testEnv));

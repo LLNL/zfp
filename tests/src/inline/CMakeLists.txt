@@ -1,5 +1,5 @@
 add_executable(testBitstream testBitstream.c)
-target_link_libraries(testBitstream cmocka)
+target_link_libraries(testBitstream cmocka zfp)
 add_test(NAME testBitstream COMMAND testBitstream)
 
 add_executable(testBitstreamSmallWsize testBitstreamSmallWsize.c)
