@@ -564,11 +564,17 @@ are themselves not modified by these functions.
   one-dimensional array iterators); :c:expr:`it - self`.
   See :cpp:func:`array1::iterator::operator-()`.
 
-.. c:function:: cfp_iter1 cfp.array1.iterator.advance(cfp_iter1 self, ptrdiff_t d)
+.. c:function:: cfp_iter1 cfp.array1.iterator.next(cfp_iter1 self, ptrdiff_t d)
 
   Advance iterator by *d* elements (only supported for one-dimensional array
   iterators) and return the result; :c:expr:`self + d`.
   See :cpp:func:`array1::iterator::operator+()`.
+
+.. c:function:: cfp_iter1 cfp.array1.iterator.prev(cfp_iter1 self, ptrdiff_t d)
+
+  Move iterator backwards by *d* elements (only supported for one-dimensional 
+  array iterators) and return the result; :c:expr:`self - d`.
+  See :cpp:func:`array1::iterator::operator-()`.
 
 .. c:function:: cfp_iter cfp.array.iterator.inc(cfp_iter self)
 
