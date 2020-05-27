@@ -23,35 +23,53 @@ typedef struct {
 } cfp_iter1d;
 
 typedef struct {
-  double (*get)(cfp_ref1d self);
   void (*set)(cfp_ref1d self, double val);
-  void (*copy)(cfp_ref1d self, cfp_ref1d src);
+  double (*get)(cfp_ref1d self);
   cfp_ptr1d (*ptr)(cfp_ref1d self);
+  void (*copy)(cfp_ref1d self, cfp_ref1d src);
 } cfp_ref1d_api;
 
 typedef struct {
+  void (*set)(cfp_ptr1d self, double val);
+  void (*set_at)(cfp_ptr1d self, double val, ptrdiff_t d);
+  double (*get)(cfp_ptr1d self);
+  double (*get_at)(cfp_ptr1d self, ptrdiff_t d);
   cfp_ref1d (*ref)(cfp_ptr1d self);
-  cfp_ref1d (*offset_ref)(cfp_ptr1d self, int i);
+  cfp_ref1d (*ref_at)(cfp_ptr1d self, ptrdiff_t d);
+  int (*lt)(cfp_ptr1d self, cfp_ptr1d src);
+  int (*gt)(cfp_ptr1d self, cfp_ptr1d src);
+  int (*leq)(cfp_ptr1d self, cfp_ptr1d src);
+  int (*geq)(cfp_ptr1d self, cfp_ptr1d src);
   int (*eq)(cfp_ptr1d self, cfp_ptr1d src);
-  int (*diff)(cfp_ptr1d self, cfp_ptr1d src);
-  cfp_ptr1d (*shift)(cfp_ptr1d self, int i);
+  int (*neq)(cfp_ptr1d self, cfp_ptr1d src);
+  int (*distance)(cfp_ptr1d self, cfp_ptr1d src);
+  cfp_ptr1d (*next)(cfp_ptr1d self, ptrdiff_t d);
+  cfp_ptr1d (*prev)(cfp_ptr1d self, ptrdiff_t d);
   cfp_ptr1d (*inc)(cfp_ptr1d self);
   cfp_ptr1d (*dec)(cfp_ptr1d self);
 } cfp_ptr1d_api;
 
 typedef struct {
+  void (*set)(cfp_iter1d self, double val);
+  void (*set_at)(cfp_iter1d self, double val, ptrdiff_t d);
+  double (*get)(cfp_iter1d self);
+  double (*get_at)(cfp_iter1d self, ptrdiff_t d);
   cfp_ref1d (*ref)(cfp_iter1d self);
-  cfp_iter1d (*inc)(cfp_iter1d self);
-  cfp_iter1d (*dec)(cfp_iter1d self);
-  cfp_iter1d (*shift)(cfp_iter1d self, int i);
-  int (*diff)(cfp_iter1d self, cfp_iter1d src);
+  cfp_ref1d (*ref_at)(cfp_iter1d self, ptrdiff_t d);
+  cfp_ptr1d (*ptr)(cfp_iter1d self);
+  cfp_ptr1d (*ptr_at)(cfp_iter1d self, ptrdiff_t d);
   int (*lt)(cfp_iter1d self, cfp_iter1d src);
   int (*gt)(cfp_iter1d self, cfp_iter1d src);
   int (*leq)(cfp_iter1d self, cfp_iter1d src);
   int (*geq)(cfp_iter1d self, cfp_iter1d src);
   int (*eq)(cfp_iter1d self, cfp_iter1d src);
+  int (*neq)(cfp_iter1d self, cfp_iter1d src);
+  int (*distance)(cfp_iter1d self, cfp_iter1d src);
+  cfp_iter1d (*next)(cfp_iter1d self, ptrdiff_t d);
+  cfp_iter1d (*prev)(cfp_iter1d self, ptrdiff_t d);
+  cfp_iter1d (*inc)(cfp_iter1d self);
+  cfp_iter1d (*dec)(cfp_iter1d self);
   uint (*i)(cfp_iter1d self);
-  cfp_ref1d (*offset_ref)(cfp_iter1d self, int i);
 } cfp_iter1d_api;
 
 typedef struct {
@@ -81,10 +99,10 @@ typedef struct {
   void (*set)(cfp_array1d self, uint i, double val);
 
   cfp_ref1d (*ref)(cfp_array1d self, uint i);
-  cfp_ref1d (*flat_ref)(cfp_array1d self, uint i);
+  cfp_ref1d (*ref_flat)(cfp_array1d self, uint i);
 
   cfp_ptr1d (*ptr)(cfp_array1d self, uint i);
-  cfp_ptr1d (*flat_ptr)(cfp_array1d self, uint i);
+  cfp_ptr1d (*ptr_flat)(cfp_array1d self, uint i);
 
   cfp_iter1d (*begin)(cfp_array1d self);
   cfp_iter1d (*end)(cfp_array1d self);

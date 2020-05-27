@@ -153,14 +153,14 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_get_ref_expect_addressMatches)(void **stat
 }
 
 static void
-_catFunc3(given_, CFP_PTR_TYPE, _when_get_offset_ref_expect_correct)(void **state)
+_catFunc3(given_, CFP_PTR_TYPE, _when_get_ref_at_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
   uint i = 1, j = 2;
   uint oi = 10;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j);
-  CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.pointer.offset_ref(cfpArrPtr, oi);
+  CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.pointer.ref_at(cfpArrPtr, oi);
 
   assert_int_equal(cfpArrPtr.reference.i + oi, cfpArrRef.i);
   assert_ptr_equal(cfpArrPtr.reference.array.object, cfpArrRef.array.object);
@@ -181,7 +181,7 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_compare_expect_correct)(void **state)
 }
 
 static void
-_catFunc3(given_, CFP_PTR_TYPE, _when_diff_expect_correct)(void **state)
+_catFunc3(given_, CFP_PTR_TYPE, _when_distance_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
@@ -190,7 +190,7 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_diff_expect_correct)(void **state)
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2, j2);
 
-  assert_int_equal((int)CFP_NAMESPACE.SUB_NAMESPACE.pointer.diff(cfpArrPtrB, cfpArrPtrA),
+  assert_int_equal((int)CFP_NAMESPACE.SUB_NAMESPACE.pointer.distance(cfpArrPtrB, cfpArrPtrA),
                    (int)(i2 +
                          j2*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) -
                    (int)(i1 +
@@ -199,13 +199,13 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_diff_expect_correct)(void **state)
 }
 
 static void
-_catFunc3(given_, CFP_PTR_TYPE, _when_shift_expect_correct)(void **state)
+_catFunc3(given_, CFP_PTR_TYPE, _when_next_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
   uint i = 1, j = 2, oi = 10;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j);
-  cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.shift(cfpArrPtr, oi);
+  cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.next(cfpArrPtr, oi);
 
   uint idx = (int)(i + j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) + oi;
   uint x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
@@ -263,6 +263,26 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_get_ref_expect_correct)(void **state)
 
   assert_int_equal(cfpArrRef.i, 0);
   assert_ptr_equal(cfpArrRef.array.object, cfpArr.object);
+}
+
+static void
+_catFunc3(given_, CFP_ITER_TYPE, _when_next_expect_correct)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+  uint oi = 10;
+  CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
+  cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.iterator.next(cfpArrIter, oi);
+  uint i = cfpArrIter.i;
+  uint j = cfpArrIter.j;
+
+  uint idx = (int)(i + j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr));
+  uint x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
+  uint y = idx / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
+
+  assert_int_equal(cfpArrIter.i, x);
+  assert_int_equal(cfpArrIter.j, y);
+  assert_ptr_equal(cfpArrIter.array.object, CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr).array.object);
 }
 
 static void

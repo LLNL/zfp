@@ -452,7 +452,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlatRef_expect_entryReturned)(void **
     CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
     uint i = 10;
-    CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.flat_ref(cfpArr, i);
+    CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.ref_flat(cfpArr, i);
 
     assert_true(CFP_NAMESPACE.SUB_NAMESPACE.reference.get(cfpArrRef) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, i));
 }
@@ -464,7 +464,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlatPtr_expect_entryReturned)(void **
     CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
     uint i = 10;
-    CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.flat_ptr(cfpArr, i);
+    CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr_flat(cfpArr, i);
 
     assert_true(CFP_NAMESPACE.SUB_NAMESPACE.reference.get(cfpArrPtr.reference) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, i));
 }

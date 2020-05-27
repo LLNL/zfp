@@ -47,7 +47,7 @@ _t1(CFP_ARRAY_TYPE, ref)(CFP_ARRAY_TYPE self, uint i, uint j)
 }
 
 static CFP_REF_TYPE
-_t1(CFP_ARRAY_TYPE, flat_ref)(CFP_ARRAY_TYPE self, uint i)
+_t1(CFP_ARRAY_TYPE, ref_flat)(CFP_ARRAY_TYPE self, uint i)
 {
   CFP_REF_TYPE r;
   r.i = i % reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.object)->size_x();
@@ -65,10 +65,10 @@ _t1(CFP_ARRAY_TYPE, ptr)(CFP_ARRAY_TYPE self, uint i, uint j)
 }
 
 static CFP_PTR_TYPE
-_t1(CFP_ARRAY_TYPE, flat_ptr)(CFP_ARRAY_TYPE self, uint i)
+_t1(CFP_ARRAY_TYPE, ptr_flat)(CFP_ARRAY_TYPE self, uint i)
 {
   CFP_PTR_TYPE p;
-  p.reference = _t1(CFP_ARRAY_TYPE, flat_ref)(self, i);
+  p.reference = _t1(CFP_ARRAY_TYPE, ref_flat)(self, i);
   return p;
 }
 
@@ -120,16 +120,16 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, eq)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
 }
 
 static int
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, diff)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, distance)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
 {
   return (self.reference.i + self.reference.j * reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->size_x()) -
          (src.reference.i + src.reference.j * reinterpret_cast<const ZFP_ARRAY_TYPE*>(src.reference.array.object)->size_x());
 }
 
 static CFP_PTR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, shift)(CFP_PTR_TYPE self, int i)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(CFP_PTR_TYPE self, ptrdiff_t d)
 {
-  uint idx = (int)(self.reference.i + self.reference.j*reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->size_x()) + i;
+  uint idx = (int)(self.reference.i + self.reference.j*reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->size_x()) + d;
 
   self.reference.i = idx % reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->size_x();
   self.reference.j = idx / reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->size_x();
@@ -160,9 +160,9 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, dec)(CFP_PTR_TYPE self)
 }
 
 static CFP_REF_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, offset_ref)(CFP_PTR_TYPE self, int i)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, ref_at)(CFP_PTR_TYPE self, int i)
 {
-  self = _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, shift)(self, i);
+  self = _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, i);
   return self.reference;
 }
 
@@ -198,6 +198,17 @@ _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, inc)(CFP_ITER_TYPE self)
     }
   }
   return it;
+}
+
+static CFP_ITER_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(CFP_ITER_TYPE self, ptrdiff_t d)
+{
+  uint idx = (int)(self.i + self.j*reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x()) + d;
+
+  self.i = idx % reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x();
+  self.j = idx / reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x();
+
+  return self;  
 }
 
 static int

@@ -8,7 +8,7 @@ void print1(cfp_ptr1d p, size_t n)
   const cfp_array1d_api _ = cfp.array1d;
 
   for (i = 0; i < n; i++)
-    printf("%e\n", _.reference.get(_.pointer.offset_ref(p, i)));
+    printf("%e\n", _.reference.get(_.pointer.ref_at(p, i)));
 }
 
 void print2(cfp_ptr2d p, size_t n)
@@ -62,12 +62,12 @@ int main()
 
   /* print array contents in row-major order */
   printf("row-major order yx indices\n");
-  print2(_2d.flat_ptr(a, 0), _2d.size(a));
+  print2(_2d.ptr_flat(a, 0), _2d.size(a));
   printf("\n");
   /* pointer arithmetic */
   cfp_ptr2d pb2 = _2d.reference.ptr(_2d.iterator.ref(_2d.begin(a)));
   cfp_ptr2d pe2 = _2d.reference.ptr(_2d.iterator.ref(_2d.end(a)));
-  printf("%u * %u = %u\n", _2d.size_x(a), _2d.size_y(a), _2d.pointer.diff(pe2, pb2));
+  printf("%u * %u = %u\n", _2d.size_x(a), _2d.size_y(a), _2d.pointer.distance(pe2, pb2));
 
   /* some fun with 3D arrays */
   cfp_array3d b = _3d.ctor(7, 2, 5, 64.0, 0, 0);
@@ -84,7 +84,7 @@ int main()
   /* pointer arithmetic */
   cfp_ptr3d pb3 = _3d.reference.ptr(_3d.iterator.ref(_3d.begin(b)));
   cfp_ptr3d pe3 = _3d.reference.ptr(_3d.iterator.ref(_3d.end(b)));
-  printf("%u * %u * %u = %u\n", _3d.size_x(b), _3d.size_y(b), _3d.size_z(b), _3d.pointer.diff(pe3, pb3));
+  printf("%u * %u * %u = %u\n", _3d.size_x(b), _3d.size_y(b), _3d.size_z(b), _3d.pointer.distance(pe3, pb3));
 
   return 0;
 }
