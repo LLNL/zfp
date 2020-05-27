@@ -89,7 +89,6 @@ copy::
 
 .. index::
    single: Header
-   single: Exceptions
 
 .. _header:
 
@@ -112,46 +111,58 @@ is to be stored in the header.  The header is also compatible with the |zfp|
   compression parameters such as rate.  Compressed-array headers are always
   96 bits long.
 
-.. cpp:function:: array::header::header()
+.. cpp:namespace:: zfp::array
+
+.. cpp:function:: header::header()
 
   Default constructor for header.
 
-.. cpp:function:: array::header::header(const array& a)
+.. _header_ctor:
+.. cpp:function:: header::header(const array& a)
 
-  Construct header for compressed-array *a*.
+  Construct header for compressed-array *a*.  Throws an
+  :ref:`exception <exception>` upon failure.
 
-.. cpp:function:: zfp_type array::header::scalar_type() const
+.. cpp:function:: zfp_type header::scalar_type() const
 
   Scalar type associated with array (see :cpp:func:`array::scalar_type`).
 
-.. cpp:function:: uint array::header::dimensionality() const
+.. cpp:function:: uint header::dimensionality() const
 
   Dimensionality associated with array (see :cpp:func:`array::dimensionality`).
 
-.. cpp:function:: uint array::header::size_x() const
-.. cpp:function:: uint array::header::size_y() const
-.. cpp:function:: uint array::header::size_z() const
+.. cpp:function:: size_t header::size_x() const
+.. cpp:function:: size_t header::size_y() const
+.. cpp:function:: size_t header::size_z() const
 
-  Array dimensions.
+  :ref:`Array dimensions <array_dims>`.  Unused dimensions have a size of zero.
 
-.. cpp:function:: double array::header::rate() const
+.. cpp:function:: double header::rate() const
 
   Rate in bits per value (see :cpp:func:`array::rate`);
 
-.. cpp:function:: virtual void* array::header::data()
+.. cpp:function:: virtual const void* header::data() = 0
 
   Return pointer to header data.
 
-.. cpp:function:: virtual size_t array::header::size()
+.. cpp:function:: virtual size_t header::size() = 0
 
   Return header size in bytes.
 
+.. index::
+   single: Exceptions
+
 .. _exception:
+
+Exceptions
+^^^^^^^^^^
+
 .. cpp:class:: exception : public std::runtime_error
 
-  Compressed arrays can throw this exception upon serialization, when forming
-  a header via :cpp:func:`get_header`, or deserialization, when constructing
-  a compressed array via its :ref:`constructor <array_ctor_header>` or
+  Compressed arrays can throw this exception upon serialization, when
+  constructing a header via its :ref:`constructor <header_ctor>`, or
+  deserialization, when constructing a compressed array via its
+  :ref:`constructor <array_ctor_header>` or
   :ref:`factory function <array_factory>`.
 
 .. note::

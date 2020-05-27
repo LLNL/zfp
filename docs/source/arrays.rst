@@ -67,6 +67,13 @@ single- and multi-dimensional floating-point arrays and STL vectors, but
 have the benefit of allowing fine control over storage size.  All classes
 below belong to the :cpp:any:`zfp` namespace.
 
+.. note::
+  Much of the compressed-array API was modified in |zfp| |64bitrelease|
+  to support 64-bit indexing of extremely large arrays.  In particular,
+  array dimensions and indices now use the :code:`size_t` type instead of
+  :code:`uint` and strides use the :code:`ptrdiff_t` type instead of
+  :code:`int`.
+
 Base Class
 ^^^^^^^^^^
 
@@ -129,16 +136,16 @@ Base Class
   section on how to construct a header.
 
 .. _array_factory:
-.. cpp:function:: static array* array::construct(const array::header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: static array* array::construct(const header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
 
   Construct a compressed-array object whose scalar type, dimensions, and rate
-  are given by the header *h*.  Return a pointer to the base class upon
-  success.  The optional *buffer* points to compressed data that, when passed,
-  is copied into the array.  If *buffer* is absent, the array is default
-  initialized with all zeroes.  The optional *buffer_size_bytes* argument
-  specifies the buffer length in bytes.  When passed, a comparison is made to
-  ensure that the buffer size is at least as large as the size implied by
-  the header.  If this function fails for any reason, an
+  are given by the :ref:`header <header>` *h*.  Return a base class pointer
+  upon success.  The optional *buffer* points to compressed data that, when
+  passed, is copied into the array.  If *buffer* is absent, the array is
+  default initialized with all zeroes.  The optional *buffer_size_bytes*
+  parameter specifies the buffer length in bytes.  When passed, a comparison
+  is made to ensure that the buffer size is at least as large as the size
+  implied by the header.  If this function fails for any reason, an
   :cpp:class:`exception` is thrown.
 
 Common Methods
@@ -176,7 +183,7 @@ class.
   uncompressed data is assumed to be stored as in the :cpp:func:`get`
   method.
 
-.. cpp:function:: const_reference array::operator[](uint index) const
+.. cpp:function:: const_reference array::operator[](size_t index) const
 
   Return :ref:`const reference <references>` to scalar stored at given flat
   index (inspector).  For a 3D array, :code:`index = x + nx * (y + ny * z)`.
@@ -188,7 +195,7 @@ class.
   necessary to allow obtaining a const pointer to the element when the array
   itself is const qualified, e.g., :code:`const_pointer p = &a[index];`.
 
-.. cpp:function:: reference array::operator[](uint index)
+.. cpp:function:: reference array::operator[](size_t index)
 
   Return :ref:`proxy reference <references>` to scalar stored at given flat
   index (mutator).  For a 3D array, :code:`index = x + nx * (y + ny * z)`.
@@ -271,28 +278,28 @@ type is omitted for readability, e.g.,
   cache that holds only one |zfp| block, i.e., the minimum possible.
 
 .. _array_ctor:
-.. cpp:function:: array1::array1(uint n, double rate, const Scalar* p = 0, size_t csize = 0)
-.. cpp:function:: array2::array2(uint nx, uint ny, double rate, const Scalar* p = 0, size_t csize = 0)
-.. cpp:function:: array3::array3(uint nx, uint ny, uint nz, double rate, const Scalar* p = 0, size_t csize = 0)
+.. cpp:function:: array1::array1(size_t n, double rate, const Scalar* p = 0, size_t cache_size = 0)
+.. cpp:function:: array2::array2(size_t nx, size_t ny, double rate, const Scalar* p = 0, size_t cache_size = 0)
+.. cpp:function:: array3::array3(size_t nx, size_t ny, size_t nz, double rate, const Scalar* p = 0, size_t cache_size = 0)
 
   Constructor of array with dimensions *n* (1D), *nx* |times| *ny* (2D), or
   *nx* |times| *ny* |times| *nz* (3D) using *rate* bits per value, at least
-  *csize* bytes of cache, and optionally initialized from flat, uncompressed
-  array *p*.  If *csize* is zero, a default cache size is chosen.
+  *cache_size* bytes of cache, and optionally initialized from flat, uncompressed
+  array *p*.  If *cache_size* is zero, a default cache size is chosen.
 
 .. _array_ctor_header:
-.. cpp:function:: array1::array1(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
-.. cpp:function:: array2::array2(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
-.. cpp:function:: array3::array3(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array1::array1(const array::header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array2::array2(const array::header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array3::array3(const array::header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
 
   Constructor from previously :ref:`serialized <serialization>` compressed
-  array.  Struct :cpp:type:`array::header` contains array metadata, while
+  array.  The :ref:`header`, *h*, contains array metadata, while
   optional *buffer* points to the compressed data that is to be copied to
-  the array.  The optional *buffer_size_bytes* argument specifies the
+  the array.  The optional *buffer_size_bytes* parameter specifies the
   *buffer* length.  If the constructor fails, an
   :cpp:class:`exception` is thrown.
   See :cpp:func:`array::construct` for further details on the *buffer* and
-  *buffer_size_bytes* arguments.
+  *buffer_size_bytes* parameters.
 
 .. cpp:function:: array1::array1(const array1& a)
 .. cpp:function:: array2::array2(const array2& a)
@@ -314,18 +321,18 @@ type is omitted for readability, e.g.,
   Assignment operator.  Performs a deep copy.
 
 .. _array_dims:
-.. cpp:function:: uint array2::size_x() const
-.. cpp:function:: uint array2::size_y() const
-.. cpp:function:: uint array3::size_x() const
-.. cpp:function:: uint array3::size_y() const
-.. cpp:function:: uint array3::size_z() const
+.. cpp:function:: size_t array2::size_x() const
+.. cpp:function:: size_t array2::size_y() const
+.. cpp:function:: size_t array3::size_x() const
+.. cpp:function:: size_t array3::size_y() const
+.. cpp:function:: size_t array3::size_z() const
 
   Return array dimensions.
 
 .. _array_resize:
-.. cpp:function:: void array1::resize(uint n, bool clear = true)
-.. cpp:function:: void array2::resize(uint nx, uint ny, bool clear = true)
-.. cpp:function:: void array3::resize(uint nx, uint ny, uint nz, bool clear = true)
+.. cpp:function:: void array1::resize(size_t n, bool clear = true)
+.. cpp:function:: void array2::resize(size_t nx, size_t ny, bool clear = true)
+.. cpp:function:: void array3::resize(size_t nx, size_t ny, size_t nz, bool clear = true)
 
   Resize the array (all previously stored data will be lost).  If *clear* is
   true, then the array elements are all initialized to zero.
@@ -338,9 +345,9 @@ type is omitted for readability, e.g.,
   minimum possible of only one |zfp| block.
 
 .. _array_accessor:
-.. cpp:function:: const_reference array1::operator()(uint i) const
-.. cpp:function:: const_reference array2::operator()(uint i, uint j) const
-.. cpp:function:: const_reference array3::operator()(uint i, uint j, uint k) const
+.. cpp:function:: const_reference array1::operator()(size_t i) const
+.. cpp:function:: const_reference array2::operator()(size_t i, size_t j) const
+.. cpp:function:: const_reference array3::operator()(size_t i, size_t j, size_t k) const
 
   Return const reference to element stored at multi-dimensional index given by
   *i*, *j*, and *k* (inspector).
@@ -354,9 +361,9 @@ type is omitted for readability, e.g.,
   :code:`const_pointer p = &a(i, j, k);`.
 
 .. _lvref:
-.. cpp:function:: reference array1::operator()(uint i)
-.. cpp:function:: reference array2::operator()(uint i, uint j)
-.. cpp:function:: reference array3::operator()(uint i, uint j, uint k)
+.. cpp:function:: reference array1::operator()(size_t i)
+.. cpp:function:: reference array2::operator()(size_t i, size_t j)
+.. cpp:function:: reference array3::operator()(size_t i, size_t j, size_t k)
 
   Return :ref:`proxy reference <references>` to scalar stored at
   multi-dimensional index given by *i*, *j*, and *k* (mutator).

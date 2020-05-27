@@ -101,12 +101,12 @@ The following operations are defined on const iterators:
 
   Return true if the two iterators do not point to the same element.
 
-.. cpp:function:: uint iterator::i() const
-.. cpp:function:: uint iterator::j() const
-.. cpp:function:: uint iterator::k() const
-.. cpp:function:: uint const_iterator::i() const
-.. cpp:function:: uint const_iterator::j() const
-.. cpp:function:: uint const_iterator::k() const
+.. cpp:function:: size_t iterator::i() const
+.. cpp:function:: size_t iterator::j() const
+.. cpp:function:: size_t iterator::k() const
+.. cpp:function:: size_t const_iterator::i() const
+.. cpp:function:: size_t const_iterator::j() const
+.. cpp:function:: size_t const_iterator::k() const
 
   Return array index of element pointed to by the iterator.
   :cpp:func:`iterator::i` is defined for all arrays.
