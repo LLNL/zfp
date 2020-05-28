@@ -55,6 +55,13 @@ As with the :ref:`C++ classes <array_classes>`, array elements can be
 accessed via multidimensional array indexing, e.g., :code:`get(array, i, j)`,
 and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
 
+The following sections are available:
+
+* :ref:`Arrays <cfp_arrays>`
+* :ref:`References <cfp_references>`
+* :ref:`Pointers <cfp_pointers>`
+* :ref:`Iterators <cfp_iterators>`
+
 .. note::
 
   The |cfp| API changed in |zfp| |cfprpirelease| by wrapping array
@@ -74,8 +81,8 @@ and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
 
 .. _cfp_arrays:
 
-Arrays
-^^^^^^
+Cfp Arrays
+^^^^^^^^^^
 
 |cfp| implements six array types for 1D, 2D, and 3D arrays of floats and
 doubles.  These array types share many functions that have the same signature.
@@ -253,9 +260,10 @@ part of the |cfp| API.
   See :cpp:func:`array::compressed_data`.
 
 
+.. _cfp_references:
 
-References
-^^^^^^^^^^
+Cfp References
+^^^^^^^^^^^^^^
 
 .. cpp:namespace:: zfp::arrayANY
 
@@ -340,15 +348,25 @@ shorten the documentation.
   see :cpp:func:`reference::operator&()`.
 
 
+.. _cfp_pointers:
 
-Pointers
-^^^^^^^^
+Cfp Pointers
+^^^^^^^^^^^^
 
 |cfp| proxy pointers wrap the C++ :ref:`pointer <pointers>` classes.
 Pointers are constructed via :c:func:`cfp.array.ptr` and
 :c:func:`cfp.array.reference.ptr`.  All pointers are
 :ref:`passed by value <cfp_rpi_value_semantics>` and
 are themselves not modified by these functions.
+
+
+.. note::
+
+  As with :cpp:class:`array::pointer`, :c:type:`cfp_ptr` indexing is 
+  based on row-major ordering and is unaware of zfp blocks. This 
+  may result in a suboptimal access pattern if sequentially 
+  accessing array members. To take advantage of zfp block 
+  traversal optimization see :ref:`iterators <cfp_iterators>`.
 
 .. c:type:: cfp_ptr1f
 .. c:type:: cfp_ptr2f
@@ -422,6 +440,15 @@ are themselves not modified by these functions.
   Get proxy reference to element stored at :code:`self[d]`.
   See :cpp:func:`pointer::operator[]()`.
 
+.. c:function:: int cfp.array.pointer.lt(cfp_ptr self, cfp_ptr src)
+.. c:function:: int cfp.array.pointer.gt(cfp_ptr self, cfp_ptr src)
+.. c:function:: int cfp.array.pointer.leq(cfp_ptr self, cfp_ptr src)
+.. c:function:: int cfp.array.pointer.geq(cfp_ptr self, cfp_ptr src)
+  
+  Return true if the two pointers satisfy the given relationship;
+  :c:expr:`self < it`, :c:expr:`self > it`, :c:expr:`self <= it`, 
+  :c:expr:`self >= it`.
+
 .. c:function:: int cfp.array.pointer.eq(cfp_ptr self, cfp_ptr src)
 
   Compare two proxy pointers for equality; :c:expr:`self == src`.
@@ -435,15 +462,20 @@ are themselves not modified by these functions.
   elements with different index within the same array.  See
   :cpp:func:`pointer::operator!=()`.
 
-.. c:function:: ptrdiff_t cfp.array.pointer.diff(cfp_ptr self, cfp_ptr src)
+.. c:function:: ptrdiff_t cfp.array.pointer.difference(cfp_ptr self, cfp_ptr src)
 
-  Difference between two proxy pointers in number of array elements;
+  Difference between two proxy pointers in number of linear array elements;
   :c:expr:`self - src`.  See :cpp:func:`pointer::operator-()`.
 
-.. c:function:: cfp_ptr cfp.array.pointer.advance(cfp_ptr self, ptrdiff_t d)
+.. c:function:: cfp_ptr cfp.array.pointer.next(cfp_ptr self, ptrdiff_t d)
 
-  Advance proxy pointer by a given distance (may be negative);
+  Advance proxy pointer by a given distance;
   :c:expr:`self + d`.  See :cpp:func:`pointer::operator+()`.
+
+.. c:function:: cfp_ptr cfp.array.pointer.prev(cfp_ptr self, ptrdiff_t d)
+
+  Move proxy pointer back by a given distance;
+  :c:expr:`self - d`.  See :cpp:func:`pointer::operator-()`.
 
 .. c:function:: cfp_ptr cfp.array.pointer.inc(cfp_ptr self)
 
@@ -456,9 +488,10 @@ are themselves not modified by these functions.
   See :cpp:func:`pointer::operator--()`.
 
 
+.. _cfp_iterators:
 
-Iterators
-^^^^^^^^^
+Cfp Iterators
+^^^^^^^^^^^^^
 
 |cfp| iterators wrap the C++ :ref:`iterator <iterators>` classes.
 All iterators are :ref:`passed by value <cfp_rpi_value_semantics>` and
