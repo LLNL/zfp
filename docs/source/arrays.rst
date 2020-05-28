@@ -220,8 +220,8 @@ class.
   Return const iterator to end of array.
 
 .. note::
-  Const :ref:`references <references>` and :ref:`iterators <iterators>` are
-  available as of |zfp| |crpirelease|.  
+  Const :ref:`references <references>`, :ref:`pointers <pointers>`, and
+  :ref:`iterators <iterators>` are available as of |zfp| |crpirelease|.  
 
 
 1D, 2D, and 3D Arrays
