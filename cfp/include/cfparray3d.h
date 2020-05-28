@@ -34,11 +34,21 @@ typedef struct {
 } cfp_ref3d_api;
 
 typedef struct {
+  void (*set)(cfp_ptr3d self, double val);
+  void (*set_at)(cfp_ptr3d self, double val, ptrdiff_t d);
+  double (*get)(cfp_ptr3d self);
+  double (*get_at)(cfp_ptr3d self, ptrdiff_t d);
   cfp_ref3d (*ref)(cfp_ptr3d self);
-  cfp_ref3d (*ref_at)(cfp_ptr3d self, int i);
+  cfp_ref3d (*ref_at)(cfp_ptr3d self, ptrdiff_t d);
+  int (*lt)(cfp_ptr3d self, cfp_ptr3d src);
+  int (*gt)(cfp_ptr3d self, cfp_ptr3d src);
+  int (*leq)(cfp_ptr3d self, cfp_ptr3d src);
+  int (*geq)(cfp_ptr3d self, cfp_ptr3d src);
   int (*eq)(cfp_ptr3d self, cfp_ptr3d src);
+  int (*neq)(cfp_ptr3d self, cfp_ptr3d src);
   int (*distance)(cfp_ptr3d self, cfp_ptr3d src);
   cfp_ptr3d (*next)(cfp_ptr3d self, ptrdiff_t d);
+  cfp_ptr3d (*prev)(cfp_ptr3d self, ptrdiff_t d);
   cfp_ptr3d (*inc)(cfp_ptr3d self);
   cfp_ptr3d (*dec)(cfp_ptr3d self);
 } cfp_ptr3d_api;

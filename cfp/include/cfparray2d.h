@@ -32,11 +32,21 @@ typedef struct {
 } cfp_ref2d_api;
 
 typedef struct {
+  void (*set)(cfp_ptr2d self, double val);
+  void (*set_at)(cfp_ptr2d self, double val, ptrdiff_t d);
+  double (*get)(cfp_ptr2d self);
+  double (*get_at)(cfp_ptr2d self, ptrdiff_t d);
   cfp_ref2d (*ref)(cfp_ptr2d self);
-  cfp_ref2d (*ref_at)(cfp_ptr2d self, int i);
+  cfp_ref2d (*ref_at)(cfp_ptr2d self, ptrdiff_t d);
+  int (*lt)(cfp_ptr2d self, cfp_ptr2d src);
+  int (*gt)(cfp_ptr2d self, cfp_ptr2d src);
+  int (*leq)(cfp_ptr2d self, cfp_ptr2d src);
+  int (*geq)(cfp_ptr2d self, cfp_ptr2d src);
   int (*eq)(cfp_ptr2d self, cfp_ptr2d src);
+  int (*neq)(cfp_ptr2d self, cfp_ptr2d src);
   int (*distance)(cfp_ptr2d self, cfp_ptr2d src);
   cfp_ptr2d (*next)(cfp_ptr2d self, ptrdiff_t);
+  cfp_ptr2d (*prev)(cfp_ptr2d self, ptrdiff_t);
   cfp_ptr2d (*inc)(cfp_ptr2d self);
   cfp_ptr2d (*dec)(cfp_ptr2d self);
 } cfp_ptr2d_api;
