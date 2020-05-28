@@ -2,6 +2,7 @@
 .. |minus| unicode:: 0x2212
 .. |leq| unicode:: 0x2264
 .. |geq| unicode:: 0x2265
+.. |approx| unicode:: 0x2248
 .. |sqrt| unicode:: 0x221a
 .. |zfp| replace:: zfp
 .. |cfp| replace:: cfp

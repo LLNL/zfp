@@ -30,7 +30,7 @@ Questions answered in this FAQ:
   #. :ref:`Why does zfp sometimes not respect my error tolerance? <q-tolerance>`
   #. :ref:`Why is the actual rate sometimes not what I requested? <q-rate>`
   #. :ref:`Can zfp perform compression in place? <q-inplace>`
-  #. :ref:`How should I set the precision to bound the relative error? <q-relerr>`
+  #. :ref:`Can zfp bound the point-wise relative error? <q-relerr>`
   #. :ref:`Does zfp support lossless compression? <q-lossless>`
   #. :ref:`Why is my actual, measured error so much smaller than the tolerance? <q-abserr>`
   #. :ref:`Are parallel compressed streams identical to serial streams? <q-parallel>`
@@ -622,24 +622,91 @@ can be done.
 
 .. _q-relerr:
 
-Q20: *How should I set the precision to bound the relative error?*
+Q20: *Can zfp bound the point-wise relative error?*
 
-A: In general, |zfp| cannot bound the point-wise relative error due to its
-use of a block-floating-point representation, in which all values within a
-block are represented in relation to a single common exponent.  For a high
-enough dynamic range within a block there may simply not be enough precision
-available to guard against loss.  For instance, a block containing the values
-2\ :sup:`0` = 1 and 2\ :sup:`-n` would require a precision of *n* + 3 bits to
-represent losslessly, and |zfp| uses at most 64-bit integers to represent
-values.  Thus, if *n* |geq| 62, then 2\ :sup:`-n` is replaced with 0, which
-is a 100% relative error.  Note that such loss also occurs when, for instance,
-2\ :sup:`0` and 2\ :sup:`-n` are added using floating-point arithmetic (see
-also :ref:`Q17 <q-tolerance>`).
+A: Yes, but with some caveats.  First, we define the relative error in a value
+*f* approximated by *g* as \|\ *f* - *g*\ \| / \|\ *f*\ \|, which converges to
+\|\ log(*f* / *g*)\ \| as *g* approaches *f*.  Below, we
+discuss three strategies for relative error control that may be applicable
+depending on the properties of the underlying floating-point data.
 
-It is, however, possible to bound the error relative to the largest (in
-magnitude) value, *fmax*, within a block, which if the magnitude of values
-does not change too rapidly may serve as a reasonable proxy for point-wise
-relative errors.
+If all floating-point values to be compressed are normalized, i.e., with no
+nonzero subnormal values smaller in magnitude than
+2\ :sup:`-126` |approx| 10\ :sup:`-38` (for floats) or
+2\ :sup:`-1022` |approx| 10\ :sup:`-308` (for doubles), then the relative error
+can be bounded using |zfp|'s :ref:`expert mode <mode-expert>` settings by
+invoking :ref:`reversible mode <mode-reversible>`.  This is achieved by
+truncating (zeroing) some number of least significant bits of all
+floating-point values and then losslessly compressing the result.  The
+*q* least significant bits are truncated by |zfp| by specifying a
+maximum precision of 32 |minus| *q* (for floats) or 64 |minus| *q* (for
+doubles).  The resulting point-wise relative error is then at most
+2\ :sup:`q - 23` (for floats) or 2\ :sup:`q - 52` (for doubles).
+
+.. note::
+  For large enough *q*, floating-point exponent bits will be discarded,
+  in which case the bound no longer holds, but then the relative error
+  is already above 100%.  Also, as mentioned, the bound does not hold
+  for subnormals; however, such values are likely too small for relative
+  errors to be meaningful.
+
+To bound the relative error, set the expert mode parameters to::
+
+  minbits = 0
+  maxbits = 0
+  maxprec = q
+  minexp = ZFP_MIN_EXP - 1 = -1075
+
+For example, using the |zfpcmd| command-line tool, set the parameters using
+:option:`-c 0 0 q -1075`.
+
+Note that while the above approach respects the error bound when the
+above conditions are met, it uses |zfp| for a purpose it was not designed
+for, and the compression ratio may not be competitive with those obtained
+using compressors designed to bound the relative error.
+
+Other forms of relative error control can be achieved using |zfp|'s lossy
+compression modes.  In :ref:`fixed-accuracy mode <mode-fixed-accuracy>`,
+the *absolute error* \|\ *f* - *g*\ \| is bounded by a user-specified error
+tolerance.  For a field whose values are all positive (or all negative), we
+may pre-transform values by taking the natural logarithm, replacing
+each value *f* with log(*f*) before compression, and then exponentiating
+values after decompression.  This ensures that
+\|\ log(*f*) - log(*g*)\ \| = \|\ log(*f* / *g*)\ \| is bounded.  (Note,
+however, that many implementations of the math library make no guarantees
+on the accuracy of the logarithm function.)  For fields whose values are
+signed, an approximate bound can be achieved by using
+log(*f*) |approx| asinh(*f* / 2), where asinh is the inverse of the
+hyperbolic sine function, which is defined for both positive and negative
+numbers.  One benefit of this approach is that it de-emphasizes the
+importance of relative errors for small values that straddle zero, where
+relative errors rarely make sense, e.g., because of round-off and other
+errors already present in the data.
+
+Finally, in :ref:`fixed-precision mode <mode-fixed-precision>`, the
+precision of |zfp| transform coefficients is fixed, resulting in an error
+that is no more than a constant factor of the largest (in magnitude)
+value, *fmax*, within the same |zfp| block.  This can be thought of as a
+weaker version of relative error, where the error is measured relative
+to values in a local neighborhood.
+
+In fixed-precision mode, |zfp| cannot bound the point-wise relative error
+due to its use of a block-floating-point representation, in which all
+values within a block are represented in relation to a single common
+exponent.  For a high enough dynamic range within a block, there may
+simply not be enough precision available to guard against loss.  For
+instance, a block containing the values 2\ :sup:`0` = 1 and 2\ :sup:`-n`
+would require a precision of *n* + 3 bits to represent losslessly, and
+|zfp| uses at most 64-bit integers to represent values.  Thus, if
+*n* |geq| 62, then 2\ :sup:`-n` is replaced with 0, which is a 100%
+relative error.  Note that such loss also occurs when, for instance,
+2\ :sup:`0` and 2\ :sup:`-n` are added using floating-point arithmetic
+(see also :ref:`Q17 <q-tolerance>`).
+
+As alluded to, it is possible to bound the error relative to the largest
+value, *fmax*, within a block, which if the magnitude of values does not
+change too rapidly may serve as a reasonable proxy for point-wise relative
+errors.
 
 One might then ask if using |zfp|'s fixed-precision mode with *p* bits of
 precision ensures that the block-wise relative error is at most
