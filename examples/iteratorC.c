@@ -67,7 +67,7 @@ int main()
   /* pointer arithmetic */
   cfp_ptr2d pb2 = _2d.reference.ptr(_2d.iterator.ref(_2d.begin(a)));
   cfp_ptr2d pe2 = _2d.reference.ptr(_2d.iterator.ref(_2d.end(a)));
-  printf("%u * %u = %u\n", _2d.size_x(a), _2d.size_y(a), _2d.pointer.distance(pe2, pb2));
+  printf("%lu * %lu = %lld\n", _2d.size_x(a), _2d.size_y(a), (long long int)_2d.pointer.distance(pe2, pb2));
 
   /* some fun with 3D arrays */
   cfp_array3d b = _3d.ctor(7, 2, 5, 64.0, 0, 0);
@@ -84,7 +84,7 @@ int main()
   /* pointer arithmetic */
   cfp_ptr3d pb3 = _3d.reference.ptr(_3d.iterator.ref(_3d.begin(b)));
   cfp_ptr3d pe3 = _3d.reference.ptr(_3d.iterator.ref(_3d.end(b)));
-  printf("%u * %u * %u = %u\n", _3d.size_x(b), _3d.size_y(b), _3d.size_z(b), _3d.pointer.distance(pe3, pb3));
+  printf("%lu * %lu * %lu = %lld\n", _3d.size_x(b), _3d.size_y(b), _3d.size_z(b), (long long int)_3d.pointer.distance(pe3, pb3));
 
   return 0;
 }
