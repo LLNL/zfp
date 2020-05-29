@@ -2,7 +2,7 @@
    single: cfp
 .. _cfp:
 
-C bindings
+C Bindings
 ----------
 
 .. cpp:namespace:: zfp
@@ -54,13 +54,6 @@ the array.
 As with the :ref:`C++ classes <array_classes>`, array elements can be
 accessed via multidimensional array indexing, e.g., :code:`get(array, i, j)`,
 and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
-
-The following sections are available:
-
-* :ref:`Arrays <cfp_arrays>`
-* :ref:`References <cfp_references>`
-* :ref:`Pointers <cfp_pointers>`
-* :ref:`Iterators <cfp_iterators>`
 
 .. note::
 
@@ -260,31 +253,48 @@ part of the |cfp| API.
   See :cpp:func:`array::compressed_data`.
 
 
-.. _cfp_references:
-
-Cfp References
-^^^^^^^^^^^^^^
+Cfp Array Accessors
+^^^^^^^^^^^^^^^^^^^
 
 .. cpp:namespace:: zfp::arrayANY
 
 |zfp| |cfprpirelease| adds |cfp| support for proxy
 :ref:`references <references>` and :ref:`pointers <pointers>` to individual
 array elements, as well as :ref:`iterators <iterators>` for traversing arrays.
-These are analogues to the corresponding C++ classes.  As with
+These are analogues to the corresponding C++ classes. As with
 :ref:`arrays <cfp_arrays>`, fictitious types and namespaces are used to
 shorten the documentation.
 
 .. _cfp_rpi_value_semantics:
+
+Unlike the case of arrays, for which the surrounding struct stores a pointer
+to the underlying array object to allow modifications of the array, the
+|cfp| proxy reference, proxy pointer, and iterator objects are all passed
+by value, and hence none of the functions below modify the *self* argument.
+To increment a pointer, for instance, one should call
+:c:expr:`p = cfp.array.pointer.inc(p)`. Note that while the references,
+pointers, and iterators are not themselves modified, the array elements
+that they reference can be modified.
+
+
+.. _cfp_references:
+
+Cfp References
+##############
+
+|cfp| proxy references wrap the C++ :ref:`reference <references>` classes.
+References are constructed via :c:func:`cfp.array.get_ref`, 
+:c:func:`cfp.array.pointer.get_ref`, and :c:func:`cfp.array.iterator.get_ref`.  
+
 .. note::
 
-  Unlike the case of arrays, for which the surrounding struct stores a pointer
-  to the underlying array object to allow modifications of the array, the
-  |cfp| proxy reference, proxy pointer, and iterator objects are all passed
-  by value, and hence none of the functions below modify the *self* argument.
-  To increment a pointer, for instance, one should call
-  :c:expr:`p = cfp.array.pointer.inc(p)`.  Note that while the references,
-  pointers, and iterators are not themselves modified, the array elements
-  that they reference can be modified.
+  |cfp| references exist primarily to provide parity with |zfp| references. As 
+  references do not exist in C, it is suggested in most cases to use cfp proxy 
+  :ref:`array <cfp_arrays>`, :ref:`pointer <cfp_pointers>`, or :ref:`iterator <cfp_iterators>` calls to access array storage.
+  Cfp references do provide the same guarantees as C++ references, functioning 
+  as object aliases. This is with the caveat that they are only accessed via 
+  cfp API calls (use of the = C assignment operator to shallow copy a :c:type:`cfp_ref` 
+  is also allowed).
 
 .. c:type:: cfp_ref1f
 .. c:type:: cfp_ref2f
@@ -351,7 +361,7 @@ shorten the documentation.
 .. _cfp_pointers:
 
 Cfp Pointers
-^^^^^^^^^^^^
+############
 
 |cfp| proxy pointers wrap the C++ :ref:`pointer <pointers>` classes.
 Pointers are constructed via :c:func:`cfp.array.ptr` and
@@ -491,7 +501,7 @@ are themselves not modified by these functions.
 .. _cfp_iterators:
 
 Cfp Iterators
-^^^^^^^^^^^^^
+#############
 
 |cfp| iterators wrap the C++ :ref:`iterator <iterators>` classes.
 All iterators are :ref:`passed by value <cfp_rpi_value_semantics>` and
@@ -554,10 +564,10 @@ are themselves not modified by these functions.
   Update element referenced by iterator; :c:expr:`*self = val`.
   See :cpp:func:`iterator::operator*()`.
 
-.. c:function:: void cfp.arrayf.iterator.set_at(cfp_iterf self, ptrdiff_t d, float val)
-.. c:function:: void cfp.arrayd.iterator.set_at(cfp_iterd self, ptrdiff_t d, double val)
+.. c:function:: void cfp.array1f.iterator.set_at(cfp_iter1 self, ptrdiff_t d, float val)
+.. c:function:: void cfp.array1d.iterator.set_at(cfp_iter1 self, ptrdiff_t d, double val)
 
-  Update element *d* elements (may be negative) from iterator only supported
+  Update element *d* elements (may be negative) from iterator (only supported
   for one-dimensional array iterators); :c:expr:`self[d] = val`.
   See :cpp:func:`iterator::operator[]()`.
 
@@ -566,11 +576,24 @@ are themselves not modified by these functions.
   Return reference to element referenced by iterator; :c:expr:`*self`.
   See :cpp:func:`iterator::operator*()`.
 
-.. c:function:: cfp_ref1 cfp.array1.iterator.ref_at(cfp_iter1 self, ptrdiff_t d)
+.. c:function:: cfp_ref1 cfp.array1f.iterator.ref_at(cfp_iter1f self, ptrdiff_t d)
+.. c:function:: cfp_ref1 cfp.array1d.iterator.ref_at(cfp_iter1d self, ptrdiff_t d)
 
   Return reference to an element offset *d* elements (may be negative) from
   iterator (only supported for one-dimensional array iterators);
   :c:expr:`self[d]`.  See :cpp:func:`array1::iterator::operator[]()`.
+
+.. c:function:: cfp_ptr cfp.array.iterator.ptr(cfp_iter self)
+
+  Return pointer to element referenced by iterator;
+  :c:expr:`ptr = &*iter`.
+
+.. c:function:: cfp_ptr1f cfp.array1f.iterator.ptr_at(cfp_iter1f self, ptrdiff_t d)
+.. c:function:: cfp_ptr1d cfp.array1d.iterator.ptr_at(cfp_iter1d self, ptrdiff_t d)
+
+  Return pointer to element offset *d* elements (may be negative) from 
+  iterator (only supported for one-dimensional array iterators);
+  :c:expr:`ptr = &*iter[d]`.
 
 .. c:function:: int cfp.array1.iterator.lt(cfp_iter1 self, cfp_iter1 it)
 .. c:function:: int cfp.array1.iterator.gt(cfp_iter1 self, cfp_iter1 it)
@@ -614,7 +637,7 @@ are themselves not modified by these functions.
   Increment iterator by one and return the resulting iterator;
   :c:expr:`self + 1`.  See :cpp:func:`iterator::operator++()`.
 
-.. c:function:: cfp_iter cfp.array.iterator.dec(cfp_iter self)
+.. c:function:: cfp_iter cfp.array1.iterator.dec(cfp_iter1 self)
 
   Decrement iterator by one and return the resulting iterator (only supported
   for one-dimensional array iterators); :c:expr:`self - 1`.

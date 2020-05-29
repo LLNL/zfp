@@ -59,7 +59,6 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_ptr2d_when_dec_expect_correct, setupCfpArrSmall, teardownCfpArr),
 
     cmocka_unit_test_setup_teardown(given_cfp_iter2d_when_get_ref_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter2d_when_next_expect_correct, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_iter2d_when_inc_expect_correct, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_iter2d_when_compare_expect_valid, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_iter2d_when_get_index_expect_correct, setupCfpArrSmall, teardownCfpArr),

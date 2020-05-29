@@ -50,6 +50,12 @@ The following sections are available:
 * :ref:`iterators`
 * :ref:`views`
 * :ref:`cfp`
+   * :ref:`Arrays <cfp_arrays>`
+   * :ref:`References <cfp_references>`
+   * :ref:`Pointers <cfp_pointers>`
+   * :ref:`Iterators <cfp_iterators>`
+
+
 
 .. _array_classes:
 

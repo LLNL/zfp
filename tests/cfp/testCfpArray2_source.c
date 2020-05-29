@@ -349,26 +349,6 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_get_ref_expect_correct)(void **state)
 }
 
 static void
-_catFunc3(given_, CFP_ITER_TYPE, _when_next_expect_correct)(void **state)
-{
-  struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint oi = 10;
-  CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
-  cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.iterator.next(cfpArrIter, oi);
-  uint i = cfpArrIter.i;
-  uint j = cfpArrIter.j;
-
-  uint idx = (int)(i + j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr));
-  uint x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
-  uint y = idx / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
-
-  assert_int_equal(cfpArrIter.i, x);
-  assert_int_equal(cfpArrIter.j, y);
-  assert_ptr_equal(cfpArrIter.array.object, CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr).array.object);
-}
-
-static void
 _catFunc3(given_, CFP_ITER_TYPE, _when_inc_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;

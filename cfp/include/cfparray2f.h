@@ -9,8 +9,8 @@ typedef struct {
 } cfp_array2f;
 
 typedef struct {
-  uint i;
-  uint j;
+  size_t i;
+  size_t j;
   cfp_array2f array;
 } cfp_ref2f;
 
@@ -19,8 +19,8 @@ typedef struct {
 } cfp_ptr2f;
 
 typedef struct {
-  uint i;
-  uint j;
+  size_t i;
+  size_t j;
   cfp_array2f array;
 } cfp_iter2f;
 
@@ -44,7 +44,7 @@ typedef struct {
   int (*geq)(cfp_ptr2f self, cfp_ptr2f src);
   int (*eq)(cfp_ptr2f self, cfp_ptr2f src);
   int (*neq)(cfp_ptr2f self, cfp_ptr2f src);
-  int (*distance)(cfp_ptr2f self, cfp_ptr2f src);
+  ptrdiff_t (*distance)(cfp_ptr2f self, cfp_ptr2f src);
   cfp_ptr2f (*next)(cfp_ptr2f self, ptrdiff_t);
   cfp_ptr2f (*prev)(cfp_ptr2f self, ptrdiff_t);
   cfp_ptr2f (*inc)(cfp_ptr2f self);
@@ -52,17 +52,20 @@ typedef struct {
 } cfp_ptr2f_api;
 
 typedef struct {
+  void (*set)(cfp_iter2f self, float value);
+  float (*get)(cfp_iter2f self);
   cfp_ref2f (*ref)(cfp_iter2f self);
-  cfp_iter2f (*next)(cfp_iter2f self, ptrdiff_t d);
+  cfp_ptr2f (*ptr)(cfp_iter2f self);
   cfp_iter2f (*inc)(cfp_iter2f self);
   int (*eq)(cfp_iter2f self, cfp_iter2f src);
-  uint (*i)(cfp_iter2f self);
-  uint (*j)(cfp_iter2f self);
+  int (*neq)(cfp_iter2f self, cfp_iter2f src);
+  size_t (*i)(cfp_iter2f self);
+  size_t (*j)(cfp_iter2f self);
 } cfp_iter2f_api;
 
 typedef struct {
   cfp_array2f (*ctor_default)();
-  cfp_array2f (*ctor)(uint nx, uint ny, double rate, const float* p, size_t csize);
+  cfp_array2f (*ctor)(size_t nx, size_t ny, double rate, const float* p, size_t csize);
   cfp_array2f (*ctor_copy)(const cfp_array2f src);
   void (*dtor)(cfp_array2f self);
 
@@ -77,22 +80,22 @@ typedef struct {
   size_t (*compressed_size)(const cfp_array2f self);
   uchar* (*compressed_data)(const cfp_array2f self);
   size_t (*size)(const cfp_array2f self);
-  uint (*size_x)(const cfp_array2f self);
-  uint (*size_y)(const cfp_array2f self);
-  void (*resize)(cfp_array2f self, uint nx, uint ny, int clear);
+  size_t (*size_x)(const cfp_array2f self);
+  size_t (*size_y)(const cfp_array2f self);
+  void (*resize)(cfp_array2f self, size_t nx, size_t ny, int clear);
 
   void (*get_array)(const cfp_array2f self, float* p);
   void (*set_array)(cfp_array2f self, const float* p);
-  float (*get_flat)(const cfp_array2f self, uint i);
-  void (*set_flat)(cfp_array2f self, uint i, float val);
-  float (*get)(const cfp_array2f self, uint i, uint j);
-  void (*set)(cfp_array2f self, uint i, uint j, float val);
+  float (*get_flat)(const cfp_array2f self, size_t i);
+  void (*set_flat)(cfp_array2f self, size_t i, float val);
+  float (*get)(const cfp_array2f self, size_t i, size_t j);
+  void (*set)(cfp_array2f self, size_t i, size_t j, float val);
 
-  cfp_ref2f (*ref)(cfp_array2f self, uint i, uint j);
-  cfp_ref2f (*ref_flat)(cfp_array2f self, uint i);
+  cfp_ref2f (*ref)(cfp_array2f self, size_t i, size_t j);
+  cfp_ref2f (*ref_flat)(cfp_array2f self, size_t i);
 
-  cfp_ptr2f (*ptr)(cfp_array2f self, uint i, uint j);
-  cfp_ptr2f (*ptr_flat)(cfp_array2f self, uint i);
+  cfp_ptr2f (*ptr)(cfp_array2f self, size_t i, size_t j);
+  cfp_ptr2f (*ptr_flat)(cfp_array2f self, size_t i);
 
   cfp_iter2f (*begin)(cfp_array2f self);
   cfp_iter2f (*end)(cfp_array2f self);

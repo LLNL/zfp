@@ -96,18 +96,17 @@ _t1(CFP_ARRAY_TYPE, set_array)(CFP_ARRAY_TYPE self, const ZFP_SCALAR_TYPE * p)
 }
 
 static ZFP_SCALAR_TYPE
-_t1(CFP_ARRAY_TYPE, get_flat)(CFP_ARRAY_TYPE self, uint i)
+_t1(CFP_ARRAY_TYPE, get_flat)(CFP_ARRAY_TYPE self, size_t i)
 {
   return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.object)->operator[](i);
 }
 
 static void
-_t1(CFP_ARRAY_TYPE, set_flat)(CFP_ARRAY_TYPE self, uint i, ZFP_SCALAR_TYPE val)
+_t1(CFP_ARRAY_TYPE, set_flat)(CFP_ARRAY_TYPE self, size_t i, ZFP_SCALAR_TYPE val)
 {
   reinterpret_cast<ZFP_ARRAY_TYPE*>(self.object)->operator[](i) = val;
 }
 
-// functions defined in accessors
 static CFP_PTR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, ptr)(CFP_REF_TYPE self)
 {

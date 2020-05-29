@@ -9,9 +9,9 @@ typedef struct {
 } cfp_array3d;
 
 typedef struct {
-  uint i;
-  uint j;
-  uint k;
+  size_t i;
+  size_t j;
+  size_t k;
   cfp_array3d array;
 } cfp_ref3d;
 
@@ -20,9 +20,9 @@ typedef struct {
 } cfp_ptr3d;
 
 typedef struct {
-  uint i;
-  uint j;
-  uint k;
+  size_t i;
+  size_t j;
+  size_t k;
   cfp_array3d array;
 } cfp_iter3d;
 
@@ -46,7 +46,7 @@ typedef struct {
   int (*geq)(cfp_ptr3d self, cfp_ptr3d src);
   int (*eq)(cfp_ptr3d self, cfp_ptr3d src);
   int (*neq)(cfp_ptr3d self, cfp_ptr3d src);
-  int (*distance)(cfp_ptr3d self, cfp_ptr3d src);
+  ptrdiff_t (*distance)(cfp_ptr3d self, cfp_ptr3d src);
   cfp_ptr3d (*next)(cfp_ptr3d self, ptrdiff_t d);
   cfp_ptr3d (*prev)(cfp_ptr3d self, ptrdiff_t d);
   cfp_ptr3d (*inc)(cfp_ptr3d self);
@@ -54,18 +54,21 @@ typedef struct {
 } cfp_ptr3d_api;
 
 typedef struct {
+  void (*set)(cfp_iter3d self, double val);
+  double (*get)(cfp_iter3d self);
   cfp_ref3d (*ref)(cfp_iter3d self);
-  cfp_iter3d (*next)(cfp_iter3d self, ptrdiff_t d);
+  cfp_ptr3d (*ptr)(cfp_iter3d self);
   cfp_iter3d (*inc)(cfp_iter3d self);
   int (*eq)(cfp_iter3d self, cfp_iter3d src);
-  uint (*i)(cfp_iter3d self);
-  uint (*j)(cfp_iter3d self);
-  uint (*k)(cfp_iter3d self);
+  int (*neq)(cfp_iter3d self, cfp_iter3d src);
+  size_t (*i)(cfp_iter3d self);
+  size_t (*j)(cfp_iter3d self);
+  size_t (*k)(cfp_iter3d self);
 } cfp_iter3d_api;
 
 typedef struct {
   cfp_array3d (*ctor_default)();
-  cfp_array3d (*ctor)(uint nx, uint ny, uint nz, double rate, const double* p, size_t csize);
+  cfp_array3d (*ctor)(size_t nx, size_t ny, size_t nz, double rate, const double* p, size_t csize);
   cfp_array3d (*ctor_copy)(const cfp_array3d src);
   void (*dtor)(cfp_array3d self);
 
@@ -80,23 +83,23 @@ typedef struct {
   size_t (*compressed_size)(const cfp_array3d self);
   uchar* (*compressed_data)(const cfp_array3d self);
   size_t (*size)(const cfp_array3d self);
-  uint (*size_x)(const cfp_array3d self);
-  uint (*size_y)(const cfp_array3d self);
-  uint (*size_z)(const cfp_array3d self);
-  void (*resize)(cfp_array3d self, uint nx, uint ny, uint nz, int clear);
+  size_t (*size_x)(const cfp_array3d self);
+  size_t (*size_y)(const cfp_array3d self);
+  size_t (*size_z)(const cfp_array3d self);
+  void (*resize)(cfp_array3d self, size_t nx, size_t ny, size_t nz, int clear);
 
   void (*get_array)(const cfp_array3d self, double* p);
   void (*set_array)(cfp_array3d self, const double* p);
-  double (*get_flat)(const cfp_array3d self, uint i);
-  void (*set_flat)(cfp_array3d self, uint i, double val);
-  double (*get)(const cfp_array3d self, uint i, uint j, uint k);
-  void (*set)(cfp_array3d self, uint i, uint j, uint k, double val);
+  double (*get_flat)(const cfp_array3d self, size_t i);
+  void (*set_flat)(cfp_array3d self, size_t i, double val);
+  double (*get)(const cfp_array3d self, size_t i, size_t j, size_t k);
+  void (*set)(cfp_array3d self, size_t i, size_t j, size_t k, double val);
 
-  cfp_ref3d (*ref)(cfp_array3d self, uint i, uint j, uint k);
-  cfp_ref3d (*ref_flat)(cfp_array3d self, uint i);
+  cfp_ref3d (*ref)(cfp_array3d self, size_t i, size_t j, size_t k);
+  cfp_ref3d (*ref_flat)(cfp_array3d self, size_t i);
 
-  cfp_ptr3d (*ptr)(cfp_array3d self, uint i, uint j, uint k);
-  cfp_ptr3d (*ptr_flat)(cfp_array3d self, uint i);
+  cfp_ptr3d (*ptr)(cfp_array3d self, size_t i, size_t j, size_t k);
+  cfp_ptr3d (*ptr_flat)(cfp_array3d self, size_t i);
 
   cfp_iter3d (*begin)(cfp_array3d self);
   cfp_iter3d (*end)(cfp_array3d self);
