@@ -446,7 +446,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getArray_expect_decompressedArrChecksumM
 }
 
 static void
-_catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlatRef_expect_entryReturned)(void **state)
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_ref_flat_expect_entryReturned)(void **state)
 {
     struct setupVars *bundle = *state;
     CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
@@ -458,7 +458,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlatRef_expect_entryReturned)(void **
 }
 
 static void
-_catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlatPtr_expect_entryReturned)(void **state)
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_ptr_flat_expect_entryReturned)(void **state)
 {
     struct setupVars *bundle = *state;
     CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;

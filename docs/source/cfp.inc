@@ -284,7 +284,8 @@ Cfp References
 
 |cfp| proxy references wrap the C++ :ref:`reference <references>` classes.
 References are constructed via :c:func:`cfp.array.get_ref`, 
-:c:func:`cfp.array.pointer.get_ref`, and :c:func:`cfp.array.iterator.get_ref`.  
+:c:func:`cfp.array.pointer.get_ref`, and :c:func:`cfp.array.iterator.get_ref` 
+(as well as associated ref_flat calls).
 
 .. note::
 
@@ -294,7 +295,7 @@ References are constructed via :c:func:`cfp.array.get_ref`,
   Cfp references do provide the same guarantees as C++ references, functioning 
   as object aliases. This is with the caveat that they are only accessed via 
   cfp API calls (use of the = C assignment operator to shallow copy a :c:type:`cfp_ref` 
-  is also allowed).
+  is also allowed in this case).
 
 .. c:type:: cfp_ref1f
 .. c:type:: cfp_ref2f
@@ -365,9 +366,9 @@ Cfp Pointers
 
 |cfp| proxy pointers wrap the C++ :ref:`pointer <pointers>` classes.
 Pointers are constructed via :c:func:`cfp.array.ptr` and
-:c:func:`cfp.array.reference.ptr`.  All pointers are
-:ref:`passed by value <cfp_rpi_value_semantics>` and
-are themselves not modified by these functions.
+:c:func:`cfp.array.reference.ptr` (and associated ptr_flat calls). 
+All pointers are :ref:`passed by value <cfp_rpi_value_semantics>` 
+and are themselves not modified by these functions.
 
 
 .. note::
@@ -431,13 +432,13 @@ are themselves not modified by these functions.
 .. c:function:: void cfp.arrayf.pointer.set(cfp_ptrf self, float val)
 .. c:function:: void cfp.arrayd.pointer.set(cfp_ptrd self, double val)
 
-  Dereference operator; :c:expr:`*self = val`.
+  Dereference operator with assignment; :c:expr:`*self = val`.
   See :cpp:func:`pointer::operator*()`.
 
 .. c:function:: void cfp.arrayf.pointer.set_at(cfp_ptrf self, ptrdiff_t d, float val)
 .. c:function:: void cfp.arrayd.pointer.set_at(cfp_ptrd self, ptrdiff_t d, double val)
 
-  Offset dereference operator; :c:expr:`self[d] = val`.
+  Offset dereference operator with assignment; :c:expr:`self[d] = val`.
   See :cpp:func:`pointer::operator[]()`.
 
 .. c:function:: cfp_ref cfp.array.pointer.ref(cfp_ptr self)
@@ -505,7 +506,9 @@ Cfp Iterators
 
 |cfp| iterators wrap the C++ :ref:`iterator <iterators>` classes.
 All iterators are :ref:`passed by value <cfp_rpi_value_semantics>` and
-are themselves not modified by these functions.
+are themselves not modified by these functions. Iterators are constructed 
+similar to C++ iterators via :c:func:`cfp.array.begin` and 
+:c:func:`cfp.array.end`. 
 
 .. c:type:: cfp_iter1f
 .. c:type:: cfp_iter2f
