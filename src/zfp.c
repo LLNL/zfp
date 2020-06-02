@@ -568,6 +568,7 @@ zfp_stream_compressed_size(const zfp_stream* zfp)
 size_t
 zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
 {
+  int reversible = is_reversible(zfp);
   uint dims = zfp_field_dimensionality(field);
   uint mx = (MAX(field->nx, 1u) + 3) / 4;
   uint my = (MAX(field->ny, 1u) + 3) / 4;
@@ -575,25 +576,25 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
   uint mw = (MAX(field->nw, 1u) + 3) / 4;
   size_t blocks = (size_t)mx * (size_t)my * (size_t)mz * (size_t)mw;
   uint values = 1u << (2 * dims);
-  uint maxbits = 1;
+  uint maxbits = 0;
 
   if (!dims)
     return 0;
   switch (field->type) {
-    case zfp_type_none:
-      return 0;
+    case zfp_type_int32:
+      maxbits += reversible ? 5 : 0;
+      break;
+    case zfp_type_int64:
+      maxbits += reversible ? 6 : 0;
+      break;
     case zfp_type_float:
-      maxbits += 8;
-      if (is_reversible(zfp))
-        maxbits += 5;
+      maxbits += reversible ? 1 + 1 + 8 + 5 : 1 + 8;
       break;
     case zfp_type_double:
-      maxbits += 11;
-      if (is_reversible(zfp))
-        maxbits += 6;
+      maxbits += reversible ? 1 + 1 + 11 + 6 : 1 + 11;
       break;
     default:
-      break;
+      return 0;
   }
   maxbits += values - 1 + values * MIN(zfp->maxprec, type_precision(field->type));
   maxbits = MIN(maxbits, zfp->maxbits);
