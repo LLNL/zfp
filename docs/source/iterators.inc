@@ -51,9 +51,13 @@ Per STL mandate, the iterators define several types:
 
   The scalar type associated with the array that the iterator points into.
 
+-----
+
 .. cpp:type:: iterator:: difference_type
 
   Difference between two iterators in number of array elements.
+
+-----
 
 .. cpp:type:: iterator::reference
 .. cpp:type:: iterator::pointer
@@ -61,36 +65,51 @@ Per STL mandate, the iterators define several types:
   The reference and pointer type associated with the iterator's parent array
   class.
 
+-----
+
 .. cpp:type:: iterator::iterator_category
 
   Type of iterator: :cpp:type:`std::random_access_iterator_tag` for 1D arrays;
   :cpp:type:`std::forward_iterator_tag` for all other arrays.
 
+-----
+
 The following operations are defined on iterators:
+
 
 .. cpp:function:: iterator iterator::operator=(const iterator& it)
 
   Assignment (copy) operator.  Make the iterator point to the same element
   as *it*.
 
+-----
+
 .. cpp:function:: reference iterator::operator*() const
 
   Dereference operator.  Return reference to the value pointed to by the
   iterator.
 
+-----
+
 .. cpp:function:: iterator& iterator::operator++()
 
   Pre increment.  Return a reference to the incremented iterator.
 
+-----
+
 .. cpp:function:: iterator iterator::operator++(int)
 
   Post increment.  Return the value of the iterator before being incremented.
+
+-----
 
 .. cpp:function:: bool iterator::operator==(const iterator& it) const
 .. cpp:function:: bool iterator::operator!=(const iterator& it) const
 
   Return true (false) if the two iterators do (do not) point to the same
   element.
+
+-----
 
 .. cpp:function:: uint iterator::i() const
 .. cpp:function:: uint iterator::j() const
@@ -112,13 +131,19 @@ The following operators are defined **only for 1D arrays**:
 
   Random access index operator.
 
+-----
+
 .. cpp:function:: array1::iterator& array1::iterator::operator--()
 
   Pre decrement.  Return a reference to the decremented iterator.
 
+-----
+
 .. cpp:function:: array1::iterator array1::iterator::operator--(int)
 
   Post decrement.  Return the value of the iterator before being decremented.
+
+-----
 
 .. cpp:function:: array1::iterator array1::iterator::operator+=(difference_type d)
 .. cpp:function:: array1::iterator array1::iterator::operator-=(difference_type d)
@@ -126,15 +151,21 @@ The following operators are defined **only for 1D arrays**:
   Increment (decrement) iterator *d* times.  Return value of incremented
   (decremented) iterator.
 
+-----
+
 .. cpp:function:: array1::iterator array1::iterator::operator+(difference_type d) const
 .. cpp:function:: array1::iterator array1::iterator::operator-(difference_type d) const
 
   Return a new iterator that has been incremented (decremented) by *d*.
 
+-----
+
 .. cpp:function:: difference_type array1::iterator::operator-(const array1::iterator& it) const
 
   Return difference between this iterator and *it* in number of elements.
   The iterators must refer to elements in the same array.
+
+-----
 
 .. cpp:function:: bool array1::iterator::operator<=(const array1::iterator& it) const
 .. cpp:function:: bool array1::iterator::operator>=(const array1::iterator& it) const

@@ -80,9 +80,13 @@ Base Class
 
   Virtual base class for common array functionality.
 
+-----
+
 .. cpp:function:: double array::rate() const
 
   Return rate in bits per value.
+
+-----
 
 .. cpp:function:: double array::set_rate(double rate)
 
@@ -91,16 +95,22 @@ Base Class
   for discussions of the rate granularity.  This method destroys the previous
   contents of the array.
 
+-----
+
 .. cpp:function:: virtual void array::clear_cache() const
 
   Empty cache without compressing modified cached blocks, i.e., discard any
   cached updates to the array.
+
+-----
 
 .. cpp:function:: virtual void array::flush_cache() const
 
   Flush cache by compressing all modified cached blocks back to persistent
   storage and emptying the cache.  This method should be called before
   writing the compressed representation of the array to disk, for instance.
+
+-----
 
 .. cpp:function:: size_t array::compressed_size() const
 
@@ -109,18 +119,26 @@ Base Class
   of the cache.  Rather, it reflects the size of the memory buffer
   returned by :cpp:func:`compressed_data`.
 
+-----
+
 .. cpp:function:: uchar* array::compressed_data() const
 
   Return pointer to compressed data for read or write access.  The size
   of the buffer is given by :cpp:func:`compressed_size`.
 
+-----
+
 .. cpp:function:: uint array::dimensionality() const
 
   Return the dimensionality (1, 2, or 3) of the array.
 
+-----
+
 .. cpp:function:: zfp_type array::scalar_type() const
 
   Return the underlying scalar type (:c:type:`zfp_type`) of the array.
+
+-----
 
 .. cpp:function:: array::header array::get_header() const
 
@@ -128,6 +146,8 @@ Base Class
   type, dimensions, and rate associated with the array.
   An :cpp:class:`array::header::exception` is thrown if the header cannot
   describe the array.
+
+-----
 
 .. _array_factory:
 .. cpp:function:: static array* array::construct(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
@@ -142,6 +162,8 @@ Base Class
   the header.  If this function fails for any reason, an
   :cpp:class:`array::header::exception` is thrown.
 
+-----
+
 Common Methods
 ^^^^^^^^^^^^^^
 
@@ -149,20 +171,28 @@ The following methods are common to 1D, 2D, and 3D arrays, but are implemented
 in the array class specific to each dimensionality rather than in the base
 class.
 
+-----
+
 .. cpp:function:: size_t array::size() const
 
   Total number of elements in array, e.g., *nx* |times| *ny* |times| *nz* for
   3D arrays.
 
+-----
+
 .. cpp:function:: size_t array::cache_size() const
 
   Return the cache size in number of bytes.
+
+-----
 
 .. cpp:function:: void array::set_cache_size(size_t csize)
 
   Set minimum cache size in bytes.  The actual size is always a power of two
   bytes and consists of at least one block.  If *csize* is zero, then a
   default cache size is used, which requires the array dimensions to be known.
+
+-----
 
 .. cpp:function:: void array::get(Scalar* p) const
 
@@ -171,16 +201,22 @@ class.
   (with default strides) and stored in the usual "row-major" order, i.e., with
   *x* varying faster than *y* and *y* varying faster than *z*.
 
+-----
+
 .. cpp:function:: void array::set(const Scalar* p)
 
   Initialize array by copying and compressing data stored at *p*.  The
   uncompressed data is assumed to be stored as in the :cpp:func:`get`
   method.
 
+-----
+
 .. cpp:function:: Scalar array::operator[](uint index) const
 
   Return scalar stored at given flat index (inspector).  For a 3D array,
   :code:`index = x + nx * (y + ny * z)`.
+
+-----
 
 .. _lvref_idx:
 .. cpp:function:: reference array::operator[](uint index)
@@ -188,15 +224,20 @@ class.
   Return :ref:`proxy reference <references>` to scalar stored at given flat
   index (mutator).  For a 3D array, :code:`index = x + nx * (y + ny * z)`.
 
+-----
+
 .. cpp:function:: iterator array::begin()
 
   Return iterator to beginning of array.
+
+-----
 
 .. cpp:function:: iterator array::end()
 
   Return iterator to end of array.  As with STL iterators, the end points
   to a virtual element just past the last valid array element.
 
+-----
 
 1D, 2D, and 3D Arrays
 ^^^^^^^^^^^^^^^^^^^^^
@@ -211,6 +252,8 @@ type is omitted for readability, e.g.,
 :code:`class array1` is used as shorthand for
 :code:`template <typename Scalar> class array1`.  Wherever the type
 :code:`Scalar` appears, it refers to this template argument.
+
+-----
 
 ..
   .. cpp:class:: template<typename Scalar> array1 : public array
@@ -228,11 +271,15 @@ type is omitted for readability, e.g.,
   or double type, e.g., :cpp:class:`array1f` is a synonym for
   :cpp:class:`array1\<float>`.
 
+-----
+
 .. cpp:class:: arrayANY : public array
 
   Fictitious class used to refer to any one of :cpp:class:`array1`,
   :cpp:class:`array2`, and :cpp:class:`array3`.  This class is not part of
   the |zfp| API.
+
+-----
 
 .. _array_ctor_default:
 .. cpp:function:: array1::array1()
@@ -251,6 +298,8 @@ type is omitted for readability, e.g.,
   :cpp:func:`array::set_cache_size`, as the default constructor creates a
   cache that holds only one |zfp| block, i.e., the minimum possible.
 
+-----
+
 .. _array_ctor:
 .. cpp:function:: array1::array1(uint n, double rate, const Scalar* p = 0, size_t csize = 0)
 .. cpp:function:: array2::array2(uint nx, uint ny, double rate, const Scalar* p = 0, size_t csize = 0)
@@ -260,6 +309,8 @@ type is omitted for readability, e.g.,
   *nx* |times| *ny* |times| *nz* (3D) using *rate* bits per value, at least
   *csize* bytes of cache, and optionally initialized from flat, uncompressed
   array *p*.  If *csize* is zero, a default cache size is chosen.
+
+-----
 
 .. _array_ctor_header:
 .. cpp:function:: array1::array1(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
@@ -275,11 +326,15 @@ type is omitted for readability, e.g.,
   See :cpp:func:`array::construct` for further details on the *buffer* and
   *buffer_size_bytes* arguments.
 
+-----
+
 .. cpp:function:: array1::array1(const array1& a)
 .. cpp:function:: array2::array2(const array2& a)
 .. cpp:function:: array3::array3(const array3& a)
 
   Copy constructor.  Performs a deep copy.
+
+-----
 
 .. cpp:function:: virtual array1::~array1()
 .. cpp:function:: virtual array2::~array2()
@@ -287,12 +342,16 @@ type is omitted for readability, e.g.,
 
   Virtual destructor (allows for inheriting from |zfp| arrays).
 
+-----
+
 .. _array_copy:
 .. cpp:function:: array1& array1::operator=(const array1& a)
 .. cpp:function:: array2& array2::operator=(const array2& a)
 .. cpp:function:: array3& array3::operator=(const array3& a)
 
   Assignment operator.  Performs a deep copy.
+
+-----
 
 .. _array_dims:
 .. cpp:function:: uint array2::size_x() const
@@ -302,6 +361,8 @@ type is omitted for readability, e.g.,
 .. cpp:function:: uint array3::size_z() const
 
   Return array dimensions.
+
+-----
 
 .. _array_resize:
 .. cpp:function:: void array1::resize(uint n, bool clear = true)
@@ -318,6 +379,8 @@ type is omitted for readability, e.g.,
   the array is default constructed, which initializes the cache size to the
   minimum possible of only one |zfp| block.
 
+-----
+
 .. _array_accessor:
 .. cpp:function:: Scalar array1::operator()(uint i) const
 .. cpp:function:: Scalar array2::operator()(uint i, uint j) const
@@ -326,6 +389,8 @@ type is omitted for readability, e.g.,
   Return scalar stored at multi-dimensional index given by *i*, *j*, and *k*
   (inspector).
 
+-----
+
 .. _lvref_bidx:
 .. cpp:function:: reference array1::operator()(uint i)
 .. cpp:function:: reference array2::operator()(uint i, uint j)
@@ -333,6 +398,8 @@ type is omitted for readability, e.g.,
 
   Return :ref:`proxy reference <references>` to scalar stored at
   multi-dimensional index given by *i*, *j*, and *k* (mutator).
+
+-----
 
 .. include:: caching.inc
 .. include:: serialization.inc

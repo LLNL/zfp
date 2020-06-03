@@ -32,13 +32,19 @@ Types
 
   :f c_ptr object: A C pointer to the instance of :c:type:`bitstream`
 
+-----
+
 .. f:type:: zFORp_stream
 
   :f c_ptr object: A C pointer to the instance of :c:type:`zfp_stream`
 
+-----
+
 .. f:type:: zFORp_field
 
   :f c_ptr object: A C pointer to the instance of :c:type:`zfp_field`
+
+-----
 
 Constants
 ---------
@@ -55,6 +61,8 @@ Enumerations
 
   Enums wrapping :c:type:`zfp_type`
 
+-----
+
 .. _zforp_mode:
 .. f:variable:: integer zFORp_mode_null
 .. f:variable:: integer zFORp_mode_expert
@@ -65,6 +73,8 @@ Enumerations
 
   Enums wrapping :c:type:`zfp_mode`
 
+-----
+
 .. _zforp_exec:
 .. f:variable:: integer zFORp_exec_serial
 .. f:variable:: integer zFORp_exec_omp
@@ -72,6 +82,7 @@ Enumerations
 
   Enums wrapping :c:type:`zfp_exec_policy`
 
+-----
 
 Non-Enum Constants
 ^^^^^^^^^^^^^^^^^^
@@ -80,87 +91,128 @@ Non-Enum Constants
 
   Wraps :c:macro:`ZFP_VERSION_MAJOR`
 
+-----
+
 .. f:variable:: integer zFORp_version_minor
 
   Wraps :c:macro:`ZFP_VERSION_MINOR`
+
+-----
 
 .. f:variable:: integer zFORp_version_patch
 
   Wraps :c:macro:`ZFP_VERSION_PATCH`
 
+-----
+
 .. f:variable:: integer zFORp_codec_version
 
   Wraps :c:data:`zfp_codec_version`
+
+-----
 
 .. f:variable:: integer zFORp_library_version
 
   Wraps :c:data:`zfp_library_version`
 
+-----
+
 .. f:variable:: character(len=36) zFORp_version_string
 
   Wraps :c:data:`zfp_version_string`
+
+-----
 
 .. f:variable:: integer zFORp_min_bits
 
   Wraps :c:macro:`ZFP_MIN_BITS`
 
+-----
+
 .. f:variable:: integer zFORp_max_bits
 
   Wraps :c:macro:`ZFP_MAX_BITS`
+
+-----
 
 .. f:variable:: integer zFORp_max_prec
 
   Wraps :c:macro:`ZFP_MAX_PREC`
 
+-----
+
 .. f:variable:: integer zFORp_min_exp
 
   Wraps :c:macro:`ZFP_MIN_EXP`
+
+-----
 
 .. _zforp_header:
 .. f:variable:: integer zFORp_header_magic
 
   Wraps :c:macro:`ZFP_HEADER_MAGIC`
 
+-----
+
 .. f:variable:: integer zFORp_header_meta
 
   Wraps :c:macro:`ZFP_HEADER_META`
+
+-----
 
 .. f:variable:: integer zFORp_header_mode
 
   Wraps :c:macro:`ZFP_HEADER_MODE`
 
+-----
+
 .. f:variable:: integer zFORp_header_full
 
   Wraps :c:macro:`ZFP_HEADER_FULL`
+
+-----
 
 .. f:variable:: integer zFORp_meta_null
 
   Wraps :c:macro:`ZFP_META_NULL`
 
+-----
+
 .. f:variable:: integer zFORp_magic_bits
 
   Wraps :c:macro:`ZFP_MAGIC_BITS`
+
+-----
 
 .. f:variable:: integer zFORp_meta_bits
 
   Wraps :c:macro:`ZFP_META_BITS`
 
+-----
+
 .. f:variable:: integer zFORp_mode_short_bits
 
   Wraps :c:macro:`ZFP_MODE_SHORT_BITS`
+
+-----
 
 .. f:variable:: integer zFORp_mode_long_bits
 
   Wraps :c:macro:`ZFP_MODE_LONG_BITS`
 
+-----
+
 .. f:variable:: integer zFORp_header_max_bits
 
   Wraps :c:macro:`ZFP_HEADER_MAX_BITS`
+
+-----
 
 .. f:variable:: integer zFORp_mode_short_max
 
   Wraps :c:macro:`ZFP_MODE_SHORT_MAX`
 
+-----
 
 Functions and Subroutines
 -------------------------
@@ -182,12 +234,15 @@ Bit Stream
   :r bs: Bit stream
   :rtype bs: zFORp_bitstream
 
+-----
+
 .. f:subroutine:: zFORp_bitstream_stream_close(bs)
 
   Wrapper for :c:func:`stream_close`
 
   :p zFORp_bitstream bs [inout]: Bit stream
 
+-----
 
 Utility Functions
 ^^^^^^^^^^^^^^^^^
@@ -200,6 +255,7 @@ Utility Functions
   :r type_size: Size of described :c:type:`zfp_type`, in bytes, from C-language perspective
   :rtype type_size: integer (kind=8)
 
+-----
 
 Compressed Stream
 ^^^^^^^^^^^^^^^^^
@@ -212,11 +268,15 @@ Compressed Stream
   :r stream: Newly allocated compressed stream
   :rtype stream: zFORp_stream
 
+-----
+
 .. f:subroutine:: zFORp_stream_close(stream)
 
   Wrapper for :c:func:`zfp_stream_close`
 
   :p zFORp_stream stream [inout]: Compressed stream
+
+-----
 
 .. f:function:: zFORp_stream_bit_stream(stream)
 
@@ -226,6 +286,8 @@ Compressed Stream
   :r bs: Bit stream
   :rtype bs: zFORp_bitstream
 
+-----
+
 .. f:function:: zFORp_stream_compression_mode(stream)
 
   Wrapper for :c:func:`zfp_stream_compression_mode`
@@ -234,6 +296,8 @@ Compressed Stream
   :r mode: :ref:`zFORp_mode <zforp_mode>` enum
   :rtype mode: integer
 
+-----
+
 .. f:function:: zFORp_stream_mode(stream)
 
   Wrapper for :c:func:`zfp_stream_mode`
@@ -241,6 +305,8 @@ Compressed Stream
   :p zFORp_stream stream [in]: Compressed stream
   :r mode: 64-bit encoded mode
   :rtype mode: integer (kind=8)
+
+-----
 
 .. f:subroutine:: zFORp_stream_params(stream, minbits, maxbits, maxprec, minexp)
 
@@ -252,6 +318,8 @@ Compressed Stream
   :p integer maxprec [inout]: Maximum precision
   :p integer minexp [inout]: Minimum bit plane number encoded
 
+-----
+
 .. f:function:: zFORp_stream_compressed_size(stream)
 
   Wrapper for :c:func:`zfp_stream_compressed_size`
@@ -259,6 +327,8 @@ Compressed Stream
   :p zFORp_stream stream [in]: Compressed stream
   :r compressed_size: Compressed size in bytes
   :rtype compressed_size: integer (kind=8)
+
+-----
 
 .. f:function:: zFORp_stream_maximum_size(stream, field)
 
@@ -269,6 +339,8 @@ Compressed Stream
   :r max_size: Maximum possible compressed size in bytes
   :rtype max_size: integer (kind=8)
 
+-----
+
 .. f:subroutine:: zFORp_stream_set_bit_stream(stream, bs)
 
   Wrapper for :c:func:`zfp_stream_set_bit_stream`
@@ -276,12 +348,15 @@ Compressed Stream
   :p zFORp_stream stream [in]: Compressed stream
   :p zFORp_bitstream bs [in]: Bit stream
 
+-----
+
 .. f:subroutine:: zFORp_stream_rewind(stream)
 
   Wrapper for :c:func:`zfp_stream_rewind`
 
   :p zFORp_stream stream [in]: Compressed stream
 
+-----
 
 Compression Parameters
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -291,6 +366,8 @@ Compression Parameters
   Wrapper for :c:func:`zfp_stream_set_reversible`
 
   :p zFORp_stream stream [in]: Compressed stream
+
+-----
 
 .. f:function:: zFORp_stream_set_rate(stream, rate, scalar_type, dims, wra)
 
@@ -304,6 +381,8 @@ Compression Parameters
   :r rate_result: Actual set rate in bits/scalar
   :rtype rate_result: real
 
+-----
+
 .. f:function:: zFORp_stream_set_precision(stream, prec)
 
   Wrapper for :c:func:`zfp_stream_set_precision`
@@ -312,6 +391,8 @@ Compression Parameters
   :p integer prec [in]: Desired precision
   :r prec_result: Actual set precision
   :rtype prec_result: integer
+
+-----
 
 .. f:function:: zFORp_stream_set_accuracy(stream, tolerance)
 
@@ -323,6 +404,8 @@ Compression Parameters
   :r tol_result: Actual set tolerance
   :rtype tol_result: real (kind=8)
 
+-----
+
 .. f:function:: zFORp_stream_set_mode(stream, mode)
 
   Wrapper for :c:func:`zfp_stream_set_mode`
@@ -332,6 +415,8 @@ Compression Parameters
   :ptype mode: integer (kind=8)
   :r mode_result: Newly set :ref:`zFORp_mode <zforp_mode>` enum
   :rtype mode_result: integer
+
+-----
 
 .. f:function:: zFORp_stream_set_params(stream, minbits, maxbits, maxprec, minexp)
 
@@ -345,6 +430,7 @@ Compression Parameters
   :r is_success: Indicate whether parameters were successfully set (1) or not (0)
   :rtype is_success: integer
 
+-----
 
 Execution Policy
 ^^^^^^^^^^^^^^^^
@@ -357,6 +443,8 @@ Execution Policy
   :r execution_policy: :ref:`zFORp_exec <zforp_exec>` enum indicating active execution policy
   :rtype execution_policy: integer
 
+-----
+
 .. f:function:: zFORp_stream_omp_threads(stream)
 
   Wrapper for :c:func:`zfp_stream_omp_threads`
@@ -365,6 +453,8 @@ Execution Policy
   :r thread_count: Number of OpenMP threads to use upon execution
   :rtype thread_count: integer
 
+-----
+
 .. f:function:: zFORp_stream_omp_chunk_size(stream)
 
   Wrapper for :c:func:`zfp_stream_omp_chunk_size`
@@ -372,6 +462,8 @@ Execution Policy
   :p zFORp_stream stream [in]: Compressed stream
   :r chunk_size_blocks: Specified chunk size, in blocks
   :rtype chunk_size_blocks: integer (kind=8)
+
+-----
 
 .. f:function:: zFORp_stream_set_execution(stream, execution_policy)
 
@@ -382,6 +474,8 @@ Execution Policy
   :r is_success: Indicate whether execution policy was successfully set (1) or not (0)
   :rtype is_success: integer
 
+-----
+
 .. f:function:: zFORp_stream_set_omp_threads(stream, thread_count)
 
   Wrapper for :c:func:`zfp_stream_set_omp_threads`
@@ -390,6 +484,8 @@ Execution Policy
   :p integer thread_count [in]: Desired number of OpenMP threads
   :r is_success: Indicate whether number of threads was successfully set (1) or not (0)
   :rtype is_success: integer
+
+-----
 
 .. f:function:: zFORp_stream_set_omp_chunk_size(stream, chunk_size)
 
@@ -400,6 +496,7 @@ Execution Policy
   :r is_success: Indicate whether chunk size was successfully set (1) or not (0)
   :rtype is_success: integer
 
+-----
 
 Array Metadata
 ^^^^^^^^^^^^^^
@@ -411,6 +508,8 @@ Array Metadata
   :r field: Newly allocated field
   :rtype field: zFORp_field
 
+-----
+
 .. f:function:: zFORp_field_1d(uncompressed_ptr, scalar_type, nx)
 
   Wrapper for :c:func:`zfp_field_1d`
@@ -420,6 +519,8 @@ Array Metadata
   :p integer nx [in]: Number of array elements
   :r field: Newly allocated field
   :rtype field: zFORp_field
+
+-----
 
 .. f:function:: zFORp_field_2d(uncompressed_ptr, scalar_type, nx, ny)
 
@@ -432,6 +533,8 @@ Array Metadata
   :r field: Newly allocated field
   :rtype field: zFORp_field
 
+-----
+
 .. f:function:: zFORp_field_3d(uncompressed_ptr, scalar_type, nx, ny, nz)
 
   Wrapper for :c:func:`zfp_field_3d`
@@ -443,6 +546,8 @@ Array Metadata
   :p integer nz [in]: Number of array elements in *z* dimension
   :r field: Newly allocated field
   :rtype field: zFORp_field
+
+-----
 
 .. f:function:: zFORp_field_4d(uncompressed_ptr, scalar_type, nx, ny, nz, nw)
 
@@ -457,11 +562,15 @@ Array Metadata
   :r field: Newly allocated field
   :rtype field: zFORp_field
 
+-----
+
 .. f:subroutine:: zFORp_field_free(field)
 
   Wrapper for :c:func:`zfp_field_free`
 
   :p zFORp_field field [inout]: Field metadata
+
+-----
 
 .. f:function:: zFORp_field_pointer(field)
 
@@ -471,6 +580,8 @@ Array Metadata
   :r arr_ptr: Pointer to raw (uncompressed/decompressed) array
   :rtype arr_ptr: c_ptr
 
+-----
+
 .. f:function:: zFORp_field_scalar_type(field)
 
   Wrapper for :c:func:`zfp_field_type`
@@ -478,6 +589,8 @@ Array Metadata
   :p zFORp_field field [in]: Field metadata
   :r scalar_type: :ref:`zFORp_type <zforp_type>` enum describing uncompressed scalar type
   :rtype scalar_type: integer
+
+-----
 
 .. f:function:: zFORp_field_precision(field)
 
@@ -487,6 +600,8 @@ Array Metadata
   :r prec: Scalar type precision in number of bits
   :rtype prec: integer
 
+-----
+
 .. f:function:: zFORp_field_dimensionality(field)
 
   Wrapper for :c:func:`zfp_field_dimensionality`
@@ -494,6 +609,8 @@ Array Metadata
   :p zFORp_field field [in]: Field metadata
   :r dims: Dimensionality of array
   :rtype dims: integer
+
+-----
 
 .. f:function:: zFORp_field_size(field, size_arr)
 
@@ -505,6 +622,8 @@ Array Metadata
   :r total_size: Total number of array elements
   :rtype total_size: integer (kind=8)
 
+-----
+
 .. f:function:: zFORp_field_stride(field, stride_arr)
 
   Wrapper for :c:func:`zfp_field_stride`
@@ -515,6 +634,8 @@ Array Metadata
   :r is_strided: Indicate whether field is strided (1) or not (0)
   :rtype is_strided: integer
 
+-----
+
 .. f:function:: zFORp_field_metadata(field)
 
   Wrapper for :c:func:`zfp_field_metadata`
@@ -523,12 +644,16 @@ Array Metadata
   :r encoded_metadata: Compact encoding of metadata
   :rtype encoded_metadata: integer (kind=8)
 
+-----
+
 .. f:subroutine:: zFORp_field_set_pointer(field, arr_ptr)
 
   Wrapper for :c:func:`zfp_field_set_pointer`
 
   :p zFORp_field field [in]: Field metadata
   :p c_ptr arr_ptr [in]: Pointer to beginning of uncompressed array
+
+-----
 
 .. f:function:: zFORp_field_set_type(field, scalar_type)
 
@@ -539,12 +664,16 @@ Array Metadata
   :r type_result: :ref:`zFORp_type <zforp_type>` enum indicating actual scalar type
   :rtype type_result: integer
 
+-----
+
 .. f:subroutine:: zFORp_field_set_size_1d(field, nx)
 
   Wrapper for :c:func:`zfp_field_set_size_1d`
 
   :p zFORp_field field [in]: Field metadata
   :p integer nx [in]: Number of array elements
+
+-----
 
 .. f:subroutine:: zFORp_field_set_size_2d(field, nx, ny)
 
@@ -554,6 +683,8 @@ Array Metadata
   :p integer nx [in]: Number of array elements in *x* dimension
   :p integer ny [in]: Number of array elements in *y* dimension
 
+-----
+
 .. f:subroutine:: zFORp_field_set_size_3d(field, nx, ny, nz)
 
   Wrapper for :c:func:`zfp_field_set_size_3d`
@@ -562,6 +693,8 @@ Array Metadata
   :p integer nx [in]: Number of array elements in *x* dimension
   :p integer ny [in]: Number of array elements in *y* dimension
   :p integer nz [in]: Number of array elements in *z* dimension
+
+-----
 
 .. f:subroutine:: zFORp_field_set_size_4d(field, nx, ny, nz, nw)
 
@@ -573,12 +706,16 @@ Array Metadata
   :p integer nz [in]: Number of array elements in *z* dimension
   :p integer nw [in]: Number of array elements in *w* dimension
 
+-----
+
 .. f:subroutine:: zFORp_field_set_stride_1d(field, sx)
 
   Wrapper for :c:func:`zfp_field_set_stride_1d`
 
   :p zFORp_field field [in]: Field metadata
   :p integer sx [in]: Stride in number of scalars
+
+-----
 
 .. f:subroutine:: zFORp_field_set_stride_2d(field, sx, sy)
 
@@ -588,6 +725,8 @@ Array Metadata
   :p integer sx [in]: Stride in *x* dimension
   :p integer sy [in]: Stride in *y* dimension
 
+-----
+
 .. f:subroutine:: zFORp_field_set_stride_3d(field, sx, sy, sz)
 
   Wrapper for :c:func:`zfp_field_set_stride_3d`
@@ -596,6 +735,8 @@ Array Metadata
   :p integer sx [in]: Stride in *x* dimension
   :p integer sy [in]: Stride in *y* dimension
   :p integer sz [in]: Stride in *z* dimension
+
+-----
 
 .. f:subroutine:: zFORp_field_set_stride_4d(field, sx, sy, sz, sw)
 
@@ -607,6 +748,8 @@ Array Metadata
   :p integer sz [in]: Stride in *z* dimension
   :p integer sw [in]: Stride in *w* dimension
 
+-----
+
 .. f:function:: zFORp_field_set_metadata(field, encoded_metadata)
 
   Wrapper for :c:func:`zfp_field_set_metadata`
@@ -617,6 +760,7 @@ Array Metadata
   :r is_success: Indicate whether metadata was successfully set (1) or not (0)
   :rtype is_success: integer
 
+-----
 
 Compression and Decompression
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -630,6 +774,8 @@ Compression and Decompression
   :r bitstream_offset_bytes: Bit stream offset after compression, in bytes, or zero on failure
   :rtype bitstream_offset_bytes: integer (kind=8)
 
+-----
+
 .. f:function:: zFORp_decompress(stream, field)
 
   Wrapper for :c:func:`zfp_decompress`
@@ -638,6 +784,8 @@ Compression and Decompression
   :p zFORp_field field [in]: Field metadata
   :r bitstream_offset_bytes: Bit stream offset after decompression, in bytes, or zero on failure
   :rtype bitstream_offset_bytes: integer (kind=8)
+
+-----
 
 .. f:function:: zFORp_write_header(stream, field, mask)
 
@@ -648,6 +796,8 @@ Compression and Decompression
   :p integer mask [in]: :ref:`Bit mask <zforp_header>` indicating which parts of header to write
   :r num_bits_written: Number of header bits written or zero on failure
   :rtype num_bits_written: integer (kind=8)
+
+-----
 
 .. f:function:: zFORp_read_header(stream, field, mask)
 

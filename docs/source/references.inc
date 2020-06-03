@@ -40,6 +40,8 @@ The following operators are defined for |zfp| references.  They act on the
 referenced array element in the same manner as operators defined for
 conventional C++ references.
 
+-----
+
 .. cpp:namespace:: zfp::arrayANY
 
 .. _ref_copy:
@@ -47,6 +49,8 @@ conventional C++ references.
 
   Assignment (copy) operator.  The referenced element, *elem*, is assigned the
   value stored at the element referenced by *ref*.  Return :code:`*this`.
+
+-----
 
 .. _ref_mutators:
 .. cpp:function:: reference reference::operator=(Scalar val)
@@ -58,6 +62,8 @@ conventional C++ references.
   Assignment and compound assignment operators.  For a given operator
   :code:`op`, update the referenced element, *elem*, via
   *elem* :code:`op` *val*.  Return :code:`*this`.
+
+-----
 
 .. cpp:function:: pointer reference::operator&()
 

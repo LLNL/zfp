@@ -61,20 +61,28 @@ and manipulated there, for instance by passing the pointer by reference via
 The following operators are defined for proxy pointers.  Below *p* refers
 to the pointer being acted upon.
 
+-----
+
 .. cpp:namespace:: zfp::arrayANY
 
 .. cpp:function:: pointer pointer::operator=(const pointer& q)
 
   Assignment operator.  Assigns *q* to *p*.
 
+-----
+
 .. cpp:function:: reference pointer::operator*() const
 
   Dereference operator.  Return proxy reference to the value pointed to by
   *p*.
 
+-----
+
 .. cpp:function:: reference pointer::operator[](ptrdiff_t d) const
 
   Index operator.  Return reference to the value stored at :code:`p[d]`.
+
+-----
 
 .. cpp:function:: pointer& pointer::operator++()
 .. cpp:function:: pointer& pointer::operator--()
@@ -82,11 +90,15 @@ to the pointer being acted upon.
   Pre increment (decrement) pointer, e.g., :code:`++p`.  Return reference to
   the incremented (decremented) pointer.
 
+-----
+
 .. cpp:function:: pointer pointer::operator++(int)
 .. cpp:function:: pointer pointer::operator--(int)
 
   Post increment (decrement) pointer, e.g., :code:`p++`.  Return a copy of
   the pointer before it was incremented (decremented).
+
+-----
 
 .. cpp:function:: pointer pointer::operator+=(ptrdiff_t d)
 .. cpp:function:: pointer pointer::operator-=(ptrdiff_t d)
@@ -94,15 +106,21 @@ to the pointer being acted upon.
   Increment (decrement) pointer by *d*.  Return a copy of the incremented
   (decremented) pointer.
 
+-----
+
 .. cpp:function:: pointer pointer::operator+(ptrdiff_t d) const
 .. cpp:function:: pointer pointer::operator-(ptrdiff_t d) const
 
   Return a copy of the pointer incremented (decremented) by *d*.
 
+-----
+
 .. cpp:function:: ptrdiff_t pointer::operator-(const pointer& q) const
 
   Return difference *p - q*.  Defined only for pointers within the same
   array.
+
+-----
 
 .. cpp:function:: bool pointer::operator==(const pointer& q) const
 .. cpp:function:: bool pointer::operator!=(const pointer& q) const
