@@ -252,6 +252,13 @@ protected:
     size = xmax - xmin;
   }
 
+  // inspector (overrides private_const_view::get)
+  const Scalar& get(uint i) const
+  {
+    const CacheLine* p = line(i, false);
+    return (*p)(i);
+  }
+
   // mutator
   void set(uint i, Scalar val)
   {
