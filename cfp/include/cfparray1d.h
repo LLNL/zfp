@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include "zfp/types.h"
 
+typedef struct cfp_header cfp_header;
+
 typedef struct {
   void* object;
 } cfp_array1d;
@@ -76,6 +78,7 @@ typedef struct {
   cfp_array1d (*ctor_default)();
   cfp_array1d (*ctor)(size_t n, double rate, const double* p, size_t csize);
   cfp_array1d (*ctor_copy)(const cfp_array1d src);
+  cfp_array1d (*ctor_header)(const cfp_header h);
   void (*dtor)(cfp_array1d self);
 
   void (*deep_copy)(cfp_array1d self, const cfp_array1d src);

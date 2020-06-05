@@ -1,3 +1,4 @@
+#include "cfpheader.cpp"
 #include "cfparrays.h"
 
 #include "cfparray1f.cpp"
@@ -13,6 +14,7 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array1f_ctor_default,
     cfp_array1f_ctor,
     cfp_array1f_ctor_copy,
+    cfp_array1f_ctor_header,
     cfp_array1f_dtor,
 
     cfp_array1f_deep_copy,
@@ -93,6 +95,7 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array1d_ctor_default,
     cfp_array1d_ctor,
     cfp_array1d_ctor_copy,
+    cfp_array1d_ctor_header,
     cfp_array1d_dtor,
 
     cfp_array1d_deep_copy,
@@ -173,6 +176,7 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array2f_ctor_default,
     cfp_array2f_ctor,
     cfp_array2f_ctor_copy,
+    cfp_array2f_ctor_header,
     cfp_array2f_dtor,
 
     cfp_array2f_deep_copy,
@@ -244,6 +248,7 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array2d_ctor_default,
     cfp_array2d_ctor,
     cfp_array2d_ctor_copy,
+    cfp_array2d_ctor_header,
     cfp_array2d_dtor,
 
     cfp_array2d_deep_copy,
@@ -315,6 +320,7 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array3f_ctor_default,
     cfp_array3f_ctor,
     cfp_array3f_ctor_copy,
+    cfp_array3f_ctor_header,
     cfp_array3f_dtor,
 
     cfp_array3f_deep_copy,
@@ -388,6 +394,7 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array3d_ctor_default,
     cfp_array3d_ctor,
     cfp_array3d_ctor_copy,
+    cfp_array3d_ctor_header,
     cfp_array3d_dtor,
 
     cfp_array3d_deep_copy,
@@ -455,5 +462,20 @@ export_ const cfp_api CFP_NAMESPACE = {
     cfp_array3d_cfp_iter3d_i,
     cfp_array3d_cfp_iter3d_j,
     cfp_array3d_cfp_iter3d_k,
+  },
+  {
+    cfp_header_ctor_default,
+    cfp_header_ctor_bytes,
+    cfp_header_ctor_array1f,
+    cfp_header_ctor_array1d,
+    cfp_header_ctor_array2f,
+    cfp_header_ctor_array2d,
+    cfp_header_ctor_array3f,
+    cfp_header_ctor_array3d,
+    cfp_header_dtor,
+
+    cfp_header_rate,
+    cfp_header_data,
+    cfp_header_size,
   },
 };

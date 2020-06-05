@@ -1,6 +1,7 @@
 #ifndef CFP_ARRAYS
 #define CFP_ARRAYS
 
+#include "cfpheader.h"
 #include "cfparray1f.h"
 #include "cfparray1d.h"
 #include "cfparray2f.h"
@@ -17,6 +18,7 @@ typedef struct {
   cfp_array2d_api array2d;
   cfp_array3f_api array3f;
   cfp_array3d_api array3d;
+  cfp_header_api  header;
 } cfp_api;
 
 #ifndef CFP_NAMESPACE
