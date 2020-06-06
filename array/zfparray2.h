@@ -212,6 +212,12 @@ protected:
     cache.deep_copy(a.cache);
   }
 
+  // global index bounds
+  size_t min_x() const { return 0; }
+  size_t max_x() const { return nx; }
+  size_t min_y() const { return 0; }
+  size_t max_y() const { return ny; }
+
   // inspector
   value_type get(size_t i, size_t j) const { return cache.get(i, j); }
 

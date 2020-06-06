@@ -4,40 +4,40 @@ public:
   typedef typename container_type::value_type value_type;
 
   // constructor
-  explicit const_reference(const container_type* container, size_t i, size_t j, size_t k) : const_handle(container, i, j, k) {}
+  explicit const_reference(const container_type* container, size_t x, size_t y, size_t z) : const_handle(container, x, y, z) {}
 
   // inspector
   operator value_type() const { return get(); }
 
   // pointer to referenced element
-  const_pointer operator&() const { return const_pointer(container, i, j, k); }
+  const_pointer operator&() const { return const_pointer(container, x, y, z); }
 
 protected:
   using const_handle::get;
   using const_handle::container;
-  using const_handle::i;
-  using const_handle::j;
-  using const_handle::k;
+  using const_handle::x;
+  using const_handle::y;
+  using const_handle::z;
 };
 
 // reference to a 3D array or view element; this class is nested within container_type
 class reference : public const_reference {
 public:
   // constructor
-  explicit reference(container_type* container, size_t i, size_t j, size_t k) : const_reference(container, i, j, k) {}
+  explicit reference(container_type* container, size_t x, size_t y, size_t z) : const_reference(container, x, y, z) {}
 
   // assignment
   reference operator=(const reference& r) { set(r.get()); return *this; }
   reference operator=(value_type val) { set(val); return *this; }
 
   // compound assignment
-  reference operator+=(value_type val) { container->add(i, j, k, val); return *this; }
-  reference operator-=(value_type val) { container->sub(i, j, k, val); return *this; }
-  reference operator*=(value_type val) { container->mul(i, j, k, val); return *this; }
-  reference operator/=(value_type val) { container->div(i, j, k, val); return *this; }
+  reference operator+=(value_type val) { container->add(x, y, z, val); return *this; }
+  reference operator-=(value_type val) { container->sub(x, y, z, val); return *this; }
+  reference operator*=(value_type val) { container->mul(x, y, z, val); return *this; }
+  reference operator/=(value_type val) { container->div(x, y, z, val); return *this; }
 
   // pointer to referenced element
-  pointer operator&() const { return pointer(container, i, j, k); }
+  pointer operator&() const { return pointer(container, x, y, z); }
 
   // swap two array elements via proxy references
   friend void swap(reference a, reference b)
@@ -50,11 +50,11 @@ public:
 
 protected:
   // assign value through reference
-  void set(value_type val) { container->set(i, j, k, val); }
+  void set(value_type val) { container->set(x, y, z, val); }
 
   using const_reference::get;
   using const_reference::container;
-  using const_reference::i;
-  using const_reference::j;
-  using const_reference::k;
+  using const_reference::x;
+  using const_reference::y;
+  using const_reference::z;
 };

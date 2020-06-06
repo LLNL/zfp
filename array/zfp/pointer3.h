@@ -5,19 +5,19 @@ public:
   const_pointer() : const_handle(0, 0, 0, 0) {}
 
   // constructor
-  explicit const_pointer(const container_type* container, size_t i, size_t j, size_t k) : const_handle(container, i, j, k) {}
+  explicit const_pointer(const container_type* container, size_t x, size_t y, size_t z) : const_handle(container, x, y, z) {}
 
   // dereference pointer
-  const_reference operator*() const { return const_reference(container, i, j, k); }
-  const_reference operator[](ptrdiff_t d) const { const_pointer p = operator+(d); return *p; }
+  const_reference operator*() const { return const_reference(container, x, y, z); }
+  const_reference operator[](ptrdiff_t d) const { return *operator+(d); }
 
   // pointer arithmetic
-  const_pointer operator+(ptrdiff_t d) const { const_pointer p = *this; p.advance(+d); return p; }
-  const_pointer operator-(ptrdiff_t d) const { const_pointer p = *this; p.advance(-d); return p; }
+  const_pointer operator+(ptrdiff_t d) const { const_pointer p = *this; p.advance(d); return p; }
+  const_pointer operator-(ptrdiff_t d) const { return operator+(-d); }
   ptrdiff_t operator-(const const_pointer& p) const { return offset() - p.offset(); }
 
   // equality operators
-  bool operator==(const const_pointer& p) const { return container == p.container && i == p.i && j == p.j && k == p.k; }
+  bool operator==(const const_pointer& p) const { return container == p.container && x == p.x && y == p.y && z == p.z; }
   bool operator!=(const const_pointer& p) const { return !operator==(p); }
 
   // relational operators
@@ -35,39 +35,39 @@ public:
   const_pointer operator-=(ptrdiff_t d) { advance(-d); return *this; }
 
 protected:
-  ptrdiff_t offset() const { return static_cast<ptrdiff_t>(i + container->size_x() * (j + container->size_y() * k)); }
-  void advance(ptrdiff_t d)
+  ptrdiff_t offset(ptrdiff_t d = 0) const { return static_cast<ptrdiff_t>(x - container->min_x() + container->size_x() * (y - container->min_y() + container->size_y() * (z - container->min_z()))) + d; }
+  void index(size_t& x, size_t& y, size_t& z, ptrdiff_t p) const
   {
-    size_t idx = offset() + d;
-    i = idx % container->size_x(); idx /= container->size_x();
-    j = idx % container->size_y(); idx /= container->size_y();
-    k = idx;
+    x = container->min_x() + p % container->size_x(); p /= container->size_x();
+    y = container->min_y() + p % container->size_y(); p /= container->size_y();
+    z = container->min_z() + p;
   }
+  void advance(ptrdiff_t d) { index(x, y, z, offset(d)); }
   void increment()
   {
-    if (++i == container->size_x()) {
-      i = 0;
-      if (++j == container->size_y()) {
-        j = 0;
-        ++k;
+    if (++x == container->max_x()) {
+      x = container->min_x();
+      if (++y == container->max_y()) {
+        y = container->min_y();
+        ++z;
       }
     }
   }
   void decrement()
   {
-    if (!i--) {
-      i += container->size_x();
-      if (!j--) {
-        j += container->size_y();
-        --k;
+    if (x-- == container->min_x()) {
+      x += container->size_x();
+      if (y-- == container->min_y()) {
+        y += container->size_y();
+        --z;
       }
     }
   }
 
   using const_handle::container;
-  using const_handle::i;
-  using const_handle::j;
-  using const_handle::k;
+  using const_handle::x;
+  using const_handle::y;
+  using const_handle::z;
 };
 
 // pointer to a 3D array or view element; this class is nested within container_type
@@ -77,19 +77,19 @@ public:
   pointer() : const_pointer(0, 0, 0, 0) {}
 
   // constructor
-  explicit pointer(container_type* container, size_t i, size_t j, size_t k) : const_pointer(container, i, j, k) {}
+  explicit pointer(container_type* container, size_t x, size_t y, size_t z) : const_pointer(container, x, y, z) {}
 
   // dereference pointer
-  reference operator*() const { return reference(container, i, j, k); }
-  reference operator[](ptrdiff_t d) const { pointer p = operator+(d); return *p; }
+  reference operator*() const { return reference(container, x, y, z); }
+  reference operator[](ptrdiff_t d) const { return *operator+(d); }
 
   // pointer arithmetic
-  pointer operator+(ptrdiff_t d) const { pointer p = *this; p.advance(+d); return p; }
-  pointer operator-(ptrdiff_t d) const { pointer p = *this; p.advance(-d); return p; }
+  pointer operator+(ptrdiff_t d) const { pointer p = *this; p.advance(d); return p; }
+  pointer operator-(ptrdiff_t d) const { return operator+(-d); }
   ptrdiff_t operator-(const pointer& p) const { return offset() - p.offset(); }
 
   // equality operators
-  bool operator==(const pointer& p) const { return container == p.container && i == p.i && j == p.j && k == p.k; }
+  bool operator==(const pointer& p) const { return container == p.container && x == p.x && y == p.y && z == p.z; }
   bool operator!=(const pointer& p) const { return !operator==(p); }
 
   // relational operators
@@ -112,7 +112,7 @@ protected:
   using const_pointer::increment;
   using const_pointer::decrement;
   using const_pointer::container;
-  using const_pointer::i;
-  using const_pointer::j;
-  using const_pointer::k;
+  using const_pointer::x;
+  using const_pointer::y;
+  using const_pointer::z;
 };
