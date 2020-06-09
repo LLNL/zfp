@@ -2,26 +2,26 @@ static CFP_ARRAY_TYPE
 _t1(CFP_ARRAY_TYPE, ctor)(size_t n, double rate, const ZFP_SCALAR_TYPE * p, size_t csize)
 {
   CFP_ARRAY_TYPE a;
-  a.object = reinterpret_cast<void*>(new ZFP_ARRAY_TYPE(n, rate, p, csize));
+  a.object = static_cast<void*>(new ZFP_ARRAY_TYPE(n, rate, p, csize));
   return a;
 }
 
 static void
 _t1(CFP_ARRAY_TYPE, resize)(CFP_ARRAY_TYPE self, size_t n, int clear)
 {
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.object)->resize(n, clear);
+  static_cast<ZFP_ARRAY_TYPE*>(self.object)->resize(n, clear);
 }
 
 static ZFP_SCALAR_TYPE
 _t1(CFP_ARRAY_TYPE, get)(CFP_ARRAY_TYPE self, size_t i)
 {
-  return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.object)->operator()(i);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->operator()(i);
 }
 
 static void
 _t1(CFP_ARRAY_TYPE, set)(CFP_ARRAY_TYPE self, size_t i, ZFP_SCALAR_TYPE val)
 {
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.object)->operator()(i) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.object)->operator()(i) = val;
 }
 
 static CFP_ITER_TYPE
@@ -37,7 +37,7 @@ static CFP_ITER_TYPE
 _t1(CFP_ARRAY_TYPE, end)(CFP_ARRAY_TYPE self)
 {
   CFP_ITER_TYPE it;
-  it.i = reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.object)->size_x();
+  it.i = static_cast<const ZFP_ARRAY_TYPE*>(self.object)->size_x();
   it.array = self;
   return it;
 }
@@ -79,20 +79,20 @@ _t1(CFP_ARRAY_TYPE, ptr_flat)(CFP_ARRAY_TYPE self, size_t i)
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, get)(CFP_REF_TYPE self)
 {
-  return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i);
 }
 
 static void
 _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, set)(CFP_REF_TYPE self, ZFP_SCALAR_TYPE val)
 {
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) = val;
 }
 
 static void
 _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
 {
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) =
-    reinterpret_cast<const ZFP_ARRAY_TYPE*>(src.array.object)->operator()(src.i);
+  static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) =
+    static_cast<const ZFP_ARRAY_TYPE*>(src.array.object)->operator()(src.i);
 }
 
 static CFP_PTR_TYPE
@@ -105,20 +105,20 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(CFP_PTR_TYPE self, ptrdiff_t d)
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, get)(CFP_PTR_TYPE self)
 {
-  return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.i);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.i);
 }
 
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, get_at)(CFP_PTR_TYPE self, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, d);
-  return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.i);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.i);
 }
 
 static void
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, set)(CFP_PTR_TYPE self, ZFP_SCALAR_TYPE val)
 {
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.i) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.i) = val;
 }
 
 static CFP_ITER_TYPE
@@ -132,7 +132,7 @@ static void
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, set_at)(CFP_PTR_TYPE self, ZFP_SCALAR_TYPE val, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, d);
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.i) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.i) = val;
 }
 
 static CFP_REF_TYPE
@@ -214,27 +214,27 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, dec)(CFP_PTR_TYPE self)
 static void
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, set)(CFP_ITER_TYPE self, ZFP_SCALAR_TYPE val)
 {
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) = val;
 }
 
 static void
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, set_at)(CFP_ITER_TYPE self, ZFP_SCALAR_TYPE val, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
-  reinterpret_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i) = val;
 }
 
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, get)(CFP_ITER_TYPE self)
 {
-  return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i);
 }
 
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, get_at)(CFP_ITER_TYPE self, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
-  return reinterpret_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.i);
 }
 
 static CFP_REF_TYPE
