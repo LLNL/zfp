@@ -3,12 +3,11 @@
 
 #include <stddef.h>
 #include "zfp/types.h"
+#include "cfptypes.h"
 
-typedef struct cfp_header cfp_header;
-
-typedef struct {
+struct cfp_array2d {
   void* object;
-} cfp_array2d;
+};
 
 typedef struct {
   size_t i;

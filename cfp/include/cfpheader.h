@@ -1,16 +1,8 @@
 #ifndef CFP_HEADER
 #define CFP_HEADER
 
-#include "cfparray1f.h"
-#include "cfparray1d.h"
-#include "cfparray2f.h"
-#include "cfparray2d.h"
-#include "cfparray3f.h"
-#include "cfparray3d.h"
-
+#include "cfptypes.h"
 #include <stddef.h>
-
-typedef struct cfp_header cfp_header;
 
 struct cfp_header {
   void* object;
