@@ -1,15 +1,26 @@
-// const pointer to a 1D array or view element; this class is nested within container_type
-class const_pointer : public const_handle {
+#ifndef ZFP_POINTER1_H
+#define ZFP_POINTER1_H
+
+namespace zfp {
+namespace internal {
+namespace dim1 {
+
+// const pointer to a 1D array or view element
+template <class Container>
+class const_pointer : public const_handle<Container> {
 public:
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+
   // default constructor
-  const_pointer() : const_handle(0, 0) {}
+  const_pointer() : const_handle<Container>(0, 0) {}
 
   // constructor
-  explicit const_pointer(const container_type* container, size_t x) : const_handle(container, x) {}
+  explicit const_pointer(const container_type* container, size_t x) : const_handle<Container>(container, x) {}
 
   // dereference pointer
-  const_reference operator*() const { return const_reference(container, x); }
-  const_reference operator[](ptrdiff_t d) const { return *operator+(d); }
+  const_reference<Container> operator*() const { return const_reference<Container>(container, x); }
+  const_reference<Container> operator[](ptrdiff_t d) const { return *operator+(d); }
 
   // pointer arithmetic
   const_pointer operator+(ptrdiff_t d) const { const_pointer p = *this; p.advance(d); return p; }
@@ -41,22 +52,26 @@ protected:
   void increment() { ++x; }
   void decrement() { --x; }
 
-  using const_handle::container;
-  using const_handle::x;
+  using const_handle<Container>::container;
+  using const_handle<Container>::x;
 };
 
-// pointer to a 1D array or view element; this class is nested within container_type
-class pointer : public const_pointer {
+// pointer to a 1D array or view element
+template <class Container>
+class pointer : public const_pointer<Container> {
 public:
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+
   // default constructor
-  pointer() : const_pointer(0, 0) {}
+  pointer() : const_pointer<Container>(0, 0) {}
 
   // constructor
-  explicit pointer(container_type* container, size_t x) : const_pointer(container, x) {}
+  explicit pointer(container_type* container, size_t x) : const_pointer<Container>(container, x) {}
 
   // dereference pointer
-  reference operator*() const { return reference(container, x); }
-  reference operator[](ptrdiff_t d) const { return *operator+(d); }
+  reference<Container> operator*() const { return reference<Container>(container, x); }
+  reference<Container> operator[](ptrdiff_t d) const { return *operator+(d); }
 
   // pointer arithmetic
   pointer operator+(ptrdiff_t d) const { pointer p = *this; p.advance(d); return p; }
@@ -82,10 +97,16 @@ public:
   pointer operator-=(ptrdiff_t d) { advance(-d); return *this; }
 
 protected:
-  using const_pointer::offset;
-  using const_pointer::advance;
-  using const_pointer::increment;
-  using const_pointer::decrement;
-  using const_pointer::container;
-  using const_pointer::x;
+  using const_pointer<Container>::offset;
+  using const_pointer<Container>::advance;
+  using const_pointer<Container>::increment;
+  using const_pointer<Container>::decrement;
+  using const_pointer<Container>::container;
+  using const_pointer<Container>::x;
 };
+
+} // dim1
+} // internal
+} // zfp
+
+#endif

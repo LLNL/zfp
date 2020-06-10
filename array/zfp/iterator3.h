@@ -1,21 +1,30 @@
-// random access const iterator that visits 3D array or view block by block; this class is nested within container_type
-class const_iterator : public const_handle {
+#ifndef ZFP_ITERATOR3_H
+#define ZFP_ITERATOR3_H
+
+namespace zfp {
+namespace internal {
+namespace dim3 {
+
+// random access const iterator that visits 3D array or view block by block
+template <class Container>
+class const_iterator : public const_handle<Container> {
 public:
   // typedefs for STL compatibility
+  typedef Container container_type;
   typedef typename container_type::value_type value_type;
   typedef ptrdiff_t difference_type;
-  typedef typename container_type::reference reference;
-  typedef typename container_type::pointer pointer;
+  typedef reference<Container> reference;
+  typedef pointer<Container> pointer;
   typedef std::random_access_iterator_tag iterator_category;
 
-  typedef typename container_type::const_reference const_reference;
-  typedef typename container_type::const_pointer const_pointer;
+  typedef const_reference<Container> const_reference;
+  typedef const_pointer<Container> const_pointer;
 
   // default constructor
-  const_iterator() : const_handle(0, 0, 0, 0) {}
+  const_iterator() : const_handle<Container>(0, 0, 0, 0) {}
 
   // constructor
-  explicit const_iterator(const container_type* container, size_t x, size_t y, size_t z) : const_handle(container, x, y, z) {}
+  explicit const_iterator(const container_type* container, size_t x, size_t y, size_t z) : const_handle<Container>(container, x, y, z) {}
 
   // dereference iterator
   const_reference operator*() const { return const_reference(container, x, y, z); }
@@ -44,7 +53,7 @@ public:
   const_iterator operator+=(difference_type d) { advance(+d); return *this; }
   const_iterator operator-=(difference_type d) { advance(-d); return *this; }
 
-  // local container indices of value referenced by iterator
+  // local container index of value referenced by iterator
   size_t i() const { return x - container->min_x(); }
   size_t j() const { return y - container->min_y(); }
   size_t k() const { return z - container->min_z(); }
@@ -106,7 +115,7 @@ protected:
   }
 
   // advance iterator by d
-  void advance(difference_type d) { index(x, y, z, offset(d)); }
+  void advance(difference_type d) { index(x, y, offset(d)); }
 
   // increment iterator to next element
   void increment()
@@ -187,27 +196,29 @@ protected:
     }
   }
 
-  using const_handle::container;
-  using const_handle::x;
-  using const_handle::y;
-  using const_handle::z;
+  using const_handle<Container>::container;
+  using const_handle<Container>::x;
+  using const_handle<Container>::y;
+  using const_handle<Container>::z;
 };
 
-// random access iterator that visits 3D array or view block by block; this class is nested within container_type
-class iterator : public const_iterator {
+// random access iterator that visits 3D array or view block by block
+template <class Container>
+class iterator : public const_iterator<Container> {
 public:
   // typedefs for STL compatibility
+  typedef Container container_type;
   typedef typename container_type::value_type value_type;
   typedef ptrdiff_t difference_type;
-  typedef typename container_type::reference reference;
-  typedef typename container_type::pointer pointer;
+  typedef reference<Container> reference;
+  typedef pointer<Container> pointer;
   typedef std::random_access_iterator_tag iterator_category;
 
   // default constructor
-  iterator() : const_iterator(0, 0, 0, 0) {}
+  iterator() : const_iterator<Container>(0, 0, 0, 0) {}
 
   // constructor
-  explicit iterator(container_type* container, size_t x, size_t y, size_t z) : const_iterator(container, x, y, z) {}
+  explicit iterator(container_type* container, size_t x, size_t y, size_t z) : const_iterator<Container>(container, x, y, z) {}
 
   // dereference iterator
   reference operator*() const { return reference(container, x, y, z); }
@@ -237,12 +248,18 @@ public:
   iterator operator-=(difference_type d) { advance(-d); return *this; }
 
 protected:
-  using const_iterator::offset;
-  using const_iterator::advance;
-  using const_iterator::increment;
-  using const_iterator::decrement;
-  using const_iterator::container;
-  using const_iterator::x;
-  using const_iterator::y;
-  using const_iterator::z;
+  using const_iterator<Container>::offset;
+  using const_iterator<Container>::advance;
+  using const_iterator<Container>::increment;
+  using const_iterator<Container>::decrement;
+  using const_iterator<Container>::container;
+  using const_iterator<Container>::x;
+  using const_iterator<Container>::y;
+  using const_iterator<Container>::z;
 };
+
+} // dim3
+} // internal
+} // zfp
+
+#endif

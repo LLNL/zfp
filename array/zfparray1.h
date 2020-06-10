@@ -8,6 +8,11 @@
 #include "zfpcodec.h"
 #include "zfp/cache1.h"
 #include "zfp/store1.h"
+#include "zfp/handle1.h"
+#include "zfp/reference1.h"
+#include "zfp/pointer1.h"
+#include "zfp/iterator1.h"
+#include "zfp/view1.h"
 
 namespace zfp {
 
@@ -21,20 +26,17 @@ public:
   typedef Codec codec_type;
   typedef typename Codec::header header;
 
-  // forward declarations
-  class const_reference;
-  class const_pointer;
-  class const_iterator;
-  class reference;
-  class pointer;
-  class iterator;
-  class view;
-
-  #include "zfp/handle1.h"
-  #include "zfp/reference1.h"
-  #include "zfp/pointer1.h"
-  #include "zfp/iterator1.h"
-  #include "zfp/view1.h"
+  // accessor classes
+  typedef zfp::internal::dim1::const_reference<array1> const_reference;
+  typedef zfp::internal::dim1::const_pointer<array1> const_pointer;
+  typedef zfp::internal::dim1::const_iterator<array1> const_iterator;
+  typedef zfp::internal::dim1::const_view<array1> const_view;
+  typedef zfp::internal::dim1::private_const_view<array1> private_const_view;
+  typedef zfp::internal::dim1::reference<array1> reference;
+  typedef zfp::internal::dim1::pointer<array1> pointer;
+  typedef zfp::internal::dim1::iterator<array1> iterator;
+  typedef zfp::internal::dim1::view<array1> view;
+  typedef zfp::internal::dim1::private_view<array1> private_view;
 
   // default constructor
   array1() :
@@ -181,6 +183,18 @@ public:
   iterator end() { return iterator(this, nx); }
 
 protected:
+  friend class zfp::internal::dim1::const_handle<array1>;
+  friend class zfp::internal::dim1::const_reference<array1>;
+  friend class zfp::internal::dim1::const_pointer<array1>;
+  friend class zfp::internal::dim1::const_iterator<array1>;
+  friend class zfp::internal::dim1::const_view<array1>;
+  friend class zfp::internal::dim1::private_const_view<array1>;
+  friend class zfp::internal::dim1::reference<array1>;
+  friend class zfp::internal::dim1::pointer<array1>;
+  friend class zfp::internal::dim1::iterator<array1>;
+  friend class zfp::internal::dim1::view<array1>;
+  friend class zfp::internal::dim1::private_view<array1>;
+
   // perform a deep copy
   void deep_copy(const array1& a)
   {

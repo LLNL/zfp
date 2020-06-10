@@ -1,6 +1,23 @@
-// const handle to a 3D array or view element; this class is nested within container_type
+#ifndef ZFP_HANDLE3_H
+#define ZFP_HANDLE3_H
+
+namespace zfp {
+namespace internal {
+namespace dim3 {
+
+// forward declarations
+template <class Container> class const_reference;
+template <class Container> class const_pointer;
+template <class Container> class const_iterator;
+template <class Container> class reference;
+template <class Container> class pointer;
+template <class Container> class iterator;
+
+// const handle to a 3D array or view element
+template <class Container>
 class const_handle {
 public:
+  typedef Container container_type;
   typedef typename container_type::value_type value_type;
 
 protected:
@@ -14,17 +31,8 @@ protected:
   size_t x, y, z;            // global element index
 };
 
-// reference to a 3D array or view element; this class is nested within container_type
-class handle : public const_handle {
-protected:
-  // protected constructor
-  explicit handle(container_type* container, size_t x, size_t y, size_t z) : const_handle(container, x, y, z) {}
+} // dim3
+} // internal
+} // zfp
 
-  // assign value through handle
-  void set(value_type val) { container->set(x, y, z, val); }
-
-  using const_handle::container;
-  using const_handle::x;
-  using const_handle::y;
-  using const_handle::z;
-};
+#endif

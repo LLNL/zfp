@@ -1,28 +1,41 @@
-// const reference to a 1D array or view element; this class is nested within container_type
-class const_reference : const_handle {
+#ifndef ZFP_REFERENCE1_H
+#define ZFP_REFERENCE1_H
+
+namespace zfp {
+namespace internal {
+namespace dim1 {
+
+// const reference to a 1D array or view element
+template <class Container>
+class const_reference : const_handle<Container> {
 public:
+  typedef Container container_type;
   typedef typename container_type::value_type value_type;
 
   // constructor
-  explicit const_reference(const container_type* container, size_t x) : const_handle(container, x) {}
+  explicit const_reference(const container_type* container, size_t x) : const_handle<Container>(container, x) {}
 
   // inspector
   operator value_type() const { return get(); }
 
   // pointer to referenced element
-  const_pointer operator&() const { return const_pointer(container, x); }
+  const_pointer<Container> operator&() const { return const_pointer<Container>(container, x); }
 
 protected:
-  using const_handle::get;
-  using const_handle::container;
-  using const_handle::x;
+  using const_handle<Container>::get;
+  using const_handle<Container>::container;
+  using const_handle<Container>::x;
 };
 
-// reference to a 1D array or view element; this class is nested within container_type
-class reference : public const_reference {
+// reference to a 1D array or view element
+template <class Container>
+class reference : public const_reference<Container> {
 public:
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+
   // constructor
-  explicit reference(container_type* container, size_t x) : const_reference(container, x) {}
+  explicit reference(container_type* container, size_t x) : const_reference<Container>(container, x) {}
 
   // assignment
   reference operator=(const reference& r) { set(r.get()); return *this; }
@@ -35,7 +48,7 @@ public:
   reference operator/=(value_type val) { container->div(x, val); return *this; }
 
   // pointer to referenced element
-  pointer operator&() const { return pointer(container, x); }
+  pointer<Container> operator&() const { return pointer<Container>(container, x); }
 
   // swap two array elements via proxy references
   friend void swap(reference a, reference b)
@@ -50,7 +63,13 @@ protected:
   // assign value through reference
   void set(value_type val) { container->set(x, val); }
 
-  using const_reference::get;
-  using const_reference::container;
-  using const_reference::x;
+  using const_reference<Container>::get;
+  using const_reference<Container>::container;
+  using const_reference<Container>::x;
 };
+
+} // dim1
+} // internal
+} // zfp
+
+#endif

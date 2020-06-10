@@ -8,6 +8,11 @@
 #include "zfpcodec.h"
 #include "zfp/cache2.h"
 #include "zfp/store2.h"
+#include "zfp/handle2.h"
+#include "zfp/reference2.h"
+#include "zfp/pointer2.h"
+#include "zfp/iterator2.h"
+#include "zfp/view2.h"
 
 namespace zfp {
 
@@ -21,20 +26,21 @@ public:
   typedef Codec codec_type;
   typedef typename Codec::header header;
 
-  // forward declarations
-  class const_reference;
-  class const_pointer;
-  class const_iterator;
-  class reference;
-  class pointer;
-  class iterator;
-  class view;
-
-  #include "zfp/handle2.h"
-  #include "zfp/reference2.h"
-  #include "zfp/pointer2.h"
-  #include "zfp/iterator2.h"
-  #include "zfp/view2.h"
+  // accessor classes
+  typedef zfp::internal::dim2::const_reference<array2> const_reference;
+  typedef zfp::internal::dim2::const_pointer<array2> const_pointer;
+  typedef zfp::internal::dim2::const_iterator<array2> const_iterator;
+  typedef zfp::internal::dim2::const_view<array2> const_view;
+  typedef zfp::internal::dim2::private_const_view<array2> private_const_view;
+  typedef zfp::internal::dim2::reference<array2> reference;
+  typedef zfp::internal::dim2::pointer<array2> pointer;
+  typedef zfp::internal::dim2::iterator<array2> iterator;
+  typedef zfp::internal::dim2::view<array2> view;
+  typedef zfp::internal::dim2::flat_view<array2> flat_view;
+  typedef zfp::internal::dim2::nested_view1<array2> nested_view1;
+  typedef zfp::internal::dim2::nested_view2<array2> nested_view2;
+  typedef zfp::internal::dim2::nested_view2<array2> nested_view;
+  typedef zfp::internal::dim2::private_view<array2> private_view;
 
   // default constructor
   array2() :
@@ -201,6 +207,21 @@ public:
   iterator end() { return iterator(this, 0, ny); }
 
 protected:
+  friend class zfp::internal::dim2::const_handle<array2>;
+  friend class zfp::internal::dim2::const_reference<array2>;
+  friend class zfp::internal::dim2::const_pointer<array2>;
+  friend class zfp::internal::dim2::const_iterator<array2>;
+  friend class zfp::internal::dim2::const_view<array2>;
+  friend class zfp::internal::dim2::private_const_view<array2>;
+  friend class zfp::internal::dim2::reference<array2>;
+  friend class zfp::internal::dim2::pointer<array2>;
+  friend class zfp::internal::dim2::iterator<array2>;
+  friend class zfp::internal::dim2::view<array2>;
+  friend class zfp::internal::dim2::flat_view<array2>;
+  friend class zfp::internal::dim2::nested_view1<array2>;
+  friend class zfp::internal::dim2::nested_view2<array2>;
+  friend class zfp::internal::dim2::private_view<array2>;
+
   // perform a deep copy
   void deep_copy(const array2& a)
   {
