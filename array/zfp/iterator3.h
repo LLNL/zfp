@@ -13,12 +13,12 @@ public:
   typedef Container container_type;
   typedef typename container_type::value_type value_type;
   typedef ptrdiff_t difference_type;
-  typedef reference<Container> reference;
-  typedef pointer<Container> pointer;
+  typedef zfp::internal::dim3::reference<Container> reference;
+  typedef zfp::internal::dim3::pointer<Container> pointer;
   typedef std::random_access_iterator_tag iterator_category;
 
-  typedef const_reference<Container> const_reference;
-  typedef const_pointer<Container> const_pointer;
+  typedef zfp::internal::dim3::const_reference<Container> const_reference;
+  typedef zfp::internal::dim3::const_pointer<Container> const_pointer;
 
   // default constructor
   const_iterator() : const_handle<Container>(0, 0, 0, 0) {}
@@ -210,8 +210,8 @@ public:
   typedef Container container_type;
   typedef typename container_type::value_type value_type;
   typedef ptrdiff_t difference_type;
-  typedef reference<Container> reference;
-  typedef pointer<Container> pointer;
+  typedef zfp::internal::dim3::reference<Container> reference;
+  typedef zfp::internal::dim3::pointer<Container> pointer;
   typedef std::random_access_iterator_tag iterator_category;
 
   // default constructor
