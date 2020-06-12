@@ -33,13 +33,26 @@ to its compressed arrays.
 Access to array elements through a view is via inspectors and mutators
 that return a :code:`const_reference` or :code:`reference`, respectively
 (see :ref:`references`).  As of |zfp| |crpirelease|, it is also possible
-to obtain pointers to array elements through views.  View pointers allow
-referencing only the elements visible through the view, e.g., a rectangular
-subset of an array.  Those elements are indexed as if the view were a
-contiguous array, and pointer arithmetic assumes that the possibly smaller
-view and not the underlying array is flattened.
+to obtain pointers to array elements through views and to iterate over them.
+View pointers and iterators allow referencing only the elements visible
+through the view, e.g., a rectangular subset of an array
+(see :numref:`view-indexing`).  Those elements are indexed as if the
+view were a contiguous array, and pointer arithmetic assumes that the
+possibly smaller view and not the underlying array is flattened.
 :ref:`Private views <private_immutable_view>` maintain their own cache
-and therefore implement their own proxy references and pointers.
+and therefore implement their own proxy references, pointers, and
+iterators.
+
+.. _view-indexing:
+.. figure:: view-indexing.pdf
+  :figwidth: 90 %
+  :align: center
+  :alt: "2D view indexing"
+
+  An 11 |times| 9 element view of a 2D array of dimensions 16 |times| 12.
+  The numbered elements indicate the order in which the view is
+  traversed using pointers and iterators.  We have
+  :code:`view(10, 7) == (&view(0, 0))[87] == view.begin()[97] == view.end()[-2]`.
 
 .. note::
   Like iterators and proxy references and pointers, a view is valid only
@@ -79,6 +92,8 @@ array or to a rectangular subset of an array.  Note that like
 references, pointers, and iterators, views are types nested within
 the arrays that they reference.
 
+----
+
 ..
   .. cpp:class:: template<typename Scalar> array1::const_view
   .. cpp:class:: template<typename Scalar> array2::const_view
@@ -90,6 +105,8 @@ the arrays that they reference.
 
   Immutable view into 1D, 2D, and 3D array.
 
+----
+
 .. _view_ctor:
 .. cpp:function:: array1::const_view::const_view(array1* array)
 .. cpp:function:: array2::const_view::const_view(array2* array)
@@ -98,6 +115,8 @@ the arrays that they reference.
   Constructor for read-only access to a whole array.  As already
   mentioned, these views are valid only during the lifetime of the
   underlying array object.
+
+----
 
 .. cpp:function:: array1::const_view::const_view(array1* array, size_t x, size_t nx)
 .. cpp:function:: array2::const_view::const_view(array2* array, size_t x, size_t y, size_t nx, size_t ny)
@@ -108,6 +127,8 @@ the arrays that they reference.
   (*x*, *y*, *z*) for a 3D array, and dimensions, e.g.,
   (*nx*, *ny*, *nz*) for a 3D array.  The rectangle must fit within
   the surrounding array.
+
+----
 
 .. cpp:function:: size_t array1::const_view::global_x(size_t i) const
 .. cpp:function:: size_t array2::const_view::global_x(size_t i) const
@@ -120,6 +141,8 @@ the arrays that they reference.
   instance, if a 1D view has been constructed with offset *x*, then
   :code:`global_x(i)` returns *x* + *i*.
 
+----
+
 .. cpp:function:: size_t array1::const_view::size_x() const
 .. cpp:function:: size_t array2::const_view::size_x() const
 .. cpp:function:: size_t array2::const_view::size_y() const
@@ -128,6 +151,8 @@ the arrays that they reference.
 .. cpp:function:: size_t array3::const_view::size_z() const
 
   Return dimensions of view.
+
+----
 
 .. _view_accessor:
 .. cpp:function:: Scalar array1::const_view::operator()(size_t i) const
@@ -138,22 +163,54 @@ the arrays that they reference.
   *y* + *j*, and *z* + *k*, where *x*, *y*, and *z* specify the offset
   into the array.
 
+----
+
 .. cpp:function:: Scalar array1::const_view::operator[](size_t index) const
 
   Alternative inspector for 1D arrays identical to
   :cpp:func:`array1::const_view::operator()`.
 
+----
+
+.. cpp:function:: array1::const_view::const_iterator array1::const_view::begin() const
+.. cpp:function:: array2::const_view::const_iterator array2::const_view::begin() const
+.. cpp:function:: array3::const_view::const_iterator array3::const_view::begin() const
+.. cpp:function:: array1::const_view::const_iterator array1::const_view::cbegin() const
+.. cpp:function:: array2::const_view::const_iterator array2::const_view::cbegin() const
+.. cpp:function:: array3::const_view::const_iterator array3::const_view::cbegin() const
+
+  Const iterator to first element of view.
+
+----
+
+.. cpp:function:: array1::const_view::const_iterator array1::const_view::end() const
+.. cpp:function:: array2::const_view::const_iterator array2::const_view::end() const
+.. cpp:function:: array3::const_view::const_iterator array3::const_view::end() const
+.. cpp:function:: array1::const_view::const_iterator array1::const_view::cend() const
+.. cpp:function:: array2::const_view::const_iterator array2::const_view::cend() const
+.. cpp:function:: array3::const_view::const_iterator array3::const_view::cend() const
+
+  Const iterator to end of view.
+
+----
+
 There are a number of common methods inherited from a base class,
 :code:`preview`, further up the class hierarchy.
+
+----
 
 .. cpp:function:: double arrayANY::const_view::rate() const
 
   Return rate in bits per value.  Same as :cpp:func:`array::rate`.
   
+----
+
 .. cpp:function:: size_t arrayANY::const_view::size() const
 
   Total number of elements in view, e.g., *nx* |times| *ny* |times| *nz* for
   3D views.
+
+----
 
 With the above definitions, the following example shows how a 2D view is
 constructed and accessed::
