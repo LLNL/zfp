@@ -115,7 +115,7 @@ protected:
   }
 
   // advance iterator by d
-  void advance(difference_type d) { index(x, y, offset(d)); }
+  void advance(difference_type d) { index(x, y, z, offset(d)); }
 
   // increment iterator to next element
   void increment()
