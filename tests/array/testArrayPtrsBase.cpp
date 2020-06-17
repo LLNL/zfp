@@ -46,6 +46,20 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_entryPointer_when_postDecrement_then_p
   EXPECT_EQ(VAL, *ptr);
 }
 
+TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, when_preIncrementPointer_then_matchPointerOffsetFromBeginning)
+{
+  ptr = ptr2 = &arr[0];
+  for (size_t i = 0; i != arr.size(); ++i, ++ptr)
+    EXPECT_TRUE(ptr == ptr2 + i);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, when_preDecrementPointer_then_matchPointerOffsetFromEnd)
+{
+  ptr = ptr2 = &arr[arr.size() - 1];
+  for (size_t i = 0; i != arr.size(); ++i, --ptr)
+    EXPECT_TRUE(ptr == ptr2 - i);
+}
+
 TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_entryPointer_when_preIncrement_then_ptrAdvancedBeforeEval)
 {
   arr[1] = VAL;
@@ -210,6 +224,20 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_entryConstPointer_when_postDecrement_t
 
   EXPECT_EQ(0, d);
   EXPECT_EQ(VAL, *cptr);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, when_preIncrementConstPointer_then_matchPointerOffsetFromBeginning)
+{
+  cptr = cptr2 = &arr[0];
+  for (size_t i = 0; i != arr.size(); ++i, ++cptr)
+    EXPECT_TRUE(cptr == cptr2 + i);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, when_preDecrementConstPointer_then_matchPointerOffsetFromEnd)
+{
+  cptr = cptr2 = &arr[arr.size() - 1];
+  for (size_t i = 0; i != arr.size(); ++i, --cptr)
+    EXPECT_TRUE(cptr == cptr2 - i);
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_PTRS, given_entryConstPointer_when_preIncrement_then_ptrAdvancedBeforeEval)

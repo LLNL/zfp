@@ -39,6 +39,24 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_constructedIteratorWithEnd_then_initia
   EXPECT_EQ(ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(iter), ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(arr.end()));
 }
 
+TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preIncrementInterator_then_matchIteratorOffsetFromBeginning)
+{
+  iter = iter2 = arr.begin();
+  for (size_t i = 0; iter != arr.end(); ++iter, ++i)
+    EXPECT_TRUE(iter == iter2 + i);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preDecrementInterator_then_matchIteratorOffsetFromEnd)
+{
+  iter = iter2 = arr.end();
+  ptrdiff_t i = 0;
+  do {
+    --iter;
+    --i;
+    EXPECT_TRUE(iter == iter2 + i);
+  } while (iter != arr.begin());
+}
+
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preIncrementIterator_then_advancedBeforeEval)
 {
   arr[0] = VAL;
@@ -117,6 +135,24 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_constructedConstIteratorWithEnd_then_i
   for (size_t i = 0; i < arr.size(); i++, citer++);
 
   EXPECT_EQ(ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(citer), ARRAY_DIMS_SCALAR_TEST::IterAbsOffset(arr.cend()));
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preIncrementConstInterator_then_matchIteratorOffsetFromBeginning)
+{
+  citer = citer2 = arr.cbegin();
+  for (size_t i = 0; citer != arr.cend(); ++citer, ++i)
+    EXPECT_TRUE(citer == citer2 + i);
+}
+
+TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preDecrementConstInterator_then_matchIteratorOffsetFromEnd)
+{
+  citer = citer2 = arr.cend();
+  ptrdiff_t i = 0;
+  do {
+    --citer;
+    --i;
+    EXPECT_TRUE(citer == citer2 + i);
+  } while (citer != arr.cbegin());
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preIncrementConstIterator_then_advancedBeforeEval)
