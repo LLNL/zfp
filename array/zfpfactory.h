@@ -15,11 +15,31 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
   const size_t nx = header.size_x();
   const size_t ny = header.size_y();
   const size_t nz = header.size_z();
+  const size_t nw = header.size_w();
 
   // construct once (passing zfp::array::header will read it again)
   zfp::array* arr = 0;
   std::string error;
   switch (dims) {
+    case 4:
+#ifdef ZFP_ARRAY4_H
+      switch (type) {
+        case zfp_type_float:
+          arr = new zfp::array4f(nx, ny, nz, nw, rate);
+          break;
+        case zfp_type_double:
+          arr = new zfp::array4d(nx, ny, nz, nw, rate);
+          break;
+        default:
+          /* NOTREACHED */
+          error = "zfp scalar type not supported";
+          break;
+      }
+#else
+      error = "zfparray4 not supported; include zfparray4.h before zfpfactory.h";
+#endif
+      break;
+
     case 3:
 #ifdef ZFP_ARRAY3_H
       switch (type) {
@@ -78,7 +98,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
       break;
 
     default:
-      error = "zfp array dimensionality other than {1, 2, 3} not supported";
+      error = "zfp array dimensionality other than {1, 2, 3, 4} not supported";
       break;
   }
 

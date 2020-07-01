@@ -39,21 +39,21 @@ protected:
   array() :
     type(zfp_type_none),
     dims(0),
-    nx(0), ny(0), nz(0)
+    nx(0), ny(0), nz(0), nw(0)
   {}
 
   // generic array with 'dims' dimensions and scalar type 'type'
   explicit array(uint dims, zfp_type type) :
     type(type),
     dims(dims),
-    nx(0), ny(0), nz(0)
+    nx(0), ny(0), nz(0), nw(0)
   {}
 
   // constructor from previously-serialized compressed array
   explicit array(uint dims, zfp_type type, const zfp::array::header& header) :
     type(type),
     dims(dims),
-    nx(header.size_x()), ny(header.size_y()), nz(header.size_z())
+    nx(header.size_x()), ny(header.size_y()), nz(header.size_z()), nw(header.size_w())
   {
     if (header.scalar_type() != type)
       throw zfp::exception("zfp array scalar type does not match header");
@@ -83,11 +83,12 @@ protected:
     nx = a.nx;
     ny = a.ny;
     nz = a.nz;
+    nw = a.nw;
   }
 
-  zfp_type type;     // scalar type
-  uint dims;         // array dimensionality (1, 2, or 3)
-  size_t nx, ny, nz; // array dimensions
+  zfp_type type;         // scalar type
+  uint dims;             // array dimensionality (1, 2, 3, or 4)
+  size_t nx, ny, nz, nw; // array dimensions
 };
 
 }

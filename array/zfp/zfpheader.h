@@ -27,8 +27,11 @@ public:
         case 3:
           field = zfp_field_3d(0, type, nx, ny, nz);
           break;
+        case 4:
+          field = zfp_field_4d(0, type, nx, ny, nz, nw);
+          break;
         default:
-          error = "zfp serialization supports only 1D, 2D, and 3D arrays";
+          error = "zfp serialization supports only 1D, 2D, 3D, and 4D arrays";
           break;
       }
 
@@ -72,14 +75,13 @@ public:
         error = "zfp deserialization supports only short headers";
       else if (zfp_stream_compression_mode(zfp) != zfp_mode_fixed_rate)
         error = "zfp deserialization supports only fixed-rate mode";
-      else if (field.nw)
-        error = "zfp deserialization supports only 1D, 2D, and 3D arrays";
       else {
         // success; initialize fields
         type = field.type;
         nx = field.nx;
         ny = field.ny;
         nz = field.nz;
+        nw = field.nw;
         bit_rate = double(zfp->maxbits) / (1u << (2 * dimensionality()));
       }
       zfp_stream_close(zfp);
@@ -110,6 +112,7 @@ protected:
   using zfp::array::header::nx;
   using zfp::array::header::ny;
   using zfp::array::header::nz;
+  using zfp::array::header::nw;
 
   double bit_rate;          // array rate in bits per value
   uint64 buffer[word_size]; // header data
