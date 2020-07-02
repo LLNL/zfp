@@ -300,7 +300,7 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_distance_expect_correct)(void **state)
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1, k1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2, j2, k2);
 
-  assert_int_equal((int)CFP_NAMESPACE.SUB_NAMESPACE.pointer.distance(cfpArrPtrB, cfpArrPtrA),
+  assert_int_equal((int)CFP_NAMESPACE.SUB_NAMESPACE.pointer.distance(cfpArrPtrA, cfpArrPtrB),
                    (int)(i2 +
                          j2*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) +
                          k2*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)) -

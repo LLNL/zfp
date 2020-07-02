@@ -328,7 +328,7 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_distance_expect_correct)(void **state)
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2);
 
-  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.pointer.distance(cfpArrPtrB, cfpArrPtrA), (int)cfpArrPtrB.reference.i - (int)cfpArrPtrA.reference.i);
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.pointer.distance(cfpArrPtrA, cfpArrPtrB), (int)cfpArrPtrB.reference.i - (int)cfpArrPtrA.reference.i);
   assert_ptr_equal(cfpArrPtrA.reference.array.object, cfpArrPtrB.reference.array.object);
 }
 
@@ -564,7 +564,7 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_distance_expect_correct)(void **state)
   CFP_ITER_TYPE cfpArrIter2 = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
   cfpArrIter2.i += 4;
 
-  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.iterator.distance(cfpArrIter2, cfpArrIter1), 4);
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.iterator.distance(cfpArrIter1, cfpArrIter2), 4);
 }
 
 static void
