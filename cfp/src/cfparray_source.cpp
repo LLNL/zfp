@@ -18,6 +18,7 @@ _t1(CFP_ARRAY_TYPE, ctor_copy)(CFP_ARRAY_TYPE src)
 static CFP_ARRAY_TYPE
 _t1(CFP_ARRAY_TYPE, ctor_header)(CFP_HEADER_TYPE h)
 {
+  (void)h;
   CFP_ARRAY_TYPE a;
   /*TODO: stub*/
   return a;

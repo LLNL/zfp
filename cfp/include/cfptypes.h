@@ -8,6 +8,8 @@ typedef struct cfp_array2f cfp_array2f;
 typedef struct cfp_array2d cfp_array2d;
 typedef struct cfp_array3f cfp_array3f;
 typedef struct cfp_array3d cfp_array3d;
+typedef struct cfp_array4f cfp_array4f;
+typedef struct cfp_array4d cfp_array4d;
 
 #include "cfpheader.h"
 #include "cfparray1f.h"
@@ -16,5 +18,7 @@ typedef struct cfp_array3d cfp_array3d;
 #include "cfparray2d.h"
 #include "cfparray3f.h"
 #include "cfparray3d.h"
+//#include "cfparray4f.h"
+//#include "cfparray4d.h"
 
 #endif
