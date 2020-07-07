@@ -50,32 +50,6 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForIntegerData_when_construct_expect_zfpArra
   }
 }
 
-TEST_F(TEST_FIXTURE, given_zfpHeaderForHigherDimensionalData_when_construct_expect_zfpArrayHeaderExceptionThrown)
-{
-  zfp_type zfpType = zfp_type_float;
-
-  zfp_stream_set_rate(stream, 6, zfpType, 4, zfp_true);
-
-  zfp_field_set_type(field, zfpType);
-  zfp_field_set_size_4d(field, 12, 12, 12, 12);
-
-  // write header to buffer with C API
-  zfp_stream_rewind(stream);
-  EXPECT_EQ(ZFP_HEADER_SIZE_BITS, zfp_write_header(stream, field, ZFP_HEADER_FULL));
-  zfp_stream_flush(stream);
-
-  try {
-    // warning: there is no way to construct a 4D array header; using array1f
-    zfp::zfp_codec<float, 1>::header h(buffer);
-    zfp::array* arr = zfp::array::construct(h);
-    FailWhenNoExceptionThrown();
-  } catch (zfp::exception const & e) {
-    EXPECT_EQ(e.what(), std::string("zfp deserialization supports only 1D, 2D, and 3D arrays"));
-  } catch (std::exception const & e) {
-    FailAndPrintException(e);
-  }
-}
-
 TEST_F(TEST_FIXTURE, given_onlyInclude2D3D_and_zfpHeaderFor1D_when_construct_expect_zfpArrayHeaderExceptionThrown)
 {
   zfp_type zfpType = zfp_type_float;
