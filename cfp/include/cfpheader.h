@@ -10,7 +10,7 @@ struct cfp_header {
 
 typedef struct {
   cfp_header (*ctor_default)(void);
-  cfp_header (*ctor_bytes)(const void* bytes, size_t n);
+  cfp_header (*ctor_buffer)(const void* bytes, size_t n);
   cfp_header (*ctor_array1f)(cfp_array1f a);
   cfp_header (*ctor_array1d)(cfp_array1d a);
   cfp_header (*ctor_array2f)(cfp_array2f a);

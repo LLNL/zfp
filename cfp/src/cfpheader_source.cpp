@@ -8,7 +8,7 @@ _t1(CFP_HEADER_TYPE, ctor_default)(void)
 }
 
 static CFP_HEADER_TYPE
-_t1(CFP_HEADER_TYPE, ctor_bytes)(const void* bytes, size_t n)
+_t1(CFP_HEADER_TYPE, ctor_buffer)(const void* bytes, size_t n)
 {
   (void)bytes;
   (void)n;

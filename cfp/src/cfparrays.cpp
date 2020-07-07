@@ -671,7 +671,7 @@ export_ const cfp_api CFP_NAMESPACE = {
   },
   {
     cfp_header_ctor_default,
-    cfp_header_ctor_bytes,
+    cfp_header_ctor_buffer,
     cfp_header_ctor_array1f,
     cfp_header_ctor_array1d,
     cfp_header_ctor_array2f,
