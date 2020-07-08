@@ -9,7 +9,7 @@ namespace zfp {
 template < typename Scalar, class Codec = zfp::codec<Scalar> >
 class py_array1 : public array1<Scalar, Codec> {
 public:
-  py_array1(unsigned int nx, double rate, const Scalar* p = 0, size_t csize = 0) :
+  py_array1(uint nx, double rate, const Scalar* p = 0, size_t csize = 0) :
     array1<Scalar, Codec>(nx, rate, p, csize) {}
 
   // inspector
