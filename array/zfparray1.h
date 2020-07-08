@@ -210,14 +210,14 @@ protected:
   }
 
   // inspector
-  Scalar get(uint i) const
+  virtual Scalar get(uint i) const
   {
     const CacheLine* p = line(i, false);
     return (*p)(i);
   }
 
   // mutator
-  void set(uint i, Scalar val)
+  virtual void set(uint i, Scalar val)
   {
     CacheLine* p = line(i, true);
     (*p)(i) = val;
