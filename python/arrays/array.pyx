@@ -7,7 +7,7 @@
 # ============================
 from libcpp cimport bool
 from libc.stdlib cimport malloc, free
-from libc.string cimport strncpy
+from libc.string cimport memcpy 
 from cython.operator cimport dereference as deref
 
 # Define portion of zfp interface needed by zfpy
@@ -73,7 +73,7 @@ cdef class zfparray1f:
         cdef size_t sz = self.compressed_size()
         cdef unsigned char* buff = <unsigned char*>malloc(sz)
         try:
-            strncpy(<char*>buff, <char*>deref(<array*>self.thisptr).compressed_data(), sz)
+            memcpy(<char*>buff, <char*>deref(<array*>self.thisptr).compressed_data(), sz)
         except:
             free(buff)
         return buff
@@ -122,7 +122,7 @@ cdef class zfparray1d:
         cdef size_t sz = self.compressed_size()
         cdef unsigned char* buff = <unsigned char*>malloc(sz)
         try:
-            strncpy(<char*>buff, <char*>deref(<array*>self.thisptr).compressed_data(), sz)
+            memcpy(<char*>buff, <char*>deref(<array*>self.thisptr).compressed_data(), sz)
         except:
             free(buff)
         return buff
