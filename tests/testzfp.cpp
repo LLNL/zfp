@@ -962,7 +962,7 @@ test(uint dims, ArraySize array_size)
   }
 
   // test compressed array support
-  double emax[2][2][4] = { // [size][type][dims]
+  double emax[2][2][4] = { // [size][type][dims] (construct test)
     // small
     {
       {4.578e-05, 7.630e-06, 3.148e-05, 3.598e-03},
@@ -970,11 +970,11 @@ test(uint dims, ArraySize array_size)
     },
     // large
     {
-      {0.000e+00, 0.000e+00, 0.000e+00, 1.192e-07},
+      {0.000e+00, 0.000e+00, 0.000e+00, 1.193e-07},
       {2.289e-05, 0.000e+00, 0.000e+00, 8.801e-08},
     }
   };
-  double dfmax[2][2][4] = { // [size][type][dims]
+  double dfmax[2][2][4] = { // [size][type][dims] (update test)
     // small
     {
       {2.155e-02, 3.755e-01, 1.846e+00, 4.843e+01},
@@ -982,8 +982,8 @@ test(uint dims, ArraySize array_size)
     },
     // large
     {
-      {2.441e-04, 4.883e-04, 1.221e-03, 2.793e-02},
-      {2.670e-04, 4.883e-04, 1.221e-03, 2.779e-02},
+      {2.441e-04, 7.801e-04, 3.599e-03, 2.793e-02},
+      {2.670e-04, 9.075e-04, 3.694e-03, 2.779e-02},
     }
   };
   double rate = 16;
