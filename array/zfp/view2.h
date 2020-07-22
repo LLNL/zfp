@@ -120,6 +120,8 @@ public:
 
 protected:
   friend class zfp::internal::dim2::const_handle<view>;
+  friend class zfp::internal::dim2::const_pointer<view>;
+  friend class zfp::internal::dim2::const_iterator<view>;
   friend class zfp::internal::dim2::reference<view>;
   friend class zfp::internal::dim2::pointer<view>;
   friend class zfp::internal::dim2::iterator<view>;
@@ -419,6 +421,8 @@ public:
 
 protected:
   friend class zfp::internal::dim2::const_handle<private_view>;
+  friend class zfp::internal::dim2::const_pointer<private_view>;
+  friend class zfp::internal::dim2::const_iterator<private_view>;
   friend class zfp::internal::dim2::reference<private_view>;
   friend class zfp::internal::dim2::pointer<private_view>;
   friend class zfp::internal::dim2::iterator<private_view>;
