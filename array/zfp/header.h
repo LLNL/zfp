@@ -14,6 +14,11 @@ public:
     s += msg;
   }
 
+  static size_t size()
+  {
+    return BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS);
+  }
+
   uchar buffer[BITS_TO_BYTES(ZFP_HEADER_SIZE_BITS)];
 };
 

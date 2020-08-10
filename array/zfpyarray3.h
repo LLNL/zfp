@@ -12,6 +12,9 @@ public:
   py_array3(uint nx, uint ny, uint nz, double rate, const Scalar* p = 0, size_t csize = 0) :
     array3<Scalar, Codec>(nx, ny, nz, rate, p, csize) {}
 
+  py_array3(const zfp::array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0) :
+    array3<Scalar>(h, buffer, buffer_size_bytes) {}
+
   // inspector
   Scalar get(uint i, uint j, uint k) const {
     return array3<Scalar, Codec>::get(i, j, k);
