@@ -39,6 +39,22 @@ function(zfp_add_cpp_tests dims type bits)
   target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
   add_test(NAME ${test_name} COMMAND ${test_name})
 
+  # test class's view pointers
+  set(test_name testArray${dims}${type}ViewPtrs)
+  add_executable(${test_name} ${test_name}.cpp)
+  target_link_libraries(${test_name}
+    gtest gtest_main zfp)
+  target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
+  add_test(NAME ${test_name} COMMAND ${test_name})
+
+  # test class's view iterators
+  set(test_name testArray${dims}${type}ViewIters)
+  add_executable(${test_name} ${test_name}.cpp)
+  target_link_libraries(${test_name}
+    gtest gtest_main zfp)
+  target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
+  add_test(NAME ${test_name} COMMAND ${test_name})
+
 endfunction()
 
 zfp_add_cpp_tests(1 f 32)
