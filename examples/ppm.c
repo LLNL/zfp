@@ -19,23 +19,11 @@ rgb2ycocg(int32 ycocg[3][16], const int32 rgb[3][16])
     r = rgb[0][i];
     g = rgb[1][i];
     b = rgb[2][i];
-    /* perform YCoCg-R forward transform */
-    co = r - b;
-    t = b + co / 2;
-    cg = g - t;
-    y = t + cg / 2;
-
-/*
-co = r;
-cg = g;
-y = b;
-co -= y;
-cg -= y;
-cg -= co / 2;
-y += co / 2;
-y += cg / 2;
-*/
-
+    /* perform range-preserving YCoCg forward transform */
+    co = (r - b) / 2;
+    t = b + co;
+    cg = (g - t) / 2;
+    y = t + cg;
     /* store YCoCg values */
     ycocg[0][i] = y;
     ycocg[1][i] = co;
@@ -55,11 +43,11 @@ ycocg2rgb(int32 rgb[3][16], const int32 ycocg[3][16])
     y = ycocg[0][i];
     co = ycocg[1][i];
     cg = ycocg[2][i];
-    /* perform YCoCg-R inverse transform */
-    t = y - cg / 2;
-    g = cg + t;
-    b = t - co / 2;
-    r = b + co;
+    /* perform range-preserving YCoCg inverse transform */
+    t = y - cg;
+    g = 2 * cg + t;
+    b = t - co;
+    r = 2 * co + b;
     /* store RGB values */
     rgb[0][i] = r;
     rgb[1][i] = g;
@@ -67,6 +55,7 @@ ycocg2rgb(int32 rgb[3][16], const int32 ycocg[3][16])
   }
 }
 
+/* perform partial forward decorrelating transform */
 static void
 fwd_lift(int32* p, uint s)
 {
@@ -76,13 +65,6 @@ fwd_lift(int32* p, uint s)
   z = *p; p += s;
   w = *p; p += s;
 
-  /*
-  ** non-orthogonal transform
-  **        ( 4  4  4  4) (x)
-  ** 1/16 * ( 5  1 -1 -5) (y)
-  **        (-4  4  4 -4) (z)
-  **        (-2  6 -6  2) (w)
-  */
   x += w; x >>= 1; w -= x;
   z += y; z >>= 1; y -= z;
   x += z; x >>= 1; z -= x;
@@ -95,6 +77,7 @@ fwd_lift(int32* p, uint s)
   p -= s; *p = x;
 }
 
+/* perform partial inverse decorrelating transform */
 static void
 inv_lift(int32* p, uint s)
 {
@@ -104,13 +87,6 @@ inv_lift(int32* p, uint s)
   z = *p; p += s;
   w = *p; p += s;
 
-  /*
-  ** non-orthogonal transform
-  **       ( 4  6 -4 -1) (x)
-  ** 1/4 * ( 4  2  4  5) (y)
-  **       ( 4 -2  4 -5) (z)
-  **       ( 4 -6 -4  1) (w)
-  */
   y += w >> 1; w -= y >> 1;
   y += w; w <<= 1; w -= y;
   z += x; x <<= 1; x -= z;
@@ -128,17 +104,17 @@ static void
 chroma_subsample(int32* block)
 {
   uint i, j;
-  /* forward transform */
+  /* perform forward decorrelating transform */
   for (j = 0; j < 4; j++)
     fwd_lift(block + 4 * j, 1);
   for (i = 0; i < 4; i++)
     fwd_lift(block + i, 4);
-  /* zero out all but bilinear coefficients */
+  /* zero out all but four lowest-sequency coefficients */
   for (j = 0; j < 4; j++)
     for (i = 0; i < 4; i++)
       if (i >= 2 || j >= 2)
         block[i + 4 * j] = 0;
-  /* inverse transform */
+  /* perform inverse decorrelating transform */
   for (i = 0; i < 4; i++)
     inv_lift(block + i, 4);
   for (j = 0; j < 4; j++)
@@ -202,11 +178,14 @@ int main(int argc, char* argv[])
       zfp_stream_set_precision(zfp[k], (uint)floor(0.5 - rate));
   }
   else {
+    /* assign higher rate to luminance than to chrominance components */
     zfp_stream_set_rate(zfp[0], rate * 2, zfp_type_int32, 2, 0);
     zfp_stream_set_rate(zfp[1], rate / 2, zfp_type_int32, 2, 0);
     zfp_stream_set_rate(zfp[2], rate / 2, zfp_type_int32, 2, 0);
   }
-  bytes = 3 * zfp_stream_maximum_size(zfp[0], field);
+  bytes = 0;
+  for (k = 0; k < 3; k++)
+    bytes += zfp_stream_maximum_size(zfp[k], field);
   buffer = malloc(bytes);
   stream = stream_open(buffer, bytes);
   for (k = 0; k < 3; k++)
@@ -231,8 +210,8 @@ int main(int argc, char* argv[])
       /* perform color space transform */
       rgb2ycocg(ycocg, rgb);
       /* chroma subsample the Co and Cg bands */
-//      for (k = 1; k < 3; k++)
-//        chroma_subsample(ycocg[i]);
+      for (k = 1; k < 3; k++)
+        chroma_subsample(ycocg[i]);
       /* compress the Y, Co, and Cg blocks */
       for (k = 0; k < 3; k++)
         zfp_encode_block_int32_2(zfp[k], ycocg[k]);
@@ -243,8 +222,7 @@ int main(int argc, char* argv[])
   fprintf(stderr, "%u compressed bytes (%.2f bps)\n", (uint)size, (double)size * CHAR_BIT / (3 * nx * ny));
 
   /* decompress */
-  for (k = 0; k < 3; k++)
-    zfp_stream_rewind(zfp[k]);
+  zfp_stream_rewind(zfp[0]);
   for (y = 0; y < ny; y += 4)
     for (x = 0; x < nx; x += 4) {
       uchar block[3][16];
