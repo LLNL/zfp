@@ -46,7 +46,7 @@ public:
   const_pointer operator-=(ptrdiff_t d) { advance(-d); return *this; }
 
 protected:
-  ptrdiff_t offset(ptrdiff_t d = 0) const { return static_cast<ptrdiff_t>(x - container->min_x() + container->size_x() * (y - container->min_y() + container->size_y() * (z - container->min_z() + container->size_z * (w - container->min_w())))) + d; }
+  ptrdiff_t offset(ptrdiff_t d = 0) const { return static_cast<ptrdiff_t>(x - container->min_x() + container->size_x() * (y - container->min_y() + container->size_y() * (z - container->min_z() + container->size_z() * (w - container->min_w())))) + d; }
   void index(size_t& x, size_t& y, size_t& z, size_t & w, ptrdiff_t p) const
   {
     x = container->min_x() + p % container->size_x(); p /= container->size_x();

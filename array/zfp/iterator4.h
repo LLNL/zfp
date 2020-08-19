@@ -119,7 +119,7 @@ protected:
       size_t bz = std::max((zmin + p / (nx * ny * sw)) & m, zmin); size_t sz = std::min((bz + 4) & m, zmax) - bz; p -= (bz - zmin) * nx * ny * sw;
       size_t by = std::max((ymin + p / (nx * sz * sw)) & m, ymin); size_t sy = std::min((by + 4) & m, ymax) - by; p -= (by - ymin) * nx * sz * sw;
       size_t bx = std::max((xmin + p / (sy * sz * sw)) & m, xmin); size_t sx = std::min((bx + 4) & m, xmax) - bx; p -= (bx - xmin) * sy * sz * sw;
-      w = bw + p / (sx * sy * sz); p -= (z - bz) * sx * sy * sz;
+      w = bw + p / (sx * sy * sz); p -= (w - bw) * sx * sy * sz;
       z = bz + p / (sx * sy);      p -= (z - bz) * sx * sy;
       y = by + p / sx;             p -= (y - by) * sx;
       x = bx + p;                  p -= (x - bx);

@@ -383,9 +383,9 @@ public:
   // 2D view
   nested_view2<Container> operator[](size_t index) const { return nested_view2<Container>(array, x, y, z + index, w, nx, ny, 1, 1); }
 
-  // (i, j, k, l) inspector and mutator
-  const_reference operator()(size_t i, size_t j, size_t k, size_t l) const { return const_reference(this, x + i, y + j, z + k, w + l); }
-  reference operator()(size_t i, size_t j, size_t k, size_t l) { return reference(this, x + i, y + j, z + k, w + l); }
+  // (i, j, k) inspector and mutator
+  const_reference operator()(size_t i, size_t j, size_t k) const { return const_reference(this, x + i, y + j, z + k, w); }
+  reference operator()(size_t i, size_t j, size_t k) { return reference(this, x + i, y + j, z + k, w); }
 
 protected:
   friend class zfp::internal::dim4::const_handle<nested_view3>;

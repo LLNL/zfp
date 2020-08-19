@@ -39,8 +39,8 @@ public:
   typedef zfp::internal::dim4::flat_view<array4> flat_view;
   typedef zfp::internal::dim4::nested_view1<array4> nested_view1;
   typedef zfp::internal::dim4::nested_view2<array4> nested_view2;
-  typedef zfp::internal::dim4::nested_view2<array4> nested_view3;
-  typedef zfp::internal::dim4::nested_view3<array4> nested_view4;
+  typedef zfp::internal::dim4::nested_view3<array4> nested_view3;
+  typedef zfp::internal::dim4::nested_view4<array4> nested_view4;
   typedef zfp::internal::dim4::nested_view4<array4> nested_view;
   typedef zfp::internal::dim4::private_view<array4> private_view;
 
@@ -243,6 +243,7 @@ protected:
   friend class zfp::internal::dim4::nested_view1<array4>;
   friend class zfp::internal::dim4::nested_view2<array4>;
   friend class zfp::internal::dim4::nested_view3<array4>;
+  friend class zfp::internal::dim4::nested_view4<array4>;
   friend class zfp::internal::dim4::private_view<array4>;
 
   // perform a deep copy
