@@ -60,9 +60,11 @@ endfunction()
 zfp_add_cpp_tests(1 f 32)
 zfp_add_cpp_tests(2 f 32)
 zfp_add_cpp_tests(3 f 32)
+zfp_add_cpp_tests(4 f 32)
 zfp_add_cpp_tests(1 d 64)
 zfp_add_cpp_tests(2 d 64)
 zfp_add_cpp_tests(3 d 64)
+zfp_add_cpp_tests(4 d 64)
 
 # test zfp::array::construct() invalid cases
 set(test_name testConstruct)

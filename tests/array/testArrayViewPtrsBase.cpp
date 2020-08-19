@@ -17,6 +17,9 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEW_PTRS, when_preIncrementInterator_then_matchPo
 #elif DIMS == 3
   ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
   ZFP_ARRAY_TYPE::view::pointer ptr = &v(0, 0, 0);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, offsetZ, offsetW, viewLenX, viewLenY, viewLenZ, viewLenW);
+  ZFP_ARRAY_TYPE::view::pointer ptr = &v(0, 0, 0, 0);
 #endif
 
   ZFP_ARRAY_TYPE::view::pointer ptr2 = ptr;
@@ -36,6 +39,9 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEW_PTRS, when_preDecrementInterator_then_matchPo
 #elif DIMS == 3
   ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
   ZFP_ARRAY_TYPE::view::pointer ptr = &v(viewLenX - 1, viewLenY - 1, viewLenZ - 1);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, offsetZ, offsetW, viewLenX, viewLenY, viewLenZ, viewLenW);
+  ZFP_ARRAY_TYPE::view::pointer ptr = &v(viewLenX - 1, viewLenY - 1, viewLenZ - 1, viewLenW - 1);
 #endif
 
   ZFP_ARRAY_TYPE::view::pointer ptr2 = ptr;
@@ -57,6 +63,9 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEW_PTRS, when_preIncrementConstInterator_then_ma
 #elif DIMS == 3
   ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
   ZFP_ARRAY_TYPE::const_view::const_pointer ptr = &v(0, 0, 0);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, offsetW, viewLenX, viewLenY, viewLenZ, viewLenW);
+  ZFP_ARRAY_TYPE::const_view::const_pointer ptr = &v(0, 0, 0, 0);
 #endif
 
   ZFP_ARRAY_TYPE::const_view::const_pointer ptr2 = ptr;
@@ -76,6 +85,9 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEW_PTRS, when_preDecrementConstInterator_then_ma
 #elif DIMS == 3
   ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
   ZFP_ARRAY_TYPE::const_view::const_pointer ptr = &v(viewLenX - 1, viewLenY - 1, viewLenZ - 1);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, offsetW, viewLenX, viewLenY, viewLenZ, viewLenW);
+  ZFP_ARRAY_TYPE::const_view::const_pointer ptr = &v(viewLenX - 1, viewLenY - 1, viewLenZ - 1, viewLenW - 1);
 #endif
 
   ZFP_ARRAY_TYPE::const_view::const_pointer ptr2 = ptr;

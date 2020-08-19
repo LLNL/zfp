@@ -1,12 +1,12 @@
-#include "array/zfparray1.h"
 #include "array/zfparray2.h"
 #include "array/zfparray3.h"
-#include "array/zfpfactory.h"
 #include "array/zfparray4.h"
+#include "array/zfpfactory.h"
+#include "array/zfparray1.h"
 using namespace zfp;
 
 extern "C" {
-  #include "constants/3dDouble.h"
+  #include "constants/4dDouble.h"
 }
 
 #include "gtest/gtest.h"
@@ -14,29 +14,29 @@ extern "C" {
 #include "utils/gtestBaseFixture.h"
 #include "utils/predicates.h"
 
-class Array3dTestEnv : public ArrayDoubleTestEnv {
+class Array4dTestEnv : public ArrayDoubleTestEnv {
 public:
-  virtual int getDims() { return 3; }
+  virtual int getDims() { return 4; }
 };
 
-Array3dTestEnv* const testEnv = new Array3dTestEnv;
+Array4dTestEnv* const testEnv = new Array4dTestEnv;
 
-class Array3dTest : public ArrayNdTestFixture {};
+class Array4dTest : public ArrayNdTestFixture {};
 
-#define TEST_FIXTURE Array3dTest
+#define TEST_FIXTURE Array4dTest
 
-#define ZFP_ARRAY_TYPE array3d
-#define ZFP_ARRAY_TYPE_WRONG_SCALAR array3f
-#define ZFP_ARRAY_TYPE_WRONG_DIM array4d
-#define ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM array4f
+#define ZFP_ARRAY_TYPE array4d
+#define ZFP_ARRAY_TYPE_WRONG_SCALAR array4f
+#define ZFP_ARRAY_TYPE_WRONG_DIM array1d
+#define ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM array1f
 #define ZFP_ARRAY_NOT_INCLUDED_TYPE array2d
 
 #define UINT uint64
 #define SCALAR double
-#define DIMS 3
+#define DIMS 4
 
 #include "testArrayBase.cpp"
-#include "testArray3Base.cpp"
+#include "testArray4Base.cpp"
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -21,6 +21,10 @@ TEST_F(TEST_FIXTURE, when_constructorCalled_then_rateSetWithWriteRandomAccess)
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, rate);
   // alignment in 3D supports integer fixed-rates [1, 64] (use <=)
   EXPECT_LE(rate, arr.rate());
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, rate);
+  // alignment in 4D supports integer fixed-rates [1, 64] (use <=)
+  EXPECT_LE(rate, arr.rate());
 #endif
 }
 
@@ -34,6 +38,8 @@ TEST_F(TEST_FIXTURE, when_constructorCalledWithCacheSize_then_minCacheSizeEnforc
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS, 0, cacheSize);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS, 0, cacheSize);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS, 0, cacheSize);
 #endif
 
   EXPECT_LE(cacheSize, arr.cache_size());
@@ -49,6 +55,8 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, oldRate, inputDataArr);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, oldRate, inputDataArr);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, oldRate, inputDataArr);
 #endif
 
   double actualOldRate = arr.rate();
@@ -69,7 +77,7 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
   EXPECT_GT(oldCompressedSize, newCompressedSize);
 }
 
-void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, uint chosenSizeY, uint chosenSizeZ, double chosenRate)
+void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, uint chosenSizeY, uint chosenSizeZ, uint chosenSizeW, double chosenRate)
 {
   // copy header into aligned memory suitable for bitstream r/w
   size_t byte_size = h.size();
@@ -88,6 +96,7 @@ void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, ui
   EXPECT_EQ(chosenSizeX, field->nx);
   EXPECT_EQ(chosenSizeY, field->ny);
   EXPECT_EQ(chosenSizeZ, field->nz);
+  EXPECT_EQ(chosenSizeW, field->nw);
 
   EXPECT_EQ(ZFP_TYPE, field->type);
 
@@ -111,28 +120,39 @@ TEST_F(TEST_FIXTURE, when_writeHeader_then_cCompatibleHeaderWritten)
 {
   double chosenRate = ZFP_RATE_PARAM_BITS;
 
-  uint chosenSizeX, chosenSizeY, chosenSizeZ;
+  uint chosenSizeX, chosenSizeY, chosenSizeZ, chosenSizeW;
 #if DIMS == 1
   chosenSizeX = 55;
   chosenSizeY = 0;
   chosenSizeZ = 0;
+  chosenSizeW = 0;
   ZFP_ARRAY_TYPE arr(chosenSizeX, chosenRate);
 #elif DIMS == 2
   chosenSizeX = 55;
   chosenSizeY = 23;
   chosenSizeZ = 0;
+  chosenSizeW = 0;
   ZFP_ARRAY_TYPE arr(chosenSizeX, chosenSizeY, chosenRate);
 #elif DIMS == 3
   chosenSizeX = 55;
   chosenSizeY = 23;
   chosenSizeZ = 31;
+  chosenSizeW = 0;
   ZFP_ARRAY_TYPE arr(chosenSizeX, chosenSizeY, chosenSizeZ, chosenRate);
+#elif DIMS == 4
+  // max rate for short headers for 4D arrays
+  chosenRate = std::min(chosenRate, 8.0);
+  chosenSizeX = 55;
+  chosenSizeY = 23;
+  chosenSizeZ = 31;
+  chosenSizeW = 10;
+  ZFP_ARRAY_TYPE arr(chosenSizeX, chosenSizeY, chosenSizeZ, chosenSizeW, chosenRate);
 #endif
 
   ZFP_ARRAY_TYPE::header header(arr);
   chosenRate = arr.rate();
 
-  VerifyProperHeaderWritten(header, chosenSizeX, chosenSizeY, chosenSizeZ, chosenRate);
+  VerifyProperHeaderWritten(header, chosenSizeX, chosenSizeY, chosenSizeZ, chosenSizeW, chosenRate);
 }
 
 TEST_F(TEST_FIXTURE, when_generateRandomData_then_checksumMatches)
@@ -169,21 +189,22 @@ TEST_F(TEST_FIXTURE, when_constructorFromSerializedWithInvalidHeader_then_except
 
 TEST_F(TEST_FIXTURE, given_zfpHeaderForCertainDimensionalityButHeaderMissing_when_construct_expect_zfpArrayHeaderExceptionThrown)
 {
-  uint missingDim = ((DIMS + 1) % 3) + 1;
-  zfp_stream_set_rate(stream, 12, ZFP_TYPE, missingDim, zfp_true);
+  uint missingDim = (DIMS % 4) + 1;
+  zfp_stream_set_rate(stream, 8, ZFP_TYPE, missingDim, zfp_true);
 
   zfp_field_set_type(field, ZFP_TYPE);
-  switch(missingDim) {
-    case 3:
-      zfp_field_set_size_3d(field, 12, 12, 12);
+  switch (missingDim) {
+    case 1:
+      zfp_field_set_size_1d(field, 12);
       break;
-
     case 2:
       zfp_field_set_size_2d(field, 12, 12);
       break;
-
-    case 1:
-      zfp_field_set_size_1d(field, 12);
+    case 3:
+      zfp_field_set_size_3d(field, 12, 12, 12);
+      break;
+    case 4:
+      zfp_field_set_size_4d(field, 12, 12, 12, 12);
       break;
   }
 
@@ -216,6 +237,9 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayFromWrongScalarType_when_con
   ZFP_ARRAY_TYPE_WRONG_SCALAR arr(inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE_WRONG_SCALAR arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#elif DIMS == 4
+  // max rate for short headers for 4D arrays
+  ZFP_ARRAY_TYPE_WRONG_SCALAR arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, std::min(ZFP_RATE_PARAM_BITS, 8));
 #endif
 
   ZFP_ARRAY_TYPE_WRONG_SCALAR::header h(arr);
@@ -237,16 +261,27 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayFromWrongDimensionality_when
 #elif DIMS == 2
   ZFP_ARRAY_TYPE_WRONG_DIM arr(100, 100, 100, ZFP_RATE_PARAM_BITS);
 #elif DIMS == 3
+  ZFP_ARRAY_TYPE_WRONG_DIM arr(100, 100, 100, 100, ZFP_RATE_PARAM_BITS);
+#elif DIMS == 4
   ZFP_ARRAY_TYPE_WRONG_DIM arr(100, ZFP_RATE_PARAM_BITS);
 #endif
 
-  ZFP_ARRAY_TYPE_WRONG_DIM::header h(arr);
-
   try {
-    ZFP_ARRAY_TYPE arr2(h, arr.compressed_data());
-    FailWhenNoExceptionThrown();
+    ZFP_ARRAY_TYPE_WRONG_DIM::header h(arr);
+    try {
+      ZFP_ARRAY_TYPE arr2(h, arr.compressed_data());
+      FailWhenNoExceptionThrown();
+    } catch (zfp::exception const & e) {
+      // short headers are available in (1D, 2D, and) 3D when ZFP_RATE_PARAM_BITS <= 32
+      EXPECT_LT(arr.dimensionality(), 4);
+      EXPECT_EQ(e.what(), std::string("zfp array dimensionality does not match header"));
+    } catch (std::exception const & e) {
+      FailAndPrintException(e);
+    }
   } catch (zfp::exception const & e) {
-    EXPECT_EQ(e.what(), std::string("zfp array dimensionality does not match header"));
+    // short headers for 4D arrays requires ZFP_RATE_PARAM_BITS <= 8, which is violated
+    EXPECT_EQ(arr.dimensionality(), 4);
+    EXPECT_EQ(e.what(), std::string("zfp serialization supports only short headers"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }
@@ -263,6 +298,8 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateHeader_when_constructorFromSeri
   field = zfp_field_2d(inputDataArr, ZFP_TYPE, inputDataSideLen, inputDataSideLen);
 #elif DIMS == 3
   field = zfp_field_3d(inputDataArr, ZFP_TYPE, inputDataSideLen, inputDataSideLen, inputDataSideLen);
+#elif DIMS == 4
+  field = zfp_field_4d(inputDataArr, ZFP_TYPE, inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen);
 #endif
 
   zfp_stream* stream = zfp_stream_open(NULL);
@@ -320,6 +357,8 @@ TEST_F(TEST_FIXTURE, given_serializedNonFixedRateWrongScalarTypeWrongDimensional
   field = zfp_field_2d(inputDataArr, zfp_type_int32, 100, 100);
 #elif DIMS == 3
   field = zfp_field_3d(inputDataArr, zfp_type_int32, 100, 100, 100);
+#elif DIMS == 4
+  field = zfp_field_4d(inputDataArr, zfp_type_int32, 30, 30, 30, 30);
 #endif
 
   zfp_stream* stream = zfp_stream_open(NULL);
@@ -389,10 +428,12 @@ TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSe
   field = zfp_field_2d(inputDataArr, ZFP_TYPE, inputDataSideLen, inputDataSideLen);
 #elif DIMS == 3
   field = zfp_field_3d(inputDataArr, ZFP_TYPE, inputDataSideLen, inputDataSideLen, inputDataSideLen);
+#elif DIMS == 4
+  field = zfp_field_4d(inputDataArr, ZFP_TYPE, inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen);
 #endif
 
   zfp_stream* stream = zfp_stream_open(NULL);
-  double rate = zfp_stream_set_rate(stream, 10, ZFP_TYPE, DIMS, zfp_true);
+  double rate = zfp_stream_set_rate(stream, 8, ZFP_TYPE, DIMS, zfp_true);
   EXPECT_EQ(zfp_mode_fixed_rate, zfp_stream_compression_mode(stream));
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
@@ -434,6 +475,11 @@ TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSe
     EXPECT_EQ(arr2.size_x(), n[0]);
     EXPECT_EQ(arr2.size_y(), n[1]);
     EXPECT_EQ(arr2.size_z(), n[2]);
+#elif DIMS == 4
+    EXPECT_EQ(arr2.size_x(), n[0]);
+    EXPECT_EQ(arr2.size_y(), n[1]);
+    EXPECT_EQ(arr2.size_z(), n[2]);
+    EXPECT_EQ(arr2.size_w(), n[3]);
 #endif
 
     EXPECT_EQ(arr2.rate(), rate);
@@ -456,6 +502,9 @@ TEST_F(TEST_FIXTURE, given_incompleteChunkOfSerializedCompressedArray_when_const
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#elif DIMS == 4
+  // max rate for short headers for 4D arrays
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, std::min(ZFP_RATE_PARAM_BITS, 8));
 #endif
 
   ZFP_ARRAY_TYPE::header h(arr);
@@ -478,6 +527,9 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayHeader_when_factoryFuncConst
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#elif DIMS == 4
+  // max rate for short headers for 4D arrays
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, std::min(ZFP_RATE_PARAM_BITS, 8));
 #endif
 
   ZFP_ARRAY_TYPE::header h(arr);
@@ -499,9 +551,12 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArray_when_factoryFuncConstruct_t
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, ZFP_RATE_PARAM_BITS);
+#elif DIMS == 4
+  // max rate for short headers for 4D arrays
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, std::min(ZFP_RATE_PARAM_BITS, 8));
 #endif
 
-  arr[1] = 999.;
+  arr[1] = 999999.;
 
   ZFP_ARRAY_TYPE::header h(arr);
 
@@ -547,6 +602,8 @@ TEST_P(TEST_FIXTURE, given_dataset_when_set_then_underlyingBitstreamChecksumMatc
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, getRate());
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate());
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate());
 #endif
 
   uint64 key1, key2;
@@ -570,6 +627,8 @@ TEST_P(TEST_FIXTURE, given_setArray_when_get_then_decompressedValsReturned)
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #endif
 
   SCALAR* decompressedArr = new SCALAR[inputDataTotalLen];
@@ -593,6 +652,8 @@ TEST_P(TEST_FIXTURE, given_populatedCompressedArray_when_resizeWithClear_then_bi
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, getRate());
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate());
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate());
 #endif
 
   arr.set(inputDataArr);
@@ -604,6 +665,8 @@ TEST_P(TEST_FIXTURE, given_populatedCompressedArray_when_resizeWithClear_then_bi
   arr.resize(inputDataSideLen + 1, inputDataSideLen + 1, true);
 #elif DIMS == 3
   arr.resize(inputDataSideLen + 1, inputDataSideLen + 1, inputDataSideLen + 1, true);
+#elif DIMS == 4
+  arr.resize(inputDataSideLen + 1, inputDataSideLen + 1, inputDataSideLen + 1, inputDataSideLen + 1, true);
 #endif
 
   EXPECT_EQ(0u, hashBitstream((uint64*)arr.compressed_data(), arr.compressed_size()));
@@ -619,6 +682,8 @@ TEST_P(TEST_FIXTURE, when_configureCompressedArrayFromDefaultConstructor_then_bi
   arr.resize(inputDataSideLen, inputDataSideLen, false);
 #elif DIMS == 3
   arr.resize(inputDataSideLen, inputDataSideLen, inputDataSideLen, false);
+#elif DIMS == 4
+  arr.resize(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, false);
 #endif
 
   arr.set_rate(getRate());
@@ -650,6 +715,8 @@ void CheckDeepCopyPerformedViaDirtyCache(ZFP_ARRAY_TYPE& arr1, ZFP_ARRAY_TYPE& a
   arr1.resize(arr1.size_x(), arr1.size_y(), true);
 #elif DIMS == 3
   arr1.resize(arr1.size_x(), arr1.size_y(), arr1.size_z(), true);
+#elif DIMS == 4
+  arr1.resize(arr1.size_x(), arr1.size_y(), arr1.size_z(), arr1.size_w(), true);
 #endif
 
   checksum = hashBitstream((uint64*)arr2.compressed_data(), arr2.compressed_size());
@@ -678,6 +745,13 @@ void CheckMemberVarsCopied(ZFP_ARRAY_TYPE& arr1, const ZFP_ARRAY_TYPE& arr2, boo
   size_t oldSizeZ = arr1.size_z();
 
   arr1.resize(oldSizeX - 10, oldSizeY - 5, oldSizeZ - 8);
+#elif DIMS == 4
+  size_t oldSizeX = arr1.size_x();
+  size_t oldSizeY = arr1.size_y();
+  size_t oldSizeZ = arr1.size_z();
+  size_t oldSizeW = arr1.size_w();
+
+  arr1.resize(oldSizeX - 10, oldSizeY - 5, oldSizeZ - 8, oldSizeW - 3);
 #endif
 
   arr1.set_rate(oldRate + 10);
@@ -698,6 +772,11 @@ void CheckMemberVarsCopied(ZFP_ARRAY_TYPE& arr1, const ZFP_ARRAY_TYPE& arr2, boo
   EXPECT_EQ(oldSizeX, arr2.size_x());
   EXPECT_EQ(oldSizeY, arr2.size_y());
   EXPECT_EQ(oldSizeZ, arr2.size_z());
+#elif DIMS == 4
+  EXPECT_EQ(oldSizeX, arr2.size_x());
+  EXPECT_EQ(oldSizeY, arr2.size_y());
+  EXPECT_EQ(oldSizeZ, arr2.size_z());
+  EXPECT_EQ(oldSizeW, arr2.size_w());
 #endif
 }
 
@@ -709,6 +788,8 @@ TEST_P(TEST_FIXTURE, given_compressedArray_when_copyConstructor_then_memberVaria
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, getRate(), inputDataArr, 128);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr, 128);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr, 128);
 #endif
 
   ZFP_ARRAY_TYPE arr2(arr);
@@ -724,11 +805,13 @@ TEST_P(TEST_FIXTURE, given_compressedArray_when_copyConstructor_then_deepCopyPer
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #endif
 
   // create arr with dirty cache
   void* arrUnflushedBitstreamPtr = arr.compressed_data();
-  arr[0] = 999;
+  arr[0] = 999999;
 
   ZFP_ARRAY_TYPE arr2(arr);
 
@@ -743,6 +826,8 @@ TEST_P(TEST_FIXTURE, given_compressedArray_when_setSecondArrayEqualToFirst_then_
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, getRate(), inputDataArr, 128);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr, 128);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr, 128);
 #endif
 
   ZFP_ARRAY_TYPE arr2 = arr;
@@ -758,11 +843,13 @@ TEST_P(TEST_FIXTURE, given_compressedArray_when_setSecondArrayEqualToFirst_then_
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #endif
 
   // create arr with dirty cache
   void* arrUnflushedBitstreamPtr = arr.compressed_data();
-  arr[0] = 999;
+  arr[0] = 999999;
 
   ZFP_ARRAY_TYPE arr2 = arr;
 
@@ -790,6 +877,8 @@ void CheckDeepCopyPerformed(ZFP_ARRAY_TYPE& arr1, ZFP_ARRAY_TYPE& arr2)
   arr1.resize(arr1.size_x(), arr1.size_y(), true);
 #elif DIMS == 3
   arr1.resize(arr1.size_x(), arr1.size_y(), arr1.size_z(), true);
+#elif DIMS == 4
+  arr1.resize(arr1.size_x(), arr1.size_y(), arr1.size_z(), arr1.size_w(), true);
 #endif
 
   uint64 checksum = hashBitstream((uint64*)arr2.compressed_data(), arr2.compressed_size());
@@ -804,6 +893,11 @@ TEST_P(TEST_FIXTURE, given_serializedCompressedArray_when_constructorFromSeriali
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
+#elif DIMS == 4
+  // max rate for short headers for 4D arrays
+  if (getRate() > 8)
+    return;
+  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, getRate(), inputDataArr);
 #endif
 
   ZFP_ARRAY_TYPE::header h(arr);

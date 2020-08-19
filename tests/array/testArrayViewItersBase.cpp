@@ -14,6 +14,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEW_ITERS, when_preIncrementInterator_then_matchI
   ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, viewLenX, viewLenY);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, offsetZ, offsetW, viewLenX, viewLenY, viewLenZ, viewLenW);
 #endif
 
   ZFP_ARRAY_TYPE::view::iterator iter = v.begin();
@@ -31,6 +33,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEW_ITERS, when_preDecrementInterator_then_matchI
   ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, viewLenX, viewLenY);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, offsetZ, offsetW, viewLenX, viewLenY, viewLenZ, viewLenW);
 #endif
 
   ZFP_ARRAY_TYPE::view::iterator iter = v.end();
@@ -54,6 +58,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEW_ITERS, when_preIncrementConstInterator_then_m
   ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, viewLenX, viewLenY);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, offsetW, viewLenX, viewLenY, viewLenZ, viewLenW);
 #endif
 
   ZFP_ARRAY_TYPE::const_view::const_iterator iter = v.begin();
@@ -71,6 +77,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEW_ITERS, when_preDecrementConstInterator_then_m
   ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, viewLenX, viewLenY);
 #elif DIMS == 3
   ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
+#elif DIMS == 4
+  ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, offsetW, viewLenX, viewLenY, viewLenZ, viewLenW);
 #endif
 
   ZFP_ARRAY_TYPE::const_view::const_iterator iter = v.end();

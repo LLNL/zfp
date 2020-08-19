@@ -43,7 +43,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preIncrementInterator_then_matchIterat
 {
   iter = iter2 = arr.begin();
   for (size_t i = 0; iter != arr.end(); ++iter, ++i)
-    EXPECT_TRUE(iter == iter2 + i);
+    ASSERT_TRUE(iter == iter2 + i);
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preDecrementInterator_then_matchIteratorOffsetFromEnd)
@@ -53,7 +53,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preDecrementInterator_then_matchIterat
   do {
     --iter;
     --i;
-    EXPECT_TRUE(iter == iter2 + i);
+    ASSERT_TRUE(iter == iter2 + i);
   } while (iter != arr.begin());
 }
 
