@@ -1,5 +1,3 @@
-#include "array/zfparray2.h"
-
 /* TODO: figure out templated tests (TYPED_TEST) */
 
 /* const_view */
@@ -422,10 +420,8 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromNestedView1_then_perform
   array1<SCALAR> arr2(v2);
 
   /* verify array entries */
-  for (uint j = 0; j < viewLenY; j++) {
-    for (uint i = 0; i < viewLenX; i++) {
-      EXPECT_EQ(arr(offsetX + i, offsetY + y, offsetZ + z), arr2(i));
-    }
+  for (uint i = 0; i < viewLenX; i++) {
+    EXPECT_EQ(arr(offsetX + i, offsetY + y, offsetZ + z), arr2(i));
   }
 
   /* verify it's a deep copy */
