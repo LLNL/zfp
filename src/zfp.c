@@ -31,7 +31,7 @@ type_precision(zfp_type type)
   }
 }
 
-static int
+static zfp_bool
 is_reversible(const zfp_stream* zfp)
 {
   return zfp->minexp < ZFP_MIN_EXP;
@@ -215,7 +215,7 @@ zfp_field_size(const zfp_field* field, uint* size)
   return (size_t)MAX(field->nx, 1u) * (size_t)MAX(field->ny, 1u) * (size_t)MAX(field->nz, 1u) * (size_t)MAX(field->nw, 1u);
 }
 
-int
+zfp_bool
 zfp_field_stride(const zfp_field* field, int* stride)
 {
   if (stride)
@@ -375,13 +375,13 @@ zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw)
   field->sw = sw;
 }
 
-int
+zfp_bool
 zfp_field_set_metadata(zfp_field* field, uint64 meta)
 {
   uint64 dims;
   /* ensure value is in range */
   if (meta >> ZFP_META_BITS)
-    return 0;
+    return zfp_false;
   field->type = (zfp_type)((meta & 0x3u) + 1); meta >>= 2;
   dims = (meta & 0x3u) + 1; meta >>= 2;
   switch (dims) {
@@ -412,7 +412,7 @@ zfp_field_set_metadata(zfp_field* field, uint64 meta)
       break;
   }
   field->sx = field->sy = field->sz = field->sw = 0;
-  return 1;
+  return zfp_true;
 }
 
 /* public functions: zfp compressed stream --------------------------------- */
@@ -720,16 +720,16 @@ zfp_stream_set_mode(zfp_stream* zfp, uint64 mode)
   return zfp_stream_compression_mode(zfp);
 }
 
-int
+zfp_bool
 zfp_stream_set_params(zfp_stream* zfp, uint minbits, uint maxbits, uint maxprec, int minexp)
 {
   if (minbits > maxbits || !(0 < maxprec && maxprec <= 64))
-    return 0;
+    return zfp_false;
   zfp->minbits = minbits;
   zfp->maxbits = maxbits;
   zfp->maxprec = maxprec;
   zfp->minexp = minexp;
-  return 1;
+  return zfp_true;
 }
 
 size_t
@@ -770,7 +770,7 @@ zfp_stream_omp_chunk_size(const zfp_stream* zfp)
   return zfp->exec.params.omp.chunk_size;
 }
 
-int
+zfp_bool
 zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
 {
   switch (policy) {
@@ -788,31 +788,31 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
       }
       break;
 #else
-      return 0;
+      return zfp_false;
 #endif
     default:
-      return 0;
+      return zfp_false;
   }
   zfp->exec.policy = policy;
-  return 1;
+  return zfp_true;
 }
 
-int
+zfp_bool
 zfp_stream_set_omp_threads(zfp_stream* zfp, uint threads)
 {
   if (!zfp_stream_set_execution(zfp, zfp_exec_omp))
-    return 0;
+    return zfp_false;
   zfp->exec.params.omp.threads = threads;
-  return 1;
+  return zfp_true;
 }
 
-int
+zfp_bool
 zfp_stream_set_omp_chunk_size(zfp_stream* zfp, uint chunk_size)
 {
   if (!zfp_stream_set_execution(zfp, zfp_exec_omp))
-    return 0;
+    return zfp_false;
   zfp->exec.params.omp.chunk_size = chunk_size;
-  return 1;
+  return zfp_true;
 }
 
 /* public functions: utility functions --------------------------------------*/
