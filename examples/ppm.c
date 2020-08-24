@@ -7,7 +7,9 @@
 #include <string.h>
 #include "zfp.h"
 
-/* convert from RGB to YCoCg color space */
+#define CHROMA2D // treat 4-coefficient chroma blocks as 2D
+
+/* convert 2D block from RGB to YCoCg color space */
 static void
 rgb2ycocg(int32 ycocg[3][16], const int32 rgb[3][16])
 {
@@ -20,9 +22,9 @@ rgb2ycocg(int32 ycocg[3][16], const int32 rgb[3][16])
     g = rgb[1][i];
     b = rgb[2][i];
     /* perform range-preserving YCoCg forward transform */
-    co = (r - b) / 2;
+    co = (r - b) >> 1;
     t = b + co;
-    cg = (g - t) / 2;
+    cg = (g - t) >> 1;
     y = t + cg;
     /* store YCoCg values */
     ycocg[0][i] = y;
@@ -31,7 +33,7 @@ rgb2ycocg(int32 ycocg[3][16], const int32 rgb[3][16])
   }
 }
 
-/* convert from YCoCg to RGB color space */
+/* convert 2D block from YCoCg to RGB color space */
 static void
 ycocg2rgb(int32 rgb[3][16], const int32 ycocg[3][16])
 {
@@ -45,9 +47,9 @@ ycocg2rgb(int32 rgb[3][16], const int32 ycocg[3][16])
     cg = ycocg[2][i];
     /* perform range-preserving YCoCg inverse transform */
     t = y - cg;
-    g = 2 * cg + t;
+    g = (cg << 1) + t;
     b = t - co;
-    r = 2 * co + b;
+    r = (co << 1) + b;
     /* store RGB values */
     rgb[0][i] = r;
     rgb[1][i] = g;
@@ -101,14 +103,15 @@ inv_lift(int32* p, uint s)
 
 /* perform chroma subsampling by discarding high-frequency components */
 static void
-chroma_subsample(int32* block)
+chroma_downsample(int32* block)
 {
   uint i, j;
   /* perform forward decorrelating transform */
   for (j = 0; j < 4; j++)
     fwd_lift(block + 4 * j, 1);
   for (i = 0; i < 4; i++)
-    fwd_lift(block + i, 4);
+    fwd_lift(block + 1 * i, 4);
+#ifdef CHROMA2D
   /* zero out all but four lowest-sequency coefficients */
   for (j = 0; j < 4; j++)
     for (i = 0; i < 4; i++)
@@ -116,10 +119,42 @@ chroma_subsample(int32* block)
         block[i + 4 * j] = 0;
   /* perform inverse decorrelating transform */
   for (i = 0; i < 4; i++)
-    inv_lift(block + i, 4);
+    inv_lift(block + 1 * i, 4);
+  for (j = 0; j < 4; j++)
+    inv_lift(block + 4 * j, 1);
+#else
+  /* keep only the four lowest-sequency coefficients */
+  block[2] = block[4];
+  block[3] = block[5];
+  for (i = 4; i < 16; i++)
+    block[i] = 0;
+  /* reconstruct as 1D block */
+  inv_lift(block, 1);
+#endif
+}
+
+#ifndef CHROMA2D
+/* reconstruct 2D chroma block from 1D block */
+static void
+chroma_upsample(int32* block)
+{
+  uint i, j;
+  /* obtain 1D block coefficients */
+  fwd_lift(block, 1);
+  /* reorganize and initialize remaining 2D block coefficients */
+  block[4] = block[2];
+  block[5] = block[3];
+  block[2] = 0;
+  block[3] = 0;
+  for (i = 6; i < 16; i++)
+    block[i] = 0;
+  /* perform inverse decorrelating transform */
+  for (i = 0; i < 4; i++)
+    inv_lift(block + 1 * i, 4);
   for (j = 0; j < 4; j++)
     inv_lift(block + 4 * j, 1);
 }
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -143,7 +178,7 @@ int main(int argc, char* argv[])
       break;
     default:
     usage:
-      fprintf(stderr, "Usage: pgm <rate|-precision> <input.ppm >output.ppm\n");
+      fprintf(stderr, "Usage: ppm <rate|-precision> <input.ppm >output.ppm\n");
       return EXIT_FAILURE;
   }
 
@@ -162,37 +197,60 @@ int main(int argc, char* argv[])
 
   /* read image data */
   image = malloc(3 * nx * ny);
+  if (!image) {
+    fprintf(stderr, "error allocating memory\n");
+    return EXIT_FAILURE;
+  }
   if (fread(image, sizeof(*image), 3 * nx * ny, stdin) != 3 * nx * ny) {
     fprintf(stderr, "error reading image\n");
     return EXIT_FAILURE;
   }
 
-  /* create input array */
-  field = zfp_field_2d(image, zfp_type_int32, nx, ny);
-
-  /* initialize compressed stream */
+  /* initialize compressed streams */
   for (k = 0; k < 3; k++)
     zfp[k] = zfp_stream_open(NULL);
   if (rate < 0) {
+    /* use fixed-precision mode */
     for (k = 0; k < 3; k++)
       zfp_stream_set_precision(zfp[k], (uint)floor(0.5 - rate));
   }
   else {
     /* assign higher rate to luminance than to chrominance components */
-    zfp_stream_set_rate(zfp[0], rate * 2, zfp_type_int32, 2, 0);
-    zfp_stream_set_rate(zfp[1], rate / 2, zfp_type_int32, 2, 0);
-    zfp_stream_set_rate(zfp[2], rate / 2, zfp_type_int32, 2, 0);
+#ifdef CHROMA2D
+    double chroma_rate = floor(8 * rate / 3 + 0.5) / 16;
+    double luma_rate = rate - 2 * chroma_rate;
+    zfp_stream_set_rate(zfp[0], luma_rate, zfp_type_int32, 2, 0);
+    zfp_stream_set_rate(zfp[1], chroma_rate, zfp_type_int32, 2, 0);
+    zfp_stream_set_rate(zfp[2], chroma_rate, zfp_type_int32, 2, 0);
+#else
+    double chroma_rate = floor(8 * rate / 3 + 0.5) / 4;
+    double luma_rate = rate - chroma_rate / 2;
+    zfp_stream_set_rate(zfp[0], luma_rate, zfp_type_int32, 2, 0);
+    zfp_stream_set_rate(zfp[1], chroma_rate, zfp_type_int32, 1, 0);
+    zfp_stream_set_rate(zfp[2], chroma_rate, zfp_type_int32, 1, 0);
+#endif
   }
+
+  /* determine size of compressed buffer */
   bytes = 0;
+  field = zfp_field_2d(image, zfp_type_int32, nx, ny);
   for (k = 0; k < 3; k++)
     bytes += zfp_stream_maximum_size(zfp[k], field);
-  buffer = malloc(bytes);
-  stream = stream_open(buffer, bytes);
-  for (k = 0; k < 3; k++)
-    zfp_stream_set_bit_stream(zfp[k], stream);
   zfp_field_free(field);
 
-  /* compress */
+  /* allocate buffer and initialize bit stream */
+  buffer = malloc(bytes);
+  if (!buffer) {
+    fprintf(stderr, "error allocating memory\n");
+    return EXIT_FAILURE;
+  }
+  stream = stream_open(buffer, bytes);
+
+  /* the three zfp streams share a single bit stream */
+  for (k = 0; k < 3; k++)
+    zfp_stream_set_bit_stream(zfp[k], stream);
+
+  /* compress image */
   for (y = 0; y < ny; y += 4)
     for (x = 0; x < nx; x += 4) {
       uchar block[3][16];
@@ -211,17 +269,24 @@ int main(int argc, char* argv[])
       rgb2ycocg(ycocg, rgb);
       /* chroma subsample the Co and Cg bands */
       for (k = 1; k < 3; k++)
-        chroma_subsample(ycocg[i]);
+        chroma_downsample(ycocg[k]);
+#ifdef CHROMA2D
       /* compress the Y, Co, and Cg blocks */
       for (k = 0; k < 3; k++)
         zfp_encode_block_int32_2(zfp[k], ycocg[k]);
+#else
+      /* compress the Y, Co, and Cg blocks */
+      zfp_encode_block_int32_2(zfp[0], ycocg[0]);
+      zfp_encode_block_int32_1(zfp[1], ycocg[1]);
+      zfp_encode_block_int32_1(zfp[2], ycocg[2]);
+#endif
     }
 
   zfp_stream_flush(zfp[0]);
   size = zfp_stream_compressed_size(zfp[0]);
-  fprintf(stderr, "%u compressed bytes (%.2f bps)\n", (uint)size, (double)size * CHAR_BIT / (3 * nx * ny));
+  fprintf(stderr, "%u compressed bytes (%.2f bits/pixel)\n", (uint)size, (double)size * CHAR_BIT / (nx * ny));
 
-  /* decompress */
+  /* decompress image */
   zfp_stream_rewind(zfp[0]);
   for (y = 0; y < ny; y += 4)
     for (x = 0; x < nx; x += 4) {
@@ -229,9 +294,19 @@ int main(int argc, char* argv[])
       int32 rgb[3][16];
       int32 ycocg[3][16];
       uint i, j, k;
+#ifdef CHROMA2D
       /* decompress the Y, Co, and Cg blocks */
       for (k = 0; k < 3; k++)
         zfp_decode_block_int32_2(zfp[k], ycocg[k]);
+#else
+      /* decompress the Y, Co, and Cg blocks */
+      zfp_decode_block_int32_2(zfp[0], ycocg[0]);
+      zfp_decode_block_int32_1(zfp[1], ycocg[1]);
+      zfp_decode_block_int32_1(zfp[2], ycocg[2]);
+      /* reconstruct Co and Cg chroma bands */
+      for (k = 1; k < 3; k++)
+        chroma_upsample(ycocg[k]);
+#endif
       /* perform color space transform */
       ycocg2rgb(rgb, ycocg);
       /* demote to 8-bit integers */
@@ -243,6 +318,8 @@ int main(int argc, char* argv[])
           for (i = 0; i < 4; i++)
             image[k + 3 * (x + i + nx * (y + j))] = block[k][i + 4 * j];
     }
+
+  /* clean up */
   for (k = 0; k < 3; k++)
     zfp_stream_close(zfp[k]);
   stream_close(stream);
