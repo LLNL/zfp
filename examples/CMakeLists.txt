@@ -17,6 +17,10 @@ target_compile_definitions(iterator PRIVATE ${zfp_compressed_array_defs})
 add_executable(pgm pgm.c)
 target_link_libraries(pgm zfp)
 
+add_executable(ppm ppm.c)
+target_link_libraries(ppm zfp)
+target_compile_definitions(ppm PRIVATE ${ppm_private_defs})
+
 add_executable(simple simple.c)
 target_link_libraries(simple zfp)
 
@@ -32,5 +36,6 @@ if(HAVE_LIBM_MATH)
 
   target_link_libraries(inplace m)
   target_link_libraries(pgm m)
+  target_link_libraries(ppm m)
   target_link_libraries(simple m)
 endif()

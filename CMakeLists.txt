@@ -108,6 +108,9 @@ set(ZFP_BIT_STREAM_WORD_SIZE 64 CACHE STRING
   "Use smaller bit stream word type for finer rate granularity")
 set_property(CACHE ZFP_BIT_STREAM_WORD_SIZE PROPERTY STRINGS "8;16;32;64")
 
+set(PPM_CHROMA 2 CACHE STRING "Chroma block dimensionality for ppm example")
+set_property(CACHE PPM_CHROMA PROPERTY STRINGS "1;2")
+
 option(ZFP_WITH_CUDA "Enable CUDA parallel compression" OFF)
 
 option(ZFP_WITH_BIT_STREAM_STRIDED
@@ -190,6 +193,8 @@ endif()
 if(ZFP_WITH_CACHE_PROFILE)
   list(APPEND zfp_compressed_array_defs ZFP_WITH_CACHE_PROFILE)
 endif()
+
+list(APPEND ppm_private_defs PPM_CHROMA=${PPM_CHROMA})
 
 # Link libm only if necessary
 include(CheckCSourceCompiles)

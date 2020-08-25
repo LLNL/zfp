@@ -27,7 +27,7 @@ $(BINDIR)/pgm: pgm.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) pgm.c $(CLIBS) -o $@
 
 $(BINDIR)/ppm: ppm.c ../lib/$(LIBZFP)
-	$(CC) $(CFLAGS) ppm.c $(CLIBS) -o $@
+	$(CC) $(CFLAGS) $(PPM_FLAGS) ppm.c $(CLIBS) -o $@
 
 $(BINDIR)/simple: simple.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) simple.c $(CLIBS) -o $@
