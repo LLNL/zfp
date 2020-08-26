@@ -536,13 +536,6 @@ protected:
     size = xmax - xmin;
   }
 
-  // inspector (overrides private_const_view::get)
-  const Scalar& get(uint i, uint j, uint k) const
-  {
-    const CacheLine* p = line(i, j, k, false);
-    return (*p)(i, j, k);
-  }
-
   // mutator
   void set(size_t x, size_t y, size_t z, value_type val) { cache.set(x, y, z, val); }
 
