@@ -162,6 +162,13 @@ stream_write_word(bitstream* s, word value)
 
 /* public functions -------------------------------------------------------- */
 
+/* word size in bits (equals stream_word_bits) */
+inline_ size_t
+stream_alignment()
+{
+  return wsize;
+}
+
 /* pointer to beginning of stream */
 inline_ void*
 stream_data(const bitstream* s)
@@ -173,14 +180,14 @@ stream_data(const bitstream* s)
 inline_ size_t
 stream_size(const bitstream* s)
 {
-  return sizeof(word) * (s->ptr - s->begin);
+  return sizeof(word) * (size_t)(s->ptr - s->begin);
 }
 
 /* byte capacity of stream */
 inline_ size_t
 stream_capacity(const bitstream* s)
 {
-  return sizeof(word) * (s->end - s->begin);
+  return sizeof(word) * (size_t)(s->end - s->begin);
 }
 
 /* number of words per block */
@@ -302,14 +309,14 @@ stream_write_bits(bitstream* s, uint64 value, uint n)
 inline_ size_t
 stream_rtell(const bitstream* s)
 {
-  return wsize * (s->ptr - s->begin) - s->bits;
+  return wsize * (size_t)(s->ptr - s->begin) - s->bits;
 }
 
 /* return bit offset to next bit to be written */
 inline_ size_t
 stream_wtell(const bitstream* s)
 {
-  return wsize * (s->ptr - s->begin) + s->bits;
+  return wsize * (size_t)(s->ptr - s->begin) + s->bits;
 }
 
 /* position stream for reading or writing at beginning */

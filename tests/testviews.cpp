@@ -11,7 +11,7 @@
 static uint
 rand(uint begin, uint end)
 {
-  return begin + rand() % (end - begin);
+  return begin + (uint)rand() % (end - begin);
 }
 
 // ensure f and g are sufficiently close
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 
   // 2D slice of a
   printf("\n2D slice\n");
-  uint z = rand(0, nv.size_z());
+  uint z = rand(0, (uint)nv.size_z());
   zfp::array3<double>::nested_view2 slice2(nv[z]);
   for (uint y = 0; y < slice2.size_y(); y++)
     for (uint x = 0; x < slice2.size_x(); x++) {
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
     }
 
   // 2D array constructed from 2D slice (exercises deep copy via iterator)
-  printf("\n3D array from 2D slice\n");
+  printf("\n2D array from 2D slice\n");
   zfp::array2<double> b(slice2);
   for (uint y = 0; y < b.size_y(); y++)
     for (uint x = 0; x < b.size_x(); x++) {
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 
   // 1D slice of a
   printf("\n1D slice\n");
-  uint y = rand(0, slice2.size_y());
+  uint y = rand(0, (uint)slice2.size_y());
   zfp::array3<double>::nested_view1 slice1 = slice2[y];
   for (uint x = 0; x < slice1.size_x(); x++) {
     printf("%u %u %u: %g %g\n", x, y, z, (double)a(x, y, z), (double)slice1[x]);
@@ -136,6 +136,7 @@ int main(int argc, char* argv[])
     }
 
   // 2D thread-safe view of c
+  printf("\n2D private view\n");
   zfp::array2<double>::private_const_view d(&c);
   for (uint y = 0; y < c.size_y(); y++)
     for (uint x = 0; x < c.size_x(); x++) {

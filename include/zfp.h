@@ -63,6 +63,14 @@
 
 /* types ------------------------------------------------------------------- */
 
+/* Boolean constants */
+enum {
+  zfp_false = 0,         /* false */
+  zfp_true  = !zfp_false /* true */
+};
+
+typedef int zfp_bool; /* Boolean type */
+
 /* execution policy */
 typedef enum {
   zfp_exec_serial = 0, /* serial execution (default) */
@@ -225,7 +233,7 @@ zfp_stream_set_rate(
   double rate,        /* desired rate in compressed bits/scalar */
   zfp_type type,      /* scalar type to compress */
   uint dims,          /* array dimensionality (1, 2, 3, or 4) */
-  int wra             /* nonzero if write random access is needed */
+  zfp_bool align      /* word-aligned blocks, e.g., for write random access */
 );
 
 /* set precision in uncompressed bits/scalar (fixed-precision mode) */
@@ -250,7 +258,7 @@ zfp_stream_set_mode(
 );
 
 /* set all parameters (expert mode); leaves stream intact on failure */
-int                   /* nonzero upon success */
+zfp_bool              /* true upon success */
 zfp_stream_set_params(
   zfp_stream* stream, /* compressed stream */
   uint minbits,       /* minimum number of bits per 4^d block */
@@ -280,21 +288,21 @@ zfp_stream_omp_chunk_size(
 );
 
 /* set execution policy */
-int                      /* nonzero upon success */
+zfp_bool                 /* true upon success */
 zfp_stream_set_execution(
   zfp_stream* stream,    /* compressed stream */
   zfp_exec_policy policy /* execution policy */
 );
 
 /* set OpenMP execution policy and number of threads */
-int                   /* nonzero upon success */
+zfp_bool              /* true upon success */
 zfp_stream_set_omp_threads(
   zfp_stream* stream, /* compressed stream */
   uint threads        /* number of OpenMP threads to use (0 for default) */
 );
 
 /* set OpenMP execution policy and number of blocks per chunk (1D only) */
-int                   /* nonzero upon success */
+zfp_bool              /* true upon success */
 zfp_stream_set_omp_chunk_size(
   zfp_stream* stream, /* compressed stream */
   uint chunk_size     /* number of blocks per chunk (0 for default) */
@@ -384,7 +392,7 @@ zfp_field_size(
 );
 
 /* field strides per dimension */
-int                       /* zero if array is contiguous */
+zfp_bool                  /* true if array is not contiguous */
 zfp_field_stride(
   const zfp_field* field, /* field metadata */
   int* stride             /* stride in scalars per dimension (may be NULL) */
@@ -481,7 +489,7 @@ zfp_field_set_stride_4d(
 );
 
 /* set field scalar type and dimensions */
-int                 /* nonzero upon success */
+zfp_bool            /* true upon success */
 zfp_field_set_metadata(
   zfp_field* field, /* field metadata */
   uint64 meta       /* compact 52-bit encoding of metadata */

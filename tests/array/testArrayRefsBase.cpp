@@ -13,7 +13,7 @@ const SCALAR VAL = (SCALAR) 4;
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_setEntryWithEquals_then_entrySetInCacheOnly)
 {
   // compressed_data() automatically flushes cache, so call it before setting entries
-  uchar* bitstreamPtr = arr.compressed_data();
+  void* bitstreamPtr = arr.compressed_data();
   size_t bitstreamLen = arr.compressed_size();
   uint64 initializedChecksum = hashBitstream((uint64*)bitstreamPtr, bitstreamLen);
 

@@ -24,6 +24,9 @@ void stream_close(bitstream* stream);
 /* make a copy of bit stream to shared memory buffer */
 bitstream* stream_clone(const bitstream* stream);
 
+/* word size in bits (equal to stream_word_bits) */
+size_t stream_alignment();
+
 /* pointer to beginning of stream */
 void* stream_data(const bitstream* stream);
 

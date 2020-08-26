@@ -14,6 +14,7 @@
 #include "zfparray1.h"
 #include "zfparray2.h"
 #include "zfparray3.h"
+#include "zfparray4.h"
 
 enum ArraySize {
   Small  = 0, // 2^12 = 4096 scalars (2^12 = (2^6)^2 = (2^4)^3 = (2^3)^4)
@@ -48,7 +49,7 @@ refine1d(int* g, const int* f, size_t m)
 
   for (size_t x = 0; x < n; x++) {
     int s = 0;
-    for (int i = 0; i < 4; i++) {
+    for (size_t i = 0; i < 4; i++) {
       size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
       s += weight[i] * f[xx];
     }
@@ -66,9 +67,9 @@ refine2d(int* g, const int* f, size_t m)
   for (size_t y = 0; y < n; y++)
     for (size_t x = 0; x < n; x++) {
       int s = 0;
-      for (int j = 0; j < 4; j++) {
+      for (size_t j = 0; j < 4; j++) {
         size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
-        for (int i = 0; i < 4; i++) {
+        for (size_t i = 0; i < 4; i++) {
           size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
           s += weight[i] * weight[j] * f[xx + m * yy];
         }
@@ -88,11 +89,11 @@ refine3d(int* g, const int* f, size_t m)
     for (size_t y = 0; y < n; y++)
       for (size_t x = 0; x < n; x++) {
         int s = 0;
-        for (int k = 0; k < 4; k++) {
+        for (size_t k = 0; k < 4; k++) {
           size_t zz = z & 1u ? (z / 2 + k - 1 + m) % m : z / 2;
-          for (int j = 0; j < 4; j++) {
+          for (size_t j = 0; j < 4; j++) {
             size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
-            for (int i = 0; i < 4; i++) {
+            for (size_t i = 0; i < 4; i++) {
               size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
               s += weight[i] * weight[j] * weight[k] * f[xx + m * (yy + m * zz)];
             }
@@ -114,13 +115,13 @@ refine4d(int* g, const int* f, size_t m)
       for (size_t y = 0; y < n; y++)
         for (size_t x = 0; x < n; x++) {
           int s = 0;
-          for (int l = 0; l < 4; l++) {
+          for (size_t l = 0; l < 4; l++) {
             size_t ww = w & 1u ? (w / 2 + l - 1 + m) % m : w / 2;
-            for (int k = 0; k < 4; k++) {
+            for (size_t k = 0; k < 4; k++) {
               size_t zz = z & 1u ? (z / 2 + k - 1 + m) % m : z / 2;
-              for (int j = 0; j < 4; j++) {
+              for (size_t j = 0; j < 4; j++) {
                 size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
-                for (int i = 0; i < 4; i++) {
+                for (size_t i = 0; i < 4; i++) {
                   size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
                   s += weight[i] * weight[j] * weight[k] * weight[l] * f[xx + m * (yy + m * (zz + m * ww))];
                 }
@@ -317,7 +318,7 @@ test_rate(zfp_stream* stream, const zfp_field* input, double rate, Scalar tolera
   zfp_type type = zfp_field_type(input);
 
   // allocate memory for compressed data
-  rate = zfp_stream_set_rate(stream, rate, type, dims, 0);
+  rate = zfp_stream_set_rate(stream, rate, type, dims, zfp_false);
   size_t bufsize = zfp_stream_maximum_size(stream, input);
   uchar* buffer = new uchar[bufsize];
   bitstream* s = stream_open(buffer, bufsize);
@@ -630,6 +631,38 @@ update_array3(zfp::array3<Scalar>& a)
         a(0, 0, 0) = std::max(a(0, 0, 0), a(i, j, k));
 }
 
+// perform 4D differencing
+template <typename Scalar>
+inline void
+update_array4(zfp::array4<Scalar>& a)
+{
+  for (uint l = 0; l < a.size_w(); l++)
+    for (uint k = 0; k < a.size_z(); k++)
+      for (uint j = 0; j < a.size_y(); j++)
+        for (uint i = 0; i < a.size_x() - 1; i++)
+          a(i, j, k, l) -= a(i + 1, j, k, l);
+  for (uint l = 0; l < a.size_w(); l++)
+    for (uint k = 0; k < a.size_z(); k++)
+      for (uint j = 0; j < a.size_y() - 1; j++)
+        for (uint i = 0; i < a.size_x(); i++)
+          a(i, j, k, l) -= a(i, j + 1, k, l);
+  for (uint l = 0; l < a.size_w(); l++)
+    for (uint k = 0; k < a.size_z() - 1; k++)
+      for (uint j = 0; j < a.size_y(); j++)
+        for (uint i = 0; i < a.size_x(); i++)
+          a(i, j, k, l) -= a(i, j, k + 1, l);
+  for (uint l = 0; l < a.size_w() - 1; l++)
+    for (uint k = 0; k < a.size_z(); k++)
+      for (uint j = 0; j < a.size_y(); j++)
+        for (uint i = 0; i < a.size_x(); i++)
+          a(i, j, k, l) -= a(i, j, k, l + 1);
+  for (uint l = 0; l < a.size_w() - 1; l++)
+    for (uint k = 0; k < a.size_z() - 1; k++)
+      for (uint j = 0; j < a.size_y() - 1; j++)
+        for (uint i = 0; i < a.size_x() - 1; i++)
+          a(0, 0, 0, 0) = std::max(a(0, 0, 0, 0), a(i, j, k, l));
+}
+
 template <class Array>
 inline void update_array(Array& a);
 
@@ -656,6 +689,14 @@ update_array(zfp::array3<float>& a) { update_array3(a); }
 template <>
 inline void
 update_array(zfp::array3<double>& a) { update_array3(a); }
+
+template <>
+inline void
+update_array(zfp::array4<float>& a) { update_array4(a); }
+
+template <>
+inline void
+update_array(zfp::array4<double>& a) { update_array4(a); }
 
 // test random-accessible array primitive
 template <class Array, typename Scalar>
@@ -716,9 +757,9 @@ test(uint dims, ArraySize array_size)
   Scalar* f = new Scalar[n];
 
   // determine array size
-  uint nx, ny, nz ,nw;
+  uint nx, ny, nz, nw;
   zfp_field* field = zfp_field_alloc();
-  zfp_field_set_type(field, zfp::codec<Scalar>::type);
+  zfp_field_set_type(field, zfp::trait<Scalar>::type);
   zfp_field_set_pointer(field, f);
   switch (dims) {
     case 1:
@@ -749,7 +790,7 @@ test(uint dims, ArraySize array_size)
   std::cout << "testing " << dims << "D array of " << (t == 0 ? "floats" : "doubles") << std::endl;
 
   // test data integrity
-  uint32 checksum[2][2][4] = {
+  uint32 checksum[2][2][4] = { // [size][type][dims]
     // small
     {{ 0x54174c44u, 0x86609589u, 0xfc0a6a76u, 0xa3481e00u },
      { 0x7d257bb6u, 0x294bb210u, 0x68614d26u, 0xf6bd3a21u }},
@@ -767,7 +808,7 @@ test(uint dims, ArraySize array_size)
   // test fixed rate
   for (uint rate = 2u >> t, i = 0; rate <= 32 * (t + 1); rate *= 4, i++) {
     // expected max errors
-    double emax[2][2][4][4] = {
+    double emax[2][2][4][4] = { // [size][type][dims][rate]
       // small
       {
         {
@@ -808,7 +849,7 @@ test(uint dims, ArraySize array_size)
   // test fixed precision
   for (uint prec = 4u << t, i = 0; i < 3; prec *= 2, i++) {
     // expected compressed sizes
-    size_t bytes[2][2][4][3] = {
+    size_t bytes[2][2][4][3] = { // [size][type][dims][prec]
       // small
       {
         {
@@ -847,7 +888,7 @@ test(uint dims, ArraySize array_size)
   for (uint i = 0; i < 3; i++) {
     Scalar tol[] = { Scalar(1e-3), 2 * std::numeric_limits<Scalar>::epsilon(), 0 };
     // expected compressed sizes
-    size_t bytes[2][2][4][3] = {
+    size_t bytes[2][2][4][3] = { // [size][type][dims][tol]
       // small
       {
         {
@@ -885,7 +926,7 @@ test(uint dims, ArraySize array_size)
   // test reversible
   {
     // expected compressed sizes
-    size_t bytes[2][2][4] = {
+    size_t bytes[2][2][4] = { // [size][type][dims]
       // small
       {
         {
@@ -921,28 +962,28 @@ test(uint dims, ArraySize array_size)
   }
 
   // test compressed array support
-  double emax[2][2][3] = {
+  double emax[2][2][4] = { // [size][type][dims] (construct test)
     // small
     {
-      {4.578e-05, 7.630e-06, 3.148e-05},
-      {1.832e-04, 8.584e-06, 3.338e-05},
+      {4.578e-05, 7.630e-06, 3.148e-05, 3.598e-03},
+      {1.832e-04, 8.584e-06, 3.338e-05, 3.312e-03},
     },
     // large
     {
-      {0.000e+00, 0.000e+00, 0.000e+00},
-      {2.289e-05, 0.000e+00, 0.000e+00},
+      {0.000e+00, 0.000e+00, 0.000e+00, 1.193e-07},
+      {2.289e-05, 0.000e+00, 0.000e+00, 8.801e-08},
     }
   };
-  double dfmax[2][2][3] = {
+  double dfmax[2][2][4] = { // [size][type][dims] (update test)
     // small
     {
-      {2.155e-02, 3.755e-01, 1.846e+00},
-      {2.155e-02, 3.755e-01, 1.846e+00},
+      {2.155e-02, 3.755e-01, 1.846e+00, 4.843e+01},
+      {2.155e-02, 3.755e-01, 1.846e+00, 4.844e+01},
     },
     // large
     {
-      {2.441e-04, 4.883e-04, 1.221e-03},
-      {2.670e-04, 4.883e-04, 1.221e-03},
+      {2.441e-04, 7.801e-04, 3.599e-03, 2.793e-02},
+      {2.670e-04, 9.075e-04, 3.694e-03, 2.779e-02},
     }
   };
   double rate = 16;
@@ -962,7 +1003,10 @@ test(uint dims, ArraySize array_size)
         failures += test_array(a, f, n, static_cast<Scalar>(emax[array_size][t][dims - 1]), static_cast<Scalar>(dfmax[array_size][t][dims - 1]));
       }
       break;
-    case 4: // 4D arrays not yet supported
+    case 4: {
+        zfp::array4<Scalar> a(nx, ny, nz, nw, rate, f);
+        failures += test_array(a, f, n, static_cast<Scalar>(emax[array_size][t][dims - 1]), static_cast<Scalar>(dfmax[array_size][t][dims - 1]));
+      }
       break;
   }
 

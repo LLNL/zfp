@@ -38,7 +38,7 @@ _t1(CFP_ARRAY_TYPE, compressed_size)(const CFP_ARRAY_TYPE * self)
   return reinterpret_cast<const ZFP_ARRAY_TYPE *>(self)->compressed_size();
 }
 
-static uchar*
+static void*
 _t1(CFP_ARRAY_TYPE, compressed_data)(const CFP_ARRAY_TYPE * self)
 {
   return reinterpret_cast<const ZFP_ARRAY_TYPE *>(self)->compressed_data();

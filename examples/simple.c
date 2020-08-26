@@ -28,7 +28,7 @@ compress(double* array, int nx, int ny, int nz, double tolerance, int decompress
 
   /* set compression mode and parameters via one of four functions */
 /*  zfp_stream_set_reversible(zfp); */
-/*  zfp_stream_set_rate(zfp, rate, type, 3, 0); */
+/*  zfp_stream_set_rate(zfp, rate, type, 3, zfp_false); */
 /*  zfp_stream_set_precision(zfp, precision); */
   zfp_stream_set_accuracy(zfp, tolerance);
 

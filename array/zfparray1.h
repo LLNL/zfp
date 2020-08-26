@@ -2,55 +2,76 @@
 #define ZFP_ARRAY1_H
 
 #include <cstddef>
-#include <iterator>
 #include <cstring>
+#include <iterator>
 #include "zfparray.h"
 #include "zfpcodec.h"
-#include "zfp/cache.h"
+#include "zfp/cache1.h"
+#include "zfp/store1.h"
+#include "zfp/handle1.h"
+#include "zfp/reference1.h"
+#include "zfp/pointer1.h"
+#include "zfp/iterator1.h"
+#include "zfp/view1.h"
 
 namespace zfp {
 
-// compressed 1D array of scalars
-template < typename Scalar, class Codec = zfp::codec<Scalar> >
+// compressed 2D array of scalars
+template < typename Scalar, class Codec = zfp::zfp_codec<Scalar, 1> >
 class array1 : public array {
 public:
-  // forward declarations
-  class reference;
-  class pointer;
-  class iterator;
-  class view;
-  #include "zfp/reference1.h"
-  #include "zfp/pointer1.h"
-  #include "zfp/iterator1.h"
-  #include "zfp/view1.h"
+  // types utilized by nested classes
+  typedef array1 container_type;
+  typedef Scalar value_type;
+  typedef Codec codec_type;
+  typedef typename Codec::header header;
+
+  // accessor classes
+  typedef zfp::internal::dim1::const_reference<array1> const_reference;
+  typedef zfp::internal::dim1::const_pointer<array1> const_pointer;
+  typedef zfp::internal::dim1::const_iterator<array1> const_iterator;
+  typedef zfp::internal::dim1::const_view<array1> const_view;
+  typedef zfp::internal::dim1::private_const_view<array1> private_const_view;
+  typedef zfp::internal::dim1::reference<array1> reference;
+  typedef zfp::internal::dim1::pointer<array1> pointer;
+  typedef zfp::internal::dim1::iterator<array1> iterator;
+  typedef zfp::internal::dim1::view<array1> view;
+  typedef zfp::internal::dim1::private_view<array1> private_view;
 
   // default constructor
-  array1() : array(1, Codec::type) {}
-
-  // constructor of n-sample array using rate bits per value, at least
-  // csize bytes of cache, and optionally initialized from flat array p
-  array1(uint n, double rate, const Scalar* p = 0, size_t csize = 0) :
+  array1() :
     array(1, Codec::type),
-    cache(lines(csize, n))
+    cache(store)
+  {}
+
+  // constructor of nx-element array using rate bits per value, at least
+  // cache_size bytes of cache, and optionally initialized from flat array p
+  array1(size_t nx, double rate, const value_type* p = 0, size_t cache_size = 0) :
+    array(1, Codec::type),
+    store(nx, rate),
+    cache(store, cache_size)
   {
-    set_rate(rate);
-    resize(n, p == 0);
+    this->nx = nx;
     if (p)
       set(p);
   }
 
   // constructor, from previously-serialized compressed array
-  array1(const zfp::array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0) :
-    array(1, Codec::type, h, buffer_size_bytes)
+  array1(const zfp::array::header& header, const void* buffer = 0, size_t buffer_size_bytes = 0) :
+    array(1, Codec::type, header),
+    store(header.size_x(), header.rate()),
+    cache(store)
   {
-    resize(nx, false);
-    if (buffer)
-      memcpy(data, buffer, bytes);
+    if (buffer) {
+      if (buffer_size_bytes && buffer_size_bytes < store.compressed_size())
+        throw zfp::exception("buffer size is smaller than required");
+      std::memcpy(store.compressed_data(), buffer, store.compressed_size());
+    }
   }
 
   // copy constructor--performs a deep copy
   array1(const array1& a) :
-    array()
+    cache(store)
   {
     deep_copy(a);
   }
@@ -59,10 +80,10 @@ public:
   template <class View>
   array1(const View& v) :
     array(1, Codec::type),
-    cache(lines(0, v.size_x()))
+    store(v.size_x(), v.rate()),
+    cache(store)
   {
-    set_rate(v.rate());
-    resize(v.size_x(), true);
+    this->nx = v.size_x();
     // initialize array in its preferred order
     for (iterator it = begin(); it != end(); ++it)
       *it = v(it.i());
@@ -80,213 +101,127 @@ public:
   }
 
   // total number of elements in array
-  size_t size() const { return size_t(nx); }
+  size_t size() const { return nx; }
 
   // array dimensions
-  uint size_x() const { return nx; }
+  size_t size_x() const { return nx; }
 
   // resize the array (all previously stored data will be lost)
-  void resize(uint n, bool clear = true)
+  void resize(size_t nx, bool clear = true)
   {
-    if (n == 0)
-      free();
-    else {
-      nx = n;
-      bx = (nx + 3) / 4;
-      blocks = bx;
-      alloc(clear);
+    this->nx = nx;
+    store.resize(nx, clear);
+    cache.clear();
+  }
 
-      // precompute block dimensions
-      zfp::deallocate(shape);
-      if (nx & 3u) {
-        shape = (uchar*)zfp::allocate(blocks);
-        uchar* p = shape;
-        for (uint i = 0; i < bx; i++)
-          *p++ = (i == bx - 1 ? -nx & 3u : 0);
-      }
-      else
-        shape = 0;
-    }
+  // rate in bits per value
+  double rate() const { return cache.rate(); }
+
+  // set rate in bits per value
+  double set_rate(double rate) { return cache.set_rate(rate); }
+
+  // number of bytes of compressed data
+  size_t compressed_size() const { return store.compressed_size(); }
+
+  // pointer to compressed data for read or write access
+  void* compressed_data() const
+  {
+    cache.flush();
+    return store.compressed_data();
   }
 
   // cache size in number of bytes
-  size_t cache_size() const { return cache.size() * sizeof(CacheLine); }
+  size_t cache_size() const { return cache.size(); }
 
   // set minimum cache size in bytes (array dimensions must be known)
-  void set_cache_size(size_t csize)
+  void set_cache_size(size_t bytes)
   {
-    flush_cache();
-    cache.resize(lines(csize, nx));
+    cache.flush();
+    cache.resize(bytes);
   }
 
   // empty cache without compressing modified cached blocks
   void clear_cache() const { cache.clear(); }
 
   // flush cache by compressing all modified cached blocks
-  void flush_cache() const
-  {
-    for (typename zfp::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
-      if (p->tag.dirty()) {
-        uint b = p->tag.index() - 1;
-        encode(b, p->line->data());
-      }
-      cache.flush(p->line);
-    }
-  }
+  void flush_cache() const { cache.flush(); }
 
   // decompress array and store at p
-  void get(Scalar* p) const
+  void get(value_type* p) const
   {
-    uint b = 0;
-    for (uint i = 0; i < bx; i++, p += 4, b++) {
-      const CacheLine* line = cache.lookup(b + 1);
-      if (line)
-        line->get(p, 1, shape ? shape[b] : 0);
-      else
-        decode(b, p, 1);
-    }
+    const size_t bx = store.block_size_x();
+    const ptrdiff_t sx = 1;
+    size_t block_index = 0;
+    for (size_t i = 0; i < bx; i++, p += 4)
+      cache.get_block(block_index++, p, sx);
   }
 
   // initialize array by copying and compressing data stored at p
-  void set(const Scalar* p)
+  void set(const value_type* p)
   {
-    uint b = 0;
-    for (uint i = 0; i < bx; i++, b++, p += 4)
-      encode(b, p, 1);
-    cache.clear();
+    const size_t bx = store.block_size_x();
+    const ptrdiff_t sx = 1;
+    size_t block_index = 0;
+    for (size_t i = 0; i < bx; i++, p += 4)
+      cache.put_block(block_index++, p, sx);
   }
 
-  // (i) accessors
-  Scalar operator()(uint i) const { return get(i); }
-  reference operator()(uint i) { return reference(this, i); }
+  // (i, j) accessors
+  const_reference operator()(size_t i) const { return const_reference(const_cast<container_type*>(this), i); }
+  reference operator()(size_t i) { return reference(this, i); }
 
   // flat index accessors
-  Scalar operator[](uint index) const { return get(index); }
-  reference operator[](uint index) { return reference(this, index); }
+  const_reference operator[](size_t index) const { return const_reference(const_cast<container_type*>(this), index); }
+  reference operator[](size_t index) { return reference(this, index); }
 
   // random access iterators
+  const_iterator cbegin() const { return const_iterator(this, 0); }
+  const_iterator cend() const { return const_iterator(this, nx); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
   iterator begin() { return iterator(this, 0); }
   iterator end() { return iterator(this, nx); }
 
 protected:
-  // cache line representing one block of decompressed values
-  class CacheLine {
-  public:
-    Scalar operator()(uint i) const { return a[index(i)]; }
-    Scalar& operator()(uint i) { return a[index(i)]; }
-    const Scalar* data() const { return a; }
-    Scalar* data() { return a; }
-    // copy cache line
-    void get(Scalar* p, int sx) const
-    {
-      const Scalar* q = a;
-      for (uint x = 0; x < 4; x++, p += sx, q++)
-        *p = *q;
-    }
-    void get(Scalar* p, int sx, uint shape) const
-    {
-      if (!shape)
-        get(p, sx);
-      else {
-        // determine block dimensions
-        uint nx = 4 - (shape & 3u); shape >>= 2;
-        const Scalar* q = a;
-        for (uint x = 0; x < nx; x++, p += sx, q++)
-          *p = *q;
-      }
-    }
-  protected:
-    static uint index(uint i) { return i & 3u; }
-    Scalar a[4];
-  };
+  friend class zfp::internal::dim1::const_handle<array1>;
+  friend class zfp::internal::dim1::const_reference<array1>;
+  friend class zfp::internal::dim1::const_pointer<array1>;
+  friend class zfp::internal::dim1::const_iterator<array1>;
+  friend class zfp::internal::dim1::const_view<array1>;
+  friend class zfp::internal::dim1::private_const_view<array1>;
+  friend class zfp::internal::dim1::reference<array1>;
+  friend class zfp::internal::dim1::pointer<array1>;
+  friend class zfp::internal::dim1::iterator<array1>;
+  friend class zfp::internal::dim1::view<array1>;
+  friend class zfp::internal::dim1::private_view<array1>;
 
   // perform a deep copy
   void deep_copy(const array1& a)
   {
     // copy base class members
     array::deep_copy(a);
-    // copy cache
-    cache = a.cache;
+    // copy persistent storage
+    store.deep_copy(a.store);
+    // copy cached data
+    cache.deep_copy(a.cache);
   }
+
+  // global index bounds
+  size_t min_x() const { return 0; }
+  size_t max_x() const { return nx; }
 
   // inspector
-  Scalar get(uint i) const
-  {
-    const CacheLine* p = line(i, false);
-    return (*p)(i);
-  }
+  value_type get(size_t i) const { return cache.get(i); }
 
-  // mutator
-  void set(uint i, Scalar val)
-  {
-    CacheLine* p = line(i, true);
-    (*p)(i) = val;
-  }
+  // mutators (called from proxy reference)
+  void set(size_t i, value_type val) { cache.set(i, val); }
+  void add(size_t i, value_type val) { cache.ref(i) += val; }
+  void sub(size_t i, value_type val) { cache.ref(i) -= val; }
+  void mul(size_t i, value_type val) { cache.ref(i) *= val; }
+  void div(size_t i, value_type val) { cache.ref(i) /= val; }
 
-  // in-place updates
-  void add(uint i, Scalar val) { (*line(i, true))(i) += val; }
-  void sub(uint i, Scalar val) { (*line(i, true))(i) -= val; }
-  void mul(uint i, Scalar val) { (*line(i, true))(i) *= val; }
-  void div(uint i, Scalar val) { (*line(i, true))(i) /= val; }
-
-  // return cache line for i; may require write-back and fetch
-  CacheLine* line(uint i, bool write) const
-  {
-    CacheLine* p = 0;
-    uint b = block(i);
-    typename zfp::Cache<CacheLine>::Tag t = cache.access(p, b + 1, write);
-    uint c = t.index() - 1;
-    if (c != b) {
-      // write back occupied cache line if it is dirty
-      if (t.dirty())
-        encode(c, p->data());
-      // fetch cache line
-      decode(b, p->data());
-    }
-    return p;
-  }
-
-  // encode block with given index
-  void encode(uint index, const Scalar* block) const
-  {
-    stream_wseek(zfp->stream, index * blkbits);
-    Codec::encode_block_1(zfp, block, shape ? shape[index] : 0);
-    stream_flush(zfp->stream);
-  }
-
-  // encode block with given index from strided array
-  void encode(uint index, const Scalar* p, int sx) const
-  {
-    stream_wseek(zfp->stream, index * blkbits);
-    Codec::encode_block_strided_1(zfp, p, shape ? shape[index] : 0, sx);
-    stream_flush(zfp->stream);
-  }
-
-  // decode block with given index
-  void decode(uint index, Scalar* block) const
-  {
-    stream_rseek(zfp->stream, index * blkbits);
-    Codec::decode_block_1(zfp, block, shape ? shape[index] : 0);
-  }
-
-  // decode block with given index to strided array
-  void decode(uint index, Scalar* p, int sx) const
-  {
-    stream_rseek(zfp->stream, index * blkbits);
-    Codec::decode_block_strided_1(zfp, p, shape ? shape[index] : 0, sx);
-  }
-
-  // block index for i
-  static uint block(uint i) { return i / 4; }
-
-  // number of cache lines corresponding to size (or suggested size if zero)
-  static uint lines(size_t size, uint n)
-  {
-    n = size ? (size + sizeof(CacheLine) - 1) / sizeof(CacheLine) : array::lines(size_t((n + 3) / 4));
-    return std::max(n, 1u);
-  }
-
-  mutable zfp::Cache<CacheLine> cache; // cache of decompressed blocks
+  BlockStore1<value_type, codec_type> store; // persistent storage of compressed blocks
+  BlockCache1<value_type, codec_type> cache; // cache of decompressed blocks
 };
 
 typedef array1<float> array1f;
