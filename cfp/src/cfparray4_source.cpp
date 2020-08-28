@@ -87,8 +87,8 @@ static CFP_REF_TYPE
 _t1(CFP_ARRAY_TYPE, ref_flat)(CFP_ARRAY_TYPE self, size_t i)
 {
   CFP_REF_TYPE r;
-  index(self.object, r.i, r.j, r.k, r.l, i);
   r.array = self;
+  ref_index(r, i);
   return r;
 }
 
@@ -273,7 +273,7 @@ _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, inc)(CFP_ITER_TYPE self)
       it.k++;
       if (!(it.k & 3u) || it.k == nz) {
         it.k = (it.k - 1) & ~3u;
-        it.l++
+        it.l++;
         if (!(it.l & 3u) || it.l == nw) {
           it.l = (it.l - 1) & ~3u;
           // done with block; advance to next

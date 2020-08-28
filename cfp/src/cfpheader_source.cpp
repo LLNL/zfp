@@ -78,7 +78,6 @@ _t1(CFP_HEADER_TYPE, ctor_array3d)(cfp_array3d a)
   return h;
 }
 
-#if 0
 static CFP_HEADER_TYPE
 _t1(CFP_HEADER_TYPE, ctor_array4f)(cfp_array4f a)
 {
@@ -98,7 +97,6 @@ _t1(CFP_HEADER_TYPE, ctor_array4d)(cfp_array4d a)
   h.object = NULL;
   return h;
 }
-#endif
 
 static void
 _t1(CFP_HEADER_TYPE, dtor)(CFP_HEADER_TYPE self)

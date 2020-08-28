@@ -1,5 +1,5 @@
 #include "cfparray4d.h"
-//#include "zfparray4.h"
+#include "zfparray4.h"
 
 #include "template/template.h"
 
@@ -10,8 +10,8 @@
 #define ZFP_ARRAY_TYPE zfp::array4d
 #define ZFP_SCALAR_TYPE double
 
-//#include "cfparray_source.cpp"
-//#include "cfparray4_source.cpp"
+#include "cfparray_source.cpp"
+#include "cfparray4_source.cpp"
 
 #undef CFP_ARRAY_TYPE
 #undef CFP_REF_TYPE

@@ -7,8 +7,8 @@
 #include "cfparray2d.cpp"
 #include "cfparray3f.cpp"
 #include "cfparray3d.cpp"
-//#include "cfparray4f.cpp"
-//#include "cfparray4d.cpp"
+#include "cfparray4f.cpp"
+#include "cfparray4d.cpp"
 
 const cfp_api CFP_NAMESPACE = {
   // array1f
@@ -503,7 +503,6 @@ const cfp_api CFP_NAMESPACE = {
   },
   // array4f
   {
-#if 0
     cfp_array4f_ctor_default,
     cfp_array4f_ctor,
     cfp_array4f_ctor_copy,
@@ -583,11 +582,9 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array4f_cfp_iter4f_k,
       cfp_array4f_cfp_iter4f_l,
     },
-#endif
   },
   // array4d
   {
-#if 0
     cfp_array4d_ctor_default,
     cfp_array4d_ctor,
     cfp_array4d_ctor_copy,
@@ -667,8 +664,8 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array4d_cfp_iter4d_k,
       cfp_array4d_cfp_iter4d_l,
     },
-#endif
   },
+  // header
   {
     cfp_header_ctor_default,
     cfp_header_ctor_buffer,
@@ -678,8 +675,8 @@ const cfp_api CFP_NAMESPACE = {
     cfp_header_ctor_array2d,
     cfp_header_ctor_array3f,
     cfp_header_ctor_array3d,
-//    cfp_header_ctor_array4f,
-//    cfp_header_ctor_array4d,
+    cfp_header_ctor_array4f,
+    cfp_header_ctor_array4d,
     cfp_header_dtor,
 
     cfp_header_rate,

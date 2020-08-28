@@ -18,7 +18,7 @@ typedef struct cfp_array4d cfp_array4d;
 #include "cfparray2d.h"
 #include "cfparray3f.h"
 #include "cfparray3d.h"
-//#include "cfparray4f.h"
-//#include "cfparray4d.h"
+#include "cfparray4f.h"
+#include "cfparray4d.h"
 
 #endif

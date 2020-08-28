@@ -86,7 +86,7 @@ typedef struct {
   void (*clear_cache)(const cfp_array4f self);
   void (*flush_cache)(const cfp_array4f self);
   size_t (*compressed_size)(const cfp_array4f self);
-  uchar* (*compressed_data)(const cfp_array4f self);
+  void* (*compressed_data)(const cfp_array4f self);
   size_t (*size)(const cfp_array4f self);
   size_t (*size_x)(const cfp_array4f self);
   size_t (*size_y)(const cfp_array4f self);
