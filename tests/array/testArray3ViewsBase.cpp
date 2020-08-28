@@ -1,16 +1,18 @@
 /* preview */
 
 /* this also tests const_view */
-TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_previewFullConstructor2D_then_lengthAndOffsetSet)
+TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_previewFullConstructor3D_then_lengthAndOffsetSet)
 {
   ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
   EXPECT_EQ(viewLenX * viewLenY * viewLenZ, v.size());
   EXPECT_EQ(viewLenX, v.size_x());
   EXPECT_EQ(viewLenY, v.size_y());
+  EXPECT_EQ(viewLenZ, v.size_z());
 
   EXPECT_EQ(offsetX, v.global_x(0));
   EXPECT_EQ(offsetY, v.global_y(0));
+  EXPECT_EQ(offsetZ, v.global_z(0));
 }
 
 /* const_view */
@@ -21,6 +23,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_sizeXYZ_then_viewXYZLe
 
   EXPECT_EQ(viewLenX, v.size_x());
   EXPECT_EQ(viewLenY, v.size_y());
+  EXPECT_EQ(viewLenZ, v.size_z());
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorParens_then_correctEntriesReturned)
@@ -68,9 +71,11 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_lengthAndOffs
   EXPECT_EQ(viewLenX * viewLenY * viewLenZ, v.size());
   EXPECT_EQ(viewLenX, v.size_x());
   EXPECT_EQ(viewLenY, v.size_y());
+  EXPECT_EQ(viewLenZ, v.size_z());
 
   EXPECT_EQ(offsetX, v.global_x(0));
   EXPECT_EQ(offsetY, v.global_y(0));
+  EXPECT_EQ(offsetZ, v.global_z(0));
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_isShallowCopyOfCompressedArray)
@@ -160,7 +165,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_flatView_when_ijk_then_returnsUnflatI
   uint i = 2, j = 1, k = 2;
   uint flatIndex = v.index(i, j, k);
 
-  uint vI, vJ, vK;
+  size_t vI, vJ, vK;
   v.ijk(vI, vJ, vK, flatIndex);
   EXPECT_EQ(i, vI);
   EXPECT_EQ(j, vJ);
@@ -395,9 +400,11 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_length
   EXPECT_EQ(viewLenX * viewLenY * viewLenZ, v.size());
   EXPECT_EQ(viewLenX, v.size_x());
   EXPECT_EQ(viewLenY, v.size_y());
+  EXPECT_EQ(viewLenZ, v.size_z());
 
   EXPECT_EQ(offsetX, v.global_x(0));
   EXPECT_EQ(offsetY, v.global_y(0));
+  EXPECT_EQ(offsetZ, v.global_z(0));
 }
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOnCount_then_setsUniqueBlockBoundsAlongLongestDimension)

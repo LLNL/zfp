@@ -4,8 +4,33 @@
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
+typedef unsigned long ulong;
 
-#if __STDC_VERSION__ >= 199901L
+#if defined(__cplusplus) && __cplusplus >= 201103L
+  /* C++11: use standard integer types */
+  #include <cstdint>
+  #include <cinttypes>
+  #define INT64C(x) INT64_C(x)
+  #define UINT64C(x) UINT64_C(x)
+  #define INT64PRId PRId64
+  #define INT64PRIi PRIi64
+  #define UINT64PRIo PRIo64
+  #define UINT64PRIu PRIu64
+  #define UINT64PRIx PRIx64
+  #define INT64SCNd SCNd64
+  #define INT64SCNi SCNi64
+  #define UINT64SCNo SCNo64
+  #define UINT64SCNu SCNu64
+  #define UINT64SCNx SCNx64
+  typedef std::int8_t int8;
+  typedef std::uint8_t uint8;
+  typedef std::int16_t int16;
+  typedef std::uint16_t uint16;
+  typedef std::int32_t int32;
+  typedef std::uint32_t uint32;
+  typedef std::int64_t int64;
+  typedef std::uint64_t uint64;
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
   /* C99: use standard integer types */
   #include <stdint.h>
   #include <inttypes.h>

@@ -6,8 +6,9 @@ endif()
 
 list(APPEND cfp_private_defs ${zfp_compressed_array_defs})
 
-if(WIN32)
+if(WIN32 AND BUILD_SHARED_LIBS)
   # define ZFP_SOURCE when compiling libcfp to export symbols to Windows DLL
+  list(APPEND cfp_public_defs ZFP_SHARED_LIBS)
   list(APPEND cfp_private_defs ZFP_SOURCE)
 endif()
 

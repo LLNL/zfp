@@ -1,23 +1,34 @@
-// 2D array views; these classes are nested within zfp::array2
+#ifndef ZFP_VIEW2_H
+#define ZFP_VIEW2_H
+
+// 2D array views
+
+namespace zfp {
+namespace internal {
+namespace dim2 {
 
 // abstract view of 2D array (base class)
+template <class Container>
 class preview {
 public:
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+
   // rate in bits per value
   double rate() const { return array->rate(); }
 
   // dimensions of (sub)array
-  size_t size() const { return size_t(nx) * size_t(ny); }
+  size_t size() const { return nx * ny; }
 
   // local to global array indices
-  uint global_x(uint i) const { return x + i; }
-  uint global_y(uint j) const { return y + j; }
+  size_t global_x(size_t i) const { return x + i; }
+  size_t global_y(size_t j) const { return y + j; }
 
 protected:
   // construction and assignment--perform shallow copy of (sub)array
-  explicit preview(array2* array) : array(array), x(0), y(0), nx(array->nx), ny(array->ny) {}
-  explicit preview(array2* array, uint x, uint y, uint nx, uint ny) : array(array), x(x), y(y), nx(nx), ny(ny) {}
-  preview& operator=(array2* a)
+  explicit preview(container_type* array) : array(array), x(0), y(0), nx(array->size_x()), ny(array->size_y()) {}
+  explicit preview(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : array(array), x(x), y(y), nx(nx), ny(ny) {}
+  preview& operator=(container_type* a)
   {
     array = a;
     x = y = 0;
@@ -26,272 +37,368 @@ protected:
     return *this;
   }
 
-  array2* array; // underlying container
-  uint x, y;     // offset into array
-  uint nx, ny;   // dimensions of subarray
+  // global index bounds for iterators
+  size_t min_x() const { return x; }
+  size_t max_x() const { return x + nx; }
+  size_t min_y() const { return y; }
+  size_t max_y() const { return y + ny; }
+
+  container_type* array; // underlying container
+  size_t x, y;           // offset into array
+  size_t nx, ny;         // dimensions of subarray
 };
 
 // generic read-only view into a rectangular subset of a 2D array
-class const_view : public preview {
-protected:
-  using preview::array;
-  using preview::x;
-  using preview::y;
-  using preview::nx;
-  using preview::ny;
+template <class Container>
+class const_view : public preview<Container> {
 public:
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+  typedef typename zfp::internal::dim2::const_reference<const_view> const_reference;
+  typedef typename zfp::internal::dim2::const_pointer<const_view> const_pointer;
+  typedef typename zfp::internal::dim2::const_iterator<const_view> const_iterator;
+
   // construction--perform shallow copy of (sub)array
-  const_view(array2* array) : preview(array) {}
-  const_view(array2* array, uint x, uint y, uint nx, uint ny) : preview(array, x, y, nx, ny) {}
+  const_view(container_type* array) : preview<Container>(array) {}
+  const_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : preview<Container>(array, x, y, nx, ny) {}
 
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
+  size_t size_x() const { return nx; }
+  size_t size_y() const { return ny; }
 
-  // (i, j) accessor
-  Scalar operator()(uint i, uint j) const { return array->get(x + i, y + j); }
+  // (i, j) inspector
+  const_reference operator()(size_t i, size_t j) const { return const_reference(this, x + i, y + j); }
+
+  // random access iterators
+  const_iterator cbegin() const { return const_iterator(this, x, y); }
+  const_iterator cend() const { return const_iterator(this, x, y + ny); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
+
+protected:
+  friend class zfp::internal::dim2::const_handle<const_view>;
+  friend class zfp::internal::dim2::const_pointer<const_view>;
+  friend class zfp::internal::dim2::const_iterator<const_view>;
+
+  using preview<Container>::min_x;
+  using preview<Container>::max_x;
+  using preview<Container>::min_y;
+  using preview<Container>::max_y;
+  using preview<Container>::array;
+  using preview<Container>::x;
+  using preview<Container>::y;
+  using preview<Container>::nx;
+  using preview<Container>::ny;
+
+  // inspector
+  value_type get(size_t x, size_t y) const { return array->get(x, y); }
 };
 
 // generic read-write view into a rectangular subset of a 2D array
-class view : public const_view {
-protected:
-  using preview::array;
-  using preview::x;
-  using preview::y;
-  using preview::nx;
-  using preview::ny;
+template <class Container>
+class view : public const_view<Container> {
 public:
-  // construction--perform shallow copy of (sub)array
-  view(array2* array) : const_view(array) {}
-  view(array2* array, uint x, uint y, uint nx, uint ny) : const_view(array, x, y, nx, ny) {}
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+  typedef typename zfp::internal::dim2::reference<view> reference;
+  typedef typename zfp::internal::dim2::pointer<view> pointer;
+  typedef typename zfp::internal::dim2::iterator<view> iterator;
 
-  // (i, j) accessor from base class
-  using const_view::operator();
+  // construction--perform shallow copy of (sub)array
+  view(container_type* array) : const_view<Container>(array) {}
+  view(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : const_view<Container>(array, x, y, nx, ny) {}
+
+  // (i, j) inspector from base class
+  using const_view<Container>::operator();
 
   // (i, j) mutator
-  reference operator()(uint i, uint j) { return reference(array, x + i, y + j); }
+  reference operator()(size_t i, size_t j) { return reference(this, x + i, y + j); }
+
+  // random access iterators
+  iterator begin() { return iterator(this, x, y); }
+  iterator end() { return iterator(this, x, y + ny); }
+
+protected:
+  friend class zfp::internal::dim2::const_handle<view>;
+  friend class zfp::internal::dim2::const_pointer<view>;
+  friend class zfp::internal::dim2::const_iterator<view>;
+  friend class zfp::internal::dim2::reference<view>;
+  friend class zfp::internal::dim2::pointer<view>;
+  friend class zfp::internal::dim2::iterator<view>;
+
+  using const_view<Container>::min_x;
+  using const_view<Container>::max_x;
+  using const_view<Container>::min_y;
+  using const_view<Container>::max_y;
+  using const_view<Container>::get;
+  using const_view<Container>::array;
+  using const_view<Container>::x;
+  using const_view<Container>::y;
+  using const_view<Container>::nx;
+  using const_view<Container>::ny;
+
+  // mutator
+  void set(size_t x, size_t y, value_type val) { array->set(x, y, val); }
+
+  // in-place updates
+  void add(size_t x, size_t y, value_type val) { array->add(x, y, val); }
+  void sub(size_t x, size_t y, value_type val) { array->sub(x, y, val); }
+  void mul(size_t x, size_t y, value_type val) { array->mul(x, y, val); }
+  void div(size_t x, size_t y, value_type val) { array->div(x, y, val); }
 };
 
 // flat view of 2D array (operator[] returns scalar)
-class flat_view : public view {
-protected:
-  using preview::array;
-  using preview::x;
-  using preview::y;
-  using preview::nx;
-  using preview::ny;
+template <class Container>
+class flat_view : public view<Container> {
 public:
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+  typedef typename zfp::internal::dim2::const_reference<flat_view> const_reference;
+  typedef typename zfp::internal::dim2::const_pointer<flat_view> const_pointer;
+  typedef typename zfp::internal::dim2::reference<flat_view> reference;
+  typedef typename zfp::internal::dim2::pointer<flat_view> pointer;
+
   // construction--perform shallow copy of (sub)array
-  flat_view(array2* array) : view(array) {}
-  flat_view(array2* array, uint x, uint y, uint nx, uint ny) : view(array, x, y, nx, ny) {}
+  flat_view(container_type* array) : view<Container>(array) {}
+  flat_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : view<Container>(array, x, y, nx, ny) {}
 
   // convert (i, j) index to flat index
-  uint index(uint i, uint j) const { return i + nx * j; }
+  size_t index(size_t i, size_t j) const { return i + nx * j; }
 
   // convert flat index to (i, j) index
-  void ij(uint& i, uint& j, uint index) const
+  void ij(size_t& i, size_t& j, size_t index) const
   {
     i = index % nx; index /= nx;
     j = index;
   }
 
-  // flat index accessors
-  Scalar operator[](uint index) const
+  // flat index inspectors
+  const_reference operator[](size_t index) const
   {
-    uint i, j;
+    size_t i, j;
     ij(i, j, index);
-    return array->get(x + i, y + j);
+    return const_reference(this, x + i, y + j);
   }
-  reference operator[](uint index)
+  reference operator[](size_t index)
   {
-    uint i, j;
+    size_t i, j;
     ij(i, j, index);
-    return reference(array, x + i, y + j);
+    return reference(this, x + i, y + j);
   }
+
+protected:
+  friend class zfp::internal::dim2::const_handle<flat_view>;
+  friend class zfp::internal::dim2::const_pointer<flat_view>;
+  friend class zfp::internal::dim2::reference<flat_view>;
+  friend class zfp::internal::dim2::pointer<flat_view>;
+
+  using view<Container>::array;
+  using view<Container>::x;
+  using view<Container>::y;
+  using view<Container>::nx;
+  using view<Container>::ny;
+
+  // inspector
+  value_type get(size_t x, size_t y) const { return array->get(x, y); }
+
+  // mutator
+  void set(size_t x, size_t y, value_type val) { array->set(x, y, val); }
+
+  // in-place updates
+  void add(size_t x, size_t y, value_type val) { array->add(x, y, val); }
+  void sub(size_t x, size_t y, value_type val) { array->sub(x, y, val); }
+  void mul(size_t x, size_t y, value_type val) { array->mul(x, y, val); }
+  void div(size_t x, size_t y, value_type val) { array->div(x, y, val); }
 };
 
 // forward declaration of friends
-class nested_view1;
-class nested_view2;
+template <class Container> class nested_view1;
+template <class Container> class nested_view2;
 
 // nested view into a 1D rectangular subset of a 2D array
-class nested_view1 : public preview {
-protected:
-  using preview::array;
-  using preview::x;
-  using preview::y;
-  using preview::nx;
-  using preview::ny;
+template <class Container>
+class nested_view1 : public preview<Container> {
 public:
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+  typedef typename zfp::internal::dim2::const_reference<nested_view1> const_reference;
+  typedef typename zfp::internal::dim2::const_pointer<nested_view1> const_pointer;
+  typedef typename zfp::internal::dim2::reference<nested_view1> reference;
+  typedef typename zfp::internal::dim2::pointer<nested_view1> pointer;
+
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
+  size_t size_x() const { return nx; }
 
-  // [i] accessor and mutator
-  Scalar operator[](uint index) const { return array->get(x + index, y); }
-  reference operator[](uint index) { return reference(array, x + index, y); }
+  // [i] inspector and mutator
+  const_reference operator[](size_t index) const { return const_reference(this, x + index, y); }
+  reference operator[](size_t index) { return reference(this, x + index, y); }
 
-  // (i) accessor and mutator
-  Scalar operator()(uint i) const { return array->get(x + i, y); }
-  reference operator()(uint i) { return reference(array, x + i, y); }
+  // (i) inspector and mutator
+  const_reference operator()(size_t i) const { return const_reference(this, x + i, y); }
+  reference operator()(size_t i) { return reference(this, x + i, y); }
 
 protected:
+  friend class zfp::internal::dim2::const_handle<nested_view1>;
+  friend class zfp::internal::dim2::const_pointer<nested_view1>;
+  friend class zfp::internal::dim2::reference<nested_view1>;
+  friend class zfp::internal::dim2::pointer<nested_view1>;
+
+  using preview<Container>::array;
+  using preview<Container>::x;
+  using preview<Container>::y;
+  using preview<Container>::nx;
+  using preview<Container>::ny;
+
   // construction--perform shallow copy of (sub)array
-  friend class nested_view2;
-  explicit nested_view1(array2* array) : preview(array) {}
-  explicit nested_view1(array2* array, uint x, uint y, uint nx, uint ny) : preview(array, x, y, nx, ny) {}
+  friend class nested_view2<Container>;
+  explicit nested_view1(container_type* array) : preview<Container>(array) {}
+  explicit nested_view1(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : preview<Container>(array, x, y, nx, ny) {}
+
+  // inspector
+  value_type get(size_t x, size_t y) const { return array->get(x, y); }
+
+  // mutator
+  void set(size_t x, size_t y, value_type val) { array->set(x, y, val); }
+
+  // in-place updates
+  void add(size_t x, size_t y, value_type val) { array->add(x, y, val); }
+  void sub(size_t x, size_t y, value_type val) { array->sub(x, y, val); }
+  void mul(size_t x, size_t y, value_type val) { array->mul(x, y, val); }
+  void div(size_t x, size_t y, value_type val) { array->div(x, y, val); }
 };
 
 // nested view into a 2D rectangular subset of a 2D array
-class nested_view2 : public preview {
-protected:
-  using preview::array;
-  using preview::x;
-  using preview::y;
-  using preview::nx;
-  using preview::ny;
+template <class Container>
+class nested_view2 : public preview<Container> {
 public:
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+  typedef typename zfp::internal::dim2::const_reference<nested_view2> const_reference;
+  typedef typename zfp::internal::dim2::const_pointer<nested_view2> const_pointer;
+  typedef typename zfp::internal::dim2::reference<nested_view2> reference;
+  typedef typename zfp::internal::dim2::pointer<nested_view2> pointer;
+
   // construction--perform shallow copy of (sub)array
-  nested_view2(array2* array) : preview(array) {}
-  nested_view2(array2* array, uint x, uint y, uint nx, uint ny) : preview(array, x, y, nx, ny) {}
+  nested_view2(container_type* array) : preview<Container>(array) {}
+  nested_view2(container_type* array, size_t x, size_t y, size_t nx, size_t ny) : preview<Container>(array, x, y, nx, ny) {}
 
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
+  size_t size_x() const { return nx; }
+  size_t size_y() const { return ny; }
 
   // 1D view
-  nested_view1 operator[](uint index) const { return nested_view1(array, x, y + index, nx, 1); }
+  nested_view1<Container> operator[](size_t index) const { return nested_view1<Container>(array, x, y + index, nx, 1); }
 
-  // (i, j) accessor and mutator
-  Scalar operator()(uint i, uint j) const { return array->get(x + i, y + j); }
-  reference operator()(uint i, uint j) { return reference(array, x + i, y + j); }
+  // (i, j) inspector and mutator
+  const_reference operator()(size_t i, size_t j) const { return const_reference(this, x + i, y + j); }
+  reference operator()(size_t i, size_t j) { return reference(this, x + i, y + j); }
+
+protected:
+  friend class zfp::internal::dim2::const_handle<nested_view2>;
+  friend class zfp::internal::dim2::const_pointer<nested_view2>;
+  friend class zfp::internal::dim2::reference<nested_view2>;
+  friend class zfp::internal::dim2::pointer<nested_view2>;
+
+  using preview<Container>::array;
+  using preview<Container>::x;
+  using preview<Container>::y;
+  using preview<Container>::nx;
+  using preview<Container>::ny;
+
+  // inspector
+  value_type get(size_t x, size_t y) const { return array->get(x, y); }
+
+  // mutator
+  void set(size_t x, size_t y, value_type val) { array->set(x, y, val); }
+
+  // in-place updates
+  void add(size_t x, size_t y, value_type val) { array->add(x, y, val); }
+  void sub(size_t x, size_t y, value_type val) { array->sub(x, y, val); }
+  void mul(size_t x, size_t y, value_type val) { array->mul(x, y, val); }
+  void div(size_t x, size_t y, value_type val) { array->div(x, y, val); }
 };
 
-typedef nested_view2 nested_view;
-
 // thread-safe read-only view of 2D (sub)array with private cache
-class private_const_view : public preview {
-protected:
-  using preview::array;
-  using preview::x;
-  using preview::y;
-  using preview::nx;
-  using preview::ny;
+template <class Container>
+class private_const_view : public preview<Container> {
 public:
-  // construction--perform shallow copy of (sub)array
-  private_const_view(array2* array) :
-    preview(array),
-    cache(array->cache.size())
-  {
-    init();
-  }
-  private_const_view(array2* array, uint x, uint y, uint nx, uint ny) :
-    preview(array, x, y, nx, ny),
-    cache(array->cache.size())
-  {
-    init();
-  }
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+  typedef typename container_type::codec_type codec_type;
+  typedef typename zfp::internal::dim2::const_reference<private_const_view> const_reference;
+  typedef typename zfp::internal::dim2::const_pointer<private_const_view> const_pointer;
+  typedef typename zfp::internal::dim2::const_iterator<private_const_view> const_iterator;
 
-  // destructor
-  ~private_const_view()
-  {
-    stream_close(zfp->stream);
-    zfp_stream_close(zfp);
-  }
+  // construction--perform shallow copy of (sub)array
+  private_const_view(container_type* array, size_t cache_size = 0) :
+    preview<Container>(array),
+    cache(array->store, cache_size ? cache_size : array->cache.size())
+  {}
+  private_const_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) :
+    preview<Container>(array, x, y, nx, ny),
+    cache(array->store, cache_size ? cache_size : array->cache.size())
+  {}
 
   // dimensions of (sub)array
-  uint size_x() const { return nx; }
-  uint size_y() const { return ny; }
+  size_t size_x() const { return nx; }
+  size_t size_y() const { return ny; }
 
   // cache size in number of bytes
-  size_t cache_size() const { return cache.size() * sizeof(CacheLine); }
+  size_t cache_size() const { return cache.size(); }
 
   // set minimum cache size in bytes (array dimensions must be known)
-  void set_cache_size(size_t csize)
-  {
-    cache.resize(array->lines(csize, nx, ny));
-  }
+  void set_cache_size(size_t bytes) { cache.resize(bytes); }
 
   // empty cache without compressing modified cached blocks
   void clear_cache() const { cache.clear(); }
 
-  // (i, j) accessor
-  Scalar operator()(uint i, uint j) const { return get(x + i, y + j); }
+  // (i, j) inspector
+  const_reference operator()(size_t i, size_t j) const { return const_reference(this, x + i, y + j); }
+
+  // random access iterators
+  const_iterator cbegin() const { return const_iterator(this, x, y); }
+  const_iterator cend() const { return const_iterator(this, x, y + ny); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
 
 protected:
-  // cache line representing one block of decompressed values
-  class CacheLine {
-  public:
-    const Scalar& operator()(uint i, uint j) const { return a[index(i, j)]; }
-    Scalar& operator()(uint i, uint j) { return a[index(i, j)]; }
-    const Scalar* data() const { return a; }
-    Scalar* data() { return a; }
-  protected:
-    static uint index(uint i, uint j) { return (i & 3u) + 4 * (j & 3u); }
-    Scalar a[16];
-  };
+  friend class zfp::internal::dim2::const_handle<private_const_view>;
+  friend class zfp::internal::dim2::const_pointer<private_const_view>;
+  friend class zfp::internal::dim2::const_iterator<private_const_view>;
 
-  // copy private data
-  void init()
-  {
-    // copy compressed stream
-    zfp = zfp_stream_open(0);
-    *zfp = *array->zfp;
-    // copy bit stream
-    zfp->stream = stream_clone(array->zfp->stream);
-  }
+  using preview<Container>::min_x;
+  using preview<Container>::max_x;
+  using preview<Container>::min_y;
+  using preview<Container>::max_y;
+  using preview<Container>::array;
+  using preview<Container>::x;
+  using preview<Container>::y;
+  using preview<Container>::nx;
+  using preview<Container>::ny;
 
   // inspector
-  const Scalar& get(uint i, uint j) const
-  {
-    const CacheLine* p = line(i, j);
-    return (*p)(i, j);
-  }
+  value_type get(size_t x, size_t y) const { return cache.get(x, y); }
 
-  // return cache line for (i, j); may require write-back and fetch
-  CacheLine* line(uint i, uint j) const
-  {
-    CacheLine* p = 0;
-    uint b = array->block(i, j);
-    typename Cache<CacheLine>::Tag t = cache.access(p, b + 1, false);
-    uint c = t.index() - 1;
-    // fetch cache line; no writeback possible since view is read-only
-    if (c != b)
-      decode(b, p->data());
-    return p;
-  }
-
-  // decode block with given index
-  void decode(uint index, Scalar* block) const
-  {
-    stream_rseek(zfp->stream, index * array->blkbits);
-    Codec::decode_block_2(zfp, block, array->shape ? array->shape[index] : 0);
-  }
-
-  zfp_stream* zfp;                // stream of compressed blocks
-  mutable Cache<CacheLine> cache; // cache of decompressed blocks
+  BlockCache2<value_type, codec_type> cache; // cache of decompressed blocks
 };
 
 // thread-safe read-write view of private 2D (sub)array
-class private_view : public private_const_view {
-protected:
-  using preview::array;
-  using preview::x;
-  using preview::y;
-  using preview::nx;
-  using preview::ny;
-  using private_const_view::zfp;
-  using private_const_view::cache;
-  using private_const_view::init;
-  using private_const_view::decode;
-  class view_reference;
-  typedef typename private_const_view::CacheLine CacheLine;
+template <class Container>
+class private_view : public private_const_view<Container> {
 public:
+  typedef Container container_type;
+  typedef typename container_type::value_type value_type;
+  typedef typename container_type::codec_type codec_type;
+  typedef typename zfp::internal::dim2::reference<private_view> reference;
+  typedef typename zfp::internal::dim2::pointer<private_view> pointer;
+  typedef typename zfp::internal::dim2::iterator<private_view> iterator;
+
   // construction--perform shallow copy of (sub)array
-  private_view(array2* array) : private_const_view(array) {}
-  private_view(array2* array, uint x, uint y, uint nx, uint ny) : private_const_view(array, x, y, nx, ny) {}
+  private_view(container_type* array, size_t cache_size = 0) : private_const_view<Container>(array, cache_size) {}
+  private_view(container_type* array, size_t x, size_t y, size_t nx, size_t ny, size_t cache_size = 0) : private_const_view<Container>(array, x, y, nx, ny, cache_size) {}
 
   // partition view into count block-aligned pieces, with 0 <= index < count
-  void partition(uint index, uint count)
+  void partition(size_t index, size_t count)
   {
     if (nx > ny)
       partition(x, nx, index, count);
@@ -300,94 +407,61 @@ public:
   }
 
   // flush cache by compressing all modified cached blocks
-  void flush_cache() const
-  {
-    for (typename Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
-      if (p->tag.dirty()) {
-        uint b = p->tag.index() - 1;
-        encode(b, p->line->data());
-      }
-      cache.flush(p->line);
-    }
-  }
+  void flush_cache() const { cache.flush(); }
 
-  // (i, j) accessor from base class
-  using private_const_view::operator();
+  // (i, j) inspector from base class
+  using private_const_view<Container>::operator();
 
   // (i, j) mutator
-  view_reference operator()(uint i, uint j) { return view_reference(this, x + i, y + j); }
+  reference operator()(size_t i, size_t j) { return reference(this, x + i, y + j); }
+
+  // random access iterators
+  iterator begin() { return iterator(this, x, y); }
+  iterator end() { return iterator(this, x, y + ny); }
 
 protected:
-  class view_reference {
-  public:
-    operator Scalar() const { return view->get(i, j); }
-    view_reference operator=(const view_reference& r) { view->set(i, j, r.operator Scalar()); return *this; }
-    view_reference operator=(Scalar val) { view->set(i, j, val); return *this; }
-    view_reference operator+=(Scalar val) { view->add(i, j, val); return *this; }
-    view_reference operator-=(Scalar val) { view->sub(i, j, val); return *this; }
-    view_reference operator*=(Scalar val) { view->mul(i, j, val); return *this; }
-    view_reference operator/=(Scalar val) { view->div(i, j, val); return *this; }
-    // swap two array elements via proxy references
-    friend void swap(view_reference a, view_reference b)
-    {
-      Scalar x = a.operator Scalar();
-      Scalar y = b.operator Scalar();
-      b.operator=(x);
-      a.operator=(y);
-    }
+  friend class zfp::internal::dim2::const_handle<private_view>;
+  friend class zfp::internal::dim2::const_pointer<private_view>;
+  friend class zfp::internal::dim2::const_iterator<private_view>;
+  friend class zfp::internal::dim2::reference<private_view>;
+  friend class zfp::internal::dim2::pointer<private_view>;
+  friend class zfp::internal::dim2::iterator<private_view>;
 
-  protected:
-    friend class private_view;
-    explicit view_reference(private_view* view, uint i, uint j) : view(view), i(i), j(j) {}
-    private_view* view;
-    uint i, j;
-  };
+  using private_const_view<Container>::min_x;
+  using private_const_view<Container>::max_x;
+  using private_const_view<Container>::min_y;
+  using private_const_view<Container>::max_y;
+  using private_const_view<Container>::get;
+  using private_const_view<Container>::array;
+  using private_const_view<Container>::x;
+  using private_const_view<Container>::y;
+  using private_const_view<Container>::nx;
+  using private_const_view<Container>::ny;
+  using private_const_view<Container>::cache;
 
   // block-aligned partition of [offset, offset + size): index out of count
-  static void partition(uint& offset, uint& size, uint index, uint count)
+  static void partition(size_t& offset, size_t& size, size_t index, size_t count)
   {
-    uint bmin = offset / 4;
-    uint bmax = (offset + size + 3) / 4;
-    uint xmin = std::max(offset +    0, 4 * (bmin + (bmax - bmin) * (index + 0) / count));
-    uint xmax = std::min(offset + size, 4 * (bmin + (bmax - bmin) * (index + 1) / count));
+    size_t bmin = offset / 4;
+    size_t bmax = (offset + size + 3) / 4;
+    size_t xmin = std::max(offset +    0, 4 * (bmin + (bmax - bmin) * (index + 0) / count));
+    size_t xmax = std::min(offset + size, 4 * (bmin + (bmax - bmin) * (index + 1) / count));
     offset = xmin;
     size = xmax - xmin;
   }
 
   // mutator
-  void set(uint i, uint j, Scalar val)
-  {
-    CacheLine* p = line(i, j, true);
-    (*p)(i, j) = val;
-  }
+  void set(size_t x, size_t y, value_type val) { cache.set(x, y, val); }
 
   // in-place updates
-  void add(uint i, uint j, Scalar val) { (*line(i, j, true))(i, j) += val; }
-  void sub(uint i, uint j, Scalar val) { (*line(i, j, true))(i, j) -= val; }
-  void mul(uint i, uint j, Scalar val) { (*line(i, j, true))(i, j) *= val; }
-  void div(uint i, uint j, Scalar val) { (*line(i, j, true))(i, j) /= val; }
-
-  // return cache line for (i, j); may require write-back and fetch
-  CacheLine* line(uint i, uint j, bool write) const
-  {
-    CacheLine* p = 0;
-    uint b = array->block(i, j);
-    typename Cache<CacheLine>::Tag t = cache.access(p, b + 1, write);
-    uint c = t.index() - 1;
-    if (c != b) {
-      // write back occupied cache line if it is dirty
-      if (t.dirty())
-        encode(c, p->data());
-      decode(b, p->data());
-    }
-    return p;
-  }
-
-  // encode block with given index
-  void encode(uint index, const Scalar* block) const
-  {
-    stream_wseek(zfp->stream, index * array->blkbits);
-    Codec::encode_block_2(zfp, block, array->shape ? array->shape[index] : 0);
-    stream_flush(zfp->stream);
-  }
+  void add(size_t x, size_t y, value_type val) { cache.ref(x, y) += val; }
+  void sub(size_t x, size_t y, value_type val) { cache.ref(x, y) -= val; }
+  void mul(size_t x, size_t y, value_type val) { cache.ref(x, y) *= val; }
+  void div(size_t x, size_t y, value_type val) { cache.ref(x, y) /= val; }
 };
+
+} // dim2
+} // internal
+} // zfp
+
+#endif

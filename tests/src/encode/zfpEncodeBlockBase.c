@@ -126,7 +126,7 @@ setupZfpStream(struct setupVars* bundle, int specialValueIndex)
   if (specialValueIndex >= 0) {
     zfp_stream_set_reversible(stream);
   } else {
-    zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
+    zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, zfp_false);
   }
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
@@ -254,7 +254,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeSpecialBlocks_expect_BitstreamCh
     }
 
     // reset/zero bitstream, rewind for next iteration
-    memset(bundle->buffer, bundle->bufsizeBytes, 0);
+    memset(bundle->buffer, 0, bundle->bufsizeBytes);
     zfp_stream_rewind(stream);
   }
 

@@ -8,9 +8,9 @@
 
 /* public data ------------------------------------------------------------- */
 
-export_ const uint zfp_codec_version = ZFP_CODEC;
-export_ const uint zfp_library_version = ZFP_VERSION;
-export_ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (May 5, 2019)";
+const uint zfp_codec_version = ZFP_CODEC;
+const uint zfp_library_version = ZFP_VERSION;
+const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (May 5, 2019)";
 
 /* private functions ------------------------------------------------------- */
 
@@ -31,7 +31,7 @@ type_precision(zfp_type type)
   }
 }
 
-static int
+static zfp_bool
 is_reversible(const zfp_stream* zfp)
 {
   return zfp->minexp < ZFP_MIN_EXP;
@@ -215,7 +215,7 @@ zfp_field_size(const zfp_field* field, uint* size)
   return (size_t)MAX(field->nx, 1u) * (size_t)MAX(field->ny, 1u) * (size_t)MAX(field->nz, 1u) * (size_t)MAX(field->nw, 1u);
 }
 
-int
+zfp_bool
 zfp_field_stride(const zfp_field* field, int* stride)
 {
   if (stride)
@@ -375,13 +375,13 @@ zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw)
   field->sw = sw;
 }
 
-int
+zfp_bool
 zfp_field_set_metadata(zfp_field* field, uint64 meta)
 {
   uint64 dims;
   /* ensure value is in range */
   if (meta >> ZFP_META_BITS)
-    return 0;
+    return zfp_false;
   field->type = (zfp_type)((meta & 0x3u) + 1); meta >>= 2;
   dims = (meta & 0x3u) + 1; meta >>= 2;
   switch (dims) {
@@ -412,7 +412,7 @@ zfp_field_set_metadata(zfp_field* field, uint64 meta)
       break;
   }
   field->sx = field->sy = field->sz = field->sw = 0;
-  return 1;
+  return zfp_true;
 }
 
 /* public functions: zfp compressed stream --------------------------------- */
@@ -568,6 +568,7 @@ zfp_stream_compressed_size(const zfp_stream* zfp)
 size_t
 zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
 {
+  int reversible = is_reversible(zfp);
   uint dims = zfp_field_dimensionality(field);
   uint mx = (MAX(field->nx, 1u) + 3) / 4;
   uint my = (MAX(field->ny, 1u) + 3) / 4;
@@ -575,25 +576,25 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
   uint mw = (MAX(field->nw, 1u) + 3) / 4;
   size_t blocks = (size_t)mx * (size_t)my * (size_t)mz * (size_t)mw;
   uint values = 1u << (2 * dims);
-  uint maxbits = 1;
+  uint maxbits = 0;
 
   if (!dims)
     return 0;
   switch (field->type) {
-    case zfp_type_none:
-      return 0;
+    case zfp_type_int32:
+      maxbits += reversible ? 5 : 0;
+      break;
+    case zfp_type_int64:
+      maxbits += reversible ? 6 : 0;
+      break;
     case zfp_type_float:
-      maxbits += 8;
-      if (is_reversible(zfp))
-        maxbits += 5;
+      maxbits += reversible ? 1 + 1 + 8 + 5 : 1 + 8;
       break;
     case zfp_type_double:
-      maxbits += 11;
-      if (is_reversible(zfp))
-        maxbits += 6;
+      maxbits += reversible ? 1 + 1 + 11 + 6 : 1 + 11;
       break;
     default:
-      break;
+      return 0;
   }
   maxbits += values - 1 + values * MIN(zfp->maxprec, type_precision(field->type));
   maxbits = MIN(maxbits, zfp->maxbits);
@@ -617,7 +618,7 @@ zfp_stream_set_reversible(zfp_stream* zfp)
 }
 
 double
-zfp_stream_set_rate(zfp_stream* zfp, double rate, zfp_type type, uint dims, int wra)
+zfp_stream_set_rate(zfp_stream* zfp, double rate, zfp_type type, uint dims, zfp_bool align)
 {
   uint n = 1u << (2 * dims);
   uint bits = (uint)floor(n * rate + 0.5);
@@ -631,7 +632,7 @@ zfp_stream_set_rate(zfp_stream* zfp, double rate, zfp_type type, uint dims, int 
     default:
       break;
   }
-  if (wra) {
+  if (align) {
     /* for write random access, round up to next multiple of stream word size */
     bits += (uint)stream_word_bits - 1;
     bits &= ~(stream_word_bits - 1);
@@ -720,16 +721,16 @@ zfp_stream_set_mode(zfp_stream* zfp, uint64 mode)
   return zfp_stream_compression_mode(zfp);
 }
 
-int
+zfp_bool
 zfp_stream_set_params(zfp_stream* zfp, uint minbits, uint maxbits, uint maxprec, int minexp)
 {
   if (minbits > maxbits || !(0 < maxprec && maxprec <= 64))
-    return 0;
+    return zfp_false;
   zfp->minbits = minbits;
   zfp->maxbits = maxbits;
   zfp->maxprec = maxprec;
   zfp->minexp = minexp;
-  return 1;
+  return zfp_true;
 }
 
 size_t
@@ -770,7 +771,7 @@ zfp_stream_omp_chunk_size(const zfp_stream* zfp)
   return zfp->exec.params.omp.chunk_size;
 }
 
-int
+zfp_bool
 zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
 {
   switch (policy) {
@@ -788,31 +789,31 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
       }
       break;
 #else
-      return 0;
+      return zfp_false;
 #endif
     default:
-      return 0;
+      return zfp_false;
   }
   zfp->exec.policy = policy;
-  return 1;
+  return zfp_true;
 }
 
-int
+zfp_bool
 zfp_stream_set_omp_threads(zfp_stream* zfp, uint threads)
 {
   if (!zfp_stream_set_execution(zfp, zfp_exec_omp))
-    return 0;
+    return zfp_false;
   zfp->exec.params.omp.threads = threads;
-  return 1;
+  return zfp_true;
 }
 
-int
+zfp_bool
 zfp_stream_set_omp_chunk_size(zfp_stream* zfp, uint chunk_size)
 {
   if (!zfp_stream_set_execution(zfp, zfp_exec_omp))
-    return 0;
+    return zfp_false;
   zfp->exec.params.omp.chunk_size = chunk_size;
-  return 1;
+  return zfp_true;
 }
 
 /* public functions: utility functions --------------------------------------*/

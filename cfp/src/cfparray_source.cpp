@@ -49,7 +49,7 @@ _t1(CFP_ARRAY_TYPE, compressed_size)(CFP_ARRAY_TYPE self)
   return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->compressed_size();
 }
 
-static uchar*
+static void*
 _t1(CFP_ARRAY_TYPE, compressed_data)(CFP_ARRAY_TYPE self)
 {
   return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->compressed_data();

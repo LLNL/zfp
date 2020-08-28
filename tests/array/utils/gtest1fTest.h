@@ -13,6 +13,9 @@ public:
   uint IterAbsOffset(array1f::iterator iter) {
     return iter.i();
   }
+  uint IterAbsOffset(array1f::const_iterator citer) {
+    return citer.i();
+  }
 
 protected:
   virtual void SetUp() {
@@ -29,12 +32,16 @@ protected:
 
   static array1f arr, arr2;
   static array1f::pointer ptr, ptr2;
+  static array1f::const_pointer cptr, cptr2;
   static array1f::iterator iter, iter2;
+  static array1f::const_iterator citer, citer2;
   static uint offset, viewLen;
 };
 
 array1f Array1fTest::arr(ARRAY_SIZE, ZFP_RATE_PARAM_BITS);
 array1f Array1fTest::arr2(ARRAY_SIZE, ZFP_RATE_PARAM_BITS);
 array1f::pointer Array1fTest::ptr, Array1fTest::ptr2;
+array1f::const_pointer Array1fTest::cptr, Array1fTest::cptr2;
 array1f::iterator Array1fTest::iter, Array1fTest::iter2;
+array1f::const_iterator Array1fTest::citer, Array1fTest::citer2;
 uint Array1fTest::offset, Array1fTest::viewLen;

@@ -623,9 +623,17 @@ when_BitstreamOpened_expect_ProperLengthAndBoundaries(void **state)
   free(buffer);
 }
 
+static void
+when_Alignment_expect_MatchingStreamWordBits(void **state)
+{
+  size_t alignment = stream_alignment();
+  assert_int_equal(alignment, stream_word_bits);
+}
+
 int main()
 {
   const struct CMUnitTest tests[] = {
+    cmocka_unit_test(when_Alignment_expect_MatchingStreamWordBits),
     cmocka_unit_test(when_BitstreamOpened_expect_ProperLengthAndBoundaries),
     cmocka_unit_test_setup_teardown(given_RewoundBitstream_when_WriteWord_expect_WordWrittenAtStreamBegin, setup, teardown),
     cmocka_unit_test_setup_teardown(when_WriteTwoWords_expect_WordsWrittenToStreamConsecutively, setup, teardown),
@@ -658,6 +666,7 @@ int main()
     cmocka_unit_test_setup_teardown(when_Align_expect_BufferEmptyBitsZero, setup, teardown),
     cmocka_unit_test_setup_teardown(given_EmptyBuffer_when_Flush_expect_NOP, setup, teardown),
     cmocka_unit_test_setup_teardown(when_Flush_expect_PaddedWordWrittenToStream, setup, teardown),
+    cmocka_unit_test_setup_teardown(when_StreamCopy_expect_BitsCopiedToDestBitstream, setup, teardown),
     cmocka_unit_test_setup_teardown(when_StreamCopy_expect_BitsCopiedToDestBitstream, setup, teardown),
   };
 

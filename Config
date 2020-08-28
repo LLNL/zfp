@@ -96,6 +96,10 @@ ifdef ZFP_WITH_OPENMP
   endif
 endif
 
+ifdef PPM_CHROMA
+  PPM_FLAGS += -DPPM_CHROMA=$(PPM_CHROMA)
+endif
+
 # compiler options ------------------------------------------------------------
 
 CFLAGS = $(CSTD) $(FLAGS) $(DEFS)
