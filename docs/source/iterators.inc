@@ -10,13 +10,15 @@ Iterators
 .. cpp:class:: array1::const_iterator
 .. cpp:class:: array2::const_iterator
 .. cpp:class:: array3::const_iterator
+.. cpp:class:: array4::const_iterator
 .. cpp:class:: array1::iterator : public array1::const_iterator
 .. cpp:class:: array2::iterator : public array2::const_iterator
 .. cpp:class:: array3::iterator : public array3::const_iterator
+.. cpp:class:: array4::iterator : public array4::const_iterator
 
 Iterators provide a mechanism for traversing a possibly
-multi-dimensional array--or a :ref:`view <views>` of a subset of an
-array--without having to track array indices or bounds.
+multi-dimensional array---or a :ref:`view <views>` of a subset of an
+array---without having to track array indices or bounds.
 They are also the preferred mechanism, compared to nested index loops, for
 initializing arrays, because they sequentially visit the array one block
 at a time.  This allows all elements of a block to be initialized together
@@ -27,13 +29,13 @@ initialized as a whole.  Note that the iterator traversal order differs in
 this respect from traversal by :ref:`pointers <pointers>`.
 
 Blocks are visited in raster order similarly to how indidivual array
-elements are indexed, that is, first by *x*, then by *y*, and finally
-by *z*.  Within each block, elements are visited in the same raster order.
-All |4powd| values in a block are visited before moving on to the next block
-(see :numref:`view-indexing`).
+elements are indexed, that is, first by *x*, then by *y*, then by *z*,
+etc.  Within each block, elements are visited in the same raster
+order.  All |4powd| values in a block are visited before moving on to the
+next block (see :numref:`view-indexing`).
 
 As of |zfp| |raiterrelease|, all iterators provided by |zfp| are random
-access iterators (previously, 2D and 3D array iterators were only
+access iterators (previously, multi-dimensional array iterators were only
 forward iterators).  |zfp| iterators are
 `STL <http://www.cplusplus.com/reference/stl/>`_ compliant and can
 be used in STL algorithms that support random access iterators.
@@ -221,12 +223,15 @@ The following operations are defined on iterators:
 .. cpp:function:: size_t iterator::i() const
 .. cpp:function:: size_t iterator::j() const
 .. cpp:function:: size_t iterator::k() const
+.. cpp:function:: size_t iterator::l() const
 .. cpp:function:: size_t const_iterator::i() const
 .. cpp:function:: size_t const_iterator::j() const
 .. cpp:function:: size_t const_iterator::k() const
+.. cpp:function:: size_t const_iterator::l() const
 
   Return array index or local view index of element pointed to by the
   iterator.
   :cpp:func:`iterator::i` is defined for all arrays.
-  :cpp:func:`iterator::j` is defined only for 2D and 3D arrays.
-  :cpp:func:`iterator::k` is defined only for 3D arrays.
+  :cpp:func:`iterator::j` is defined only for 2D, 3D, and 4D arrays.
+  :cpp:func:`iterator::k` is defined only for 3D and 4D arrays.
+  :cpp:func:`iterator::l` is defined only for 4D arrays.

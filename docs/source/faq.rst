@@ -658,7 +658,7 @@ To bound the relative error, set the expert mode parameters to::
   minexp = ZFP_MIN_EXP - 1 = -1075
 
 For example, using the |zfpcmd| command-line tool, set the parameters using
-:option:`-c 0 0 q -1075`.
+:option:`-c` :code:`0 0 q -1075`.
 
 Note that while the above approach respects the error bound when the
 above conditions are met, it uses |zfp| for a purpose it was not designed

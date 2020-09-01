@@ -10,9 +10,11 @@ Pointers
 .. cpp:class:: array1::const_pointer
 .. cpp:class:: array2::const_pointer
 .. cpp:class:: array3::const_pointer
+.. cpp:class:: array4::const_pointer
 .. cpp:class:: array1::pointer : public array1::const_pointer
 .. cpp:class:: array2::pointer : public array2::const_pointer
 .. cpp:class:: array3::pointer : public array3::const_pointer
+.. cpp:class:: array4::pointer : public array4::const_pointer
 
 Similar to :ref:`references <references>`, |zfp| supports proxy pointers
 (also known as fancy pointers) to individual array elements.  From the
@@ -64,10 +66,14 @@ to the pointer being acted upon.
 
 .. cpp:namespace:: zfp::arrayANY
 
+----
+
 .. cpp:function:: pointer pointer::operator=(const pointer& q)
 .. cpp:function:: const_pointer const_pointer::operator=(const const_pointer& q)
 
   Assignment operator.  Assigns *q* to *p*.
+
+----
 
 .. cpp:function:: reference pointer::operator*() const
 .. cpp:function:: const_reference const_pointer::operator*() const
@@ -75,55 +81,29 @@ to the pointer being acted upon.
   Dereference operator.  Return proxy (const) reference to the value pointed
   to by *p*.
 
+----
+
 .. cpp:function:: reference pointer::operator[](ptrdiff_t d) const
 .. cpp:function:: const_reference const_pointer::operator[](ptrdiff_t d) const
 
   Offset dereference operator.  Return proxy (const) reference to the value
   stored at :code:`p[d]`.
 
-.. cpp:function:: pointer& pointer::operator++()
-.. cpp:function:: const_pointer& const_pointer::operator++()
-
-  Prefix increment pointer, i.e., :code:`++p`.  Return reference to
-  the incremented pointer.
-
-.. cpp:function:: pointer& pointer::operator--()
-.. cpp:function:: const_pointer& const_pointer::operator--()
-
-  Prefix decrement pointer, i.e., :code:`--p`.  Return reference to
-  the decremented pointer.
-
-.. cpp:function:: pointer pointer::operator++(int)
-.. cpp:function:: const_pointer const_pointer::operator++(int)
-
-  Postfix increment pointer, i.e., :code:`p++`.  Return a copy of
-  the pointer before it was incremented.
-
-.. cpp:function:: pointer pointer::operator--(int)
-.. cpp:function:: const_pointer const_pointer::operator--(int)
-
-  Postfix decrement pointer, i.e., :code:`p--`.  Return a copy of
-  the pointer before it was decremented.
-
-.. cpp:function:: pointer pointer::operator+=(ptrdiff_t d)
-.. cpp:function:: const_pointer const_pointer::operator+=(ptrdiff_t d)
-
-  Increment pointer by *d*.  Return a copy of the incremented pointer.
-
-.. cpp:function:: pointer pointer::operator-=(ptrdiff_t d)
-.. cpp:function:: const_pointer const_pointer::operator-=(ptrdiff_t d)
-
-  Decrement pointer by *d*.  Return a copy of the decremented pointer.
+----
 
 .. cpp:function:: pointer pointer::operator+(ptrdiff_t d) const
 .. cpp:function:: const_pointer const_pointer::operator+(ptrdiff_t d) const
 
   Return a copy of the pointer incremented by *d*.
 
+----
+
 .. cpp:function:: pointer pointer::operator-(ptrdiff_t d) const
 .. cpp:function:: const_pointer const_pointer::operator-(ptrdiff_t d) const
 
   Return a copy of the pointer decremented by *d*.
+
+----
 
 .. cpp:function:: ptrdiff_t pointer::operator-(const pointer& q) const
 .. cpp:function:: ptrdiff_t const_pointer::operator-(const const_pointer& q) const
@@ -131,16 +111,22 @@ to the pointer being acted upon.
   Return difference *p - q*.  Defined only for pointers within the same
   array.
 
+----
+
 .. cpp:function:: bool pointer::operator==(const pointer& q) const
 .. cpp:function:: bool const_pointer::operator==(const const_pointer& q) const
 
   Return true if *p* and *q* point to the same array element.
+
+----
 
 .. cpp:function:: bool pointer::operator!=(const pointer& q) const
 .. cpp:function:: bool const_pointer::operator!=(const const_pointer& q) const
 
   Return true if *p* and *q* do not point to the same array element.
   This operator returns false if *p* and *q* do not point into the same array.
+
+----
 
 .. cpp:function:: bool pointer::operator<=(const pointer& q) const
 .. cpp:function:: bool pointer::operator>=(const pointer& q) const
@@ -153,3 +139,49 @@ to the pointer being acted upon.
 
   Return true if the two pointers satisfy the given relationship.  These operators
   return false if *p* and *q* do not point into the same array.
+
+----
+
+.. cpp:function:: pointer& pointer::operator++()
+.. cpp:function:: const_pointer& const_pointer::operator++()
+
+  Prefix increment pointer, i.e., :code:`++p`.  Return reference to
+  the incremented pointer.
+
+----
+
+.. cpp:function:: pointer& pointer::operator--()
+.. cpp:function:: const_pointer& const_pointer::operator--()
+
+  Prefix decrement pointer, i.e., :code:`--p`.  Return reference to
+  the decremented pointer.
+
+----
+
+.. cpp:function:: pointer pointer::operator++(int)
+.. cpp:function:: const_pointer const_pointer::operator++(int)
+
+  Postfix increment pointer, i.e., :code:`p++`.  Return a copy of
+  the pointer before it was incremented.
+
+----
+
+.. cpp:function:: pointer pointer::operator--(int)
+.. cpp:function:: const_pointer const_pointer::operator--(int)
+
+  Postfix decrement pointer, i.e., :code:`p--`.  Return a copy of
+  the pointer before it was decremented.
+
+----
+
+.. cpp:function:: pointer pointer::operator+=(ptrdiff_t d)
+.. cpp:function:: const_pointer const_pointer::operator+=(ptrdiff_t d)
+
+  Increment pointer by *d*.  Return a copy of the incremented pointer.
+
+----
+
+.. cpp:function:: pointer pointer::operator-=(ptrdiff_t d)
+.. cpp:function:: const_pointer const_pointer::operator-=(ptrdiff_t d)
+
+  Decrement pointer by *d*.  Return a copy of the decremented pointer.

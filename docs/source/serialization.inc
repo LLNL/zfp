@@ -25,7 +25,7 @@ compressed data: via array-specific :ref:`constructors <array_ctor_header>`
 and via a generic :ref:`factory function <array_factory>`:
 
 - When the array scalar type (i.e., :code:`float` or :code:`double`) and
-  dimensionality (i.e., 1D, 2D, or 3D) are already known, the corresponding
+  dimensionality (i.e., 1D, 2D, 3D, or 4D) are already known, the corresponding
   array :ref:`constructor <array_ctor_header>` may be used.  If the
   scalar type and dimensionality stored in the header do not match
   the array class, then an :ref:`exception <exception>` is thrown.
@@ -40,23 +40,24 @@ and via a generic :ref:`factory function <array_factory>`:
   The (static) factory function is made available by including
   :file:`zfpfactory.h`.  This header must be included *after* first
   including the header files associated with the compressed arrays, i.e.,
-  :file:`zfparray1.h`, :file:`zfparray2.h`, and :file:`zfparray3.h`.
-  Only those arrays whose header files are included can be constructed by
-  the factory function.  This design decouples the array classes so that
-  they may be included independently, for example, to reduce compilation
-  time.
+  :file:`zfparray1.h`, :file:`zfparray2.h`, :file:`zfparray3.h`, and
+  :file:`zfparray4.h`.  Only those arrays whose header files are included
+  can be constructed by the factory function.  This design decouples the
+  array classes so that they may be included independently, for example,
+  to reduce compilation time.
 
 Both types of deserialization functions accept an :cpp:class:`array::header`,
 an optional buffer holding compressed data, and an optional buffer size.
 If this buffer is provided, then a separate copy of the compressed data it
 holds is made, which is used to initialize the array.  If the optional buffer
-size is also provided, then these functions throw an exception if the size
-is not at least as large as is expected from the metadata stored in the
-header.  This safeguard is implemented to avoid accessing memory beyond the
-end of the buffer.  If no buffer is provided, then all array elements are
-default initialized to zero.  The array may later be initialized by directly
-reading/copying data into the space pointed to by
-:cpp:func:`array::compressed_data`.
+size is also provided, then these functions throw an
+:ref:`exception <exception>` if the size is not at least as large as is
+expected from the metadata stored in the header.  This safeguard is
+implemented to avoid accessing memory beyond the end of the buffer.  If no
+buffer is provided, then all array elements are default initialized to zero.
+The array may later be initialized by directly reading/copying data into the
+space pointed to by :cpp:func:`array::compressed_data` and calling
+:cpp:func:`array::clear_cache` (in either order).
 
 Below is a simple example of serialization of a 3D compressed array of doubles
 (error checking has been omitted for clarity)::
@@ -82,10 +83,11 @@ copy::
 .. note::
   The array serialization API changed significantly in |zfp| |crpirelease|.
   The :cpp:func:`array::get_header` function is now deprecated and has been
-  replaced with a header constructor that takes an array as parameter.
-  Exceptions are now part of the main :code:`zfp` namespace rather
-  than nested within the array header.  The header is no longer a simple POD
-  data structure but should be queried for its data pointer and size.
+  replaced with a :ref:`header constructor <header_ctor>` that takes an
+  array as parameter.  Exceptions are now part of the main :code:`zfp`
+  namespace rather than nested within the array header.  The header is no
+  longer a simple POD data structure but should be queried for its data
+  pointer and size.
 
 .. index::
    single: Header
@@ -113,9 +115,13 @@ is to be stored in the header.  The header is also compatible with the |zfp|
 
 .. cpp:namespace:: zfp::array
 
+----
+
 .. cpp:function:: header::header()
 
   Default constructor for header.
+
+----
 
 .. _header_ctor:
 .. cpp:function:: header::header(const array& a)
@@ -123,27 +129,40 @@ is to be stored in the header.  The header is also compatible with the |zfp|
   Construct header for compressed-array *a*.  Throws an
   :ref:`exception <exception>` upon failure.
 
+----
+
 .. cpp:function:: zfp_type header::scalar_type() const
 
   Scalar type associated with array (see :cpp:func:`array::scalar_type`).
+
+----
 
 .. cpp:function:: uint header::dimensionality() const
 
   Dimensionality associated with array (see :cpp:func:`array::dimensionality`).
 
+----
+
 .. cpp:function:: size_t header::size_x() const
 .. cpp:function:: size_t header::size_y() const
 .. cpp:function:: size_t header::size_z() const
+.. cpp:function:: size_t header::size_w() const
 
   :ref:`Array dimensions <array_dims>`.  Unused dimensions have a size of zero.
+
+----
 
 .. cpp:function:: double header::rate() const
 
   Rate in bits per value (see :cpp:func:`array::rate`);
 
+----
+
 .. cpp:function:: virtual const void* header::data() = 0
 
   Return pointer to header data.
+
+----
 
 .. cpp:function:: virtual size_t header::size() = 0
 
@@ -169,6 +188,8 @@ Exceptions
   Compressed-array headers use |zfp|'s most concise representation of only
   96 bits.  Such short headers support compressed blocks up to 2048 bits long.
   This implies that the highest rate for 3D arrays is 2048/4\ :sup:`3` = 32
-  bits/value.  3D arrays whose rate exceeds 32 cannot be serialized and
-  result in an exception being thrown.  1D and 2D arrays do not suffer from
-  this limitation.
+  bits/value; the highest rate for 4D arrays is only 2048/4\ :sup:`4` = 8
+  bits/value.  3D and 4D arrays whose rate exceeds these limits cannot be
+  serialized and result in an exception being thrown.  1D and 2D arrays
+  support rates up to 512 and 128 bits/value, respectively, which both
+  are large enough to represent all usable rates.

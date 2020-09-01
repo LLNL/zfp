@@ -10,9 +10,11 @@ References
 .. cpp:class:: array1::const_reference
 .. cpp:class:: array2::const_reference
 .. cpp:class:: array3::const_reference
+.. cpp:class:: array4::const_reference
 .. cpp:class:: array1::reference : public array1::const_reference
 .. cpp:class:: array2::reference : public array2::const_reference
 .. cpp:class:: array3::reference : public array3::const_reference
+.. cpp:class:: array4::reference : public array4::const_reference
 
 Array :ref:`indexing operators <lvref>` must return lvalue references that
 alias array elements and serve as vehicles for assigning values to those
@@ -55,11 +57,15 @@ References define a single type:
 
   Scalar type associated with referenced array elements.
 
+----
+
 The following operators are defined for |zfp| references.  They act on the
 referenced array element in the same manner as operators defined for
 conventional C++ references.  References are obtained via
 :ref:`array inspectors <array_accessor>`
 and :ref:`mutators <lvref>`.
+
+----
 
 .. cpp:function:: value_type reference::operator value_type() const
 .. cpp:function:: value_type const_reference::operator value_type() const
@@ -67,15 +73,21 @@ and :ref:`mutators <lvref>`.
   Conversion operator for dereferencing the reference.  Return the value
   of the referenced array element.
 
+----
+
 .. cpp:function:: pointer reference::operator&() const
 .. cpp:function:: const_pointer const_reference::operator&() const
 
   Return (const) pointer to the referenced array element.
  
+----
+
 .. cpp:function:: reference reference::operator=(const reference& ref)
 
   Assignment (copy) operator.  The referenced element, *elem*, is assigned the
   value stored at the element referenced by *ref*.  Return :code:`*this`.
+
+----
 
 .. cpp:function:: reference reference::operator=(Scalar val)
 .. cpp:function:: reference reference::operator+=(Scalar val)
