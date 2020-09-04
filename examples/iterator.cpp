@@ -17,9 +17,9 @@ void print2(zfp::array2<double>::pointer p, size_t n)
     std::cout << *p++ << std::endl;
 }
 
-void print3(zfp::array1<double>::iterator begin, zfp::array1<double>::iterator end)
+void print3(zfp::array1<double>::const_iterator begin, zfp::array1<double>::const_iterator end)
 {
-  for (zfp::array1<double>::iterator p = begin; p != end; p++)
+  for (zfp::array1<double>::const_iterator p = begin; p != end; p++)
     std::cout << *p << std::endl;
 }
 

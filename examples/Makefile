@@ -5,6 +5,7 @@ TARGETS = $(BINDIR)/diffusion\
 	  $(BINDIR)/inplace\
 	  $(BINDIR)/iterator\
 	  $(BINDIR)/pgm\
+	  $(BINDIR)/ppm\
 	  $(BINDIR)/simple\
 	  $(BINDIR)/speed
 LIBS = -L../lib -lzfp
@@ -24,6 +25,9 @@ $(BINDIR)/iterator: iterator.cpp ../lib/$(LIBZFP)
 
 $(BINDIR)/pgm: pgm.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) pgm.c $(CLIBS) -o $@
+
+$(BINDIR)/ppm: ppm.c ../lib/$(LIBZFP)
+	$(CC) $(CFLAGS) $(PPM_FLAGS) ppm.c $(CLIBS) -o $@
 
 $(BINDIR)/simple: simple.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) simple.c $(CLIBS) -o $@

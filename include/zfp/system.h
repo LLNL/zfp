@@ -1,15 +1,16 @@
 #ifndef ZFP_SYSTEM_H
 #define ZFP_SYSTEM_H
 
-#if __STDC_VERSION__ >= 199901L
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+  /* C99: use restrict */
   #define restrict_ restrict
 #else
+  /* C89: no restrict keyword */
   #define restrict_
 #endif
 
 /* macros for exporting and importing symbols */
-#ifdef _MSC_VER
-  #define export_ __declspec(dllexport)
+#if defined(_MSC_VER) && defined(ZFP_SHARED_LIBS)
   /* export (import) symbols when ZFP_SOURCE is (is not) defined */
   #ifdef ZFP_SOURCE
     #ifdef __cplusplus
@@ -24,8 +25,7 @@
       #define extern_ extern     __declspec(dllimport)
     #endif
   #endif
-#else /* !_MSC_VER */
-  #define export_
+#else /* !(_MSC_VER && ZFP_SHARED_LIBS) */
   #ifdef __cplusplus
     #define extern_ extern "C"
   #else

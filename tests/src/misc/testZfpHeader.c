@@ -36,7 +36,7 @@ setup(void **state)
   zfp_field* field = zfp_field_2d(NULL, type, FIELD_X_LEN, FIELD_Y_LEN);
 
   zfp_stream* stream = zfp_stream_open(NULL);
-  zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
+  zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, zfp_false);
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
   bundle->buffer = calloc(bufsizeBytes, sizeof(char));

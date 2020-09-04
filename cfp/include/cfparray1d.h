@@ -22,7 +22,7 @@ typedef struct {
   void (*clear_cache)(const cfp_array1d* self);
   void (*flush_cache)(const cfp_array1d* self);
   size_t (*compressed_size)(const cfp_array1d* self);
-  uchar* (*compressed_data)(const cfp_array1d* self);
+  void* (*compressed_data)(const cfp_array1d* self);
   size_t (*size)(const cfp_array1d* self);
   void (*resize)(cfp_array1d* self, uint n, int clear);
 

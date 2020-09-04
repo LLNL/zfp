@@ -100,7 +100,8 @@ Constants
 .. c:var:: const size_t stream_word_bits
 
   The number of bits in a word.  The size of a flushed bit stream will be
-  a multiple of this number of bits.  See :c:macro:`BIT_STREAM_WORD_TYPE`.
+  a multiple of this number of bits.  See :c:macro:`BIT_STREAM_WORD_TYPE`
+  and :c:func:`stream_alignment`.
 
 .. _bs-functions:
 
@@ -119,6 +120,12 @@ Functions
 .. c:function:: bitstream* stream_clone(const bitstream* stream)
 
   Create a copy of *stream* that points to the same memory buffer.
+
+.. c:function:: size_t stream_alignment()
+
+  Word size in bits.  This is a functional form of the constant
+  :c:var:`stream_word_bits` and returns the same value.
+  Available since |zfp| |crpirelease|.
 
 .. c:function:: void* stream_data(const bitstream* stream)
 

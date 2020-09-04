@@ -1,61 +1,7 @@
 /*
-** Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
-** Produced at the Lawrence Livermore National Laboratory.
-** Authors: Peter Lindstrom, Markus Salasoo, Matt Larsen, Stephen Herbein.
-** LLNL-CODE-663824.
-** All rights reserved.
-**
-** This file is part of the zfp library.
-** For details, see http://computing.llnl.gov/casc/zfp/.
-**
-** Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are met:
-**
-** 1. Redistributions of source code must retain the above copyright notice,
-** this list of conditions and the disclaimer below.
-**
-** 2. Redistributions in binary form must reproduce the above copyright notice,
-** this list of conditions and the disclaimer (as noted below) in the
-** documentation and/or other materials provided with the distribution.
-**
-** 3. Neither the name of the LLNS/LLNL nor the names of its contributors may
-** be used to endorse or promote products derived from this software without
-** specific prior written permission.
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-** AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-** IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-** ARE DISCLAIMED.  IN NO EVENT SHALL LAWRENCE LIVERMORE NATIONAL SECURITY,
-** LLC, THE U.S. DEPARTMENT OF ENERGY OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-** INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-** (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-** LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-** ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-** THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-**
-**
-** Additional BSD Notice
-**
-** 1. This notice is required to be provided under our contract with the U.S.
-** Department of Energy (DOE).  This work was produced at Lawrence Livermore
-** National Laboratory under Contract No. DE-AC52-07NA27344 with the DOE.
-
-** 2. Neither the United States Government nor Lawrence Livermore National
-** Security, LLC nor any of their employees, makes any warranty, express or
-** implied, or assumes any liability or responsibility for the accuracy,
-** completeness, or usefulness of any information, apparatus, product, or
-** process disclosed, or represents that its use would not infringe
-** privately-owned rights.
-**
-** 3. Also, reference herein to any specific commercial products, process, or
-** services by trade name, trademark, manufacturer or otherwise does not
-** necessarily constitute or imply its endorsement, recommendation, or
-** favoring by the United States Government or Lawrence Livermore National
-** Security, LLC.  The views and opinions of authors expressed herein do not
-** necessarily state or reflect those of the United States Government or
-** Lawrence Livermore National Security, LLC, and shall not be used for
-** advertising or product endorsement purposes.
+** Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC and
+** other zfp project contributors. See the top-level LICENSE file for details.
+** SPDX-License-Identifier: BSD-3-Clause
 */
 
 #ifndef ZFP_H
@@ -116,6 +62,14 @@
 #define ZFP_MODE_SHORT_MAX  ((1u << ZFP_MODE_SHORT_BITS) - 2)
 
 /* types ------------------------------------------------------------------- */
+
+/* Boolean constants */
+enum {
+  zfp_false = 0,         /* false */
+  zfp_true  = !zfp_false /* true */
+};
+
+typedef int zfp_bool; /* Boolean type */
 
 /* execution policy */
 typedef enum {
@@ -279,7 +233,7 @@ zfp_stream_set_rate(
   double rate,        /* desired rate in compressed bits/scalar */
   zfp_type type,      /* scalar type to compress */
   uint dims,          /* array dimensionality (1, 2, 3, or 4) */
-  int wra             /* nonzero if write random access is needed */
+  zfp_bool align      /* word-aligned blocks, e.g., for write random access */
 );
 
 /* set precision in uncompressed bits/scalar (fixed-precision mode) */
@@ -304,7 +258,7 @@ zfp_stream_set_mode(
 );
 
 /* set all parameters (expert mode); leaves stream intact on failure */
-int                   /* nonzero upon success */
+zfp_bool              /* true upon success */
 zfp_stream_set_params(
   zfp_stream* stream, /* compressed stream */
   uint minbits,       /* minimum number of bits per 4^d block */
@@ -334,21 +288,21 @@ zfp_stream_omp_chunk_size(
 );
 
 /* set execution policy */
-int                      /* nonzero upon success */
+zfp_bool                 /* true upon success */
 zfp_stream_set_execution(
   zfp_stream* stream,    /* compressed stream */
   zfp_exec_policy policy /* execution policy */
 );
 
 /* set OpenMP execution policy and number of threads */
-int                   /* nonzero upon success */
+zfp_bool              /* true upon success */
 zfp_stream_set_omp_threads(
   zfp_stream* stream, /* compressed stream */
   uint threads        /* number of OpenMP threads to use (0 for default) */
 );
 
 /* set OpenMP execution policy and number of blocks per chunk (1D only) */
-int                   /* nonzero upon success */
+zfp_bool              /* true upon success */
 zfp_stream_set_omp_chunk_size(
   zfp_stream* stream, /* compressed stream */
   uint chunk_size     /* number of blocks per chunk (0 for default) */
@@ -438,7 +392,7 @@ zfp_field_size(
 );
 
 /* field strides per dimension */
-int                       /* zero if array is contiguous */
+zfp_bool                  /* true if array is not contiguous */
 zfp_field_stride(
   const zfp_field* field, /* field metadata */
   int* stride             /* stride in scalars per dimension (may be NULL) */
@@ -535,7 +489,7 @@ zfp_field_set_stride_4d(
 );
 
 /* set field scalar type and dimensions */
-int                 /* nonzero upon success */
+zfp_bool            /* true upon success */
 zfp_field_set_metadata(
   zfp_field* field, /* field metadata */
   uint64 meta       /* compact 52-bit encoding of metadata */

@@ -1,8 +1,8 @@
 .. include:: defs.rst
 .. _arrays:
 
-Compressed Arrays
-=================
+Compressed-Array Classes
+========================
 
 .. cpp:namespace:: zfp
 
@@ -22,7 +22,9 @@ simulation.
 
 The *rate*, measured in number of bits per array element, can be specified
 in fractions of a bit (but see FAQs :ref:`#12 <q-granularity>` and
-:ref:`#18 <q-rate>` for limitations).  Note that array dimensions need not
+:ref:`#18 <q-rate>` for limitations).  |zfp| supports 1D, 2D, 3D, and (as
+of version |4darrrelease|) 4D arrays.  For higher-dimensional arrays,
+consider using an array of |zfp| arrays.  Note that array dimensions need not
 be multiples of four; |zfp| transparently handles partial blocks on array
 boundaries.
 
@@ -56,16 +58,23 @@ The following sections are available:
 Array Classes
 -------------
 
-Currently there are six array classes for 1D, 2D, and 3D arrays, each of
-which can represent single- or double-precision values.  Although these
-arrays store values in a form different from conventional single- and
-double-precision floating point, the user interacts with the arrays via
-floats and doubles.
+There are eight array classes for 1D, 2D, 3D, and 4D arrays, each of which
+can represent single- or double-precision values.
+Although these arrays store values in a form different from conventional
+single- and double-precision floating point, the user interacts with the
+arrays via floats and doubles.
 
 The array classes can often serve as direct substitutes for C/C++
 single- and multi-dimensional floating-point arrays and STL vectors, but
 have the benefit of allowing fine control over storage size.  All classes
 below belong to the :cpp:any:`zfp` namespace.
+
+.. note::
+  Much of the compressed-array API was modified in |zfp| |64bitrelease|
+  to support 64-bit indexing of very large arrays.  In particular, array
+  dimensions and indices now use the :code:`size_t` type instead of
+  :code:`uint` and strides use the :code:`ptrdiff_t` type instead of
+  :code:`int`.
 
 Base Class
 ^^^^^^^^^^
@@ -103,14 +112,21 @@ Base Class
   of the cache.  Rather, it reflects the size of the memory buffer
   returned by :cpp:func:`compressed_data`.
 
-.. cpp:function:: uchar* array::compressed_data() const
+.. cpp:function:: void* array::compressed_data() const
 
   Return pointer to compressed data for read or write access.  The size
   of the buffer is given by :cpp:func:`compressed_size`.
 
+.. note::
+  As of |zfp| |crpirelease|, the return value is :code:`void*` rather than
+  :code:`uchar*` to simplify pointer conversion and to dispel any misconception
+  that the compressed data needs only :code:`uchar` alignment.  Compressed
+  streams are always word aligned (see :c:var:`stream_word_bits` and
+  :c:macro:`BIT_STREAM_WORD_TYPE`).
+
 .. cpp:function:: uint array::dimensionality() const
 
-  Return the dimensionality (1, 2, or 3) of the array.
+  Return the dimensionality (aka. rank) of the array: 1, 2, 3, or 4.
 
 .. cpp:function:: zfp_type array::scalar_type() const
 
@@ -118,30 +134,28 @@ Base Class
 
 .. cpp:function:: array::header array::get_header() const
 
-  Return a short fixed-length :ref:`header <header>` describing the scalar
-  type, dimensions, and rate associated with the array.
-  An :cpp:class:`array::header::exception` is thrown if the header cannot
-  describe the array.
+  Deprecated function as of |zfp| |crpirelease|.  See the :ref:`header`
+  section on how to construct a header.
 
 .. _array_factory:
-.. cpp:function:: static array* array::construct(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: static array* array::construct(const header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
 
   Construct a compressed-array object whose scalar type, dimensions, and rate
-  are given by the header *h*.  Return a pointer to the base class upon
-  success.  The optional *buffer* points to compressed data that, when passed,
-  is copied into the array.  If *buffer* is absent, the array is default
-  initialized with all zeroes.  The optional *buffer_size_bytes* argument
-  specifies the buffer length in bytes.  When passed, a comparison is made to
-  ensure that the buffer size is at least as large as the size implied by
-  the header.  If this function fails for any reason, an
-  :cpp:class:`array::header::exception` is thrown.
+  are given by the :ref:`header <header>` *h*.  Return a base class pointer
+  upon success.  The optional *buffer* points to compressed data that, when
+  passed, is copied into the array.  If *buffer* is absent, the array is
+  default initialized with all zeroes.  The optional *buffer_size_bytes*
+  parameter specifies the buffer length in bytes.  When passed, a comparison
+  is made to ensure that the buffer size is at least as large as the size
+  implied by the header.  If this function fails for any reason, an
+  :cpp:class:`exception` is thrown.
 
 Common Methods
 ^^^^^^^^^^^^^^
 
-The following methods are common to 1D, 2D, and 3D arrays, but are implemented
-in the array class specific to each dimensionality rather than in the base
-class.
+The following methods are common to 1D, 2D, 3D, and 4D arrays, but are
+implemented in the array class specific to each dimensionality rather than
+in the base class.
 
 .. cpp:function:: size_t array::size() const
 
@@ -152,10 +166,10 @@ class.
 
   Return the cache size in number of bytes.
 
-.. cpp:function:: void array::set_cache_size(size_t csize)
+.. cpp:function:: void array::set_cache_size(size_t bytes)
 
   Set minimum cache size in bytes.  The actual size is always a power of two
-  bytes and consists of at least one block.  If *csize* is zero, then a
+  bytes and consists of at least one block.  If *bytes* is zero, then a
   default cache size is used, which requires the array dimensions to be known.
 
 .. cpp:function:: void array::get(Scalar* p) const
@@ -163,7 +177,7 @@ class.
   Decompress entire array and store at *p*, for which sufficient storage must
   have been allocated.  The uncompressed array is assumed to be contiguous
   (with default strides) and stored in the usual "row-major" order, i.e., with
-  *x* varying faster than *y* and *y* varying faster than *z*.
+  *x* varying faster than *y*, *y* varying faster than *z*, etc.
 
 .. cpp:function:: void array::set(const Scalar* p)
 
@@ -171,28 +185,49 @@ class.
   uncompressed data is assumed to be stored as in the :cpp:func:`get`
   method.
 
-.. cpp:function:: Scalar array::operator[](uint index) const
+.. cpp:function:: const_reference array::operator[](size_t index) const
 
-  Return scalar stored at given flat index (inspector).  For a 3D array,
-  :code:`index = x + nx * (y + ny * z)`.
+  Return :ref:`const reference <references>` to scalar stored at given flat
+  index (inspector).  For a 3D array, :code:`index = x + nx * (y + ny * z)`.
 
-.. cpp:function:: reference array::operator[](uint index)
+.. note::
+  As of |zfp| |crpirelease|, the return value is no longer :code:`Scalar` but
+  is a :ref:`const reference <references>` to the corresponding array element
+  (conceptually equivalent to :code:`const Scalar&`).  This API change was
+  necessary to allow obtaining a const pointer to the element when the array
+  itself is const qualified, e.g., :code:`const_pointer p = &a[index];`.
+
+.. cpp:function:: reference array::operator[](size_t index)
 
   Return :ref:`proxy reference <references>` to scalar stored at given flat
   index (mutator).  For a 3D array, :code:`index = x + nx * (y + ny * z)`.
 
 .. cpp:function:: iterator array::begin()
 
-  Return iterator to beginning of array.
+  Return mutable iterator to beginning of array.
 
 .. cpp:function:: iterator array::end()
 
-  Return iterator to end of array.  As with STL iterators, the end points
-  to a virtual element just past the last valid array element.
+  Return mutable iterator to end of array.  As with STL iterators, the end
+  points to a virtual element just past the last valid array element.
+
+.. cpp:function:: const_iterator array::begin() const
+.. cpp:function:: const_iterator array::cbegin() const
+
+  Return const iterator to beginning of array.
+
+.. cpp:function:: const_iterator array::end() const
+.. cpp:function:: const_iterator array::cend() const
+
+  Return const iterator to end of array.
+
+.. note::
+  Const :ref:`references <references>`, :ref:`pointers <pointers>`, and
+  :ref:`iterators <iterators>` are available as of |zfp| |crpirelease|.  
 
 
-1D, 2D, and 3D Arrays
-^^^^^^^^^^^^^^^^^^^^^
+1D, 2D, 3D, and 4D Arrays
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Below are classes and methods specific to each array dimensionality and
 template scalar type (:code:`float` or :code:`double`).  Since the classes
@@ -209,28 +244,35 @@ type is omitted for readability, e.g.,
   .. cpp:class:: template<typename Scalar> array1 : public array
   .. cpp:class:: template<typename Scalar> array2 : public array
   .. cpp:class:: template<typename Scalar> array3 : public array
+  .. cpp:class:: template<typename Scalar> array4 : public array
 
 .. cpp:class:: array1 : public array
 .. cpp:class:: array2 : public array
 .. cpp:class:: array3 : public array
+.. cpp:class:: array4 : public array
 
-  This is a 1D/2D/3D array that inherits basic functionality from the generic
-  :cpp:class:`array` base class.  The template argument, :cpp:type:`Scalar`,
-  specifies the floating type returned for array elements.  The suffixes
-  :code:`f` and :code:`d` can also be appended to each class to indicate float
-  or double type, e.g., :cpp:class:`array1f` is a synonym for
-  :cpp:class:`array1\<float>`.
+  This is a 1D, 2D, 3D, or 4D array that inherits basic functionality
+  from the generic :cpp:class:`array` base class.  The template argument,
+  :cpp:type:`Scalar`, specifies the floating type returned for array
+  elements.  The suffixes :code:`f` and :code:`d` can also be appended
+  to each class to indicate float or double type, e.g.,
+  :cpp:class:`array1f` is a synonym for :cpp:class:`array1\<float>`.
+
+----
 
 .. cpp:class:: arrayANY : public array
 
   Fictitious class used to refer to any one of :cpp:class:`array1`,
-  :cpp:class:`array2`, and :cpp:class:`array3`.  This class is not part of
-  the |zfp| API.
+  :cpp:class:`array2`, :cpp:class:`array3`, and :cpp:class:`array4`.
+  This class is not part of the |zfp| API.
+
+----
 
 .. _array_ctor_default:
 .. cpp:function:: array1::array1()
 .. cpp:function:: array2::array2()
 .. cpp:function:: array3::array3()
+.. cpp:function:: array4::array4()
 
   Default constructor.  Creates an empty array whose size and rate are both
   zero.
@@ -244,62 +286,87 @@ type is omitted for readability, e.g.,
   :cpp:func:`array::set_cache_size`, as the default constructor creates a
   cache that holds only one |zfp| block, i.e., the minimum possible.
 
-.. _array_ctor:
-.. cpp:function:: array1::array1(uint n, double rate, const Scalar* p = 0, size_t csize = 0)
-.. cpp:function:: array2::array2(uint nx, uint ny, double rate, const Scalar* p = 0, size_t csize = 0)
-.. cpp:function:: array3::array3(uint nx, uint ny, uint nz, double rate, const Scalar* p = 0, size_t csize = 0)
+----
 
-  Constructor of array with dimensions *n* (1D), *nx* |times| *ny* (2D), or
-  *nx* |times| *ny* |times| *nz* (3D) using *rate* bits per value, at least
-  *csize* bytes of cache, and optionally initialized from flat, uncompressed
-  array *p*.  If *csize* is zero, a default cache size is chosen.
+.. _array_ctor:
+.. cpp:function:: array1::array1(size_t n, double rate, const Scalar* p = 0, size_t cache_size = 0)
+.. cpp:function:: array2::array2(size_t nx, size_t ny, double rate, const Scalar* p = 0, size_t cache_size = 0)
+.. cpp:function:: array3::array3(size_t nx, size_t ny, size_t nz, double rate, const Scalar* p = 0, size_t cache_size = 0)
+.. cpp:function:: array4::array4(size_t nx, size_t ny, size_t nz, size_t nw, double rate, const Scalar* p = 0, size_t cache_size = 0)
+
+  Constructor of array with dimensions *n* (1D), *nx* |times| *ny* (2D),
+  *nx* |times| *ny* |times| *nz* (3D), or
+  *nx* |times| *ny* |times| *nz* |times| *nw* (4D) using *rate* bits per
+  value, at least *cache_size* bytes of cache, and optionally initialized
+  from flat, uncompressed array *p*.  If *cache_size* is zero, a default
+  cache size is chosen.
+
+----
 
 .. _array_ctor_header:
-.. cpp:function:: array1::array1(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
-.. cpp:function:: array2::array2(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
-.. cpp:function:: array3::array3(const array::header& h, const uchar* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array1::array1(const array::header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array2::array2(const array::header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array3::array3(const array::header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
+.. cpp:function:: array4::array4(const array::header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
 
   Constructor from previously :ref:`serialized <serialization>` compressed
-  array.  Struct :cpp:type:`array::header` contains array metadata, while
-  optional *buffer* points to the compressed data that is to be copied to
-  the array.  The optional *buffer_size_bytes* argument specifies the
-  *buffer* length.  If the constructor fails, an
-  :cpp:class:`array::header::exception` is thrown.
+  array.  The :ref:`header <header>`, *h*, contains array metadata, while the
+  optional *buffer* points to the compressed data that is to be copied to the
+  array.  The optional *buffer_size_bytes* parameter specifies the *buffer*
+  length.  If the constructor fails, an :ref:`exception <exception>` is thrown.
   See :cpp:func:`array::construct` for further details on the *buffer* and
-  *buffer_size_bytes* arguments.
+  *buffer_size_bytes* parameters.
+
+----
 
 .. cpp:function:: array1::array1(const array1& a)
 .. cpp:function:: array2::array2(const array2& a)
 .. cpp:function:: array3::array3(const array3& a)
+.. cpp:function:: array4::array4(const array4& a)
 
   Copy constructor.  Performs a deep copy.
+
+----
 
 .. cpp:function:: virtual array1::~array1()
 .. cpp:function:: virtual array2::~array2()
 .. cpp:function:: virtual array3::~array3()
+.. cpp:function:: virtual array4::~array4()
 
   Virtual destructor (allows for inheriting from |zfp| arrays).
+
+----
 
 .. _array_copy:
 .. cpp:function:: array1& array1::operator=(const array1& a)
 .. cpp:function:: array2& array2::operator=(const array2& a)
 .. cpp:function:: array3& array3::operator=(const array3& a)
+.. cpp:function:: array4& array4::operator=(const array4& a)
 
   Assignment operator.  Performs a deep copy.
 
+----
+
 .. _array_dims:
-.. cpp:function:: uint array2::size_x() const
-.. cpp:function:: uint array2::size_y() const
-.. cpp:function:: uint array3::size_x() const
-.. cpp:function:: uint array3::size_y() const
-.. cpp:function:: uint array3::size_z() const
+.. cpp:function:: size_t array2::size_x() const
+.. cpp:function:: size_t array2::size_y() const
+.. cpp:function:: size_t array3::size_x() const
+.. cpp:function:: size_t array3::size_y() const
+.. cpp:function:: size_t array3::size_z() const
+.. cpp:function:: size_t array4::size_x() const
+.. cpp:function:: size_t array4::size_y() const
+.. cpp:function:: size_t array4::size_z() const
+.. cpp:function:: size_t array4::size_w() const
 
   Return array dimensions.
 
+----
+
 .. _array_resize:
-.. cpp:function:: void array1::resize(uint n, bool clear = true)
-.. cpp:function:: void array2::resize(uint nx, uint ny, bool clear = true)
-.. cpp:function:: void array3::resize(uint nx, uint ny, uint nz, bool clear = true)
+.. cpp:function:: void array1::resize(size_t n, bool clear = true)
+.. cpp:function:: void array2::resize(size_t nx, size_t ny, bool clear = true)
+.. cpp:function:: void array3::resize(size_t nx, size_t ny, size_t nz, bool clear = true)
+.. cpp:function:: void array4::resize(size_t nx, size_t ny, size_t nz, size_t nw, bool clear = true)
 
   Resize the array (all previously stored data will be lost).  If *clear* is
   true, then the array elements are all initialized to zero.
@@ -311,21 +378,35 @@ type is omitted for readability, e.g.,
   the array is default constructed, which initializes the cache size to the
   minimum possible of only one |zfp| block.
 
-.. _array_accessor:
-.. cpp:function:: Scalar array1::operator()(uint i) const
-.. cpp:function:: Scalar array2::operator()(uint i, uint j) const
-.. cpp:function:: Scalar array3::operator()(uint i, uint j, uint k) const
+----
 
-  Return scalar stored at multi-dimensional index given by *i*, *j*, and *k*
-  (inspector).
+.. _array_accessor:
+.. cpp:function:: const_reference array1::operator()(size_t i) const
+.. cpp:function:: const_reference array2::operator()(size_t i, size_t j) const
+.. cpp:function:: const_reference array3::operator()(size_t i, size_t j, size_t k) const
+.. cpp:function:: const_reference array4::operator()(size_t i, size_t j, size_t k, size_t l) const
+
+  Return const reference to element stored at multi-dimensional index given by
+  *i*, *j*, *k*, and *l* (inspector).
+
+.. note::
+  As of |zfp| |crpirelease|, the return value is no longer :code:`Scalar` but
+  is a :ref:`const reference <references>` to the corresponding array element
+  (essentially equivalent to :code:`const Scalar&`).  This API change was
+  necessary to allow obtaining a const pointer to the element when the array
+  itself is const qualified, e.g.,
+  :code:`const_pointer p = &a(i, j, k);`.
+
+----
 
 .. _lvref:
-.. cpp:function:: reference array1::operator()(uint i)
-.. cpp:function:: reference array2::operator()(uint i, uint j)
-.. cpp:function:: reference array3::operator()(uint i, uint j, uint k)
+.. cpp:function:: reference array1::operator()(size_t i)
+.. cpp:function:: reference array2::operator()(size_t i, size_t j)
+.. cpp:function:: reference array3::operator()(size_t i, size_t j, size_t k)
+.. cpp:function:: reference array4::operator()(size_t i, size_t j, size_t k, size_t l)
 
   Return :ref:`proxy reference <references>` to scalar stored at
-  multi-dimensional index given by *i*, *j*, and *k* (mutator).
+  multi-dimensional index given by *i*, *j*, *k*, and *l* (mutator).
 
 .. include:: caching.inc
 .. include:: serialization.inc

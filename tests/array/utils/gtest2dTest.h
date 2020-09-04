@@ -14,6 +14,9 @@ public:
   uint IterAbsOffset(array2d::iterator iter) {
     return iter.i() + ARRAY_SIZE_X * iter.j();
   }
+  uint IterAbsOffset(array2d::const_iterator citer) {
+    return citer.i() + ARRAY_SIZE_X * citer.j();
+  }
 
 protected:
   virtual void SetUp() {
@@ -34,12 +37,16 @@ protected:
 
   static array2d arr, arr2;
   static array2d::pointer ptr, ptr2;
+  static array2d::const_pointer cptr, cptr2;
   static array2d::iterator iter, iter2;
+  static array2d::const_iterator citer, citer2;
   static uint offsetX, offsetY, viewLenX, viewLenY;
 };
 
 array2d Array2dTest::arr(ARRAY_SIZE_X, ARRAY_SIZE_Y, ZFP_RATE_PARAM_BITS);
 array2d Array2dTest::arr2(ARRAY_SIZE_X, ARRAY_SIZE_Y, ZFP_RATE_PARAM_BITS);
 array2d::pointer Array2dTest::ptr, Array2dTest::ptr2;
+array2d::const_pointer Array2dTest::cptr, Array2dTest::cptr2;
 array2d::iterator Array2dTest::iter, Array2dTest::iter2;
+array2d::const_iterator Array2dTest::citer, Array2dTest::citer2;
 uint Array2dTest::offsetX, Array2dTest::offsetY, Array2dTest::viewLenX, Array2dTest::viewLenY;

@@ -93,19 +93,19 @@ given_zfpStreamSetWithFixedRate_when_zfpStreamCompressionMode_expect_returnsFixe
   zfp_type zfpType;
   uint dims;
   int rate;
-  int wra;
+  int align;
   for (zfpType = 1; zfpType <= 4; zfpType++) {
     for (dims = 1; dims <= 4; dims++) {
       for (rate = 1; rate <= ((zfpType % 2) ? 32 : 64); rate++) {
-        for (wra = 0; wra <= 1; wra++) {
+        for (align = 0; align <= 1; align++) {
           setDefaultCompressionParams(stream);
 
           /* set fixed-rate, assert fixed-rate identified */
-          zfp_stream_set_rate(stream, rate, zfpType, dims, wra);
+          zfp_stream_set_rate(stream, rate, zfpType, dims, (zfp_bool)align);
 
           zfp_mode mode = zfp_stream_compression_mode(stream);
           if (mode != zfp_mode_fixed_rate) {
-            fail_msg("Setting zfp_stream with zfp_type %u, fixed rate %d, wra = %d, in %u dimensions returned zfp_mode enum %u", zfpType, rate, wra, dims, mode);
+            fail_msg("Setting zfp_stream with zfp_type %u, fixed rate %d, align = %d, in %u dimensions returned zfp_mode enum %u", zfpType, rate, align, dims, mode);
           }
         }
       }
@@ -236,13 +236,13 @@ given_zfpStreamSetRateModeVal_when_zfpStreamSetMode_expect_returnsFixedRate_and_
   zfp_type zfpType;
   uint dims;
   int rate;
-  int wra;
+  int align;
   for (zfpType = 1; zfpType <= 4; zfpType++) {
     for (dims = 1; dims <= 4; dims++) {
       for (rate = 1; rate <= ((zfpType % 2) ? 32 : 64); rate++) {
-        for (wra = 0; wra <= 1; wra++) {
+        for (align = 0; align <= 1; align++) {
           /* set fixed-rate mode */
-          zfp_stream_set_rate(stream, rate, zfpType, dims, wra);
+          zfp_stream_set_rate(stream, rate, zfpType, dims, (zfp_bool)align);
           assert_int_equal(zfp_stream_compression_mode(stream), zfp_mode_fixed_rate);
 
           /* get mode and compression params */
@@ -258,7 +258,7 @@ given_zfpStreamSetRateModeVal_when_zfpStreamSetMode_expect_returnsFixedRate_and_
           /* see that mode is updated correctly */
           zfp_mode zfpMode = zfp_stream_set_mode(stream, mode);
           if (zfpMode != zfp_mode_fixed_rate) {
-            fail_msg("Using fixed rate %d, wra %d, zfp_type %u, in %u dimensions, zfp_stream_compression_mode() incorrectly returned %u", rate, wra, zfpType, dims, zfpMode);
+            fail_msg("Using fixed rate %d, align %d, zfp_type %u, in %u dimensions, zfp_stream_compression_mode() incorrectly returned %u", rate, align, zfpType, dims, zfpMode);
           }
 
           /* see that compression params conserved */
@@ -266,7 +266,7 @@ given_zfpStreamSetRateModeVal_when_zfpStreamSetMode_expect_returnsFixedRate_and_
               || stream->maxbits != maxbits
               || stream->maxprec != maxprec
               || stream->minexp != minexp) {
-            printf("Using fixed rate %d, wra %d, zfp_type %u, in %u dimensions, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"UINT64PRIx"\n", rate, wra, zfpType, dims, mode);
+            printf("Using fixed rate %d, align %d, zfp_type %u, in %u dimensions, zfp_stream_set_mode() incorrectly set compression params when fed zfp_stream_mode() = %"UINT64PRIx"\n", rate, align, zfpType, dims, mode);
             fail_msg("The zfp_stream had (minbits, maxbits, maxprec, minexp) = (%u, %u, %u, %d), but was expected to equal (%u, %u, %u, %d)", stream->minbits, stream->maxbits, stream->maxprec, stream->minexp, minbits, maxbits, maxprec, minexp);
           }
         }

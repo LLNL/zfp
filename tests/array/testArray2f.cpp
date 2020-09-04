@@ -1,6 +1,8 @@
+#include "array/zfparray1.h"
 #include "array/zfparray2.h"
-#include "array/zfparray3.h"
+#include "array/zfparray4.h"
 #include "array/zfpfactory.h"
+#include "array/zfparray3.h"
 using namespace zfp;
 
 extern "C" {

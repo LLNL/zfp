@@ -2,16 +2,16 @@
 using namespace zfp;
 
 extern "C" {
-  #include "utils/rand64.h"
+  #include "utils/rand32.h"
 }
 
-#define ARRAY_DIMS_SCALAR_TEST Array3dTest
-#define ARRAY_DIMS_SCALAR_TEST_VIEWS Array3dTestViews
+#define ARRAY_DIMS_SCALAR_TEST Array3fTest
+#define ARRAY_DIMS_SCALAR_TEST_VIEWS Array3fTestViews
 
-#include "utils/gtest3dTest.h"
+#include "utils/gtest3fTest.h"
 
-#define ZFP_ARRAY_TYPE array3d
-#define SCALAR double
+#define ZFP_ARRAY_TYPE array3f
+#define SCALAR float
 #define DIMS 3
 
 #include "testArrayViewsBase.cpp"

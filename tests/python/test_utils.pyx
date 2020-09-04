@@ -17,29 +17,29 @@ ctypedef stdint.uint32_t uint32_t
 ctypedef stdint.uint64_t uint64_t
 
 cdef extern from "genSmoothRandNums.h":
-    size_t intPow(size_t base, int exponent);
+    size_t intPow(size_t base, int exponent)
     void generateSmoothRandInts64(size_t minTotalElements,
                                   int numDims,
                                   int amplitudeExp,
                                   int64_t** outputArr,
                                   size_t* outputSideLen,
-                                  size_t* outputTotalLen);
+                                  size_t* outputTotalLen)
     void generateSmoothRandInts32(size_t minTotalElements,
                                   int numDims,
                                   int amplitudeExp,
                                   int32_t** outputArr32Ptr,
                                   size_t* outputSideLen,
-                                  size_t* outputTotalLen);
+                                  size_t* outputTotalLen)
     void generateSmoothRandFloats(size_t minTotalElements,
                                   int numDims,
                                   float** outputArrPtr,
                                   size_t* outputSideLen,
-                                  size_t* outputTotalLen);
+                                  size_t* outputTotalLen)
     void generateSmoothRandDoubles(size_t minTotalElements,
                                    int numDims,
                                    double** outputArrPtr,
                                    size_t* outputSideLen,
-                                   size_t* outputTotalLen);
+                                   size_t* outputTotalLen)
 
 cdef extern from "stridedOperations.h":
     ctypedef enum stride_config:
@@ -51,30 +51,30 @@ cdef extern from "stridedOperations.h":
     void reverseArray(void* inputArr,
                       void* outputArr,
                       size_t inputArrLen,
-                      zfpy.zfp_type zfpType);
+                      zfpy.zfp_type zfpType)
     void interleaveArray(void* inputArr,
                          void* outputArr,
                          size_t inputArrLen,
-                         zfpy.zfp_type zfpType);
+                         zfpy.zfp_type zfpType)
     int permuteSquareArray(void* inputArr,
                            void* outputArr,
                            size_t sideLen,
                            int dims,
-                           zfpy.zfp_type zfpType);
+                           zfpy.zfp_type zfpType)
     void getReversedStrides(int dims,
                             size_t n[4],
-                            int s[4]);
+                            int s[4])
     void getInterleavedStrides(int dims,
                                size_t n[4],
-                               int s[4]);
+                               int s[4])
     void getPermutedStrides(int dims,
                             size_t n[4],
-                            int s[4]);
+                            int s[4])
 
 cdef extern from "zfpCompressionParams.h":
-    int computeFixedPrecisionParam(int param);
-    size_t computeFixedRateParam(int param);
-    double computeFixedAccuracyParam(int param);
+    int computeFixedPrecisionParam(int param)
+    size_t computeFixedRateParam(int param)
+    double computeFixedAccuracyParam(int param)
 
 cdef extern from "zfp.h":
     ctypedef enum zfp_type:
@@ -98,57 +98,57 @@ cdef extern from "zfpChecksums.h":
     void computeKeyOriginalInput(test_type tt,
                                  unsigned int n[4],
                                  uint64_t* key1,
-                                 uint64_t* key2);
+                                 uint64_t* key2)
     void computeKey(test_type tt,
                     subject sjt,
                     unsigned int n[4],
                     zfpy.zfp_mode mode,
                     int miscParam,
                     uint64_t* key1,
-                    uint64_t* key2);
+                    uint64_t* key2)
     uint64_t getChecksumByKey(int dims,
                               zfp_type type,
                               uint64_t key1,
-                              uint64_t key2);
+                              uint64_t key2)
     uint64_t getChecksumOriginalDataBlock(int dims,
-                                          zfpy.zfp_type type);
+                                          zfpy.zfp_type type)
     uint64_t getChecksumEncodedBlock(int dims,
-                                     zfpy.zfp_type type);
+                                     zfpy.zfp_type type)
     uint64_t getChecksumEncodedPartialBlock(int dims,
-                                            zfpy.zfp_type type);
+                                            zfpy.zfp_type type)
     uint64_t getChecksumDecodedBlock(int dims,
-                                     zfpy.zfp_type type);
+                                     zfpy.zfp_type type)
     uint64_t getChecksumDecodedPartialBlock(int dims,
-                                            zfpy.zfp_type type);
+                                            zfpy.zfp_type type)
     uint64_t getChecksumOriginalDataArray(int ndims,
                                           unsigned int[4] dims,
-                                          zfpy.zfp_type type);
+                                          zfpy.zfp_type type)
     uint64_t getChecksumCompressedBitstream(int ndims,
                                             unsigned int[4] dims,
                                             zfpy.zfp_type type,
                                             zfpy.zfp_mode mode,
-                                            int compressParamNum);
+                                            int compressParamNum)
     uint64_t getChecksumDecompressedArray(int ndims,
                                           unsigned int[4] dims,
                                           zfpy.zfp_type ztype,
                                           zfpy.zfp_mode mode,
-                                          int compressParamNum);
+                                          int compressParamNum)
 
 cdef extern from "zfpHash.h":
     uint64_t hashBitstream(uint64_t* ptrStart,
-                           size_t bufsizeBytes);
+                           size_t bufsizeBytes)
     uint32_t hashArray32(const uint32_t* arr,
                          size_t nx,
-                         int sx);
+                         int sx)
     uint32_t hashStridedArray32(const uint32_t* arr,
                                 size_t n[4],
-                                int s[4]);
+                                int s[4])
     uint64_t hashArray64(const uint64_t* arr,
                          size_t nx,
-                         int sx);
+                         int sx)
     uint64_t hashStridedArray64(const uint64_t* arr,
                                 size_t n[4],
-                                int s[4]);
+                                int s[4])
 
 # enums
 stride_as_is = AS_IS
@@ -407,8 +407,12 @@ cpdef hashStridedArray(
     strides,
 ):
     cdef char* array = inarray
-    cdef size_t[4] padded_shape = zfpy.gen_padded_int_list(shape)
-    cdef int[4] padded_strides = zfpy.gen_padded_int_list(strides)
+    cdef size_t[4] padded_shape
+    for i in range(4):
+        padded_shape[i] = zfpy.gen_padded_int_list(shape)[i]
+    cdef int[4] padded_strides
+    for i in range(4):
+        padded_strides[i] = zfpy.gen_padded_int_list(strides)[i]
 
     if ztype == zfpy.type_int32 or ztype == zfpy.type_float:
         return hashStridedArray32(<uint32_t*>array, padded_shape, padded_strides)
@@ -435,11 +439,13 @@ cpdef hashNumpyArray(
         elif dtype == np.int64 or dtype == np.float64:
             return hashArray64(<uint64_t*>nparray.data, size, stride_width)
     elif stride_conf in [REVERSED, PERMUTED]:
-        strides = zfpy.gen_padded_int_list(
-            [x for x in nparray.strides[:nparray.ndim]]
+        for i in range(4):
+            strides[i] = zfpy.gen_padded_int_list(
+                [x for x in nparray.strides[:nparray.ndim]][i]
         )
-        shape = zfpy.gen_padded_int_list(
-            [x for x in nparray.shape[:nparray.ndim]]
+        for i in range(4):
+            shape[i] = zfpy.gen_padded_int_list(
+                [x for x in nparray.shape[:nparray.ndim]][i]
         )
         if dtype == np.int32 or dtype == np.float32:
             return hashStridedArray32(<uint32_t*>nparray.data, shape, strides)
@@ -462,8 +468,12 @@ cpdef generateStridedRandomNumpyArray(
     shape = [int(x) for x in randomArray.shape[:ndim]]
     dtype = randomArray.dtype
     cdef zfpy.zfp_type ztype = zfpy.dtype_to_ztype(dtype)
-    cdef int[4] strides = [0, 0, 0, 0]
-    cdef size_t[4] dims = zfpy.gen_padded_int_list(shape)
+    cdef int[4] strides
+    for i in range(4):
+        strides[i] = 0
+    cdef size_t[4] dims
+    for i in range(4):
+        dims[i] = zfpy.gen_padded_int_list(shape)[i]
     cdef size_t inputLen = len(randomArray)
     cdef void* output_array_ptr = NULL
     cdef np.ndarray output_array = None
@@ -477,7 +487,8 @@ cpdef generateStridedRandomNumpyArray(
             raise ValueError("Permutation not supported on 1D arrays")
         output_array = np.empty_like(randomArray, order='K')
         getPermutedStrides(ndim, dims, strides)
-        strides = [int(x) * (randomArray.itemsize) for x in strides]
+        for i in range(4):
+            strides[i] = int(strides[i]) * (randomArray.itemsize)
         ret = permuteSquareArray(
             randomArray.data,
             output_array.data,
@@ -498,7 +509,8 @@ cpdef generateStridedRandomNumpyArray(
         num_elements = np.prod(shape)
         new_shape = [x for x in dims if x > 0]
         new_shape[-1] *= 2
-        dims = tuple(zfpy.gen_padded_int_list(new_shape, pad=0, length=4))
+        for i in range(4):
+            dims[i] = zfpy.gen_padded_int_list(new_shape, pad=0, length=4)[i]
 
         output_array = np.empty(
             new_shape,
@@ -511,7 +523,8 @@ cpdef generateStridedRandomNumpyArray(
             ztype
         )
         getInterleavedStrides(ndim, dims, strides)
-        strides = [int(x) * (randomArray.itemsize) for x in strides]
+        for i in range(4):
+            strides[i] = int(strides[i]) * (randomArray.itemsize)
         return np.lib.stride_tricks.as_strided(
             output_array,
             shape=shape,

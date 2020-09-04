@@ -30,6 +30,30 @@ array access analogous to the C/C++ nested array syntax :code:`array[i][j]`.
 Finally, |zfp|'s *private views* can be used to ensure thread-safe access
 to its compressed arrays.
 
+Access to array elements through a view is via inspectors and mutators
+that return a :code:`const_reference` or :code:`reference`, respectively
+(see :ref:`references`).  As of |zfp| |crpirelease|, it is also possible
+to obtain pointers to array elements through views and to iterate over them.
+View pointers and iterators allow referencing only the elements visible
+through the view, e.g., a rectangular subset of an array
+(see :numref:`view-indexing`).  Those elements are indexed as if the
+view were a contiguous array, and pointer arithmetic assumes that the
+possibly smaller view and not the underlying array is flattened.
+:ref:`Private views <private_immutable_view>` maintain their own cache
+and therefore implement their own proxy references, pointers, and
+iterators.
+
+.. _view-indexing:
+.. figure:: view-indexing.pdf
+  :figwidth: 90 %
+  :align: center
+  :alt: "2D view indexing"
+
+  An 11 |times| 9 element view of a 2D array of dimensions 16 |times| 12.
+  The numbered elements indicate the order in which the view is
+  traversed using pointers and iterators.  We have
+  :code:`view(10, 7) == (&view(0, 0))[87] == view.begin()[97] == view.end()[-2]`.
+
 .. note::
   Like iterators and proxy references and pointers, a view is valid only
   during the lifetime of the array that it references.  **No reference
@@ -68,29 +92,39 @@ array or to a rectangular subset of an array.  Note that like
 references, pointers, and iterators, views are types nested within
 the arrays that they reference.
 
+----
+
 ..
   .. cpp:class:: template<typename Scalar> array1::const_view
   .. cpp:class:: template<typename Scalar> array2::const_view
   .. cpp:class:: template<typename Scalar> array3::const_view
+  .. cpp:class:: template<typename Scalar> array4::const_view
 
 .. cpp:class:: array1::const_view
 .. cpp:class:: array2::const_view
 .. cpp:class:: array3::const_view
+.. cpp:class:: array4::const_view
 
-  Immutable view into 1D, 2D, and 3D array.
+  Immutable view into 1D, 2D, 3D, and 4D array.
+
+----
 
 .. _view_ctor:
 .. cpp:function:: array1::const_view::const_view(array1* array)
 .. cpp:function:: array2::const_view::const_view(array2* array)
 .. cpp:function:: array3::const_view::const_view(array3* array)
+.. cpp:function:: array4::const_view::const_view(array4* array)
 
   Constructor for read-only access to a whole array.  As already
   mentioned, these views are valid only during the lifetime of the
   underlying array object.
 
-.. cpp:function:: array1::const_view::const_view(array1* array, uint x, uint nx)
-.. cpp:function:: array2::const_view::const_view(array2* array, uint x, uint y, uint nx, uint ny)
-.. cpp:function:: array3::const_view::const_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
+----
+
+.. cpp:function:: array1::const_view::const_view(array1* array, size_t x, size_t nx)
+.. cpp:function:: array2::const_view::const_view(array2* array, size_t x, size_t y, size_t nx, size_t ny)
+.. cpp:function:: array3::const_view::const_view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. cpp:function:: array4::const_view::const_view(array4* array, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
 
   Constructors for read-only access to a rectangular subset of an
   array.  The subset is specified by an offset, e.g.,
@@ -98,51 +132,102 @@ the arrays that they reference.
   (*nx*, *ny*, *nz*) for a 3D array.  The rectangle must fit within
   the surrounding array.
 
-.. cpp:function:: uint array1::const_view::global_x(uint i) const
-.. cpp:function:: uint array2::const_view::global_x(uint i) const
-.. cpp:function:: uint array2::const_view::global_y(uint j) const
-.. cpp:function:: uint array3::const_view::global_x(uint i) const
-.. cpp:function:: uint array3::const_view::global_y(uint j) const
-.. cpp:function:: uint array3::const_view::global_z(uint k) const
+----
+
+.. cpp:function:: size_t array1::const_view::global_x(size_t i) const
+.. cpp:function:: size_t array2::const_view::global_x(size_t i) const
+.. cpp:function:: size_t array2::const_view::global_y(size_t j) const
+.. cpp:function:: size_t array3::const_view::global_x(size_t i) const
+.. cpp:function:: size_t array3::const_view::global_y(size_t j) const
+.. cpp:function:: size_t array3::const_view::global_z(size_t k) const
+.. cpp:function:: size_t array4::const_view::global_x(size_t i) const
+.. cpp:function:: size_t array4::const_view::global_y(size_t j) const
+.. cpp:function:: size_t array4::const_view::global_z(size_t k) const
+.. cpp:function:: size_t array4::const_view::global_w(size_t l) const
 
   Return global array index associated with local view index.  For
   instance, if a 1D view has been constructed with offset *x*, then
   :code:`global_x(i)` returns *x* + *i*.
 
-.. cpp:function:: uint array1::const_view::size_x() const
-.. cpp:function:: uint array2::const_view::size_x() const
-.. cpp:function:: uint array2::const_view::size_y() const
-.. cpp:function:: uint array3::const_view::size_x() const
-.. cpp:function:: uint array3::const_view::size_y() const
-.. cpp:function:: uint array3::const_view::size_z() const
+----
+
+.. cpp:function:: size_t array1::const_view::size_x() const
+.. cpp:function:: size_t array2::const_view::size_x() const
+.. cpp:function:: size_t array2::const_view::size_y() const
+.. cpp:function:: size_t array3::const_view::size_x() const
+.. cpp:function:: size_t array3::const_view::size_y() const
+.. cpp:function:: size_t array3::const_view::size_z() const
+.. cpp:function:: size_t array4::const_view::size_x() const
+.. cpp:function:: size_t array4::const_view::size_y() const
+.. cpp:function:: size_t array4::const_view::size_z() const
+.. cpp:function:: size_t array4::const_view::size_w() const
 
   Return dimensions of view.
 
+----
+
 .. _view_accessor:
-.. cpp:function:: Scalar array1::const_view::operator()(uint i) const
-.. cpp:function:: Scalar array2::const_view::operator()(uint i, uint j) const
-.. cpp:function:: Scalar array3::const_view::operator()(uint i, uint j, uint k) const
+.. cpp:function:: const_reference array1::const_view::operator()(size_t i) const
+.. cpp:function:: const_reference array2::const_view::operator()(size_t i, size_t j) const
+.. cpp:function:: const_reference array3::const_view::operator()(size_t i, size_t j, size_t k) const
+.. cpp:function:: const_reference array4::const_view::operator()(size_t i, size_t j, size_t k, size_t l) const
 
-  Return scalar stored at multi-dimensional index given by *x* + *i*,
-  *y* + *j*, and *z* + *k*, where *x*, *y*, and *z* specify the offset
-  into the array.
+  Return reference to scalar stored at multi-dimensional index given by
+  *x* + *i*, *y* + *j*, *z* + *k*, and *w* + *l*, where *x*, *y*, *z*, and *w*
+  specify the offset into the array.
 
-.. cpp:function:: Scalar array1::const_view::operator[](uint index) const
+----
+
+.. cpp:function:: const_reference array1::const_view::operator[](size_t index) const
 
   Alternative inspector for 1D arrays identical to
   :cpp:func:`array1::const_view::operator()`.
 
+----
+
+.. cpp:function:: array1::const_view::const_iterator array1::const_view::begin() const
+.. cpp:function:: array2::const_view::const_iterator array2::const_view::begin() const
+.. cpp:function:: array3::const_view::const_iterator array3::const_view::begin() const
+.. cpp:function:: array4::const_view::const_iterator array4::const_view::begin() const
+.. cpp:function:: array1::const_view::const_iterator array1::const_view::cbegin() const
+.. cpp:function:: array2::const_view::const_iterator array2::const_view::cbegin() const
+.. cpp:function:: array3::const_view::const_iterator array3::const_view::cbegin() const
+.. cpp:function:: array4::const_view::const_iterator array4::const_view::cbegin() const
+
+  Const iterator to first element of view.
+
+----
+
+.. cpp:function:: array1::const_view::const_iterator array1::const_view::end() const
+.. cpp:function:: array2::const_view::const_iterator array2::const_view::end() const
+.. cpp:function:: array3::const_view::const_iterator array3::const_view::end() const
+.. cpp:function:: array4::const_view::const_iterator array4::const_view::end() const
+.. cpp:function:: array1::const_view::const_iterator array1::const_view::cend() const
+.. cpp:function:: array2::const_view::const_iterator array2::const_view::cend() const
+.. cpp:function:: array3::const_view::const_iterator array3::const_view::cend() const
+.. cpp:function:: array4::const_view::const_iterator array4::const_view::cend() const
+
+  Const iterator to end of view.
+
+----
+
 There are a number of common methods inherited from a base class,
 :code:`preview`, further up the class hierarchy.
+
+----
 
 .. cpp:function:: double arrayANY::const_view::rate() const
 
   Return rate in bits per value.  Same as :cpp:func:`array::rate`.
   
+----
+
 .. cpp:function:: size_t arrayANY::const_view::size() const
 
   Total number of elements in view, e.g., *nx* |times| *ny* |times| *nz* for
   3D views.
+
+----
 
 With the above definitions, the following example shows how a 2D view is
 constructed and accessed::
@@ -166,26 +251,35 @@ for the :code:`const_view`.
   .. cpp:class:: template<typename Scalar> array1::view
   .. cpp:class:: template<typename Scalar> array2::view
   .. cpp:class:: template<typename Scalar> array3::view
+  .. cpp:class:: template<typename Scalar> array4::view
 
 .. cpp:class:: array1::view : public array1::const_view
 .. cpp:class:: array2::view : public array2::const_view
 .. cpp:class:: array3::view : public array3::const_view
+.. cpp:class:: array4::view : public array4::const_view
 
-  Mutable view into 1D, 2D, and 3D array.
+  Mutable view into 1D, 2D, 3D, and 4D array.
+
+----
 
 .. cpp:function:: array1::view::view(array1* array)
 .. cpp:function:: array2::view::view(array2* array)
 .. cpp:function:: array3::view::view(array3* array)
-.. cpp:function:: array1::view::view(array1* array, uint x, uint nx)
-.. cpp:function:: array2::view::view(array2* array, uint x, uint y, uint nx, uint ny)
-.. cpp:function:: array3::view::view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
+.. cpp:function:: array4::view::view(array4* array)
+.. cpp:function:: array1::view::view(array1* array, size_t x, size_t nx)
+.. cpp:function:: array2::view::view(array2* array, size_t x, size_t y, size_t nx, size_t ny)
+.. cpp:function:: array3::view::view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. cpp:function:: array4::view::view(array4* array, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
 
   Whole-array and sub-array mutable view constructors.  See
   :ref:`const_view constructors <view_ctor>` for details.
 
-.. cpp:function:: array1::reference array1::view::operator()(uint i)
-.. cpp:function:: array2::reference array2::view::operator()(uint i, uint j)
-.. cpp:function:: array3::reference array3::view::operator()(uint i, uint j, uint k)
+----
+
+.. cpp:function:: reference array1::view::operator()(size_t i)
+.. cpp:function:: reference array2::view::operator()(size_t i, size_t j)
+.. cpp:function:: reference array3::view::operator()(size_t i, size_t j, size_t k)
+.. cpp:function:: reference array4::view::operator()(size_t i, size_t j, size_t k, size_t l)
 
   These operators, whose arguments have the same meaning as in the
   :ref:`array accessors <array_accessor>`, return
@@ -211,48 +305,66 @@ This is true regardless of the view offset (*x*, *y*, *z*).
 
 The flat view derives from the mutable view and adds :code:`operator[]`
 for flat indexing.  This operator is essentially equivalent to
-:cpp:func:`array::operator[]` defined for 2D and 3D arrays.  Flat views
-also provide functions for converting between multidimensional and flat
-indices.  
+:cpp:func:`array::operator[]` defined for 2D, 3D, and 4D arrays.  Flat
+views also provide functions for converting between multidimensional and
+flat indices.  
 
-Flat views are available only for 2D and 3D arrays.  The basic mutable
+Flat views are available only for 2D, 3D, and 4D arrays.  The basic mutable
 view, :cpp:class:`array1::view`, for 1D arrays can be thought of as
 either a flat or a nested view.
 
 ..
   .. cpp:class:: template<typename Scalar> array2::flat_view
   .. cpp:class:: template<typename Scalar> array3::flat_view
+  .. cpp:class:: template<typename Scalar> array4::flat_view
 
 .. cpp:class:: array2::flat_view : public array2::view
-.. cpp:class:: array3::flat_view : public array2::view
+.. cpp:class:: array3::flat_view : public array3::view
+.. cpp:class:: array4::flat_view : public array4::view
 
-  Flat, mutable views for 2D and 3D arrays.
+  Flat, mutable views for 2D, 3D, and 4D arrays.
+
+----
 
 .. cpp:function:: array2::flat_view::flat_view(array2* array)
 .. cpp:function:: array3::flat_view::flat_view(array3* array)
-.. cpp:function:: array2::flat_view::flat_view(array2* array, uint x, uint y, uint nx, uint ny)
-.. cpp:function:: array3::flat_view::flat_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
+.. cpp:function:: array4::flat_view::flat_view(array4* array)
+.. cpp:function:: array2::flat_view::flat_view(array2* array, size_t x, size_t y, size_t nx, size_t ny)
+.. cpp:function:: array3::flat_view::flat_view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. cpp:function:: array4::flat_view::flat_view(array4* array, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
 
   Whole-array and sub-array flat view constructors.  See
   :ref:`const_view constructors <view_ctor>` for details.
 
-.. cpp:function:: uint array2::flat_view::index(uint i, uint j) const
-.. cpp:function:: uint array3::flat_view::index(uint i, uint j, uint k) const
+----
+
+.. cpp:function:: size_t array2::flat_view::index(size_t i, size_t j) const
+.. cpp:function:: size_t array3::flat_view::index(size_t i, size_t j, size_t k) const
+.. cpp:function:: size_t array4::flat_view::index(size_t i, size_t j, size_t k, size_t l) const
 
   Return flat index associated with multidimensional index.
 
-.. cpp:function:: void array2::flat_view::ij(uint& i, uint& j, uint index) const
-.. cpp:function:: void array3::flat_view::ijk(uint& i, uint& j, uint& k, uint index) const
+----
+
+.. cpp:function:: void array2::flat_view::ij(size_t& i, size_t& j, size_t index) const
+.. cpp:function:: void array3::flat_view::ijk(size_t& i, size_t& j, size_t& k, size_t index) const
+.. cpp:function:: void array4::flat_view::ijkl(size_t& i, size_t& j, size_t& k, size_t& l, size_t index) const
 
   Convert flat index to multidimensional index.
 
-.. cpp:function:: Scalar array2::flat_view::operator[](uint index) const
-.. cpp:function:: Scalar array3::flat_view::operator[](uint index) const
+----
+
+.. cpp:function:: const_reference array2::flat_view::operator[](size_t index) const
+.. cpp:function:: const_reference array3::flat_view::operator[](size_t index) const
+.. cpp:function:: const_reference array4::flat_view::operator[](size_t index) const
 
   Return array element associated with given flat index.
 
-.. cpp:function:: array2::reference array2::flat_view::operator[](uint index)
-.. cpp:function:: array3::reference array3::flat_view::operator[](uint index)
+----
+
+.. cpp:function:: reference array2::flat_view::operator[](size_t index)
+.. cpp:function:: reference array3::flat_view::operator[](size_t index)
+.. cpp:function:: reference array4::flat_view::operator[](size_t index)
 
   Return reference to array element associated with given flat index.
 
@@ -278,9 +390,9 @@ multidimensional arrays.  Nested views are mutable.
 Nested views are associated with a dimensionality.  For instance,
 if :code:`v` is a 3D nested view of a 3D array, then :code:`v[i]`
 is a 2D nested view (of a 3D array), :code:`v[i][j]` is a 1D nested
-view (of a 3D array), and :code:`v[i][j][k]` is a scalar array element.
-Note that the order of indices is reversed when using nested indexing
-compared to multidimensional indexing, e.g.,
+view (of a 3D array), and :code:`v[i][j][k]` is a (reference to a) scalar
+array element.  Note that the order of indices is reversed when using
+nested indexing compared to multidimensional indexing, e.g.,
 :code:`v(i, j, k) == v[k][j][i]`.
 
 Whereas :code:`operator[]` on an array object accesses an element
@@ -302,12 +414,16 @@ nested view to in effect provide nested array indexing::
 
   View of a 1D slice of a 2D array.
 
+----
+
 ..
   .. cpp:class:: template<typename Scalar> array2::nested_view2
 
 .. cpp:class:: array2::nested_view2
 
   2D view of a 2D (sub)array.
+
+----
 
 ..
   .. cpp:class:: template<typename Scalar> array3::nested_view1
@@ -316,12 +432,16 @@ nested view to in effect provide nested array indexing::
 
   View of a 1D slice of a 3D array.
 
+----
+
 ..
   .. cpp:class:: template<typename Scalar> array3::nested_view2
 
 .. cpp:class:: array3::nested_view2
 
   View of a 2D slice of a 3D array.
+
+----
 
 ..
   .. cpp:class:: template<typename Scalar> array3::nested_view3
@@ -330,60 +450,142 @@ nested view to in effect provide nested array indexing::
 
   3D view of a 3D (sub)array.
 
+----
+
+..
+  .. cpp:class:: template<typename Scalar> array4::nested_view1
+
+.. cpp:class:: array4::nested_view1
+
+  View of a 1D slice of a 4D array.
+
+----
+
+..
+  .. cpp:class:: template<typename Scalar> array4::nested_view2
+
+.. cpp:class:: array4::nested_view2
+
+  View of a 2D slice of a 4D array.
+
+----
+
+..
+  .. cpp:class:: template<typename Scalar> array4::nested_view3
+
+.. cpp:class:: array4::nested_view3
+
+  View of a 3D slice of a 4D array.
+
+----
+
+..
+  .. cpp:class:: template<typename Scalar> array4::nested_view4
+
+.. cpp:class:: array4::nested_view4
+
+  4D view of a 4D (sub)array.
+
+----
+
 .. cpp:function:: array2::nested_view2::nested_view2(array2* array)
 .. cpp:function:: array3::nested_view3::nested_view3(array3* array)
-.. cpp:function:: array2::nested_view2::nested_view2(array2* array, uint x, uint y, uint nx, uint ny)
-.. cpp:function:: array3::nested_view3::nested_view3(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
+.. cpp:function:: array4::nested_view4::nested_view4(array4* array)
+.. cpp:function:: array2::nested_view2::nested_view2(array2* array, size_t x, size_t y, size_t nx, size_t ny)
+.. cpp:function:: array3::nested_view3::nested_view3(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. cpp:function:: array4::nested_view4::nested_view4(array4* array, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
 
   Whole-array and sub-array nested view constructors.  See
   :ref:`const_view <immutable_view>` constructors for details.
   Lower-dimensional view constructors are not accessible to the
   user but are invoked when accessing views via nested indexing.
 
-.. cpp:function:: array2::nested_view1::size_x() const
-.. cpp:function:: array2::nested_view2::size_x() const
-.. cpp:function:: array2::nested_view2::size_y() const
-.. cpp:function:: array3::nested_view1::size_x() const
-.. cpp:function:: array3::nested_view2::size_x() const
-.. cpp:function:: array3::nested_view2::size_y() const
-.. cpp:function:: array3::nested_view3::size_x() const
-.. cpp:function:: array3::nested_view3::size_y() const
-.. cpp:function:: array3::nested_view3::size_z() const
+----
+
+.. cpp:function:: size_t array2::nested_view1::size_x() const
+.. cpp:function:: size_t array2::nested_view2::size_x() const
+.. cpp:function:: size_t array2::nested_view2::size_y() const
+.. cpp:function:: size_t array3::nested_view1::size_x() const
+.. cpp:function:: size_t array3::nested_view2::size_x() const
+.. cpp:function:: size_t array3::nested_view2::size_y() const
+.. cpp:function:: size_t array3::nested_view3::size_x() const
+.. cpp:function:: size_t array3::nested_view3::size_y() const
+.. cpp:function:: size_t array3::nested_view3::size_z() const
+.. cpp:function:: size_t array4::nested_view1::size_x() const
+.. cpp:function:: size_t array4::nested_view2::size_x() const
+.. cpp:function:: size_t array4::nested_view2::size_y() const
+.. cpp:function:: size_t array4::nested_view3::size_x() const
+.. cpp:function:: size_t array4::nested_view3::size_y() const
+.. cpp:function:: size_t array4::nested_view3::size_z() const
+.. cpp:function:: size_t array4::nested_view4::size_x() const
+.. cpp:function:: size_t array4::nested_view4::size_y() const
+.. cpp:function:: size_t array4::nested_view4::size_z() const
+.. cpp:function:: size_t array4::nested_view4::size_w() const
 
   View dimensions.
 
-.. cpp:function:: array3::nested_view2 array3::nested_view3::operator[](uint index) const
+----
 
-  Return view to a 2D slice of a 3D array.
+.. cpp:function:: array4::nested_view3 array4::nested_view4::operator[](size_t index) const
 
-.. cpp:function:: array2::nested_view1 array2::nested_view2::operator[](uint index) const
-.. cpp:function:: array3::nested_view1 array3::nested_view2::operator[](uint index) const
+  Return view to a 3D slice of 4D array.
 
-  Return view to a 1D slice of a 2D or 3D array.
+----
 
-.. cpp:function:: Scalar array2::nested_view1::operator[](uint index) const
-.. cpp:function:: Scalar array3::nested_view1::operator[](uint index) const
+.. cpp:function:: array3::nested_view2 array3::nested_view3::operator[](size_t index) const
+.. cpp:function:: array4::nested_view2 array4::nested_view3::operator[](size_t index) const
 
-  Return scalar element of a 2D or 3D array.
+  Return view to a 2D slice of a 3D or 4D array.
 
-.. cpp:function:: array2::reference array2::nested_view1::operator[](uint index)
-.. cpp:function:: array3::reference array3::nested_view1::operator[](uint index)
+----
 
-  Return reference to a scalar element of a 2D or 3D array.
+.. cpp:function:: array2::nested_view1 array2::nested_view2::operator[](size_t index) const
+.. cpp:function:: array3::nested_view1 array3::nested_view2::operator[](size_t index) const
+.. cpp:function:: array4::nested_view1 array4::nested_view2::operator[](size_t index) const
 
-.. cpp:function:: Scalar array2::nested_view1::operator()(uint i) const
-.. cpp:function:: Scalar array2::nested_view2::operator()(uint i, uint j) const
-.. cpp:function:: Scalar array3::nested_view1::operator()(uint i) const
-.. cpp:function:: Scalar array3::nested_view2::operator()(uint i, uint j) const
-.. cpp:function:: Scalar array3::nested_view3::operator()(uint i, uint j, uint k) const
+  Return view to a 1D slice of a 2D, 3D, or 4D array.
 
-  Return scalar element of a 2D or 3D array.
+----
 
-.. cpp:function:: array2::reference array2::nested_view1::operator()(uint i)
-.. cpp:function:: array2::reference array2::nested_view2::operator()(uint i, uint j)
-.. cpp:function:: array3::reference array3::nested_view1::operator()(uint i)
-.. cpp:function:: array3::reference array3::nested_view2::operator()(uint i, uint j)
-.. cpp:function:: array3::reference array3::nested_view3::operator()(uint i, uint j, uint k)
+.. cpp:function:: const_reference array2::nested_view1::operator[](size_t index) const
+.. cpp:function:: const_reference array3::nested_view1::operator[](size_t index) const
+.. cpp:function:: const_reference array4::nested_view1::operator[](size_t index) const
+
+  Return scalar element of a 2D, 3D, or 4D array.
+
+----
+
+.. cpp:function:: reference array2::nested_view1::operator[](size_t index)
+.. cpp:function:: reference array3::nested_view1::operator[](size_t index)
+.. cpp:function:: reference array4::nested_view1::operator[](size_t index)
+
+  Return reference to a scalar element of a 2D, 3D, or 4D array.
+
+----
+
+.. cpp:function:: const_reference array2::nested_view1::operator()(size_t i) const
+.. cpp:function:: const_reference array2::nested_view2::operator()(size_t i, size_t j) const
+.. cpp:function:: const_reference array3::nested_view1::operator()(size_t i) const
+.. cpp:function:: const_reference array3::nested_view2::operator()(size_t i, size_t j) const
+.. cpp:function:: const_reference array3::nested_view3::operator()(size_t i, size_t j, size_t k) const
+.. cpp:function:: const_reference array4::nested_view1::operator()(size_t i) const
+.. cpp:function:: const_reference array4::nested_view2::operator()(size_t i, size_t j) const
+.. cpp:function:: const_reference array4::nested_view3::operator()(size_t i, size_t j, size_t k) const
+.. cpp:function:: const_reference array4::nested_view4::operator()(size_t i, size_t j, size_t k, size_t l) const
+
+  Return const reference to a scalar element of a 2D, 3D, or 4D array.
+
+----
+
+.. cpp:function:: reference array2::nested_view1::operator()(size_t i)
+.. cpp:function:: reference array2::nested_view2::operator()(size_t i, size_t j)
+.. cpp:function:: reference array3::nested_view1::operator()(size_t i)
+.. cpp:function:: reference array3::nested_view2::operator()(size_t i, size_t j)
+.. cpp:function:: reference array3::nested_view3::operator()(size_t i, size_t j, size_t k)
+.. cpp:function:: reference array4::nested_view1::operator()(size_t i)
+.. cpp:function:: reference array4::nested_view2::operator()(size_t i, size_t j)
+.. cpp:function:: reference array4::nested_view3::operator()(size_t i, size_t j, size_t k)
+.. cpp:function:: reference array4::nested_view4::operator()(size_t i, size_t j, size_t k, size_t l)
 
   Return reference to a scalar element of a 2D or 3D array.
 
@@ -424,6 +626,7 @@ Slicing adds the following templated array constructors.
 .. cpp:function:: template<class View> array1::array1(const View& v)
 .. cpp:function:: template<class View> array2::array2(const View& v)
 .. cpp:function:: template<class View> array3::array3(const View& v)
+.. cpp:function:: template<class View> array4::array4(const View& v)
 
   Construct array from a view via a deep copy.  The view, *v*, must support
   :ref:`multidimensional indexing <view_accessor>`.
@@ -447,9 +650,9 @@ prohibitive performance cost.
 
 To ensure thread-safe access, |zfp| provides private mutable and
 immutable views of arrays that maintain their own private caches.
-The :code:`private_const_view` immutable view provides read-only
-access to the underlying array.  It is similar to a
-:ref:`const_view <immutable_view>` in this sense, but differs in
+The :code:`private_const_view` immutable view
+provides read-only access to the underlying array.  It is similar
+to a :ref:`const_view <immutable_view>` in this sense, but differs in
 that it maintains its own private cache rather than sharing the
 cache owned by the array.  Multiple threads may thus access the
 same array in parallel through their own private views.
@@ -479,37 +682,55 @@ are neither flat nor nested.
   .. cpp:class:: template<typename Scalar> array1::private_const_view
   .. cpp:class:: template<typename Scalar> array2::private_const_view
   .. cpp:class:: template<typename Scalar> array3::private_const_view
+  .. cpp:class:: template<typename Scalar> array4::private_const_view
 
+.. _private_const_view:
 .. cpp:class:: array1::private_const_view
 .. cpp:class:: array2::private_const_view
 .. cpp:class:: array3::private_const_view
+.. cpp:class:: array4::private_const_view
 
-  Immutable views of 1D, 2D, and 3D arrays with private caches.
+  Immutable views of 1D, 2D, 3D, and 4D arrays with private caches.
+
+----
 
 .. cpp:function:: array1::private_const_view::private_const_view(array1* array)
 .. cpp:function:: array2::private_const_view::private_const_view(array2* array)
 .. cpp:function:: array3::private_const_view::private_const_view(array3* array)
-.. cpp:function:: array1::private_const_view::private_const_view(array1* array, uint x, uint nx)
-.. cpp:function:: array2::private_const_view::private_const_view(array2* array, uint x, uint y, uint nx, uint ny)
-.. cpp:function:: array3::private_const_view::private_const_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
+.. cpp:function:: array4::private_const_view::private_const_view(array4* array)
+.. cpp:function:: array1::private_const_view::private_const_view(array1* array, size_t x, size_t nx)
+.. cpp:function:: array2::private_const_view::private_const_view(array2* array, size_t x, size_t y, size_t nx, size_t ny)
+.. cpp:function:: array3::private_const_view::private_const_view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. cpp:function:: array4::private_const_view::private_const_view(array4* array, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
 
   Whole-array and sub-array private immutable view constructors.  See
   :ref:`const_view constructors <view_ctor>` for details.
 
-.. cpp:function:: array1::private_const_view::size_x() const
-.. cpp:function:: array2::private_const_view::size_x() const
-.. cpp:function:: array2::private_const_view::size_y() const
-.. cpp:function:: array3::private_const_view::size_x() const
-.. cpp:function:: array3::private_const_view::size_y() const
-.. cpp:function:: array3::private_const_view::size_z() const
+----
+
+.. cpp:function:: size_t array1::private_const_view::size_x() const
+.. cpp:function:: size_t array2::private_const_view::size_x() const
+.. cpp:function:: size_t array2::private_const_view::size_y() const
+.. cpp:function:: size_t array3::private_const_view::size_x() const
+.. cpp:function:: size_t array3::private_const_view::size_y() const
+.. cpp:function:: size_t array3::private_const_view::size_z() const
+.. cpp:function:: size_t array4::private_const_view::size_x() const
+.. cpp:function:: size_t array4::private_const_view::size_y() const
+.. cpp:function:: size_t array4::private_const_view::size_z() const
+.. cpp:function:: size_t array4::private_const_view::size_w() const
 
   View dimensions.
 
-.. cpp:function:: Scalar array1::private_const_view::operator()(uint i) const
-.. cpp:function:: Scalar array2::private_const_view::operator()(uint i, uint j) const
-.. cpp:function:: Scalar array3::private_const_view::operator()(uint i, uint j, uint k) const
+----
 
-  Return scalar element of a 1D, 2D, or 3D array.
+.. cpp:function:: const_reference array1::private_const_view::operator()(size_t i) const
+.. cpp:function:: const_reference array2::private_const_view::operator()(size_t i, size_t j) const
+.. cpp:function:: const_reference array3::private_const_view::operator()(size_t i, size_t j, size_t k) const
+.. cpp:function:: const_reference array4::private_const_view::operator()(size_t i, size_t j, size_t k, size_t l) const
+
+  Return const reference to scalar element of a 1D, 2D, 3D, or 4D array.
+
+----
 
 The following functions are common among all dimensionalities:
 
@@ -572,44 +793,59 @@ The :code:`private_view` class inherits all public functions from
   .. cpp:class:: template<typename Scalar> array1::private_view
   .. cpp:class:: template<typename Scalar> array2::private_view
   .. cpp:class:: template<typename Scalar> array3::private_view
+  .. cpp:class:: template<typename Scalar> array4::private_view
 
 .. cpp:class:: array1::private_view : public array1::private_const_view
 .. cpp:class:: array2::private_view : public array2::private_const_view
 .. cpp:class:: array3::private_view : public array3::private_const_view
+.. cpp:class:: array4::private_view : public array4::private_const_view
 
-  Mutable views of 1D, 2D, and 3D arrays with private caches.
+  Mutable views of 1D, 2D, 3D, and 4D arrays with private caches.
+
+----
 
 ..
   .. cpp:class:: template<typename Scalar> array1::private_view::view_reference
   .. cpp:class:: template<typename Scalar> array2::private_view::view_reference
   .. cpp:class:: template<typename Scalar> array3::private_view::view_reference
+  .. cpp:class:: template<typename Scalar> array4::private_view::view_reference
 
 .. cpp:class:: array1::private_view::view_reference
 .. cpp:class:: array2::private_view::view_reference
 .. cpp:class:: array3::private_view::view_reference
+.. cpp:class:: array4::private_view::view_reference
 
   Proxy references to array elements specialized for mutable
   private views.
 
+----
+
 .. cpp:function:: array1::private_view::private_view(array1* array)
 .. cpp:function:: array2::private_view::private_view(array2* array)
 .. cpp:function:: array3::private_view::private_view(array3* array)
-.. cpp:function:: array1::private_view::private_view(array1* array, uint x, uint nx)
-.. cpp:function:: array2::private_view::private_view(array2* array, uint x, uint y, uint nx, uint ny)
-.. cpp:function:: array3::private_view::private_view(array3* array, uint x, uint y, uint z, uint nx, uint ny, uint nz)
+.. cpp:function:: array4::private_view::private_view(array4* array)
+.. cpp:function:: array1::private_view::private_view(array1* array, size_t x, size_t nx)
+.. cpp:function:: array2::private_view::private_view(array2* array, size_t x, size_t y, size_t nx, size_t ny)
+.. cpp:function:: array3::private_view::private_view(array3* array, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. cpp:function:: array4::private_view::private_view(array4* array, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
 
   Whole-array and sub-array private mutable view constructors.  See
   :ref:`const_view constructors <view_ctor>` for details.
 
-.. cpp:function:: array1::private_view::view_reference array1::private_view::operator()(uint i) const
-.. cpp:function:: array2::private_view::view_reference array2::private_view::operator()(uint i, uint j) const
-.. cpp:function:: array3::private_view::view_reference array3::private_view::operator()(uint i, uint j, uint k) const
+----
 
-  Return reference to a scalar element of a 1D, 2D, or 3D array.
+.. cpp:function:: array1::private_view::view_reference array1::private_view::operator()(size_t i) const
+.. cpp:function:: array2::private_view::view_reference array2::private_view::operator()(size_t i, size_t j) const
+.. cpp:function:: array3::private_view::view_reference array3::private_view::operator()(size_t i, size_t j, size_t k) const
+.. cpp:function:: array4::private_view::view_reference array4::private_view::operator()(size_t i, size_t j, size_t k, size_t l) const
+
+  Return reference to a scalar element of a 1D, 2D, 3D, or 4D array.
+
+----
 
 The following functions are common among all dimensionalities:
 
-.. cpp:function:: void arrayANY::private_view::partition(uint index, uint count)
+.. cpp:function:: void arrayANY::private_view::partition(size_t index, size_t count)
 
   Partition the current view into *count* roughly equal-size pieces along the
   view's longest dimension and modify the view's extents to match the piece
@@ -619,6 +855,8 @@ The following functions are common among all dimensionalities:
   new views; it merely modifies the current values of the view's offsets
   and dimensions.  Note that this may result in empty views whose dimensions
   are zero, e.g., if there are more pieces than blocks along a dimension.
+
+----
 
 .. cpp:function:: void arrayANY::private_view::flush_cache() const
 

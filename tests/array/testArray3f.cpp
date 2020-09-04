@@ -1,6 +1,8 @@
-#include "array/zfparray3.h"
 #include "array/zfparray1.h"
+#include "array/zfparray2.h"
+#include "array/zfparray3.h"
 #include "array/zfpfactory.h"
+#include "array/zfparray4.h"
 using namespace zfp;
 
 extern "C" {
@@ -25,8 +27,8 @@ class Array3fTest : public ArrayNdTestFixture {};
 
 #define ZFP_ARRAY_TYPE array3f
 #define ZFP_ARRAY_TYPE_WRONG_SCALAR array3d
-#define ZFP_ARRAY_TYPE_WRONG_DIM array1f
-#define ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM array1d
+#define ZFP_ARRAY_TYPE_WRONG_DIM array4f
+#define ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM array4d
 #define ZFP_ARRAY_NOT_INCLUDED_TYPE array2f
 
 #define UINT uint32

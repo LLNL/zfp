@@ -129,22 +129,28 @@ public:
   void resize(uint minsize)
   {
     for (mask = minsize ? minsize - 1 : 1; mask & (mask + 1); mask |= mask + 1);
-    zfp::reallocate_aligned(tag, ((size_t)mask + 1) * sizeof(Tag), 0x100);
-    zfp::reallocate_aligned(line, ((size_t)mask + 1) * sizeof(Line), 0x100);
+    zfp::reallocate_aligned(tag, ((size_t)mask + 1) * sizeof(Tag), ZFP_MEMORY_ALIGNMENT);
+    zfp::reallocate_aligned(line, ((size_t)mask + 1) * sizeof(Line), ZFP_MEMORY_ALIGNMENT);
     clear();
   }
 
   // look up cache line #x and return pointer to it if in the cache;
   // otherwise return null
-  const Line* lookup(Index x) const
+  Line* lookup(Index x, bool write)
   {
     uint i = primary(x);
-    if (tag[i].index() == x)
+    if (tag[i].index() == x) {
+      if (write)
+        tag[i].mark();
       return line + i;
+    }
 #ifdef ZFP_WITH_CACHE_TWOWAY
     uint j = secondary(x);
-    if (tag[j].index() == x)
+    if (tag[j].index() == x) {
+      if (write)
+        tag[i].mark();
       return line + j;
+    }
 #endif
     return 0;
   }
@@ -211,8 +217,8 @@ protected:
   void deep_copy(const Cache& c)
   {
     mask = c.mask;
-    zfp::clone_aligned(tag, c.tag, mask + 1, 0x100u);
-    zfp::clone_aligned(line, c.line, mask + 1, 0x100u);
+    zfp::clone_aligned(tag, c.tag, mask + 1, ZFP_MEMORY_ALIGNMENT);
+    zfp::clone_aligned(line, c.line, mask + 1, ZFP_MEMORY_ALIGNMENT);
 #ifdef ZFP_WITH_CACHE_PROFILE
     hit[0][0] = c.hit[0][0];
     hit[0][1] = c.hit[0][1];
