@@ -280,20 +280,28 @@ Types
   the dimensions or specify strides to properly describe the memory layout.
   See this :ref:`discussion <p-dimensions>` for further details.
 
-----
-
 .. c:type:: zfp_bool
 
-  Boolean type and associated literals.
-  ::
+  :c:type:`zfp_bool` is new as of |zfp| |boolrelease|.  Although merely
+  an alias for :code:`int`, this type serves to document that a return
+  value or function parameter should be treated as Boolean.  Two enumerated
+  constants are available::
 
-    typedef int zfp_bool;
-
-    typedef enum {
-      zfp_false = 0,         // false
-      zfp_true = !zfp_false; // true
+    enum {
+      zfp_false = 0,
+      zfp_true = !zfp_false
     };
 
+  The reason why :c:type:`zfp_bool` is not an enumerated type itself is
+  that in C++ this would require an explicit cast between the :code:`bool`
+  type resulting from logical expressions, e.g.,
+  :code:`zfp_bool done = static_cast<zfp_bool>(queue.empty() && work == 0)`.
+  Such casts from :code:`bool` to a non-enumerated :code:`int` are not
+  necessary.
+
+  The |zfp| |boolrelease| API has changed to use :c:type:`zfp_bool` in
+  place of :code:`int` where appropriate; this change should not affect
+  existing code.
 
 .. _hl-data:
 
@@ -554,6 +562,7 @@ Execution Policy
   If zero, use one chunk per thread.  This function also sets the execution
   policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
 
+
 .. _hl-func-field:
 
 Array Metadata
@@ -649,8 +658,12 @@ Array Metadata
   :code:`a[nw][nz][ny][nx]` depending on dimensionality.  Return
   :code:`zfp_true` if the array is strided and laid out differently in memory.
   If *stride* is not :c:macro:`NULL`, then store the stride for each
-  dimension, e.g., :code:`stride[0] = sx; stride[1] = sy; stride[2] = sz`
+  dimension, e.g., :code:`stride[0] = sx; stride[1] = sy; stride[2] = sz;`
   for a 3D array.  See :c:type:`zfp_field` for more information on strides.
+  Return false if the array is stored contiguously as :code:`a[nx]`,
+  :code:`a[ny][nx]`, :code:`a[nz][ny][nx]`, or :code:`a[nw][nz][ny][nx]`
+  depending on dimensionality.  Return true if the array is strided
+  and laid out differently in memory.
 
 ----
 
@@ -736,6 +749,7 @@ Array Metadata
   Specify array scalar type and dimensions from compact 52-bit representation.
   Return :code:`zfp_true` upon success.  See :c:func:`zfp_field_metadata` for
   how to encode *meta*.
+
 
 .. _hl-func-codec:
 

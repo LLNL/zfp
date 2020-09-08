@@ -31,4 +31,5 @@
 .. |crpirelease| replace:: 0.5.6
 .. |raiterrelease| replace:: 0.5.6
 .. |64bitrelease| replace:: 0.5.6
+.. |boolrelease| replace:: 0.5.6
 .. |4darrrelease| replace:: 0.5.6
