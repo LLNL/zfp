@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
   if (rate < 0)
     zfp_stream_set_precision(zfp, (uint)floor(0.5 - rate));
   else
-    zfp_stream_set_rate(zfp, rate, zfp_type_int32, 2, 0);
+    zfp_stream_set_rate(zfp, rate, zfp_type_int32, 2, zfp_false);
   bytes = zfp_stream_maximum_size(zfp, field);
   buffer = malloc(bytes);
   stream = stream_open(buffer, bytes);
