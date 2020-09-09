@@ -1,0 +1,192 @@
+#!/usr/bin/python3
+from sys import argv, path
+import zfpy
+import numpy as np
+import math
+
+path.append("@ZFP_BINARY_DIR@/@CMAKE_INSTALL_LIBDIR@")
+
+class Constants:
+    def __init__(self, nx, ny, nt):
+        self.nx = int(nx)
+        self.ny = int(ny)
+        self.nt = int(nt)
+        self.x0 = int((nx - 1) / 2)
+        self.y0 = int((ny - 1) / 2)
+        self.k = 0.04
+        self.dx = 2.0 / (max(nx, ny) - 1)
+        self.dy = 2.0 / (max(nx, ny) - 1)
+        self.dt = 0.5 * (self.dx ** 2 + self.dy ** 2) / (8 * self.k)
+        self.tfinal = self.nt * self.dt if self.nt != 0 else 1.0
+        self.pi = math.pi
+
+
+def total_compressed(u):
+    s = 0.0
+    nx = u.shape[0]
+    ny = u.shape[1]
+    for y in range(1, ny - 1):
+        for x in range(1, nx - 1):
+            s = s + u.get(x, y)
+    return s
+
+
+def total(u, nx, ny):
+    s = 0.0
+    for y in range(1, ny - 1):
+        for x in range(1, nx - 1):
+            s = s + u[y*nx + x]
+    return s
+
+def exp(arg):
+    if arg == 0:
+        return 1.0
+    elif arg == -math.inf:
+        return 0
+    elif arg == math.inf:
+        return math.inf
+    elif math.isnan(arg):
+        return float("nan")
+    else:
+        math.e **(arg)
+
+def error_compressed(u, c, t):
+    e = 0.0
+    for y in range(1, c.ny - 1):
+        py = c.dy * (y - c.y0)
+        for x in range(1, c.nx - 1):
+            px = c.dx * (x - c.x0)
+            f = u.get(x, y)
+            g = math.inf if t == 0 else c.dx * c.dy * exp(-1*(px ** 2 + py ** 2) / (4 * c.k * t)) / (4 * c.pi * c.k * t)
+            e = e + (f - g) ** 2
+    return math.sqrt(e / ((c.nx - 2) * (c.ny - 2)))
+
+
+def error(u, c, t):
+    e = 0.0
+    for y in range(1, c.ny - 1):
+        py = c.dy * (y - c.y0)
+        for x in range(1, c.nx - 1):
+            px = c.dx * (x - c.x0)
+            f = u[y*c.nx + x]
+            g = math.inf if t == 0 else c.dx * c.dy * exp(-1*(px ** 2 + py ** 2) / (4 * c.k * t)) / (4 * c.pi * c.k * t)
+            e = e + (f - g) ** 2
+    return math.sqrt(e / ((c.nx - 2) * (c.ny - 2)))
+
+
+def time_step_indexed_compressed(u, c):
+    # compute du/dt
+    du = zfpy.zfparray2d(c.nx, c.ny, u.rate())
+    for y in range(1, c.ny - 1):
+        for x in range(1, c.nx - 1):
+            uxx = (u.get(x - 1, y) - 2 * u.get(x, y) + u.get(x + 1, y)) / (c.dx ** 2)
+            uyy = (u.get(x, y - 1) - 2 * u.get(x, y) + u.get(x, y + 1)) / (c.dy ** 2)
+            du.set(x, y, c.dt * c.k * (uxx + uyy))
+    # take forward Euler step
+    for i in range(0, u.shape[0]*u.shape[1] - 1):
+        u.flat_set(i, u.flat_get(i) + du.flat_get(i))
+
+
+def time_step_indexed(u, c):
+    # compute du/dt
+    du = [0.0 for i in range(c.nx*c.ny)]
+    for y in range(1, c.ny - 1):
+        for x in range(1, c.nx - 1):
+            uxx = (u[y*c.nx + (x - 1)] - 2 * u[y*c.nx + x] + u[y*c.nx + (x + 1)]) / (c.dx ** 2)
+            uyy = (u[(y - 1)*c.nx + x] - 2 * u[y*c.nx + x] + u[(y + 1)*c.nx + x]) / (c.dy ** 2)
+            du[y*c.nx + x] = c.dt * c.k * (uxx + uyy)
+    # take forward Euler step
+    for i in range(0, c.nx*c.ny):
+        u[i] = u[i] + du[i]
+
+
+def solve_compressed(u, c):
+    u.set(c.x0, c.y0, 1)
+    for t in np.arange(0, c.tfinal, c.dt):
+        print("t=" + "{:8.6f}".format(t))
+        time_step_indexed_compressed(u, c)
+    return t
+
+
+def solve(u, c):
+    u[c.y0*c.nx + c.x0] = 1
+    for t in np.arange(0, c.tfinal, c.dt):
+        print("t=" + "{:8.6f}".format(t))
+        time_step_indexed(u, c)
+    return t
+
+
+def usage():
+    print("Usage: diffusion.py [options]")
+    print("Options:")
+    print("-n <nx> <ny> : number of grid points")
+    print("-t <nt> : number of time steps")
+    print("-r <rate> : use compressed arrays with 'rate' bits/value")
+    print("-c <blocks> : use 'blocks' 4x4 blocks of cache")
+    exit()
+
+
+def main():
+    nx = 100
+    ny = 100
+    nt = 0
+    rate = 64
+    compression = False
+    cache = 0
+
+    # parse command-line options
+    i = 0
+    while i < len(argv)-1:
+        i += 1
+        if argv[i][0] != '-':
+            usage();
+        if argv[i][1] == "n":
+            try:
+                nx = int(argv[i+1])
+                ny = int(argv[i+2])
+                i += 2
+            except:
+                usage()
+        elif argv[i][1] == "t":
+            try:
+                nt = int(argv[i+1])
+                i += 1
+            except:
+                usage()
+        elif argv[i][1] == "r":
+            try:
+                rate = float(argv[i+1])
+                compression = True
+                i += 1
+            except:
+                usage()
+        elif argv[i][1] == "c":
+            try:
+                cache = int(argv[i+1])
+                i += 1
+            except:
+                usage()
+        else:
+            usage()
+
+    c = Constants(nx, ny, nt+1) 
+
+    usum = 0.0
+    uerr = 0.0
+    if compression:
+        u = zfpy.zfparray2d(nx, ny, rate)
+        t = solve_compressed(u, c)
+        usum = total_compressed(u) 
+        uerr = error_compressed(u, c, t)
+        rate = u.rate()
+    else:
+        u = [0 for i in range(nx*ny)]
+        t = solve(u, c)
+        usum = total(u, nx, ny)
+        uerr = error(u, c, t)
+
+    print("rate=" + str(rate) + " sum=" + str(usum) + " error=" + str(uerr))
+
+
+if __name__ == "__main__":
+    main()

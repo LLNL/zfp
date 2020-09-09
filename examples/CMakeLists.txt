@@ -7,6 +7,10 @@ if(BUILD_CFP)
   target_link_libraries(diffusionC cfp)
 endif()
 
+if(BUILD_ZFPY)
+  configure_file(diffusion.py.in ${ZFP_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/diffusion.py)  
+endif()
+
 add_executable(inplace inplace.c)
 target_link_libraries(inplace zfp)
 
