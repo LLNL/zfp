@@ -38,8 +38,9 @@ cdef extern from "zfparray1.h" namespace "zfp":
 
 cdef extern from "zfpyarray1.h" namespace "zfp":
     cdef cppclass py_array1[Scalar]:
-        py_array1(unsigned int nx, double rate, const Scalar* p = 0, size_t csize = 0)
-        py_array1(const header& h, const unsigned char* buffer = 0, size_t buffer_size_bytes = 0)
+        py_array1(unsigned int nx, double rate)
+        py_array1(unsigned int nx, double rate, const Scalar* p)
+        py_array1(unsigned int nx, double rate, const Scalar* p, size_t csize)
         Scalar get(unsigned int i) const
         void set(unsigned int i, Scalar val)
 
@@ -50,8 +51,9 @@ cdef extern from "zfparray2.h" namespace "zfp":
 
 cdef extern from "zfpyarray2.h" namespace "zfp":
     cdef cppclass py_array2[Scalar]:
-        py_array2(unsigned int nx, unsigned int ny, double rate, const Scalar* p = 0, size_t csize = 0)
-        py_array2(const header& h, const unsigned char* buffer = 0, size_t buffer_size_bytes = 0)
+        py_array2(unsigned int nx, unsigned int ny, double rate)
+        py_array2(unsigned int nx, unsigned int ny, double rate, const Scalar*)
+        py_array2(unsigned int nx, unsigned int ny, double rate, const Scalar*, size_t csize)
         Scalar get(unsigned int i) const
         Scalar get(unsigned int i, unsigned int j) const
         void set(unsigned int i, Scalar val)
@@ -95,12 +97,12 @@ cdef class zfparray1f:
     cdef readonly str dtype
     cdef readonly list shape
 
-    def __cinit__(self, size_t sz, double rate):
+    def __cinit__(self, size_t sz, double rate, size_t csize = 0):
         self.shape = [sz]
         self.dtype = "float32"
 
         # note: cython needs some help to figure out which overload we want here (hence the explicit casts)
-        self.thisptr = new py_array1[float](<unsigned int>self.shape[0], <double>rate)
+        self.thisptr = new py_array1[float](<unsigned int>self.shape[0], <double>rate, <float*>0, <size_t>csize)
 
     def __dealloc__(self):
         del self.thisptr
@@ -167,12 +169,12 @@ cdef class zfparray1d:
     cdef readonly str dtype
     cdef readonly list shape
 
-    def __cinit__(self, size_t sz, double rate):
+    def __cinit__(self, size_t sz, double rate, size_t csize = 0):
         self.shape = [sz]
         self.dtype = "float64"
 
         # note: cython needs some help to figure out which overload we want here (hence the explicit casts)
-        self.thisptr = new py_array1[double](<unsigned int>self.shape[0], <double>rate)
+        self.thisptr = new py_array1[double](<unsigned int>self.shape[0], <double>rate, <double*>0, <size_t>csize)
 
     def __dealloc__(self):
         del self.thisptr
@@ -234,12 +236,12 @@ cdef class zfparray2d:
     cdef readonly str dtype
     cdef readonly list shape
 
-    def __cinit__(self, size_t sz_x, sz_y, double rate):
+    def __cinit__(self, size_t sz_x, sz_y, double rate, size_t csize = 0):
         self.shape = [sz_x, sz_y]
         self.dtype = "float64"
 
         # note: cython needs some help to figure out which overload we want here (hence the explicit casts)
-        self.thisptr = new py_array2[double](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <double>rate)
+        self.thisptr = new py_array2[double](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <double>rate, <double*>0, <size_t>csize)
 
     def __dealloc__(self):
         del self.thisptr
