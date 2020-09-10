@@ -257,8 +257,9 @@ Types
   Strides can be used in case multiple fields are stored interleaved via
   "array of struct" (AoS) rather than "struct of array" (SoA) storage,
   or if the dimensions should be transposed during (de)compression.
-  Given 4D array indices (*x*, *y*, *z*, *w*), the corresponding array
-  element is stored at
+  Strides may even be negative, allowing one or more dimensions to be
+  traversed in reverse order.  Given 4D array indices (*x*, *y*, *z*, *w*),
+  the corresponding array element is stored at
   ::
 
     data[x * sx + y * sy + z * sz + w * sw]
@@ -565,6 +566,8 @@ Execution Policy
 
 .. _hl-func-field:
 
+.. _hl-func-field:
+
 Array Metadata
 ^^^^^^^^^^^^^^
 
@@ -619,7 +622,16 @@ Array Metadata
 
 .. c:function:: void* zfp_field_pointer(const zfp_field* field)
 
-  Return pointer to the first scalar in the array.
+  Return pointer to the first scalar in the field with index
+  *x* = *y* = *z* = *w* = 0.
+
+----
+
+.. c:function:: void* zfp_field_begin(const zfp_field* field)
+
+  Return pointer to the lowest memory address occupied by the field.
+  Equals :c:func:`zfp_field_pointer` if all strides are positive.
+  Available since |zfp| |fieldrelease|.
 
 ----
 
@@ -651,6 +663,15 @@ Array Metadata
 
 ----
 
+.. c:function:: size_t zfp_field_size_bytes(const zfp_field* field)
+
+  Return number of bytes spanned by the field payload data.  This includes
+  gaps in memory in case the field layout, as given by the strides, is not
+  contiguous (see :c:func:`zfp_field_is_contiguous`).  Available since
+  |zfp| |fieldrelease|.
+
+----
+
 .. c:function:: zfp_bool zfp_field_stride(const zfp_field* field, int* stride)
 
   Return :code:`zfp_false` if the array is stored contiguously as
@@ -660,10 +681,20 @@ Array Metadata
   If *stride* is not :c:macro:`NULL`, then store the stride for each
   dimension, e.g., :code:`stride[0] = sx; stride[1] = sy; stride[2] = sz;`
   for a 3D array.  See :c:type:`zfp_field` for more information on strides.
-  Return false if the array is stored contiguously as :code:`a[nx]`,
-  :code:`a[ny][nx]`, :code:`a[nz][ny][nx]`, or :code:`a[nw][nz][ny][nx]`
-  depending on dimensionality.  Return true if the array is strided
-  and laid out differently in memory.
+  Return false if the array is stored contiguously (the default) as
+  :code:`a[nx]`, :code:`a[ny][nx]`, :code:`a[nz][ny][nx]`, or
+  :code:`a[nw][nz][ny][nx]` depending on dimensionality.  Return true if
+  nonzero strides have been specified.
+
+----
+
+.. c:function:: zfp_bool zfp_field_is_contiguous(const zfp_field* field)
+
+  Return true if the field occupies a contiguous portion of memory.  Note
+  that the field layout may be contiguous even if a raster order traversal
+  does not visit memory in a monotonically increasing or decreasing order,
+  e.g., if the layout is simply a permutation of the default layout.
+  Available since |zfp| |fieldrelease|.
 
 ----
 

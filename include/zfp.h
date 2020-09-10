@@ -385,6 +385,12 @@ zfp_field_pointer(
   const zfp_field* field /* field metadata */
 );
 
+/* pointer to lowest memory address spanned by field */
+void*
+zfp_field_begin(
+  const zfp_field* field /* field metadata */
+);
+
 /* field scalar type */
 zfp_type                 /* scalar type */
 zfp_field_type(
@@ -410,11 +416,23 @@ zfp_field_size(
   uint* size              /* number of scalars per dimension (may be NULL) */
 );
 
+/* number of bytes spanned by field data including gaps (if any) */
+size_t
+zfp_field_size_bytes(
+  const zfp_field* field /* field metadata */
+);
+
 /* field strides per dimension */
 zfp_bool                  /* true if array is not contiguous */
 zfp_field_stride(
   const zfp_field* field, /* field metadata */
   int* stride             /* stride in scalars per dimension (may be NULL) */
+);
+
+/* field contiguity test */
+zfp_bool                 /* true if field layout is contiguous */
+zfp_field_is_contiguous(
+  const zfp_field* field /* field metadata */
 );
 
 /* field scalar type and dimensions */
