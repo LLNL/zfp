@@ -2,7 +2,7 @@
 
 import unittest
 
-import zfpy
+import zfpynumpy as zfpy
 import test_utils
 import numpy as np
 try:

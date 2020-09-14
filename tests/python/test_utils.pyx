@@ -5,8 +5,8 @@ cimport libc.stdint as stdint
 from cython cimport view
 from itertools import islice, repeat, chain
 
-import zfpy
-cimport zfpy
+import zfpynumpy as zfpy
+cimport zfpynumpy as zfpy
 
 import numpy as np
 cimport numpy as np

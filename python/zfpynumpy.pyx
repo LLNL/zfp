@@ -13,7 +13,7 @@ if sys.version_info[0] == 2:
 elif sys.version_info[0] == 3:
     from itertools import zip_longest
 
-cimport zfpy
+cimport zfpynumpy
 
 import numpy as np
 cimport numpy as np
@@ -286,7 +286,7 @@ cpdef np.ndarray _decompress(
         if out is None:
             output = np.asarray(_decompress_with_view(field, stream))
         else:
-            dtype = zfpy.ztype_to_dtype(ztype)
+            dtype = zfpynumpy.ztype_to_dtype(ztype)
             if isinstance(out, np.ndarray):
                 output = out
 
