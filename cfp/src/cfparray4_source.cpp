@@ -16,8 +16,8 @@ static ptrdiff_t
 ref_offset(CFP_REF_TYPE self)
 {
   size_t nx = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x();
-  size_t ny = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x();
-  size_t nz = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x();
+  size_t ny = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_y();
+  size_t nz = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_z();
   return static_cast<ptrdiff_t>(self.i + nx * (self.j + ny * (self.k + nz * self.l)));
 }
 

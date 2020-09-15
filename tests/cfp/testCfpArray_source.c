@@ -17,8 +17,9 @@
 #include "utils/zfpHash.h"
 
 #define SIZE_X 20
-#define SIZE_Y 31
+#define SIZE_Y 21
 #define SIZE_Z 22
+#define SIZE_W 5
 
 #define VAL 4.4
 
@@ -81,7 +82,11 @@ prepCommonSetupVars(void** state)
   struct setupVars *bundle = calloc(1, sizeof(struct setupVars));
   assert_non_null(bundle);
 
+#if DIMS == 4
+  bundle->rate = 8;
+#else
   bundle->rate = ZFP_RATE_PARAM_BITS;
+#endif
   bundle->csize = 300;
 
   *state = bundle;
@@ -123,7 +128,7 @@ setupCfpArrMinimal(void** state)
 }
 
 static int
-setupCfpArrSizeRate(void** state, uint sizeX, uint sizeY, uint sizeZ)
+setupCfpArrSizeRate(void** state, uint sizeX, uint sizeY, uint sizeZ, uint sizeW)
 {
   struct setupVars *bundle = *state;
 
@@ -134,7 +139,8 @@ setupCfpArrSizeRate(void** state, uint sizeX, uint sizeY, uint sizeZ)
 #elif DIMS == 3
   bundle->cfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor(sizeX, sizeY, sizeZ, bundle->rate, 0, 0);
 #else
-  fail_msg("unexpected value for macro DIMS");
+  /* NOTE: 4d rate is capped at 8 bits */
+  bundle->cfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor(sizeX, sizeY, sizeZ, sizeW, 8, 0, 0);
 #endif
 
   assert_non_null(bundle->cfpArr.object);
@@ -154,7 +160,8 @@ setupCfpArrLargeComplete(void **state)
 #elif DIMS == 3
   bundle->cfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor(bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen, bundle->rate, bundle->dataArr, bundle->csize);
 #else
-  fail_msg("unexpected value for macro DIMS");
+  /* NOTE: 4d rate is capped at 8 bits */
+  bundle->cfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor(bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen, 8, bundle->dataArr, bundle->csize);
 #endif
 
   assert_non_null(bundle->cfpArr.object);
@@ -166,13 +173,13 @@ static int
 setupCfpArrLarge(void** state)
 {
   struct setupVars *bundle = *state;
-  return setupCfpArrSizeRate(state, bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen);
+  return setupCfpArrSizeRate(state, bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen, bundle->dataSideLen);
 }
 
 static int
 setupCfpArrSmall(void** state)
 {
-  return setupCfpArrSizeRate(state, SIZE_X, SIZE_Y, SIZE_Z);
+  return setupCfpArrSizeRate(state, SIZE_X, SIZE_Y, SIZE_Z, SIZE_W);
 }
 
 static int
@@ -195,7 +202,11 @@ loadFixedRateVars(void **state, int paramNum)
     fail_msg("Unknown paramNum during loadFixedRateVars()");
   }
 
+#if DIMS == 4
+  bundle->rate = 8;
+#else
   bundle->rate = (double)(1u << (bundle->paramNum + 3));
+#endif
   printf("\t\tFixed rate: %lf\n", bundle->rate);
 
   *state = bundle;
