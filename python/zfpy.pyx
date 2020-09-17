@@ -5,6 +5,7 @@ import cython
 from libc.stdlib cimport malloc, free
 from cython cimport view
 from cpython cimport array
+from libc.stdint cimport uint8_t
 import array
 
 import itertools
@@ -245,7 +246,7 @@ cdef _validate_4d_list(in_list, list_name):
         )
 
 cpdef np.ndarray _decompress(
-    bytes compressed_data,
+    const uint8_t[::1] compressed_data,
     zfp_type ztype,
     shape,
     out=None,
@@ -260,7 +261,7 @@ cpdef np.ndarray _decompress(
         raise ValueError("Cannot decompress in-place")
     _validate_4d_list(shape, "shape")
 
-    cdef char* comp_data_pointer = compressed_data
+    cdef char* comp_data_pointer = <char*>&compressed_data[0]
     cdef zfp_field* field = zfp_field_alloc()
     cdef bitstream* bstream = stream_open(
         comp_data_pointer,
@@ -329,12 +330,12 @@ cpdef np.ndarray _decompress(
     return output
 
 cpdef np.ndarray decompress_numpy(
-    bytes compressed_data,
+    const uint8_t[::1] compressed_data,
 ):
     if compressed_data is None:
         raise TypeError("compressed_data cannot be None")
 
-    cdef char* comp_data_pointer = compressed_data
+    cdef char* comp_data_pointer = <char *>&compressed_data[0]
     cdef zfp_field* field = zfp_field_alloc()
     cdef bitstream* bstream = stream_open(
         comp_data_pointer,
