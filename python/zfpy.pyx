@@ -246,7 +246,7 @@ cdef _validate_4d_list(in_list, list_name):
         )
 
 cpdef np.ndarray _decompress(
-    uint8_t[::1] compressed_data,
+    const uint8_t[::1] compressed_data,
     zfp_type ztype,
     shape,
     out=None,
@@ -261,10 +261,10 @@ cpdef np.ndarray _decompress(
         raise ValueError("Cannot decompress in-place")
     _validate_4d_list(shape, "shape")
 
-    cdef char* comp_data_pointer = <char*>&compressed_data[0]
+    cdef const char* comp_data_pointer = <const char*>&compressed_data[0]
     cdef zfp_field* field = zfp_field_alloc()
     cdef bitstream* bstream = stream_open(
-        comp_data_pointer,
+        <char*>comp_data_pointer,
         len(compressed_data)
     )
     cdef zfp_stream* stream = zfp_stream_open(bstream)
@@ -330,15 +330,15 @@ cpdef np.ndarray _decompress(
     return output
 
 cpdef np.ndarray decompress_numpy(
-    uint8_t[::1] compressed_data,
+     uint8_t[::1] compressed_data,
 ):
     if compressed_data is None:
         raise TypeError("compressed_data cannot be None")
 
-    cdef char* comp_data_pointer = <char *>&compressed_data[0]
+    cdef const char* comp_data_pointer = <const char *>&compressed_data[0]
     cdef zfp_field* field = zfp_field_alloc()
     cdef bitstream* bstream = stream_open(
-        comp_data_pointer,
+        <char *>comp_data_pointer,
         len(compressed_data)
     )
     cdef zfp_stream* stream = zfp_stream_open(bstream)
