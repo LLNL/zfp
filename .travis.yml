@@ -14,7 +14,6 @@ matrix:
             - g++-6
             - gfortran-6
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' COVERAGE='ON'
@@ -30,7 +29,6 @@ matrix:
             - g++-7
             - gfortran-6
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='clang-3.6' CXX='clang++-3.6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
@@ -48,7 +46,6 @@ matrix:
             - g++-7
             - gfortran-6
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='clang-4.0' CXX='clang++-4.0' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
@@ -64,7 +61,6 @@ matrix:
             - g++-4.4
             - gfortran-4.4
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-4.4' CXX='g++-4.4' FC='gfortran-4.4' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
@@ -80,7 +76,6 @@ matrix:
             - g++-4.7
             - gfortran-4.7
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-4.7' CXX='g++-4.7' FC='gfortran-4.7' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
@@ -96,7 +91,6 @@ matrix:
             - g++-4.8
             - gfortran-4.8
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-4.8' CXX='g++-4.8' FC='gfortran-4.8' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
@@ -112,7 +106,6 @@ matrix:
             - g++-4.9
             - gfortran-4.9
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-4.9' CXX='g++-4.9' FC='gfortran-4.9' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
@@ -155,7 +148,6 @@ matrix:
             - g++-6
             - gfortran-6
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' C_STANDARD='90'
@@ -171,7 +163,6 @@ matrix:
             - g++-6
             - gfortran-6
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' C_STANDARD='11'
@@ -187,7 +178,6 @@ matrix:
             - g++-6
             - gfortran-6
             - libpython3.5-dev
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' CXX_STANDARD='11'
@@ -203,7 +193,6 @@ matrix:
             - g++-6
             - gfortran-6
             - libpython3.5
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' CXX_STANDARD='14'
@@ -219,7 +208,6 @@ matrix:
             - g++-6
             - gfortran-6
             - libpython3.5
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2008' PYTHON_VERSION='3.5'
@@ -235,7 +223,6 @@ matrix:
             - g++-7
             - gfortran-7
             - libpython3.5
-            - cython3
             - python3-numpy
             - python3-pip
       env: CC='gcc-7' CXX='g++-7' FC='gfortran-7' FORTRAN_STANDARD='2008' PYTHON_VERSION='3.5'
