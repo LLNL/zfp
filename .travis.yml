@@ -296,6 +296,7 @@ script:
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$PYTHON_VERSION" = "3.5" ]; then
         export PYTHON_INCLUDE_DIR=/usr/include/python3.5m;
         export PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade pip;
         sudo $PYTHON_EXECUTABLE -m pip install --upgrade cython3;
     fi
   - |
