@@ -45,7 +45,7 @@ else
   BUILD_FLAGS="$BUILD_FLAGS -DBUILD_OPENMP=OFF"
   BUILD_FLAGS="$BUILD_FLAGS -DBUILD_CUDA=OFF"
   run_all "$BUILD_FLAGS"
-
+  python -m cython --version
   rm -rf ./* ;
 
   # if OpenMP available, start a 2nd build with it
