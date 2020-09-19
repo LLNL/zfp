@@ -16,6 +16,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' COVERAGE='ON'
 
     - os: linux
@@ -31,6 +32,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='clang-3.6' CXX='clang++-3.6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
 
     - os: linux
@@ -48,6 +50,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='clang-4.0' CXX='clang++-4.0' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
 
     - os: linux
@@ -63,7 +66,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
-            - pip
+            - python-pip
       env: CC='gcc-4.4' CXX='g++-4.4' FC='gfortran-4.4' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
 
     - os: linux
@@ -79,6 +82,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-4.7' CXX='g++-4.7' FC='gfortran-4.7' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
 
     - os: linux
@@ -94,6 +98,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-4.8' CXX='g++-4.8' FC='gfortran-4.8' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
 
     - os: linux
@@ -109,6 +114,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-4.9' CXX='g++-4.9' FC='gfortran-4.9' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
 
     - os: linux
@@ -152,6 +158,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' C_STANDARD='90'
 
     - os: linux
@@ -167,6 +174,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' C_STANDARD='11'
 
     - os: linux
@@ -182,6 +190,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' CXX_STANDARD='11'
 
     - os: linux
@@ -197,6 +206,7 @@ matrix:
             - libpython3.5
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5' CXX_STANDARD='14'
 
     - os: linux
@@ -212,6 +222,7 @@ matrix:
             - libpython3.5
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2008' PYTHON_VERSION='3.5'
 
     - os: linux
@@ -227,6 +238,7 @@ matrix:
             - libpython3.5
             - cython3
             - python3-numpy
+            - python-pip
       env: CC='gcc-7' CXX='g++-7' FC='gfortran-7' FORTRAN_STANDARD='2008' PYTHON_VERSION='3.5'
 
     - os: osx
@@ -282,11 +294,15 @@ script:
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$PYTHON_VERSION" = "2.7" ]; then
         export PYTHON_INCLUDE_DIR=/usr/include/python2.7;
         export PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython2.7.so;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade pip;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade cython3;
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$PYTHON_VERSION" = "3.5" ]; then
         export PYTHON_INCLUDE_DIR=/usr/include/python3.5m;
         export PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade pip;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade cython3;
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$DISTRIB_CODENAME" = "trusty" ] && [ "$PYTHON_VERSION" = "2.7" ]; then
