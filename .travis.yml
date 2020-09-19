@@ -63,6 +63,7 @@ matrix:
             - libpython3.5-dev
             - cython3
             - python3-numpy
+            - pip
       env: CC='gcc-4.4' CXX='g++-4.4' FC='gfortran-4.4' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
 
     - os: linux
@@ -274,6 +275,8 @@ script:
     if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         export PYTHON_EXECUTABLE=/usr/bin/python$PYTHON_VERSION;
         source /etc/lsb-release;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade pip;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade cython3;
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$PYTHON_VERSION" = "2.7" ]; then
