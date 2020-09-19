@@ -1,7 +1,7 @@
-#ifndef ZFPY_ARRAY2_H
-#define ZFPY_ARRAY2_H
+#ifndef ZFPY_ARRAY3_H
+#define ZFPY_ARRAY3_H
 
-#include "zfparray2.h"
+#include "zfparray3.h"
 
 namespace zfp {
 
@@ -16,11 +16,19 @@ public:
     array3<Scalar>(h, buffer, buffer_size_bytes) {}
 
   // inspector
+  Scalar get(uint i) const {
+    return array3<Scalar, Codec>::operator[](i);
+  }
+
   Scalar get(uint i, uint j, uint k) const {
     return array3<Scalar, Codec>::get(i, j, k);
   }
 
   // mutator
+  void set(uint i, Scalar val) {
+    array3<Scalar, Codec>::operator[](i) = val;
+  }
+
   void set(uint i, uint j, uint k, Scalar val) {
     array3<Scalar, Codec>::set(i, j, k, val);
   }

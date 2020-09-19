@@ -29,9 +29,16 @@ if(DEFINED ENV{PYTHONPATH})
   set(TEST_PYTHON_PATH "${TEST_PYTHON_PATH}:$ENV{PYTHONPATH}")
 endif()
 
-add_test(NAME test_numpy
-  COMMAND ${PYTHON_EXECUTABLE} test_numpy.py
+add_test(NAME test_py_numpy
+  COMMAND ${PYTHON_EXECUTABLE} test_py_numpy.py
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-set_tests_properties(test_numpy PROPERTIES
+set_tests_properties(test_py_numpy PROPERTIES
+  ENVIRONMENT PYTHONPATH=${TEST_PYTHON_PATH})
+
+add_test(NAME test_py_array
+  COMMAND ${PYTHON_EXECUTABLE} test_py_array.py
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+set_tests_properties(test_py_array PROPERTIES
   ENVIRONMENT PYTHONPATH=${TEST_PYTHON_PATH})
