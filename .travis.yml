@@ -297,7 +297,7 @@ script:
         export PYTHON_INCLUDE_DIR=/usr/include/python3.5m;
         export PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so;
         sudo $PYTHON_EXECUTABLE -m pip install --upgrade pip;
-        sudo $PYTHON_EXECUTABLE -m pip install --upgrade cython3;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade cython;
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$DISTRIB_CODENAME" = "trusty" ] && [ "$PYTHON_VERSION" = "2.7" ]; then
