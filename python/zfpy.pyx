@@ -254,7 +254,6 @@ cpdef np.ndarray _decompress(
     double rate = -1,
     int precision = -1,
 ):
-    print(cython.__version__)
     if compressed_data is None:
         raise TypeError("compressed_data cannot be None")
     if compressed_data is out:
