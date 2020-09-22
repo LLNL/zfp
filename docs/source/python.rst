@@ -7,14 +7,115 @@
 Python Bindings
 ===============
 
-|zfp| |zfpyrelease| adds |zfpy|: Python bindings that allow compressing
-and decompressing `NumPy <https://www.numpy.org>`_ integer and
-floating-point arrays.  The |zfpy| implementation is based on
+|zfp| |zfpyrelease| includes |zfpy|: Python bindings that allow |zfp| 
+style compressed array access as well as functionality for
+compressing and decompressing `NumPy <https://www.numpy.org>`_ integer 
+and floating-point arrays. The |zfpy| implementation is based on
 `Cython <https://cython.org>`_ and requires both NumPy and Cython
-to be installed.  Currently, |zfpy| supports only serial execution.
+to be installed. Currently, |zfpy| supports only serial execution.
 
-The |zfpy| API is limited to two functions, for compression and
-decompression, which are described below.
+.. Note::
+  zfpy compressed arrays are new as of <version number here>.
+
+Arrays
+------
+
+|zfpy| arrays are designed to, as much as possible, mimic their NumPy 
+counterparts. The current structure splits array types by data type 
+and dimensionality (similarly to |cfp|). It is planned to eventually 
+merge these into a single array type to simplify usage.
+
+.. _array:
+.. py:class:: zfpy.array1f
+.. py:class:: zfpy.array1d
+.. py:class:: zfpy.array2f
+.. py:class:: zfpy.array2d
+.. py:class:: zfpy.array3f
+.. py:class:: zfpy.array3d
+
+    .. py:attribute:: dtype
+
+       String representation of C++ data type for uncompressed array
+       scalars. Similar to NumPy array dtype.
+
+    .. py:attribute:: shape
+
+       Tuple representation of array dimensionality and sizes. 
+       Equivalent to NumPy array shape.
+
+.. _pyarray_ctor:
+.. py:function:: zfpy.array1(size_x, rate, cache_size = 0)
+.. py:function:: zfpy.array2(size_x, size_y, rate, cache_size = 0)
+.. py:function:: zfpy.array3(size_x, size_y, size_z, rate, cache_size = 0)
+
+  Currently |zfpy| provides fixed-rate array constructors. These are 
+  likely to be replaced soon by external functions that will operate
+  similarly to NumPy's array() functions. These are fixed-rate arrays 
+  equivalent to those in |zfp| save that they do not allow for value 
+  initialization via pointer. A cache size of zero will cause |zfpy| 
+  to default to a standard cache size.
+
+.. _pyarray_rate:
+.. py:function:: zfpy.arrayALL.rate()
+
+  Get current rate for array
+
+.. _pyarray_set_rate:
+.. py:function:: zfpy.arrayALL.set_rate(rate)
+
+  Update rate for array. |zfpy| will adjust its rate to the closest acceptable 
+  rate.
+
+.. warning::
+  Updating the rate will reset all values.
+
+.. _pyarray_get:
+.. py:function:: zfpy.array1.get(i)
+.. py:function:: zfpy.array2.get(i, j)
+.. py:function:: zfpy.array3.get(i, j, k)
+
+  Multi-dimensional accessor for a single array element.
+
+.. note::
+  |zfpy| does not yet support multi-dimensional access via standard array 
+  notation. Implementing this correctly requires supporting slicing which 
+  will be coming alongside support for views.
+
+.. _pyarray_set:
+.. py:function:: zfpy.array1.set(i, val)
+.. py:function:: zfpy.array2.set(i, j, val)
+.. py:function:: zfpy.array3.set(i, j, k, val)
+
+  Multi-dimensional mutator for a single array element.
+
+.. _pyarray_flat_get:
+.. py:function:: zfpy.array2.flat_get(i)
+.. py:function:: zfpy.array3.flat_get(i)
+
+  Flat indexed arrary accessor.
+
+.. _pyarray_flat_set:
+.. py:function:: zfpy.array2.flat_set(i, val)
+.. py:function:: zfpy.array3.flat_set(i, val)
+
+  Flat indexed arrary mutator.
+
+.. _pyarray_subscript_op:
+.. py:function:: zfpy.arrayANY[i]
+
+  Flat indexed array accessor. Equivalent to the |zfp| compressed 
+  array [] operator. Supports python array negative indexing.
+
+.. _pyarray_compressed_size:
+.. py:function:: zfpy.arrayANY.compressed_size()
+
+  See :cpp:func:`array::compressed_size`.
+
+.. _pyarray_compressed_data:
+.. py:function:: zfpy.arrayANY.compressed_data()
+
+  See :cpp:func:`array::compressed_data`. Note that this returns a 
+  python bytes type.
 
 Compression
 -----------
@@ -30,10 +131,10 @@ Compression
   *write_header* to *False*.  If this function fails for any reason, an
   exception is thrown.
 
-|zfpy| compression currently requires a NumPy array
+|zfpy| NumPy compression takes a NumPy array
 (`ndarray <https://www.numpy.org/devdocs/reference/arrays.ndarray.html>`_)
-populated with the data to be compressed.  The array metadata (i.e.,
-shape, strides, and scalar type) are used to automatically populate the
+populated with the data to be compressed. The array metadata (i.e.,
+shape, strides, and scalar type) is used to automatically populate the
 :c:type:`zfp_field` structure passed to :c:func:`zfp_compress`.  By default,
 all that is required to be passed to the compression function is the
 NumPy array; this will result in a stream that includes a header and is

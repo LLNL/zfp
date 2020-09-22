@@ -10,71 +10,10 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy 
 from cython.operator cimport dereference as deref
 
-#TODO: split this up into pxd and pyx files in case someone using cython wants to in turn use our cython module
-#       also look at cython inlining where possible
+cimport zfpy
+
+# TODO: look at cython inlining where possible
 # see: https://cython.readthedocs.io/en/latest/src/tutorial/pxd_files.html
-
-# Define portion of zfp interface needed by zfpy
-# ==============================================
-
-cdef extern from "zfparray.h" namespace "zfp::array":
-    cdef cppclass header:
-        header()
-        size_t size()
-        unsigned char* buffer
-
-cdef extern from "zfparray.h" namespace "zfp":
-    cdef cppclass array:
-        double rate() const
-        double set_rate(double rate)
-        size_t compressed_size()
-        unsigned char* compressed_data() const
-        header get_header() const
-
-cdef extern from "zfparray1.h" namespace "zfp":
-    cdef cppclass array1[Scalar]:
-        array1()
-        array1(unsigned int nx, double rate, const Scalar* p = 0, size_t csize = 0)
-
-cdef extern from "zfpyarray1.h" namespace "zfp":
-    cdef cppclass py_array1[Scalar]:
-        py_array1(unsigned int nx, double rate)
-        py_array1(unsigned int nx, double rate, const Scalar* p)
-        py_array1(unsigned int nx, double rate, const Scalar* p, size_t csize)
-        Scalar get(unsigned int i) const
-        void set(unsigned int i, Scalar val)
-
-cdef extern from "zfparray2.h" namespace "zfp":
-    cdef cppclass array2[Scalar]:
-        array2()
-        array2(unsigned int nx, unsigned int ny, double rate, const Scalar* p = 0, size_t csize = 0)
-
-cdef extern from "zfpyarray2.h" namespace "zfp":
-    cdef cppclass py_array2[Scalar]:
-        py_array2(unsigned int nx, unsigned int ny, double rate)
-        py_array2(unsigned int nx, unsigned int ny, double rate, const Scalar*)
-        py_array2(unsigned int nx, unsigned int ny, double rate, const Scalar*, size_t csize)
-        Scalar get(unsigned int i) const
-        Scalar get(unsigned int i, unsigned int j) const
-        void set(unsigned int i, Scalar val)
-        void set(unsigned int i, unsigned int j, Scalar val)
-
-cdef extern from "zfparray3.h" namespace "zfp":
-    cdef cppclass array3[Scalar]:
-        array3()
-        array3(unsigned int nx, unsigned int ny, unsigned int nz, double rate, const Scalar* p = 0, size_t csize = 0)
-
-cdef extern from "zfpyarray3.h" namespace "zfp":
-    cdef cppclass py_array3[Scalar]:
-        py_array3(unsigned int nx, unsigned int ny, unsigned int nz, double rate)
-        py_array3(unsigned int nx, unsigned int ny, unsigned int nz, double rate, const Scalar*)
-        py_array3(unsigned int nx, unsigned int ny, unsigned int nz, double rate, const Scalar*, size_t csize)
-        Scalar get(unsigned int i) const
-        Scalar get(unsigned int i, unsigned int j, unsigned int k) const
-        void set(unsigned int i, Scalar val)
-        void set(unsigned int i, unsigned int j, unsigned int k, Scalar val)
-
-
 
 # zfpy algorithm interface
 # zfpy equivalents to numpy interface
@@ -109,35 +48,44 @@ cdef class zfpheader:
 # zfpy numpy-like array interface
 # zfpy equivalents to numpy ndarray interface
 # ===========================================
-cdef class zfparray1f:
+cdef class array1f:
     cdef py_array1[float] *thisptr
     cdef readonly str dtype
-    cdef readonly list shape
+    cdef readonly tuple shape
 
-    def __cinit__(self, size_t sz, double rate, size_t csize = 0):
-        self.shape = [sz]
+    def __cinit__(self, size_t sz_x, double rate, size_t cache_size = 0):
+        self.shape = (sz_x,)
         self.dtype = "float32"
 
         # note: cython needs some help to figure out which overload we want here (hence the explicit casts)
-        self.thisptr = new py_array1[float](<unsigned int>self.shape[0], <double>rate, <float*>0, <size_t>csize)
+        self.thisptr = new py_array1[float](<unsigned int>self.shape[0], <double>rate, <float*>0, <size_t>cache_size)
 
     def __dealloc__(self):
         del self.thisptr
 
     #TODO: if isinstance(subscript, slice):
     # see: https://stackoverflow.com/questions/2936863/implementing-slicing-in-getitem
-    #TODO: negative index
     #TODO: multi-dimensional bracket operators (e.g. array2d[i][j] = val or arr2d[i] = [val, val, ...])
     def __getitem__(self, long long i):
+        if i < 0:
+            i = len(self) + i
         if i >= self.shape[0] or i < 0:
             raise IndexError("index " + str(i) + " is out of bounds for axis 0 with size " + str(self.shape[0]))
         cdef float val = deref(self.thisptr).get(i)
         return val
 
     def __setitem__(self, long long i, float value):
+        if i < 0:
+            i = len(self) + i
         if i >= self.shape[0] or i < 0:
             raise IndexError("index " + str(i) + " is out of bounds for axis 0 with size " + str(self.shape[0]))
         deref(self.thisptr).set(i, value)
+
+    def __len__(self):
+        return self.shape[0]
+
+    def __repr__(self):
+        return str([val for val in self])
 
     def get(self, long long i):
         if i >= self.shape[0] or i < 0:
@@ -181,31 +129,41 @@ cdef class zfparray1f:
         
 
 
-cdef class zfparray1d:
+cdef class array1d:
     cdef py_array1[double] *thisptr
     cdef readonly str dtype
-    cdef readonly list shape
+    cdef readonly tuple shape
 
-    def __cinit__(self, size_t sz, double rate, size_t csize = 0):
-        self.shape = [sz]
+    def __cinit__(self, size_t sz_x, double rate, size_t cache_size = 0):
+        self.shape = (sz_x,)
         self.dtype = "float64"
 
         # note: cython needs some help to figure out which overload we want here (hence the explicit casts)
-        self.thisptr = new py_array1[double](<unsigned int>self.shape[0], <double>rate, <double*>0, <size_t>csize)
+        self.thisptr = new py_array1[double](<unsigned int>self.shape[0], <double>rate, <double*>0, <size_t>cache_size)
 
     def __dealloc__(self):
         del self.thisptr
 
     def __getitem__(self, long long i):
+        if i < 0:
+            i = len(self) + i
         if i >= self.shape[0] or i < 0:
             raise IndexError("index " + str(i) + " is out of bounds for axis 0 with size " + str(self.shape[0]))
         cdef double val = deref(self.thisptr).get(i)
         return val
 
     def __setitem__(self, long long i, double value):
+        if i < 0:
+            i = len(self) + i
         if i >= self.shape[0] or i < 0:
             raise IndexError("index " + str(i) + " is out of bounds for axis 0 with size " + str(self.shape[0]))
         deref(self.thisptr).set(i, value)
+
+    def __len__(self):
+        return self.shape[0]
+
+    def __repr__(self):
+        return str([val for val in self])
 
     def get(self, long long i):
         if i >= self.shape[0] or i < 0:
@@ -248,28 +206,38 @@ cdef class zfparray1d:
 
 
 
-cdef class zfparray2f:
+cdef class array2f:
     cdef py_array2[float] *thisptr
     cdef readonly str dtype
-    cdef readonly list shape
+    cdef readonly tuple shape
 
-    def __cinit__(self, size_t sz_x, sz_y, double rate, size_t csize = 0):
-        self.shape = [sz_x, sz_y]
+    def __cinit__(self, size_t sz_x, sz_y, double rate, size_t cache_size = 0):
+        self.shape = (sz_x, sz_y)
         self.dtype = "float32"
 
         # note: cython needs some help to figure out which overload we want here (hence the explicit casts)
-        self.thisptr = new py_array2[float](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <double>rate, <float*>0, <size_t>csize)
+        self.thisptr = new py_array2[float](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <double>rate, <float*>0, <size_t>cache_size)
 
     def __dealloc__(self):
         del self.thisptr
 
     #TODO: multi-dimensional and slicing
     def __getitem__(self, int i):
+        if i < 0:
+            i = len(self) + i
         return self.flat_get(<long long>i)
 
     #TODO: multi-dimensional and slicing
     def __setitem__(self, int i, float value):
+        if i < 0:
+            i = len(self) + i
         self.flat_set(<long long>i, value)
+
+    def __len__(self):
+        return self.shape[0]*self.shape[1]
+
+    def __repr__(self):
+        return str([[self.get(i, j) for i in range(self.shape[0])] for j in range(self.shape[1])])
 
     def flat_get(self, long long i):
         if i >= self.shape[0]*self.shape[1] or i < 0:
@@ -323,28 +291,38 @@ cdef class zfparray2f:
 
 
 
-cdef class zfparray2d:
+cdef class array2d:
     cdef py_array2[double] *thisptr
     cdef readonly str dtype
-    cdef readonly list shape
+    cdef readonly tuple shape
 
-    def __cinit__(self, size_t sz_x, sz_y, double rate, size_t csize = 0):
-        self.shape = [sz_x, sz_y]
+    def __cinit__(self, size_t sz_x, sz_y, double rate, size_t cache_size = 0):
+        self.shape = (sz_x, sz_y)
         self.dtype = "float64"
 
         # note: cython needs some help to figure out which overload we want here (hence the explicit casts)
-        self.thisptr = new py_array2[double](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <double>rate, <double*>0, <size_t>csize)
+        self.thisptr = new py_array2[double](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <double>rate, <double*>0, <size_t>cache_size)
 
     def __dealloc__(self):
         del self.thisptr
 
     #TODO: multi-dimensional and slicing
     def __getitem__(self, int i):
+        if i < 0:
+            i = len(self) + i
         return self.flat_get(<long long>i)
 
     #TODO: multi-dimensional and slicing
     def __setitem__(self, int i, double value):
+        if i < 0:
+            i = len(self) + i
         self.flat_set(<long long>i, value)
+
+    def __len__(self):
+        return self.shape[0]*self.shape[1]
+
+    def __repr__(self):
+        return str([[self.get(i, j) for i in range(self.shape[0])] for j in range(self.shape[1])])
 
     def flat_get(self, long long i):
         if i >= self.shape[0]*self.shape[1] or i < 0:
@@ -398,28 +376,38 @@ cdef class zfparray2d:
 
 
 
-cdef class zfparray3f:
+cdef class array3f:
     cdef py_array3[float] *thisptr
     cdef readonly str dtype
-    cdef readonly list shape
+    cdef readonly tuple shape
 
-    def __cinit__(self, size_t sz_x, sz_y, sz_z, double rate, size_t csize = 0):
-        self.shape = [sz_x, sz_y, sz_z]
+    def __cinit__(self, size_t sz_x, sz_y, sz_z, double rate, size_t cache_size = 0):
+        self.shape = (sz_x, sz_y, sz_z)
         self.dtype = "float32"
 
         # note: cython needs some help to figure out which overload we want here (hence the explicit casts)
-        self.thisptr = new py_array3[float](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <unsigned int>self.shape[2], <double>rate, <float*>0, <size_t>csize)
+        self.thisptr = new py_array3[float](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <unsigned int>self.shape[2], <double>rate, <float*>0, <size_t>cache_size)
 
     def __dealloc__(self):
         del self.thisptr
 
     #TODO: multi-dimensional and slicing
     def __getitem__(self, int i):
+        if i < 0:
+            i = len(self) + i
         return self.flat_get(<long long>i)
 
     #TODO: multi-dimensional and slicing
     def __setitem__(self, int i, float value):
+        if i < 0:
+            i = len(self) + i
         self.flat_set(<long long>i, value)
+
+    def __len__(self):
+        return self.shape[0]*self.shape[1]*self.shape[2]
+
+    def __repr__(self):
+        return str([[[self.get(i, j, k) for i in range(self.shape[0])] for j in range(self.shape[1])] for k in range(self.shape[2])])
 
     def flat_get(self, long long i):
         if i >= self.shape[0]*self.shape[1]*self.shape[2] or i < 0:
@@ -473,28 +461,38 @@ cdef class zfparray3f:
 
 
 
-cdef class zfparray3d:
+cdef class array3d:
     cdef py_array3[double] *thisptr
     cdef readonly str dtype
-    cdef readonly list shape
+    cdef readonly tuple shape
 
-    def __cinit__(self, size_t sz_x, sz_y, sz_z, double rate, size_t csize = 0):
-        self.shape = [sz_x, sz_y, sz_z]
-        self.dtype = "double32"
+    def __cinit__(self, size_t sz_x, sz_y, sz_z, double rate, size_t cache_size = 0):
+        self.shape = (sz_x, sz_y, sz_z)
+        self.dtype = "float64"
 
         # note: cython needs some help to figure out which overload we want here (hence the explicit casts)
-        self.thisptr = new py_array3[double](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <unsigned int>self.shape[2], <double>rate, <double*>0, <size_t>csize)
+        self.thisptr = new py_array3[double](<unsigned int>self.shape[0], <unsigned int>self.shape[1], <unsigned int>self.shape[2], <double>rate, <double*>0, <size_t>cache_size)
 
     def __dealloc__(self):
         del self.thisptr
 
     #TODO: multi-dimensional and slicing
     def __getitem__(self, int i):
+        if i < 0:
+            i = len(self) + i
         return self.flat_get(<long long>i)
 
     #TODO: multi-dimensional and slicing
     def __setitem__(self, int i, double value):
+        if i < 0:
+            i = len(self) + i
         self.flat_set(<long long>i, value)
+
+    def __len__(self):
+        return self.shape[0]*self.shape[1]*self.shape[2]
+
+    def __repr__(self):
+        return str([[[self.get(i, j, k) for i in range(self.shape[0])] for j in range(self.shape[1])] for k in range(self.shape[2])])
 
     def flat_get(self, long long i):
         if i >= self.shape[0]*self.shape[1]*self.shape[2] or i < 0:

@@ -3,7 +3,7 @@
 import unittest
 from random import random
 
-import zfpyarray as zfpy
+import zfpy
 import test_utils
 try:
     from packaging.version import parse as version_parse
@@ -20,25 +20,27 @@ class TestArray1f(unittest.TestCase):
         self.rates = [i*16 for i in range(1,20)]
 
     def test_array_default_init(self):
-        zfpArray = zfpy.zfparray1f(1000, 64)
+        zfpArray = zfpy.array1f(1000, 64)
+        self.assertEqual(zfpArray.dtype, "float32")
+        self.assertEqual(zfpArray.shape, (1000,))
         for val in zfpArray:
             self.assertAlmostEqual(val, 0.0, places=12)
 
     def test_array_get_set(self):
         inputArray = [random() for idx in range(1000)]
-        zfpArray = zfpy.zfparray1f(1000, 64)
+        zfpArray = zfpy.array1f(1000, 64)
         for idx in range(1000):
             zfpArray[idx] = inputArray[idx]
             self.assertAlmostEqual(zfpArray[idx], inputArray[idx], places=6)
 
     def test_rate_init(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray1f(1000, rate)
+            zfpArray = zfpy.array1f(1000, rate)
             self.assertEqual(zfpArray.rate(), rate)
 
     def test_rate_set(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray1f(1000, 1)
+            zfpArray = zfpy.array1f(1000, 1)
             zfpArray.set_rate(rate)
             self.assertEqual(zfpArray.rate(), rate)
 
@@ -48,25 +50,26 @@ class TestArray1d(unittest.TestCase):
         self.rates = [i*16 for i in range(1,20)]
 
     def test_array_default_init(self):
-        zfpArray = zfpy.zfparray1d(1000, 64)
+        zfpArray = zfpy.array1d(1000, 64)
+        self.assertEqual(zfpArray.dtype, "float64")
         for val in zfpArray:
             self.assertAlmostEqual(val, 0.0, places=12)
 
     def test_array_get_set(self):
         inputArray = [random() for idx in range(1000)]
-        zfpArray = zfpy.zfparray1d(1000, 64)
+        zfpArray = zfpy.array1d(1000, 64)
         for idx in range(1000):
             zfpArray[idx] = inputArray[idx]
             self.assertAlmostEqual(zfpArray[idx], inputArray[idx], places=6)
 
     def test_rate_init(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray1d(1000, rate)
+            zfpArray = zfpy.array1d(1000, rate)
             self.assertEqual(zfpArray.rate(), rate)
 
     def test_rate_set(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray1d(1000, 1)
+            zfpArray = zfpy.array1d(1000, 1)
             zfpArray.set_rate(rate)
             self.assertEqual(zfpArray.rate(), rate)
 
@@ -76,25 +79,34 @@ class TestArray2f(unittest.TestCase):
         self.rates = [i*16 for i in range(1,20)]
 
     def test_array_default_init(self):
-        zfpArray = zfpy.zfparray2f(100, 100, 64)
+        zfpArray = zfpy.array2f(100, 100, 64)
+        self.assertEqual(zfpArray.dtype, "float32")
         for val in zfpArray:
             self.assertAlmostEqual(val, 0.0, places=12)
 
     def test_array_get_set(self):
+        inputArray = [[random() for idx in range(100)] for idx in range(100)]
+        zfpArray = zfpy.array2f(100, 100, 64)
+        for j in range(100):
+            for i in range(100):
+                zfpArray.set(i, j, inputArray[i][j])
+                self.assertAlmostEqual(zfpArray.get(i, j), inputArray[i][j], places=6)
+
+    def test_array_flat_get_set(self):
         inputArray = [random() for idx in range(10000)]
-        zfpArray = zfpy.zfparray2f(100, 100, 64)
+        zfpArray = zfpy.array2f(100, 100, 64)
         for idx in range(10000):
             zfpArray[idx] = inputArray[idx]
             self.assertAlmostEqual(zfpArray[idx], inputArray[idx], places=6)
 
     def test_rate_init(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray2f(100, 100, rate)
+            zfpArray = zfpy.array2f(100, 100, rate)
             self.assertEqual(zfpArray.rate(), rate)
 
     def test_rate_set(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray2f(100, 100, 1)
+            zfpArray = zfpy.array2f(100, 100, 1)
             zfpArray.set_rate(rate)
             self.assertEqual(zfpArray.rate(), rate)
 
@@ -104,25 +116,34 @@ class TestArray2d(unittest.TestCase):
         self.rates = [i*16 for i in range(1,20)]
 
     def test_array_default_init(self):
-        zfpArray = zfpy.zfparray2d(100, 100, 64)
+        zfpArray = zfpy.array2d(100, 100, 64)
+        self.assertEqual(zfpArray.dtype, "float64")
         for val in zfpArray:
             self.assertAlmostEqual(val, 0.0, places=12)
 
     def test_array_get_set(self):
+        inputArray = [[random() for idx in range(100)] for idx in range(100)]
+        zfpArray = zfpy.array2d(100, 100, 64)
+        for j in range(100):
+            for i in range(100):
+                zfpArray.set(i, j, inputArray[i][j])
+                self.assertAlmostEqual(zfpArray.get(i, j), inputArray[i][j], places=6)
+
+    def test_array_flat_get_set(self):
         inputArray = [random() for idx in range(10000)]
-        zfpArray = zfpy.zfparray2d(100, 100, 64)
+        zfpArray = zfpy.array2d(100, 100, 64)
         for idx in range(10000):
             zfpArray[idx] = inputArray[idx]
             self.assertAlmostEqual(zfpArray[idx], inputArray[idx], places=6)
 
     def test_rate_init(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray2d(100, 100, rate)
+            zfpArray = zfpy.array2d(100, 100, rate)
             self.assertEqual(zfpArray.rate(), rate)
 
     def test_rate_set(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray2d(100, 100, 1)
+            zfpArray = zfpy.array2d(100, 100, 1)
             zfpArray.set_rate(rate)
             self.assertEqual(zfpArray.rate(), rate)
 
@@ -132,25 +153,35 @@ class TestArray3f(unittest.TestCase):
         self.rates = [i*16 for i in range(1,20)]
 
     def test_array_default_init(self):
-        zfpArray = zfpy.zfparray3f(10, 10, 10, 64)
+        zfpArray = zfpy.array3f(10, 10, 10, 64)
+        self.assertEqual(zfpArray.dtype, "float32")
         for val in zfpArray:
             self.assertAlmostEqual(val, 0.0, places=12)
 
     def test_array_get_set(self):
+        inputArray = [[[random() for idx in range(10)] for idx in range(10)] for idx in range(10)]
+        zfpArray = zfpy.array3f(10, 10, 10, 64)
+        for k in range(10):
+            for j in range(10):
+                for i in range(10):
+                    zfpArray.set(i, j, k, inputArray[i][j][k])
+                    self.assertAlmostEqual(zfpArray.get(i, j, k), inputArray[i][j][k], places=6)
+
+    def test_array_flat_get_set(self):
         inputArray = [random() for idx in range(10000)]
-        zfpArray = zfpy.zfparray3f(10, 10, 10, 64)
+        zfpArray = zfpy.array3f(10, 10, 10, 64)
         for idx in range(1000):
             zfpArray[idx] = inputArray[idx]
             self.assertAlmostEqual(zfpArray[idx], inputArray[idx], places=6)
 
     def test_rate_init(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray3f(10, 10, 10, rate)
+            zfpArray = zfpy.array3f(10, 10, 10, rate)
             self.assertEqual(zfpArray.rate(), rate)
 
     def test_rate_set(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray2f(10, 10, 10, 1)
+            zfpArray = zfpy.array2f(10, 10, 10, 1)
             zfpArray.set_rate(rate)
             self.assertEqual(zfpArray.rate(), rate)
 
@@ -160,25 +191,35 @@ class TestArray3d(unittest.TestCase):
         self.rates = [i*16 for i in range(1,20)]
 
     def test_array_default_init(self):
-        zfpArray = zfpy.zfparray3d(10, 10, 10, 64)
+        zfpArray = zfpy.array3d(10, 10, 10, 64)
+        self.assertEqual(zfpArray.dtype, "float64")
         for val in zfpArray:
             self.assertAlmostEqual(val, 0.0, places=12)
 
     def test_array_get_set(self):
+        inputArray = [[[random() for idx in range(10)] for idx in range(10)] for idx in range(10)]
+        zfpArray = zfpy.array3d(10, 10, 10, 64)
+        for k in range(10):
+            for j in range(10):
+                for i in range(10):
+                    zfpArray.set(i, j, k, inputArray[i][j][k])
+                    self.assertAlmostEqual(zfpArray.get(i, j, k), inputArray[i][j][k], places=6)
+
+    def test_array_flat_get_set(self):
         inputArray = [random() for idx in range(1000)]
-        zfpArray = zfpy.zfparray3d(10, 10, 10, 64)
+        zfpArray = zfpy.array3d(10, 10, 10, 64)
         for idx in range(1000):
             zfpArray[idx] = inputArray[idx]
             self.assertAlmostEqual(zfpArray[idx], inputArray[idx], places=6)
 
     def test_rate_init(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray3d(10, 10, 10, rate)
+            zfpArray = zfpy.array3d(10, 10, 10, rate)
             self.assertEqual(zfpArray.rate(), rate)
 
     def test_rate_set(self):
         for rate in self.rates:
-            zfpArray = zfpy.zfparray3d(10, 10, 10, 1)
+            zfpArray = zfpy.array3d(10, 10, 10, 1)
             zfpArray.set_rate(rate)
             self.assertEqual(zfpArray.rate(), rate)
 
