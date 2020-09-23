@@ -77,36 +77,43 @@ and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
 Cfp Arrays
 ^^^^^^^^^^
 
-|cfp| implements six array types for 1D, 2D, and 3D arrays of floats and
+|cfp| implements eight array types for 1D, 2D, 3D, and 4D arrays of floats and
 doubles.  These array types share many functions that have the same signature.
 To reduce redundancy in the documentation, we define fictitious types
 :c:type:`cfp_arrayf` and :c:type:`cfp_arrayd` for *N*-dimensional
-(1 |leq| *N* |leq| 3) arrays of floats or doubles, :c:type:`cfp_array1`,
-:c:type:`cfp_array2`, and :c:type:`cfp_array3` for 1D, 2D, and 3D arrays
+(1 |leq| *N* |leq| 4) arrays of floats or doubles, :c:type:`cfp_array1`,
+:c:type:`cfp_array2`, and :c:type:`cfp_array3` for 1D, 2D, 3D, and 4D arrays
 of either floats or doubles, and :c:type:`cfp_array` for arrays of any
 dimensionality and type.  We also make use of corresponding namespaces,
 e.g., :c:struct:`cfp.array1` refers to the API common to one-dimensional
 arrays of floats or doubles.  These types and namespaces are not actually
 part of the |cfp| API.
 
+.. Note::
+
+  Support for 4D arrays was added to cfp in version |cfprpirelease|.
+
 -----
 
 .. c:type:: cfp_array1f
 .. c:type:: cfp_array2f
 .. c:type:: cfp_array3f
+.. c:type:: cfp_array4f
 .. c:type:: cfp_array1d
 .. c:type:: cfp_array2d
 .. c:type:: cfp_array3d
+.. c:type:: cfp_array4d
 
-  Opaque types for 1D, 2D, and 3D compressed arrays of floats and doubles.
+  Opaque types for 1D, 2D, 3D, and 4D compressed arrays of floats and doubles.
 
 -----
 
 .. c:type:: cfp_array1
 .. c:type:: cfp_array2
 .. c:type:: cfp_array3
+.. c:type:: cfp_array4
 
-  Fictitious types denoting 1D, 2D, and 3D arrays of any scalar type.
+  Fictitious types denoting 1D, 2D, 3D, and 4D arrays of any scalar type.
 
 -----
 
@@ -131,6 +138,8 @@ part of the |cfp| API.
   .. c:struct:: array2d
   .. c:struct:: array3f
   .. c:struct:: array3d
+  .. c:struct:: array4f
+  .. c:struct:: array4d
 
   Nested C "namespaces" for encapsulating the |cfp| API.  The outer
   :c:struct:`cfp` namespace may be redefined at compile-time via the macro
@@ -145,6 +154,8 @@ part of the |cfp| API.
 .. c:function:: cfp_array2d cfp.array2d.ctor(uint nx, uint ny, double rate, const double* p, size_t csize)
 .. c:function:: cfp_array3f cfp.array3f.ctor(uint nx, uint ny, uint nz, double rate, const float* p, size_t csize)
 .. c:function:: cfp_array3d cfp.array3d.ctor(uint nx, uint ny, uint nz, double rate, const double* p, size_t csize)
+.. c:function:: cfp_array4f cfp.array4f.ctor(uint nx, uint ny, uint nz, uint nw, double rate, const float* p, size_t csize)
+.. c:function:: cfp_array4d cfp.array4d.ctor(uint nx, uint ny, uint nz, uint nw, double rate, const double* p, size_t csize)
 
   :ref:`Array constructors <array_ctor>`.
   If *p* is not :code:`NULL`, then the array is initialized from uncompressed
@@ -187,9 +198,11 @@ part of the |cfp| API.
 .. c:function:: float cfp.array1f.get(const cfp_array1f a, uint i)
 .. c:function:: float cfp.array2f.get(const cfp_array2f a, uint i, uint j)
 .. c:function:: float cfp.array3f.get(const cfp_array3f a, uint i, uint j, uint k)
+.. c:function:: float cfp.array4f.get(const cfp_array4f a, uint i, uint j, uint k, uint l)
 .. c:function:: double cfp.array1d.get(const cfp_array1d a, uint i)
 .. c:function:: double cfp.array2d.get(const cfp_array2d a, uint i, uint j)
 .. c:function:: double cfp.array3d.get(const cfp_array3d a, uint i, uint j, uint k)
+.. c:function:: double cfp.array4d.get(const cfp_array4d a, uint i, uint j, uint k, uint l)
 
   :ref:`Array accessors <array_accessor>` via multidimensional indexing.
 
@@ -198,9 +211,11 @@ part of the |cfp| API.
 .. c:function:: void cfp.array1f.set(const cfp_array1f a, uint i, float val)
 .. c:function:: void cfp.array2f.set(const cfp_array2f a, uint i, uint j, float val)
 .. c:function:: void cfp.array3f.set(const cfp_array3f a, uint i, uint j, uint k, float val)
+.. c:function:: void cfp.array4f.set(const cfp_array4f a, uint i, uint j, uint k, uint l, float val)
 .. c:function:: void cfp.array1d.set(const cfp_array1d a, uint i, double val)
 .. c:function:: void cfp.array2d.set(const cfp_array2d a, uint i, uint j, double val)
 .. c:function:: void cfp.array3d.set(const cfp_array3d a, uint i, uint j, uint k, double val)
+.. c:function:: void cfp.array4d.set(const cfp_array4d a, uint i, uint j, uint k, uint l, double val)
 
   Array mutators for assigning values to array elements via multidimensional
   indexing.
@@ -240,6 +255,10 @@ part of the |cfp| API.
 .. c:function:: uint cfp.array3.size_x(const cfp_array3 self)
 .. c:function:: uint cfp.array3.size_y(const cfp_array3 self)
 .. c:function:: uint cfp.array3.size_z(const cfp_array3 self)
+.. c:function:: uint cfp.array4.size_x(const cfp_array4 self)
+.. c:function:: uint cfp.array4.size_y(const cfp_array4 self)
+.. c:function:: uint cfp.array4.size_z(const cfp_array4 self)
+.. c:function:: uint cfp.array4.size_w(const cfp_array4 self)
 
   :ref:`Array dimensions <array_dims>`.
 
@@ -249,6 +268,7 @@ part of the |cfp| API.
 .. c:function:: void cfp.array1.resize(cfp_array1 self, uint n, int clear)
 .. c:function:: void cfp.array2.resize(cfp_array2 self, uint nx, uint ny, int clear)
 .. c:function:: void cfp.array3.resize(cfp_array3 self, uint nx, uint ny, uint nz, int clear)
+.. c:function:: void cfp.array4.resize(cfp_array4 self, uint nx, uint ny, uint nz, uint nw, int clear)
 
   :ref:`Resize array <array_resize>`.
 
@@ -361,11 +381,13 @@ References are constructed via :c:func:`cfp.array.get_ref`,
 .. c:type:: cfp_ref1f
 .. c:type:: cfp_ref2f
 .. c:type:: cfp_ref3f
+.. c:type:: cfp_ref4f
 .. c:type:: cfp_ref1d
 .. c:type:: cfp_ref2d
 .. c:type:: cfp_ref3d
+.. c:type:: cfp_ref4d
 
-  Opaque types for proxy references to 1D, 2D, and 3D compressed float or
+  Opaque types for proxy references to 1D, 2D, 3D, and 4D compressed float or
   double array elements.
 
 -----
@@ -373,8 +395,9 @@ References are constructed via :c:func:`cfp.array.get_ref`,
 .. c:type:: cfp_ref1
 .. c:type:: cfp_ref2
 .. c:type:: cfp_ref3
+.. c:type:: cfp_ref4
 
-  Fictitious types denoting references into 1D, 2D, and 3D arrays of any
+  Fictitious types denoting references into 1D, 2D, 3D, and 4D arrays of any
   scalar type.
 
 -----
@@ -397,6 +420,7 @@ References are constructed via :c:func:`cfp.array.get_ref`,
 .. c:function:: cfp_ref1 cfp.array1.ref(cfp_array1 self, uint i)
 .. c:function:: cfp_ref2 cfp.array2.ref(cfp_array2 self, uint i, uint j)
 .. c:function:: cfp_ref3 cfp.array3.ref(cfp_array3 self, uint i, uint j, uint k)
+.. c:function:: cfp_ref4 cfp.array4.ref(cfp_array4 self, uint i, uint j, uint k, uint l)
 
   Reference :ref:`constructor <lvref_bidx>` via multidimensional indexing.
 
@@ -463,11 +487,13 @@ and are themselves not modified by these functions.
 .. c:type:: cfp_ptr1f
 .. c:type:: cfp_ptr2f
 .. c:type:: cfp_ptr3f
+.. c:type:: cfp_ptr4f
 .. c:type:: cfp_ptr1d
 .. c:type:: cfp_ptr2d
 .. c:type:: cfp_ptr3d
+.. c:type:: cfp_ptr4d
 
-  Opaque types for proxy pointers to 1D, 2D, and 3D compressed float or
+  Opaque types for proxy pointers to 1D, 2D, 3D, and 4D compressed float or
   double array elements.
 
 -----
@@ -475,8 +501,9 @@ and are themselves not modified by these functions.
 .. c:type:: cfp_ptr1
 .. c:type:: cfp_ptr2
 .. c:type:: cfp_ptr3
+.. c:type:: cfp_ptr4
 
-  Fictitious types denoting pointers into 1D, 2D, and 3D arrays of any
+  Fictitious types denoting pointers into 1D, 2D, 3D, and 4D arrays of any
   scalar type.
 
 -----
@@ -499,6 +526,7 @@ and are themselves not modified by these functions.
 .. c:function:: cfp_ptr1 cfp.array1.ptr(cfp_array1 self, uint i)
 .. c:function:: cfp_ptr2 cfp.array2.ptr(cfp_array2 self, uint i, uint j)
 .. c:function:: cfp_ptr3 cfp.array3.ptr(cfp_array3 self, uint i, uint j, uint k)
+.. c:function:: cfp_ptr4 cfp.array4.ptr(cfp_array4 self, uint i, uint j, uint k, uint l)
 
   Obtain pointer to array element via multidimensional indexing.
 
@@ -645,11 +673,13 @@ iterator syntax. For example::
 .. c:type:: cfp_iter1f
 .. c:type:: cfp_iter2f
 .. c:type:: cfp_iter3f
+.. c:type:: cfp_iter4f
 .. c:type:: cfp_iter1d
 .. c:type:: cfp_iter2d
 .. c:type:: cfp_iter3d
+.. c:type:: cfp_iter4d
 
-  Opaque types for block iterators over 1D, 2D, and 3D compressed float
+  Opaque types for block iterators over 1D, 2D, 3D, and 4D compressed float
   or double array elements.
 
 -----
@@ -657,8 +687,9 @@ iterator syntax. For example::
 .. c:type:: cfp_iter1
 .. c:type:: cfp_iter2
 .. c:type:: cfp_iter3
+.. c:type:: cfp_iter4
 
-  Fictitious types denoting iterators over 1D, 2D, and 3D arrays of any
+  Fictitious types denoting iterators over 1D, 2D, 3D, and 4D arrays of any
   scalar type.
 
 -----
@@ -825,6 +856,7 @@ iterator syntax. For example::
 .. c:function:: uint cfp.array1.iterator.i(cfp_iter1 self)
 .. c:function:: uint cfp.array2.iterator.i(cfp_iter2 self)
 .. c:function:: uint cfp.array3.iterator.i(cfp_iter3 self)
+.. c:function:: uint cfp.array4.iterator.i(cfp_iter4 self)
 
   Get *i* component of array element referenced by iterator; see
   :cpp:func:`iterator::i()`.
@@ -833,6 +865,7 @@ iterator syntax. For example::
 
 .. c:function:: uint cfp.array2.iterator.j(cfp_iter2 self)
 .. c:function:: uint cfp.array3.iterator.j(cfp_iter3 self)
+.. c:function:: uint cfp.array4.iterator.j(cfp_iter4 self)
 
   Get *j* component of array element referenced by iterator; see
   :cpp:func:`iterator::j()`.
@@ -840,6 +873,14 @@ iterator syntax. For example::
 -----
 
 .. c:function:: uint cfp.array3.iterator.k(cfp_iter3 self)
+.. c:function:: uint cfp.array4.iterator.k(cfp_iter4 self)
 
   Get *k* component of array element referenced by iterator; see
   :cpp:func:`iterator::k()`.
+
+-----
+
+.. c:function:: uint cfp.array4.iterator.l(cfp_iter4 self)
+
+  Get *l* component of array element referenced by iterator; see
+  :cpp:func:`iterator::l()`.
