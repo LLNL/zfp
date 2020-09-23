@@ -21,7 +21,7 @@
 #define SIZE_Z 22
 #define SIZE_W 5
 
-#define VAL 4.4
+#define VAL 12345678.9
 
 #define MIN_TOTAL_ELEMENTS 1000000
 
@@ -203,11 +203,10 @@ loadFixedRateVars(void **state, int paramNum)
   }
 
 #if DIMS == 4
-  bundle->rate = 8;
+  bundle->rate = 8; // max rate for serialization
 #else
   bundle->rate = (double)(1u << (bundle->paramNum + 3));
 #endif
-  printf("\t\tFixed rate: %lf\n", bundle->rate);
 
   *state = bundle;
 

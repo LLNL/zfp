@@ -30,7 +30,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_resize_expect_sizeChanged)(void **state)
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
-  size_t newSizeX = 81, newSizeY = 123, newSizeZ = 14, newSizeW;
+  size_t newSizeX = 81, newSizeY = 123, newSizeZ = 14, newSizeW = 6;
   assert_int_not_equal(CFP_NAMESPACE.SUB_NAMESPACE.size(cfpArr), newSizeX * newSizeY * newSizeZ * newSizeW);
 
   CFP_NAMESPACE.SUB_NAMESPACE.resize(cfpArr, newSizeX, newSizeY, newSizeZ, newSizeW, 1);
