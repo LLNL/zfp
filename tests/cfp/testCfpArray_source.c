@@ -244,7 +244,6 @@ teardown(void **state)
 static void
 when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
-/*
   struct setupVars *bundle = *state;
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->dataArr, bundle->totalDataLen, 1);
 
@@ -253,7 +252,6 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
   uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
 
   assert_int_equal(checksum, expectedChecksum);
-*/
 }
 
 static void
@@ -423,7 +421,6 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getFlat_expect_entryReturned)(void **sta
 static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_setArray_expect_compressedStreamChecksumMatches)(void **state)
 {
-/*
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
@@ -438,13 +435,11 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_setArray_expect_compressedStreamChecksum
   uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
 
   assert_int_equal(checksum, expectedChecksum);
-*/
 }
 
 static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_getArray_expect_decompressedArrChecksumMatches)(void **state)
 {
-/*
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
@@ -458,7 +453,6 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_getArray_expect_decompressedArrChecksumM
   uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
 
   assert_int_equal(checksum, expectedChecksum);
-*/
 }
 
 static void

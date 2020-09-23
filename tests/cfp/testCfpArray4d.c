@@ -68,12 +68,9 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_iter4d_when_iterate_touch_all, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_iter4d_when_get_index_expect_correct, setupCfpArrSmall, teardownCfpArr),
 
+    /* NOTE: 4D arrays only support 8bit rates so setupFixedRate1 and 2 aren't used for testing here */
     cmocka_unit_test_setup_teardown(given_cfp_array4d_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate0, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_array4d_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate1, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_array4d_when_setArray_expect_compressedStreamChecksumMatches, setupFixedRate2, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array4d_when_getArray_expect_decompressedArrChecksumMatches, setupFixedRate0, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_array4d_when_getArray_expect_decompressedArrChecksumMatches, setupFixedRate1, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_array4d_when_getArray_expect_decompressedArrChecksumMatches, setupFixedRate2, teardownCfpArr),
   };
 
   return cmocka_run_group_tests(tests, prepCommonSetupVars, teardownCommonSetupVars);
