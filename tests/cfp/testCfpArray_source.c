@@ -82,11 +82,7 @@ prepCommonSetupVars(void** state)
   struct setupVars *bundle = calloc(1, sizeof(struct setupVars));
   assert_non_null(bundle);
 
-#if DIMS == 4
-  bundle->rate = 8;
-#else
   bundle->rate = ZFP_RATE_PARAM_BITS;
-#endif
   bundle->csize = 300;
 
   *state = bundle;
@@ -196,18 +192,20 @@ static int
 loadFixedRateVars(void **state, int paramNum)
 {
   struct setupVars *bundle = *state;
-
   bundle->paramNum = paramNum;
+
+#if DIMS == 4
+  // 4d (de)serialization rate limit
+  if (bundle->paramNum != 0) {
+    fail_msg("Unknown paramNum during loadFixedRateVars()")
+  }
+#else
   if (bundle->paramNum > 2 || bundle->paramNum < 0) {
     fail_msg("Unknown paramNum during loadFixedRateVars()");
   }
-
-#if DIMS == 4
-  bundle->rate = 8; // max rate for serialization
-#else
-  bundle->rate = (double)(1u << (bundle->paramNum + 3));
 #endif
 
+  bundle->rate = (double)(1u << (bundle->paramNum + 3));
   *state = bundle;
 
   return setupCfpArrLarge(state);
