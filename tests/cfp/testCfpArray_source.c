@@ -197,7 +197,7 @@ loadFixedRateVars(void **state, int paramNum)
 #if DIMS == 4
   // 4d (de)serialization rate limit
   if (bundle->paramNum != 0) {
-    fail_msg("Unknown paramNum during loadFixedRateVars()")
+    fail_msg("Unknown paramNum during loadFixedRateVars()");
   }
 #else
   if (bundle->paramNum > 2 || bundle->paramNum < 0) {
