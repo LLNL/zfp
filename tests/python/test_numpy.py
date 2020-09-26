@@ -59,12 +59,16 @@ class TestNumpy(unittest.TestCase):
                 compress_param_num
             ),
         }
-        compressed_array = zfpy.compress_numpy(
+        compressed_array_t = zfpy.compress_numpy(
             random_array,
             write_header=False,
             **compression_kwargs
         )
-
+        if isinstance(compressed_array_t, np.ndarray):
+            compressed_array = compressed_array_t
+        else:
+            mem = memoryview(compressed_array_t)
+            compressed_array = np.array(mem, copy=False)
         # Decompression using the "advanced" interface which enforces no header,
         # and the user must provide all the metadata
         decompressed_array = np.empty_like(random_array)
@@ -177,11 +181,16 @@ class TestNumpy(unittest.TestCase):
                             # Decompression using the "public" interface
                             # requires a header, so re-compress with the header
                             # included in the stream
-                            compressed_array = zfpy.compress_numpy(
+                            compressed_array_t = zfpy.compress_numpy(
                                 random_array,
                                 write_header=True,
                                 **compression_kwargs
                             )
+                            if isinstance(compressed_array_t, np.ndarray):
+                                compressed_array = compressed_array_t
+                            else:
+                                mem = memoryview(compressed_array_t)
+                                compressed_array = np.array(mem, copy=False)
                             decompressed_array = zfpy.decompress_numpy(
                                 compressed_array,
                             )
