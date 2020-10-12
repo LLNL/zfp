@@ -4,9 +4,7 @@ import functools
 import cython
 from libc.stdlib cimport malloc, free
 from cython cimport view
-from cpython cimport array
 from libc.stdint cimport uint8_t
-import array
 
 import itertools
 if sys.version_info[0] == 2:
