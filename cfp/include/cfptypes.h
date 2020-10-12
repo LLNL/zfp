@@ -1,6 +1,9 @@
 #ifndef CFP_TYPES_H
 #define CFP_TYPES_H
 
+/* needed for access to zfp type definitions */
+#include "zfp.h"
+
 typedef struct cfp_header cfp_header;
 typedef struct cfp_array1f cfp_array1f;
 typedef struct cfp_array1d cfp_array1d;

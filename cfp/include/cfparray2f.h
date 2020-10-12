@@ -68,7 +68,7 @@ typedef struct {
   cfp_array2f (*ctor_default)();
   cfp_array2f (*ctor)(size_t nx, size_t ny, double rate, const float* p, size_t csize);
   cfp_array2f (*ctor_copy)(const cfp_array2f src);
-  cfp_array2f (*ctor_header)(const cfp_header h);
+  cfp_array2f (*ctor_header)(const cfp_header h, const void* buffer, size_t buffer_size_bytes);
   void (*dtor)(cfp_array2f self);
 
   void (*deep_copy)(cfp_array2f self, const cfp_array2f src);

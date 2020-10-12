@@ -667,7 +667,6 @@ const cfp_api CFP_NAMESPACE = {
   },
   // header
   {
-    cfp_header_ctor_default,
     cfp_header_ctor_buffer,
     cfp_header_ctor_array1f,
     cfp_header_ctor_array1d,
@@ -679,8 +678,15 @@ const cfp_api CFP_NAMESPACE = {
     cfp_header_ctor_array4d,
     cfp_header_dtor,
 
+    cfp_header_scalar_type,
+    cfp_header_dimensionality,
+    cfp_header_size,
+    cfp_header_size_x,
+    cfp_header_size_y,
+    cfp_header_size_z,
+    cfp_header_size_w,
+
     cfp_header_rate,
     cfp_header_data,
-    cfp_header_size,
   },
 };

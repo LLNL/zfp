@@ -71,7 +71,7 @@ typedef struct {
   cfp_array3f (*ctor_default)();
   cfp_array3f (*ctor)(size_t nx, size_t ny, size_t nz, double rate, const float* p, size_t csize);
   cfp_array3f (*ctor_copy)(const cfp_array3f src);
-  cfp_array3f (*ctor_header)(const cfp_header h);
+  cfp_array3f (*ctor_header)(const cfp_header h, const void* buffer, size_t buffer_size_bytes);
   void (*dtor)(cfp_array3f self);
 
   void (*deep_copy)(cfp_array3f self, const cfp_array3f src);
