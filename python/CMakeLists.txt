@@ -22,5 +22,11 @@ python_extension_module(zfpy)
 set(PYLIB_BUILD_DIR "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Directory where zfp python library will be built")
 set_target_properties(zfpy PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYLIB_BUILD_DIR})
 # Install to the typical python module directory
-set(python_install_lib_dir "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/")
+# Taken from FindPython in CMake 3.18
+if(NOT python_install_lib_dir)
+    execute_process(COMMAND
+                    ${PYTHON_EXECUTABLE} -c
+                    "from distutil import sysconfig; print(sysconfig.get_python_lib(plat_specific=False, standard_lib=False))"
+                    OUTPUT_VARIABLE python_install_lib_dir)
+endif()
 install(TARGETS zfpy LIBRARY DESTINATION ${python_install_lib_dir})
