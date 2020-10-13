@@ -9,6 +9,8 @@
 #define CFP_ITER_TYPE cfp_iter4d
 #define SUB_NAMESPACE array4d
 #define SCALAR double
+#define SCALAR_TYPE zfp_type_double
+#define DIMENSIONALITY 4
 
 #include "testCfpArray_source.c"
 #include "testCfpArray4_source.c"
@@ -22,6 +24,11 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_array4d_when_ctor_expect_paramsSet, setupCfpArrLargeComplete, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array4d_when_copyCtor_expect_paramsCopied, setupCfpArrLargeComplete, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array4d_when_copyCtor_expect_cacheCopied, setupCfpArrLargeComplete, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array4d_when_headerCtor_expect_copied, setupCfpArrLargeComplete, teardownCfpArr),
+
+    cmocka_unit_test_setup_teardown(given_cfp_array4d_header_expect_matchingMetadata, setupCfpArrLargeComplete, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array4d_header_when_bufferCtor_expect_copied, setupCfpArrLargeComplete, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_array4d_header_when_bufferCtor_expect_paramsCopied, setupCfpArrLargeComplete, teardownCfpArr),
 
     cmocka_unit_test_setup_teardown(given_cfp_array4d_when_setRate_expect_rateSet, setupCfpArrMinimal, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array4d_when_setCacheSize_expect_cacheSizeSet, setupCfpArrSmall, teardownCfpArr),

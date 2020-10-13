@@ -25,6 +25,8 @@
 
 #define MIN_TOTAL_ELEMENTS 1000000
 
+#define CFP_HEADER_TYPE cfp_header
+
 struct setupVars {
   size_t dataSideLen;
   size_t totalDataLen;
@@ -321,6 +323,87 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_copyCtor_expect_cacheCopied)(void **stat
   assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get_flat(newCfpArr, i) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(srcCfpArr, i));
 
   CFP_NAMESPACE.SUB_NAMESPACE.dtor(newCfpArr);
+}
+
+static void
+_catFunc3(given_, CFP_ARRAY_TYPE, _when_headerCtor_expect_copied)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE srcCfpArr = bundle->cfpArr;
+
+  // get header
+  CFP_HEADER_TYPE srcCfpHdr = _catFunc2(CFP_NAMESPACE.header.ctor_, SUB_NAMESPACE)(srcCfpArr);
+
+  // get compressed bitstream
+  void* srcBuff = (void*)CFP_NAMESPACE.SUB_NAMESPACE.compressed_data(srcCfpArr);
+  size_t srcSz  = CFP_NAMESPACE.SUB_NAMESPACE.compressed_size(srcCfpArr);
+
+  // exec construct from header + stream
+  CFP_ARRAY_TYPE newCfpArr = CFP_NAMESPACE.SUB_NAMESPACE.ctor_header(srcCfpHdr, srcBuff, srcSz); 
+
+  // verify reconstruction from header + stream results in equivalent array data
+  void* newBuff = (void*)CFP_NAMESPACE.SUB_NAMESPACE.compressed_data(newCfpArr);
+  size_t newSz  = CFP_NAMESPACE.SUB_NAMESPACE.compressed_size(newCfpArr);
+
+  assert_int_equal(srcSz, newSz);
+  assert_memory_equal(srcBuff, newBuff, newSz);
+
+  // cleanup
+  CFP_NAMESPACE.header.dtor(srcCfpHdr);
+  CFP_NAMESPACE.SUB_NAMESPACE.dtor(newCfpArr);
+}
+
+static void
+_catFunc3(given_, CFP_ARRAY_TYPE, _header_when_bufferCtor_expect_copied)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE srcCfpArr = bundle->cfpArr;
+
+  // get header
+  CFP_HEADER_TYPE srcCfpHdr = _catFunc2(CFP_NAMESPACE.header.ctor_, SUB_NAMESPACE)(srcCfpArr);
+  const void* srcBuff = CFP_NAMESPACE.header.data(srcCfpHdr);
+  size_t srcSz = CFP_NAMESPACE.header.size(srcCfpHdr);
+
+  // exec new header construct from source header
+  CFP_HEADER_TYPE newCfpHdr = CFP_NAMESPACE.header.ctor_buffer(DIMENSIONALITY, SCALAR_TYPE, srcBuff, srcSz);
+
+  const void* newBuff = CFP_NAMESPACE.header.data(newCfpHdr);
+  size_t newSz = CFP_NAMESPACE.header.size(newCfpHdr);
+
+  assert_int_equal(srcSz, newSz);
+  assert_memory_equal(srcBuff, newBuff, newSz);
+
+  // cleanup
+  CFP_NAMESPACE.header.dtor(srcCfpHdr);
+  CFP_NAMESPACE.header.dtor(newCfpHdr);
+}
+
+static void
+_catFunc3(given_, CFP_ARRAY_TYPE, _header_when_bufferCtor_expect_paramsCopied)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE srcCfpArr = bundle->cfpArr;
+
+  // get header
+  CFP_HEADER_TYPE srcCfpHdr = _catFunc2(CFP_NAMESPACE.header.ctor_, SUB_NAMESPACE)(srcCfpArr);
+  const void* hBuff = CFP_NAMESPACE.header.data(srcCfpHdr);
+  size_t hSz = CFP_NAMESPACE.header.size(srcCfpHdr);
+
+  // exec new header construct from source header
+  CFP_HEADER_TYPE newCfpHdr = CFP_NAMESPACE.header.ctor_buffer(DIMENSIONALITY, SCALAR_TYPE, hBuff, hSz);
+
+  assert_int_equal(CFP_NAMESPACE.header.scalar_type(srcCfpHdr), CFP_NAMESPACE.header.scalar_type(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.header.dimensionality(srcCfpHdr), CFP_NAMESPACE.header.dimensionality(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.header.rate(srcCfpHdr), CFP_NAMESPACE.header.rate(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.header.size(srcCfpHdr), CFP_NAMESPACE.header.size(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.header.size_x(srcCfpHdr), CFP_NAMESPACE.header.size_x(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.header.size_y(srcCfpHdr), CFP_NAMESPACE.header.size_y(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.header.size_z(srcCfpHdr), CFP_NAMESPACE.header.size_z(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.header.size_w(srcCfpHdr), CFP_NAMESPACE.header.size_w(newCfpHdr));
+
+  // cleanup
+  CFP_NAMESPACE.header.dtor(srcCfpHdr);
+  CFP_NAMESPACE.header.dtor(newCfpHdr);
 }
 
 static void

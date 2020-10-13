@@ -21,6 +21,22 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_ctor_expect_paramsSet)(void **state)
 }
 
 static void
+_catFunc3(given_, CFP_ARRAY_TYPE, _header_expect_matchingMetadata)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE srcCfpArr = bundle->cfpArr;
+  CFP_HEADER_TYPE srcCfpHdr = _catFunc2(CFP_NAMESPACE.header.ctor_, SUB_NAMESPACE)(srcCfpArr);
+
+  assert_int_equal(CFP_NAMESPACE.header.scalar_type(srcCfpHdr), SCALAR_TYPE);
+  assert_int_equal(CFP_NAMESPACE.header.dimensionality(srcCfpHdr), 1);
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.rate(srcCfpArr), CFP_NAMESPACE.header.rate(srcCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.size(srcCfpArr), CFP_NAMESPACE.header.size_x(srcCfpHdr));
+
+  // cleanup
+  CFP_NAMESPACE.header.dtor(srcCfpHdr);
+}
+
+static void
 _catFunc3(given_, CFP_ARRAY_TYPE, _when_resize_expect_sizeChanged)(void **state)
 {
   struct setupVars *bundle = *state;
