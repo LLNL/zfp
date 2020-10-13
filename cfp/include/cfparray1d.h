@@ -37,12 +37,12 @@ typedef struct {
   double (*get_at)(cfp_ptr1d self, ptrdiff_t d);
   cfp_ref1d (*ref)(cfp_ptr1d self);
   cfp_ref1d (*ref_at)(cfp_ptr1d self, ptrdiff_t d);
-  int (*lt)(cfp_ptr1d self, cfp_ptr1d src);
-  int (*gt)(cfp_ptr1d self, cfp_ptr1d src);
-  int (*leq)(cfp_ptr1d self, cfp_ptr1d src);
-  int (*geq)(cfp_ptr1d self, cfp_ptr1d src);
-  int (*eq)(cfp_ptr1d self, cfp_ptr1d src);
-  int (*neq)(cfp_ptr1d self, cfp_ptr1d src);
+  zfp_bool (*lt)(cfp_ptr1d self, cfp_ptr1d src);
+  zfp_bool (*gt)(cfp_ptr1d self, cfp_ptr1d src);
+  zfp_bool (*leq)(cfp_ptr1d self, cfp_ptr1d src);
+  zfp_bool (*geq)(cfp_ptr1d self, cfp_ptr1d src);
+  zfp_bool (*eq)(cfp_ptr1d self, cfp_ptr1d src);
+  zfp_bool (*neq)(cfp_ptr1d self, cfp_ptr1d src);
   ptrdiff_t (*distance)(cfp_ptr1d self, cfp_ptr1d src);
   cfp_ptr1d (*next)(cfp_ptr1d self, ptrdiff_t d);
   cfp_ptr1d (*prev)(cfp_ptr1d self, ptrdiff_t d);
@@ -59,12 +59,12 @@ typedef struct {
   cfp_ref1d (*ref_at)(cfp_iter1d self, ptrdiff_t d);
   cfp_ptr1d (*ptr)(cfp_iter1d self);
   cfp_ptr1d (*ptr_at)(cfp_iter1d self, ptrdiff_t d);
-  int (*lt)(cfp_iter1d self, cfp_iter1d src);
-  int (*gt)(cfp_iter1d self, cfp_iter1d src);
-  int (*leq)(cfp_iter1d self, cfp_iter1d src);
-  int (*geq)(cfp_iter1d self, cfp_iter1d src);
-  int (*eq)(cfp_iter1d self, cfp_iter1d src);
-  int (*neq)(cfp_iter1d self, cfp_iter1d src);
+  zfp_bool (*lt)(cfp_iter1d self, cfp_iter1d src);
+  zfp_bool (*gt)(cfp_iter1d self, cfp_iter1d src);
+  zfp_bool (*leq)(cfp_iter1d self, cfp_iter1d src);
+  zfp_bool (*geq)(cfp_iter1d self, cfp_iter1d src);
+  zfp_bool (*eq)(cfp_iter1d self, cfp_iter1d src);
+  zfp_bool (*neq)(cfp_iter1d self, cfp_iter1d src);
   ptrdiff_t (*distance)(cfp_iter1d self, cfp_iter1d src);
   cfp_iter1d (*next)(cfp_iter1d self, ptrdiff_t d);
   cfp_iter1d (*prev)(cfp_iter1d self, ptrdiff_t d);
@@ -91,7 +91,7 @@ typedef struct {
   size_t (*compressed_size)(const cfp_array1d self);
   void* (*compressed_data)(const cfp_array1d self);
   size_t (*size)(const cfp_array1d self);
-  void (*resize)(cfp_array1d self, size_t n, int clear);
+  void (*resize)(cfp_array1d self, size_t n, zfp_bool clear);
 
   void (*get_array)(const cfp_array1d self, double* p);
   void (*set_array)(cfp_array1d self, const double* p);

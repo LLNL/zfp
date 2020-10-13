@@ -43,12 +43,12 @@ typedef struct {
   float (*get_at)(cfp_ptr4f self, ptrdiff_t d);
   cfp_ref4f (*ref)(cfp_ptr4f self);
   cfp_ref4f (*ref_at)(cfp_ptr4f self, ptrdiff_t d);
-  int (*lt)(cfp_ptr4f self, cfp_ptr4f src);
-  int (*gt)(cfp_ptr4f self, cfp_ptr4f src);
-  int (*leq)(cfp_ptr4f self, cfp_ptr4f src);
-  int (*geq)(cfp_ptr4f self, cfp_ptr4f src);
-  int (*eq)(cfp_ptr4f self, cfp_ptr4f src);
-  int (*neq)(cfp_ptr4f self, cfp_ptr4f src);
+  zfp_bool (*lt)(cfp_ptr4f self, cfp_ptr4f src);
+  zfp_bool (*gt)(cfp_ptr4f self, cfp_ptr4f src);
+  zfp_bool (*leq)(cfp_ptr4f self, cfp_ptr4f src);
+  zfp_bool (*geq)(cfp_ptr4f self, cfp_ptr4f src);
+  zfp_bool (*eq)(cfp_ptr4f self, cfp_ptr4f src);
+  zfp_bool (*neq)(cfp_ptr4f self, cfp_ptr4f src);
   ptrdiff_t (*distance)(cfp_ptr4f self, cfp_ptr4f src);
   cfp_ptr4f (*next)(cfp_ptr4f self, ptrdiff_t d);
   cfp_ptr4f (*prev)(cfp_ptr4f self, ptrdiff_t d);
@@ -62,8 +62,8 @@ typedef struct {
   cfp_ref4f (*ref)(cfp_iter4f self);
   cfp_ptr4f (*ptr)(cfp_iter4f self);
   cfp_iter4f (*inc)(cfp_iter4f self);
-  int (*eq)(cfp_iter4f self, cfp_iter4f src);
-  int (*neq)(cfp_iter4f self, cfp_iter4f src);
+  zfp_bool (*eq)(cfp_iter4f self, cfp_iter4f src);
+  zfp_bool (*neq)(cfp_iter4f self, cfp_iter4f src);
   size_t (*i)(cfp_iter4f self);
   size_t (*j)(cfp_iter4f self);
   size_t (*k)(cfp_iter4f self);
@@ -92,7 +92,7 @@ typedef struct {
   size_t (*size_y)(const cfp_array4f self);
   size_t (*size_z)(const cfp_array4f self);
   size_t (*size_w)(const cfp_array4f self);
-  void (*resize)(cfp_array4f self, size_t nx, size_t ny, size_t nz, size_t nw, int clear);
+  void (*resize)(cfp_array4f self, size_t nx, size_t ny, size_t nz, size_t nw, zfp_bool clear);
 
   void (*get_array)(const cfp_array4f self, float* p);
   void (*set_array)(cfp_array4f self, const float* p);
