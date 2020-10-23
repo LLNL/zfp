@@ -2,12 +2,12 @@
 #define CFP_ARRAY_3D
 
 #include <stddef.h>
+#include "zfp.h"
 #include "zfp/types.h"
-#include "cfptypes.h"
 
-struct cfp_array3d {
+typedef struct {
   void* object;
-};
+} cfp_array3d;
 
 typedef struct {
   size_t i;
@@ -26,6 +26,8 @@ typedef struct {
   size_t k;
   cfp_array3d array;
 } cfp_iter3d;
+
+struct cfp_header;
 
 typedef struct {
   double (*get)(cfp_ref3d self);
@@ -71,7 +73,7 @@ typedef struct {
   cfp_array3d (*ctor_default)();
   cfp_array3d (*ctor)(size_t nx, size_t ny, size_t nz, double rate, const double* p, size_t csize);
   cfp_array3d (*ctor_copy)(const cfp_array3d src);
-  cfp_array3d (*ctor_header)(const cfp_header h, const void* buffer, size_t buffer_size_bytes);
+  cfp_array3d (*ctor_header)(const struct cfp_header h, const void* buffer, size_t buffer_size_bytes);
   void (*dtor)(cfp_array3d self);
 
   void (*deep_copy)(cfp_array3d self, const cfp_array3d src);

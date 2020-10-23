@@ -2,12 +2,12 @@
 #define CFP_ARRAY_1F
 
 #include <stddef.h>
+#include "zfp.h"
 #include "zfp/types.h"
-#include "cfptypes.h"
 
-struct cfp_array1f {
+typedef struct {
   void* object;
-};
+} cfp_array1f;
 
 typedef struct {
   size_t i;
@@ -22,6 +22,8 @@ typedef struct {
   size_t i;
   cfp_array1f array;
 } cfp_iter1f;
+
+struct cfp_header;
 
 typedef struct {
   void (*set)(cfp_ref1f self, float val);
@@ -77,7 +79,7 @@ typedef struct {
   cfp_array1f (*ctor_default)();
   cfp_array1f (*ctor)(size_t n, double rate, const float* p, size_t csize);
   cfp_array1f (*ctor_copy)(const cfp_array1f src);
-  cfp_array1f (*ctor_header)(const cfp_header h, const void* buffer, size_t buffer_size_bytes);
+  cfp_array1f (*ctor_header)(const struct cfp_header h, const void* buffer, size_t buffer_size_bytes);
   void (*dtor)(cfp_array1f self);
 
   void (*deep_copy)(cfp_array1f self, const cfp_array1f src);

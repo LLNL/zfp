@@ -680,13 +680,13 @@ const cfp_api CFP_NAMESPACE = {
 
     cfp_header_scalar_type,
     cfp_header_dimensionality,
-    cfp_header_size,
     cfp_header_size_x,
     cfp_header_size_y,
     cfp_header_size_z,
     cfp_header_size_w,
-
     cfp_header_rate,
+
     cfp_header_data,
+    cfp_header_size,
   },
 };

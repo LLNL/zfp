@@ -2,12 +2,12 @@
 #define CFP_ARRAY_4D
 
 #include <stddef.h>
+#include "zfp.h"
 #include "zfp/types.h"
-#include "cfptypes.h"
 
-struct cfp_array4d {
+typedef struct {
   void* object;
-};
+} cfp_array4d;
 
 typedef struct {
   size_t i;
@@ -28,6 +28,8 @@ typedef struct {
   size_t l;
   cfp_array4d array;
 } cfp_iter4d;
+
+struct cfp_header;
 
 typedef struct {
   double (*get)(cfp_ref4d self);
@@ -74,7 +76,7 @@ typedef struct {
   cfp_array4d (*ctor_default)();
   cfp_array4d (*ctor)(size_t nx, size_t ny, size_t nz, size_t nw, double rate, const double* p, size_t csize);
   cfp_array4d (*ctor_copy)(const cfp_array4d src);
-  cfp_array4d (*ctor_header)(const cfp_header h, const void* buffer, size_t buffer_size_bytes);
+  cfp_array4d (*ctor_header)(const struct cfp_header h, const void* buffer, size_t buffer_size_bytes);
   void (*dtor)(cfp_array4d self);
 
   void (*deep_copy)(cfp_array4d self, const cfp_array4d src);
