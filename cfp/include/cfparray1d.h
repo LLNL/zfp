@@ -10,8 +10,8 @@ typedef struct {
 } cfp_array1d;
 
 typedef struct {
-  size_t i;
   cfp_array1d array;
+  size_t x;
 } cfp_ref1d;
 
 typedef struct {
@@ -19,8 +19,8 @@ typedef struct {
 } cfp_ptr1d;
 
 typedef struct {
-  size_t i;
   cfp_array1d array;
+  size_t x;
 } cfp_iter1d;
 
 struct cfp_header;

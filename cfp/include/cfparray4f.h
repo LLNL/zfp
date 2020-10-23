@@ -10,11 +10,8 @@ typedef struct {
 } cfp_array4f;
 
 typedef struct {
-  size_t i;
-  size_t j;
-  size_t k;
-  size_t l;
   cfp_array4f array;
+  size_t x, y, z, w;
 } cfp_ref4f;
 
 typedef struct {
@@ -22,11 +19,8 @@ typedef struct {
 } cfp_ptr4f;
 
 typedef struct {
-  size_t i;
-  size_t j;
-  size_t k;
-  size_t l;
   cfp_array4f array;
+  size_t x, y, z, w;
 } cfp_iter4f;
 
 struct cfp_header;

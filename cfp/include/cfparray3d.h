@@ -10,10 +10,8 @@ typedef struct {
 } cfp_array3d;
 
 typedef struct {
-  size_t i;
-  size_t j;
-  size_t k;
   cfp_array3d array;
+  size_t x, y, z;
 } cfp_ref3d;
 
 typedef struct {
@@ -21,10 +19,8 @@ typedef struct {
 } cfp_ptr3d;
 
 typedef struct {
-  size_t i;
-  size_t j;
-  size_t k;
   cfp_array3d array;
+  size_t x, y, z;
 } cfp_iter3d;
 
 struct cfp_header;
