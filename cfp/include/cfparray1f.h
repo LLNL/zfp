@@ -3,7 +3,6 @@
 
 #include <stddef.h>
 #include "zfp.h"
-#include "zfp/types.h"
 
 typedef struct {
   void* object;
@@ -26,58 +25,63 @@ typedef struct {
 struct cfp_header;
 
 typedef struct {
+  /* member functions */
   void (*set)(cfp_ref1f self, float val);
-  float (*get)(cfp_ref1f self);
+  float (*get)(const cfp_ref1f self);
   cfp_ptr1f (*ptr)(cfp_ref1f self);
-  void (*copy)(cfp_ref1f self, cfp_ref1f src);
+  void (*copy)(cfp_ref1f self, const cfp_ref1f src);
 } cfp_ref1f_api;
 
 typedef struct {
+  /* member functions */
   void (*set)(cfp_ptr1f self, float val);
-  void (*set_at)(cfp_ptr1f self, float val, ptrdiff_t d);
-  float (*get)(cfp_ptr1f self);
-  float (*get_at)(cfp_ptr1f self, ptrdiff_t d);
+  void (*set_at)(cfp_ptr1f self, ptrdiff_t d, float val);
+  float (*get)(const cfp_ptr1f self);
+  float (*get_at)(const cfp_ptr1f self, ptrdiff_t d);
   cfp_ref1f (*ref)(cfp_ptr1f self);
   cfp_ref1f (*ref_at)(cfp_ptr1f self, ptrdiff_t d);
-  zfp_bool (*lt)(cfp_ptr1f self, cfp_ptr1f src);
-  zfp_bool (*gt)(cfp_ptr1f self, cfp_ptr1f src);
-  zfp_bool (*leq)(cfp_ptr1f self, cfp_ptr1f src);
-  zfp_bool (*geq)(cfp_ptr1f self, cfp_ptr1f src);
-  zfp_bool (*eq)(cfp_ptr1f self, cfp_ptr1f src);
-  zfp_bool (*neq)(cfp_ptr1f self, cfp_ptr1f src);
-  ptrdiff_t (*distance)(cfp_ptr1f self, cfp_ptr1f src);
-  cfp_ptr1f (*next)(cfp_ptr1f self, ptrdiff_t d);
-  cfp_ptr1f (*prev)(cfp_ptr1f self, ptrdiff_t d);
-  cfp_ptr1f (*inc)(cfp_ptr1f self);
-  cfp_ptr1f (*dec)(cfp_ptr1f self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_ptr1f lhs, const cfp_ptr1f rhs);
+  zfp_bool (*gt)(const cfp_ptr1f lhs, const cfp_ptr1f rhs);
+  zfp_bool (*leq)(const cfp_ptr1f lhs, const cfp_ptr1f rhs);
+  zfp_bool (*geq)(const cfp_ptr1f lhs, const cfp_ptr1f rhs);
+  zfp_bool (*eq)(const cfp_ptr1f lhs, const cfp_ptr1f rhs);
+  zfp_bool (*neq)(const cfp_ptr1f lhs, const cfp_ptr1f rhs);
+  ptrdiff_t (*distance)(const cfp_ptr1f first, const cfp_ptr1f last);
+  cfp_ptr1f (*next)(const cfp_ptr1f p, ptrdiff_t d);
+  cfp_ptr1f (*prev)(const cfp_ptr1f p, ptrdiff_t d);
+  cfp_ptr1f (*inc)(const cfp_ptr1f p);
+  cfp_ptr1f (*dec)(const cfp_ptr1f p);
 } cfp_ptr1f_api;
 
 typedef struct {
+  /* member functions */
   void (*set)(cfp_iter1f self, float val);
-  void (*set_at)(cfp_iter1f self, float val, ptrdiff_t d);
-  float (*get)(cfp_iter1f self);
-  float (*get_at)(cfp_iter1f self, ptrdiff_t d);
+  void (*set_at)(cfp_iter1f self, ptrdiff_t d, float val);
+  float (*get)(const cfp_iter1f self);
+  float (*get_at)(const cfp_iter1f self, ptrdiff_t d);
   cfp_ref1f (*ref)(cfp_iter1f self);
   cfp_ref1f (*ref_at)(cfp_iter1f self, ptrdiff_t d);
   cfp_ptr1f (*ptr)(cfp_iter1f self);
   cfp_ptr1f (*ptr_at)(cfp_iter1f self, ptrdiff_t d);
-  zfp_bool (*lt)(cfp_iter1f self, cfp_iter1f src);
-  zfp_bool (*gt)(cfp_iter1f self, cfp_iter1f src);
-  zfp_bool (*leq)(cfp_iter1f self, cfp_iter1f src);
-  zfp_bool (*geq)(cfp_iter1f self, cfp_iter1f src);
-  zfp_bool (*eq)(cfp_iter1f self, cfp_iter1f src);
-  zfp_bool (*neq)(cfp_iter1f self, cfp_iter1f src);
-  ptrdiff_t (*distance)(cfp_iter1f self, cfp_iter1f src);
-  cfp_iter1f (*next)(cfp_iter1f self, ptrdiff_t d);
-  cfp_iter1f (*prev)(cfp_iter1f self, ptrdiff_t d);
-  cfp_iter1f (*inc)(cfp_iter1f self);
-  cfp_iter1f (*dec)(cfp_iter1f self);
-  size_t (*i)(cfp_iter1f self);
+  size_t (*i)(const cfp_iter1f self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_iter1f lhs, const cfp_iter1f rhs);
+  zfp_bool (*gt)(const cfp_iter1f lhs, const cfp_iter1f rhs);
+  zfp_bool (*leq)(const cfp_iter1f lhs, const cfp_iter1f rhs);
+  zfp_bool (*geq)(const cfp_iter1f lhs, const cfp_iter1f rhs);
+  zfp_bool (*eq)(const cfp_iter1f lhs, const cfp_iter1f rhs);
+  zfp_bool (*neq)(const cfp_iter1f lhs, const cfp_iter1f rhs);
+  ptrdiff_t (*distance)(const cfp_iter1f first, const cfp_iter1f last);
+  cfp_iter1f (*next)(const cfp_iter1f it, ptrdiff_t d);
+  cfp_iter1f (*prev)(const cfp_iter1f it, ptrdiff_t d);
+  cfp_iter1f (*inc)(const cfp_iter1f it);
+  cfp_iter1f (*dec)(const cfp_iter1f it);
 } cfp_iter1f_api;
 
 typedef struct {
   cfp_array1f (*ctor_default)();
-  cfp_array1f (*ctor)(size_t n, double rate, const float* p, size_t csize);
+  cfp_array1f (*ctor)(size_t n, double rate, const float* p, size_t cache_size);
   cfp_array1f (*ctor_copy)(const cfp_array1f src);
   cfp_array1f (*ctor_header)(const struct cfp_header h, const void* buffer, size_t buffer_size_bytes);
   void (*dtor)(cfp_array1f self);
@@ -87,7 +91,7 @@ typedef struct {
   double (*rate)(const cfp_array1f self);
   double (*set_rate)(cfp_array1f self, double rate);
   size_t (*cache_size)(const cfp_array1f self);
-  void (*set_cache_size)(cfp_array1f self, size_t csize);
+  void (*set_cache_size)(cfp_array1f self, size_t bytes);
   void (*clear_cache)(const cfp_array1f self);
   void (*flush_cache)(const cfp_array1f self);
   size_t (*compressed_size)(const cfp_array1f self);

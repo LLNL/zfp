@@ -1,8 +1,8 @@
 static CFP_ARRAY_TYPE
-_t1(CFP_ARRAY_TYPE, ctor)(size_t n, double rate, const ZFP_SCALAR_TYPE * p, size_t csize)
+_t1(CFP_ARRAY_TYPE, ctor)(size_t n, double rate, const ZFP_SCALAR_TYPE* p, size_t cache_size)
 {
   CFP_ARRAY_TYPE a;
-  a.object = static_cast<void*>(new ZFP_ARRAY_TYPE(n, rate, p, csize));
+  a.object = new ZFP_ARRAY_TYPE(n, rate, p, cache_size);
   return a;
 }
 
@@ -139,7 +139,7 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, neq)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
 static ptrdiff_t
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, distance)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
 {
-   return src.reference.x - self.reference.x;
+  return src.reference.x - self.reference.x;
 }
 
 static CFP_PTR_TYPE
@@ -190,7 +190,7 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, set)(CFP_PTR_TYPE self, ZFP_SCALAR_TYPE val)
 }
 
 static void
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, set_at)(CFP_PTR_TYPE self, ZFP_SCALAR_TYPE val, ptrdiff_t d)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, set_at)(CFP_PTR_TYPE self, ptrdiff_t d, ZFP_SCALAR_TYPE val)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, d);
   static_cast<ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.x) = val;
@@ -280,7 +280,7 @@ _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, set)(CFP_ITER_TYPE self, ZFP_SCALAR_TYPE val)
 }
 
 static void
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, set_at)(CFP_ITER_TYPE self, ZFP_SCALAR_TYPE val, ptrdiff_t d)
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, set_at)(CFP_ITER_TYPE self, ptrdiff_t d, ZFP_SCALAR_TYPE val)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
   static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x) = val;
@@ -308,10 +308,8 @@ _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, ref)(CFP_ITER_TYPE self)
 static CFP_REF_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, ref_at)(CFP_ITER_TYPE self, ptrdiff_t d)
 {
-  CFP_REF_TYPE r;
-  r.array = self.array;
-  r.x = self.x + d;
-  return r;
+  self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
+  return _t1(CFP_ARRAY_TYPE, ref)(self.array, self.x);
 }
 
 static CFP_PTR_TYPE
@@ -324,9 +322,7 @@ static CFP_PTR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, ptr_at)(CFP_ITER_TYPE self, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
-  CFP_PTR_TYPE p;
-  p.reference = _t1(CFP_ARRAY_TYPE, ref)(self.array, self.x);
-  return p;
+  return _t1(CFP_ARRAY_TYPE, ptr)(self.array, self.x);
 }
 
 static size_t

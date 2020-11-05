@@ -75,9 +75,9 @@ _t1(CFP_ARRAY_TYPE, cache_size)(CFP_ARRAY_TYPE self)
 }
 
 static void
-_t1(CFP_ARRAY_TYPE, set_cache_size)(CFP_ARRAY_TYPE self, size_t csize)
+_t1(CFP_ARRAY_TYPE, set_cache_size)(CFP_ARRAY_TYPE self, size_t bytes)
 {
-  static_cast<ZFP_ARRAY_TYPE*>(self.object)->set_cache_size(csize);
+  static_cast<ZFP_ARRAY_TYPE*>(self.object)->set_cache_size(bytes);
 }
 
 static void

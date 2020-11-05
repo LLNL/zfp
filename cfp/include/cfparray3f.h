@@ -3,7 +3,6 @@
 
 #include <stddef.h>
 #include "zfp.h"
-#include "zfp/types.h"
 
 typedef struct {
   void* object;
@@ -26,48 +25,65 @@ typedef struct {
 struct cfp_header;
 
 typedef struct {
-  float (*get)(cfp_ref3f self);
+  /* member functions */
   void (*set)(cfp_ref3f self, float val);
-  void (*copy)(cfp_ref3f self, cfp_ref3f src);
+  float (*get)(const cfp_ref3f self);
   cfp_ptr3f (*ptr)(cfp_ref3f self);
+  void (*copy)(cfp_ref3f self, const cfp_ref3f src);
 } cfp_ref3f_api;
 
 typedef struct {
+  /* member functions */
   void (*set)(cfp_ptr3f self, float val);
-  void (*set_at)(cfp_ptr3f self, float val, ptrdiff_t d);
-  float (*get)(cfp_ptr3f self);
-  float (*get_at)(cfp_ptr3f self, ptrdiff_t d);
+  void (*set_at)(cfp_ptr3f self, ptrdiff_t d, float val);
+  float (*get)(const cfp_ptr3f self);
+  float (*get_at)(const cfp_ptr3f self, ptrdiff_t d);
   cfp_ref3f (*ref)(cfp_ptr3f self);
   cfp_ref3f (*ref_at)(cfp_ptr3f self, ptrdiff_t d);
-  zfp_bool (*lt)(cfp_ptr3f self, cfp_ptr3f src);
-  zfp_bool (*gt)(cfp_ptr3f self, cfp_ptr3f src);
-  zfp_bool (*leq)(cfp_ptr3f self, cfp_ptr3f src);
-  zfp_bool (*geq)(cfp_ptr3f self, cfp_ptr3f src);
-  zfp_bool (*eq)(cfp_ptr3f self, cfp_ptr3f src);
-  zfp_bool (*neq)(cfp_ptr3f self, cfp_ptr3f src);
-  ptrdiff_t (*distance)(cfp_ptr3f self, cfp_ptr3f src);
-  cfp_ptr3f (*next)(cfp_ptr3f self, ptrdiff_t d);
-  cfp_ptr3f (*prev)(cfp_ptr3f self, ptrdiff_t d);
-  cfp_ptr3f (*inc)(cfp_ptr3f self);
-  cfp_ptr3f (*dec)(cfp_ptr3f self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
+  zfp_bool (*gt)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
+  zfp_bool (*leq)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
+  zfp_bool (*geq)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
+  zfp_bool (*eq)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
+  zfp_bool (*neq)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
+  ptrdiff_t (*distance)(const cfp_ptr3f first, const cfp_ptr3f last);
+  cfp_ptr3f (*next)(const cfp_ptr3f p, ptrdiff_t d);
+  cfp_ptr3f (*prev)(const cfp_ptr3f p, ptrdiff_t d);
+  cfp_ptr3f (*inc)(const cfp_ptr3f p);
+  cfp_ptr3f (*dec)(const cfp_ptr3f p);
 } cfp_ptr3f_api;
 
 typedef struct {
+  /* member functions */
   void (*set)(cfp_iter3f self, float val);
-  float (*get)(cfp_iter3f self);
+  void (*set_at)(cfp_iter3f self, ptrdiff_t d, float val);
+  float (*get)(const cfp_iter3f self);
+  float (*get_at)(const cfp_iter3f self, ptrdiff_t d);
   cfp_ref3f (*ref)(cfp_iter3f self);
+  cfp_ref3f (*ref_at)(cfp_iter3f self, ptrdiff_t d);
   cfp_ptr3f (*ptr)(cfp_iter3f self);
-  cfp_iter3f (*inc)(cfp_iter3f self);
-  zfp_bool (*eq)(cfp_iter3f self, cfp_iter3f src);
-  zfp_bool (*neq)(cfp_iter3f self, cfp_iter3f src);
-  size_t (*i)(cfp_iter3f self);
-  size_t (*j)(cfp_iter3f self);
-  size_t (*k)(cfp_iter3f self);
+  cfp_ptr3f (*ptr_at)(cfp_iter3f self, ptrdiff_t d);
+  size_t (*i)(const cfp_iter3f self);
+  size_t (*j)(const cfp_iter3f self);
+  size_t (*k)(const cfp_iter3f self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_iter3f lhs, const cfp_iter3f rhs);
+  zfp_bool (*gt)(const cfp_iter3f lhs, const cfp_iter3f rhs);
+  zfp_bool (*leq)(const cfp_iter3f lhs, const cfp_iter3f rhs);
+  zfp_bool (*geq)(const cfp_iter3f lhs, const cfp_iter3f rhs);
+  zfp_bool (*eq)(const cfp_iter3f lhs, const cfp_iter3f rhs);
+  zfp_bool (*neq)(const cfp_iter3f lhs, const cfp_iter3f rhs);
+  ptrdiff_t (*distance)(const cfp_iter3f first, const cfp_iter3f last);
+  cfp_iter3f (*next)(const cfp_iter3f it, ptrdiff_t d);
+  cfp_iter3f (*prev)(const cfp_iter3f it, ptrdiff_t d);
+  cfp_iter3f (*inc)(const cfp_iter3f it);
+  cfp_iter3f (*dec)(const cfp_iter3f it);
 } cfp_iter3f_api;
 
 typedef struct {
   cfp_array3f (*ctor_default)();
-  cfp_array3f (*ctor)(size_t nx, size_t ny, size_t nz, double rate, const float* p, size_t csize);
+  cfp_array3f (*ctor)(size_t nx, size_t ny, size_t nz, double rate, const float* p, size_t cache_size);
   cfp_array3f (*ctor_copy)(const cfp_array3f src);
   cfp_array3f (*ctor_header)(const struct cfp_header h, const void* buffer, size_t buffer_size_bytes);
   void (*dtor)(cfp_array3f self);
@@ -77,7 +93,7 @@ typedef struct {
   double (*rate)(const cfp_array3f self);
   double (*set_rate)(cfp_array3f self, double rate);
   size_t (*cache_size)(const cfp_array3f self);
-  void (*set_cache_size)(cfp_array3f self, size_t csize);
+  void (*set_cache_size)(cfp_array3f self, size_t bytes);
   void (*clear_cache)(const cfp_array3f self);
   void (*flush_cache)(const cfp_array3f self);
   size_t (*compressed_size)(const cfp_array3f self);

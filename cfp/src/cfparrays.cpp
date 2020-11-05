@@ -84,6 +84,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array1f_cfp_iter1f_ref_at,
       cfp_array1f_cfp_iter1f_ptr,
       cfp_array1f_cfp_iter1f_ptr_at,
+      cfp_array1f_cfp_iter1f_i,
       cfp_array1f_cfp_iter1f_lt,
       cfp_array1f_cfp_iter1f_gt,
       cfp_array1f_cfp_iter1f_leq,
@@ -95,7 +96,6 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array1f_cfp_iter1f_prev,
       cfp_array1f_cfp_iter1f_inc,
       cfp_array1f_cfp_iter1f_dec,
-      cfp_array1f_cfp_iter1f_i,
     },
   },
   // array1d
@@ -171,6 +171,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array1d_cfp_iter1d_ref_at,
       cfp_array1d_cfp_iter1d_ptr,
       cfp_array1d_cfp_iter1d_ptr_at,
+      cfp_array1d_cfp_iter1d_i,
       cfp_array1d_cfp_iter1d_lt,
       cfp_array1d_cfp_iter1d_gt,
       cfp_array1d_cfp_iter1d_leq,
@@ -182,7 +183,6 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array1d_cfp_iter1d_prev,
       cfp_array1d_cfp_iter1d_inc,
       cfp_array1d_cfp_iter1d_dec,
-      cfp_array1d_cfp_iter1d_i,
     },
   },
   // array2f
@@ -225,10 +225,10 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array2f_end,
 
     {
-      cfp_array2f_cfp_ref2f_get,
       cfp_array2f_cfp_ref2f_set,
-      cfp_array2f_cfp_ref2f_copy,
+      cfp_array2f_cfp_ref2f_get,
       cfp_array2f_cfp_ref2f_ptr,
+      cfp_array2f_cfp_ref2f_copy,
     },
 
     {
@@ -253,14 +253,26 @@ const cfp_api CFP_NAMESPACE = {
 
     {
       cfp_array2f_cfp_iter2f_set,
+      cfp_array2f_cfp_iter2f_set_at,
       cfp_array2f_cfp_iter2f_get,
+      cfp_array2f_cfp_iter2f_get_at,
       cfp_array2f_cfp_iter2f_ref,
+      cfp_array2f_cfp_iter2f_ref_at,
       cfp_array2f_cfp_iter2f_ptr,
-      cfp_array2f_cfp_iter2f_inc,
-      cfp_array2f_cfp_iter2f_eq,
-      cfp_array2f_cfp_iter2f_neq,
+      cfp_array2f_cfp_iter2f_ptr_at,
       cfp_array2f_cfp_iter2f_i,
       cfp_array2f_cfp_iter2f_j,
+      cfp_array2f_cfp_iter2f_lt,
+      cfp_array2f_cfp_iter2f_gt,
+      cfp_array2f_cfp_iter2f_leq,
+      cfp_array2f_cfp_iter2f_geq,
+      cfp_array2f_cfp_iter2f_eq,
+      cfp_array2f_cfp_iter2f_neq,
+      cfp_array2f_cfp_iter2f_distance,
+      cfp_array2f_cfp_iter2f_next,
+      cfp_array2f_cfp_iter2f_prev,
+      cfp_array2f_cfp_iter2f_inc,
+      cfp_array2f_cfp_iter2f_dec,
     },
   },
   // array2d
@@ -303,10 +315,10 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array2d_end,
 
     {
-      cfp_array2d_cfp_ref2d_get,
       cfp_array2d_cfp_ref2d_set,
-      cfp_array2d_cfp_ref2d_copy,
+      cfp_array2d_cfp_ref2d_get,
       cfp_array2d_cfp_ref2d_ptr,
+      cfp_array2d_cfp_ref2d_copy,
     },
 
     {
@@ -331,14 +343,26 @@ const cfp_api CFP_NAMESPACE = {
 
     {
       cfp_array2d_cfp_iter2d_set,
+      cfp_array2d_cfp_iter2d_set_at,
       cfp_array2d_cfp_iter2d_get,
+      cfp_array2d_cfp_iter2d_get_at,
       cfp_array2d_cfp_iter2d_ref,
+      cfp_array2d_cfp_iter2d_ref_at,
       cfp_array2d_cfp_iter2d_ptr,
-      cfp_array2d_cfp_iter2d_inc,
-      cfp_array2d_cfp_iter2d_eq,
-      cfp_array2d_cfp_iter2d_neq,
+      cfp_array2d_cfp_iter2d_ptr_at,
       cfp_array2d_cfp_iter2d_i,
       cfp_array2d_cfp_iter2d_j,
+      cfp_array2d_cfp_iter2d_lt,
+      cfp_array2d_cfp_iter2d_gt,
+      cfp_array2d_cfp_iter2d_leq,
+      cfp_array2d_cfp_iter2d_geq,
+      cfp_array2d_cfp_iter2d_eq,
+      cfp_array2d_cfp_iter2d_neq,
+      cfp_array2d_cfp_iter2d_distance,
+      cfp_array2d_cfp_iter2d_next,
+      cfp_array2d_cfp_iter2d_prev,
+      cfp_array2d_cfp_iter2d_inc,
+      cfp_array2d_cfp_iter2d_dec,
     }
   },
   // array3f
@@ -382,10 +406,10 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array3f_end,
 
     {
-      cfp_array3f_cfp_ref3f_get,
       cfp_array3f_cfp_ref3f_set,
-      cfp_array3f_cfp_ref3f_copy,
+      cfp_array3f_cfp_ref3f_get,
       cfp_array3f_cfp_ref3f_ptr,
+      cfp_array3f_cfp_ref3f_copy,
     },
 
     {
@@ -410,15 +434,27 @@ const cfp_api CFP_NAMESPACE = {
 
     {
       cfp_array3f_cfp_iter3f_set,
+      cfp_array3f_cfp_iter3f_set_at,
       cfp_array3f_cfp_iter3f_get,
+      cfp_array3f_cfp_iter3f_get_at,
       cfp_array3f_cfp_iter3f_ref,
+      cfp_array3f_cfp_iter3f_ref_at,
       cfp_array3f_cfp_iter3f_ptr,
-      cfp_array3f_cfp_iter3f_inc,
-      cfp_array3f_cfp_iter3f_eq,
-      cfp_array3f_cfp_iter3f_neq,
+      cfp_array3f_cfp_iter3f_ptr_at,
       cfp_array3f_cfp_iter3f_i,
       cfp_array3f_cfp_iter3f_j,
       cfp_array3f_cfp_iter3f_k,
+      cfp_array3f_cfp_iter3f_lt,
+      cfp_array3f_cfp_iter3f_gt,
+      cfp_array3f_cfp_iter3f_leq,
+      cfp_array3f_cfp_iter3f_geq,
+      cfp_array3f_cfp_iter3f_eq,
+      cfp_array3f_cfp_iter3f_neq,
+      cfp_array3f_cfp_iter3f_distance,
+      cfp_array3f_cfp_iter3f_prev,
+      cfp_array3f_cfp_iter3f_next,
+      cfp_array3f_cfp_iter3f_inc,
+      cfp_array3f_cfp_iter3f_dec,
     },
   },
   // array3d
@@ -462,10 +498,10 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array3d_end,
 
     {
-      cfp_array3d_cfp_ref3d_get,
       cfp_array3d_cfp_ref3d_set,
-      cfp_array3d_cfp_ref3d_copy,
+      cfp_array3d_cfp_ref3d_get,
       cfp_array3d_cfp_ref3d_ptr,
+      cfp_array3d_cfp_ref3d_copy,
     },
 
     {
@@ -490,15 +526,27 @@ const cfp_api CFP_NAMESPACE = {
 
     {
       cfp_array3d_cfp_iter3d_set,
+      cfp_array3d_cfp_iter3d_set_at,
       cfp_array3d_cfp_iter3d_get,
+      cfp_array3d_cfp_iter3d_get_at,
       cfp_array3d_cfp_iter3d_ref,
+      cfp_array3d_cfp_iter3d_ref_at,
       cfp_array3d_cfp_iter3d_ptr,
-      cfp_array3d_cfp_iter3d_inc,
-      cfp_array3d_cfp_iter3d_eq,
-      cfp_array3d_cfp_iter3d_neq,
+      cfp_array3d_cfp_iter3d_ptr_at,
       cfp_array3d_cfp_iter3d_i,
       cfp_array3d_cfp_iter3d_j,
       cfp_array3d_cfp_iter3d_k,
+      cfp_array3d_cfp_iter3d_lt,
+      cfp_array3d_cfp_iter3d_gt,
+      cfp_array3d_cfp_iter3d_leq,
+      cfp_array3d_cfp_iter3d_geq,
+      cfp_array3d_cfp_iter3d_eq,
+      cfp_array3d_cfp_iter3d_neq,
+      cfp_array3d_cfp_iter3d_distance,
+      cfp_array3d_cfp_iter3d_next,
+      cfp_array3d_cfp_iter3d_prev,
+      cfp_array3d_cfp_iter3d_inc,
+      cfp_array3d_cfp_iter3d_dec,
     },
   },
   // array4f
@@ -543,10 +591,10 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array4f_end,
 
     {
-      cfp_array4f_cfp_ref4f_get,
       cfp_array4f_cfp_ref4f_set,
-      cfp_array4f_cfp_ref4f_copy,
+      cfp_array4f_cfp_ref4f_get,
       cfp_array4f_cfp_ref4f_ptr,
+      cfp_array4f_cfp_ref4f_copy,
     },
 
     {
@@ -571,16 +619,28 @@ const cfp_api CFP_NAMESPACE = {
 
     {
       cfp_array4f_cfp_iter4f_set,
+      cfp_array4f_cfp_iter4f_set_at,
       cfp_array4f_cfp_iter4f_get,
+      cfp_array4f_cfp_iter4f_get_at,
       cfp_array4f_cfp_iter4f_ref,
+      cfp_array4f_cfp_iter4f_ref_at,
       cfp_array4f_cfp_iter4f_ptr,
-      cfp_array4f_cfp_iter4f_inc,
-      cfp_array4f_cfp_iter4f_eq,
-      cfp_array4f_cfp_iter4f_neq,
+      cfp_array4f_cfp_iter4f_ptr_at,
       cfp_array4f_cfp_iter4f_i,
       cfp_array4f_cfp_iter4f_j,
       cfp_array4f_cfp_iter4f_k,
       cfp_array4f_cfp_iter4f_l,
+      cfp_array4f_cfp_iter4f_lt,
+      cfp_array4f_cfp_iter4f_gt,
+      cfp_array4f_cfp_iter4f_leq,
+      cfp_array4f_cfp_iter4f_geq,
+      cfp_array4f_cfp_iter4f_eq,
+      cfp_array4f_cfp_iter4f_neq,
+      cfp_array4f_cfp_iter4f_distance,
+      cfp_array4f_cfp_iter4f_next,
+      cfp_array4f_cfp_iter4f_prev,
+      cfp_array4f_cfp_iter4f_inc,
+      cfp_array4f_cfp_iter4f_dec,
     },
   },
   // array4d
@@ -625,10 +685,10 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array4d_end,
 
     {
-      cfp_array4d_cfp_ref4d_get,
       cfp_array4d_cfp_ref4d_set,
-      cfp_array4d_cfp_ref4d_copy,
+      cfp_array4d_cfp_ref4d_get,
       cfp_array4d_cfp_ref4d_ptr,
+      cfp_array4d_cfp_ref4d_copy,
     },
 
     {
@@ -653,16 +713,28 @@ const cfp_api CFP_NAMESPACE = {
 
     {
       cfp_array4d_cfp_iter4d_set,
+      cfp_array4d_cfp_iter4d_set_at,
       cfp_array4d_cfp_iter4d_get,
+      cfp_array4d_cfp_iter4d_get_at,
       cfp_array4d_cfp_iter4d_ref,
+      cfp_array4d_cfp_iter4d_ref_at,
       cfp_array4d_cfp_iter4d_ptr,
-      cfp_array4d_cfp_iter4d_inc,
-      cfp_array4d_cfp_iter4d_eq,
-      cfp_array4d_cfp_iter4d_neq,
+      cfp_array4d_cfp_iter4d_ptr_at,
       cfp_array4d_cfp_iter4d_i,
       cfp_array4d_cfp_iter4d_j,
       cfp_array4d_cfp_iter4d_k,
       cfp_array4d_cfp_iter4d_l,
+      cfp_array4d_cfp_iter4d_lt,
+      cfp_array4d_cfp_iter4d_gt,
+      cfp_array4d_cfp_iter4d_leq,
+      cfp_array4d_cfp_iter4d_geq,
+      cfp_array4d_cfp_iter4d_eq,
+      cfp_array4d_cfp_iter4d_neq,
+      cfp_array4d_cfp_iter4d_distance,
+      cfp_array4d_cfp_iter4d_next,
+      cfp_array4d_cfp_iter4d_prev,
+      cfp_array4d_cfp_iter4d_inc,
+      cfp_array4d_cfp_iter4d_dec,
     },
   },
   // header
