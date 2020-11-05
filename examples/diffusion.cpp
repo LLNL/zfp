@@ -141,7 +141,7 @@ time_step_iterated(array2d& u, const Constants& c)
     *p += *q;
 }
 
-// solve heat equation using 
+// solve heat equation
 template <class array2d>
 inline double
 solve(array2d& u, const Constants& c, bool iterator, bool parallel)
