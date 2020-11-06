@@ -145,72 +145,72 @@ _t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
 }
 
 static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, lt)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, lt)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return self.reference.array.object == src.reference.array.object && ref_offset(self.reference) < ref_offset(src.reference);
+  return lhs.reference.array.object == rhs.reference.array.object && ref_offset(lhs.reference) < ref_offset(rhs.reference);
 }
 
 static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, gt)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, gt)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return self.reference.array.object == src.reference.array.object && ref_offset(self.reference) > ref_offset(src.reference);
+  return lhs.reference.array.object == rhs.reference.array.object && ref_offset(lhs.reference) > ref_offset(rhs.reference);
 }
 
 static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, leq)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, leq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return self.reference.array.object == src.reference.array.object && ref_offset(self.reference) <= ref_offset(src.reference);
+  return lhs.reference.array.object == rhs.reference.array.object && ref_offset(lhs.reference) <= ref_offset(rhs.reference);
 }
 
 static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, geq)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, geq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return self.reference.array.object == src.reference.array.object && ref_offset(self.reference) >= ref_offset(src.reference);
+  return lhs.reference.array.object == rhs.reference.array.object && ref_offset(lhs.reference) >= ref_offset(rhs.reference);
 }
 
 static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, eq)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, eq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return self.reference.array.object == src.reference.array.object &&
-         self.reference.x == src.reference.x &&
-         self.reference.y == src.reference.y;
+  return lhs.reference.array.object == rhs.reference.array.object &&
+         lhs.reference.x == rhs.reference.x &&
+         lhs.reference.y == rhs.reference.y;
 }
 
 static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, neq)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, neq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return !_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, eq)(self, src);
+  return !_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, eq)(lhs, rhs);
 }
 
 static ptrdiff_t
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, distance)(CFP_PTR_TYPE self, CFP_PTR_TYPE src)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, distance)(CFP_PTR_TYPE first, CFP_PTR_TYPE last)
 {
-  return ref_offset(src.reference) - ref_offset(self.reference);
+  return ref_offset(last.reference) - ref_offset(first.reference);
 }
 
 static CFP_PTR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(CFP_PTR_TYPE self, ptrdiff_t d)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(CFP_PTR_TYPE p, ptrdiff_t d)
 {
-  ref_set_offset(self.reference, ref_offset(self.reference) + d);
-  return self;
+  ref_set_offset(p.reference, ref_offset(p.reference) + d);
+  return p;
 }
 
 static CFP_PTR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, prev)(CFP_PTR_TYPE self, ptrdiff_t d)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, prev)(CFP_PTR_TYPE p, ptrdiff_t d)
 {
-  return _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, -d);
+  return _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(p, -d);
 }
 
 static CFP_PTR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, inc)(CFP_PTR_TYPE self)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, inc)(CFP_PTR_TYPE p)
 {
-  return _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, +1);
+  return _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(p, +1);
 }
 
 static CFP_PTR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, dec)(CFP_PTR_TYPE self)
+_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, dec)(CFP_PTR_TYPE p)
 {
-  return _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, -1);
+  return _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(p, -1);
 }
 
 static ZFP_SCALAR_TYPE
@@ -244,6 +244,64 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, ref_at)(CFP_PTR_TYPE self, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, d);
   return self.reference;
+}
+
+static zfp_bool
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, lt)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
+{
+  return lhs.array.object == rhs.array.object && iter_offset(lhs) < iter_offset(rhs);
+}
+
+static zfp_bool
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, gt)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
+{
+  return lhs.array.object == rhs.array.object && iter_offset(lhs) > iter_offset(rhs);
+}
+
+static zfp_bool
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, leq)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
+{
+  return lhs.array.object == rhs.array.object && iter_offset(lhs) <= iter_offset(rhs);
+}
+
+static zfp_bool
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, geq)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
+{
+  return lhs.array.object == rhs.array.object && iter_offset(lhs) >= iter_offset(rhs);
+}
+
+static zfp_bool
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, eq)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
+{
+  return lhs.array.object == rhs.array.object &&
+         lhs.x == rhs.x &&
+         lhs.y == rhs.y;
+}
+
+static zfp_bool
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, neq)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
+{
+  return !_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, eq)(lhs, rhs);
+}
+
+static ptrdiff_t
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, distance)(CFP_ITER_TYPE first, CFP_ITER_TYPE last)
+{
+  return iter_offset(last) - iter_offset(first);
+}
+
+static CFP_ITER_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(CFP_ITER_TYPE it, ptrdiff_t d)
+{
+  iter_set_offset(it, iter_offset(it) + d);
+  return it;
+}
+
+static CFP_ITER_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, prev)(CFP_ITER_TYPE it, ptrdiff_t d)
+{
+  iter_set_offset(it, iter_offset(it) - d);
+  return it;
 }
 
 static CFP_ITER_TYPE
@@ -308,62 +366,17 @@ _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, dec)(CFP_ITER_TYPE it)
   return it;
 }
 
-static CFP_ITER_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(CFP_ITER_TYPE it, ptrdiff_t d)
+static ZFP_SCALAR_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, get)(CFP_ITER_TYPE self)
 {
-  iter_set_offset(it, iter_offset(it) + d);
-  return it;
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x, self.y);
 }
 
-static CFP_ITER_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, prev)(CFP_ITER_TYPE it, ptrdiff_t d)
+static ZFP_SCALAR_TYPE
+_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, get_at)(CFP_ITER_TYPE self, ptrdiff_t d)
 {
-  iter_set_offset(it, iter_offset(it) - d);
-  return it;
-}
-
-static ptrdiff_t
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, distance)(CFP_ITER_TYPE first, CFP_ITER_TYPE last)
-{
-  return iter_offset(last) - iter_offset(first);
-}
-
-static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, lt)(CFP_ITER_TYPE self, CFP_ITER_TYPE src)
-{
-  return self.array.object == src.array.object && iter_offset(self) < iter_offset(src);
-}
-
-static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, gt)(CFP_ITER_TYPE self, CFP_ITER_TYPE src)
-{
-  return self.array.object == src.array.object && iter_offset(self) > iter_offset(src);
-}
-
-static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, leq)(CFP_ITER_TYPE self, CFP_ITER_TYPE src)
-{
-  return self.array.object == src.array.object && iter_offset(self) <= iter_offset(src);
-}
-
-static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, geq)(CFP_ITER_TYPE self, CFP_ITER_TYPE src)
-{
-  return self.array.object == src.array.object && iter_offset(self) >= iter_offset(src);
-}
-
-static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, eq)(CFP_ITER_TYPE self, CFP_ITER_TYPE src)
-{
-  return self.array.object == src.array.object &&
-         self.x == src.x &&
-         self.y == src.y;
-}
-
-static zfp_bool
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, neq)(CFP_ITER_TYPE self, CFP_ITER_TYPE src)
-{
-  return !_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, eq)(self, src);
+  self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x, self.y);
 }
 
 static void
@@ -377,19 +390,6 @@ _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, set_at)(CFP_ITER_TYPE self, ptrdiff_t d, ZFP_
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
   static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x, self.y) = val;
-}
-
-static ZFP_SCALAR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, get)(CFP_ITER_TYPE self)
-{
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x, self.y);
-}
-
-static ZFP_SCALAR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, get_at)(CFP_ITER_TYPE self, ptrdiff_t d)
-{
-  self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x, self.y);
 }
 
 static CFP_REF_TYPE

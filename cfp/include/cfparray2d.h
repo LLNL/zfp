@@ -26,18 +26,18 @@ struct cfp_header;
 
 typedef struct {
   /* member functions */
-  void (*set)(cfp_ref2d self, double val);
   double (*get)(const cfp_ref2d self);
+  void (*set)(cfp_ref2d self, double val);
   cfp_ptr2d (*ptr)(cfp_ref2d self);
   void (*copy)(cfp_ref2d self, const cfp_ref2d src);
 } cfp_ref2d_api;
 
 typedef struct {
   /* member functions */
-  void (*set)(cfp_ptr2d self, double val);
-  void (*set_at)(cfp_ptr2d self, ptrdiff_t d, double val);
   double (*get)(const cfp_ptr2d self);
   double (*get_at)(const cfp_ptr2d self, ptrdiff_t d);
+  void (*set)(cfp_ptr2d self, double val);
+  void (*set_at)(cfp_ptr2d self, ptrdiff_t d, double val);
   cfp_ref2d (*ref)(cfp_ptr2d self);
   cfp_ref2d (*ref_at)(cfp_ptr2d self, ptrdiff_t d);
   /* non-member functions */
@@ -56,10 +56,10 @@ typedef struct {
 
 typedef struct {
   /* member functions */
-  void (*set)(cfp_iter2d self, double value);
-  void (*set_at)(cfp_iter2d self, ptrdiff_t d, double value);
   double (*get)(const cfp_iter2d self);
   double (*get_at)(const cfp_iter2d self, ptrdiff_t d);
+  void (*set)(cfp_iter2d self, double value);
+  void (*set_at)(cfp_iter2d self, ptrdiff_t d, double value);
   cfp_ref2d (*ref)(cfp_iter2d self);
   cfp_ref2d (*ref_at)(cfp_iter2d self, ptrdiff_t d);
   cfp_ptr2d (*ptr)(cfp_iter2d self);

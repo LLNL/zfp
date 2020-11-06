@@ -49,17 +49,17 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array1f_end,
 
     {
-      cfp_array1f_cfp_ref1f_set,
       cfp_array1f_cfp_ref1f_get,
+      cfp_array1f_cfp_ref1f_set,
       cfp_array1f_cfp_ref1f_ptr,
       cfp_array1f_cfp_ref1f_copy,
     },
 
     {
-      cfp_array1f_cfp_ptr1f_set,
-      cfp_array1f_cfp_ptr1f_set_at,
       cfp_array1f_cfp_ptr1f_get,
       cfp_array1f_cfp_ptr1f_get_at,
+      cfp_array1f_cfp_ptr1f_set,
+      cfp_array1f_cfp_ptr1f_set_at,
       cfp_array1f_cfp_ptr1f_ref,
       cfp_array1f_cfp_ptr1f_ref_at,
       cfp_array1f_cfp_ptr1f_lt,
@@ -76,10 +76,10 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_array1f_cfp_iter1f_set,
-      cfp_array1f_cfp_iter1f_set_at,
       cfp_array1f_cfp_iter1f_get,
       cfp_array1f_cfp_iter1f_get_at,
+      cfp_array1f_cfp_iter1f_set,
+      cfp_array1f_cfp_iter1f_set_at,
       cfp_array1f_cfp_iter1f_ref,
       cfp_array1f_cfp_iter1f_ref_at,
       cfp_array1f_cfp_iter1f_ptr,
@@ -136,17 +136,17 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array1d_end,
 
     {
-      cfp_array1d_cfp_ref1d_set,
       cfp_array1d_cfp_ref1d_get,
+      cfp_array1d_cfp_ref1d_set,
       cfp_array1d_cfp_ref1d_ptr,
       cfp_array1d_cfp_ref1d_copy,
     },
 
     {
-      cfp_array1d_cfp_ptr1d_set,
-      cfp_array1d_cfp_ptr1d_set_at,
       cfp_array1d_cfp_ptr1d_get,
       cfp_array1d_cfp_ptr1d_get_at,
+      cfp_array1d_cfp_ptr1d_set,
+      cfp_array1d_cfp_ptr1d_set_at,
       cfp_array1d_cfp_ptr1d_ref,
       cfp_array1d_cfp_ptr1d_ref_at,
       cfp_array1d_cfp_ptr1d_lt,
@@ -163,10 +163,10 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_array1d_cfp_iter1d_set,
-      cfp_array1d_cfp_iter1d_set_at,
       cfp_array1d_cfp_iter1d_get,
       cfp_array1d_cfp_iter1d_get_at,
+      cfp_array1d_cfp_iter1d_set,
+      cfp_array1d_cfp_iter1d_set_at,
       cfp_array1d_cfp_iter1d_ref,
       cfp_array1d_cfp_iter1d_ref_at,
       cfp_array1d_cfp_iter1d_ptr,
@@ -225,17 +225,17 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array2f_end,
 
     {
-      cfp_array2f_cfp_ref2f_set,
       cfp_array2f_cfp_ref2f_get,
+      cfp_array2f_cfp_ref2f_set,
       cfp_array2f_cfp_ref2f_ptr,
       cfp_array2f_cfp_ref2f_copy,
     },
 
     {
-      cfp_array2f_cfp_ptr2f_set,
-      cfp_array2f_cfp_ptr2f_set_at,
       cfp_array2f_cfp_ptr2f_get,
       cfp_array2f_cfp_ptr2f_get_at,
+      cfp_array2f_cfp_ptr2f_set,
+      cfp_array2f_cfp_ptr2f_set_at,
       cfp_array2f_cfp_ptr2f_ref,
       cfp_array2f_cfp_ptr2f_ref_at,
       cfp_array2f_cfp_ptr2f_lt,
@@ -252,10 +252,10 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_array2f_cfp_iter2f_set,
-      cfp_array2f_cfp_iter2f_set_at,
       cfp_array2f_cfp_iter2f_get,
       cfp_array2f_cfp_iter2f_get_at,
+      cfp_array2f_cfp_iter2f_set,
+      cfp_array2f_cfp_iter2f_set_at,
       cfp_array2f_cfp_iter2f_ref,
       cfp_array2f_cfp_iter2f_ref_at,
       cfp_array2f_cfp_iter2f_ptr,
@@ -315,17 +315,17 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array2d_end,
 
     {
-      cfp_array2d_cfp_ref2d_set,
       cfp_array2d_cfp_ref2d_get,
+      cfp_array2d_cfp_ref2d_set,
       cfp_array2d_cfp_ref2d_ptr,
       cfp_array2d_cfp_ref2d_copy,
     },
 
     {
-      cfp_array2d_cfp_ptr2d_set,
-      cfp_array2d_cfp_ptr2d_set_at,
       cfp_array2d_cfp_ptr2d_get,
       cfp_array2d_cfp_ptr2d_get_at,
+      cfp_array2d_cfp_ptr2d_set,
+      cfp_array2d_cfp_ptr2d_set_at,
       cfp_array2d_cfp_ptr2d_ref,
       cfp_array2d_cfp_ptr2d_ref_at,
       cfp_array2d_cfp_ptr2d_lt,
@@ -342,10 +342,10 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_array2d_cfp_iter2d_set,
-      cfp_array2d_cfp_iter2d_set_at,
       cfp_array2d_cfp_iter2d_get,
       cfp_array2d_cfp_iter2d_get_at,
+      cfp_array2d_cfp_iter2d_set,
+      cfp_array2d_cfp_iter2d_set_at,
       cfp_array2d_cfp_iter2d_ref,
       cfp_array2d_cfp_iter2d_ref_at,
       cfp_array2d_cfp_iter2d_ptr,
@@ -406,17 +406,17 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array3f_end,
 
     {
-      cfp_array3f_cfp_ref3f_set,
       cfp_array3f_cfp_ref3f_get,
+      cfp_array3f_cfp_ref3f_set,
       cfp_array3f_cfp_ref3f_ptr,
       cfp_array3f_cfp_ref3f_copy,
     },
 
     {
-      cfp_array3f_cfp_ptr3f_set,
-      cfp_array3f_cfp_ptr3f_set_at,
       cfp_array3f_cfp_ptr3f_get,
       cfp_array3f_cfp_ptr3f_get_at,
+      cfp_array3f_cfp_ptr3f_set,
+      cfp_array3f_cfp_ptr3f_set_at,
       cfp_array3f_cfp_ptr3f_ref,
       cfp_array3f_cfp_ptr3f_ref_at,
       cfp_array3f_cfp_ptr3f_lt,
@@ -433,10 +433,10 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_array3f_cfp_iter3f_set,
-      cfp_array3f_cfp_iter3f_set_at,
       cfp_array3f_cfp_iter3f_get,
       cfp_array3f_cfp_iter3f_get_at,
+      cfp_array3f_cfp_iter3f_set,
+      cfp_array3f_cfp_iter3f_set_at,
       cfp_array3f_cfp_iter3f_ref,
       cfp_array3f_cfp_iter3f_ref_at,
       cfp_array3f_cfp_iter3f_ptr,
@@ -498,17 +498,17 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array3d_end,
 
     {
-      cfp_array3d_cfp_ref3d_set,
       cfp_array3d_cfp_ref3d_get,
+      cfp_array3d_cfp_ref3d_set,
       cfp_array3d_cfp_ref3d_ptr,
       cfp_array3d_cfp_ref3d_copy,
     },
 
     {
-      cfp_array3d_cfp_ptr3d_set,
-      cfp_array3d_cfp_ptr3d_set_at,
       cfp_array3d_cfp_ptr3d_get,
       cfp_array3d_cfp_ptr3d_get_at,
+      cfp_array3d_cfp_ptr3d_set,
+      cfp_array3d_cfp_ptr3d_set_at,
       cfp_array3d_cfp_ptr3d_ref,
       cfp_array3d_cfp_ptr3d_ref_at,
       cfp_array3d_cfp_ptr3d_lt,
@@ -525,10 +525,10 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_array3d_cfp_iter3d_set,
-      cfp_array3d_cfp_iter3d_set_at,
       cfp_array3d_cfp_iter3d_get,
       cfp_array3d_cfp_iter3d_get_at,
+      cfp_array3d_cfp_iter3d_set,
+      cfp_array3d_cfp_iter3d_set_at,
       cfp_array3d_cfp_iter3d_ref,
       cfp_array3d_cfp_iter3d_ref_at,
       cfp_array3d_cfp_iter3d_ptr,
@@ -591,17 +591,17 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array4f_end,
 
     {
-      cfp_array4f_cfp_ref4f_set,
       cfp_array4f_cfp_ref4f_get,
+      cfp_array4f_cfp_ref4f_set,
       cfp_array4f_cfp_ref4f_ptr,
       cfp_array4f_cfp_ref4f_copy,
     },
 
     {
-      cfp_array4f_cfp_ptr4f_set,
-      cfp_array4f_cfp_ptr4f_set_at,
       cfp_array4f_cfp_ptr4f_get,
       cfp_array4f_cfp_ptr4f_get_at,
+      cfp_array4f_cfp_ptr4f_set,
+      cfp_array4f_cfp_ptr4f_set_at,
       cfp_array4f_cfp_ptr4f_ref,
       cfp_array4f_cfp_ptr4f_ref_at,
       cfp_array4f_cfp_ptr4f_lt,
@@ -618,10 +618,10 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_array4f_cfp_iter4f_set,
-      cfp_array4f_cfp_iter4f_set_at,
       cfp_array4f_cfp_iter4f_get,
       cfp_array4f_cfp_iter4f_get_at,
+      cfp_array4f_cfp_iter4f_set,
+      cfp_array4f_cfp_iter4f_set_at,
       cfp_array4f_cfp_iter4f_ref,
       cfp_array4f_cfp_iter4f_ref_at,
       cfp_array4f_cfp_iter4f_ptr,
@@ -685,17 +685,17 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array4d_end,
 
     {
-      cfp_array4d_cfp_ref4d_set,
       cfp_array4d_cfp_ref4d_get,
+      cfp_array4d_cfp_ref4d_set,
       cfp_array4d_cfp_ref4d_ptr,
       cfp_array4d_cfp_ref4d_copy,
     },
 
     {
-      cfp_array4d_cfp_ptr4d_set,
-      cfp_array4d_cfp_ptr4d_set_at,
       cfp_array4d_cfp_ptr4d_get,
       cfp_array4d_cfp_ptr4d_get_at,
+      cfp_array4d_cfp_ptr4d_set,
+      cfp_array4d_cfp_ptr4d_set_at,
       cfp_array4d_cfp_ptr4d_ref,
       cfp_array4d_cfp_ptr4d_ref_at,
       cfp_array4d_cfp_ptr4d_lt,
@@ -712,10 +712,10 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_array4d_cfp_iter4d_set,
-      cfp_array4d_cfp_iter4d_set_at,
       cfp_array4d_cfp_iter4d_get,
       cfp_array4d_cfp_iter4d_get_at,
+      cfp_array4d_cfp_iter4d_set,
+      cfp_array4d_cfp_iter4d_set_at,
       cfp_array4d_cfp_iter4d_ref,
       cfp_array4d_cfp_iter4d_ref_at,
       cfp_array4d_cfp_iter4d_ptr,

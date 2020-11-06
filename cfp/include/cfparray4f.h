@@ -26,18 +26,18 @@ struct cfp_header;
 
 typedef struct {
   /* member functions */
-  void (*set)(cfp_ref4f self, float val);
   float (*get)(const cfp_ref4f self);
+  void (*set)(cfp_ref4f self, float val);
   cfp_ptr4f (*ptr)(cfp_ref4f self);
   void (*copy)(cfp_ref4f self, const cfp_ref4f src);
 } cfp_ref4f_api;
 
 typedef struct {
   /* member functions */
-  void (*set)(cfp_ptr4f self, float val);
-  void (*set_at)(cfp_ptr4f self, ptrdiff_t d, float val);
   float (*get)(const cfp_ptr4f self);
   float (*get_at)(const cfp_ptr4f self, ptrdiff_t d);
+  void (*set)(cfp_ptr4f self, float val);
+  void (*set_at)(cfp_ptr4f self, ptrdiff_t d, float val);
   cfp_ref4f (*ref)(cfp_ptr4f self);
   cfp_ref4f (*ref_at)(cfp_ptr4f self, ptrdiff_t d);
   /* non-member functions */
@@ -56,10 +56,10 @@ typedef struct {
 
 typedef struct {
   /* member functions */
-  void (*set)(cfp_iter4f self, float val);
-  void (*set_at)(cfp_iter4f self, ptrdiff_t d, float val);
   float (*get)(const cfp_iter4f self);
   float (*get_at)(const cfp_iter4f self, ptrdiff_t d);
+  void (*set)(cfp_iter4f self, float val);
+  void (*set_at)(cfp_iter4f self, ptrdiff_t d, float val);
   cfp_ref4f (*ref)(cfp_iter4f self);
   cfp_ref4f (*ref_at)(cfp_iter4f self, ptrdiff_t d);
   cfp_ptr4f (*ptr)(cfp_iter4f self);

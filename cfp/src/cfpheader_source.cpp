@@ -7,25 +7,25 @@ _t1(CFP_HEADER_TYPE, ctor_buffer)(uint dims, zfp_type scalar_type, const void* d
     case 1:
       if (scalar_type == zfp_type_float)
         h.object = new zfp::array1f::header(data, bytes);
-      else if (scalar_type == zfp_type_double) 
+      else if (scalar_type == zfp_type_double)
         h.object = new zfp::array1d::header(data, bytes);
       break;
     case 2:
       if (scalar_type == zfp_type_float)
         h.object = new zfp::array2f::header(data, bytes);
-      else if (scalar_type == zfp_type_double) 
+      else if (scalar_type == zfp_type_double)
         h.object = new zfp::array2d::header(data, bytes);
       break;
     case 3:
       if (scalar_type == zfp_type_float)
         h.object = new zfp::array3f::header(data, bytes);
-      else if (scalar_type == zfp_type_double) 
+      else if (scalar_type == zfp_type_double)
         h.object = new zfp::array3d::header(data, bytes);
       break;
     case 4:
       if (scalar_type == zfp_type_float)
         h.object = new zfp::array4f::header(data, bytes);
-      else if (scalar_type == zfp_type_double) 
+      else if (scalar_type == zfp_type_double)
         h.object = new zfp::array4d::header(data, bytes);
       break;
   }
