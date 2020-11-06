@@ -3,7 +3,7 @@ static CFP_ARRAY_TYPE
 _t1(CFP_ARRAY_TYPE, ctor_default)()
 {
   CFP_ARRAY_TYPE a;
-  a.object = static_cast<void*>(new ZFP_ARRAY_TYPE());
+  a.object = new ZFP_ARRAY_TYPE();
   return a;
 }
 
@@ -11,7 +11,7 @@ static CFP_ARRAY_TYPE
 _t1(CFP_ARRAY_TYPE, ctor_copy)(CFP_ARRAY_TYPE src)
 {
   CFP_ARRAY_TYPE a;
-  a.object = static_cast<void*>(new ZFP_ARRAY_TYPE(*static_cast<const ZFP_ARRAY_TYPE *>(src.object)));
+  a.object = new ZFP_ARRAY_TYPE(*static_cast<const ZFP_ARRAY_TYPE *>(src.object));
   return a;
 }
 
@@ -19,8 +19,7 @@ static CFP_ARRAY_TYPE
 _t1(CFP_ARRAY_TYPE, ctor_header)(CFP_HEADER_TYPE h, const void* buffer, size_t buffer_size_bytes)
 {
   CFP_ARRAY_TYPE a;
-  a.object = static_cast<void*>
-    (new ZFP_ARRAY_TYPE(*static_cast<zfp::array::header*>(h.object), buffer, buffer_size_bytes));
+  a.object = new ZFP_ARRAY_TYPE(*static_cast<zfp::array::header*>(h.object), buffer, buffer_size_bytes);
   return a;
 }
 
