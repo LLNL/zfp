@@ -25,23 +25,80 @@ ref_set_offset(CFP_REF_TYPE& self, size_t offset)
 static ptrdiff_t
 iter_offset(const CFP_ITER_TYPE& self)
 {
-  size_t nx = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x();
-  size_t ny = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_y();
-  size_t nz = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_z();
-  return static_cast<ptrdiff_t>(self.x + nx * (self.y + ny * (self.z + nz * self.w)));
+  const ZFP_ARRAY_TYPE* container = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object);
+  size_t xmin = 0;
+  size_t xmax = container->size_x();
+  size_t ymin = 0;
+  size_t ymax = container->size_y();
+  size_t zmin = 0;
+  size_t zmax = container->size_z();
+  size_t wmin = 0;
+  size_t wmax = container->size_w();
+  size_t nx = xmax - xmin;
+  size_t ny = ymax - ymin;
+  size_t nz = zmax - zmin;
+  size_t nw = wmax - wmin;
+  size_t x = self.x;
+  size_t y = self.y;
+  size_t z = self.z;
+  size_t w = self.w;
+  size_t p = 0;
+  if (w == wmax)
+    p += nx * ny * nz * nw;
+  else {
+    size_t m = ~size_t(3);
+    size_t bw = std::max(w & m, wmin); size_t sw = std::min((bw + 4) & m, wmax) - bw; p += (bw - wmin) * nx * ny * nz;
+    size_t bz = std::max(z & m, zmin); size_t sz = std::min((bz + 4) & m, zmax) - bz; p += (bz - zmin) * nx * ny * sw;
+    size_t by = std::max(y & m, ymin); size_t sy = std::min((by + 4) & m, ymax) - by; p += (by - ymin) * nx * sz * sw;
+    size_t bx = std::max(x & m, xmin); size_t sx = std::min((bx + 4) & m, xmax) - bx; p += (bx - xmin) * sy * sz * sw;
+    p += (w - bw) * sx * sy * sz;
+    p += (z - bz) * sx * sy;
+    p += (y - by) * sx;
+    p += (x - bx);
+  }
+  return static_cast<ptrdiff_t>(p);
 }
 
 // utility function: compute multidimensional index from onedimensional offset
 static void
 iter_set_offset(CFP_ITER_TYPE& self, size_t offset)
 {
-  size_t nx = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x();
-  size_t ny = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_y();
-  size_t nz = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_z();
-  self.x = offset % nx; offset /= nx;
-  self.y = offset % ny; offset /= ny;
-  self.z = offset % nz; offset /= nz;
-  self.w = offset;
+  const ZFP_ARRAY_TYPE* container = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object);
+  size_t xmin = 0;
+  size_t xmax = container->size_x();
+  size_t ymin = 0;
+  size_t ymax = container->size_y();
+  size_t zmin = 0;
+  size_t zmax = container->size_z();
+  size_t wmin = 0;
+  size_t wmax = container->size_w();
+  size_t nx = xmax - xmin;
+  size_t ny = ymax - ymin;
+  size_t nz = zmax - zmin;
+  size_t nw = wmax - wmin;
+  size_t p = offset;
+  size_t x, y, z, w;
+  if (p == nx * ny * nz * nw) {
+    x = xmin;
+    y = ymin;
+    z = zmin;
+    w = wmax;
+  }
+  else {
+    size_t m = ~size_t(3);
+    size_t bw = std::max((wmin + p / (nx * ny * nz)) & m, wmin); size_t sw = std::min((bw + 4) & m, wmax) - bw; p -= (bw - wmin) * nx * ny * nz;
+    size_t bz = std::max((zmin + p / (nx * ny * sw)) & m, zmin); size_t sz = std::min((bz + 4) & m, zmax) - bz; p -= (bz - zmin) * nx * ny * sw;
+    size_t by = std::max((ymin + p / (nx * sz * sw)) & m, ymin); size_t sy = std::min((by + 4) & m, ymax) - by; p -= (by - ymin) * nx * sz * sw;
+    size_t bx = std::max((xmin + p / (sy * sz * sw)) & m, xmin); size_t sx = std::min((bx + 4) & m, xmax) - bx; p -= (bx - xmin) * sy * sz * sw;
+    w = bw + p / (sx * sy * sz); p -= (w - bw) * sx * sy * sz;
+    z = bz + p / (sx * sy);      p -= (z - bz) * sx * sy;
+    y = by + p / sx;             p -= (y - by) * sx;
+    x = bx + p;                  p -= (x - bx);
+  }
+  self.x = x;
+  self.y = y;
+  self.z = z;
+  self.w = w;
 }
 
 static CFP_ARRAY_TYPE

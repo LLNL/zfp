@@ -559,3 +559,85 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_ptr_flat_expect_entryReturned)(void **st
 
     assert_true(CFP_NAMESPACE.SUB_NAMESPACE.reference.get(cfpArrPtr.reference) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, i));
 }
+
+// ##############
+// cfp_iter tests
+// ##############
+
+static void
+_catFunc3(given_, CFP_ITER_TYPE, _when_get_set_expect_correct)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+
+  SCALAR val = 5;
+
+  CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
+  CFP_NAMESPACE.SUB_NAMESPACE.iterator.set(cfpArrIter, val);
+
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.iterator.get(cfpArrIter), val);
+}
+
+static void
+_catFunc3(given_, CFP_ITER_TYPE, _when_get_at_set_at_expect_correct)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+
+  uint i = 3;
+  SCALAR val = 5;
+
+  CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
+  CFP_NAMESPACE.SUB_NAMESPACE.iterator.set_at(cfpArrIter, i, val);
+
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.iterator.get_at(cfpArrIter, i), val);
+}
+
+static void
+_catFunc3(given_, CFP_ITER_TYPE, _when_iterate_touch_all)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+  CFP_ITER_TYPE cfpArrIter;
+  CFP_PTR_TYPE cfpArrPtr;
+
+  SCALAR val = -1;
+
+  for (cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
+       CFP_NAMESPACE.SUB_NAMESPACE.iterator.neq(cfpArrIter, CFP_NAMESPACE.SUB_NAMESPACE.end(cfpArr));
+       cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.iterator.inc(cfpArrIter))
+  {
+    CFP_NAMESPACE.SUB_NAMESPACE.iterator.set(cfpArrIter, val);
+  }
+
+  for (cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr_flat(cfpArr, 0);
+       CFP_NAMESPACE.SUB_NAMESPACE.pointer.leq(cfpArrPtr, CFP_NAMESPACE.SUB_NAMESPACE.ptr_flat(cfpArr, CFP_NAMESPACE.SUB_NAMESPACE.size(cfpArr) - 1));
+       cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.inc(cfpArrPtr))
+  {
+    assert_true(CFP_NAMESPACE.SUB_NAMESPACE.pointer.get(cfpArrPtr) - val < 1e-12);
+    assert_true(CFP_NAMESPACE.SUB_NAMESPACE.pointer.get(cfpArrPtr) - val > -1e-12);
+  }
+}
+
+static void
+_catFunc3(given_, CFP_ITER_TYPE, _when_eq_expect_equal)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+
+  CFP_ITER_TYPE cfpArrIter1 = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
+
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.iterator.eq(cfpArrIter1, cfpArrIter1));
+}
+
+static void
+_catFunc3(given_, CFP_ITER_TYPE, _when_neq_expect_not_equal)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
+
+  CFP_ITER_TYPE cfpArrIter1 = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
+  CFP_ITER_TYPE cfpArrIter2 = CFP_NAMESPACE.SUB_NAMESPACE.end(cfpArr);
+
+  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.iterator.neq(cfpArrIter1, cfpArrIter2));
+}

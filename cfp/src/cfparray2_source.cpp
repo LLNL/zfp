@@ -19,17 +19,54 @@ ref_set_offset(CFP_REF_TYPE& self, size_t offset)
 static ptrdiff_t
 iter_offset(const CFP_ITER_TYPE& self)
 {
-  size_t nx = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x();
-  return static_cast<ptrdiff_t>(self.x + nx * self.y);
+  const ZFP_ARRAY_TYPE* container = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object);
+  size_t xmin = 0;
+  size_t xmax = container->size_x();
+  size_t ymin = 0;
+  size_t ymax = container->size_y();
+  size_t nx = xmax - xmin;
+  size_t ny = ymax - ymin;
+  size_t x = self.x;
+  size_t y = self.y;
+  size_t p = 0;
+  if (y == ymax)
+    p += nx * ny;
+  else {
+    size_t m = ~size_t(3);
+    size_t by = std::max(y & m, ymin); size_t sy = std::min((by + 4) & m, ymax) - by; p += (by - ymin) * nx;
+    size_t bx = std::max(x & m, xmin); size_t sx = std::min((bx + 4) & m, xmax) - bx; p += (bx - xmin) * sy;
+    p += (y - by) * sx;
+    p += (x - bx);
+  }
+  return static_cast<ptrdiff_t>(p);
 }
 
 // utility function: compute multidimensional index from onedimensional offset
 static void
 iter_set_offset(CFP_ITER_TYPE& self, size_t offset)
 {
-  size_t nx = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->size_x();
-  self.x = offset % nx; offset /= nx;
-  self.y = offset;
+  const ZFP_ARRAY_TYPE* container = static_cast<const ZFP_ARRAY_TYPE*>(self.array.object);
+  size_t xmin = 0;
+  size_t xmax = container->size_x();
+  size_t ymin = 0;
+  size_t ymax = container->size_y();
+  size_t nx = xmax - xmin;
+  size_t ny = ymax - ymin;
+  size_t p = offset;
+  size_t x, y;
+  if (p == nx * ny) {
+    x = xmin;
+    y = ymax;
+  }
+  else {
+    size_t m = ~size_t(3);
+    size_t by = std::max((ymin + p / nx) & m, ymin); size_t sy = std::min((by + 4) & m, ymax) - by; p -= (by - ymin) * nx;
+    size_t bx = std::max((xmin + p / sy) & m, xmin); size_t sx = std::min((bx + 4) & m, xmax) - bx; p -= (bx - xmin) * sy;
+    y = by + p / sx; p -= (y - by) * sx;
+    x = bx + p;      p -= (x - bx);
+  }
+  self.x = x;
+  self.y = y;
 }
 
 static CFP_ARRAY_TYPE
