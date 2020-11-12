@@ -1,11 +1,11 @@
-#ifndef CUZFP_DECODE2_CUH
-#define CUZFP_DECODE2_CUH
+#ifndef HIPZFP_DECODE2_HIPH
+#define HIPZFP_DECODE2_HIPH
 
 #include "shared.h"
-#include "decode.cuh"
-#include "type_info.cuh"
+#include "decode.h"
+#include "type_info.h"
 
-namespace cuZFP {
+namespace hipZFP {
 
 template<typename Scalar> 
 __device__ __host__ inline 
@@ -37,7 +37,7 @@ void scatter2(const Scalar* q, Scalar* p, int sx, int sy)
 template<class Scalar, int BlockSize>
 __global__
 void
-cudaDecode2(Word *blocks,
+hipDecode2(Word *blocks,
             Scalar *out,
             const uint2 dims,
             const int2 stride,
@@ -101,9 +101,9 @@ size_t decode2launch(uint2 dims,
                      Scalar *d_data,
                      uint maxbits)
 {
-  const int cuda_block_size = 128;
+  const int hip_block_size = 128;
   dim3 block_size;
-  block_size = dim3(cuda_block_size, 1, 1);
+  block_size = dim3(hip_block_size, 1, 1);
   
   uint2 zfp_pad(dims); 
   // ensure that we have block sizes
@@ -116,28 +116,28 @@ size_t decode2launch(uint2 dims,
   
   //
   // we need to ensure that we launch a multiple of the 
-  // cuda block size
+  // hip block size
   //
   int block_pad = 0; 
-  if(zfp_blocks % cuda_block_size != 0)
+  if(zfp_blocks % hip_block_size != 0)
   {
-    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
+    block_pad = hip_block_size - zfp_blocks % hip_block_size; 
   }
 
 
   size_t stream_bytes = calc_device_mem2d(zfp_pad, maxbits);
   size_t total_blocks = block_pad + zfp_blocks;
-  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
+  dim3 grid_size = calhiplate_grid_size(total_blocks, hip_block_size);
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef HIP_ZFP_RATE_PRINT
   // setup some timing code
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  cudaEventRecord(start);
+  hipEvent_t start, stop;
+  hipEventCreate(&start);
+  hipEventCreate(&stop);
+  hipEventRecord(start);
 #endif
 
-  cudaDecode2<Scalar, 16> <<< grid_size, block_size >>>
+  hipDecode2<Scalar, 16> <<< grid_size, block_size >>>
     (stream,
 		 d_data,
      dims,
@@ -145,13 +145,13 @@ size_t decode2launch(uint2 dims,
      zfp_pad,
      maxbits);
 
-#ifdef CUDA_ZFP_RATE_PRINT
-  cudaEventRecord(stop);
-  cudaEventSynchronize(stop);
-	cudaStreamSynchronize(0);
+#ifdef HIP_ZFP_RATE_PRINT
+  hipEventRecord(stop);
+  hipEventSynchronize(stop);
+	hipStreamSynchronize(0);
 
   float miliseconds = 0;
-  cudaEventElapsedTime(&miliseconds, start, stop);
+  hipEventElapsedTime(&miliseconds, start, stop);
   float seconds = miliseconds / 1000.f;
   float rate = (float(dims.x * dims.y) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
@@ -173,6 +173,6 @@ size_t decode2(uint2 dims,
 	return decode2launch<Scalar>(dims, stride, stream, d_data, maxbits);
 }
 
-} // namespace cuZFP
+} // namespace hipZFP
 
 #endif
