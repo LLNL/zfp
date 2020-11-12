@@ -75,7 +75,8 @@ typedef int zfp_bool; /* Boolean type */
 typedef enum {
   zfp_exec_serial = 0, /* serial execution (default) */
   zfp_exec_omp    = 1, /* OpenMP multi-threaded execution */
-  zfp_exec_cuda   = 2  /* CUDA parallel execution */
+  zfp_exec_cuda   = 2, /* CUDA parallel execution */
+  zfp_exec_hip    = 3  /* HIP parallel execution */
 } zfp_exec_policy;
 
 /* OpenMP execution parameters */

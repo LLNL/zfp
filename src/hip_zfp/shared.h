@@ -1,11 +1,11 @@
-#ifndef CUZFP_SHARED_H
-#define CUZFP_SHARED_H
+#ifndef HIPZFP_SHARED_H
+#define HIPZFP_SHARED_H
 
-//#define CUDA_ZFP_RATE_PRINT 1
+//#define HIP_ZFP_RATE_PRINT 1
 typedef unsigned long long Word;
 #define Wsize ((uint)(CHAR_BIT * sizeof(Word)))
 
-#include "type_info.cuh"
+#include "type_info.h"
 #include "zfp.h"
 #include "constants.h"
 #include <stdio.h>
@@ -19,7 +19,7 @@ typedef unsigned long long Word;
 
 #define NBMASK 0xaaaaaaaaaaaaaaaaull
 
-namespace cuZFP
+namespace hipZFP
 {
 
 template<typename T>
@@ -85,9 +85,9 @@ size_t calc_device_mem3d(const uint3 encoded_dims,
 
 dim3 get_max_grid_dims()
 {
-  cudaDeviceProp prop; 
+  hipDeviceProp_t prop; 
   int device = 0;
-  cudaGetDeviceProperties(&prop, device);
+  hipGetDeviceProperties(&prop, device);
   dim3 grid_dims;
   grid_dims.x = prop.maxGridSize[0];
   grid_dims.y = prop.maxGridSize[1];
@@ -95,10 +95,10 @@ dim3 get_max_grid_dims()
   return grid_dims;
 }
 
-// size is assumed to have a pad to the nearest cuda block size
-dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
+// size is assumed to have a pad to the nearest hip block size
+dim3 calhiplate_grid_size(size_t size, size_t hip_block_size)
 {
-  size_t grids = size / cuda_block_size; // because of pad this will be exact
+  size_t grids = size / hip_block_size; // because of pad this will be exact
   dim3 max_grid_dims = get_max_grid_dims();
   int dims  = 1;
   // check to see if we need to add more grids
@@ -138,9 +138,9 @@ dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
 
   if(dims == 3)
   {
-    float cub_r = pow((float)grids, 1.f/3.f);;
+    float hipb_r = pow((float)grids, 1.f/3.f);;
     float intpart = 0.;
-    modf(cub_r,&intpart); 
+    modf(hipb_r,&intpart); 
     int base = intpart;
     grid_size.x = base; 
     grid_size.y = base; 
@@ -268,5 +268,5 @@ const unsigned char* get_perm<4>()
 }
 
 
-} // namespace cuZFP
+} // namespace hipZFP
 #endif

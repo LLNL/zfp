@@ -50,6 +50,8 @@ is_reversible(const zfp_stream* zfp)
 #include "template/ompcompress.c"
 #include "template/cudacompress.c"
 #include "template/cudadecompress.c"
+#include "template/hipcompress.c"
+#include "template/hipdecompress.c"
 #undef Scalar
 
 #define Scalar int64
@@ -58,6 +60,8 @@ is_reversible(const zfp_stream* zfp)
 #include "template/ompcompress.c"
 #include "template/cudacompress.c"
 #include "template/cudadecompress.c"
+#include "template/hipcompress.c"
+#include "template/hipdecompress.c"
 #undef Scalar
 
 #define Scalar float
@@ -66,6 +70,8 @@ is_reversible(const zfp_stream* zfp)
 #include "template/ompcompress.c"
 #include "template/cudacompress.c"
 #include "template/cudadecompress.c"
+#include "template/hipcompress.c"
+#include "template/hipdecompress.c"
 #undef Scalar
 
 #define Scalar double
@@ -74,6 +80,8 @@ is_reversible(const zfp_stream* zfp)
 #include "template/ompcompress.c"
 #include "template/cudacompress.c"
 #include "template/cudadecompress.c"
+#include "template/hipcompress.c"
+#include "template/hipdecompress.c"
 #undef Scalar
 
 /* public functions: miscellaneous ----------------------------------------- */
@@ -781,6 +789,10 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
     case zfp_exec_cuda:
       break;
 #endif
+#ifdef ZFP_WITH_HIP
+    case zfp_exec_hip:
+      break;
+#endif
     case zfp_exec_omp:
 #ifdef _OPENMP
       if (zfp->exec.policy != policy) {
@@ -896,7 +908,7 @@ size_t
 zfp_compress(zfp_stream* zfp, const zfp_field* field)
 {
   /* function table [execution][strided][dimensionality][scalar type] */
-  void (*ftable[3][2][4][4])(zfp_stream*, const zfp_field*) = {
+  void (*ftable[4][2][4][4])(zfp_stream*, const zfp_field*) = {
     /* serial */
     {{{ compress_int32_1,         compress_int64_1,         compress_float_1,         compress_double_1 },
       { compress_strided_int32_2, compress_strided_int64_2, compress_strided_float_2, compress_strided_double_2 },
@@ -934,6 +946,19 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
 #else
     {{{ NULL }}},
 #endif
+    /* HIP */
+#ifdef ZFP_WITH_HIP
+    {{{ compress_hip_int32_1,         compress_hip_int64_1,         compress_hip_float_1,         compress_hip_double_1 },
+      { compress_strided_hip_int32_2, compress_strided_hip_int64_2, compress_strided_hip_float_2, compress_strided_hip_double_2 },
+      { compress_strided_hip_int32_3, compress_strided_hip_int64_3, compress_strided_hip_float_3, compress_strided_hip_double_3 },
+      { NULL,                            NULL,                            NULL,                            NULL }},
+     {{ compress_strided_hip_int32_1, compress_strided_hip_int64_1, compress_strided_hip_float_1, compress_strided_hip_double_1 },
+      { compress_strided_hip_int32_2, compress_strided_hip_int64_2, compress_strided_hip_float_2, compress_strided_hip_double_2 },
+      { compress_strided_hip_int32_3, compress_strided_hip_int64_3, compress_strided_hip_float_3, compress_strided_hip_double_3 },
+      { NULL,                            NULL,                            NULL,                            NULL }}},
+#else
+    {{{ NULL }}},
+#endif
   };
   uint exec = zfp->exec.policy;
   uint strided = zfp_field_stride(field, NULL);
@@ -967,7 +992,7 @@ size_t
 zfp_decompress(zfp_stream* zfp, zfp_field* field)
 {
   /* function table [execution][strided][dimensionality][scalar type] */
-  void (*ftable[3][2][4][4])(zfp_stream*, zfp_field*) = {
+  void (*ftable[4][2][4][4])(zfp_stream*, zfp_field*) = {
     /* serial */
     {{{ decompress_int32_1,         decompress_int64_1,         decompress_float_1,         decompress_double_1 },
       { decompress_strided_int32_2, decompress_strided_int64_2, decompress_strided_float_2, decompress_strided_double_2 },
@@ -990,6 +1015,19 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
      {{ decompress_strided_cuda_int32_1, decompress_strided_cuda_int64_1, decompress_strided_cuda_float_1, decompress_strided_cuda_double_1 },
       { decompress_strided_cuda_int32_2, decompress_strided_cuda_int64_2, decompress_strided_cuda_float_2, decompress_strided_cuda_double_2 },
       { decompress_strided_cuda_int32_3, decompress_strided_cuda_int64_3, decompress_strided_cuda_float_3, decompress_strided_cuda_double_3 },
+      { NULL,                            NULL,                            NULL,                            NULL }}},
+#else
+    {{{ NULL }}},
+#endif
+
+#ifdef ZFP_WITH_HIP
+    {{{ decompress_hip_int32_1,         decompress_hip_int64_1,         decompress_hip_float_1,         decompress_hip_double_1 },
+      { decompress_strided_hip_int32_2, decompress_strided_hip_int64_2, decompress_strided_hip_float_2, decompress_strided_hip_double_2 },
+      { decompress_strided_hip_int32_3, decompress_strided_hip_int64_3, decompress_strided_hip_float_3, decompress_strided_hip_double_3 },
+      { NULL,                            NULL,                            NULL,                            NULL }},
+     {{ decompress_strided_hip_int32_1, decompress_strided_hip_int64_1, decompress_strided_hip_float_1, decompress_strided_hip_double_1 },
+      { decompress_strided_hip_int32_2, decompress_strided_hip_int64_2, decompress_strided_hip_float_2, decompress_strided_hip_double_2 },
+      { decompress_strided_hip_int32_3, decompress_strided_hip_int64_3, decompress_strided_hip_float_3, decompress_strided_hip_double_3 },
       { NULL,                            NULL,                            NULL,                            NULL }}},
 #else
     {{{ NULL }}},
