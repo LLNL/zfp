@@ -44,7 +44,7 @@ exponent(Scalar x)
 {
   if (x > 0) {
     int e;
-    frexp(x, &e);
+    frexp((double)x, &e);
     // clamp exponent in case x is denormalized
     return max(e, 1 - get_ebias<Scalar>());
   }
