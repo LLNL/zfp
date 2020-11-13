@@ -53,9 +53,13 @@ Per STL mandate, the iterators define several types:
 
   The scalar type associated with the array that the iterator points into.
 
+-----
+
 .. cpp:type:: iterator::difference_type
 
   Difference between two iterators in number of array elements.
+
+-----
 
 .. cpp:type:: iterator::reference
 
@@ -66,6 +70,8 @@ Per STL mandate, the iterators define several types:
 
   The :ref:`pointer <pointers>` type associated with the iterator's parent
   array class.
+
+-----
 
 .. cpp:type:: iterator::iterator_category
 
@@ -86,6 +92,8 @@ For const iterators, the following additional types are defined:
   The immutable pointer type associated with the iterator's container class.
 
 ----
+
+-----
 
 The following operations are defined on iterators:
 
@@ -184,7 +192,7 @@ The following operations are defined on iterators:
   Postfix increment (:code:`it++`).  Return the value of the iterator
   before being incremented.
 
-----
+-----
 
 .. cpp:function:: iterator& iterator::operator--()
 .. cpp:function:: const_iterator& const_iterator::operator--()

@@ -52,6 +52,12 @@ The following sections are available:
 * :ref:`iterators`
 * :ref:`views`
 * :ref:`cfp`
+   * :ref:`Arrays <cfp_arrays>`
+   * :ref:`References <cfp_references>`
+   * :ref:`Pointers <cfp_pointers>`
+   * :ref:`Iterators <cfp_iterators>`
+
+
 
 .. _array_classes:
 
@@ -83,9 +89,13 @@ Base Class
 
   Virtual base class for common array functionality.
 
+----
+
 .. cpp:function:: double array::rate() const
 
   Return rate in bits per value.
+
+----
 
 .. cpp:function:: double array::set_rate(double rate)
 
@@ -94,10 +104,14 @@ Base Class
   for discussions of the rate granularity.  This method destroys the previous
   contents of the array.
 
+----
+
 .. cpp:function:: virtual void array::clear_cache() const
 
   Empty cache without compressing modified cached blocks, i.e., discard any
   cached updates to the array.
+
+----
 
 .. cpp:function:: virtual void array::flush_cache() const
 
@@ -105,12 +119,16 @@ Base Class
   storage and emptying the cache.  This method should be called before
   writing the compressed representation of the array to disk, for instance.
 
+----
+
 .. cpp:function:: size_t array::compressed_size() const
 
   Return number of bytes of storage for the compressed data.  This amount
   does not include the small overhead of other class members or the size
   of the cache.  Rather, it reflects the size of the memory buffer
   returned by :cpp:func:`compressed_data`.
+
+----
 
 .. cpp:function:: void* array::compressed_data() const
 
@@ -124,18 +142,26 @@ Base Class
   streams are always word aligned (see :c:var:`stream_word_bits` and
   :c:macro:`BIT_STREAM_WORD_TYPE`).
 
+----
+
 .. cpp:function:: uint array::dimensionality() const
 
   Return the dimensionality (aka. rank) of the array: 1, 2, 3, or 4.
+
+----
 
 .. cpp:function:: zfp_type array::scalar_type() const
 
   Return the underlying scalar type (:c:type:`zfp_type`) of the array.
 
+----
+
 .. cpp:function:: array::header array::get_header() const
 
   Deprecated function as of |zfp| |crpirelease|.  See the :ref:`header`
   section on how to construct a header.
+
+----
 
 .. _array_factory:
 .. cpp:function:: static array* array::construct(const header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
@@ -150,6 +176,8 @@ Base Class
   implied by the header.  If this function fails for any reason, an
   :cpp:class:`exception` is thrown.
 
+----
+
 Common Methods
 ^^^^^^^^^^^^^^
 
@@ -157,10 +185,14 @@ The following methods are common to 1D, 2D, 3D, and 4D arrays, but are
 implemented in the array class specific to each dimensionality rather than
 in the base class.
 
+----
+
 .. cpp:function:: size_t array::size() const
 
   Total number of elements in array, e.g., *nx* |times| *ny* |times| *nz* for
   3D arrays.
+
+----
 
 .. cpp:function:: size_t array::cache_size() const
 
@@ -172,6 +204,8 @@ in the base class.
   bytes and consists of at least one block.  If *bytes* is zero, then a
   default cache size is used, which requires the array dimensions to be known.
 
+----
+
 .. cpp:function:: void array::get(Scalar* p) const
 
   Decompress entire array and store at *p*, for which sufficient storage must
@@ -179,11 +213,15 @@ in the base class.
   (with default strides) and stored in the usual "row-major" order, i.e., with
   *x* varying faster than *y*, *y* varying faster than *z*, etc.
 
+----
+
 .. cpp:function:: void array::set(const Scalar* p)
 
   Initialize array by copying and compressing data stored at *p*.  The
   uncompressed data is assumed to be stored as in the :cpp:func:`get`
   method.
+
+----
 
 .. cpp:function:: const_reference array::operator[](size_t index) const
 
@@ -197,14 +235,21 @@ in the base class.
   necessary to allow obtaining a const pointer to the element when the array
   itself is const qualified, e.g., :code:`const_pointer p = &a[index];`.
 
+----
+
+.. _lvref_idx:
 .. cpp:function:: reference array::operator[](size_t index)
 
   Return :ref:`proxy reference <references>` to scalar stored at given flat
   index (mutator).  For a 3D array, :code:`index = x + nx * (y + ny * z)`.
 
+----
+
 .. cpp:function:: iterator array::begin()
 
   Return mutable iterator to beginning of array.
+
+----
 
 .. cpp:function:: iterator array::end()
 
@@ -225,6 +270,7 @@ in the base class.
   Const :ref:`references <references>`, :ref:`pointers <pointers>`, and
   :ref:`iterators <iterators>` are available as of |zfp| |crpirelease|.  
 
+----
 
 1D, 2D, 3D, and 4D Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -239,6 +285,8 @@ type is omitted for readability, e.g.,
 :code:`class array1` is used as shorthand for
 :code:`template <typename Scalar> class array1`.  Wherever the type
 :code:`Scalar` appears, it refers to this template argument.
+
+----
 
 ..
   .. cpp:class:: template<typename Scalar> array1 : public array
@@ -407,6 +455,8 @@ type is omitted for readability, e.g.,
 
   Return :ref:`proxy reference <references>` to scalar stored at
   multi-dimensional index given by *i*, *j*, *k*, and *l* (mutator).
+
+----
 
 .. include:: caching.inc
 .. include:: serialization.inc

@@ -1,10 +1,10 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 set -ex
 
 MAX_DIM=4
 SCALAR_TYPES=( "Float" "Double" "Int32" "Int64" )
 
-mkdir checksumGenBuild
+mkdir -p checksumGenBuild
 cd checksumGenBuild
 
 cmake ../../.. -DZFP_WITH_OPENMP=OFF -DPRINT_CHECKSUMS=1

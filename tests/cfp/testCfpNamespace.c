@@ -11,9 +11,8 @@
 static void
 given_cfpCompiledWithNamespace_cfp2_when_linkToCfpLib_expect_namespacePersists(void** state)
 {
-  cfp_array1d* arr;
-  arr = cfp2.array1d.ctor_default();
-  assert_non_null(arr);
+  cfp_array1d arr = cfp2.array1d.ctor_default();
+  assert_non_null(arr.object);
 
   cfp2.array1d.dtor(arr);
 }

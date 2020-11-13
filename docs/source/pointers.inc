@@ -64,6 +64,8 @@ are available, and conceptually are equivalent to :code:`const Scalar*`.
 The following operators are defined for proxy pointers.  Below *p* refers
 to the pointer being acted upon.
 
+----
+
 .. cpp:namespace:: zfp::arrayANY
 
 ----

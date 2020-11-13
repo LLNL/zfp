@@ -136,3 +136,8 @@ compressed-array iterators and pointers for traversing arrays.  For
 instance, it gives an example of sorting a 1D compressed array
 using :cpp:func:`std::sort`.  This example takes no command-line
 options.
+
+The :program:`iteratorC` example illustrates the equivalent |cfp|
+iterator operations.  It closely follows the usage shown in the 
+:program:`iterator` example with some minor differences. It 
+likewise takes no command-line options.

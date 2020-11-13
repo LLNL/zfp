@@ -128,16 +128,19 @@ or using GNU make
 
 Regardless of the settings below, |libzfp| will always be built.
 
+
 .. c:macro:: BUILD_ALL
 
   Build all subdirectories; enable all options (except
   :c:macro:`BUILD_SHARED_LIBS`).
   Default: off.
 
+
 .. c:macro:: BUILD_CFP
 
   Build |libcfp| for C bindings to compressed arrays.
   Default: off.
+
 
 .. c:macro:: BUILD_ZFPY
 
@@ -154,6 +157,7 @@ Regardless of the settings below, |libzfp| will always be built.
   CMake default: off.
   GNU make default: off and ignored.
 
+
 .. c:macro:: BUILD_ZFORP
 
   Build |libzforp| for Fortran bindings to the C API.  Requires Fortran
@@ -165,21 +169,25 @@ Regardless of the settings below, |libzfp| will always be built.
 
   Default: off.
 
+
 .. c:macro:: BUILD_UTILITIES
 
   Build |zfpcmd| command-line utility for compressing binary files.
   Default: on.
+
 
 .. c:macro:: BUILD_EXAMPLES
 
   Build code examples.
   Default: off.
 
+
 .. c:macro:: BUILD_TESTING
 
   Build |testzfp| and (when on the GitHub
   `develop branch <https://github.com/LLNL/zfp/tree/develop>`_) unit tests.
   Default: on.
+
 
 .. c:macro:: BUILD_SHARED_LIBS
 
@@ -194,6 +202,7 @@ Regardless of the settings below, |libzfp| will always be built.
    single: Configuration
 .. _config:
 
+
 Configuration
 -------------
 
@@ -202,6 +211,7 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 ::
 
     cmake -DZFP_WITH_OPENMP=OFF ..
+
 
 .. c:macro:: ZFP_INT64
 .. c:macro:: ZFP_INT64_SUFFIX
@@ -216,6 +226,7 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   Defaults: :code:`long int`, :code:`l`, :code:`unsigned long int`, and
   :code:`ul`, respectively.
 
+
 .. c:macro:: ZFP_WITH_OPENMP
 
   CMake and GNU make macro for enabling or disabling OpenMP support.  CMake
@@ -226,6 +237,7 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   :code:`-fopenmp`.  NOTE: clang currently does not support OpenMP on macOS.
   CMake default: on.
   GNU make default: off.
+
 
 .. c:macro:: ZFP_WITH_CUDA
 
@@ -240,11 +252,13 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   CMake default: off.
   GNU make default: off and ignored.
 
+
 .. c:macro:: ZFP_WITH_ALIGNED_ALLOC
 
   Use aligned memory allocation in an attempt to align compressed blocks
   on hardware cache lines.
   Default: undefined/off.
+
 
 .. c:macro:: ZFP_WITH_CACHE_TWOWAY
 
@@ -252,17 +266,20 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   incurs some overhead that may be offset by better cache utilization.
   Default: undefined/off.
 
+
 .. c:macro:: ZFP_WITH_CACHE_FAST_HASH
 
   Use a simpler hash function for cache line lookup.  This is faster but may
   lead to more collisions.
   Default: undefined/off.
 
+
 .. c:macro:: ZFP_WITH_CACHE_PROFILE
 
   Enable cache profiling to gather and print statistics on cache hit and miss
   rates.
   Default: undefined/off.
+
 
 .. c:macro:: BIT_STREAM_WORD_TYPE
 
@@ -272,11 +289,13 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   :c:macro:`BIT_STREAM_WORD_TYPE` should be set to :c:type:`uint8`.
   Default: :c:type:`uint64`.
 
+
 .. c:macro:: ZFP_BIT_STREAM_WORD_SIZE
 
   CMake macro for indirectly setting :c:macro:`BIT_STREAM_WORD_TYPE`.  Valid
   values are 8, 16, 32, 64.
   Default: 64.
+
 
 .. c:macro:: BIT_STREAM_STRIDED
 
@@ -284,11 +303,13 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   layouts, e.g., to enable progressive access.
   Default: undefined/off.
 
+
 .. c:macro:: CFP_NAMESPACE
 
   Macro for renaming the outermost |cfp| namespace, e.g., to avoid name
   clashes.
   Default: :code:`cfp`.
+
 
 .. c:macro:: PYTHON_LIBRARY
 
@@ -296,11 +317,13 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   CMake default: undefined/off.
   GNU make default: off and ignored.
 
+
 .. c:macro:: PYTHON_INCLUDE_DIR
 
   Path to the Python include directory, e.g., :file:`/usr/include/python2.7`.
   CMake default: undefined/off.
   GNU make default: off and ignored.
+
 
 
 Dependencies
