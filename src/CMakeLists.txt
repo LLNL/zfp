@@ -61,6 +61,8 @@ endif()
 
 if(ZFP_WITH_HIP)
   set(HIP_HIPRT_LIBRARY "${HIP_PATH}/../lib/libamdhip64.so")	
+  #find_package(CUDA)
+  #target_link_libraries(zfp PRIVATE ${CUDA_CUDART_LIBRARY} stdc++)
   target_link_libraries(zfp PRIVATE  ${HIP_HIPRT_LIBRARY} stdc++)
 endif()
 
