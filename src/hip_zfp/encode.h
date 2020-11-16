@@ -246,8 +246,12 @@ struct BlockWriter
     // If this does not happen, then we may write into a zfp
     // block not at the specified index
     // uint zero_shift = sizeof(Word) * 8 - n_bits;
-    Word left = (bits >> n_bits) << n_bits;
     
+    // bit shift behave differently in HIP 
+    Word left;
+    if (n_bits == 64) left = 0;
+    else left = (bits >> n_bits) << n_bits;
+
     Word b = bits - left;
     Word add = b << shift;
     atomicAdd(&m_stream[write_index], add); 
@@ -259,7 +263,10 @@ struct BlockWriter
       atomicAdd(&m_stream[write_index + 1], rem); 
     }
     m_hiprrent_bit += n_bits;
-    return bits >> (Word)n_bits;
+
+    // bit shift behave differently in HIP 
+    if (n_bits == 64) return 0;
+    else return bits >> (Word)n_bits;
   }
 
   __device__

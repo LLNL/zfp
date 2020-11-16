@@ -106,7 +106,8 @@ dim3 calhiplate_grid_size(size_t size, size_t hip_block_size)
   {
     dims = 2; 
   }
-  if(grids > max_grid_dims.x * max_grid_dims.y)
+  // avoiding overflow in HIP
+  if(grids > (unsigned long long)max_grid_dims.x * max_grid_dims.y)
   {
     dims = 3;
   }
