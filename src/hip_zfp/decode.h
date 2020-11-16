@@ -82,10 +82,18 @@ public:
      
     int first_read = min(rem_bits, n_bits);
     // first mask 
-    Word mask = ((Word)1<<((first_read)))-1;
+    // bit shift behave differently in HIP
+    Word mask;
+    if (first_read == 64) mask = 18446744073709551615;
+    else mask = ((Word)1<<((first_read)))-1;
     bits = m_buffer & mask;
-    m_buffer >>= n_bits;
+   
+    // bit shift behave differently in HIP
+    if (n_bits == 64) m_buffer = 0;
+    else m_buffer >>= n_bits;
+   
     m_hiprrent_bit += first_read;
+   
     int next_read = 0;
     if(n_bits >= rem_bits) 
     {
@@ -98,7 +106,11 @@ public:
     // this is basically a no-op when first read constained 
     // all the bits. TODO: if we have aligned reads, this could 
     // be a conditional without divergence
-    mask = ((Word)1<<((next_read)))-1;
+
+    // bit shift behave differently in HIP
+    if (next_read == 64) mask = 18446744073709551615;
+    else mask = ((Word)1<<((next_read)))-1;
+
     bits += (m_buffer & mask) << first_read;
     m_buffer >>= next_read;
     m_hiprrent_bit += next_read; 
