@@ -45,7 +45,7 @@ Stream Manipulation
   a stream word boundary following this call.  The number of zero-bits
   written, if any, is returned.
 
------
+----
 
 .. c:function:: size_t zfp_stream_align(zfp_stream* stream)
 
@@ -54,8 +54,6 @@ Stream Manipulation
   encoder flushes the stream, the decoder should align it to ensure
   synchronization between encoder and decoder.  The number of bits skipped,
   if any, is returned.
-
------
 
 .. _ll-encoder:
 
@@ -78,7 +76,7 @@ compressed storage for the block being encoded, or zero upon failure.
 
   Encode 1D contiguous block of 4 values.
 
------
+----
 
 .. c:function:: uint zfp_encode_block_strided_int32_1(zfp_stream* stream, const int32* p, int sx)
 .. c:function:: uint zfp_encode_block_strided_int64_1(zfp_stream* stream, const int64* p, int sx)
@@ -87,7 +85,7 @@ compressed storage for the block being encoded, or zero upon failure.
 
   Encode 1D complete block from strided array with stride *sx*.
 
------
+----
 
 .. c:function:: uint zfp_encode_partial_block_strided_int32_1(zfp_stream* stream, const int32* p, uint nx, int sx)
 .. c:function:: uint zfp_encode_partial_block_strided_int64_1(zfp_stream* stream, const int64* p, uint nx, int sx)
@@ -95,8 +93,6 @@ compressed storage for the block being encoded, or zero upon failure.
 .. c:function:: uint zfp_encode_partial_block_strided_double_1(zfp_stream* stream, const double* p, uint nx, int sx)
 
   Encode 1D partial block of size *nx* from strided array with stride *sx*.
-
------
 
 .. _ll-2d-encoder:
 
@@ -110,7 +106,7 @@ compressed storage for the block being encoded, or zero upon failure.
 
   Encode 2D contiguous block of |4by4| values.
 
------
+----
 
 .. c:function:: uint zfp_encode_block_strided_int32_2(zfp_stream* stream, const int32* p, int sx, int sy)
 .. c:function:: uint zfp_encode_block_strided_int64_2(zfp_stream* stream, const int64* p, int sx, int sy)
@@ -119,7 +115,7 @@ compressed storage for the block being encoded, or zero upon failure.
 
   Encode 2D complete block from strided array with strides *sx* and *sy*.
 
------
+----
 
 .. c:function:: uint zfp_encode_partial_block_strided_int32_2(zfp_stream* stream, const int32* p, uint nx, uint ny, int sx, int sy)
 .. c:function:: uint zfp_encode_partial_block_strided_int64_2(zfp_stream* stream, const int64* p, uint nx, uint ny, int sx, int sy)
@@ -128,8 +124,6 @@ compressed storage for the block being encoded, or zero upon failure.
 
   Encode 2D partial block of size *nx* |times| *ny* from strided array with
   strides *sx* and *sy*.
-
------
 
 .. _ll-3d-encoder:
 
@@ -143,7 +137,7 @@ compressed storage for the block being encoded, or zero upon failure.
 
   Encode 3D contiguous block of |4by4by4| values.
 
------
+----
 
 .. c:function:: uint zfp_encode_block_strided_int32_3(zfp_stream* stream, const int32* p, int sx, int sy, int sz)
 .. c:function:: uint zfp_encode_block_strided_int64_3(zfp_stream* stream, const int64* p, int sx, int sy, int sz)
@@ -153,7 +147,7 @@ compressed storage for the block being encoded, or zero upon failure.
   Encode 3D complete block from strided array with strides *sx*, *sy*, and
   *sz*.
 
------
+----
 
 .. c:function:: uint zfp_encode_partial_block_strided_int32_3(zfp_stream* stream, const int32* p, uint nx, uint ny, uint nz, int sx, int sy, int sz)
 .. c:function:: uint zfp_encode_partial_block_strided_int64_3(zfp_stream* stream, const int64* p, uint nx, uint ny, uint nz, int sx, int sy, int sz)
@@ -162,8 +156,6 @@ compressed storage for the block being encoded, or zero upon failure.
 
   Encode 3D partial block of size *nx* |times| *ny* |times| *nz* from strided
   array with strides *sx*, *sy*, and *sz*.
-
------
 
 .. _ll-4d-encoder:
 
@@ -177,7 +169,7 @@ compressed storage for the block being encoded, or zero upon failure.
 
   Encode 4D contiguous block of |4by4by4by4| values.
 
------
+----
 
 .. c:function:: uint zfp_encode_block_strided_int32_4(zfp_stream* stream, const int32* p, int sx, int sy, int sz, int sw)
 .. c:function:: uint zfp_encode_block_strided_int64_4(zfp_stream* stream, const int64* p, int sx, int sy, int sz, int sw)
@@ -187,7 +179,7 @@ compressed storage for the block being encoded, or zero upon failure.
   Encode 4D complete block from strided array with strides *sx*, *sy*, *sz*, and
   *sw*.
 
------
+----
 
 .. c:function:: uint zfp_encode_partial_block_strided_int32_4(zfp_stream* stream, const int32* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw)
 .. c:function:: uint zfp_encode_partial_block_strided_int64_4(zfp_stream* stream, const int64* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw)
@@ -196,8 +188,6 @@ compressed storage for the block being encoded, or zero upon failure.
 
   Encode 4D partial block of size *nx* |times| *ny* |times| *nz* |times| *nw*
   from strided array with strides *sx*, *sy*, *sz*, and *sw*.
-
------
 
 .. _ll-decoder:
 
@@ -220,7 +210,7 @@ further details.
 
   Decode 1D contiguous block of 4 values.
 
------
+----
 
 .. c:function:: uint zfp_decode_block_strided_int32_1(zfp_stream* stream, int32* p, int sx)
 .. c:function:: uint zfp_decode_block_strided_int64_1(zfp_stream* stream, int64* p, int sx)
@@ -229,7 +219,7 @@ further details.
 
   Decode 1D complete block to strided array with stride *sx*.
 
------
+----
 
 .. c:function:: uint zfp_decode_partial_block_strided_int32_1(zfp_stream* stream, int32* p, uint nx, int sx)
 .. c:function:: uint zfp_decode_partial_block_strided_int64_1(zfp_stream* stream, int64* p, uint nx, int sx)
@@ -237,8 +227,6 @@ further details.
 .. c:function:: uint zfp_decode_partial_block_strided_double_1(zfp_stream* stream, double* p, uint nx, int sx)
 
   Decode 1D partial block of size *nx* to strided array with stride *sx*.
-
------
 
 .. _ll-2d-decoder:
 
@@ -252,7 +240,7 @@ further details.
 
   Decode 2D contiguous block of |4by4| values.
 
------
+----
 
 .. c:function:: uint zfp_decode_block_strided_int32_2(zfp_stream* stream, int32* p, int sx, int sy)
 .. c:function:: uint zfp_decode_block_strided_int64_2(zfp_stream* stream, int64* p, int sx, int sy)
@@ -261,7 +249,7 @@ further details.
 
   Decode 2D complete block to strided array with strides *sx* and *sy*.
 
------
+----
 
 .. c:function:: uint zfp_decode_partial_block_strided_int32_2(zfp_stream* stream, int32* p, uint nx, uint ny, int sx, int sy)
 .. c:function:: uint zfp_decode_partial_block_strided_int64_2(zfp_stream* stream, int64* p, uint nx, uint ny, int sx, int sy)
@@ -270,8 +258,6 @@ further details.
 
   Decode 2D partial block of size *nx* |times| *ny* to strided array with
   strides *sx* and *sy*.
-
------
 
 .. _ll-3d-decoder:
 
@@ -285,7 +271,7 @@ further details.
 
   Decode 3D contiguous block of |4by4by4| values.
 
------
+----
 
 .. c:function:: uint zfp_decode_block_strided_int32_3(zfp_stream* stream, int32* p, int sx, int sy, int sz)
 .. c:function:: uint zfp_decode_block_strided_int64_3(zfp_stream* stream, int64* p, int sx, int sy, int sz)
@@ -294,7 +280,7 @@ further details.
 
   Decode 3D complete block to strided array with strides *sx*, *sy*, and *sz*.
 
------
+----
 
 .. c:function:: uint zfp_decode_partial_block_strided_int32_3(zfp_stream* stream, int32* p, uint nx, uint ny, uint nz, int sx, int sy, int sz)
 .. c:function:: uint zfp_decode_partial_block_strided_int64_3(zfp_stream* stream, int64* p, uint nx, uint ny, uint nz, int sx, int sy, int sz)
@@ -303,8 +289,6 @@ further details.
 
   Decode 3D partial block of size *nx* |times| *ny* |times| *nz* to strided
   array with strides *sx*, *sy*, and *sz*.
-
------
 
 .. _ll-4d-decoder:
 
@@ -318,7 +302,7 @@ further details.
 
   Decode 4D contiguous block of |4by4by4by4| values.
 
------
+----
 
 .. c:function:: uint zfp_decode_block_strided_int32_4(zfp_stream* stream, int32* p, int sx, int sy, int sz, int sw)
 .. c:function:: uint zfp_decode_block_strided_int64_4(zfp_stream* stream, int64* p, int sx, int sy, int sz, int sw)
@@ -327,7 +311,7 @@ further details.
 
   Decode 4D complete block to strided array with strides *sx*, *sy*, *sz*, and *sw*.
 
------
+----
 
 .. c:function:: uint zfp_decode_partial_block_strided_int32_4(zfp_stream* stream, int32* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw)
 .. c:function:: uint zfp_decode_partial_block_strided_int64_4(zfp_stream* stream, int64* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw)
@@ -336,8 +320,6 @@ further details.
 
   Decode 4D partial block of size *nx* |times| *ny* |times| *nz* |times| *nw*
   to strided array with strides *sx*, *sy*, *sz*, and *sw*.
-
------
 
 .. _ll-utilities:
 
@@ -351,7 +333,7 @@ are preferred over simple casting since they eliminate the redundant leading
 zeros that would otherwise have to be compressed, and they apply the
 appropriate bias for unsigned integer data.
 
------
+----
 
 .. c:function:: void zfp_promote_int8_to_int32(int32* oblock, const int8* iblock, uint dims)
 .. c:function:: void zfp_promote_uint8_to_int32(int32* oblock, const uint8* iblock, uint dims)
@@ -360,7 +342,7 @@ appropriate bias for unsigned integer data.
 
   Convert *dims*-dimensional contiguous block to 32-bit integer type.
 
------
+----
 
 .. c:function:: void zfp_demote_int32_to_int8(int8* oblock, const int32* iblock, uint dims)
 .. c:function:: void zfp_demote_int32_to_uint8(uint8* oblock, const int32* iblock, uint dims)

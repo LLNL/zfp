@@ -68,8 +68,6 @@ to the pointer being acted upon.
 
 .. cpp:namespace:: zfp::arrayANY
 
-----
-
 .. cpp:function:: pointer pointer::operator=(const pointer& q)
 .. cpp:function:: const_pointer const_pointer::operator=(const const_pointer& q)
 
