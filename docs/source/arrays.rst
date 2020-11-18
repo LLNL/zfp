@@ -1,13 +1,13 @@
 .. include:: defs.rst
 .. _arrays:
 
-Compressed-Array Classes
-========================
+Compressed-Array C++ Classes
+============================
 
 .. cpp:namespace:: zfp
 
-|zfp|'s compressed arrays are C++ classes, plus C wrappers around these
-classes, that implement random-accessible single- and multi-dimensional
+|zfp|'s compressed arrays are C++ classes, plus :ref:`C wrappers <cfp>` around
+these classes, that implement random-accessible single- and multi-dimensional
 floating-point arrays whose storage size, specified in number of bits per
 array element, is set by the user.  Such arbitrary storage is achieved via
 |zfp|'s lossy :ref:`fixed-rate compression <mode-fixed-rate>` mode, by
@@ -51,19 +51,12 @@ The following sections are available:
 * :ref:`pointers`
 * :ref:`iterators`
 * :ref:`views`
-* :ref:`cfp`
-
-  * :ref:`Arrays <cfp_arrays>`
-  * :ref:`References <cfp_references>`
-  * :ref:`Pointers <cfp_pointers>`
-  * :ref:`Iterators <cfp_iterators>`
-
 
 
 .. _array_classes:
 
-Array Classes
--------------
+Arrays
+------
 
 There are eight array classes for 1D, 2D, 3D, and 4D arrays, each of which
 can represent single- or double-precision values.

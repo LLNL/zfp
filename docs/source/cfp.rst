@@ -1,15 +1,16 @@
+.. include:: defs.rst
 .. index::
    single: cfp
 .. _cfp:
 
-C Bindings
-----------
+Compressed-Array C Bindings
+===========================
 
 .. cpp:namespace:: zfp
 
 |zfp| |cfprelease| adds |cfp|: C language bindings for compressed arrays
-via wrappers around the C++ classes.  |zfp| |crpirelease| modifies its
-API (see below).
+via wrappers around the :ref:`C++ classes <arrays>`.  |zfp| |crpirelease|
+modifies its API (see below).
 
 The C API has been designed to facilitate working with compressed arrays
 without the benefits of C++ operator overloading and self-aware objects,
@@ -74,8 +75,8 @@ and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
 
 .. _cfp_arrays:
 
-|cfp| Arrays
-^^^^^^^^^^^^
+Arrays
+------
 
 |cfp| implements eight array types for 1D, 2D, 3D, and 4D arrays of floats and
 doubles.  These array types share many functions that have the same signature.
@@ -336,8 +337,8 @@ not actually part of the |cfp| API.
   See :cpp:func:`array::compressed_data`.
 
 
-|cfp| Array Accessors
-^^^^^^^^^^^^^^^^^^^^^
+Array Accessors
+---------------
 
 .. cpp:namespace:: zfp::arrayANY
   
@@ -363,8 +364,8 @@ shorten the documentation.
 
 .. _cfp_references:
 
-|cfp| References
-^^^^^^^^^^^^^^^^
+References
+----------
 
 |cfp| proxy references wrap the C++ :ref:`reference <references>` classes.
 References are constructed via :c:func:`cfp.array.ref`, 
@@ -470,8 +471,8 @@ References are constructed via :c:func:`cfp.array.ref`,
 
 .. _cfp_pointers:
 
-|cfp| Pointers
-^^^^^^^^^^^^^^
+Pointers
+--------
 
 |cfp| proxy pointers wrap the C++ :ref:`pointer <pointers>` classes.
 Pointers are constructed via :c:func:`cfp.array.ptr` and
@@ -651,8 +652,8 @@ and are themselves not modified by these functions.
 
 .. _cfp_iterators:
 
-|cfp| Iterators
-^^^^^^^^^^^^^^^
+Iterators
+---------
 
 |cfp| iterators wrap the C++ :ref:`iterator <iterators>` classes.
 All iterators are :ref:`passed by value <cfp_rpi_value_semantics>` and

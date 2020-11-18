@@ -17,9 +17,10 @@
    high-level-api
    low-level-api
    bit-stream
-   arrays
    python
    zforp
+   arrays
+   cfp
    tutorial
    zfpcmd
    examples
