@@ -279,6 +279,21 @@ Types
   the dimensions or specify strides to properly describe the memory layout.
   See this :ref:`discussion <p-dimensions>` for further details.
 
+----
+
+.. c:type:: zfp_bool
+
+  Boolean type and associated literals.
+  ::
+
+    typedef int zfp_bool;
+
+    typedef enum {
+      zfp_false = 0,         // false
+      zfp_true = !zfp_false; // true
+    };
+
+
 .. _hl-data:
 
 Constants
