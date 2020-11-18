@@ -52,10 +52,11 @@ The following sections are available:
 * :ref:`iterators`
 * :ref:`views`
 * :ref:`cfp`
-   * :ref:`Arrays <cfp_arrays>`
-   * :ref:`References <cfp_references>`
-   * :ref:`Pointers <cfp_pointers>`
-   * :ref:`Iterators <cfp_iterators>`
+
+  * :ref:`Arrays <cfp_arrays>`
+  * :ref:`References <cfp_references>`
+  * :ref:`Pointers <cfp_pointers>`
+  * :ref:`Iterators <cfp_iterators>`
 
 
 
@@ -185,8 +186,6 @@ The following methods are common to 1D, 2D, 3D, and 4D arrays, but are
 implemented in the array class specific to each dimensionality rather than
 in the base class.
 
-----
-
 .. cpp:function:: size_t array::size() const
 
   Total number of elements in array, e.g., *nx* |times| *ny* |times| *nz* for
@@ -197,6 +196,8 @@ in the base class.
 .. cpp:function:: size_t array::cache_size() const
 
   Return the cache size in number of bytes.
+
+----
 
 .. cpp:function:: void array::set_cache_size(size_t bytes)
 
@@ -256,10 +257,14 @@ in the base class.
   Return mutable iterator to end of array.  As with STL iterators, the end
   points to a virtual element just past the last valid array element.
 
+----
+
 .. cpp:function:: const_iterator array::begin() const
 .. cpp:function:: const_iterator array::cbegin() const
 
   Return const iterator to beginning of array.
+
+----
 
 .. cpp:function:: const_iterator array::end() const
 .. cpp:function:: const_iterator array::cend() const
@@ -269,8 +274,6 @@ in the base class.
 .. note::
   Const :ref:`references <references>`, :ref:`pointers <pointers>`, and
   :ref:`iterators <iterators>` are available as of |zfp| |crpirelease|.  
-
-----
 
 1D, 2D, 3D, and 4D Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -285,8 +288,6 @@ type is omitted for readability, e.g.,
 :code:`class array1` is used as shorthand for
 :code:`template <typename Scalar> class array1`.  Wherever the type
 :code:`Scalar` appears, it refers to this template argument.
-
-----
 
 ..
   .. cpp:class:: template<typename Scalar> array1 : public array
@@ -455,8 +456,6 @@ type is omitted for readability, e.g.,
 
   Return :ref:`proxy reference <references>` to scalar stored at
   multi-dimensional index given by *i*, *j*, *k*, and *l* (mutator).
-
-----
 
 .. include:: caching.inc
 .. include:: serialization.inc

@@ -92,8 +92,6 @@ array or to a rectangular subset of an array.  Note that like
 references, pointers, and iterators, views are types nested within
 the arrays that they reference.
 
-----
-
 ..
   .. cpp:class:: template<typename Scalar> array1::const_view
   .. cpp:class:: template<typename Scalar> array2::const_view
@@ -209,12 +207,8 @@ the arrays that they reference.
 
   Const iterator to end of view.
 
-----
-
 There are a number of common methods inherited from a base class,
 :code:`preview`, further up the class hierarchy.
-
-----
 
 .. cpp:function:: double arrayANY::const_view::rate() const
 
@@ -226,8 +220,6 @@ There are a number of common methods inherited from a base class,
 
   Total number of elements in view, e.g., *nx* |times| *ny* |times| *nz* for
   3D views.
-
-----
 
 With the above definitions, the following example shows how a 2D view is
 constructed and accessed::
@@ -246,8 +238,6 @@ Mutable view
 The basic mutable :code:`view` derives from the :code:`const_view` but
 adds operators for write-access.  Its constructors are similar to those
 for the :code:`const_view`.
-
-----
 
 ..
   .. cpp:class:: template<typename Scalar> array1::view
@@ -314,8 +304,6 @@ flat indices.
 Flat views are available only for 2D, 3D, and 4D arrays.  The basic mutable
 view, :cpp:class:`array1::view`, for 1D arrays can be thought of as
 either a flat or a nested view.
-
-----
 
 ..
   .. cpp:class:: template<typename Scalar> array2::flat_view
@@ -410,8 +398,6 @@ nested view to in effect provide nested array indexing::
   assert(a[32] == v[0][1][2]); // OK: v supports nested indexing
   zfp::array2d b(v[5]); // define and deep copy 30x20 2D slice of a
   assert(a(2, 1, 5) == b(2, 1)); // OK: multidimensional indexing
-
-----
 
 ..
   .. cpp:class:: template<typename Scalar> array2::nested_view1
@@ -629,8 +615,6 @@ example::
 
 Slicing adds the following templated array constructors.
 
-----
-
 .. cpp:function:: template<class View> array1::array1(const View& v)
 .. cpp:function:: template<class View> array2::array2(const View& v)
 .. cpp:function:: template<class View> array3::array3(const View& v)
@@ -686,8 +670,6 @@ see the :ref:`diffusion <ex-diffusion>` code example.
 Private views support only multidimensional indexing, i.e., they
 are neither flat nor nested.
 
-----
-
 ..
   .. cpp:class:: template<typename Scalar> array1::private_const_view
   .. cpp:class:: template<typename Scalar> array2::private_const_view
@@ -740,11 +722,7 @@ are neither flat nor nested.
 
   Return const reference to scalar element of a 1D, 2D, 3D, or 4D array.
 
-----
-
 The following functions are common among all dimensionalities:
-
-----
 
 .. cpp:function:: size_t arrayANY::private_const_view::cache_size() const
 .. cpp:function:: void arrayANY::private_const_view::set_cache_size(size_t csize)
@@ -801,8 +779,6 @@ cache coherence with mutable and immutable private views.
 The :code:`private_view` class inherits all public functions from
 :code:`private_const_view`.
 
-----
-
 ..
   .. cpp:class:: template<typename Scalar> array1::private_view
   .. cpp:class:: template<typename Scalar> array2::private_view
@@ -855,11 +831,7 @@ The :code:`private_view` class inherits all public functions from
 
   Return reference to a scalar element of a 1D, 2D, 3D, or 4D array.
 
-----
-
 The following functions are common among all dimensionalities:
-
-----
 
 .. cpp:function:: void arrayANY::private_view::partition(size_t index, size_t count)
 
