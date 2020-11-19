@@ -75,6 +75,7 @@ and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
 The following sections are available:
 
 * :ref:`cfp_arrays`
+* :ref:`cfp_serialization`
 * :ref:`cfp_references`
 * :ref:`cfp_pointers`
 * :ref:`cfp_iterators`
@@ -154,6 +155,7 @@ not actually part of the |cfp| API.
   .. c:struct:: array3d
   .. c:struct:: array4f
   .. c:struct:: array4d
+  .. c:struct:: header
 
   Nested C "namespaces" for encapsulating the |cfp| API.  The outer
   :c:struct:`cfp` namespace may be redefined at compile-time via the macro
@@ -388,6 +390,98 @@ not actually part of the |cfp| API.
   see :cpp:func:`array::end()`.
 
 
+.. _cfp_serialization:
+
+Serialization
+-------------
+
+.. cpp:namespace:: zfp
+
+|zfp| |crpirelease| adds |cfp| array :ref:`serialization <serialization>`.
+Like |zfp|'s C++ arrays, |cfp| arrays can be serialized and deserialized to
+and from sequential storage.  Currently, |cfp| provides no factory function,
+so the caller must know which type of array (dimensionality and scalar type)
+to construct.  As with the C++ arrays, (de)serialization is done with the
+assistance of a header class, :c:type:`cfp_header`.  This header is
+dynamically allocated and must be explicitly destructed via
+:c:func:`cfp.header.dtor`.
+
+.. c:type:: cfp_header
+
+  Wrapper around :cpp:class:`array::header`.
+
+----
+
+.. c:function:: cfp_header cfp.header.ctor_buffer(uint dims, zfp_type scalar_type, const void* data, size_t bytes)
+
+  Construct a header for an array of *dims* dimensions and given *scalar_type*
+  from header *data* buffer of size *bytes*.
+
+----
+
+.. c:function:: cfp_header cfp.header.ctor_array1f(const cfp_array1f a);
+.. c:function:: cfp_header cfp.header.ctor_array1d(const cfp_array1d a);
+.. c:function:: cfp_header cfp.header.ctor_array2f(const cfp_array2f a);
+.. c:function:: cfp_header cfp.header.ctor_array2d(const cfp_array2d a);
+.. c:function:: cfp_header cfp.header.ctor_array3f(const cfp_array3f a);
+.. c:function:: cfp_header cfp.header.ctor_array3d(const cfp_array3d a);
+.. c:function:: cfp_header cfp.header.ctor_array4f(const cfp_array4f a);
+.. c:function:: cfp_header cfp.header.ctor_array4d(const cfp_array4d a);
+
+  Construct a header that describes the metadata of an existing array *a*.
+
+----
+
+.. c:function:: void cfp.header.dtor(cfp_header self);
+
+  Destructor.  Deallocates all data associated with the header.  The user
+  must call the destructor to avoid memory leaks.
+
+----
+
+.. cpp:namespace:: zfp::array
+
+.. c:function:: zfp_type cfp.header.scalar_type(const cfp_header self);
+
+  Scalar type associated with array.  See :cpp:func:`header::scalar_type`.
+
+----
+
+.. c:function:: uint cfp.header.dimensionality(const cfp_header self);
+
+  Dimensionality associated with array.
+  See :cpp:func:`header::dimensionality`.
+
+----
+
+.. c:function:: size_t cfp.header.size_x(const cfp_header self);
+.. c:function:: size_t cfp.header.size_y(const cfp_header self);
+.. c:function:: size_t cfp.header.size_z(const cfp_header self);
+.. c:function:: size_t cfp.header.size_w(const cfp_header self);
+
+  :ref:`Array dimensions <header_dims>`.  Unused dimensions have a size of zero.
+
+----
+
+.. c:function:: double cfp.header.rate(const cfp_header self);
+
+  Rate in bits/value.  See :cpp:func:`header::rate`.
+
+----
+
+.. c:function:: const void* cfp.header.data(const cfp_header self);
+
+  Pointer to header data buffer needed for serializing the header.
+  See :cpp:func:`header::data`.
+
+----
+
+.. c:function:: size_t cfp.header.size(const cfp_header self);
+
+  Size of header data buffer needed for serializing the header.
+  See :cpp:func:`header::size`.
+
+
 Array Accessors
 ---------------
 
@@ -411,7 +505,6 @@ shorten the documentation.
   :code:`p = cfp.array.pointer.inc(p)`. Note that while the references,
   pointers, and iterators are not themselves modified, the array elements
   that they reference can be modified.
-
 
 .. _cfp_references:
 
