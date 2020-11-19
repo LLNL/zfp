@@ -456,4 +456,3 @@ type is omitted for readability, e.g.,
 .. include:: pointers.inc
 .. include:: iterators.inc
 .. include:: views.inc
-.. include:: cfp.inc
