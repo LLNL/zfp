@@ -1,0 +1,2949 @@
+diff --git a/include/zfp.h b/include/zfp.h
+index 0085ce6..7502f50 100644
+--- a/include/zfp.h
++++ b/include/zfp.h
+@@ -61,6 +61,10 @@
+ #define ZFP_HEADER_MAX_BITS 148 /* max number of header bits */
+ #define ZFP_MODE_SHORT_MAX  ((1u << ZFP_MODE_SHORT_BITS) - 2)
+ 
++/* index constants */
++/* TODO: decide if we want to have this constant or adjustable, and how */
++#define PARTITION_SIZE  32  /* number of blocks in a partition for hybrid index */
++
+ /* types ------------------------------------------------------------------- */
+ 
+ /* Boolean constants */
+@@ -78,6 +82,14 @@ typedef enum {
+   zfp_exec_cuda   = 2  /* CUDA parallel execution */
+ } zfp_exec_policy;
+ 
++/* index type */
++typedef enum {
++  zfp_index_none = 0,   /* no index */
++  zfp_index_offset = 1, /* offsets (OMP and CUDA decompression) */
++  zfp_index_length = 2, /* lengths */
++  zfp_index_hybrid = 3  /* hyrbid (CUDA decomrpession) */
++} zfp_index_type;
++
+ /* OpenMP execution parameters */
+ typedef struct {
+   uint threads;    /* number of requested threads */
+@@ -94,6 +106,14 @@ typedef struct {
+   zfp_exec_params params; /* execution parameters */
+ } zfp_execution;
+ 
++/* index for parallel decompression */
++typedef struct {
++  zfp_index_type type; /* zfp_index_none if no index */
++  void* data;          /* NULL if no index */
++  size_t size;         /* byte size of data (0 if no index) */
++  uint granularity;    /* Granularity of the index */
++} zfp_index;
++
+ /* compressed stream; use accessors to get/set members */
+ typedef struct {
+   uint minbits;       /* minimum number of bits to store per block */
+@@ -102,6 +122,7 @@ typedef struct {
+   int minexp;         /* minimum floating point bit plane number to store */
+   bitstream* stream;  /* compressed bit stream */
+   zfp_execution exec; /* execution policy and parameters */
++  zfp_index* index;   /* index for parallel decompression */
+ } zfp_stream;
+ 
+ /* compression mode */
+@@ -267,6 +288,45 @@ zfp_stream_set_params(
+   int minexp          /* minimum base-2 exponent; error <= 2^minexp */
+ );
+ 
++/* set size of buffer for compressed data */
++void
++zfp_stream_set_size(
++  zfp_stream* zfp,   /* compressed stream */
++  size_t size        /* size of the buffer */
++);
++
++/* set index of the stream */
++void
++zfp_stream_set_index(
++  zfp_stream* zfp,  /* compressed stream */
++  zfp_index* index  /* index */
++);
++
++/* allocate index struct */
++zfp_index* /* pointer to default uninitialized index */
++zfp_index_create();
++
++/* set the size of the index */
++void
++zfp_index_set_type(
++  zfp_index* index,     /* the index */
++  zfp_index_type type,  /* type of the index */
++  uint granularity       /* granularity of the index */
++);
++
++/* set the data of the index */
++void
++zfp_index_set_data(
++  zfp_index* index, /* index */
++  void* data,       /* buffer for index data */
++  size_t size       /* size of the index data buffer */
++);
++
++void
++zfp_index_free(
++  zfp_index* index
++);
++
+ /* high-level API: execution policy ---------------------------------------- */
+ 
+ /* current execution policy */
+diff --git a/src/cuda_zfp/cuZFP.cu b/src/cuda_zfp/cuZFP.cu
+index 657976e..be3d506 100644
+--- a/src/cuda_zfp/cuZFP.cu
++++ b/src/cuda_zfp/cuZFP.cu
+@@ -68,31 +68,27 @@ bool is_contigous2d(const uint dims[3], const int3 &stride, long long int &offse
+ bool is_contigous1d(uint dim, const int &stride, long long int &offset)
+ {
+   offset = 0;
+-  if(stride < 0) offset = stride * (int(dim) - 1);
++  if (stride < 0) offset = stride * (int(dim) - 1);
+   return std::abs(stride) == 1;
+ }
+ 
+ bool is_contigous(const uint dims[3], const int3 &stride, long long int &offset)
+ {
+   int d = 0;
+-  
+-  if(dims[0] != 0) d++;
+-  if(dims[1] != 0) d++;
+-  if(dims[2] != 0) d++;
+ 
+-  if(d == 3)
+-  {
++  if (dims[0] != 0) d++;
++  if (dims[1] != 0) d++;
++  if (dims[2] != 0) d++;
++
++  if (d == 3) {
+     return is_contigous3d(dims, stride, offset);
+   }
+-  else if(d == 2)
+-  {
++  else if (d == 2) {
+    return is_contigous2d(dims, stride, offset);
+   }
+-  else
+-  {
++  else {
+     return is_contigous1d(dims[0], stride.x, offset);
+   } 
+-
+ }
+ //
+ // encode expects device pointers
+@@ -100,13 +96,10 @@ bool is_contigous(const uint dims[3], const int3 &stride, long long int &offset)
+ template<typename T>
+ size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_stream)
+ {
+-
+   int d = 0;
+   size_t len = 1;
+-  for(int i = 0; i < 3; ++i)
+-  {
+-    if(dims[i] != 0)
+-    {
++  for (int i = 0; i < 3; ++i) {
++    if (dims[i] != 0) {
+       d++;
+       len *= dims[i];
+     }
+@@ -114,22 +107,19 @@ size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_
+ 
+   ErrorCheck errors;
+   size_t stream_size = 0;
+-  if(d == 1)
+-  {
++  if (d == 1) {
+     int dim = dims[0];
+     int sx = stride.x;
+     stream_size = cuZFP::encode1<T>(dim, sx, d_data, d_stream, bits_per_block); 
+   }
+-  else if(d == 2)
+-  {
++  else if (d == 2) {
+     uint2 ndims = make_uint2(dims[0], dims[1]);
+     int2 s;
+     s.x = stride.x; 
+     s.y = stride.y; 
+     stream_size = cuZFP::encode2<T>(ndims, s, d_data, d_stream, bits_per_block); 
+   }
+-  else if(d == 3)
+-  {
++  else if (d == 3) {
+     int3 s;
+     s.x = stride.x; 
+     s.y = stride.y; 
+@@ -139,116 +129,123 @@ size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_
+   }
+ 
+   errors.chk("Encode");
+-  
++
+   return stream_size; 
+ }
+ 
+ template<typename T>
+-size_t decode(uint ndims[3], int3 stride, int bits_per_block, Word *stream, T *out)
++size_t decode(uint ndims[3], int3 stride, Word *stream, Word *index, T *out, int decode_parameter, uint granularity, zfp_mode mode, zfp_index_type index_type)
+ {
+-
+   int d = 0;
+   size_t out_size = 1;
+   size_t stream_bytes = 0;
+-  for(int i = 0; i < 3; ++i)
+-  {
+-    if(ndims[i] != 0)
+-    {
++  for (int i = 0; i < 3; ++i) {
++    if (ndims[i] != 0) {
+       d++;
+       out_size *= ndims[i];
+     }
+   }
+ 
+-  if(d == 3)
+-  {
++  if (d == 3) {
+     uint3 dims = make_uint3(ndims[0], ndims[1], ndims[2]);
+-
+     int3 s;
+     s.x = stride.x; 
+     s.y = stride.y; 
+     s.z = stride.z; 
+-
+-    stream_bytes = cuZFP::decode3<T>(dims, s, stream, out, bits_per_block); 
+-  }
+-  else if(d == 1)
+-  {
+-    uint dim = ndims[0];
+-    int sx = stride.x;
+-
+-    stream_bytes = cuZFP::decode1<T>(dim, sx, stream, out, bits_per_block); 
+-
++    stream_bytes = cuZFP::decode3<T>(dims, s, stream, index, out, decode_parameter, granularity, mode, index_type);
+   }
+-  else if(d == 2)
+-  {
++  else if (d == 2) {
+     uint2 dims;
+     dims.x = ndims[0];
+     dims.y = ndims[1];
+-
+     int2 s;
+     s.x = stride.x; 
+     s.y = stride.y; 
+-
+-    stream_bytes = cuZFP::decode2<T>(dims, s, stream, out, bits_per_block); 
++    stream_bytes = cuZFP::decode2<T>(dims, s, stream, index, out, decode_parameter, granularity, mode, index_type);
++  }
++  else if (d == 1) {
++    uint dim = ndims[0];
++    int sx = stride.x;
++    stream_bytes = cuZFP::decode1<T>(dim, sx, stream, index, out, decode_parameter, granularity, mode, index_type);
+   }
+   else std::cerr<<" d ==  "<<d<<" not implemented\n";
+  
+   return stream_bytes;
+ }
+ 
+-Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
++Word *setup_device_stream_compress(zfp_stream *stream, const zfp_field *field)
+ {
+   bool stream_device = cuZFP::is_gpu_ptr(stream->stream->begin);
+   assert(sizeof(word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
+ 
+-  if(stream_device)
+-  {
++  if (stream_device) {
+     return (Word*) stream->stream->begin;
+   }
+ 
+   Word *d_stream = NULL;
+   size_t max_size = zfp_stream_maximum_size(stream, field);
+-  cudaMalloc(&d_stream, max_size);
++  if (cudaMalloc(&d_stream, max_size) != cudaSuccess) {
++    std::cerr<<"failed to allocate device memory for stream\n";
++  }
+   return d_stream;
+ }
+ 
+-Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
++Word *setup_device_stream_decompress(zfp_stream *stream, const zfp_field *field)
+ {
+   bool stream_device = cuZFP::is_gpu_ptr(stream->stream->begin);
+   assert(sizeof(word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
+ 
+-  if(stream_device)
+-  {
++  if (stream_device) {
+     return (Word*) stream->stream->begin;
+   }
+ 
+   Word *d_stream = NULL;
+   //TODO: change maximum_size to compressed stream size
+   size_t size = zfp_stream_maximum_size(stream, field);
+-  cudaMalloc(&d_stream, size);
+-  cudaMemcpy(d_stream, stream->stream->begin, size, cudaMemcpyHostToDevice);
++  if (cudaMalloc(&d_stream, size) != cudaSuccess) {
++    std::cerr<<"failed to allocate device memory for stream\n";
++  }
++  if (cudaMemcpy(d_stream, stream->stream->begin, size, cudaMemcpyHostToDevice) != cudaSuccess) {
++    std::cerr<<"failed to copy stream from host to device\n";
++  }
+   return d_stream;
+ }
+ 
++Word *setup_device_index(zfp_stream *stream, const size_t size)
++{
++  bool stream_device = cuZFP::is_gpu_ptr(stream->index->data);
++  assert(sizeof(uint64) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
++
++  if (stream_device) {
++    return (Word*) stream->index->data;
++  }
++
++  Word *d_index = NULL;
++  if (cudaMalloc(&d_index, size) != cudaSuccess) {
++    std::cerr<<"failed to allocate device memory for index\n";
++  }
++  if (cudaMemcpy(d_index, stream->index->data, size, cudaMemcpyHostToDevice) != cudaSuccess) {
++    std::cerr<<"failed to copy stream from host to device\n";
++  }
++  return d_index;
++}
++
+ void * offset_void(zfp_type type, void *ptr, long long int offset)
+ {
+   void * offset_ptr = NULL;
+-  if(type == zfp_type_float)
+-  {
++  if (type == zfp_type_float) {
+     float* data = (float*) ptr;
+     offset_ptr = (void*)(&data[offset]);
+   }
+-  else if(type == zfp_type_double)
+-  {
++  else if (type == zfp_type_double) {
+     double* data = (double*) ptr;
+     offset_ptr = (void*)(&data[offset]);
+   }
+-  else if(type == zfp_type_int32)
+-  {
++  else if (type == zfp_type_int32) {
+     int * data = (int*) ptr;
+     offset_ptr = (void*)(&data[offset]);
+   }
+-  else if(type == zfp_type_int64)
+-  {
++  else if (type == zfp_type_int64) {
+     long long int * data = (long long int*) ptr;
+     offset_ptr = (void*)(&data[offset]);
+   }
+@@ -259,12 +256,11 @@ void *setup_device_field_compress(const zfp_field *field, const int3 &stride, lo
+ {
+   bool field_device = cuZFP::is_gpu_ptr(field->data);
+ 
+-  if(field_device)
+-  {
++  if (field_device) {
+     offset = 0;
+     return field->data;
+   }
+-  
++
+   uint dims[3];
+   dims[0] = field->nx;
+   dims[1] = field->ny;
+@@ -273,25 +269,23 @@ void *setup_device_field_compress(const zfp_field *field, const int3 &stride, lo
+   size_t type_size = zfp_type_size(field->type);
+ 
+   size_t field_size = 1;
+-  for(int i = 0; i < 3; ++i)
+-  {
+-    if(dims[i] != 0)
+-    {
++  for (int i = 0; i < 3; ++i) {
++    if (dims[i] != 0) {
+       field_size *= dims[i];
+     }
+   }
+ 
+   bool contig = internal::is_contigous(dims, stride, offset);
+-  
++
+   void * host_ptr = offset_void(field->type, field->data, offset);;
+ 
+   void *d_data = NULL;
+-  if(contig)
+-  {
++  if (contig) {
+     size_t field_bytes = type_size * field_size;
+-    cudaMalloc(&d_data, field_bytes);
+-
+-    cudaMemcpy(d_data, host_ptr, field_bytes, cudaMemcpyHostToDevice);
++    if (cudaMalloc(&d_data, field_bytes) != cudaSuccess)
++      std::cerr<<"failed to allocate device memory for field\n";
++    if (cudaMemcpy(d_data, host_ptr, field_bytes, cudaMemcpyHostToDevice) != cudaSuccess)
++      std::cerr<<"failed to copy field from host to device\n";
+   }
+   return offset_void(field->type, d_data, -offset);
+ }
+@@ -300,8 +294,7 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride,
+ {
+   bool field_device = cuZFP::is_gpu_ptr(field->data);
+ 
+-  if(field_device)
+-  {
++  if (field_device) {
+     offset = 0;
+     return field->data;
+   }
+@@ -314,38 +307,37 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride,
+   size_t type_size = zfp_type_size(field->type);
+ 
+   size_t field_size = 1;
+-  for(int i = 0; i < 3; ++i)
+-  {
+-    if(dims[i] != 0)
+-    {
++  for (int i = 0; i < 3; ++i) {
++    if (dims[i] != 0) {
+       field_size *= dims[i];
+     }
+   }
+ 
+   bool contig = internal::is_contigous(dims, stride, offset);
+ 
++  void * host_ptr = offset_void(field->type, field->data, offset);;
++
+   void *d_data = NULL;
+-  if(contig)
+-  {
++  if (contig) {
+     size_t field_bytes = type_size * field_size;
+-    cudaMalloc(&d_data, field_bytes);
++    if (cudaMalloc(&d_data, field_bytes) != cudaSuccess)
++      std::cerr<<"failed to allocate device memory for field\n";
+   }
+   return offset_void(field->type, d_data, -offset);
+ }
+ 
++
+ void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes, long long int offset, zfp_type type)
+ {
+   bool device = cuZFP::is_gpu_ptr(orig_ptr);
+-  if(device)
+-  {
++  if (device) {
+     return;
+   }
+   // from whence it came
+   void *d_offset_ptr = offset_void(type, d_ptr, offset);
+   void *h_offset_ptr = offset_void(type, orig_ptr, offset);
+ 
+-  if(bytes > 0)
+-  {
++  if (bytes > 0) {
+     cudaMemcpy(h_offset_ptr, d_offset_ptr, bytes, cudaMemcpyDeviceToHost);
+   }
+ 
+@@ -362,7 +354,7 @@ cuda_compress(zfp_stream *stream, const zfp_field *field)
+   dims[1] = field->ny;
+   dims[2] = field->nz;
+ 
+-  int3 stride;  
++  int3 stride;
+   stride.x = field->sx ? field->sx : 1;
+   stride.y = field->sy ? field->sy : field->nx;
+   stride.z = field->sz ? field->sz : field->nx * field->ny;
+@@ -371,31 +363,26 @@ cuda_compress(zfp_stream *stream, const zfp_field *field)
+   long long int offset = 0; 
+   void *d_data = internal::setup_device_field_compress(field, stride, offset);
+ 
+-  if(d_data == NULL)
+-  {
++  if (d_data == NULL) {
+     // null means the array is non-contiguous host mem which is not supported
+     return 0;
+   }
+ 
+   Word *d_stream = internal::setup_device_stream_compress(stream, field);
+ 
+-  if(field->type == zfp_type_float)
+-  {
++  if (field->type == zfp_type_float) {
+     float* data = (float*) d_data;
+     stream_bytes = internal::encode<float>(dims, stride, (int)stream->maxbits, data, d_stream);
+   }
+-  else if(field->type == zfp_type_double)
+-  {
++  else if (field->type == zfp_type_double) {
+     double* data = (double*) d_data;
+     stream_bytes = internal::encode<double>(dims, stride, (int)stream->maxbits, data, d_stream);
+   }
+-  else if(field->type == zfp_type_int32)
+-  {
++  else if (field->type == zfp_type_int32) {
+     int * data = (int*) d_data;
+     stream_bytes = internal::encode<int>(dims, stride, (int)stream->maxbits, data, d_stream);
+   }
+-  else if(field->type == zfp_type_int64)
+-  {
++  else if (field->type == zfp_type_int64) {
+     long long int * data = (long long int*) d_data;
+     stream_bytes = internal::encode<long long int>(dims, stride, (int)stream->maxbits, data, d_stream);
+   }
+@@ -412,80 +399,114 @@ cuda_compress(zfp_stream *stream, const zfp_field *field)
+ 
+   return stream_bytes;
+ }
+-  
+-void 
++
++void
+ cuda_decompress(zfp_stream *stream, zfp_field *field)
+ {
+   uint dims[3];
+   dims[0] = field->nx;
+   dims[1] = field->ny;
+   dims[2] = field->nz;
+-   
++
+   int3 stride;  
+   stride.x = field->sx ? field->sx : 1;
+   stride.y = field->sy ? field->sy : field->nx;
+   stride.z = field->sz ? field->sz : field->nx * field->ny;
+ 
+-  size_t decoded_bytes = 0;
+   long long int offset = 0;
+   void *d_data = internal::setup_device_field_decompress(field, stride, offset);
+-  
+-  if(d_data == NULL)
+-  {
++
++  if (d_data == NULL) {
+     // null means the array is non-contiguous host mem which is not supported
+     return;
+   }
+ 
+   Word *d_stream = internal::setup_device_stream_decompress(stream, field);
++  Word *d_index = NULL;
++  zfp_mode mode = zfp_stream_compression_mode(stream);
++
++  /* decode_parametereter differs per execution policy */
++  /* TODO: Decide if we want to pass maxbits, minexp and maxprec for all cases or not */
++  /* TODO: decide if casting the uints maxbits & maxprec to int is acceptable or not */
++  size_t index_size;
++  uint blocks, chunks, granularity;
++  int decode_parameter;
++  zfp_index_type index_type = zfp_index_none;
++  if (mode == zfp_mode_fixed_rate) {
++    decode_parameter = (int)stream->maxbits;
++    granularity = 1;
++  }
++  else if (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision) {
++    blocks = 1;
++    if (dims[0]) blocks *= ((dims[0] + 3)/4);
++    if (dims[1]) blocks *= ((dims[1] + 3)/4);
++    if (dims[2]) blocks *= ((dims[2] + 3)/4);
++    granularity = stream->index->granularity;
++    index_type = stream->index->type;
++    chunks = (blocks + granularity - 1) / granularity;
++    if (index_type == zfp_index_offset)
++      index_size = (size_t)chunks * sizeof(uint64);
++    else if (index_type == zfp_index_hybrid) {
++      /* TODO: check if we want to support variable partition size (recommended to not do so for GPU) */
++      size_t partitions = (chunks + PARTITION_SIZE - 1) / PARTITION_SIZE;
++      index_size = partitions * (sizeof(uint64) + PARTITION_SIZE * sizeof(uint16));
++    }
++    else {
++      std::cerr<<"Non-supported index type for GPU. Use hybrid or offset \n";
++      return;
++    }
++    d_index = internal::setup_device_index(stream, index_size);
++    decode_parameter = (mode == zfp_mode_fixed_accuracy ? (int)stream->minexp : (int)stream->maxprec);
++  }
++  else {
++    std::cerr<<"Custom mode not supported on GPU\n";
++    return;
++  }
+ 
+-  if(field->type == zfp_type_float)
+-  {
++  if (field->type == zfp_type_float) {
+     float *data = (float*) d_data;
+-    decoded_bytes = internal::decode(dims, stride, (int)stream->maxbits, d_stream, data);
++    internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
+     d_data = (void*) data;
+   }
+-  else if(field->type == zfp_type_double)
+-  {
++  else if (field->type == zfp_type_double) {
+     double *data = (double*) d_data;
+-    decoded_bytes = internal::decode(dims, stride, (int)stream->maxbits, d_stream, data);
++    internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
+     d_data = (void*) data;
+   }
+-  else if(field->type == zfp_type_int32)
+-  {
++  else if (field->type == zfp_type_int32) {
+     int *data = (int*) d_data;
+-    decoded_bytes = internal::decode(dims, stride, (int)stream->maxbits, d_stream, data);
++    internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
+     d_data = (void*) data;
+   }
+-  else if(field->type == zfp_type_int64)
+-  {
++  else if (field->type == zfp_type_int64) {
+     long long int *data = (long long int*) d_data;
+-    decoded_bytes = internal::decode(dims, stride, (int)stream->maxbits, d_stream, data);
++    internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
+     d_data = (void*) data;
+   }
+-  else
+-  {
++  else {
+     std::cerr<<"Cannot decompress: type unknown\n";
+   }
+ 
+-   
+   size_t type_size = zfp_type_size(field->type);
+ 
+   size_t field_size = 1;
+-  for(int i = 0; i < 3; ++i)
+-  {
+-    if(dims[i] != 0)
+-    {
++  for (int i = 0; i < 3; ++i) {
++    if (dims[i] != 0) {
+       field_size *= dims[i];
+     }
+   }
+-  
++
+   size_t bytes = type_size * field_size;
+-  internal::cleanup_device_ptr(stream->stream->begin, d_stream, 0, 0, field->type);
++  internal::cleanup_device_ptr(stream->stream, d_stream, 0, 0, field->type);
+   internal::cleanup_device_ptr(field->data, d_data, bytes, offset, field->type);
+-  
+-  // this is how zfp determins if this was a success
+-  size_t words_read = decoded_bytes / sizeof(Word);
++
++  //TODO: Find a better fix for this
++  size_t words_read = zfp_stream_maximum_size(stream, field) / sizeof(Word);
++  if (d_index) {
++    cudaFree(d_index);
++  }
+   stream->stream->bits = wsize;
+   // set stream pointer to end of stream
+   stream->stream->ptr = stream->stream->begin + words_read;
++
+ }
+diff --git a/src/cuda_zfp/decode.cuh b/src/cuda_zfp/decode.cuh
+index 14bedfc..8996882 100644
+--- a/src/cuda_zfp/decode.cuh
++++ b/src/cuda_zfp/decode.cuh
+@@ -19,36 +19,31 @@ int uint2int(unsigned int x)
+ 	return (x ^0xaaaaaaaau) - 0xaaaaaaaau;
+ }
+ 
++/* Removed the unused arguments from the class as they can not be set easily in
++fixed accuracy or precision mode. If needed their functionality can be restored */
+ template<int block_size>
+ class BlockReader
+ {
+ private:
+-  const int m_maxbits; 
+   int m_current_bit;
+   Word *m_words;
+   Word m_buffer;
+-  bool m_valid_block;
+-  int m_block_idx;
+ 
+   __device__ BlockReader()
+-    : m_maxbits(0)
+   {
+   }
+ 
+ public:
+-  __device__ BlockReader(Word *b, const int &maxbits, const int &block_idx, const int &num_blocks)
+-    :  m_maxbits(maxbits), m_valid_block(true)
++  __device__ BlockReader(Word *b, long long int bit_offset)
+   {
+-    if(block_idx >= num_blocks) m_valid_block = false;
+-    int word_index = (block_idx * maxbits)  / (sizeof(Word) * 8); 
++    /* TODO: possibly move the functionality of the constructor to a seek function */
++    int word_index = bit_offset / (sizeof(Word) * 8);
+     m_words = b + word_index;
+     m_buffer = *m_words;
+-    m_current_bit = (block_idx * maxbits) % (sizeof(Word) * 8); 
+-
++    m_current_bit = bit_offset % (sizeof(Word) * 8);
+     m_buffer >>= m_current_bit;
+-    m_block_idx = block_idx;
+-   
+   }
++
+   inline __device__
+   void print()
+   {
+@@ -71,7 +66,6 @@ public:
+     return bit; 
+   }
+ 
+-
+   // note this assumes that n_bits is <= 64
+   inline __device__ 
+   uint64 read_bits(const uint &n_bits)
+@@ -94,7 +88,6 @@ public:
+       m_current_bit = 0;
+       next_read = n_bits - first_read; 
+     }
+-   
+     // this is basically a no-op when first read constained 
+     // all the bits. TODO: if we have aligned reads, this could 
+     // be a conditional without divergence
+@@ -104,19 +97,19 @@ public:
+     m_current_bit += next_read; 
+     return bits;
+   }
+-
+ }; // block reader
+ 
+-template<typename Scalar, int Size, typename UInt>
++template<typename Scalar, int Size, typename UInt, typename Int>
+ inline __device__
+-void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
++void decode_ints_rate(BlockReader<Size> &reader, const int max_bits, Int *iblock)
+ {
+   const int intprec = get_precision<Scalar>();
+-  memset(data, 0, sizeof(UInt) * Size);
++  UInt ublock[Size] = {0};
+   uint64 x; 
+   // maxprec = 64;
+   const uint kmin = 0; //= intprec > maxprec ? intprec - maxprec : 0;
+   int bits = max_bits;
++  int i;
+   for (uint k = intprec, n = 0; bits && k-- > kmin;)
+   {
+     // read bit plane
+@@ -126,20 +119,69 @@ void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
+     for (; n < Size && bits && (bits--, reader.read_bit()); x += (Word) 1 << n++)
+       for (; n < (Size - 1) && bits && (bits--, !reader.read_bit()); n++);
+     
+-    // deposit bit plane
++    /* deposit bit plane, use fixed bound to prevent warp divergence */
+ #if (CUDART_VERSION < 8000)
+     #pragma unroll
+ #else
+     #pragma unroll Size
+ #endif
+-    for (int i = 0; i < Size; i++, x >>= 1)
++    for (i = 0; i < Size; i++, x >>= 1)
+     {
+-      data[i] += (UInt)(x & 1u) << k;
++      ublock[i] += (UInt)(x & 1u) << k;
+     }
+-  } 
++  }
++  const unsigned char *perm = get_perm<Size>();
++#if (CUDART_VERSION < 8000)
++    #pragma unroll
++#else
++    #pragma unroll Size
++#endif
++  for(int i = 0; i < Size; ++i)
++  {
++     iblock[perm[i]] = uint2int(ublock[i]);
++  }
+ }
+ 
+ 
++template<typename Scalar, int Size, typename UInt, typename Int>
++inline __device__
++void decode_ints_planes(BlockReader<Size> &reader, const int maxprec, Int *iblock)
++{
++  const int intprec = get_precision<Scalar>();
++  const uint kmin = (uint)(intprec > maxprec ? intprec - maxprec : 0);
++  UInt ublock[Size] = {0};
++  uint64 x;
++  int i;
++
++  for (uint k = intprec, n = 0; k-- > kmin;)
++  {
++    x = reader.read_bits(n);
++    for (; n < Size && reader.read_bit(); x += (Word) 1 << n++)
++      for (; n < (Size - 1) && !reader.read_bit(); n++);
++
++    /* deposit bit plane, use fixed bound to prevent warp divergence */
++#if (CUDART_VERSION < 8000)
++    #pragma unroll
++#else
++    #pragma unroll Size
++#endif
++    for (i = 0; i < Size; i++, x >>= 1)
++    {
++      ublock[i] += (UInt)(x & 1u) << k;
++    }
++  }
++  const unsigned char *perm = get_perm<Size>();
++#if (CUDART_VERSION < 8000)
++    #pragma unroll
++#else
++    #pragma unroll Size
++#endif
++  for(int i = 0; i < Size; ++i)
++  {
++     iblock[perm[i]] = uint2int(ublock[i]);
++  }
++}
++
+ template<int BlockSize>
+ struct inv_transform;
+ 
+@@ -197,7 +239,7 @@ struct inv_transform<4>
+ };
+ 
+ template<typename Scalar, int BlockSize>
+-__device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint maxbits)
++__device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, const int decode_parameter, const zfp_mode mode, const int dims)
+ {
+   typedef typename zfp_traits<Scalar>::UInt UInt;
+   typedef typename zfp_traits<Scalar>::Int Int;
+@@ -214,41 +256,39 @@ __device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint
+   if(s_cont)
+   {
+     uint ebits = get_ebits<Scalar>() + 1;
+-
+-    uint emax;
++    int emax;
+     if(!is_int<Scalar>())
+     {
+-      // read in the shared exponent
+-      emax = reader.read_bits(ebits - 1) - get_ebias<Scalar>();
++      emax = (int)reader.read_bits(ebits - 1) - (int)get_ebias<Scalar>();
+     }
+     else
+     {
+-      // no exponent bits
+       ebits = 0;
+     }
+ 
+-	  maxbits -= ebits;
+-    
+-    UInt ublock[BlockSize];
+-
+-    decode_ints<Scalar, BlockSize, UInt>(reader, maxbits, ublock);
+-
+-    Int iblock[BlockSize];
+-    const unsigned char *perm = get_perm<BlockSize>();
+-#if (CUDART_VERSION < 8000)
+-    #pragma unroll 
+-#else
+-    #pragma unroll BlockSize
+-#endif
+-    for(int i = 0; i < BlockSize; ++i)
+-    {
+-		  iblock[perm[i]] = uint2int(ublock[i]);
++    Int * iblock = (Int*)fblock;
++    int maxbits, maxprec;
++    switch(mode) {
++      case zfp_mode_fixed_rate:
++        /* decode_parameter contains maxbits */
++        maxbits = decode_parameter - (int)ebits;
++        decode_ints_rate<Scalar, BlockSize, UInt, Int>(reader, maxbits, iblock);
++        break;
++      case zfp_mode_fixed_accuracy:
++        /* decode_parameter contains minexp */
++        maxprec = MAX(emax - decode_parameter + 2 * (dims + 1), 0);
++        decode_ints_planes<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
++        break;
++      case zfp_mode_fixed_precision:
++        /* decode_parameter contains maxprec */
++        decode_ints_planes<Scalar, BlockSize, UInt, Int>(reader, decode_parameter, iblock);
++        break;
+     }
+-    
++
+     inv_transform<BlockSize> trans;
+     trans.inv_xform(iblock);
+ 
+-		Scalar inv_w = dequantize<Int, Scalar>(1, emax);
++    Scalar inv_w = dequantize<Int, Scalar>(1, emax);
+ 
+ #if (CUDART_VERSION < 8000)
+     #pragma unroll 
+@@ -257,9 +297,8 @@ __device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint
+ #endif
+     for(int i = 0; i < BlockSize; ++i)
+     {
+-		  fblock[i] = inv_w * (Scalar)iblock[i];
++       fblock[i] = inv_w * (Scalar)iblock[i];
+     }
+-     
+   }
+ }
+ 
+diff --git a/src/cuda_zfp/decode1.cuh b/src/cuda_zfp/decode1.cuh
+index b1f474d..4a88393 100644
+--- a/src/cuda_zfp/decode1.cuh
++++ b/src/cuda_zfp/decode1.cuh
+@@ -7,9 +7,8 @@
+ 
+ namespace cuZFP {
+ 
+-
+-template<typename Scalar> 
+-__device__ __host__ inline 
++template<typename Scalar>
++__device__ __host__ inline
+ void scatter_partial1(const Scalar* q, Scalar* p, int nx, int sx)
+ {
+   uint x;
+@@ -17,8 +16,8 @@ void scatter_partial1(const Scalar* q, Scalar* p, int nx, int sx)
+     if (x < nx) p[x * sx] = q[x];
+ }
+ 
+-template<typename Scalar> 
+-__device__ __host__ inline 
++template<typename Scalar>
++__device__ __host__ inline
+ void scatter1(const Scalar* q, Scalar* p, int sx)
+ {
+   uint x;
+@@ -30,102 +29,122 @@ template<class Scalar>
+ __global__
+ void
+ cudaDecode1(Word *blocks,
++            Word *index,
+             Scalar *out,
+             const uint dim,
+             const int stride,
+             const uint padded_dim,
+             const uint total_blocks,
+-            uint maxbits)
++            const int decode_parameter,
++            const uint granularity,
++            const zfp_mode mode,
++            const zfp_index_type index_type)
+ {
+   typedef unsigned long long int ull;
+   typedef long long int ll;
+   typedef typename zfp_traits<Scalar>::UInt UInt;
+   typedef typename zfp_traits<Scalar>::Int Int;
+ 
+-  const int intprec = get_precision<Scalar>();
+-
+-  const ull blockId = blockIdx.x +
++  const uint blockId = blockIdx.x +
+                       blockIdx.y * gridDim.x +
+-                      gridDim.x  * gridDim.y * blockIdx.z;
+-
+-  // each thread gets a block so the block index is 
+-  // the global thread index
+-  const ull block_idx = blockId * blockDim.x + threadIdx.x;
+-
+-  if(block_idx >= total_blocks) return;
+-
+-  BlockReader<4> reader(blocks, maxbits, block_idx, total_blocks);
+-  Scalar result[4] = {0,0,0,0};
+-
+-  zfp_decode(reader, result, maxbits);
+-
+-  uint block;
+-  block = block_idx * 4ull; 
+-  const ll offset = (ll)block * stride; 
+-  
+-  bool partial = false;
+-  if(block + 4 > dim) partial = true;
+-  if(partial)
+-  {
+-    const uint nx = 4u - (padded_dim - dim);
+-    scatter_partial1(result, out + offset, nx, stride);
++                      gridDim.x * gridDim.y * blockIdx.z;
++  const uint chunk_idx = blockId * blockDim.x + threadIdx.x;
++  const int warp_idx = blockId * blockDim.x / 32;
++  const int thread_idx = threadIdx.x;
++
++  ll bit_offset;
++  if (mode == zfp_mode_fixed_rate)
++    bit_offset = decode_parameter * chunk_idx;
++  else if (index_type == zfp_index_offset) {
++    bit_offset = index[chunk_idx];
+   }
+-  else
+-  {
+-    scatter1(result, out + offset, stride);
++  else if (index_type == zfp_index_hybrid) {
++    __shared__ uint64 offsets[32];
++    uint64* data64 = (uint64 *)index;
++    uint16* data16 = (uint16 *)index;
++    data16 += warp_idx * 36 + 3;
++    offsets[thread_idx] = (uint64)data16[thread_idx];
++    offsets[0] = data64[warp_idx * 9];
++    int j;
++
++    for (int i = 0; i < 5; i++) {
++      j = (1 << i);
++      if (thread_idx + j < 32) {
++        offsets[thread_idx + j] += offsets[thread_idx];
++      }
++      __syncthreads();
++    }
++    bit_offset = offsets[thread_idx];
++  }
++
++  uint block_idx = chunk_idx * granularity;
++  const uint lim = MIN(block_idx + granularity, total_blocks);
++  BlockReader<4> reader(blocks, bit_offset);
++
++  for (; block_idx < lim; block_idx++) {
++    Scalar result[4] = {0};
++    zfp_decode<Scalar,4>(reader, result, decode_parameter, mode, 1);
++
++    uint block = block_idx * 4;
++    const ll offset = (ll)block * stride;
++    if (block + 4 > dim) {
++      const uint nx = 4u - (padded_dim - dim);
++      scatter_partial1(result, out + offset, nx, stride);
++    }
++    else 
++      scatter1(result, out + offset, stride);
+   }
+ }
+ 
+ template<class Scalar>
+-size_t decode1launch(uint dim, 
++size_t decode1launch(uint dim,
+                      int stride,
+                      Word *stream,
++                     Word *index,
+                      Scalar *d_data,
+-                     uint maxbits)
++                     int decode_parameter,
++                     uint granularity,
++                     zfp_mode mode,
++                     zfp_index_type index_type)
+ {
+-  const int cuda_block_size = 128;
+-
+-  uint zfp_pad(dim); 
+-  if(zfp_pad % 4 != 0) zfp_pad += 4 - dim % 4;
+-
+-  uint zfp_blocks = (zfp_pad) / 4; 
+-
+-  if(dim % 4 != 0)  zfp_blocks = (dim + (4 - dim % 4)) / 4;
+-
+-  int block_pad = 0;
+-  if(zfp_blocks % cuda_block_size != 0) 
+-  {
+-    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
+-  }
+-
+-  size_t total_blocks = block_pad + zfp_blocks;
+-  size_t stream_bytes = calc_device_mem1d(zfp_pad, maxbits);
+-
++  uint zfp_pad = (dim % 4 == 0 ? dim : dim += 4 - dim % 4);
++  uint zfp_blocks = zfp_pad / 4;
++
++  /* Block size fixed to 32 in this version, needed for hybrid functionality */
++  size_t cuda_block_size = 32;
++  /* TODO: remove nonzero stream_bytes requirement */
++  size_t stream_bytes = 1;
++  size_t chunks = (zfp_blocks + (size_t)granularity - 1) / granularity;
++  if (chunks % cuda_block_size != 0)
++    chunks += (cuda_block_size - chunks % cuda_block_size);
+   dim3 block_size = dim3(cuda_block_size, 1, 1);
+-  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
++  dim3 grid_size = calculate_grid_size(chunks, cuda_block_size);
+ 
+ #ifdef CUDA_ZFP_RATE_PRINT
+   // setup some timing code
+   cudaEvent_t start, stop;
+   cudaEventCreate(&start);
+   cudaEventCreate(&stop);
+-
+   cudaEventRecord(start);
+ #endif
+ 
+   cudaDecode1<Scalar> << < grid_size, block_size >> >
+     (stream,
+-		 d_data,
++     index,
++     d_data,
+      dim,
+      stride,
+      zfp_pad,
+-     zfp_blocks, // total blocks to decode
+-     maxbits);
++     zfp_blocks,
++     decode_parameter,
++     granularity,
++     mode,
++     index_type);
+ 
+ #ifdef CUDA_ZFP_RATE_PRINT
+   cudaEventRecord(stop);
+   cudaEventSynchronize(stop);
+-	cudaStreamSynchronize(0);
++  cudaStreamSynchronize(0);
+ 
+   float miliseconds = 0;
+   cudaEventElapsedTime(&miliseconds, start, stop);
+@@ -135,19 +154,23 @@ size_t decode1launch(uint dim,
+   rate /= 1024.f;
+   rate /= 1024.f;
+   printf("Decode elapsed time: %.5f (s)\n", seconds);
+-  printf("# decode1 rate: %.2f (GB / sec) %d\n", rate, maxbits);
++  printf("# decode1 rate: %.2f (GB / sec)\n", rate);
+ #endif
+   return stream_bytes;
+ }
+ 
+ template<class Scalar>
+-size_t decode1(int dim, 
++size_t decode1(int dim,
+                int stride,
+                Word *stream,
++               Word *index,
+                Scalar *d_data,
+-               uint maxbits)
++               int decode_parameter,
++               uint granularity,
++               zfp_mode mode,
++               zfp_index_type index_type)
+ {
+-	return decode1launch<Scalar>(dim, stride, stream, d_data, maxbits);
++	return decode1launch<Scalar>(dim, stride, stream, index, d_data, decode_parameter, granularity, mode, index_type);
+ }
+ 
+ } // namespace cuZFP
+diff --git a/src/cuda_zfp/decode2.cuh b/src/cuda_zfp/decode2.cuh
+index 3378f5a..a5f79ba 100644
+--- a/src/cuda_zfp/decode2.cuh
++++ b/src/cuda_zfp/decode2.cuh
+@@ -7,8 +7,8 @@
+ 
+ namespace cuZFP {
+ 
+-template<typename Scalar> 
+-__device__ __host__ inline 
++template<typename Scalar>
++__device__ __host__ inline
+ void scatter_partial2(const Scalar* q, Scalar* p, int nx, int ny, int sx, int sy)
+ {
+   uint x, y;
+@@ -23,8 +23,8 @@ void scatter_partial2(const Scalar* q, Scalar* p, int nx, int ny, int sx, int sy
+     }
+ }
+ 
+-template<typename Scalar> 
+-__device__ __host__ inline 
++template<typename Scalar>
++__device__ __host__ inline
+ void scatter2(const Scalar* q, Scalar* p, int sx, int sy)
+ {
+   uint x, y;
+@@ -33,101 +33,114 @@ void scatter2(const Scalar* q, Scalar* p, int sx, int sy)
+       *p = *q++;
+ }
+ 
+-
+ template<class Scalar, int BlockSize>
+ __global__
+ void
+ cudaDecode2(Word *blocks,
++            Word *index,
+             Scalar *out,
+             const uint2 dims,
+             const int2 stride,
+             const uint2 padded_dims,
+-            uint maxbits)
++            const uint total_blocks,
++            const int decode_parameter,
++            const uint granularity,
++            const zfp_mode mode,
++            const zfp_index_type index_type)
+ {
+   typedef unsigned long long int ull;
+   typedef long long int ll;
+-  const ull blockId = blockIdx.x +
++
++  const uint blockId = blockIdx.x +
+                       blockIdx.y * gridDim.x +
+                       gridDim.x * gridDim.y * blockIdx.z;
+-
+-  // each thread gets a block so the block index is 
+-  // the global thread index
+-  const ull block_idx = blockId * blockDim.x + threadIdx.x;
+-  
+-  const int total_blocks = (padded_dims.x * padded_dims.y) / 16; 
+-  
+-  if(block_idx >= total_blocks) 
+-  {
+-    return;
++  const uint chunk_idx = blockId * blockDim.x + threadIdx.x;
++  const int warp_idx = blockId * blockDim.x / 32;
++  const int thread_idx = threadIdx.x;
++
++  ll bit_offset;
++  if (mode == zfp_mode_fixed_rate)
++    bit_offset = decode_parameter * chunk_idx;
++  else if (index_type == zfp_index_offset){
++    bit_offset = index[chunk_idx];
++  }
++  else if (index_type == zfp_index_hybrid) {
++    __shared__ uint64 offsets[32];
++    uint64* data64 = (uint64 *)index;
++    uint16* data16 = (uint16 *)index;
++    data16 += warp_idx * 36 + 3;
++    offsets[thread_idx] = (uint64)data16[thread_idx];
++    offsets[0] = data64[warp_idx * 9];
++    int j;
++    
++    for (int i = 0; i < 5; i++) {
++      j = (1 << i);
++      if (thread_idx + j < 32) {
++        offsets[thread_idx + j] += offsets[thread_idx];
++      }
++      __syncthreads();
++    }
++    bit_offset = offsets[thread_idx];
+   }
+-
+-  BlockReader<BlockSize> reader(blocks, maxbits, block_idx, total_blocks);
+- 
+-  Scalar result[BlockSize];
+-  memset(result, 0, sizeof(Scalar) * BlockSize);
+-
+-  zfp_decode(reader, result, maxbits);
+ 
+   // logical block dims
+   uint2 block_dims;
+-  block_dims.x = padded_dims.x >> 2; 
+-  block_dims.y = padded_dims.y >> 2; 
+-  // logical pos in 3d array
+-  uint2 block;
+-  block.x = (block_idx % block_dims.x) * 4; 
+-  block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
+-  
+-  const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y; 
+-
+-  bool partial = false;
+-  if(block.x + 4 > dims.x) partial = true;
+-  if(block.y + 4 > dims.y) partial = true;
+-  if(partial)
+-  {
+-    const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
+-    const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
+-    scatter_partial2(result, out + offset, nx, ny, stride.x, stride.y);
+-  }
+-  else
+-  {
+-    scatter2(result, out + offset, stride.x, stride.y);
++  block_dims.x = padded_dims.x >> 2;
++  block_dims.y = padded_dims.y >> 2;
++
++  BlockReader<BlockSize> reader(blocks, bit_offset);
++  uint block_idx = chunk_idx * granularity;
++  const uint lim = MIN(block_idx + granularity, total_blocks);
++
++  for (; block_idx < lim; block_idx++) {
++    Scalar result[BlockSize] = {0};
++    zfp_decode<Scalar,BlockSize>(reader, result, decode_parameter, mode, 2);
++
++    // logical pos in 3d array
++    uint2 block;
++    block.x = (block_idx % block_dims.x) * 4;
++    block.y = ((block_idx / block_dims.x) % block_dims.y) * 4;
++
++    const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y;
++
++    if (block.x + 4 > dims.x || block.y + 4 > dims.y) {
++      const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
++      const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
++      scatter_partial2(result, out + offset, nx, ny, stride.x, stride.y);
++    }
++    else
++      scatter2(result, out + offset, stride.x, stride.y);
+   }
+ }
+ 
++
+ template<class Scalar>
+-size_t decode2launch(uint2 dims, 
++size_t decode2launch(uint2 dims,
+                      int2 stride,
+                      Word *stream,
++                     Word *index,
+                      Scalar *d_data,
+-                     uint maxbits)
++                     int decode_parameter,
++                     uint granularity,
++                     zfp_mode mode, 
++                     zfp_index_type index_type)
+ {
+-  const int cuda_block_size = 128;
+-  dim3 block_size;
+-  block_size = dim3(cuda_block_size, 1, 1);
+-  
+-  uint2 zfp_pad(dims); 
++  uint2 zfp_pad(dims);
+   // ensure that we have block sizes
+   // that are a multiple of 4
+-  if(zfp_pad.x % 4 != 0) zfp_pad.x += 4 - dims.x % 4;
+-  if(zfp_pad.y % 4 != 0) zfp_pad.y += 4 - dims.y % 4;
+-
+-  const int zfp_blocks = (zfp_pad.x * zfp_pad.y) / 16; 
+-
+-  
+-  //
+-  // we need to ensure that we launch a multiple of the 
+-  // cuda block size
+-  //
+-  int block_pad = 0; 
+-  if(zfp_blocks % cuda_block_size != 0)
+-  {
+-    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
+-  }
+-
+-
+-  size_t stream_bytes = calc_device_mem2d(zfp_pad, maxbits);
+-  size_t total_blocks = block_pad + zfp_blocks;
+-  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
++  if (zfp_pad.x % 4 != 0) zfp_pad.x += 4 - dims.x % 4;
++  if (zfp_pad.y % 4 != 0) zfp_pad.y += 4 - dims.y % 4;
++  const uint zfp_blocks = (zfp_pad.x / 4) * (zfp_pad.y / 4);
++
++  /* Block size fixed to 32 in this version, needed for hybrid functionality */
++  size_t cuda_block_size = 32;
++  /* TODO: remove nonzero stream_bytes requirement */
++  size_t stream_bytes = 1;
++  size_t chunks = (zfp_blocks + (size_t)granularity - 1) / granularity;
++  if (chunks % cuda_block_size != 0)
++    chunks += (cuda_block_size - chunks % cuda_block_size);
++  dim3 block_size = dim3(cuda_block_size, 1, 1);
++  dim3 grid_size = calculate_grid_size(chunks, cuda_block_size);
+ 
+ #ifdef CUDA_ZFP_RATE_PRINT
+   // setup some timing code
+@@ -139,16 +152,21 @@ size_t decode2launch(uint2 dims,
+ 
+   cudaDecode2<Scalar, 16> << < grid_size, block_size >> >
+     (stream,
+-		 d_data,
++     index,
++     d_data,
+      dims,
+      stride,
+      zfp_pad,
+-     maxbits);
++     zfp_blocks,
++     decode_parameter,
++     granularity,
++     mode,
++     index_type);
+ 
+ #ifdef CUDA_ZFP_RATE_PRINT
+   cudaEventRecord(stop);
+   cudaEventSynchronize(stop);
+-	cudaStreamSynchronize(0);
++  cudaStreamSynchronize(0);
+ 
+   float miliseconds = 0;
+   cudaEventElapsedTime(&miliseconds, start, stop);
+@@ -158,19 +176,25 @@ size_t decode2launch(uint2 dims,
+   rate /= 1024.f;
+   rate /= 1024.f;
+   printf("Decode elapsed time: %.5f (s)\n", seconds);
+-  printf("# decode2 rate: %.2f (GB / sec) %d\n", rate, maxbits);
++  printf("# decode2 rate: %.2f (GB / sec)\n", rate);
+ #endif
+   return stream_bytes;
+ }
+ 
++
++
+ template<class Scalar>
+-size_t decode2(uint2 dims, 
++size_t decode2(uint2 dims,
+                int2 stride,
+                Word *stream,
++               Word *index,
+                Scalar *d_data,
+-               uint maxbits)
++               int decode_parameter,
++               uint granularity,
++               zfp_mode mode,
++               zfp_index_type index_type)
+ {
+-	return decode2launch<Scalar>(dims, stride, stream, d_data, maxbits);
++ return decode2launch<Scalar>(dims, stride, stream, index, d_data, decode_parameter, granularity, mode, index_type);
+ }
+ 
+ } // namespace cuZFP
+diff --git a/src/cuda_zfp/decode3.cuh b/src/cuda_zfp/decode3.cuh
+index 7092f9a..6fceb00 100644
+--- a/src/cuda_zfp/decode3.cuh
++++ b/src/cuda_zfp/decode3.cuh
+@@ -7,8 +7,8 @@
+ 
+ namespace cuZFP {
+ 
+-template<typename Scalar> 
+-__device__ __host__ inline 
++template<typename Scalar>
++__device__ __host__ inline
+ void scatter_partial3(const Scalar* q, Scalar* p, int nx, int ny, int nz, int sx, int sy, int sz)
+ {
+   uint x, y, z;
+@@ -27,8 +27,8 @@ void scatter_partial3(const Scalar* q, Scalar* p, int nx, int ny, int nz, int sx
+     }
+ }
+ 
+-template<typename Scalar> 
+-__device__ __host__ inline 
++template<typename Scalar>
++__device__ __host__ inline
+ void scatter3(const Scalar* q, Scalar* p, int sx, int sy, int sz)
+ {
+   uint x, y, z;
+@@ -43,125 +43,140 @@ template<class Scalar, int BlockSize>
+ __global__
+ void
+ cudaDecode3(Word *blocks,
++            Word *index,
+             Scalar *out,
+             const uint3 dims,
+             const int3 stride,
+             const uint3 padded_dims,
+-            uint maxbits)
++            const uint total_blocks,
++            const int decode_parameter,
++            const uint granularity,
++            const zfp_mode mode,
++            zfp_index_type index_type)
+ {
+-  
+   typedef unsigned long long int ull;
+   typedef long long int ll;
+ 
+-  const ull blockId = blockIdx.x +
++  const uint blockId = blockIdx.x +
+                       blockIdx.y * gridDim.x +
+                       gridDim.x * gridDim.y * blockIdx.z;
+-  // each thread gets a block so the block index is 
+-  // the global thread index
+-  const ull block_idx = blockId * blockDim.x + threadIdx.x;
+-  
+-  const int total_blocks = (padded_dims.x * padded_dims.y * padded_dims.z) / 64; 
+-  
+-  if(block_idx >= total_blocks) 
+-  {
+-    return;
++  const uint chunk_idx = blockId * blockDim.x + threadIdx.x;
++  const int warp_idx = blockId * blockDim.x / 32;
++  const int thread_idx = threadIdx.x;
++
++  ll bit_offset;
++  if (mode == zfp_mode_fixed_rate)
++    bit_offset = decode_parameter * chunk_idx;
++  else if (index_type == zfp_index_offset){
++    bit_offset = index[chunk_idx];
++  }
++  else if (index_type == zfp_index_hybrid) {
++    __shared__ uint64 offsets[32];
++    uint64* data64 = (uint64 *)index;
++    uint16* data16 = (uint16 *)index;
++    data16 += warp_idx * 36 + 3;
++    offsets[thread_idx] = (uint64)data16[thread_idx];
++    offsets[0] = data64[warp_idx * 9];
++    int j;
++
++    for (int i = 0; i < 5; i++) {
++      j = (1 << i);
++      if (thread_idx + j < 32) {
++        offsets[thread_idx + j] += offsets[thread_idx];
++      }
++      __syncthreads();
++    }
++    bit_offset = offsets[thread_idx];
+   }
+-
+-  BlockReader<BlockSize> reader(blocks, maxbits, block_idx, total_blocks);
+- 
+-  Scalar result[BlockSize];
+-  memset(result, 0, sizeof(Scalar) * BlockSize);
+-
+-  zfp_decode<Scalar,BlockSize>(reader, result, maxbits);
+ 
+   // logical block dims
+   uint3 block_dims;
+-  block_dims.x = padded_dims.x >> 2; 
+-  block_dims.y = padded_dims.y >> 2; 
+-  block_dims.z = padded_dims.z >> 2; 
+-  // logical pos in 3d array
+-  uint3 block;
+-  block.x = (block_idx % block_dims.x) * 4; 
+-  block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
+-  block.z = (block_idx/ (block_dims.x * block_dims.y)) * 4; 
+-  
+-  // default strides
+-  const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y + (ll)block.z * stride.z; 
+-
+-  bool partial = false;
+-  if(block.x + 4 > dims.x) partial = true;
+-  if(block.y + 4 > dims.y) partial = true;
+-  if(block.z + 4 > dims.z) partial = true;
+-  if(partial)
+-  {
+-    const uint nx = block.x + 4u > dims.x ? dims.x - block.x : 4;
+-    const uint ny = block.y + 4u > dims.y ? dims.y - block.y : 4;
+-    const uint nz = block.z + 4u > dims.z ? dims.z - block.z : 4;
+-
+-    scatter_partial3(result, out + offset, nx, ny, nz, stride.x, stride.y, stride.z);
+-  }
+-  else
+-  {
+-    scatter3(result, out + offset, stride.x, stride.y, stride.z);
++  block_dims.x = padded_dims.x >> 2;
++  block_dims.y = padded_dims.y >> 2;
++  block_dims.z = padded_dims.z >> 2;
++
++  BlockReader<BlockSize> reader(blocks, bit_offset);
++  uint block_idx = chunk_idx * granularity;
++  const uint lim = MIN(block_idx + granularity, total_blocks);
++
++  for (; block_idx < lim; block_idx++) {
++    Scalar result[BlockSize] = {0};
++    zfp_decode<Scalar,BlockSize>(reader, result, decode_parameter, mode, 3);
++
++    // logical pos in 3d array
++    uint3 block;
++    block.x = (block_idx % block_dims.x) * 4;
++    block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4;
++    block.z = (block_idx/ (block_dims.x * block_dims.y)) * 4;
++
++    // default strides
++    const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y + (ll)block.z * stride.z;
++
++    if (block.x + 4 > dims.x || block.y + 4 > dims.y || block.z + 4 > dims.z) {
++      const uint nx = block.x + 4u > dims.x ? dims.x - block.x : 4;
++      const uint ny = block.y + 4u > dims.y ? dims.y - block.y : 4;
++      const uint nz = block.z + 4u > dims.z ? dims.z - block.z : 4;
++      scatter_partial3(result, out + offset, nx, ny, nz, stride.x, stride.y, stride.z);
++    }
++    else
++      scatter3(result, out + offset, stride.x, stride.y, stride.z);
+   }
+ }
++
+ template<class Scalar>
+-size_t decode3launch(uint3 dims, 
++size_t decode3launch(uint3 dims,
+                      int3 stride,
+                      Word *stream,
++                     Word *index,
+                      Scalar *d_data,
+-                     uint maxbits)
++                     int decode_parameter,
++                     uint granularity,
++                     zfp_mode mode,
++                     zfp_index_type index_type)
+ {
+-  const int cuda_block_size = 128;
+-  dim3 block_size;
+-  block_size = dim3(cuda_block_size, 1, 1);
+-
+-  uint3 zfp_pad(dims); 
++  uint3 zfp_pad(dims);
+   // ensure that we have block sizes
+   // that are a multiple of 4
+-  if(zfp_pad.x % 4 != 0) zfp_pad.x += 4 - dims.x % 4;
+-  if(zfp_pad.y % 4 != 0) zfp_pad.y += 4 - dims.y % 4;
+-  if(zfp_pad.z % 4 != 0) zfp_pad.z += 4 - dims.z % 4;
+-
+-  const int zfp_blocks = (zfp_pad.x * zfp_pad.y * zfp_pad.z) / 64; 
+-
+-  
+-  //
+-  // we need to ensure that we launch a multiple of the 
+-  // cuda block size
+-  //
+-  int block_pad = 0; 
+-  if(zfp_blocks % cuda_block_size != 0)
+-  {
+-    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
+-  }
+-
+-  size_t total_blocks = block_pad + zfp_blocks;
+-  size_t stream_bytes = calc_device_mem3d(zfp_pad, maxbits);
+-
+-  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
++  if (zfp_pad.x % 4 != 0) zfp_pad.x += 4 - dims.x % 4;
++  if (zfp_pad.y % 4 != 0) zfp_pad.y += 4 - dims.y % 4;
++  if (zfp_pad.z % 4 != 0) zfp_pad.z += 4 - dims.z % 4;
++  const uint zfp_blocks = (zfp_pad.x / 4) * (zfp_pad.y / 4) * (zfp_pad.z / 4);
++
++  /* Block size fixed to 32 in this version, needed for hybrid functionality */
++  size_t cuda_block_size = 32;
++  /* TODO: remove nonzero stream_bytes requirement */
++  size_t stream_bytes = 1;
++  size_t chunks = (zfp_blocks + (size_t)granularity - 1) / granularity;
++  if (chunks % cuda_block_size != 0)
++    chunks += (cuda_block_size - chunks % cuda_block_size);
++  dim3 block_size = dim3(cuda_block_size, 1, 1);
++  dim3 grid_size = calculate_grid_size(chunks, cuda_block_size);
+ 
+ #ifdef CUDA_ZFP_RATE_PRINT
+   // setup some timing code
+   cudaEvent_t start, stop;
+   cudaEventCreate(&start);
+   cudaEventCreate(&stop);
+-
+   cudaEventRecord(start);
+ #endif
+ 
+   cudaDecode3<Scalar, 64> << < grid_size, block_size >> >
+     (stream,
+-		 d_data,
++     index,
++     d_data,
+      dims,
+      stride,
+      zfp_pad,
+-     maxbits);
++     zfp_blocks,
++     decode_parameter,
++     granularity,
++     mode,
++     index_type);
+ 
+ #ifdef CUDA_ZFP_RATE_PRINT
+   cudaEventRecord(stop);
+   cudaEventSynchronize(stop);
+-	cudaStreamSynchronize(0);
++  cudaStreamSynchronize(0);
+ 
+   float miliseconds = 0;
+   cudaEventElapsedTime(&miliseconds, start, stop);
+@@ -171,20 +186,23 @@ size_t decode3launch(uint3 dims,
+   rate /= 1024.f;
+   rate /= 1024.f;
+   printf("Decode elapsed time: %.5f (s)\n", seconds);
+-  printf("# decode3 rate: %.2f (GB / sec) %d\n", rate, maxbits);
++  printf("# decode3 rate: %.2f (GB / sec)\n", rate);
+ #endif
+-
+   return stream_bytes;
+ }
+ 
+ template<class Scalar>
+-size_t decode3(uint3 dims, 
++size_t decode3(uint3 dims,
+                int3 stride,
+-               Word  *stream,
++               Word *stream,
++               Word *index,
+                Scalar *d_data,
+-               uint maxbits)
++               int decode_parameter,
++               uint granularity,
++               zfp_mode mode,
++               zfp_index_type index_type)
+ {
+-	return decode3launch<Scalar>(dims, stride, stream, d_data, maxbits);
++	return decode3launch<Scalar>(dims, stride, stream, index, d_data, decode_parameter, granularity, mode, index_type);
+ }
+ 
+ } // namespace cuZFP
+diff --git a/src/share/parallel.c b/src/share/parallel.c
+index e778ac7..7caec1e 100644
+--- a/src/share/parallel.c
++++ b/src/share/parallel.c
+@@ -97,4 +97,67 @@ compress_finish_par(zfp_stream* stream, bitstream** src, uint chunks)
+     stream_wseek(dst, offset);
+ }
+ 
++/* initialize per-thread bit streams for parallel decompression */
++static bitstream**
++decompress_init_par(zfp_stream* stream, const zfp_field* field, const uint chunks, const uint blocks)
++// UPDATE!!!
++{
++  int i;
++  void * buffer = stream_data(zfp_stream_bit_stream(stream));
++  zfp_mode mode = zfp_stream_compression_mode(stream);
++  bitstream** bs = (bitstream**)malloc(chunks * sizeof(bitstream*));
++  if (!bs) {
++    /* memory for per-thread bit streams not properly allocated */
++    return NULL;
++  }
++  const size_t size = stream_size(stream->stream);
++  if (mode == zfp_mode_fixed_rate) {
++    const uint maxbits = stream->maxbits;
++    for (i = 0; i < (int)chunks; i++) {
++      /* chunk offsets are computed by block size in bits * index of first block in chunk */
++      bs[i] = stream_open(buffer, size);
++      if (!bs[i]) {
++        /* memory for bitstream not properly allocated */
++        return NULL;
++      }
++      size_t block = (size_t)chunk_offset(blocks, chunks, i);
++      stream_rseek(bs[i], ((size_t)maxbits * block));
++    }
++  }
++  else if (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision) {
++    const zfp_index_type type = stream->index->type;
++    if (type == zfp_index_offset) {
++      uint64* offset_table = (uint64*)stream->index->data;
++      for (i = 0; i < (int)chunks; i++) {
++        /* read the chunk offset and set the bitstream to the start of the chunk */
++        bs[i] = stream_open(buffer, size);
++        if (!bs[i]) {
++          /* memory for bitstream not properly allocated */
++          return NULL;
++        }
++        stream_rseek(bs[i], (size_t)offset_table[i]);
++      }
++    }
++    else {
++    /* unsupported index type */
++      return NULL;
++    }
++  }
++  else {
++    /* expert mode not available */
++    return NULL;
++  }
++  return bs;
++}
++
++/* close all the bitstreams */
++static void
++decompress_finish_par(bitstream** bs, uint chunks)
++{
++  int i;
++  for (i = 0; i < (int)chunks; i++)
++    stream_close(bs[i]);
++  free(bs);
++}
++
+ #endif
+diff --git a/src/template/compress.c b/src/template/compress.c
+index 3bef658..aa40ff6 100644
+--- a/src/template/compress.c
++++ b/src/template/compress.c
+@@ -6,12 +6,25 @@ _t2(compress, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
+   uint nx = field->nx;
+   uint mx = nx & ~3u;
+   uint x;
++  
++  /* set up the optional lengths table */
++  uint16 block_length;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
+ 
+   /* compress array one block of 4 values at a time */
+-  for (x = 0; x < mx; x += 4, data += 4)
+-    _t2(zfp_encode_block, Scalar, 1)(stream, data);
+-  if (x < nx)
+-    _t2(zfp_encode_partial_block_strided, Scalar, 1)(stream, data, nx - x, 1);
++  for (x = 0; x < mx; x += 4, data += 4) {
++    block_length = _t2(zfp_encode_block, Scalar, 1)(stream, data);
++    if (length_table)
++      *length_table++ = block_length;
++  }
++  if (x < nx) {
++    block_length = _t2(zfp_encode_partial_block_strided, Scalar, 1)(stream, data, nx - x, 1);
++    if (length_table)
++      *length_table++ = block_length;
++  }
+ }
+ 
+ /* compress 1d strided array */
+@@ -23,13 +36,26 @@ _t2(compress_strided, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
+   int sx = field->sx ? field->sx : 1;
+   uint x;
+ 
++  /* set up the optional lengths table */
++  uint16 block_length;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
++
+   /* compress array one block of 4 values at a time */
+   for (x = 0; x < nx; x += 4) {
+     const Scalar* p = data + sx * (ptrdiff_t)x;
+-    if (nx - x < 4)
+-      _t2(zfp_encode_partial_block_strided, Scalar, 1)(stream, p, nx - x, sx);
+-    else
+-      _t2(zfp_encode_block_strided, Scalar, 1)(stream, p, sx);
++    if (nx - x < 4) {
++      block_length = _t2(zfp_encode_partial_block_strided, Scalar, 1)(stream, p, nx - x, sx);
++      if (length_table)
++        *length_table++ = block_length;
++    }
++    else {
++      block_length = _t2(zfp_encode_block_strided, Scalar, 1)(stream, p, sx);
++      if (length_table)
++        *length_table++ = block_length;
++    }
+   }
+ }
+ 
+@@ -44,14 +70,27 @@ _t2(compress_strided, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
+   int sy = field->sy ? field->sy : (int)nx;
+   uint x, y;
+ 
++  /* set up the optional lengths table */
++  uint16 block_length;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
++
+   /* compress array one block of 4x4 values at a time */
+   for (y = 0; y < ny; y += 4)
+     for (x = 0; x < nx; x += 4) {
+       const Scalar* p = data + sx * (ptrdiff_t)x + sy * (ptrdiff_t)y;
+-      if (nx - x < 4 || ny - y < 4)
+-        _t2(zfp_encode_partial_block_strided, Scalar, 2)(stream, p, MIN(nx - x, 4u), MIN(ny - y, 4u), sx, sy);
+-      else
+-        _t2(zfp_encode_block_strided, Scalar, 2)(stream, p, sx, sy);
++      if (nx - x < 4 || ny - y < 4) {
++        block_length = _t2(zfp_encode_partial_block_strided, Scalar, 2)(stream, p, MIN(nx - x, 4u), MIN(ny - y, 4u), sx, sy);
++        if (length_table)
++          *length_table++ = block_length;
++        }
++      else {
++        block_length = _t2(zfp_encode_block_strided, Scalar, 2)(stream, p, sx, sy);
++        if (length_table)
++          *length_table++ = block_length;
++      }
+     }
+ }
+ 
+@@ -68,15 +107,28 @@ _t2(compress_strided, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
+   int sz = field->sz ? field->sz : (int)(nx * ny);
+   uint x, y, z;
+ 
++  /* set up the optional lengths table */
++  uint16 block_length;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
++
+   /* compress array one block of 4x4x4 values at a time */
+   for (z = 0; z < nz; z += 4)
+     for (y = 0; y < ny; y += 4)
+       for (x = 0; x < nx; x += 4) {
+         const Scalar* p = data + sx * (ptrdiff_t)x + sy * (ptrdiff_t)y + sz * (ptrdiff_t)z;
+-        if (nx - x < 4 || ny - y < 4 || nz - z < 4)
+-          _t2(zfp_encode_partial_block_strided, Scalar, 3)(stream, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), sx, sy, sz);
+-        else
+-          _t2(zfp_encode_block_strided, Scalar, 3)(stream, p, sx, sy, sz);
++        if (nx - x < 4 || ny - y < 4 || nz - z < 4) {
++          block_length = _t2(zfp_encode_partial_block_strided, Scalar, 3)(stream, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), sx, sy, sz);
++          if (length_table)
++            *length_table++ = block_length;
++        }
++        else {
++          block_length = _t2(zfp_encode_block_strided, Scalar, 3)(stream, p, sx, sy, sz);
++          if (length_table)
++            *length_table++ = block_length;
++        }
+       }
+ }
+ 
+@@ -95,15 +147,28 @@ _t2(compress_strided, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
+   int sw = field->sw ? field->sw : (int)(nx * ny * nz);
+   uint x, y, z, w;
+ 
++  /* set up the optional lengths table */
++  uint16 block_length;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
++
+   /* compress array one block of 4x4x4x4 values at a time */
+   for (w = 0; w < nw; w += 4)
+     for (z = 0; z < nz; z += 4)
+       for (y = 0; y < ny; y += 4)
+         for (x = 0; x < nx; x += 4) {
+           const Scalar* p = data + sx * (ptrdiff_t)x + sy * (ptrdiff_t)y + sz * (ptrdiff_t)z + sw * (ptrdiff_t)w;
+-          if (nx - x < 4 || ny - y < 4 || nz - z < 4 || nw - w < 4)
+-            _t2(zfp_encode_partial_block_strided, Scalar, 4)(stream, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), MIN(nw - w, 4u), sx, sy, sz, sw);
+-          else
++          if (nx - x < 4 || ny - y < 4 || nz - z < 4 || nw - w < 4) {
++            block_length = _t2(zfp_encode_partial_block_strided, Scalar, 4)(stream, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), MIN(nw - w, 4u), sx, sy, sz, sw);
++            if (length_table)
++              *length_table++ = block_length;
++          }
++          else {
+             _t2(zfp_encode_block_strided, Scalar, 4)(stream, p, sx, sy, sz, sw);
++            if (length_table)
++              *length_table++ = block_length;
++          }
+         }
+ }
+diff --git a/src/template/cudadecompress.c b/src/template/cudadecompress.c
+index 4ea4e5b..7a8f6c9 100644
+--- a/src/template/cudadecompress.c
++++ b/src/template/cudadecompress.c
+@@ -5,40 +5,28 @@
+ static void
+ _t2(decompress_cuda, Scalar, 1)(zfp_stream* stream, zfp_field* field)
+ {
+-  if(zfp_stream_compression_mode(stream) == zfp_mode_fixed_rate)
+-  {
+-    cuda_decompress(stream, field);   
+-  }
++  cuda_decompress(stream, field);
+ }
+ 
+ /* compress 1d strided array */
+ static void
+ _t2(decompress_strided_cuda, Scalar, 1)(zfp_stream* stream, zfp_field* field)
+ {
+-  if(zfp_stream_compression_mode(stream) == zfp_mode_fixed_rate)
+-  {
+-    cuda_decompress(stream, field);   
+-  }
++  cuda_decompress(stream, field);
+ }
+ 
+ /* compress 2d strided array */
+ static void
+ _t2(decompress_strided_cuda, Scalar, 2)(zfp_stream* stream, zfp_field* field)
+ {
+-  if(zfp_stream_compression_mode(stream) == zfp_mode_fixed_rate)
+-  {
+-    cuda_decompress(stream, field);   
+-  }
++  cuda_decompress(stream, field);
+ }
+ 
+ /* compress 3d strided array */
+ static void
+ _t2(decompress_strided_cuda, Scalar, 3)(zfp_stream* stream, zfp_field* field)
+ {
+-  if(zfp_stream_compression_mode(stream) == zfp_mode_fixed_rate)
+-  {
+-    cuda_decompress(stream, field);   
+-  }
++  cuda_decompress(stream, field);
+ }
+ 
+ #endif
+diff --git a/src/template/ompcompress.c b/src/template/ompcompress.c
+index c8150c6..687ca52 100644
+--- a/src/template/ompcompress.c
++++ b/src/template/ompcompress.c
+@@ -6,6 +6,10 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
+ {
+   /* array metadata */
+   const Scalar* data = (const Scalar*)field->data;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
+   uint nx = field->nx;
+ 
+   /* number of omp threads, blocks, and chunks */
+@@ -37,9 +41,15 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
+       p += x;
+       /* compress partial or full block */
+       if (nx - x < 4)
+-        _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, MIN(nx - x, 4u), 1);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, MIN(nx - x, 4u), 1);
++        else
++          _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, MIN(nx - x, 4u), 1);
+       else
+-        _t2(zfp_encode_block, Scalar, 1)(&s, p);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_block, Scalar, 1)(&s, p);
++        else
++          _t2(zfp_encode_block, Scalar, 1)(&s, p);
+     }
+   }
+ 
+@@ -53,6 +63,10 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
+ {
+   /* array metadata */
+   const Scalar* data = (const Scalar*)field->data;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
+   uint nx = field->nx;
+   int sx = field->sx ? field->sx : 1;
+ 
+@@ -85,9 +99,15 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
+       p += sx * (ptrdiff_t)x;
+       /* compress partial or full block */
+       if (nx - x < 4)
+-        _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, MIN(nx - x, 4u), sx);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, MIN(nx - x, 4u), sx);
++        else
++          _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, MIN(nx - x, 4u), sx);
+       else
+-        _t2(zfp_encode_block_strided, Scalar, 1)(&s, p, sx);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_block_strided, Scalar, 1)(&s, p, sx);
++        else
++          _t2(zfp_encode_block_strided, Scalar, 1)(&s, p, sx);
+     }
+   }
+ 
+@@ -101,6 +121,10 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
+ {
+   /* array metadata */
+   const Scalar* data = (const Scalar*)field->data;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
+   uint nx = field->nx;
+   uint ny = field->ny;
+   int sx = field->sx ? field->sx : 1;
+@@ -140,9 +164,15 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
+       p += sx * (ptrdiff_t)x + sy * (ptrdiff_t)y;
+       /* compress partial or full block */
+       if (nx - x < 4 || ny - y < 4)
+-        _t2(zfp_encode_partial_block_strided, Scalar, 2)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), sx, sy);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_partial_block_strided, Scalar, 2)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), sx, sy);
++        else
++          _t2(zfp_encode_partial_block_strided, Scalar, 2)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), sx, sy);
+       else
+-        _t2(zfp_encode_block_strided, Scalar, 2)(&s, p, sx, sy);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_block_strided, Scalar, 2)(&s, p, sx, sy);
++        else
++          _t2(zfp_encode_block_strided, Scalar, 2)(&s, p, sx, sy);
+     }
+   }
+ 
+@@ -156,6 +186,10 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
+ {
+   /* array metadata */
+   const Scalar* data = (const Scalar*)field->data;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
+   uint nx = field->nx;
+   uint ny = field->ny;
+   uint nz = field->nz;
+@@ -199,9 +233,15 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
+       p += sx * (ptrdiff_t)x + sy * (ptrdiff_t)y + sz * (ptrdiff_t)z;
+       /* compress partial or full block */
+       if (nx - x < 4 || ny - y < 4 || nz - z < 4)
+-        _t2(zfp_encode_partial_block_strided, Scalar, 3)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), sx, sy, sz);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_partial_block_strided, Scalar, 3)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), sx, sy, sz);
++        else
++          _t2(zfp_encode_partial_block_strided, Scalar, 3)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), sx, sy, sz);
+       else
+-        _t2(zfp_encode_block_strided, Scalar, 3)(&s, p, sx, sy, sz);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_block_strided, Scalar, 3)(&s, p, sx, sy, sz);
++        else
++          _t2(zfp_encode_block_strided, Scalar, 3)(&s, p, sx, sy, sz);
+     }
+   }
+ 
+@@ -215,6 +255,10 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
+ {
+   /* array metadata */
+   const Scalar* data = field->data;
++  uint16* length_table = NULL;
++  if (stream->index){
++    length_table = (uint16*)stream->index->data;
++  }
+   uint nx = field->nx;
+   uint ny = field->ny;
+   uint nz = field->nz;
+@@ -262,9 +306,15 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
+       p += sx * (ptrdiff_t)x + sy * (ptrdiff_t)y + sz * (ptrdiff_t)z + sw * (ptrdiff_t)w;
+       /* compress partial or full block */
+       if (nx - x < 4 || ny - y < 4 || nz - z < 4 || nw - w < 4)
+-        _t2(zfp_encode_partial_block_strided, Scalar, 4)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), MIN(nw - w, 4u), sx, sy, sz, sw);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_partial_block_strided, Scalar, 4)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), MIN(nw - w, 4u), sx, sy, sz, sw);
++        else
++          _t2(zfp_encode_partial_block_strided, Scalar, 4)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), MIN(nw - w, 4u), sx, sy, sz, sw);
+       else
+-        _t2(zfp_encode_block_strided, Scalar, 4)(&s, p, sx, sy, sz, sw);
++        if (length_table)
++          length_table[block] = _t2(zfp_encode_block_strided, Scalar, 4)(&s, p, sx, sy, sz, sw);
++        else
++          _t2(zfp_encode_block_strided, Scalar, 4)(&s, p, sx, sy, sz, sw);
+     }
+   }
+ 
+diff --git a/src/template/ompdecompress.c b/src/template/ompdecompress.c
+new file mode 100644
+index 0000000..20474ec
+--- /dev/null
++++ b/src/template/ompdecompress.c
+@@ -0,0 +1,344 @@
++#ifdef _OPENMP
++
++/* decompress 1d contiguous array in parallel */
++static void
++_t2(decompress_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
++{
++  Scalar* data = (Scalar*)field->data;
++  const uint nx = field->nx;
++  const uint threads = thread_count_omp(stream);
++  const zfp_mode mode = zfp_stream_compression_mode(stream);
++
++  /* calculate the number of blocks and chunks */
++  const uint blocks = (nx + 3) / 4;
++  uint index_granularity = 1;
++  if (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision) {
++    if (stream->index == NULL)
++      return;
++    else {
++      index_granularity = stream->index->granularity;
++      /* TODO: support more types
++      current implementation only supports OpenMP decompression with an offset table */
++      if (stream->index->type != zfp_index_offset)
++        return;
++    }
++  }
++  const uint chunks = (blocks + index_granularity - 1) / index_granularity;
++
++  /* allocate per-thread streams */
++  bitstream** bs = decompress_init_par(stream, field, chunks, blocks);
++  if (!bs)
++    return;
++
++  /* decompress chunks of blocks in parallel */
++  int chunk;
++  #pragma omp parallel for num_threads(threads)
++  for (chunk = 0; chunk < (int)chunks; chunk++) {
++    /* determine range of block indices assigned to this thread */
++    const uint bmin = chunk * index_granularity;
++    const uint bmax = MIN(bmin + index_granularity, blocks);
++    uint block;
++
++    /* set up thread-local bit stream */
++    zfp_stream s = *stream;
++    zfp_stream_set_bit_stream(&s, bs[chunk]);
++
++    /* decode all blocks in the chunk sequentially */
++    uint x;
++    Scalar * block_data;
++
++    for (block = bmin; block < bmax; block++) {
++      x = block * 4;
++      block_data = data + x;
++      if (nx - x < 4)
++        _t2(zfp_decode_partial_block_strided, Scalar, 1)(&s, block_data, nx - x, 1);
++      else
++        _t2(zfp_decode_block, Scalar, 1)(&s, block_data);
++    }
++  }
++  decompress_finish_par(bs, chunks);
++  /* TODO: find a better solution
++  this workaround reads a bit from the bitstream, because the bitstream pointer is checked to see if decompression was succesful */
++  stream_read_bit(stream->stream);
++}
++
++/* decompress 1d strided array in parallel */
++static void
++_t2(decompress_strided_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
++{
++  Scalar* data = (Scalar*)field->data;
++  const uint nx = field->nx;
++  const int sx = field->sx ? field->sx : 1;
++  const uint threads = thread_count_omp(stream);
++  const zfp_mode mode = zfp_stream_compression_mode(stream);
++
++  /* calculate the number of blocks and chunks */
++  const uint blocks = (nx + 3) / 4;
++  uint index_granularity = 1;
++  if (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision) {
++    if (!stream->index)
++      return;
++    else {
++      index_granularity = stream->index->granularity;
++      /* TODO: support more types
++      current implementation only supports OpenMP decompression with an offset table */
++      if (stream->index->type != zfp_index_offset)
++        return;
++    }
++  }
++  const uint chunks = (blocks + index_granularity - 1) / index_granularity;
++
++  /* allocate per-thread streams */
++  bitstream** bs = decompress_init_par(stream, field, chunks, blocks);
++  if (!bs)
++    return;
++
++  /* decompress chunks of blocks in parallel */
++  int chunk;
++  #pragma omp parallel for num_threads(threads)
++  for (chunk = 0; chunk < (int)chunks; chunk++) {
++    /* determine range of block indices assigned to this thread */
++    const uint bmin = chunk * index_granularity;
++    const uint bmax = MIN(bmin + index_granularity, blocks);
++    uint block;
++
++    /* set up thread-local bit stream */
++    zfp_stream s = *stream;
++    zfp_stream_set_bit_stream(&s, bs[chunk]);
++
++    /* decode all blocks in the chunk sequentially */
++    uint x;
++    Scalar * block_data;
++
++    for (block = bmin; block < bmax; block++) {
++      x = block * 4;
++      block_data = data + sx * x;
++      if (nx - x < 4)
++        _t2(zfp_decode_partial_block_strided, Scalar, 1)(&s, block_data, nx - x, 1);
++      else
++        _t2(zfp_decode_block_strided, Scalar, 1)(&s, block_data, sx);
++    }
++  }
++  decompress_finish_par(bs, chunks);
++  /* TODO: find a better solution
++  this workaround reads a bit from the bitstream, because the bitstream pointer is checked to see if decompression was succesful */
++  stream_read_bit(stream->stream);
++}
++
++/* decompress 2d strided array in parallel */
++static void
++_t2(decompress_strided_omp, Scalar, 2)(zfp_stream* stream, zfp_field* field)
++{
++  Scalar* data = (Scalar*)field->data;
++  const uint nx = field->nx;
++  const uint ny = field->ny;
++  const int sx = field->sx ? field->sx : 1;
++  const int sy = field->sy ? field->sy : nx;
++  const uint threads = thread_count_omp(stream);
++  const zfp_mode mode = zfp_stream_compression_mode(stream);
++
++  /* calculate the number of blocks and chunks */
++  const uint bx = (nx + 3) / 4;
++  const uint by = (ny + 3) / 4;
++  const uint blocks = bx * by;
++  uint index_granularity = 1;
++  if (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision) {
++    if (!stream->index)
++      return;
++    else {
++      index_granularity = stream->index->granularity;
++      /* TODO: support more types
++      current implementation only supports OpenMP decompression with an offset table */
++      if (stream->index->type != zfp_index_offset)
++        return;
++    }
++  }
++  const uint chunks = (blocks + index_granularity - 1) / index_granularity;
++
++  /* allocate per-thread streams */
++  bitstream** bs = decompress_init_par(stream, field, chunks, blocks);
++  if (!bs)
++    return;
++
++  /* decompress chunks of blocks in parallel */
++  int chunk;
++  #pragma omp parallel for num_threads(threads)
++  for (chunk = 0; chunk < (int)chunks; chunk++) {
++    /* determine range of block indices assigned to this thread */
++    const uint bmin = chunk * index_granularity;
++    const uint bmax = MIN(bmin + index_granularity, blocks);
++    uint block;
++
++    /* set up thread-local bit stream */
++    zfp_stream s = *stream;
++    zfp_stream_set_bit_stream(&s, bs[chunk]);
++
++    /* decode all blocks in the chunk sequentially */
++    uint x, y;
++    Scalar * block_data;
++
++    for (block = bmin; block < bmax; block++) {
++      x = 4 * (block % bx);
++      y = 4 * (block / bx);
++      block_data = data + y * sy + x * sx;
++      if (nx - x < 4 || ny - y < 4)
++        _t2(zfp_decode_partial_block_strided, Scalar, 2)(&s, block_data, MIN(nx - x, 4u), MIN(ny - y, 4u), sx, sy);
++      else
++        _t2(zfp_decode_block_strided, Scalar, 2)(&s, block_data, sx, sy);
++    }
++  }
++  decompress_finish_par(bs, chunks);
++  /* TODO: find a better solution
++  this workaround reads a bit from the bitstream, because the bitstream pointer is checked to see if decompression was succesful */
++  stream_read_bit(stream->stream);
++}
++
++/* decompress 3d strided array in parallel */
++static void
++_t2(decompress_strided_omp, Scalar, 3)(zfp_stream* stream, zfp_field* field)
++{
++  Scalar* data = (Scalar*)field->data;
++  const uint nx = field->nx;
++  const uint ny = field->ny;
++  const uint nz = field->nz;
++  const int sx = field->sx ? field->sx : 1;
++  const int sy = field->sy ? field->sy : nx;
++  const int sz = field->sz ? field->sz : nx * ny;
++  const uint threads = thread_count_omp(stream);
++  const zfp_mode mode = zfp_stream_compression_mode(stream);
++
++  /* calculate the number of blocks and chunks */
++  const uint bx = (nx + 3) / 4;
++  const uint by = (ny + 3) / 4;
++  const uint bz = (nz + 3) / 4;
++  const uint blocks = bx * by * bz;
++  uint index_granularity = 1;
++  if (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision) {
++    if (!stream->index)
++      return;
++    else {
++      index_granularity = stream->index->granularity;
++      /* TODO: support more types
++      current implementation only supports OpenMP decompression with an offset table */
++      if (stream->index->type != zfp_index_offset)
++        return;
++    }
++  }
++  const uint chunks = (blocks + index_granularity - 1) / index_granularity;
++
++  /* allocate per-thread streams */
++  bitstream** bs = decompress_init_par(stream, field, chunks, blocks);
++  if (!bs)
++    return;
++
++  /* decompress chunks of blocks in parallel */
++  int chunk;
++  #pragma omp parallel for num_threads(threads)
++  for (chunk = 0; chunk < (int)chunks; chunk++) {
++    /* determine range of block indices assigned to this thread */
++    const uint bmin = chunk * index_granularity;
++    const uint bmax = MIN(bmin + index_granularity, blocks);
++    uint block;
++
++    /* set up thread-local bit stream */
++    zfp_stream s = *stream;
++    zfp_stream_set_bit_stream(&s, bs[chunk]);
++
++    /* decode all blocks in the chunk sequentially */
++    uint x, y, z;
++    Scalar * block_data;
++
++    for (block = bmin; block < bmax; block++) {
++      x = 4 * (block % bx);
++      y = 4 * ((block / bx) % by);
++      z = 4 * (block / (bx * by));
++      block_data = data + x * sx + y * sy + z * sz;
++      if (nx - x < 4 || ny - y < 4 || nz - z < 4)
++        _t2(zfp_decode_partial_block_strided, Scalar, 3)(&s, block_data, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), sx, sy, sz);
++      else
++        _t2(zfp_decode_block_strided, Scalar, 3)(&s, block_data, sx, sy, sz);
++    }
++  }
++  decompress_finish_par(bs, chunks);
++  /* TODO: find a better solution
++  this workaround reads a bit from the bitstream, because the bitstream pointer is checked to see if decompression was succesful */
++  stream_read_bit(stream->stream);
++}
++
++/* decompress 4d strided array in parallel */
++static void
++_t2(decompress_strided_omp, Scalar, 4)(zfp_stream* stream, zfp_field* field)
++{
++  Scalar* data = (Scalar*)field->data;
++  uint nx = field->nx;
++  uint ny = field->ny;
++  uint nz = field->nz;
++  uint nw = field->nw;
++  int sx = field->sx ? field->sx : 1;
++  int sy = field->sy ? field->sy : nx;
++  int sz = field->sz ? field->sz : (ptrdiff_t)nx * ny;
++  int sw = field->sw ? field->sw : (ptrdiff_t)nx * ny * nz;
++  const uint threads = thread_count_omp(stream);
++  const zfp_mode mode = zfp_stream_compression_mode(stream);
++
++  /* calculate the number of blocks and chunks */
++  const uint bx = (nx + 3) / 4;
++  const uint by = (ny + 3) / 4;
++  const uint bz = (nz + 3) / 4;
++  const uint bw = (nw + 3) / 4;
++  const uint blocks = bx * by * bz * bw;
++  uint index_granularity = 1;
++  if (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision) {
++    if (!stream->index)
++      return;
++    else {
++      index_granularity = stream->index->granularity;
++      /* TODO: support more types
++      current implementation only supports OpenMP decompression with an offset table */
++      if (stream->index->type != zfp_index_offset)
++        return;
++    }
++  }
++  const uint chunks = (blocks + index_granularity - 1) / index_granularity;
++
++  /* allocate per-thread streams */
++  bitstream** bs = decompress_init_par(stream, field, chunks, blocks);
++  if (!bs)
++    return;
++
++  /* decompress chunks of blocks in parallel */
++  int chunk;
++  #pragma omp parallel for num_threads(threads)
++  for (chunk = 0; chunk < (int)chunks; chunk++) {
++    /* determine range of block indices assigned to this thread */
++    const uint bmin = chunk * index_granularity;
++    const uint bmax = MIN(bmin + index_granularity, blocks);
++    uint block;
++
++    /* set up thread-local bit stream */
++    zfp_stream s = *stream;
++    zfp_stream_set_bit_stream(&s, bs[chunk]);
++
++    /* decode all blocks in the chunk sequentially */
++    uint x, y, z, w;
++    Scalar * block_data;
++
++    for (block = bmin; block < bmax; block++) {
++      x = 4 * (block % bx);
++      y = 4 * ((block / bx) % by);
++      z = 4 * ((block / (bx * by)) % bz);
++      w = 4 * (block / (bx * by * bz));
++      block_data = data + x * sx + y * sy + z * sz + sw * w;
++      if (nx - x < 4 || ny - y < 4 || nz - z < 4 || nw - w < 4)
++        _t2(zfp_decode_partial_block_strided, Scalar, 4)(&s, block_data, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), MIN(nw - w, 4u), sx, sy, sz, sw);
++      else
++        _t2(zfp_decode_block_strided, Scalar, 4)(&s, block_data, sx, sy, sz, sw);
++    }
++  }
++  decompress_finish_par(bs, chunks);
++  /* TODO: find a better solution
++  this workaround reads a bit from the bitstream, because the bitstream pointer is checked to see if decompression was succesful */
++  stream_read_bit(stream->stream);
++}
++
++#endif
+\ No newline at end of file
+diff --git a/src/zfp.c b/src/zfp.c
+index abf1cb1..1cbc71b 100644
+--- a/src/zfp.c
++++ b/src/zfp.c
+@@ -48,6 +48,7 @@ is_reversible(const zfp_stream* zfp)
+ #include "template/compress.c"
+ #include "template/decompress.c"
+ #include "template/ompcompress.c"
++#include "template/ompdecompress.c"
+ #include "template/cudacompress.c"
+ #include "template/cudadecompress.c"
+ #undef Scalar
+@@ -56,6 +57,7 @@ is_reversible(const zfp_stream* zfp)
+ #include "template/compress.c"
+ #include "template/decompress.c"
+ #include "template/ompcompress.c"
++#include "template/ompdecompress.c"
+ #include "template/cudacompress.c"
+ #include "template/cudadecompress.c"
+ #undef Scalar
+@@ -64,6 +66,7 @@ is_reversible(const zfp_stream* zfp)
+ #include "template/compress.c"
+ #include "template/decompress.c"
+ #include "template/ompcompress.c"
++#include "template/ompdecompress.c"
+ #include "template/cudacompress.c"
+ #include "template/cudadecompress.c"
+ #undef Scalar
+@@ -72,6 +75,7 @@ is_reversible(const zfp_stream* zfp)
+ #include "template/compress.c"
+ #include "template/decompress.c"
+ #include "template/ompcompress.c"
++#include "template/ompdecompress.c"
+ #include "template/cudacompress.c"
+ #include "template/cudadecompress.c"
+ #undef Scalar
+@@ -428,6 +432,7 @@ zfp_stream_open(bitstream* stream)
+     zfp->maxprec = ZFP_MAX_PREC;
+     zfp->minexp = ZFP_MIN_EXP;
+     zfp->exec.policy = zfp_exec_serial;
++    zfp->index = NULL;
+   }
+   return zfp;
+ }
+@@ -733,6 +738,45 @@ zfp_stream_set_params(zfp_stream* zfp, uint minbits, uint maxbits, uint maxprec,
+   return zfp_true;
+ }
+ 
++void
++zfp_stream_set_index(zfp_stream* zfp, zfp_index* index)
++{
++  zfp->index = index;
++}
++
++zfp_index*
++zfp_index_create()
++{
++  zfp_index* index = (zfp_index*)malloc(sizeof(zfp_index));
++  if (index) {
++    index->type = zfp_index_none;
++    index->data = NULL;
++    index->size = 0;
++    index->granularity = 1;
++  }
++  return index;
++}
++
++void
++zfp_index_set_type(zfp_index* index, zfp_index_type type, uint granularity)
++{
++  index->type = type;
++  index->granularity = granularity;
++}
++
++void
++zfp_index_set_data(zfp_index* index, void* data, size_t size)
++{
++  index->data = data;
++  index->size = size;
++}
++
++void
++zfp_index_free(zfp_index* index)
++{
++  free(index);
++}
++
+ size_t
+ zfp_stream_flush(zfp_stream* zfp)
+ {
+@@ -940,6 +984,12 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
+   uint dims = zfp_field_dimensionality(field);
+   uint type = field->type;
+   void (*compress)(zfp_stream*, const zfp_field*);
++  int i;
++
++  /* index variables */
++  void* length_table = NULL;
++  zfp_index_type idx_type;
++  size_t blocks;
+ 
+   switch (type) {
+     case zfp_type_int32:
+@@ -951,15 +1001,115 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
+       return 0;
+   }
+ 
++  /* allocate buffer for length table */
++  if (zfp->index != NULL) {
++    idx_type = zfp->index->type;
++    uint mx = (MAX(field->nx, 1u) + 3) / 4;
++    uint my = (MAX(field->ny, 1u) + 3) / 4;
++    uint mz = (MAX(field->nz, 1u) + 3) / 4;
++    uint mw = (MAX(field->nw, 1u) + 3) / 4;
++    blocks = (size_t)mx * (size_t)my * (size_t)mz * (size_t)mw;
++    size_t length_table_size = blocks * sizeof(uint16);
++    length_table = malloc(length_table_size);
++    zfp_index_set_data(zfp->index, length_table, length_table_size);
++  }
++
+   /* return 0 if compression mode is not supported */
+   compress = ftable[exec][strided][dims - 1][type - zfp_type_int32];
+-  if (!compress)
++  if (!compress) {
+     return 0;
++  }
+ 
+   /* compress field and align bit stream on word boundary */
+   compress(zfp, field);
+   stream_flush(zfp->stream);
+ 
++  /* encode index - calling a separate encoding function might be better */
++  if (zfp->index != NULL) {
++    uint index_granularity = zfp->index->granularity;
++    uint chunks = (blocks + index_granularity - 1) / index_granularity;
++    uint partitions = 0;
++    size_t index_size = 0;
++    uint64 sum = 0;
++    int j = 0;
++
++    void* index_data = NULL;
++    uint16* index16 = NULL;
++    uint* index32 = NULL;
++    uint64* index64 = NULL;
++    uint16* length16 = (uint16*) length_table;
++
++    switch (idx_type) {
++      /* default option is offset table, fallthrough to offset */
++      case zfp_index_none:
++      /* convert from length table to offset index with header */
++      case zfp_index_offset:
++        index_size = (1 + chunks) * sizeof(uint64);
++        index_data = malloc(index_size);
++        index64 = (uint64*)index_data;
++        index32 = (uint*)index_data;
++        index32[0] = 1; // encode type offsets in the header
++        index32[1] = index_granularity;
++        j = 1;
++        for (i = 0; i < blocks; i++) {
++          if (i % index_granularity == 0)
++            index64[j++] = sum;
++          sum += (uint64)length16[i];
++        }
++        break;
++      case zfp_index_length:
++        /* TODO: Decide if we should support granularity for lengths. Risk is overflow of 16 bit datatype */
++        index_size = sizeof(uint64) + blocks * sizeof(uint16);
++        index_data = malloc(index_size);
++        index32 = (uint*)index_data;
++        index16 = (uint16*)index_data;
++        index32[0] = 2; // encode type lengths in the header
++        index32[1] = 1; // variable index granularity not supported yet
++        index16 += 4; //skip the header
++        for (i=0; i < blocks; i++) {
++          index16[i] = length16[i]; // copy data from length table to index data
++        }
++        break;
++      /* TODO: variable partition size */
++      /* TODO: decide on the datatypes for offsets and lengths */
++      case zfp_index_hybrid:
++        partitions = (chunks + PARTITION_SIZE - 1) / PARTITION_SIZE;
++        /* TODO: decide if we want to keep the extra uint16 (32 instead of 31) to keep partitions aligned on 64 bits */
++        index_size = sizeof(uint64) + partitions * (sizeof(uint64) + 32 * sizeof(uint16));
++        index_data = malloc(index_size);
++        index64 = (uint64*)index_data;
++        index32 = (uint*)index_data;
++        index16 = (uint16*)index_data;
++        index32[0] = 3; // encode type hybrid in the header
++        index32[1] = index_granularity;
++        index64 += 1; //skip the header
++        index16 += 4; //skip the header
++        uint chunk = 0;
++        uint16 partialsum = 0;
++        uint k = 0;
++        for (i = 0, j = 0; i < partitions; i++) {
++          index64[i * 9] = sum;
++          for (chunk = 0; chunk < PARTITION_SIZE; chunk++) {
++            partialsum = 0;
++            for (k = 0; k < index_granularity && j < blocks; k++, j++)
++              partialsum += length16[j];
++            index16[i * 36 + 4 + chunk] = partialsum;
++            sum += partialsum;
++          }
++        }
++        /* Finish the last partial partition with zeros */
++        for (; chunk < PARTITION_SIZE; chunk++) {
++          index16[i * 36 + 4 + chunk] = 0;
++        }
++        break;
++      /* unrecognized type, return no index data */
++      default:
++        break;
++    }
++    /* set the encoded index size and data in the stream */
++    zfp_index_set_data(zfp->index, index_data, index_size); 
++    free(length_table);
++  }
+   return stream_size(zfp->stream);
+ }
+ 
+@@ -978,8 +1128,19 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
+       { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 },
+       { decompress_strided_int32_4, decompress_strided_int64_4, decompress_strided_float_4, decompress_strided_double_4 }}},
+ 
+-    /* OpenMP; not yet supported */
+-    {{{ NULL }}},
++    /* OpenMP */
++#ifdef _OPENMP
++    {{{ decompress_omp_int32_1,         decompress_omp_int64_1,         decompress_omp_float_1,         decompress_omp_double_1 },
++      { decompress_strided_omp_int32_2, decompress_strided_omp_int64_2, decompress_strided_omp_float_2, decompress_strided_omp_double_2 },
++      { decompress_strided_omp_int32_3, decompress_strided_omp_int64_3, decompress_strided_omp_float_3, decompress_strided_omp_double_3 },
++      { decompress_strided_omp_int32_4, decompress_strided_omp_int64_4, decompress_strided_omp_float_4, decompress_strided_omp_double_4 }},
++     {{ decompress_strided_omp_int32_1, decompress_strided_omp_int64_1, decompress_strided_omp_float_1, decompress_strided_omp_double_1 },
++      { decompress_strided_omp_int32_2, decompress_strided_omp_int64_2, decompress_strided_omp_float_2, decompress_strided_omp_double_2 },
++      { decompress_strided_omp_int32_3, decompress_strided_omp_int64_3, decompress_strided_omp_float_3, decompress_strided_omp_double_3 },
++      { decompress_strided_omp_int32_4, decompress_strided_omp_int64_4, decompress_strided_omp_float_4, decompress_strided_omp_double_4 }}},
++#else
++     {{{ NULL }}},
++#endif
+ 
+     /* CUDA */
+ #ifdef ZFP_WITH_CUDA
+@@ -1000,6 +1161,10 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
+   uint dims = zfp_field_dimensionality(field);
+   uint type = field->type;
+   void (*decompress)(zfp_stream*, zfp_field*);
++  zfp_mode mode = zfp_stream_compression_mode(zfp);
++  uint* index32 = NULL;
++  uint index_type = 0;
++  uint index_granularity = 1;
+ 
+   switch (type) {
+     case zfp_type_int32:
+@@ -1011,6 +1176,41 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
+       return 0;
+   }
+ 
++  /* check if index for parallel decompression is required */
++  if ((exec == zfp_exec_omp || exec == zfp_exec_cuda) && (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision)) {
++    /* check if index is present */
++    if (zfp->index != NULL){
++      if (zfp->index->data != NULL) {
++        /* TODO: find a better method to store and read the header information, preferably based on zfp_index_type instead of plain uint */
++        index32 = (uint*)zfp->index->data;
++        index_type = index32[0];
++        index_granularity = index32[1];
++        /* Shift the index data pointer to skip the first 8 bytes of the header since they are decoded */
++        index32 += 2;
++        switch (index_type) {
++          /* offsets */
++          case 1:
++            zfp->index->data = (void*)(index32);
++            zfp->index->type = zfp_index_offset;
++            zfp->index->granularity = index_granularity;
++            break;
++          /* hybrid */
++          case 3:
++            zfp->index->data = (void*)(index32);
++            zfp->index->type = zfp_index_hybrid;
++            zfp->index->granularity = index_granularity;
++            break;
++          default:
++            return 0;
++        }
++      }
++      else
++        return 0;
++    }
++    else
++      return 0;
++  }
++
+   /* return 0 if decompression mode is not supported */
+   decompress = ftable[exec][strided][dims - 1][type - zfp_type_int32];
+   if (!decompress)
+diff --git a/utils/zfp.c b/utils/zfp.c
+index 97a621f..b6f76f0 100644
+--- a/utils/zfp.c
++++ b/utils/zfp.c
+@@ -4,6 +4,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <stdbool.h>
+ #include "zfp.h"
+ #include "zfp/macros.h"
+ 
+@@ -114,6 +115,9 @@ usage()
+   fprintf(stderr, "  -x serial : serial compression (default)\n");
+   fprintf(stderr, "  -x omp[=threads[,chunk_size]] : OpenMP parallel compression\n");
+   fprintf(stderr, "  -x cuda : CUDA fixed rate parallel compression/decompression\n");
++  fprintf(stderr, "Index for parallel decompression:\n");
++  fprintf(stderr, "  -m <path>: create index during compression, use index for parallel decompression\n");
++  fprintf(stderr, "  -n <type>=<granularity>: optionally set type (offset or hybrid) and granularity when creating an index\n");
+   fprintf(stderr, "Examples:\n");
+   fprintf(stderr, "  -i file : read uncompressed file and compress to memory\n");
+   fprintf(stderr, "  -z file : read compressed file and decompress to memory\n");
+@@ -135,6 +139,7 @@ int main(int argc, char* argv[])
+ {
+   /* default settings */
+   zfp_type type = zfp_type_none;
++  zfp_index_type index_type = zfp_index_none;
+   size_t typesize = 0;
+   uint dims = 0;
+   uint nx = 0;
+@@ -152,25 +157,33 @@ int main(int argc, char* argv[])
+   int header = 0;
+   int quiet = 0;
+   int stats = 0;
++  uint index_granularity = 1;
+   char* inpath = 0;
+   char* zfppath = 0;
+   char* outpath = 0;
++  char* indexpath = 0;
+   char mode = 0;
+   zfp_exec_policy exec = zfp_exec_serial;
+   uint threads = 0;
+   uint chunk_size = 0;
++  bool use_index = 0;
+ 
+   /* local variables */
+   int i;
+   zfp_field* field = NULL;
+   zfp_stream* zfp = NULL;
++  zfp_index* index = NULL;
+   bitstream* stream = NULL;
++  void* index_data = NULL;
+   void* fi = NULL;
+   void* fo = NULL;
+   void* buffer = NULL;
++  void* idxbuffer = NULL;
+   size_t rawsize = 0;
+   size_t zfpsize = 0;
+   size_t bufsize = 0;
++  size_t idxsize = 0;
++  size_t idxbufsize = 0;
+ 
+   if (argc == 1)
+     usage();
+@@ -295,6 +308,26 @@ int main(int argc, char* argv[])
+         else
+           usage();
+         break;
++      case 'm':
++        use_index = 1;
++        if (++i == argc) {
++          printf("No index file path specified\n");
++          usage();
++        }
++        indexpath = argv[i];
++        break;
++      case 'n':
++        if (++i == argc)
++          usage();
++        if (sscanf(argv[i], "offset=%u", &index_granularity) == 1)
++          index_type = zfp_index_offset;
++        else if (!strcmp(argv[i], "length"))
++          index_type = zfp_index_length;
++        else if (sscanf(argv[i], "hybrid=%u", &index_granularity) == 1)
++          index_type = zfp_index_hybrid;
++        else
++          usage();
++        break;
+       case 'z':
+         if (++i == argc)
+           usage();
+@@ -371,6 +404,7 @@ int main(int argc, char* argv[])
+ 
+   zfp = zfp_stream_open(NULL);
+   field = zfp_field_alloc();
++  index = zfp_index_create();
+ 
+   /* read uncompressed or compressed file */
+   if (inpath) {
+@@ -506,7 +540,7 @@ int main(int argc, char* argv[])
+     }
+     buffer = malloc(bufsize);
+     if (!buffer) {
+-      fprintf(stderr, "cannot allocate memory\n");
++      fprintf(stderr, "cannot allocate memory for uncompressed input file\n");
+       return EXIT_FAILURE;
+     }
+ 
+@@ -524,6 +558,22 @@ int main(int argc, char* argv[])
+       return EXIT_FAILURE;
+     }
+ 
++    /* optionally set the index type */
++    if ((index_type != zfp_index_none) && index_granularity) {
++      /* TODO: decide what to do with this check */
++      if (index_type == zfp_index_hybrid) {
++        uint max_granularity = 10 - 2 * dims;
++        if (index_granularity >> max_granularity)
++          fprintf(stderr, "Warning: Granularity is too large for lengths in 16 bit datatype. This may lead to an incorrect index and errors in decompression\n");
++      }
++      zfp_index_set_type(index, index_type, index_granularity);
++    }
++
++    /* optionally set the index */
++    if (use_index) {
++      zfp_stream_set_index(zfp, index);
++    }
++
+     /* compress data */
+     zfpsize = zfp_compress(zfp, field);
+     if (zfpsize == 0) {
+@@ -544,6 +594,22 @@ int main(int argc, char* argv[])
+       }
+       fclose(file);
+     }
++
++    /* optionally write index */
++    if (use_index && zfppath) {
++      FILE* file = !strcmp(indexpath, "-") ? stdout : fopen(indexpath, "wb");
++      if (!file) {
++        fprintf(stderr, "cannot create index file\n");
++        return EXIT_FAILURE;
++      }
++      index_data = zfp->index->data;
++      idxsize = zfp->index->size;
++      if (fwrite(index_data, 1, idxsize, file) != idxsize) {
++        fprintf(stderr, "cannot write index to file\n");
++        return EXIT_FAILURE;
++      }
++      fclose(file);
++    }
+   }
+ 
+   /* decompress data if necessary */
+@@ -578,10 +644,35 @@ int main(int argc, char* argv[])
+     rawsize = typesize * count;
+     fo = malloc(rawsize);
+     if (!fo) {
+-      fprintf(stderr, "cannot allocate memory\n");
++      fprintf(stderr, "cannot allocate memory for compressed input file\n");
+       return EXIT_FAILURE;
+     }
+     zfp_field_set_pointer(field, fo);
++    /* read index in increasingly large chunks */
++    if (use_index && (zfp->index == NULL)) {
++      FILE* file = !strcmp(indexpath, "-") ? stdin : fopen(indexpath, "rb");
++      if (!file) {
++        fprintf(stderr, "cannot open index file\n");
++       return EXIT_FAILURE;
++      }
++      idxbufsize = 0x100;
++      do {
++        idxbufsize *= 2;
++        idxbuffer = realloc(idxbuffer, idxbufsize);
++        if (!idxbuffer) {
++          fprintf(stderr, "cannot allocate memory for index\n");
++          return EXIT_FAILURE;
++        }
++        idxsize += fread((uchar*)idxbuffer + idxsize, 1, idxbufsize - idxsize, file);
++      } while (idxsize == idxbufsize);
++      if (ferror(file)) {
++        fprintf(stderr, "cannot read index file\n");
++        return EXIT_FAILURE;
++      }
++      fclose(file);
++      zfp_index_set_data(index, idxbuffer, idxsize);
++      zfp_stream_set_index(zfp, index);
++    }
+ 
+     /* decompress data */
+     while (!zfp_decompress(zfp, field)) {
+@@ -630,6 +721,10 @@ int main(int argc, char* argv[])
+   free(buffer);
+   free(fi);
+   free(fo);
++  if(idxbuffer)
++    free(idxbuffer);
++  if(index)
++    zfp_index_free(index);
+ 
+   return EXIT_SUCCESS;
+ }

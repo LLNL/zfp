@@ -61,6 +61,10 @@
 #define ZFP_HEADER_MAX_BITS 148 /* max number of header bits */
 #define ZFP_MODE_SHORT_MAX  ((1u << ZFP_MODE_SHORT_BITS) - 2)
 
+/* index constants */
+/* TODO: decide if we want to have this constant or adjustable, and how */
+#define PARTITION_SIZE  32  /* number of blocks in a partition for hybrid index */
+
 /* types ------------------------------------------------------------------- */
 
 /* Boolean constants */
@@ -78,6 +82,14 @@ typedef enum {
   zfp_exec_cuda   = 2  /* CUDA parallel execution */
 } zfp_exec_policy;
 
+/* index type */
+typedef enum {
+  zfp_index_none = 0,   /* no index */
+  zfp_index_offset = 1, /* offsets (OMP and CUDA decompression) */
+  zfp_index_length = 2, /* lengths */
+  zfp_index_hybrid = 3  /* hyrbid (CUDA decomrpession) */
+} zfp_index_type;
+
 /* OpenMP execution parameters */
 typedef struct {
   uint threads;    /* number of requested threads */
@@ -94,6 +106,14 @@ typedef struct {
   zfp_exec_params params; /* execution parameters */
 } zfp_execution;
 
+/* index for parallel decompression */
+typedef struct {
+  zfp_index_type type; /* zfp_index_none if no index */
+  void* data;          /* NULL if no index */
+  size_t size;         /* byte size of data (0 if no index) */
+  uint granularity;    /* Granularity of the index */
+} zfp_index;
+
 /* compressed stream; use accessors to get/set members */
 typedef struct {
   uint minbits;       /* minimum number of bits to store per block */
@@ -102,6 +122,7 @@ typedef struct {
   int minexp;         /* minimum floating point bit plane number to store */
   bitstream* stream;  /* compressed bit stream */
   zfp_execution exec; /* execution policy and parameters */
+  zfp_index* index;   /* index for parallel decompression */
 } zfp_stream;
 
 /* compression mode */
@@ -265,6 +286,45 @@ zfp_stream_set_params(
   uint maxbits,       /* maximum number of bits per 4^d block */
   uint maxprec,       /* maximum precision (# bit planes coded) */
   int minexp          /* minimum base-2 exponent; error <= 2^minexp */
+);
+
+/* set size of buffer for compressed data */
+void
+zfp_stream_set_size(
+  zfp_stream* zfp,   /* compressed stream */
+  size_t size        /* size of the buffer */
+);
+
+/* set index of the stream */
+void
+zfp_stream_set_index(
+  zfp_stream* zfp,  /* compressed stream */
+  zfp_index* index  /* index */
+);
+
+/* allocate index struct */
+zfp_index* /* pointer to default uninitialized index */
+zfp_index_create();
+
+/* set the size of the index */
+void
+zfp_index_set_type(
+  zfp_index* index,     /* the index */
+  zfp_index_type type,  /* type of the index */
+  uint granularity       /* granularity of the index */
+);
+
+/* set the data of the index */
+void
+zfp_index_set_data(
+  zfp_index* index, /* index */
+  void* data,       /* buffer for index data */
+  size_t size       /* size of the index data buffer */
+);
+
+void
+zfp_index_free(
+  zfp_index* index
 );
 
 /* high-level API: execution policy ---------------------------------------- */
