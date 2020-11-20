@@ -19,36 +19,31 @@ int uint2int(unsigned int x)
 	return (x ^0xaaaaaaaau) - 0xaaaaaaaau;
 }
 
+/* Removed the unused arguments from the class as they can not be set easily in
+fixed accuracy or precision mode. If needed their functionality can be restored */
 template<int block_size>
 class BlockReader
 {
 private:
-  const int m_maxbits; 
   int m_current_bit;
   Word *m_words;
   Word m_buffer;
-  bool m_valid_block;
-  int m_block_idx;
 
   __device__ BlockReader()
-    : m_maxbits(0)
   {
   }
 
 public:
-  __device__ BlockReader(Word *b, const int &maxbits, const int &block_idx, const int &num_blocks)
-    :  m_maxbits(maxbits), m_valid_block(true)
+  __device__ BlockReader(Word *b, long long int bit_offset)
   {
-    if(block_idx >= num_blocks) m_valid_block = false;
-    int word_index = (block_idx * maxbits)  / (sizeof(Word) * 8); 
+    /* TODO: possibly move the functionality of the constructor to a seek function */
+    int word_index = bit_offset / (sizeof(Word) * 8);
     m_words = b + word_index;
     m_buffer = *m_words;
-    m_current_bit = (block_idx * maxbits) % (sizeof(Word) * 8); 
-
+    m_current_bit = bit_offset % (sizeof(Word) * 8);
     m_buffer >>= m_current_bit;
-    m_block_idx = block_idx;
-   
   }
+
   inline __device__
   void print()
   {
@@ -70,7 +65,6 @@ public:
     }
     return bit; 
   }
-
 
   // note this assumes that n_bits is <= 64
   inline __device__ 
@@ -94,7 +88,6 @@ public:
       m_current_bit = 0;
       next_read = n_bits - first_read; 
     }
-   
     // this is basically a no-op when first read constained 
     // all the bits. TODO: if we have aligned reads, this could 
     // be a conditional without divergence
@@ -104,19 +97,19 @@ public:
     m_current_bit += next_read; 
     return bits;
   }
-
 }; // block reader
 
-template<typename Scalar, int Size, typename UInt>
+template<typename Scalar, int Size, typename UInt, typename Int>
 inline __device__
-void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
+void decode_ints_rate(BlockReader<Size> &reader, const int max_bits, Int *iblock)
 {
   const int intprec = get_precision<Scalar>();
-  memset(data, 0, sizeof(UInt) * Size);
+  UInt ublock[Size] = {0};
   uint64 x; 
   // maxprec = 64;
   const uint kmin = 0; //= intprec > maxprec ? intprec - maxprec : 0;
   int bits = max_bits;
+  int i;
   for (uint k = intprec, n = 0; bits && k-- > kmin;)
   {
     // read bit plane
@@ -126,19 +119,68 @@ void decode_ints(BlockReader<Size> &reader, uint &max_bits, UInt *data)
     for (; n < Size && bits && (bits--, reader.read_bit()); x += (Word) 1 << n++)
       for (; n < (Size - 1) && bits && (bits--, !reader.read_bit()); n++);
     
-    // deposit bit plane
+    /* deposit bit plane, use fixed bound to prevent warp divergence */
 #if (CUDART_VERSION < 8000)
     #pragma unroll
 #else
     #pragma unroll Size
 #endif
-    for (int i = 0; i < Size; i++, x >>= 1)
+    for (i = 0; i < Size; i++, x >>= 1)
     {
-      data[i] += (UInt)(x & 1u) << k;
+      ublock[i] += (UInt)(x & 1u) << k;
     }
-  } 
+  }
+  const unsigned char *perm = get_perm<Size>();
+#if (CUDART_VERSION < 8000)
+    #pragma unroll
+#else
+    #pragma unroll Size
+#endif
+  for(int i = 0; i < Size; ++i)
+  {
+     iblock[perm[i]] = uint2int(ublock[i]);
+  }
 }
 
+
+template<typename Scalar, int Size, typename UInt, typename Int>
+inline __device__
+void decode_ints_planes(BlockReader<Size> &reader, const int maxprec, Int *iblock)
+{
+  const int intprec = get_precision<Scalar>();
+  const uint kmin = (uint)(intprec > maxprec ? intprec - maxprec : 0);
+  UInt ublock[Size] = {0};
+  uint64 x;
+  int i;
+
+  for (uint k = intprec, n = 0; k-- > kmin;)
+  {
+    x = reader.read_bits(n);
+    for (; n < Size && reader.read_bit(); x += (Word) 1 << n++)
+      for (; n < (Size - 1) && !reader.read_bit(); n++);
+
+    /* deposit bit plane, use fixed bound to prevent warp divergence */
+#if (CUDART_VERSION < 8000)
+    #pragma unroll
+#else
+    #pragma unroll Size
+#endif
+    for (i = 0; i < Size; i++, x >>= 1)
+    {
+      ublock[i] += (UInt)(x & 1u) << k;
+    }
+  }
+  const unsigned char *perm = get_perm<Size>();
+#if (CUDART_VERSION < 8000)
+    #pragma unroll
+#else
+    #pragma unroll Size
+#endif
+  for(int i = 0; i < Size; ++i)
+  {
+     iblock[perm[i]] = uint2int(ublock[i]);
+  }
+}
 
 template<int BlockSize>
 struct inv_transform;
@@ -197,7 +239,7 @@ struct inv_transform<4>
 };
 
 template<typename Scalar, int BlockSize>
-__device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint maxbits)
+__device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, const int decode_parameter, const zfp_mode mode, const int dims)
 {
   typedef typename zfp_traits<Scalar>::UInt UInt;
   typedef typename zfp_traits<Scalar>::Int Int;
@@ -214,41 +256,39 @@ __device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint 
   if(s_cont)
   {
     uint ebits = get_ebits<Scalar>() + 1;
-
-    uint emax;
+    int emax;
     if(!is_int<Scalar>())
     {
-      // read in the shared exponent
-      emax = reader.read_bits(ebits - 1) - get_ebias<Scalar>();
+      emax = (int)reader.read_bits(ebits - 1) - (int)get_ebias<Scalar>();
     }
     else
     {
-      // no exponent bits
       ebits = 0;
     }
 
-	  maxbits -= ebits;
-    
-    UInt ublock[BlockSize];
-
-    decode_ints<Scalar, BlockSize, UInt>(reader, maxbits, ublock);
-
-    Int iblock[BlockSize];
-    const unsigned char *perm = get_perm<BlockSize>();
-#if (CUDART_VERSION < 8000)
-    #pragma unroll 
-#else
-    #pragma unroll BlockSize
-#endif
-    for(int i = 0; i < BlockSize; ++i)
-    {
-		  iblock[perm[i]] = uint2int(ublock[i]);
+    Int * iblock = (Int*)fblock;
+    int maxbits, maxprec;
+    switch(mode) {
+      case zfp_mode_fixed_rate:
+        /* decode_parameter contains maxbits */
+        maxbits = decode_parameter - (int)ebits;
+        decode_ints_rate<Scalar, BlockSize, UInt, Int>(reader, maxbits, iblock);
+        break;
+      case zfp_mode_fixed_accuracy:
+        /* decode_parameter contains minexp */
+        maxprec = MAX(emax - decode_parameter + 2 * (dims + 1), 0);
+        decode_ints_planes<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
+        break;
+      case zfp_mode_fixed_precision:
+        /* decode_parameter contains maxprec */
+        decode_ints_planes<Scalar, BlockSize, UInt, Int>(reader, decode_parameter, iblock);
+        break;
     }
-    
+
     inv_transform<BlockSize> trans;
     trans.inv_xform(iblock);
 
-		Scalar inv_w = dequantize<Int, Scalar>(1, emax);
+    Scalar inv_w = dequantize<Int, Scalar>(1, emax);
 
 #if (CUDART_VERSION < 8000)
     #pragma unroll 
@@ -257,9 +297,8 @@ __device__ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, uint 
 #endif
     for(int i = 0; i < BlockSize; ++i)
     {
-		  fblock[i] = inv_w * (Scalar)iblock[i];
+       fblock[i] = inv_w * (Scalar)iblock[i];
     }
-     
   }
 }
 
