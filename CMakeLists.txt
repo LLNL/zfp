@@ -108,22 +108,32 @@ set(ZFP_BIT_STREAM_WORD_SIZE 64 CACHE STRING
   "Use smaller bit stream word type for finer rate granularity")
 set_property(CACHE ZFP_BIT_STREAM_WORD_SIZE PROPERTY STRINGS "8;16;32;64")
 
+if(CMAKE_C_COMPILER_ID MATCHES "PGI|NVHPC")
+  # Default to minimal alignment to address PGI compiler bug
+  set(ZFP_CACHE_LINE_SIZE 1 CACHE STRING "Cache line alignment in bytes")
+  mark_as_advanced(ZFP_CACHE_LINE_SIZE)
+endif()
+
 set(PPM_CHROMA 2 CACHE STRING "Chroma block dimensionality for ppm example")
 set_property(CACHE PPM_CHROMA PROPERTY STRINGS "1;2")
 
 option(ZFP_WITH_CUDA "Enable CUDA parallel compression" OFF)
 
-option(ZFP_WITH_BIT_STREAM_STRIDED
-  "Enable strided access for progressive zfp streams" OFF)
+option(ZFP_WITH_BIT_STREAM_STRIDED "Enable strided access for progressive zfp streams" OFF)
+mark_as_advanced(ZFP_WITH_BIT_STREAM_STRIDED)
 
 option(ZFP_WITH_ALIGNED_ALLOC "Enable aligned memory allocation" OFF)
+mark_as_advanced(ZFP_WITH_ALIGNED_ALLOC)
 
 option(ZFP_WITH_CACHE_TWOWAY "Use two-way skew-associative cache" OFF)
+mark_as_advanced(ZFP_WITH_CACHE_TWOWAY)
 
 option(ZFP_WITH_CACHE_FAST_HASH
   "Use a faster but more collision prone hash function" OFF)
+mark_as_advanced(ZFP_WITH_CACHE_FAST_HASH)
 
 option(ZFP_WITH_CACHE_PROFILE "Count cache misses" OFF)
+mark_as_advanced(ZFP_WITH_CACHE_PROFILE)
 
 # Handle compile-time macros
 
@@ -172,6 +182,10 @@ endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
   list(APPEND zfp_private_defs BIT_STREAM_WORD_TYPE=uint${ZFP_BIT_STREAM_WORD_SIZE})
+endif()
+
+if(DEFINED ZFP_CACHE_LINE_SIZE)
+  list(APPEND zfp_private_defs ZFP_CACHE_LINE_SIZE=${ZFP_CACHE_LINE_SIZE})
 endif()
 
 if(ZFP_WITH_BIT_STREAM_STRIDED)

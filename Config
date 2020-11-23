@@ -35,6 +35,9 @@ OMPFLAGS = -fopenmp
 # DEFS += -DBIT_STREAM_WORD_TYPE=uint32
 # DEFS += -DBIT_STREAM_WORD_TYPE=uint64
 
+# cache alignment
+# DEFS += -DZFP_CACHE_LINE_SIZE=256
+
 # enable strided access for progressive zfp streams
 # DEFS += -DBIT_STREAM_STRIDED
 
