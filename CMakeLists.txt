@@ -109,8 +109,8 @@ set(ZFP_BIT_STREAM_WORD_SIZE 64 CACHE STRING
 set_property(CACHE ZFP_BIT_STREAM_WORD_SIZE PROPERTY STRINGS "8;16;32;64")
 
 if(CMAKE_C_COMPILER_ID MATCHES "PGI|NVHPC")
-  # Default to minimal alignment to address PGI compiler bug
-  set(ZFP_CACHE_LINE_SIZE 1 CACHE STRING "Cache line alignment in bytes")
+  # Use default alignment to address PGI compiler bug.
+  set(ZFP_CACHE_LINE_SIZE 0 CACHE STRING "Cache line alignment in bytes")
   mark_as_advanced(ZFP_CACHE_LINE_SIZE)
 endif()
 
@@ -147,7 +147,7 @@ if((DEFINED ZFP_UINT64) AND (DEFINED ZFP_UINT64_SUFFIX))
   list(APPEND zfp_public_defs ZFP_UINT64_SUFFIX=${ZFP_UINT64_SUFFIX})
 endif()
 
-# This odd cmake pattern here let's the OpenMP feature be either auto-detected,
+# This odd cmake pattern here lets the OpenMP feature be either auto-detected,
 # explicitly enabled, or explicitly disabled, instead of just on or off.
 if(DEFINED ZFP_WITH_OPENMP)
   option(ZFP_WITH_OPENMP "Enable OpenMP parallel compression"
@@ -176,7 +176,7 @@ if(ZFP_WITH_CUDA)
     message(FATAL_ERROR "ZFP_WITH_CUDA is enabled, but a CUDA installation was not found.")
   endif()
   if(${CUDA_VERSION_MAJOR} LESS 7)
-        message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
+    message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
   endif()
 endif()
 
@@ -185,6 +185,8 @@ if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
 endif()
 
 if(DEFINED ZFP_CACHE_LINE_SIZE)
+  # Add to zfp_public_defs since many tests currently include files from src.
+#  list(APPEND zfp_public_defs ZFP_CACHE_LINE_SIZE=${ZFP_CACHE_LINE_SIZE})
   list(APPEND zfp_private_defs ZFP_CACHE_LINE_SIZE=${ZFP_CACHE_LINE_SIZE})
 endif()
 
