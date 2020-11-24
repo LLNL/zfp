@@ -704,15 +704,15 @@ zfp_stream_set_mode(zfp_stream* zfp, uint64 mode)
       minbits = ZFP_MIN_BITS;
       maxbits = ZFP_MAX_BITS;
       maxprec = ZFP_MAX_PREC;
-      minexp = (uint)mode + ZFP_MIN_EXP - (2048 + 128 + 1);
+      minexp = (int)mode + ZFP_MIN_EXP - (2048 + 128 + 1);
     }
   }
   else {
     /* 64-bit encoding */
-    mode >>= 12; minbits = ((uint)mode & 0x7fffu) + 1;
-    mode >>= 15; maxbits = ((uint)mode & 0x7fffu) + 1;
-    mode >>= 15; maxprec = ((uint)mode & 0x007fu) + 1;
-    mode >>=  7; minexp  = ((uint)mode & 0x7fffu) - 16495;
+    mode >>= 12; minbits = (uint)(mode & 0x7fffu) + 1;
+    mode >>= 15; maxbits = (uint)(mode & 0x7fffu) + 1;
+    mode >>= 15; maxprec = (uint)(mode & 0x007fu) + 1;
+    mode >>=  7; minexp  = (int)(mode & 0x7fffu) - 16495;
   }
 
   if (!zfp_stream_set_params(zfp, minbits, maxbits, maxprec, minexp))
