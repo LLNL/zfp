@@ -1190,13 +1190,13 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
         switch (index_type) {
           /* offsets */
           case 1:
-            zfp->index->data = (void*)(index32);
+            zfp->index->data = (void*)index32;
             zfp->index->type = zfp_index_offset;
             zfp->index->granularity = index_granularity;
             break;
           /* hybrid */
           case 3:
-            zfp->index->data = (void*)(index32);
+            zfp->index->data = (void*)index32;
             zfp->index->type = zfp_index_hybrid;
             zfp->index->granularity = index_granularity;
             break;
@@ -1219,6 +1219,12 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
   /* decompress field and align bit stream on word boundary */
   decompress(zfp, field);
   stream_align(zfp->stream);
+  /* restore the index header */
+    if (zfp->index != NULL)
+      if (zfp->index->data != NULL) {
+        index32 -= 2;
+        zfp->index->data = (void*)index32;
+      }
 
   return stream_size(zfp->stream);
 }
