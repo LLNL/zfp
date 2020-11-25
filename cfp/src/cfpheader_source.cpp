@@ -1,33 +1,42 @@
 static CFP_HEADER_TYPE
-_t1(CFP_HEADER_TYPE, ctor_buffer)(uint dims, zfp_type scalar_type, const void* data, size_t bytes)
+_t1(CFP_HEADER_TYPE, ctor_buffer)(const void* data, size_t bytes)
 {
   CFP_HEADER_TYPE h;
-  h.object = 0;
-  switch (dims) {
-    case 1:
-      if (scalar_type == zfp_type_float)
-        h.object = new zfp::array1f::header(data, bytes);
-      else if (scalar_type == zfp_type_double)
-        h.object = new zfp::array1d::header(data, bytes);
-      break;
-    case 2:
-      if (scalar_type == zfp_type_float)
-        h.object = new zfp::array2f::header(data, bytes);
-      else if (scalar_type == zfp_type_double)
-        h.object = new zfp::array2d::header(data, bytes);
-      break;
-    case 3:
-      if (scalar_type == zfp_type_float)
-        h.object = new zfp::array3f::header(data, bytes);
-      else if (scalar_type == zfp_type_double)
-        h.object = new zfp::array3d::header(data, bytes);
-      break;
-    case 4:
-      if (scalar_type == zfp_type_float)
-        h.object = new zfp::array4f::header(data, bytes);
-      else if (scalar_type == zfp_type_double)
-        h.object = new zfp::array4d::header(data, bytes);
-      break;
+  try {
+    // construct generic header and query array type
+    header hdr(data, bytes);
+    uint dims = hdr.dimensionality();
+    zfp_type scalar_type = hdr.scalar_type();
+    // construct array-specific header
+    switch (dims) {
+      case 1:
+        if (scalar_type == zfp_type_float)
+          h.object = new zfp::array1f::header(data, bytes);
+        else if (scalar_type == zfp_type_double)
+          h.object = new zfp::array1d::header(data, bytes);
+        break;
+      case 2:
+        if (scalar_type == zfp_type_float)
+          h.object = new zfp::array2f::header(data, bytes);
+        else if (scalar_type == zfp_type_double)
+          h.object = new zfp::array2d::header(data, bytes);
+        break;
+      case 3:
+        if (scalar_type == zfp_type_float)
+          h.object = new zfp::array3f::header(data, bytes);
+        else if (scalar_type == zfp_type_double)
+          h.object = new zfp::array3d::header(data, bytes);
+        break;
+      case 4:
+        if (scalar_type == zfp_type_float)
+          h.object = new zfp::array4f::header(data, bytes);
+        else if (scalar_type == zfp_type_double)
+          h.object = new zfp::array4d::header(data, bytes);
+        break;
+    }
+  }
+  catch (...) {
+    h.object = 0;
   }
   return h;
 }
