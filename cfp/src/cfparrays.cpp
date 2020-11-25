@@ -97,6 +97,21 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array1f_cfp_iter1f_inc,
       cfp_array1f_cfp_iter1f_dec,
     },
+
+    {
+      cfp_header_ctor_array1f,
+      cfp_header_ctor_buffer,
+      cfp_header_dtor,
+      cfp_header_scalar_type,
+      cfp_header_dimensionality,
+      cfp_header_size_x,
+      cfp_header_size_y,
+      cfp_header_size_z,
+      cfp_header_size_w,
+      cfp_header_rate,
+      cfp_header_data,
+      cfp_header_size,
+    },
   },
   // array1d
   {
@@ -183,6 +198,21 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array1d_cfp_iter1d_prev,
       cfp_array1d_cfp_iter1d_inc,
       cfp_array1d_cfp_iter1d_dec,
+    },
+
+    {
+      cfp_header_ctor_array1d,
+      cfp_header_ctor_buffer,
+      cfp_header_dtor,
+      cfp_header_scalar_type,
+      cfp_header_dimensionality,
+      cfp_header_size_x,
+      cfp_header_size_y,
+      cfp_header_size_z,
+      cfp_header_size_w,
+      cfp_header_rate,
+      cfp_header_data,
+      cfp_header_size,
     },
   },
   // array2f
@@ -274,6 +304,21 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array2f_cfp_iter2f_inc,
       cfp_array2f_cfp_iter2f_dec,
     },
+
+    {
+      cfp_header_ctor_array2f,
+      cfp_header_ctor_buffer,
+      cfp_header_dtor,
+      cfp_header_scalar_type,
+      cfp_header_dimensionality,
+      cfp_header_size_x,
+      cfp_header_size_y,
+      cfp_header_size_z,
+      cfp_header_size_w,
+      cfp_header_rate,
+      cfp_header_data,
+      cfp_header_size,
+    },
   },
   // array2d
   {
@@ -363,7 +408,22 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array2d_cfp_iter2d_prev,
       cfp_array2d_cfp_iter2d_inc,
       cfp_array2d_cfp_iter2d_dec,
-    }
+    },
+
+    {
+      cfp_header_ctor_array2d,
+      cfp_header_ctor_buffer,
+      cfp_header_dtor,
+      cfp_header_scalar_type,
+      cfp_header_dimensionality,
+      cfp_header_size_x,
+      cfp_header_size_y,
+      cfp_header_size_z,
+      cfp_header_size_w,
+      cfp_header_rate,
+      cfp_header_data,
+      cfp_header_size,
+    },
   },
   // array3f
   {
@@ -456,6 +516,21 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array3f_cfp_iter3f_inc,
       cfp_array3f_cfp_iter3f_dec,
     },
+
+    {
+      cfp_header_ctor_array3f,
+      cfp_header_ctor_buffer,
+      cfp_header_dtor,
+      cfp_header_scalar_type,
+      cfp_header_dimensionality,
+      cfp_header_size_x,
+      cfp_header_size_y,
+      cfp_header_size_z,
+      cfp_header_size_w,
+      cfp_header_rate,
+      cfp_header_data,
+      cfp_header_size,
+    },
   },
   // array3d
   {
@@ -547,6 +622,21 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array3d_cfp_iter3d_prev,
       cfp_array3d_cfp_iter3d_inc,
       cfp_array3d_cfp_iter3d_dec,
+    },
+
+    {
+      cfp_header_ctor_array3d,
+      cfp_header_ctor_buffer,
+      cfp_header_dtor,
+      cfp_header_scalar_type,
+      cfp_header_dimensionality,
+      cfp_header_size_x,
+      cfp_header_size_y,
+      cfp_header_size_z,
+      cfp_header_size_w,
+      cfp_header_rate,
+      cfp_header_data,
+      cfp_header_size,
     },
   },
   // array4f
@@ -642,6 +732,21 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array4f_cfp_iter4f_inc,
       cfp_array4f_cfp_iter4f_dec,
     },
+
+    {
+      cfp_header_ctor_array4f,
+      cfp_header_ctor_buffer,
+      cfp_header_dtor,
+      cfp_header_scalar_type,
+      cfp_header_dimensionality,
+      cfp_header_size_x,
+      cfp_header_size_y,
+      cfp_header_size_z,
+      cfp_header_size_w,
+      cfp_header_rate,
+      cfp_header_data,
+      cfp_header_size,
+    },
   },
   // array4d
   {
@@ -736,29 +841,20 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array4d_cfp_iter4d_inc,
       cfp_array4d_cfp_iter4d_dec,
     },
-  },
-  // header
-  {
-    cfp_header_ctor_buffer,
-    cfp_header_ctor_array1f,
-    cfp_header_ctor_array1d,
-    cfp_header_ctor_array2f,
-    cfp_header_ctor_array2d,
-    cfp_header_ctor_array3f,
-    cfp_header_ctor_array3d,
-    cfp_header_ctor_array4f,
-    cfp_header_ctor_array4d,
-    cfp_header_dtor,
 
-    cfp_header_scalar_type,
-    cfp_header_dimensionality,
-    cfp_header_size_x,
-    cfp_header_size_y,
-    cfp_header_size_z,
-    cfp_header_size_w,
-    cfp_header_rate,
-
-    cfp_header_data,
-    cfp_header_size,
+    {
+      cfp_header_ctor_array4d,
+      cfp_header_ctor_buffer,
+      cfp_header_dtor,
+      cfp_header_scalar_type,
+      cfp_header_dimensionality,
+      cfp_header_size_x,
+      cfp_header_size_y,
+      cfp_header_size_z,
+      cfp_header_size_w,
+      cfp_header_rate,
+      cfp_header_data,
+      cfp_header_size,
+    },
   },
 };

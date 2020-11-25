@@ -22,8 +22,6 @@ typedef struct {
   size_t x, y;
 } cfp_iter2d;
 
-struct cfp_header;
-
 typedef struct {
   /* member functions */
   double (*get)(const cfp_ref2d self);
@@ -81,10 +79,28 @@ typedef struct {
 } cfp_iter2d_api;
 
 typedef struct {
+  /* constructor/destructor */
+  cfp_header (*ctor)(const cfp_array2d a);
+  cfp_header (*ctor_buffer)(const void* data, size_t size);
+  void (*dtor)(cfp_header self);
+  /* array metadata */
+  zfp_type (*scalar_type)(const cfp_header self);
+  uint (*dimensionality)(const cfp_header self);
+  size_t (*size_x)(const cfp_header self);
+  size_t (*size_y)(const cfp_header self);
+  size_t (*size_z)(const cfp_header self);
+  size_t (*size_w)(const cfp_header self);
+  double (*rate)(const cfp_header self);
+  /* header payload: data pointer and byte size */
+  const void* (*data)(const cfp_header self);
+  size_t (*size)(const cfp_header self);
+} cfp_header2d_api;
+
+typedef struct {
   cfp_array2d (*ctor_default)();
   cfp_array2d (*ctor)(size_t nx, size_t ny, double rate, const double* p, size_t cache_size);
   cfp_array2d (*ctor_copy)(const cfp_array2d src);
-  cfp_array2d (*ctor_header)(const struct cfp_header h, const void* buffer, size_t buffer_size_bytes);
+  cfp_array2d (*ctor_header)(const cfp_header h, const void* buffer, size_t buffer_size_bytes);
   void (*dtor)(cfp_array2d self);
 
   void (*deep_copy)(cfp_array2d self, const cfp_array2d src);
@@ -121,6 +137,7 @@ typedef struct {
   cfp_ref2d_api reference;
   cfp_ptr2d_api pointer;
   cfp_iter2d_api iterator;
+  cfp_header2d_api header;
 } cfp_array2d_api;
 
 #endif

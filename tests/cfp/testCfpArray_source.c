@@ -332,7 +332,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_headerCtor_expect_copied)(void **state)
   CFP_ARRAY_TYPE srcCfpArr = bundle->cfpArr;
 
   // get header
-  CFP_HEADER_TYPE srcCfpHdr = _catFunc2(CFP_NAMESPACE.header.ctor_, SUB_NAMESPACE)(srcCfpArr);
+  CFP_HEADER_TYPE srcCfpHdr = CFP_NAMESPACE.SUB_NAMESPACE.header.ctor(srcCfpArr);
 
   // get compressed bitstream
   void* srcBuff = (void*)CFP_NAMESPACE.SUB_NAMESPACE.compressed_data(srcCfpArr);
@@ -349,7 +349,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_headerCtor_expect_copied)(void **state)
   assert_memory_equal(srcBuff, newBuff, newSz);
 
   // cleanup
-  CFP_NAMESPACE.header.dtor(srcCfpHdr);
+  CFP_NAMESPACE.SUB_NAMESPACE.header.dtor(srcCfpHdr);
   CFP_NAMESPACE.SUB_NAMESPACE.dtor(newCfpArr);
 }
 
@@ -360,22 +360,22 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _header_when_bufferCtor_expect_copied)(void **
   CFP_ARRAY_TYPE srcCfpArr = bundle->cfpArr;
 
   // get header
-  CFP_HEADER_TYPE srcCfpHdr = _catFunc2(CFP_NAMESPACE.header.ctor_, SUB_NAMESPACE)(srcCfpArr);
-  const void* srcBuff = CFP_NAMESPACE.header.data(srcCfpHdr);
-  size_t srcSz = CFP_NAMESPACE.header.size(srcCfpHdr);
+  CFP_HEADER_TYPE srcCfpHdr = CFP_NAMESPACE.SUB_NAMESPACE.header.ctor(srcCfpArr);
+  const void* srcBuff = CFP_NAMESPACE.SUB_NAMESPACE.header.data(srcCfpHdr);
+  size_t srcSz = CFP_NAMESPACE.SUB_NAMESPACE.header.size(srcCfpHdr);
 
   // exec new header construct from source header
-  CFP_HEADER_TYPE newCfpHdr = CFP_NAMESPACE.header.ctor_buffer(DIMENSIONALITY, SCALAR_TYPE, srcBuff, srcSz);
+  CFP_HEADER_TYPE newCfpHdr = CFP_NAMESPACE.SUB_NAMESPACE.header.ctor_buffer(srcBuff, srcSz);
 
-  const void* newBuff = CFP_NAMESPACE.header.data(newCfpHdr);
-  size_t newSz = CFP_NAMESPACE.header.size(newCfpHdr);
+  const void* newBuff = CFP_NAMESPACE.SUB_NAMESPACE.header.data(newCfpHdr);
+  size_t newSz = CFP_NAMESPACE.SUB_NAMESPACE.header.size(newCfpHdr);
 
   assert_int_equal(srcSz, newSz);
   assert_memory_equal(srcBuff, newBuff, newSz);
 
   // cleanup
-  CFP_NAMESPACE.header.dtor(srcCfpHdr);
-  CFP_NAMESPACE.header.dtor(newCfpHdr);
+  CFP_NAMESPACE.SUB_NAMESPACE.header.dtor(srcCfpHdr);
+  CFP_NAMESPACE.SUB_NAMESPACE.header.dtor(newCfpHdr);
 }
 
 static void
@@ -385,25 +385,25 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _header_when_bufferCtor_expect_paramsCopied)(v
   CFP_ARRAY_TYPE srcCfpArr = bundle->cfpArr;
 
   // get header
-  CFP_HEADER_TYPE srcCfpHdr = _catFunc2(CFP_NAMESPACE.header.ctor_, SUB_NAMESPACE)(srcCfpArr);
-  const void* hBuff = CFP_NAMESPACE.header.data(srcCfpHdr);
-  size_t hSz = CFP_NAMESPACE.header.size(srcCfpHdr);
+  CFP_HEADER_TYPE srcCfpHdr = CFP_NAMESPACE.SUB_NAMESPACE.header.ctor(srcCfpArr);
+  const void* hBuff = CFP_NAMESPACE.SUB_NAMESPACE.header.data(srcCfpHdr);
+  size_t hSz = CFP_NAMESPACE.SUB_NAMESPACE.header.size(srcCfpHdr);
 
   // exec new header construct from source header
-  CFP_HEADER_TYPE newCfpHdr = CFP_NAMESPACE.header.ctor_buffer(DIMENSIONALITY, SCALAR_TYPE, hBuff, hSz);
+  CFP_HEADER_TYPE newCfpHdr = CFP_NAMESPACE.SUB_NAMESPACE.header.ctor_buffer(hBuff, hSz);
 
-  assert_int_equal(CFP_NAMESPACE.header.scalar_type(srcCfpHdr), CFP_NAMESPACE.header.scalar_type(newCfpHdr));
-  assert_int_equal(CFP_NAMESPACE.header.dimensionality(srcCfpHdr), CFP_NAMESPACE.header.dimensionality(newCfpHdr));
-  assert_int_equal(CFP_NAMESPACE.header.rate(srcCfpHdr), CFP_NAMESPACE.header.rate(newCfpHdr));
-  assert_int_equal(CFP_NAMESPACE.header.size(srcCfpHdr), CFP_NAMESPACE.header.size(newCfpHdr));
-  assert_int_equal(CFP_NAMESPACE.header.size_x(srcCfpHdr), CFP_NAMESPACE.header.size_x(newCfpHdr));
-  assert_int_equal(CFP_NAMESPACE.header.size_y(srcCfpHdr), CFP_NAMESPACE.header.size_y(newCfpHdr));
-  assert_int_equal(CFP_NAMESPACE.header.size_z(srcCfpHdr), CFP_NAMESPACE.header.size_z(newCfpHdr));
-  assert_int_equal(CFP_NAMESPACE.header.size_w(srcCfpHdr), CFP_NAMESPACE.header.size_w(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.scalar_type(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.scalar_type(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.dimensionality(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.dimensionality(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.rate(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.rate(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.size(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size_x(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.size_x(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size_y(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.size_y(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size_z(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.size_z(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size_w(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.size_w(newCfpHdr));
 
   // cleanup
-  CFP_NAMESPACE.header.dtor(srcCfpHdr);
-  CFP_NAMESPACE.header.dtor(newCfpHdr);
+  CFP_NAMESPACE.SUB_NAMESPACE.header.dtor(srcCfpHdr);
+  CFP_NAMESPACE.SUB_NAMESPACE.header.dtor(newCfpHdr);
 }
 
 static void
