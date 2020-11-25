@@ -68,7 +68,7 @@ getChecksumPtr(int dims, zfp_type type)
 void
 computeKeyOriginalInput(test_type tt, uint n[4], uint64* key1, uint64* key2)
 {
-  computeKey(tt, ORIGINAL_INPUT, n, 0, 0, key1, key2);
+  computeKey(tt, ORIGINAL_INPUT, n, (zfp_mode)0, 0, key1, key2);
 }
 
 void

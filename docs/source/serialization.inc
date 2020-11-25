@@ -143,6 +143,7 @@ is to be stored in the header.  The header is also compatible with the |zfp|
 
 ----
 
+.. _header_dims:
 .. cpp:function:: size_t header::size_x() const
 .. cpp:function:: size_t header::size_y() const
 .. cpp:function:: size_t header::size_z() const
@@ -158,13 +159,13 @@ is to be stored in the header.  The header is also compatible with the |zfp|
 
 ----
 
-.. cpp:function:: virtual const void* header::data() = 0
+.. cpp:function:: virtual const void* header::data() const = 0
 
   Return pointer to header data.
 
 ----
 
-.. cpp:function:: virtual size_t header::size() = 0
+.. cpp:function:: virtual size_t header::size() const = 0
 
   Return header size in bytes.
 

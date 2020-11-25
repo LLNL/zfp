@@ -427,17 +427,16 @@ Compression Parameters
 
 ----
 
-.. c:function:: double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, uint dims, int wra)
+.. c:function:: double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, uint dims, zfp_bool align)
 
   Set *rate* for :ref:`fixed-rate mode <mode-fixed-rate>` in compressed bits
   per value.  The target scalar *type* and array *dimensionality* are needed
   to correctly translate the rate to the number of bits per block.  The
-  parameter *wra* should be nonzero if random access writes of blocks into
-  the compressed bit stream is needed, for example for implementing |zfp|'s
-  :ref:`compressed arrays <arrays>`.  This requires blocks to be aligned on
-  :ref:`bit stream word <q-portability>` boundaries, and therefore constrains
-  the rate.  The closest supported rate is returned, which may differ from
-  the desired rate.
+  Boolean *align* should be :code:`zfp_true` if
+  :ref:`word alignment <q-portability>` is needed, e.g., to support random
+  access writes of blocks for |zfp|'s :ref:`compressed arrays <arrays>`.
+  Such alignment may further constrain the rate.  The closest supported rate
+  is returned, which may differ from the requested rate.
 
 ----
 
@@ -473,11 +472,11 @@ Compression Parameters
 
 ----
 
-.. c:function:: int zfp_stream_set_params(zfp_stream* stream, uint minbits, uint maxbits, uint maxprec, int minexp)
+.. c:function:: zfp_bool zfp_stream_set_params(zfp_stream* stream, uint minbits, uint maxbits, uint maxprec, int minexp)
 
   Set all compression parameters directly.  See the section on
   :ref:`expert mode <mode-expert>` for a discussion of the parameters.
-  The return value is nonzero upon success.
+  The return value is :code:`zfp_true` upon success.
 
 .. _hl-func-field:
 
@@ -504,29 +503,29 @@ Execution Policy
 
 ----
 
-.. c:function:: int zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)
+.. c:function:: zfp_bool zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)
 
   Set execution policy.  If different from the previous policy, initialize
-  the execution parameters to their default values.  Nonzero is returned if
-  the execution policy is supported.
+  the execution parameters to their default values.  :code:`zfp_true` is
+  returned if the execution policy is supported.
 
 ----
 
-.. c:function:: int zfp_stream_set_omp_threads(zfp_stream* stream, uint threads)
+.. c:function:: zfp_bool zfp_stream_set_omp_threads(zfp_stream* stream, uint threads)
 
   Set the number of OpenMP threads to use during compression.  If *threads*
   is zero, then the number of threads is given by the value of the OpenMP
   *nthreads-var* internal control variable when :c:func:`zfp_compress` is
   called (usually the maximum number available).  This function also sets
-  the execution policy to OpenMP.  Upon success, nonzero is returned.
+  the execution policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
 
 ----
 
-.. c:function:: int zfp_stream_set_omp_chunk_size(zfp_stream* stream, uint chunk_size)
+.. c:function:: zfp_bool zfp_stream_set_omp_chunk_size(zfp_stream* stream, uint chunk_size)
 
   Set the number of consecutive blocks to compress together per OpenMP thread.
   If zero, use one chunk per thread.  This function also sets the execution
-  policy to OpenMP.  Upon success, nonzero is returned.
+  policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
 
 Array Metadata
 ^^^^^^^^^^^^^^
@@ -614,12 +613,12 @@ Array Metadata
 
 ----
 
-.. c:function:: int zfp_field_stride(const zfp_field* field, int* stride)
+.. c:function:: zfp_bool zfp_field_stride(const zfp_field* field, int* stride)
 
-  Return zero if the array is stored contiguously as :code:`a[nx]`,
-  :code:`a[ny][nx]`, :code:`a[nz][ny][nx]`, or :code:`a[nw][nz][ny][nx]`
-  depending on dimensionality.  Return nonzero if the array is strided
-  and laid out differently in memory.
+  Return :code:`zfp_false` if the array is stored contiguously as
+  :code:`a[nx]`, :code:`a[ny][nx]`, :code:`a[nz][ny][nx]`, or
+  :code:`a[nw][nz][ny][nx]` depending on dimensionality.  Return
+  :code:`zfp_true` if the array is strided and laid out differently in memory.
   If *stride* is not :c:macro:`NULL`, then store the stride for each
   dimension, e.g., :code:`stride[0] = sx; stride[1] = sy; stride[2] = sz`
   for a 3D array.  See :c:type:`zfp_field` for more information on strides.
@@ -703,11 +702,11 @@ Array Metadata
 
 ----
 
-.. c:function:: int zfp_field_set_metadata(zfp_field* field, uint64 meta)
+.. c:function:: zfp_bool zfp_field_set_metadata(zfp_field* field, uint64 meta)
 
   Specify array scalar type and dimensions from compact 52-bit representation.
-  Return nonzero upon success.  See :c:func:`zfp_field_metadata` for how to
-  encode *meta*.
+  Return :code:`zfp_true` upon success.  See :c:func:`zfp_field_metadata` for
+  how to encode *meta*.
 
 .. _hl-func-codec:
 
@@ -717,11 +716,11 @@ Compression and Decompression
 .. c:function:: size_t zfp_compress(zfp_stream* stream, const zfp_field* field)
 
   Compress the whole array described by *field* using parameters given by
-  *stream* and then flush the stream to emit any buffered bits and align the
-  stream on a word boundary.  The number of bytes of compressed storage
-  is returned, if the stream were rewound before compression, and otherwise the
-  current byte offset within the bit stream.  Zero is returned if compression
-  failed.
+  *stream*.  Then flush the stream to emit any buffered bits and align the
+  stream on a word boundary.  The resulting byte offset within the bit stream
+  is returned, which equals the total number of bytes of compressed storage
+  if the stream was rewound before the :c:func:`zfp_compress` call.  Zero is
+  returned if compression failed.
 
 ----
 

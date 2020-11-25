@@ -21,4 +21,4 @@ $(LIBDIR)/libzfp.so: $(OBJECTS)
 	$(CC) $(CFLAGS) -shared $^ -o $@
 
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -I../include -c $<

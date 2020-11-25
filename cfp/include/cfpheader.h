@@ -18,7 +18,7 @@ typedef struct cfp_header cfp_header;
 
 typedef struct {
   /* header constructor/destructor */
-  cfp_header (*ctor_buffer)(uint dims, zfp_type scalar_type, const void* bytes, size_t n);
+  cfp_header (*ctor_buffer)(uint dims, zfp_type scalar_type, const void* data, size_t bytes);
   cfp_header (*ctor_array1f)(const cfp_array1f a);
   cfp_header (*ctor_array1d)(const cfp_array1d a);
   cfp_header (*ctor_array2f)(const cfp_array2f a);
