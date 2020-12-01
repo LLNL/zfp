@@ -164,6 +164,7 @@ not actually part of the |cfp| API.
 
 ----
 
+.. _cfp_ctor:
 .. c:function:: cfp_array1f cfp.array1f.ctor(size_t nx, double rate, const float* p, size_t cache_size)
 .. c:function:: cfp_array1d cfp.array1d.ctor(size_t nx, double rate, const double* p, size_t cache_size)
 .. c:function:: cfp_array2f cfp.array2f.ctor(size_t nx, size_t ny, double rate, const float* p, size_t cache_size)
@@ -193,6 +194,16 @@ not actually part of the |cfp| API.
 .. c:function:: cfp_array cfp.array.ctor_copy(const cfp_array src)
 
   :ref:`Copy constructor <array_ctor_default>`.
+
+----
+
+.. _cfp_ctor_header:
+.. c:function:: cfp_array cfp.array.ctor_header(const cfp_header h, const void* buffer, size_t buffer_size_bytes);
+
+  Constructor from metadata given by the :ref:`header <cfp_header>` *h*
+  and optionally initialized with compressed data from *buffer* of
+  size *buffer_size_bytes*.
+  See :ref:`corresponding C++ constructor <array_ctor_header>`.
 
 ----
 
@@ -399,12 +410,26 @@ Serialization
 
 |zfp| |crpirelease| adds |cfp| array :ref:`serialization <serialization>`.
 Like |zfp|'s C++ arrays, |cfp| arrays can be serialized and deserialized to
-and from sequential storage.  Currently, |cfp| provides no factory function,
-so the caller must know which type of array (dimensionality and scalar type)
-to construct.  As with the C++ arrays, (de)serialization is done with the
-assistance of a header class, :c:type:`cfp_header`.  This header is
-dynamically allocated and must be explicitly destructed via
-:c:func:`cfp.header.dtor`.
+and from sequential storage.  As with the C++ arrays, (de)serialization is
+done with the assistance of a header class, :c:type:`cfp_header`.  Currently,
+|cfp| provides no :ref:`factory function <array_factory>`---the caller must
+either know which type of array (dimensionality and scalar type) to
+:ref:`construct <cfp_ctor>` at compile-time or obtain this information at
+run-time from a header :ref:`constructed <cfp_ctor_header>` from a memory
+buffer.
+
+.. _cfp_header:
+
+Header
+^^^^^^
+
+:c:type:`cfp_header` is a wrapper around :cpp:class:`array::header`.
+Although the header type is shared among all array types, the header API
+is accessed through the associated array type whose metadata the header
+describes.  For example, :code:`cfp.array3f.header.ctor(const cfp_array3f a)`
+constructs a header for a :c:type:`cfp_array3f`.  The header is dynamically
+allocated and must be explicitly destructed via
+:c:func:`cfp.array.header.dtor`.
 
 .. c:type:: cfp_header
 
@@ -412,27 +437,21 @@ dynamically allocated and must be explicitly destructed via
 
 ----
 
-.. c:function:: cfp_header cfp.header.ctor_buffer(uint dims, zfp_type scalar_type, const void* data, size_t bytes)
+.. c:function:: cfp_header cfp.array.header.ctor(const cfp_array a);
 
-  Construct a header for an array of *dims* dimensions and given *scalar_type*
-  from header *data* buffer of size *bytes*.
-
-----
-
-.. c:function:: cfp_header cfp.header.ctor_array1f(const cfp_array1f a);
-.. c:function:: cfp_header cfp.header.ctor_array1d(const cfp_array1d a);
-.. c:function:: cfp_header cfp.header.ctor_array2f(const cfp_array2f a);
-.. c:function:: cfp_header cfp.header.ctor_array2d(const cfp_array2d a);
-.. c:function:: cfp_header cfp.header.ctor_array3f(const cfp_array3f a);
-.. c:function:: cfp_header cfp.header.ctor_array3d(const cfp_array3d a);
-.. c:function:: cfp_header cfp.header.ctor_array4f(const cfp_array4f a);
-.. c:function:: cfp_header cfp.header.ctor_array4d(const cfp_array4d a);
-
-  Construct a header that describes the metadata of an existing array *a*.
+  :ref:`Construct <header_ctor>` a header that describes the metadata of an
+  existing array *a*.
 
 ----
 
-.. c:function:: void cfp.header.dtor(cfp_header self);
+.. c:function:: cfp_header cfp.array.header.ctor_buffer(const void* data, size_t size)
+
+  :ref:`Construct <header_ctor_buffer>` a header from header *data* buffer
+  of given byte *size*.
+
+----
+
+.. c:function:: void cfp.array.header.dtor(cfp_header self);
 
   Destructor.  Deallocates all data associated with the header.  The user
   must call the destructor to avoid memory leaks.
@@ -441,44 +460,44 @@ dynamically allocated and must be explicitly destructed via
 
 .. cpp:namespace:: zfp::array
 
-.. c:function:: zfp_type cfp.header.scalar_type(const cfp_header self);
+.. c:function:: zfp_type cfp.array.header.scalar_type(const cfp_header self);
 
   Scalar type associated with array.  See :cpp:func:`header::scalar_type`.
 
 ----
 
-.. c:function:: uint cfp.header.dimensionality(const cfp_header self);
+.. c:function:: uint cfp.array.header.dimensionality(const cfp_header self);
 
   Dimensionality associated with array.
   See :cpp:func:`header::dimensionality`.
 
 ----
 
-.. c:function:: size_t cfp.header.size_x(const cfp_header self);
-.. c:function:: size_t cfp.header.size_y(const cfp_header self);
-.. c:function:: size_t cfp.header.size_z(const cfp_header self);
-.. c:function:: size_t cfp.header.size_w(const cfp_header self);
+.. c:function:: size_t cfp.array.header.size_x(const cfp_header self);
+.. c:function:: size_t cfp.array.header.size_y(const cfp_header self);
+.. c:function:: size_t cfp.array.header.size_z(const cfp_header self);
+.. c:function:: size_t cfp.array.header.size_w(const cfp_header self);
 
   :ref:`Array dimensions <header_dims>`.  Unused dimensions have a size of zero.
 
 ----
 
-.. c:function:: double cfp.header.rate(const cfp_header self);
+.. c:function:: double cfp.array.header.rate(const cfp_header self);
 
   Rate in bits/value.  See :cpp:func:`header::rate`.
 
 ----
 
-.. c:function:: const void* cfp.header.data(const cfp_header self);
+.. c:function:: const void* cfp.array.header.data(const cfp_header self);
 
   Pointer to header data buffer needed for serializing the header.
   See :cpp:func:`header::data`.
 
 ----
 
-.. c:function:: size_t cfp.header.size(const cfp_header self);
+.. c:function:: size_t cfp.array.header.size(const cfp_header self);
 
-  Size of header data buffer needed for serializing the header.
+  Byte size of header data buffer needed for serializing the header.
   See :cpp:func:`header::size`.
 
 
