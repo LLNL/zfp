@@ -11,3 +11,6 @@ set(CTEST_DROP_METHOD "https")
 set(CTEST_DROP_SITE "open.cdash.org")
 set(CTEST_DROP_LOCATION "/submit.php?project=zfp")
 set(CTEST_DROP_SITE_CDASH TRUE)
+
+# Test Options
+set(MEMORYCHECK_COMMAND_OPTIONS "--show-reachable=no")

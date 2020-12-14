@@ -1,12 +1,14 @@
 include ../Config
 
 TARGET = ../bin/zfp
+INCS = -I../include
+LIBS = -L../lib -lzfp -lm
 
 all: $(TARGET)
 
 $(TARGET): zfp.c ../lib/$(LIBZFP)
 	mkdir -p ../bin
-	$(CC) $(CFLAGS) zfp.c -L../lib -lzfp -lm -o $(TARGET)
+	$(CC) $(CFLAGS) $(INCS) zfp.c $(LIBS) -o $(TARGET)
 
 clean:
 	rm -f $(TARGET) fields.o

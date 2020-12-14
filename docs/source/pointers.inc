@@ -66,8 +66,6 @@ to the pointer being acted upon.
 
 .. cpp:namespace:: zfp::arrayANY
 
-----
-
 .. cpp:function:: pointer pointer::operator=(const pointer& q)
 .. cpp:function:: const_pointer const_pointer::operator=(const const_pointer& q)
 
@@ -128,6 +126,7 @@ to the pointer being acted upon.
 
 ----
 
+.. _ptr_inequalities:
 .. cpp:function:: bool pointer::operator<=(const pointer& q) const
 .. cpp:function:: bool pointer::operator>=(const pointer& q) const
 .. cpp:function:: bool pointer::operator<(const pointer& q) const

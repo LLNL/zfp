@@ -94,7 +94,7 @@ given_zfpStreamSetWithFixedRate_when_zfpStreamCompressionMode_expect_returnsFixe
   uint dims;
   int rate;
   int align;
-  for (zfpType = 1; zfpType <= 4; zfpType++) {
+  for (zfpType = (zfp_type)1; zfpType <= (zfp_type)4; zfpType++) {
     for (dims = 1; dims <= 4; dims++) {
       for (rate = 1; rate <= ((zfpType % 2) ? 32 : 64); rate++) {
         for (align = 0; align <= 1; align++) {
@@ -237,7 +237,7 @@ given_zfpStreamSetRateModeVal_when_zfpStreamSetMode_expect_returnsFixedRate_and_
   uint dims;
   int rate;
   int align;
-  for (zfpType = 1; zfpType <= 4; zfpType++) {
+  for (zfpType = (zfp_type)1; zfpType <= (zfp_type)4; zfpType++) {
     for (dims = 1; dims <= 4; dims++) {
       for (rate = 1; rate <= ((zfpType % 2) ? 32 : 64); rate++) {
         for (align = 0; align <= 1; align++) {

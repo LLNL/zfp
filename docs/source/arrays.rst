@@ -1,13 +1,13 @@
 .. include:: defs.rst
 .. _arrays:
 
-Compressed-Array Classes
-========================
+Compressed-Array C++ Classes
+============================
 
 .. cpp:namespace:: zfp
 
-|zfp|'s compressed arrays are C++ classes, plus C wrappers around these
-classes, that implement random-accessible single- and multi-dimensional
+|zfp|'s compressed arrays are C++ classes, plus :ref:`C wrappers <cfp>` around
+these classes, that implement random-accessible single- and multi-dimensional
 floating-point arrays whose storage size, specified in number of bits per
 array element, is set by the user.  Such arbitrary storage is achieved via
 |zfp|'s lossy :ref:`fixed-rate compression <mode-fixed-rate>` mode, by
@@ -51,12 +51,12 @@ The following sections are available:
 * :ref:`pointers`
 * :ref:`iterators`
 * :ref:`views`
-* :ref:`cfp`
+
 
 .. _array_classes:
 
-Array Classes
--------------
+Arrays
+------
 
 There are eight array classes for 1D, 2D, 3D, and 4D arrays, each of which
 can represent single- or double-precision values.
@@ -83,9 +83,13 @@ Base Class
 
   Virtual base class for common array functionality.
 
+----
+
 .. cpp:function:: double array::rate() const
 
   Return rate in bits per value.
+
+----
 
 .. cpp:function:: double array::set_rate(double rate)
 
@@ -94,10 +98,14 @@ Base Class
   for discussions of the rate granularity.  This method destroys the previous
   contents of the array.
 
+----
+
 .. cpp:function:: virtual void array::clear_cache() const
 
   Empty cache without compressing modified cached blocks, i.e., discard any
   cached updates to the array.
+
+----
 
 .. cpp:function:: virtual void array::flush_cache() const
 
@@ -105,12 +113,16 @@ Base Class
   storage and emptying the cache.  This method should be called before
   writing the compressed representation of the array to disk, for instance.
 
+----
+
 .. cpp:function:: size_t array::compressed_size() const
 
   Return number of bytes of storage for the compressed data.  This amount
   does not include the small overhead of other class members or the size
   of the cache.  Rather, it reflects the size of the memory buffer
   returned by :cpp:func:`compressed_data`.
+
+----
 
 .. cpp:function:: void* array::compressed_data() const
 
@@ -124,18 +136,26 @@ Base Class
   streams are always word aligned (see :c:var:`stream_word_bits` and
   :c:macro:`BIT_STREAM_WORD_TYPE`).
 
+----
+
 .. cpp:function:: uint array::dimensionality() const
 
   Return the dimensionality (aka. rank) of the array: 1, 2, 3, or 4.
+
+----
 
 .. cpp:function:: zfp_type array::scalar_type() const
 
   Return the underlying scalar type (:c:type:`zfp_type`) of the array.
 
+----
+
 .. cpp:function:: array::header array::get_header() const
 
   Deprecated function as of |zfp| |crpirelease|.  See the :ref:`header`
   section on how to construct a header.
+
+----
 
 .. _array_factory:
 .. cpp:function:: static array* array::construct(const header& h, const void* buffer = 0, size_t buffer_size_bytes = 0)
@@ -150,6 +170,8 @@ Base Class
   implied by the header.  If this function fails for any reason, an
   :cpp:class:`exception` is thrown.
 
+----
+
 Common Methods
 ^^^^^^^^^^^^^^
 
@@ -162,15 +184,21 @@ in the base class.
   Total number of elements in array, e.g., *nx* |times| *ny* |times| *nz* for
   3D arrays.
 
+----
+
 .. cpp:function:: size_t array::cache_size() const
 
   Return the cache size in number of bytes.
+
+----
 
 .. cpp:function:: void array::set_cache_size(size_t bytes)
 
   Set minimum cache size in bytes.  The actual size is always a power of two
   bytes and consists of at least one block.  If *bytes* is zero, then a
   default cache size is used, which requires the array dimensions to be known.
+
+----
 
 .. cpp:function:: void array::get(Scalar* p) const
 
@@ -179,11 +207,15 @@ in the base class.
   (with default strides) and stored in the usual "row-major" order, i.e., with
   *x* varying faster than *y*, *y* varying faster than *z*, etc.
 
+----
+
 .. cpp:function:: void array::set(const Scalar* p)
 
   Initialize array by copying and compressing data stored at *p*.  The
   uncompressed data is assumed to be stored as in the :cpp:func:`get`
   method.
+
+----
 
 .. cpp:function:: const_reference array::operator[](size_t index) const
 
@@ -197,24 +229,35 @@ in the base class.
   necessary to allow obtaining a const pointer to the element when the array
   itself is const qualified, e.g., :code:`const_pointer p = &a[index];`.
 
+----
+
+.. _lvref_idx:
 .. cpp:function:: reference array::operator[](size_t index)
 
   Return :ref:`proxy reference <references>` to scalar stored at given flat
   index (mutator).  For a 3D array, :code:`index = x + nx * (y + ny * z)`.
 
+----
+
 .. cpp:function:: iterator array::begin()
 
   Return mutable iterator to beginning of array.
+
+----
 
 .. cpp:function:: iterator array::end()
 
   Return mutable iterator to end of array.  As with STL iterators, the end
   points to a virtual element just past the last valid array element.
 
+----
+
 .. cpp:function:: const_iterator array::begin() const
 .. cpp:function:: const_iterator array::cbegin() const
 
   Return const iterator to beginning of array.
+
+----
 
 .. cpp:function:: const_iterator array::end() const
 .. cpp:function:: const_iterator array::cend() const
@@ -224,7 +267,6 @@ in the base class.
 .. note::
   Const :ref:`references <references>`, :ref:`pointers <pointers>`, and
   :ref:`iterators <iterators>` are available as of |zfp| |crpirelease|.  
-
 
 1D, 2D, 3D, and 4D Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -414,4 +456,3 @@ type is omitted for readability, e.g.,
 .. include:: pointers.inc
 .. include:: iterators.inc
 .. include:: views.inc
-.. include:: cfp.inc

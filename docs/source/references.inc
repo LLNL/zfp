@@ -16,7 +16,7 @@ References
 .. cpp:class:: array3::reference : public array3::const_reference
 .. cpp:class:: array4::reference : public array4::const_reference
 
-Array :ref:`indexing operators <lvref>` must return lvalue references that
+Array :ref:`indexing operators <lvref_idx>` must return lvalue references that
 alias array elements and serve as vehicles for assigning values to those
 elements.  Unfortunately, |zfp| cannot simply return a standard C++ reference
 (e.g., :code:`float&`) to an uncompressed array element since the element in
@@ -82,6 +82,7 @@ and :ref:`mutators <lvref>`.
  
 ----
 
+.. _ref_copy:
 .. cpp:function:: reference reference::operator=(const reference& ref)
 
   Assignment (copy) operator.  The referenced element, *elem*, is assigned the
@@ -89,6 +90,7 @@ and :ref:`mutators <lvref>`.
 
 ----
 
+.. _ref_mutators:
 .. cpp:function:: reference reference::operator=(Scalar val)
 .. cpp:function:: reference reference::operator+=(Scalar val)
 .. cpp:function:: reference reference::operator-=(Scalar val)

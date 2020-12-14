@@ -17,7 +17,7 @@ dimensions, and rate.
 The user may concatenate the header and compressed data to form a
 fixed-rate byte stream that can be read by the |zfp|
 :ref:`command-line tool <zfpcmd>`.  When serializing the array,
-the user should first call :cpp:func:`array::flush_cache()` before
+the user should first call :cpp:func:`array::flush_cache` before
 accessing the raw compressed data.
 
 There are two primary ways to construct a compressed-array object from
@@ -131,6 +131,17 @@ is to be stored in the header.  The header is also compatible with the |zfp|
 
 ----
 
+.. _header_ctor_buffer:
+.. cpp:function:: header::header(const void* buffer, size_t size_bytes = 0)
+
+  Deserialize header from memory buffer given by *buffer* of optional
+  size *size_bytes*.  This memory buffer is obtained from an existing
+  header during serialization via :cpp:func:`header::data` and
+  :cpp:func:`header::size`.  The constructor throws an
+  :ref:`exception <exception>` upon failure.
+
+----
+
 .. cpp:function:: zfp_type header::scalar_type() const
 
   Scalar type associated with array (see :cpp:func:`array::scalar_type`).
@@ -143,6 +154,7 @@ is to be stored in the header.  The header is also compatible with the |zfp|
 
 ----
 
+.. _header_dims:
 .. cpp:function:: size_t header::size_x() const
 .. cpp:function:: size_t header::size_y() const
 .. cpp:function:: size_t header::size_z() const
@@ -158,13 +170,13 @@ is to be stored in the header.  The header is also compatible with the |zfp|
 
 ----
 
-.. cpp:function:: virtual const void* header::data() = 0
+.. cpp:function:: virtual const void* header::data() const = 0
 
   Return pointer to header data.
 
 ----
 
-.. cpp:function:: virtual size_t header::size() = 0
+.. cpp:function:: virtual size_t header::size() const = 0
 
   Return header size in bytes.
 

@@ -2,15 +2,16 @@ include ../Config
 
 BINDIR = ../bin
 TARGETS = $(BINDIR)/testzfp $(BINDIR)/testviews
-CXXLIBS = -L../lib -lzfp
+INCS = -I../include -I../array
+LIBS = -L../lib -lzfp
 
 all: $(TARGETS)
 
 $(BINDIR)/testzfp: testzfp.cpp ../lib/$(LIBZFP)
-	$(CXX) $(CXXFLAGS) -I../array testzfp.cpp $(CXXLIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(INCS) testzfp.cpp $(LIBS) -o $@
 
 $(BINDIR)/testviews: testviews.cpp ../lib/$(LIBZFP)
-	$(CXX) $(CXXFLAGS) -I../array testviews.cpp $(CXXLIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(INCS) testviews.cpp $(LIBS) -o $@
 
 test: $(BINDIR)/testzfp
 	$(BINDIR)/testzfp

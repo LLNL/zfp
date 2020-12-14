@@ -426,7 +426,6 @@ static int
 isDecompressedArrayChecksumsMatch(struct setupVars* bundle)
 {
   zfp_field* field = bundle->field;
-  zfp_stream* stream = bundle->stream;
 
   // hash decompressedArr
   const UInt* arr = (const UInt*)bundle->decompressedArr;

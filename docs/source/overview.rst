@@ -45,7 +45,7 @@ components, specifically
 * Via one of the I/O libraries or visualization tools that support |zfp|,
   e.g.,
 
-  * `ADIOS plugin <https://github.com/suchyta1/AtoZ>`_
+  * `ADIOS plugin <https://www.olcf.ornl.gov/center-projects/adios/>`_
   * `HDF5 plugin <https://github.com/LLNL/H5Z-ZFP>`_
   * `Intel IPP plugin <https://software.intel.com/en-us/ipp-dev-reference-zfp-compression-functions>`_
   * `TTK plugin <https://topology-tool-kit.github.io/installation.html>`_
