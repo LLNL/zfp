@@ -4,7 +4,6 @@ else()
   cmake_minimum_required(VERSION 3.1)
 endif()
 
-set(CMAKE_VERBOSE_MAKEFILE on)
 
 # Fail immediately if not using an out-of-source build
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
@@ -27,7 +26,7 @@ set(ZFP_VERSION
   "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}")
 
 project(ZFP VERSION ${ZFP_VERSION})
-
+set(CMAKE_VERBOSE_MAKEFILE ON)
 #------------------------------------------------------------------------------#
 # Some boilerplate to setup nice output directories
 #------------------------------------------------------------------------------#

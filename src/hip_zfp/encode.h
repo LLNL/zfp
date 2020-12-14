@@ -198,12 +198,12 @@ struct BlockWriter
 
   uint m_word_index;
   uint m_start_bit;
-  uint m_hiprrent_bit;
+  uint m_current_bit;
   const int m_maxbits; 
   Word *m_stream;
 
   __device__ BlockWriter(Word *stream, const int &maxbits, const uint &block_idx)
-   :  m_hiprrent_bit(0),
+   :  m_current_bit(0),
       m_maxbits(maxbits),
       m_stream(stream)
   {
@@ -237,8 +237,8 @@ struct BlockWriter
   write_bits(const long long unsigned int &bits, const uint &n_bits)
   {
     const uint wbits = sizeof(Word) * 8;
-    uint seg_start = (m_start_bit + m_hiprrent_bit) % wbits;
-    uint write_index = m_word_index + uint((m_start_bit + m_hiprrent_bit) / wbits);
+    uint seg_start = (m_start_bit + m_current_bit) % wbits;
+    uint write_index = m_word_index + uint((m_start_bit + m_current_bit) / wbits);
     uint seg_end = seg_start + n_bits - 1;
     uint shift = seg_start; 
     // we may be asked to write less bits than exist in 'bits'
@@ -262,7 +262,7 @@ struct BlockWriter
       Word rem = b >> (sizeof(Word) * 8 - shift);
       atomicAdd(&m_stream[write_index + 1], rem); 
     }
-    m_hiprrent_bit += n_bits;
+    m_current_bit += n_bits;
 
     // bit shift behave differently in HIP 
     if (n_bits == 64) return 0;
@@ -273,8 +273,8 @@ struct BlockWriter
   uint write_bit(const unsigned int &bit)
   {
     const uint wbits = sizeof(Word) * 8;
-    uint seg_start = (m_start_bit + m_hiprrent_bit) % wbits;
-    uint write_index = m_word_index + uint((m_start_bit + m_hiprrent_bit) / wbits);
+    uint seg_start = (m_start_bit + m_current_bit) % wbits;
+    uint write_index = m_word_index + uint((m_start_bit + m_current_bit) / wbits);
     uint shift = seg_start; 
     // we may be asked to write less bits than exist in 'bits'
     // so we have to make sure that anything after n is zero.
@@ -284,7 +284,7 @@ struct BlockWriter
     
     Word add = (Word)bit << shift;
     atomicAdd(&m_stream[write_index], add); 
-    m_hiprrent_bit += 1;
+    m_current_bit += 1;
 
     return bit;
   }
