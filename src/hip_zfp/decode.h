@@ -24,7 +24,7 @@ class BlockReader
 {
 private:
   const int m_maxbits; 
-  int m_hiprrent_bit;
+  int m_current_bit;
   Word *m_words;
   Word m_buffer;
   bool m_valid_block;
@@ -43,9 +43,9 @@ public:
     int word_index = (block_idx * maxbits)  / (sizeof(Word) * 8); 
     m_words = b + word_index;
     m_buffer = *m_words;
-    m_hiprrent_bit = (block_idx * maxbits) % (sizeof(Word) * 8); 
+    m_current_bit = (block_idx * maxbits) % (sizeof(Word) * 8); 
 
-    m_buffer >>= m_hiprrent_bit;
+    m_buffer >>= m_current_bit;
     m_block_idx = block_idx;
    
   }
@@ -59,12 +59,12 @@ public:
   uint read_bit()
   {
     uint bit = m_buffer & 1;
-    ++m_hiprrent_bit;
+    ++m_current_bit;
     m_buffer >>= 1;
     // handle moving into next word
-    if(m_hiprrent_bit >= sizeof(Word) * 8) 
+    if(m_current_bit >= sizeof(Word) * 8) 
     {
-      m_hiprrent_bit = 0;
+      m_current_bit = 0;
       ++m_words;
       m_buffer = *m_words;
     }
@@ -78,7 +78,7 @@ public:
   {
     uint64 bits; 
     // rem bits will always be positive
-    int rem_bits = sizeof(Word) * 8 - m_hiprrent_bit;
+    int rem_bits = sizeof(Word) * 8 - m_current_bit;
      
     int first_read = min(rem_bits, n_bits);
     // first mask 
@@ -92,14 +92,14 @@ public:
     if (n_bits == 64) m_buffer = 0;
     else m_buffer >>= n_bits;
    
-    m_hiprrent_bit += first_read;
+    m_current_bit += first_read;
    
     int next_read = 0;
     if(n_bits >= rem_bits) 
     {
       ++m_words;
       m_buffer = *m_words;
-      m_hiprrent_bit = 0;
+      m_current_bit = 0;
       next_read = n_bits - first_read; 
     }
    
@@ -113,7 +113,7 @@ public:
 
     bits += (m_buffer & mask) << first_read;
     m_buffer >>= next_read;
-    m_hiprrent_bit += next_read; 
+    m_current_bit += next_read; 
     return bits;
   }
 
