@@ -24,6 +24,7 @@ The following sections are available:
 
   * :ref:`hl-func-bitstream`
   * :ref:`hl-func-stream`
+  * :ref:`hl-func-exec`
   * :ref:`hl-func-field`
   * :ref:`hl-func-codec`
 
@@ -478,7 +479,7 @@ Compression Parameters
   :ref:`expert mode <mode-expert>` for a discussion of the parameters.
   The return value is :code:`zfp_true` upon success.
 
-.. _hl-func-field:
+.. _hl-func-exec:
 
 Execution Policy
 ^^^^^^^^^^^^^^^^
@@ -526,6 +527,8 @@ Execution Policy
   Set the number of consecutive blocks to compress together per OpenMP thread.
   If zero, use one chunk per thread.  This function also sets the execution
   policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
+
+.. _hl-func-field:
 
 Array Metadata
 ^^^^^^^^^^^^^^
@@ -740,16 +743,18 @@ Compression and Decompression
   Write an optional variable-length header to the stream that encodes
   compression parameters, array metadata, etc.  The header information written
   is determined by the bit *mask* (see :c:macro:`macros <ZFP_HEADER_MAGIC>`).
-  The return value is the number of bits written, or zero upon failure.
   Unlike in :c:func:`zfp_compress`, no word alignment is enforced.  See the
   :ref:`limitations <limitations>` section for limits on the maximum array
-  size supported by the header.
+  size supported by the header.  The return value is the number of bits
+  written, or zero upon failure.
 
 ----
 
 .. c:function:: size_t zfp_read_header(zfp_stream* stream, zfp_field* field, uint mask)
 
   Read header if one was previously written using :c:func:`zfp_write_header`.
-  The return value is the number of bits read, or zero upon failure.  The
-  caller must ensure that the bit *mask* agrees between header read and
-  write calls.
+  The *stream* and *field* data structures are populated with the information
+  stored in the header, as specified by the bit *mask* (see
+  :c:macro:`macros <ZFP_HEADER_MAGIC>`).  The caller must ensure that *mask*
+  agrees between header read and write calls.  The return value is the number
+  of bits read, or zero upon failure.
