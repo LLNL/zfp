@@ -7,7 +7,7 @@ forward Euler finite difference solution to the heat equation on a 2D grid
 #include <stdlib.h>
 #include <math.h>
 
-#include "cfparrays.h"
+#include "cfparray.h"
 #define _ (CFP_NAMESPACE.array2d)
 
 #define MAX(x, y) (((nx) > (ny)) ? (nx) : (ny))

@@ -10,8 +10,8 @@
 #define ZFP_ARRAY_TYPE zfp::array2d
 #define ZFP_SCALAR_TYPE double
 
-#include "cfparray_source.cpp"
-#include "cfparray2_source.cpp"
+#include "template/cfparray.cpp"
+#include "template/cfparray2.cpp"
 
 #undef CFP_ARRAY_TYPE
 #undef CFP_REF_TYPE

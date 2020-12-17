@@ -1,5 +1,5 @@
 #include "cfpheader.cpp"
-#include "cfparrays.h"
+#include "cfparray.h"
 
 #include "cfparray1f.cpp"
 #include "cfparray1d.cpp"
