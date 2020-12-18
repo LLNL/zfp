@@ -51,24 +51,24 @@ _t2(fwd_xform, Int, 3)(Int* p)
 
 /* public functions -------------------------------------------------------- */
 
-/* encode 4*4*4 floating-point block stored at p using strides (sx, sy, sz) */
+/* encode 4*4*4 block stored at p using strides (sx, sy, sz) */
 uint
 _t2(zfp_encode_block_strided, Scalar, 3)(zfp_stream* stream, const Scalar* p, int sx, int sy, int sz)
 {
   /* gather block from strided array */
-  cache_align_(Scalar fblock[64]);
-  _t2(gather, Scalar, 3)(fblock, p, sx, sy, sz);
-  /* encode floating-point block */
-  return _t2(zfp_encode_block, Scalar, 3)(stream, fblock);
+  cache_align_(Scalar block[64]);
+  _t2(gather, Scalar, 3)(block, p, sx, sy, sz);
+  /* encode block */
+  return _t2(zfp_encode_block, Scalar, 3)(stream, block);
 }
 
-/* encode nx*ny*nz floating-point block stored at p using strides (sx, sy, sz) */
+/* encode nx*ny*nz block stored at p using strides (sx, sy, sz) */
 uint
 _t2(zfp_encode_partial_block_strided, Scalar, 3)(zfp_stream* stream, const Scalar* p, uint nx, uint ny, uint nz, int sx, int sy, int sz)
 {
   /* gather block from strided array */
-  cache_align_(Scalar fblock[64]);
-  _t2(gather_partial, Scalar, 3)(fblock, p, nx, ny, nz, sx, sy, sz);
-  /* encode floating-point block */
-  return _t2(zfp_encode_block, Scalar, 3)(stream, fblock);
+  cache_align_(Scalar block[64]);
+  _t2(gather_partial, Scalar, 3)(block, p, nx, ny, nz, sx, sy, sz);
+  /* encode block */
+  return _t2(zfp_encode_block, Scalar, 3)(stream, block);
 }
