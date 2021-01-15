@@ -107,7 +107,7 @@ protected:
     size_t ny = ymax - ymin;
     size_t nz = zmax - zmin;
     size_t nw = wmax - wmin;
-    if (p == nx * ny * nz * nw) {
+    if (size_t(p) == nx * ny * nz * nw) {
       x = xmin;
       y = ymin;
       z = zmin;
