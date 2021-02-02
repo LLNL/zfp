@@ -40,10 +40,10 @@ public:
     :  m_maxbits(maxbits), m_valid_block(true)
   {
     if(block_idx >= num_blocks) m_valid_block = false;
-    int word_index = (block_idx * maxbits)  / (sizeof(Word) * 8); 
+    size_t word_index = ((size_t)block_idx * maxbits)  / (sizeof(Word) * 8); 
     m_words = b + word_index;
     m_buffer = *m_words;
-    m_current_bit = (block_idx * maxbits) % (sizeof(Word) * 8); 
+    m_current_bit = ((size_t)block_idx * maxbits) % (sizeof(Word) * 8); 
 
     m_buffer >>= m_current_bit;
     m_block_idx = block_idx;
