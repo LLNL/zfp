@@ -63,7 +63,7 @@ for several Linux distributions and may be installed using :code:`apt` or
 :code:`yum`.
 
 
-.. _app_support:
+.. _app-support:
 
 Application Support
 -------------------
@@ -120,7 +120,7 @@ specifically
 * Via the |zfp| :ref:`command-line tool <zfpcmd>` when compressing
   binary files offline.
 
-* Via :ref:`third-party <app_support>` I/O libraries or tools that support |zfp|.
+* Via :ref:`third-party <app-support>` I/O libraries or tools that support |zfp|.
 
 
 
