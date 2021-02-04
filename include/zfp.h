@@ -170,9 +170,28 @@ zfp_stream_bit_stream(
   const zfp_stream* stream /* compressed stream */
 );
 
-/* returns enum of compression mode */
-zfp_mode                   /* enum for compression mode */
+/* enumerated compression mode */
+zfp_mode                   /* compression mode or zfp_mode_null if not set */
 zfp_stream_compression_mode(
+  const zfp_stream* stream /* compressed stream */
+);
+
+/* rate in compressed bits/scalar (when in fixed-rate mode) */
+double                      /* rate or zero upon failure */
+zfp_stream_rate(
+  const zfp_stream* stream, /* compressed stream */
+  uint dims                 /* array dimensionality (1, 2, 3, or 4) */
+);
+
+/* precision in uncompressed bits/scalar (when in fixed-precision mode) */
+uint                       /* precision or zero upon failure */
+zfp_stream_precision(
+  const zfp_stream* stream /* compressed stream */
+);
+
+/* accuracy as absolute error tolerance (when in fixed-accuracy mode) */
+double                     /* tolerance or zero upon failure */
+zfp_stream_accuracy(
   const zfp_stream* stream /* compressed stream */
 );
 
@@ -378,7 +397,7 @@ zfp_field_precision(
   const zfp_field* field /* field metadata */
 );
 
-/* field dimensionality (1, 2, or 3) */
+/* field dimensionality (1, 2, 3, or 4) */
 uint                     /* number of dimensions */
 zfp_field_dimensionality(
   const zfp_field* field /* field metadata */

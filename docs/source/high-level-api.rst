@@ -339,7 +339,6 @@ Functions
 Compressed Stream
 ^^^^^^^^^^^^^^^^^
 
-
 .. c:function:: zfp_stream* zfp_stream_open(bitstream* stream)
 
   Allocate compressed stream and associate it with bit stream for reading
@@ -355,37 +354,22 @@ Compressed Stream
 
 ----
 
+.. c:function:: void zfp_stream_rewind(zfp_stream* stream)
+
+  Rewind bit stream to beginning for compression or decompression.
+
+----
+
 .. c:function:: bitstream* zfp_stream_bit_stream(const zfp_stream* stream)
 
-  Return bit stream associated with compressed stream.
+  Return bit stream associated with compressed stream (see
+  :c:func:`zfp_stream_set_bit_stream`).
 
 ----
 
-.. c:function:: zfp_mode zfp_stream_compression_mode(const zfp_stream* stream)
+.. c:function:: void zfp_stream_set_bit_stream(zfp_stream* stream, bitstream* bs)
 
-  Return compression mode associated with compression parameters. Return
-  :code:`zfp_mode_null` when compression parameters are invalid.
-
-----
-
-.. c:function:: uint64 zfp_stream_mode(const zfp_stream* stream)
-
-  Return compact encoding of compression parameters.  If the return value
-  is no larger than :c:macro:`ZFP_MODE_SHORT_MAX`, then the least significant
-  :c:macro:`ZFP_MODE_SHORT_BITS` (12 in the current version) suffice to
-  encode the parameters.  Otherwise all 64 bits are needed, and the low
-  :c:macro:`ZFP_MODE_SHORT_BITS` bits will be all ones.  Thus, this
-  variable-length encoding can be used to economically encode and decode
-  the compression parameters, which is especially important if the parameters
-  are to vary spatially over small regions.  Such spatially adaptive coding
-  would have to be implemented via the low-level API.
-
-----
-
-.. c:function:: void zfp_stream_params(const zfp_stream* stream, uint* minbits, uint* maxbits, uint* maxprec, int* minexp)
-
-  Query :ref:`compression parameters <mode-expert>`.  For any parameter not
-  needed, pass :c:macro:`NULL` for the corresponding pointer.
+  Associate bit stream with compressed stream.
 
 ----
 
@@ -405,26 +389,30 @@ Compressed Stream
   are given by *field*.  This function may be used to determine how large a
   memory buffer to allocate to safely hold the entire compressed array.
 
-----
-
-.. c:function:: void zfp_stream_set_bit_stream(zfp_stream* stream, bitstream* bs)
-
-  Associate bit stream with compressed stream.
-
-----
-
-.. c:function:: void zfp_stream_rewind(zfp_stream* stream)
-
-  Rewind bit stream to beginning for compression or decompression.
 
 .. _hl-func-stream:
 
 Compression Parameters
 ^^^^^^^^^^^^^^^^^^^^^^
 
+.. c:function:: zfp_mode zfp_stream_compression_mode(const zfp_stream* stream)
+
+  Return compression mode associated with compression parameters. Return
+  :code:`zfp_mode_null` when compression parameters are invalid.
+
+----
+
 .. c:function:: void zfp_stream_set_reversible(zfp_stream* stream)
 
   Enable :ref:`reversible <mode-reversible>` (lossless) compression.
+
+----
+
+.. c:function:: double zfp_stream_rate(const zfp_stream* stream, uint dims)
+
+  Return rate in compressed bits per value if *stream* is in
+  :ref:`fixed-rate mode <mode-fixed-rate>` (see :c:func:`zfp_stream_set_rate`),
+  else zero.  *dims* is the dimensionality of the compressed data.
 
 ----
 
@@ -441,6 +429,14 @@ Compression Parameters
 
 ----
 
+.. c:function:: uint zfp_stream_precision(const zfp_stream* stream)
+
+  Return precision in uncompressed bits per value if *stream* is in
+  :ref:`fixed-precision mode <mode-fixed-precision>` (see
+  :c:func:`zfp_stream_set_precision`), else zero.
+
+----
+
 .. c:function:: uint zfp_stream_set_precision(zfp_stream* stream, uint precision)
 
   Set *precision* for :ref:`fixed-precision mode <mode-fixed-precision>`.
@@ -449,6 +445,14 @@ Compression Parameters
   returned, e.g., in case the desired precision is out of range.  To
   preserve a certain floating-point mantissa or integer precision in the
   decompressed data, see :ref:`FAQ #21 <q-lossless>`.
+
+----
+
+.. c:function:: double zfp_stream_accuracy(const zfp_stream* stream)
+
+  Return accuracy as an absolute error tolerance if *stream* is in
+  :ref:`fixed-accuracy mode <mode-fixed-accuracy>` (see
+  :c:func:`zfp_stream_set_accuracy`), else zero.
 
 ----
 
@@ -463,6 +467,20 @@ Compression Parameters
 
 ----
 
+.. c:function:: uint64 zfp_stream_mode(const zfp_stream* stream)
+
+  Return compact encoding of compression parameters.  If the return value
+  is no larger than :c:macro:`ZFP_MODE_SHORT_MAX`, then the least significant
+  :c:macro:`ZFP_MODE_SHORT_BITS` (12 in the current version) suffice to
+  encode the parameters.  Otherwise all 64 bits are needed, and the low
+  :c:macro:`ZFP_MODE_SHORT_BITS` bits will be all ones.  Thus, this
+  variable-length encoding can be used to economically encode and decode
+  the compression parameters, which is especially important if the parameters
+  are to vary spatially over small regions.  Such spatially adaptive coding
+  would have to be implemented via the low-level API.
+
+----
+
 .. c:function:: zfp_mode zfp_stream_set_mode(zfp_stream* stream, uint64 mode)
 
   Set all compression parameters from compact integer representation.
@@ -473,11 +491,19 @@ Compression Parameters
 
 ----
 
+.. c:function:: void zfp_stream_params(const zfp_stream* stream, uint* minbits, uint* maxbits, uint* maxprec, int* minexp)
+
+  Query :ref:`compression parameters <mode-expert>`.  For any parameter not
+  needed, pass :c:macro:`NULL` for the corresponding pointer.
+
+----
+
 .. c:function:: zfp_bool zfp_stream_set_params(zfp_stream* stream, uint minbits, uint maxbits, uint maxprec, int minexp)
 
   Set all compression parameters directly.  See the section on
   :ref:`expert mode <mode-expert>` for a discussion of the parameters.
   The return value is :code:`zfp_true` upon success.
+
 
 .. _hl-func-exec:
 

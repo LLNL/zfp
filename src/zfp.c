@@ -488,6 +488,30 @@ zfp_stream_compression_mode(const zfp_stream* zfp)
   return zfp_mode_expert;
 }
 
+double
+zfp_stream_rate(const zfp_stream* zfp, uint dims)
+{
+  return (zfp_stream_compression_mode(zfp) == zfp_mode_fixed_rate)
+           ? (double)zfp->maxbits / (1u << (2 * dims))
+           : 0.0;
+}
+
+uint
+zfp_stream_precision(const zfp_stream* zfp)
+{
+  return (zfp_stream_compression_mode(zfp) == zfp_mode_fixed_precision)
+           ? zfp->maxprec
+           : 0;
+}
+
+double
+zfp_stream_accuracy(const zfp_stream* zfp)
+{
+  return (zfp_stream_compression_mode(zfp) == zfp_mode_fixed_accuracy)
+           ? ldexp(1.0, zfp->minexp)
+           : 0.0;
+}
+
 uint64
 zfp_stream_mode(const zfp_stream* zfp)
 {
