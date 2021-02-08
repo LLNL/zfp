@@ -283,13 +283,13 @@ script:
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$PYTHON_VERSION" = "3.5" ]; then
         export PYTHON_INCLUDE_DIR=/usr/include/python3.5m;
         export PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so;
-        $PYTHON_EXECUTABLE -m pip install --user --upgrade pip;
-        $PYTHON_EXECUTABLE -m pip install --user --upgrade cython;
+        $PYTHON_EXECUTABLE -m pip install --no-cache-dir --user --upgrade pip;
+        $PYTHON_EXECUTABLE -m pip install --no-cache-dir --user --upgrade cython;
         export PATH=${HOME}/.local/bin/:$PATH
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$DISTRIB_CODENAME" = "trusty" ] && [ "$PYTHON_VERSION" = "2.7" ]; then
-        $PYTHON_EXECUTABLE -m pip install --user --upgrade pip;
+        $PYTHON_EXECUTABLE -m pip install --no-cache-dir --user --upgrade pip;
         $PYTHON_EXECUTABLE -m pip install -r ${TRAVIS_BUILD_DIR}/python/requirements.txt;
         export PATH=${HOME}/.local/bin/:$PATH
     fi
