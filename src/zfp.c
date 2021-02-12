@@ -806,7 +806,7 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
       break;
 #endif
     case zfp_exec_omp:
-#ifdef _OPENMP
+#if _OPENMP >= 200805
       if (zfp->exec.policy != policy) {
         zfp->exec.params.omp.threads = 0;
         zfp->exec.params.omp.chunk_size = 0;
@@ -932,7 +932,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
       { compress_strided_int32_4, compress_strided_int64_4, compress_strided_float_4, compress_strided_double_4 }}},
 
     /* OpenMP */
-#ifdef _OPENMP
+#if _OPENMP >= 200805
     {{{ compress_omp_int32_1,         compress_omp_int64_1,         compress_omp_float_1,         compress_omp_double_1 },
       { compress_strided_omp_int32_2, compress_strided_omp_int64_2, compress_strided_omp_float_2, compress_strided_omp_double_2 },
       { compress_strided_omp_int32_3, compress_strided_omp_int64_3, compress_strided_omp_float_3, compress_strided_omp_double_3 },
