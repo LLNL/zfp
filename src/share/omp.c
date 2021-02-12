@@ -1,4 +1,5 @@
-#if _OPENMP >= 200805
+#ifdef _OPENMP
+#include <limits.h>
 #include <omp.h>
 
 /* number of omp threads to use */
@@ -19,7 +20,11 @@ chunk_count_omp(const zfp_stream* stream, size_t blocks, uint threads)
   size_t chunk_size = stream->exec.params.omp.chunk_size;
   /* if no chunk size is specified, assign one chunk per thread */
   size_t chunks = chunk_size ? (blocks + chunk_size - 1) / chunk_size : threads;
-  return MIN(chunks, blocks);
+  /* each chunk must contain at least one block */
+  chunks = MIN(chunks, blocks);
+  /* OpenMP 2.0 loop counters must be ints */
+  chunks = MIN(chunks, INT_MAX);
+  return chunks;
 }
 
 #endif

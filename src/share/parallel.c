@@ -1,4 +1,4 @@
-#if _OPENMP >= 200805
+#ifdef _OPENMP
 
 /* block index at which chunk begins */
 static size_t

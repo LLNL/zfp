@@ -9,7 +9,7 @@
 #include "zfparray2.h"
 #include "array2d.h"
 
-#if _OPENMP >= 200805
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 

@@ -1,9 +1,4 @@
-/* require OpenMP 3.0 for size_t loop counters */
-#if defined(_OPENMP) && _OPENMP < 200805
-  #error "zfp requires OpenMP 3.0 or later"
-#endif
-
-#if _OPENMP >= 200805
+#ifdef _OPENMP
 
 /* compress 1d contiguous array in parallel */
 static void
@@ -17,7 +12,7 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
   uint threads = thread_count_omp(stream);
   size_t blocks = (nx + 3) / 4;
   size_t chunks = chunk_count_omp(stream, blocks, threads);
-  size_t chunk;
+  int chunk; /* OpenMP 2.0 requires int loop counter */
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -26,7 +21,7 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 
   /* compress chunks of blocks in parallel */
   #pragma omp parallel for num_threads(threads)
-  for (chunk = 0; chunk < chunks; chunk++) {
+  for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     size_t bmin = chunk_offset(blocks, chunks, chunk + 0);
     size_t bmax = chunk_offset(blocks, chunks, chunk + 1);
@@ -65,7 +60,7 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
   uint threads = thread_count_omp(stream);
   size_t blocks = (nx + 3) / 4;
   size_t chunks = chunk_count_omp(stream, blocks, threads);
-  size_t chunk;
+  int chunk; /* OpenMP 2.0 requires int loop counter */
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -74,7 +69,7 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 
   /* compress chunks of blocks in parallel */
   #pragma omp parallel for num_threads(threads)
-  for (chunk = 0; chunk < chunks; chunk++) {
+  for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     size_t bmin = chunk_offset(blocks, chunks, chunk + 0);
     size_t bmax = chunk_offset(blocks, chunks, chunk + 1);
@@ -117,7 +112,7 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
   size_t by = (ny + 3) / 4;
   size_t blocks = bx * by;
   size_t chunks = chunk_count_omp(stream, blocks, threads);
-  size_t chunk;
+  int chunk; /* OpenMP 2.0 requires int loop counter */
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -126,7 +121,7 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
 
   /* compress chunks of blocks in parallel */
   #pragma omp parallel for num_threads(threads)
-  for (chunk = 0; chunk < chunks; chunk++) {
+  for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     size_t bmin = chunk_offset(blocks, chunks, chunk + 0);
     size_t bmax = chunk_offset(blocks, chunks, chunk + 1);
@@ -175,7 +170,7 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
   size_t bz = (nz + 3) / 4;
   size_t blocks = bx * by * bz;
   size_t chunks = chunk_count_omp(stream, blocks, threads);
-  size_t chunk;
+  int chunk; /* OpenMP 2.0 requires int loop counter */
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -184,7 +179,7 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
 
   /* compress chunks of blocks in parallel */
   #pragma omp parallel for num_threads(threads)
-  for (chunk = 0; chunk < chunks; chunk++) {
+  for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     size_t bmin = chunk_offset(blocks, chunks, chunk + 0);
     size_t bmax = chunk_offset(blocks, chunks, chunk + 1);
@@ -237,7 +232,7 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
   size_t bw = (nw + 3) / 4;
   size_t blocks = bx * by * bz * bw;
   size_t chunks = chunk_count_omp(stream, blocks, threads);
-  size_t chunk;
+  int chunk; /* OpenMP 2.0 requires int loop counter */
 
   /* allocate per-thread streams */
   bitstream** bs = compress_init_par(stream, field, chunks, blocks);
@@ -246,7 +241,7 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
 
   /* compress chunks of blocks in parallel */
   #pragma omp parallel for num_threads(threads)
-  for (chunk = 0; chunk < chunks; chunk++) {
+  for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     size_t bmin = chunk_offset(blocks, chunks, chunk + 0);
     size_t bmax = chunk_offset(blocks, chunks, chunk + 1);
