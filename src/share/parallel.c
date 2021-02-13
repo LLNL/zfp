@@ -4,7 +4,7 @@
 static size_t
 chunk_offset(size_t blocks, size_t chunks, size_t chunk)
 {
-  return (blocks * chunk) / chunks;
+  return (size_t)(((uint64)blocks * (uint64)chunk) / chunks);
 }
 
 /* initialize per-thread bit streams for parallel compression */
@@ -54,7 +54,7 @@ compress_init_par(zfp_stream* stream, const zfp_field* field, size_t chunks, siz
     return NULL;
   for (chunk = 0; chunk < chunks; chunk++) {
     size_t block = chunk_offset(blocks, chunks, chunk);
-    void* buffer = copy ? malloc(size) : (uchar*)stream_data(stream->stream) + stream_size(stream->stream) + block * stream->maxbits / CHAR_BIT;
+    void* buffer = copy ? malloc(size) : (uchar*)stream_data(stream->stream) + stream_size(stream->stream) + block * (stream->maxbits / CHAR_BIT);
     if (!buffer)
       break;
     bs[chunk] = stream_open(buffer, size);
