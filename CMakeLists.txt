@@ -329,7 +329,8 @@ if(BUILD_CFP)
     DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 endif()
 
-if(BUILD_UTILITIES)
-  install(TARGETS zfpcmd
-    DESTINATION "${CMAKE_INSTALL_BINDIR}")
-endif()
+# TODO: Fix on Travis
+#if(BUILD_UTILITIES)
+#  install(TARGETS zfpcmd
+#    DESTINATION "${CMAKE_INSTALL_BINDIR}")
+#endif()
