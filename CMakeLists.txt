@@ -328,3 +328,8 @@ if(BUILD_CFP)
   install(EXPORT cfp-targets NAMESPACE zfp::
     DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 endif()
+
+if(BUILD_UTILITIES)
+  install(TARGETS zfpcmd
+    DESTINATION "${CMAKE_INSTALL_BINDIR}")
+endif()
