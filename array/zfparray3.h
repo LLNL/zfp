@@ -24,6 +24,7 @@ public:
   typedef array3 container_type;
   typedef Scalar value_type;
   typedef Codec codec_type;
+  typedef BlockStore3<value_type, codec_type> store_type;
   typedef typename Codec::header header;
 
   // accessor classes
@@ -53,7 +54,7 @@ public:
   // cache_size bytes of cache, and optionally initialized from flat array p
   array3(size_t nx, size_t ny, size_t nz, double rate, const value_type* p = 0, size_t cache_size = 0) :
     array(3, Codec::type),
-    store(nx, ny, nz, rate),
+    store(nx, ny, nz, zfp_config_rate(rate, true)),
     cache(store, cache_size)
   {
     this->nx = nx;
@@ -120,18 +121,22 @@ public:
   // resize the array (all previously stored data will be lost)
   void resize(size_t nx, size_t ny, size_t nz, bool clear = true)
   {
+    cache.clear();
     this->nx = nx;
     this->ny = ny;
     this->nz = nz;
     store.resize(nx, ny, nz, clear);
-    cache.clear();
   }
 
   // rate in bits per value
-  double rate() const { return cache.rate(); }
+  double rate() const { return store.rate(); }
 
   // set rate in bits per value
-  double set_rate(double rate) { return cache.set_rate(rate); }
+  double set_rate(double rate)
+  {
+    cache.clear();
+    return store.set_rate(rate);
+  }
 
   // number of bytes of compressed data
   size_t compressed_size() const { return store.compressed_size(); }
@@ -209,7 +214,7 @@ public:
     return reference(this, i, j, k);
   }
 
-  // sequential iterators
+  // random access iterators
   const_iterator cbegin() const { return const_iterator(this, 0, 0, 0); }
   const_iterator cend() const { return const_iterator(this, 0, 0, nz); }
   const_iterator begin() const { return cbegin(); }
@@ -272,7 +277,7 @@ protected:
   }
 
   BlockStore3<value_type, codec_type> store; // persistent storage of compressed blocks
-  BlockCache3<value_type, codec_type> cache; // cache of decompressed blocks
+  BlockCache3<value_type, store_type> cache; // cache of decompressed blocks
 };
 
 typedef array3<float> array3f;

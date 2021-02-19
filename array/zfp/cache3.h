@@ -2,24 +2,17 @@
 #define ZFP_CACHE3_H
 
 #include "cache.h"
-#include "store3.h"
 
 namespace zfp {
 
-template <typename Scalar, class Codec>
+template <typename Scalar, class Store>
 class BlockCache3 {
 public:
   // constructor of cache of given size
-  BlockCache3(BlockStore3<Scalar, Codec>& store, size_t bytes = 0) :
+  BlockCache3(Store& store, size_t bytes = 0) :
     cache((uint)((bytes + sizeof(CacheLine) - 1) / sizeof(CacheLine))),
-    store(store),
-    codec(0)
-  {
-    alloc();
-  }
-
-  // destructor
-  ~BlockCache3() { free(); }
+    store(store)
+  {}
 
   // cache size in number of bytes
   size_t size() const { return cache.size() * sizeof(CacheLine); }
@@ -31,19 +24,6 @@ public:
     cache.resize(lines(bytes, store.blocks()));
   }
 
-  // rate in bits per value
-  double rate() const { return store.rate(); }
-
-  // set rate in bits per value
-  double set_rate(double rate)
-  {
-    cache.clear();
-    free();
-    rate = store.set_rate(rate);
-    alloc();
-    return rate;
-  }
-
   // empty cache without compressing modified cached blocks
   void clear() const { cache.clear(); }
 
@@ -53,19 +33,14 @@ public:
     for (typename zfp::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
       if (p->tag.dirty()) {
         size_t block_index = p->tag.index() - 1;
-        store.encode(codec, block_index, p->line->data());
+        store.encode(block_index, p->line->data());
       }
       cache.flush(p->line);
     }
   }
 
   // perform a deep copy
-  void deep_copy(const BlockCache3& c)
-  {
-    free();
-    cache = c.cache;
-    alloc();
-  }
+  void deep_copy(const BlockCache3& c) { cache = c.cache; }
 
   // inspector
   Scalar get(size_t i, size_t j, size_t k) const
@@ -88,43 +63,27 @@ public:
     return (*p)(i, j, k);
   }
 
-  // copy block from cache, if cached, or fetch from persistent storage without caching
+  // read-no-allocate: copy block from cache on hit, else from store without caching
   void get_block(size_t block_index, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
     const CacheLine* line = cache.lookup((uint)block_index + 1, false);
     if (line)
       line->get(p, sx, sy, sz, store.block_shape(block_index));
     else
-      store.decode(codec, block_index, p, sx, sy, sz);
+      store.decode(block_index, p, sx, sy, sz);
   }
 
-  // copy vlock to cache, if cached, or store to persistent storage without caching
+  // write-no-allocate: copy block to cache on hit, else to store without caching
   void put_block(size_t block_index, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
     CacheLine* line = cache.lookup((uint)block_index + 1, true);
     if (line)
       line->put(p, sx, sy, sz, store.block_shape(block_index));
     else
-      store.encode(codec, block_index, p, sx, sy, sz);
+      store.encode(block_index, p, sx, sy, sz);
   }
 
 protected:
-  // allocate codec
-  void alloc()
-  {
-    codec = new Codec(store.compressed_data(), store.compressed_size());
-    codec->set_rate(store.rate());
-  }
-
-  // free allocated data
-  void free()
-  {
-    if (codec) {
-      delete codec;
-      codec = 0;
-    }
-  }
-
   // cache line representing one block of decompressed values
   class CacheLine {
   public:
@@ -207,9 +166,9 @@ protected:
     if (stored_block_index != block_index) {
       // write back occupied cache line if it is dirty
       if (tag.dirty())
-        store.encode(codec, stored_block_index, p->data());
+        store.encode(stored_block_index, p->data());
       // fetch cache line
-      store.decode(codec, block_index, p->data());
+      store.decode(block_index, p->data());
     }
     return p;
   }
@@ -230,9 +189,8 @@ protected:
     return std::max(n, 1u);
   }
 
-  mutable Cache<CacheLine> cache;    // cache of decompressed blocks
-  BlockStore3<Scalar, Codec>& store; // store backed by cache
-  Codec* codec;                      // compression codec
+  mutable Cache<CacheLine> cache; // cache of decompressed blocks
+  Store& store;                   // store backed by cache
 };
 
 }

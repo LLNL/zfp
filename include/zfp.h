@@ -45,10 +45,21 @@
 #define ZFP_MIN_EXP  -1074 /* minimum floating-point base-2 exponent */
 
 /* header masks (enable via bitwise or; reader must use same mask) */
+#define ZFP_HEADER_NONE   0x0u /* no header */
 #define ZFP_HEADER_MAGIC  0x1u /* embed 64-bit magic */
 #define ZFP_HEADER_META   0x2u /* embed 52-bit field metadata */
 #define ZFP_HEADER_MODE   0x4u /* embed 12- or 64-bit compression mode */
 #define ZFP_HEADER_FULL   0x7u /* embed all of the above */
+
+/* bit masks for specifying storage class */
+#define ZFP_DATA_UNUSED  0x01u /* allocated but unused storage */
+#define ZFP_DATA_PADDING 0x02u /* padding for alignment purposes */
+#define ZFP_DATA_META    0x04u /* class members and other fixed-size storage */
+#define ZFP_DATA_MISC    0x08u /* miscellaneous uncategorized storage */
+#define ZFP_DATA_PAYLOAD 0x10u /* compressed data */
+#define ZFP_DATA_INDEX   0x20u /* variable-rate block index information */
+#define ZFP_DATA_CACHE   0x40u /* uncompressed cached data */
+#define ZFP_DATA_ALL     0x7fu /* all storage */
 
 /* field metadata indeterminate state and error code */
 #define ZFP_META_NULL (UINT64C(-1))

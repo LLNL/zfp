@@ -2,13 +2,12 @@
 #define ZFP_STORE4_H
 
 #include "zfp/store.h"
-#include "zfp/memory.h"
 
 namespace zfp {
 
 // compressed block store for 4D array
-template <typename Scalar, class Codec>
-class BlockStore4 : public BlockStore {
+template <typename Scalar, class Codec, class Index = zfp::internal::ImplicitIndex>
+class BlockStore4 : public BlockStore<Codec, Index> {
 public:
   // default constructor
   BlockStore4() :
@@ -16,28 +15,27 @@ public:
     bx(0), by(0), bz(0), bw(0)
   {}
 
-  // block store for array of size nx * ny * nz * nw and given rate
-  BlockStore4(size_t nx, size_t ny, size_t nz, size_t nw, double rate) :
-    nx(nx),
-    ny(ny),
-    nz(nz),
-    nw(nw),
-    bx((nx + 3) / 4),
-    by((ny + 3) / 4),
-    bz((nz + 3) / 4),
-    bw((nw + 3) / 4)
+  // block store for array of size nx * ny * nz * nw and given configuration
+  BlockStore4(size_t nx, size_t ny, size_t nz, size_t nw, const zfp_config& config)
   {
-    set_rate(rate);
+    set_size(nx, ny, nz, nw);
+    this->set_config(config);
   }
 
-  // destructor
-  ~BlockStore4() { free(); }
+  // conservative buffer size 
+  virtual size_t buffer_size() const
+  {
+    zfp_field* field = zfp_field_4d(0, codec.type, nx, ny, nz, nw);
+    size_t size = codec.buffer_size(field);
+    zfp_field_free(field);
+    return size;
+  }
 
   // perform a deep copy
   void deep_copy(const BlockStore4& s)
   {
     free();
-    BlockStore::deep_copy(s);
+    BlockStore<Codec, Index>::deep_copy(s);
     nx = s.nx;
     ny = s.ny;
     nz = s.nz;
@@ -48,42 +46,20 @@ public:
     bw = s.bw;
   }
 
-  // rate in bits per value
-  double rate() const { return double(bits_per_block) / block_size; }
-
-  // set rate in bits per value
-  double set_rate(double rate)
-  {
-    free();
-    rate = Codec::nearest_rate(rate);
-    bits_per_block = uint(rate * block_size);
-    alloc(blocks(), true);
-    return rate;
-  }
-
   // resize array
   void resize(size_t nx, size_t ny, size_t nz, size_t nw, bool clear = true)
   {
     free();
-    if (nx == 0 || ny == 0 || nz == 0 || nw == 0) {
-      this->nx = this->ny = this->nz = this->nw = 0;
-      bx = by = bz = bw = 0;
-    }
-    else {
-      this->nx = nx;
-      this->ny = ny;
-      this->nz = nz;
-      this->nw = nw;
-      bx = (nx + 3) / 4;
-      by = (ny + 3) / 4;
-      bz = (nz + 3) / 4;
-      bw = (nw + 3) / 4;
-      alloc(blocks(), clear);
-    }
+    set_size(nx, ny, nz, nw);
+    if (blocks())
+      alloc(clear);
   }
 
+  // number of elements per block
+  virtual size_t block_size() const { return 4 * 4 * 4 * 4; }
+
   // total number of blocks
-  size_t blocks() const { return bx * by * bz * bw; }
+  virtual size_t blocks() const { return bx * by * bz * bw; }
 
   // array size in blocks
   size_t block_size_x() const { return bx; }
@@ -98,30 +74,41 @@ public:
   uint block_shape(size_t block_index) const { return shape(block_index); }
 
   // encode contiguous block with given index
-  size_t encode(Codec* codec, size_t block_index, const Scalar* block) const
+  size_t encode(size_t block_index, const Scalar* block)
   {
-    return codec->encode_block(offset(block_index), shape(block_index), block);
+    size_t size = codec.encode_block(offset(block_index), shape(block_index), block);
+    index.set_block_size(block_index, size);
+    return size;
   }
 
   // encode block with given index from strided array
-  size_t encode(Codec* codec, size_t block_index, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
+  size_t encode(size_t block_index, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
   {
-    return codec->encode_block_strided(offset(block_index), shape(block_index), p, sx, sy, sz, sw);
+    size_t size = codec.encode_block_strided(offset(block_index), shape(block_index), p, sx, sy, sz, sw);
+    index.set_block_size(block_index, size);
+    return size;
   }
 
   // decode contiguous block with given index
-  size_t decode(Codec* codec, size_t block_index, Scalar* block) const
+  size_t decode(size_t block_index, Scalar* block) const
   {
-    return codec->decode_block(offset(block_index), shape(block_index), block);
+    return codec.decode_block(offset(block_index), shape(block_index), block);
   }
 
   // decode block with given index to strided array
-  size_t decode(Codec* codec, size_t block_index, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
+  size_t decode(size_t block_index, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
   {
-    return codec->decode_block_strided(offset(block_index), shape(block_index), p, sx, sy, sz, sw);
+    return codec.decode_block_strided(offset(block_index), shape(block_index), p, sx, sy, sz, sw);
   }
 
 protected:
+  using BlockStore<Codec, Index>::alloc;
+  using BlockStore<Codec, Index>::free;
+  using BlockStore<Codec, Index>::offset;
+  using BlockStore<Codec, Index>::shape_code;
+  using BlockStore<Codec, Index>::index;
+  using BlockStore<Codec, Index>::codec;
+
   // shape of block with given global block index
   uint shape(size_t block_index) const
   {
@@ -136,7 +123,25 @@ protected:
     return mx + 4 * (my + 4 * (mz + 4 * mw));
   }
 
-  static const size_t block_size = 4 * 4 * 4 * 4; // block size in number of elements
+  // set array dimensions
+  void set_size(size_t nx, size_t ny, size_t nz, size_t nw)
+  {
+    if (nx == 0 || ny == 0 || nz == 0 || nw == 0) {
+      this->nx = this->ny = this->nz = this->nw = 0;
+      bx = by = bz = bw = 0;
+    }
+    else {
+      this->nx = nx;
+      this->ny = ny;
+      this->nz = nz;
+      this->nw = nw;
+      bx = (nx + 3) / 4;
+      by = (ny + 3) / 4;
+      bz = (nz + 3) / 4;
+      bw = (nw + 3) / 4;
+    }
+    index.resize(blocks());
+  }
 
   size_t nx, ny, nz, nw; // array dimensions
   size_t bx, by, bz, bw; // array dimensions in number of blocks

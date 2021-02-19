@@ -6,6 +6,7 @@
 #include <cstring>
 #include "zfp.h"
 #include "zfpcpp.h"
+#include "zfp/memory.h"
 #include "zfp/traits.h"
 
 namespace zfp {
@@ -15,35 +16,109 @@ template <typename Scalar, uint dims>
 class zfp_codec_base {
 protected:
   // constructor takes pre-allocated buffer of compressed blocks
-  zfp_codec_base(void* data, size_t size)
-  {
-    bitstream* stream = stream_open(data, size);
-    zfp = zfp_stream_open(stream);
-  }
+  zfp_codec_base() :
+    zfp(zfp_stream_open(0))
+  {}
 
-public:
   // destructor
   ~zfp_codec_base()
   {
-    bitstream* stream = zfp_stream_bit_stream(zfp);
+    close();
     zfp_stream_close(zfp);
-    stream_close(stream);
   }
 
-  // return nearest rate supported
-  static double nearest_rate(double target_rate)
+public:
+  // assignment operator--performs deep copy
+  zfp_codec_base& operator=(const zfp_codec_base& codec)
   {
-    size_t block_bits = static_cast<size_t>(target_rate * block_size);
-    size_t word_bits = stream_alignment();
-    size_t words = std::max((block_bits + word_bits - 1) / word_bits, size_t(1));
-    return static_cast<double>(words * word_bits) / block_size;
+fprintf(stderr, "codec_base::copy\n");
+    if (this != &codec)
+      deep_copy(codec);
+    return *this;
   }
 
-  // rate in bits/value
-  double rate() const { return double(zfp->maxbits) / block_size; }
+  // conservative buffer size for current codec settings
+  size_t buffer_size(const zfp_field* field) const
+  {
+//fprintf(stderr, "codec::buffer_size()\n");
+//fprintf(stderr, "zfp = (%u, %u, %u, %d)\n", zfp->minbits, zfp->maxbits, zfp->maxprec, zfp->minexp);
+    // empty field case
+    if (!field->nx && !field->ny && !field->nz && !field->nw)
+      return 0;
+    // variable-rate case
+    if (zfp_stream_compression_mode(zfp) != zfp_mode_fixed_rate)
+      return zfp_stream_maximum_size(zfp, field);
+    // fixed-rate case: exclude header
+    size_t bx = (std::max(field->nx, 1u) + 3) / 4;
+    size_t by = (std::max(field->ny, 1u) + 3) / 4;
+    size_t bz = (std::max(field->nz, 1u) + 3) / 4;
+    size_t bw = (std::max(field->nw, 1u) + 3) / 4;
+    size_t blocks = bx * by * bz * bw;
+    return zfp::round_up(blocks * zfp->maxbits, stream_alignment()) / CHAR_BIT;
+  }
 
-  // set rate in bits/value
-  double set_rate(double rate) { return zfp_stream_set_rate(zfp, rate, type, dims, zfp_true); }
+  // open bit stream
+  void open(void* data, size_t size)
+  {
+    bitstream* stream = stream_open(data, size);
+    zfp_stream_set_bit_stream(zfp, stream);
+  }
+
+  // close bit stream
+  void close()
+  {
+    bitstream* stream = zfp_stream_bit_stream(zfp);
+    stream_close(stream);
+    zfp_stream_set_bit_stream(zfp, 0);
+  }
+
+  // compression mode
+  zfp_mode mode() const { return zfp_stream_compression_mode(zfp); }
+
+  // rate in compressed bits/value (fixed-rate mode only)
+  double rate() const { return zfp_stream_rate(zfp, dims); }
+
+  // precision in uncompressed bits/value (fixed-precision mode only)
+  uint precision() const { return zfp_stream_precision(zfp); }
+
+  // accuracy as absolute error tolerance (fixed-accuracy mode only)
+  double accuracy() const { return zfp_stream_accuracy(zfp); }
+
+  // maximum number of bits per block
+  uint maxbits() const { return zfp->maxbits; }
+
+  // set rate in compressed bits/value
+//  double set_rate(double rate) { return zfp_stream_set_rate(zfp, rate, type, dims, zfp_true); }
+  double set_rate(double rate)
+  {
+fprintf(stderr, "codec%d::set_rate(%g)=", dims, rate);
+    rate = zfp_stream_set_rate(zfp, rate, type, dims, zfp_true);
+fprintf(stderr, "%g\n", rate);
+    return rate;
+  }
+
+  // set precision in uncompressed bits/value
+  uint set_precision(uint precision) { return zfp_stream_set_precision(zfp, precision); }
+
+  // set accuracy as absolute error tolerance
+  double set_accuracy(double tolerance) { return zfp_stream_set_accuracy(zfp, tolerance); }
+
+  // enable reversible (lossless) mode
+  void set_reversible() { zfp_stream_set_reversible(zfp); }
+
+  // byte size of codec data structure components indicated by mask
+  size_t size_bytes(uint mask = ZFP_DATA_ALL) const
+  {
+    size_t size = 0;
+    if (mask & ZFP_DATA_META) {
+      size += sizeof(*zfp);
+      size += sizeof(*this);
+    }
+    return size;
+  }
+
+  // unit of allocated data in bytes
+  static size_t alignment() { return stream_alignment() / CHAR_BIT; }
 
   static const zfp_type type = zfp::trait<Scalar>::type; // scalar type
 
@@ -51,8 +126,17 @@ public:
   #include "zfp/zfpheader.h"
 
 protected:
+  // deep copy
+  void deep_copy(const zfp_codec_base& codec)
+  {
+fprintf(stderr, "codec::deep_copy\n");
+    zfp = zfp_stream_open(0);
+    *zfp = *codec.zfp;
+    zfp->stream = 0;
+  }
+
   // encode full contiguous block
-  size_t encode_block(size_t offset, const Scalar* block)
+  size_t encode_block(size_t offset, const Scalar* block) const
   {
     stream_wseek(zfp->stream, offset);
     size_t size = cpp::encode_block<Scalar, dims>(zfp, block);
@@ -61,7 +145,7 @@ protected:
   }
 
   // decode full contiguous block
-  size_t decode_block(size_t offset, Scalar* block)
+  size_t decode_block(size_t offset, Scalar* block) const
   {
     stream_rseek(zfp->stream, offset);
     size_t size = cpp::decode_block<Scalar, dims>(zfp, block);
@@ -82,18 +166,15 @@ class zfp_codec;
 template <typename Scalar>
 class zfp_codec<Scalar, 1> : public zfp_codec_base<Scalar, 1> {
 public:
-  // constructor takes pre-allocated buffer of compressed blocks
-  zfp_codec(void* data, size_t size) : zfp_codec_base<Scalar, 1>(data, size) {}
-
   // encode contiguous 1D block
-  size_t encode_block(size_t offset, uint shape, const Scalar* block)
+  size_t encode_block(size_t offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1)
                  : zfp_codec_base<Scalar, 1>::encode_block(offset, block);
   }
 
   // encode 1D block from strided storage
-  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx)
+  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx) const
   {
     size_t size;
     stream_wseek(zfp->stream, offset);
@@ -108,14 +189,14 @@ public:
   }
 
   // decode contiguous 1D block
-  size_t decode_block(size_t offset, uint shape, Scalar* block)
+  size_t decode_block(size_t offset, uint shape, Scalar* block) const
   {
     return shape ? decode_block_strided(offset, shape, block, 1)
                  : decode_block(offset, block);
   }
 
   // decode 1D block to strided storage
-  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx)
+  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx) const
   {
     size_t size;
     stream_rseek(zfp->stream, offset);
@@ -139,18 +220,15 @@ protected:
 template <typename Scalar>
 class zfp_codec<Scalar, 2> : public zfp_codec_base<Scalar, 2> {
 public:
-  // constructor takes pre-allocated buffer of compressed blocks
-  zfp_codec(void* data, size_t size) : zfp_codec_base<Scalar, 2>(data, size) {}
-
   // encode contiguous 2D block
-  size_t encode_block(size_t offset, uint shape, const Scalar* block)
+  size_t encode_block(size_t offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1, 4)
                  : encode_block(offset, block);
   }
 
   // encode 2D block from strided storage
-  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
+  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
   {
     size_t size;
     stream_wseek(zfp->stream, offset);
@@ -166,14 +244,14 @@ public:
   }
 
   // decode contiguous 2D block
-  size_t decode_block(size_t offset, uint shape, Scalar* block)
+  size_t decode_block(size_t offset, uint shape, Scalar* block) const
   {
     return shape ? decode_block_strided(offset, shape, block, 1, 4)
                  : decode_block(offset, block);
   }
 
   // decode 2D block to strided storage
-  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
+  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
   {
     size_t size;
     stream_rseek(zfp->stream, offset);
@@ -198,18 +276,15 @@ protected:
 template <typename Scalar>
 class zfp_codec<Scalar, 3> : public zfp_codec_base<Scalar, 3> {
 public:
-  // constructor takes pre-allocated buffer of compressed blocks
-  zfp_codec(void* data, size_t size) : zfp_codec_base<Scalar, 3>(data, size) {}
-
   // encode contiguous 3D block
-  size_t encode_block(size_t offset, uint shape, const Scalar* block)
+  size_t encode_block(size_t offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1, 4, 16)
                  : encode_block(offset, block);
   }
 
   // encode 3D block from strided storage
-  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
     size_t size;
     stream_wseek(zfp->stream, offset);
@@ -226,14 +301,14 @@ public:
   }
 
   // decode contiguous 3D block
-  size_t decode_block(size_t offset, uint shape, Scalar* block)
+  size_t decode_block(size_t offset, uint shape, Scalar* block) const
   {
     return shape ? decode_block_strided(offset, shape, block, 1, 4, 16)
                  : decode_block(offset, block);
   }
 
   // decode 3D block to strided storage
-  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
     size_t size;
     stream_rseek(zfp->stream, offset);
@@ -259,18 +334,15 @@ protected:
 template <typename Scalar>
 class zfp_codec<Scalar, 4> : public zfp_codec_base<Scalar, 4> {
 public:
-  // constructor takes pre-allocated buffer of compressed blocks
-  zfp_codec(void* data, size_t size) : zfp_codec_base<Scalar, 4>(data, size) {}
-
   // encode contiguous 4D block
-  size_t encode_block(size_t offset, uint shape, const Scalar* block)
+  size_t encode_block(size_t offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1, 4, 16, 64)
                  : encode_block(offset, block);
   }
 
   // encode 4D block from strided storage
-  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
+  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
   {
     size_t size;
     stream_wseek(zfp->stream, offset);
@@ -288,14 +360,14 @@ public:
   }
 
   // decode contiguous 4D block
-  size_t decode_block(size_t offset, uint shape, Scalar* block)
+  size_t decode_block(size_t offset, uint shape, Scalar* block) const
   {
     return shape ? decode_block_strided(offset, shape, block, 1, 4, 16, 64)
                  : decode_block(offset, block);
   }
 
   // decode 4D block to strided storage
-  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
+  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
   {
     size_t size;
     stream_rseek(zfp->stream, offset);

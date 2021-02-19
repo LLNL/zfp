@@ -87,11 +87,11 @@ public:
   };
 
   // allocate cache with at least minsize lines
-  Cache(uint minsize = 0) : tag(0), line(0)
+  Cache(uint minsize = 0) : mask(0), tag(0), line(0)
   {
     resize(minsize);
 #ifdef ZFP_WITH_CACHE_PROFILE
-    std::cerr << "cache lines=" << mask + 1 << std::endl;
+    std::cerr << "cache lines=" << size() << std::endl;
     hit[0][0] = hit[1][0] = miss[0] = back[0] = 0;
     hit[0][1] = hit[1][1] = miss[1] = back[1] = 0;
 #endif
@@ -122,15 +122,27 @@ public:
     return *this;
   }
 
+  // byte size of cache data structure components indicated by mask
+  size_t size_bytes(uint mask = ZFP_DATA_ALL) const
+  {
+    size_t size = 0;
+    if (mask & ZFP_DATA_CACHE)
+      size += this->size() * (sizeof(*tag) + sizeof(*line));
+    if (mask & ZFP_DATA_META)
+      size += sizeof(*this);
+    return size;
+  }
+
   // cache size in number of lines
   uint size() const { return mask + 1; }
 
   // change cache size to at least minsize lines (all contents will be lost)
   void resize(uint minsize)
   {
+    // compute smallest value of mask such that mask + 1 = 2^k >= minsize
     for (mask = minsize ? minsize - 1 : 1; mask & (mask + 1); mask |= mask + 1);
-    zfp::reallocate_aligned(tag, ((size_t)mask + 1) * sizeof(Tag), ZFP_MEMORY_ALIGNMENT);
-    zfp::reallocate_aligned(line, ((size_t)mask + 1) * sizeof(Line), ZFP_MEMORY_ALIGNMENT);
+    zfp::reallocate_aligned(tag, size() * sizeof(Tag), ZFP_MEMORY_ALIGNMENT);
+    zfp::reallocate_aligned(line, size() * sizeof(Line), ZFP_MEMORY_ALIGNMENT);
     clear();
   }
 
@@ -217,8 +229,8 @@ protected:
   void deep_copy(const Cache& c)
   {
     mask = c.mask;
-    zfp::clone_aligned(tag, c.tag, mask + 1, ZFP_MEMORY_ALIGNMENT);
-    zfp::clone_aligned(line, c.line, mask + 1, ZFP_MEMORY_ALIGNMENT);
+    zfp::clone_aligned(tag, c.tag, size(), ZFP_MEMORY_ALIGNMENT);
+    zfp::clone_aligned(line, c.line, size(), ZFP_MEMORY_ALIGNMENT);
 #ifdef ZFP_WITH_CACHE_PROFILE
     hit[0][0] = c.hit[0][0];
     hit[0][1] = c.hit[0][1];
