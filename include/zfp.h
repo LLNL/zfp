@@ -114,6 +114,22 @@ typedef enum {
   zfp_mode_reversible      = 5  /* reversible (lossless) mode */
 } zfp_mode;
 
+/* compression mode and parameter settings */
+typedef struct {
+  zfp_mode mode;      /* compression mode */
+  union {
+    double rate;      /* compressed bits/value (negative for word alignment) */
+    uint precision;   /* uncompressed bits/value */
+    double tolerance; /* absolute error tolerance */
+    struct {
+      uint minbits;   /* min number of compressed bits/block */
+      uint maxbits;   /* max number of compressed bits/block */
+      uint maxprec;   /* max number of uncompressed bits/value */
+      int minexp;     /* min floating point bit plane number to store */
+    } expert;         /* expert mode arguments */
+  } arg;              /* arguments corresponding to compression mode */
+} zfp_config;
+
 /* scalar type */
 typedef enum {
   zfp_type_none   = 0, /* unspecified type */
@@ -306,6 +322,44 @@ zfp_bool              /* true upon success */
 zfp_stream_set_omp_chunk_size(
   zfp_stream* stream, /* compressed stream */
   uint chunk_size     /* number of blocks per chunk (0 for default) */
+);
+
+/* high-level API: compression mode and parameter settings ----------------- */
+
+/* unspecified configuration */
+zfp_config /* compression mode and parameter settings */
+zfp_config_none();
+
+/* fixed-rate configuration */
+zfp_config       /* compression mode and parameter settings */
+zfp_config_rate(
+  double rate,   /* desired rate in compressed bits/scalar */
+  zfp_bool align /* word-aligned blocks, e.g., for write random access */
+);
+
+/* fixed-precision configuration */
+zfp_config       /* compression mode and parameter settings */
+zfp_config_precision(
+  uint precision /* desired precision in uncompressed bits/scalar */
+);
+
+/* fixed-accuracy configuration */
+zfp_config         /* compression mode and parameter settings */
+zfp_config_accuracy(
+  double tolerance /* desired error tolerance */
+);
+
+/* reversible (lossless) configuration */
+zfp_config /* compression mode and parameter settings */
+zfp_config_reversible();
+
+/* expert configuration */
+zfp_config      /* compression mode and parameter settings */
+zfp_config_expert(
+  uint minbits, /* minimum number of bits per 4^d block */
+  uint maxbits, /* maximum number of bits per 4^d block */
+  uint maxprec, /* maximum precision (# bit planes coded) */
+  int minexp    /* minimum base-2 exponent; error <= 2^minexp */
 );
 
 /* high-level API: uncompressed array construction/destruction ------------- */

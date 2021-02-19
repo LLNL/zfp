@@ -415,6 +415,75 @@ zfp_field_set_metadata(zfp_field* field, uint64 meta)
   return zfp_true;
 }
 
+/* public functions: compression mode and parameter settings --------------- */
+
+zfp_config
+zfp_config_none()
+{
+  zfp_config config;
+  config.mode = zfp_mode_null;
+  return config;
+}
+
+zfp_config
+zfp_config_rate(
+  double rate,
+  zfp_bool align
+)
+{
+  zfp_config config;
+  config.mode = zfp_mode_fixed_rate;
+  config.arg.rate = align ? -rate : +rate;
+  return config;
+}
+
+zfp_config
+zfp_config_precision(
+  uint precision
+)
+{
+  zfp_config config;
+  config.mode = zfp_mode_fixed_precision;
+  config.arg.precision = precision;
+  return config;
+}
+
+zfp_config
+zfp_config_accuracy(
+  double tolerance
+)
+{
+  zfp_config config;
+  config.mode = zfp_mode_fixed_accuracy;
+  config.arg.tolerance = tolerance;
+  return config;
+}
+
+zfp_config
+zfp_config_reversible()
+{
+  zfp_config config;
+  config.mode = zfp_mode_reversible;
+  return config;
+}
+
+zfp_config
+zfp_config_expert(    
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+)
+{
+  zfp_config config;
+  config.mode = zfp_mode_expert;
+  config.arg.expert.minbits = minbits;
+  config.arg.expert.maxbits = maxbits;
+  config.arg.expert.maxprec = maxprec;
+  config.arg.expert.minexp = minexp;
+  return config;
+}
+
 /* public functions: zfp compressed stream --------------------------------- */
 
 zfp_stream*
