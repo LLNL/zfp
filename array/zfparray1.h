@@ -60,7 +60,7 @@ public:
   // constructor, from previously-serialized compressed array
   array1(const zfp::array::header& header, const void* buffer = 0, size_t buffer_size_bytes = 0) :
     array(1, Codec::type, header),
-    store(header.size_x(), header.rate()),
+    store(header.size_x(), zfp_config_rate(header.rate(), true)),
     cache(store)
   {
     if (buffer) {
@@ -81,7 +81,7 @@ public:
   template <class View>
   array1(const View& v) :
     array(1, Codec::type),
-    store(v.size_x(), v.rate()),
+    store(v.size_x(), zfp_config_rate(v.rate(), true)),
     cache(store)
   {
     this->nx = v.size_x();
@@ -171,7 +171,7 @@ public:
       cache.put_block(block_index++, p, sx);
   }
 
-  // (i, j) accessors
+  // accessors
   const_reference operator()(size_t i) const { return const_reference(const_cast<container_type*>(this), i); }
   reference operator()(size_t i) { return reference(this, i); }
 

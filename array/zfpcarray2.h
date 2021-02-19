@@ -1,76 +1,75 @@
-#ifndef ZFP_CARRAY3_H
-#define ZFP_CARRAY3_H
+#ifndef ZFP_CARRAY2_H
+#define ZFP_CARRAY2_H
 
 #include <cstddef>
 #include <cstring>
 #include <iterator>
 #include "zfparray.h"
 #include "zfpcodec.h"
-#include "zfp/cache3.h"
-#include "zfp/store3.h"
-#include "zfp/handle3.h"
-#include "zfp/reference3.h"
-#include "zfp/pointer3.h"
-#include "zfp/iterator3.h"
-#include "zfp/view3.h"
+#include "zfp/cache2.h"
+#include "zfp/store2.h"
+#include "zfp/handle2.h"
+#include "zfp/reference2.h"
+#include "zfp/pointer2.h"
+#include "zfp/iterator2.h"
+#include "zfp/view2.h"
 
 namespace zfp {
 
-// compressed 3D array of scalars
+// compressed 2D array of scalars
 template <
   typename Scalar,
-  class Codec = zfp::zfp_codec<Scalar, 3>,
-  class Index = zfp::internal::Hybrid8Index<3>
+  class Codec = zfp::zfp_codec<Scalar, 2>,
+  class Index = zfp::internal::Hybrid8Index<2>
 >
-class const_array3 : public array {
+class const_array2 : public array {
 public:
   // types utilized by nested classes
-  typedef const_array3 container_type;
+  typedef const_array2 container_type;
   typedef Scalar value_type;
   typedef Codec codec_type;
   typedef Index index_type;
-  typedef BlockStore3<value_type, codec_type, index_type> store_type;
+  typedef BlockStore2<value_type, codec_type, index_type> store_type;
   typedef typename Codec::header header;
 
   // accessor classes
-  typedef zfp::internal::dim3::const_reference<const_array3> const_reference;
-  typedef zfp::internal::dim3::const_pointer<const_array3> const_pointer;
-  typedef zfp::internal::dim3::const_iterator<const_array3> const_iterator;
-  typedef zfp::internal::dim3::const_view<const_array3> const_view;
-  typedef zfp::internal::dim3::private_const_view<const_array3> private_const_view;
+  typedef zfp::internal::dim2::const_reference<const_array2> const_reference;
+  typedef zfp::internal::dim2::const_pointer<const_array2> const_pointer;
+  typedef zfp::internal::dim2::const_iterator<const_array2> const_iterator;
+  typedef zfp::internal::dim2::const_view<const_array2> const_view;
+  typedef zfp::internal::dim2::private_const_view<const_array2> private_const_view;
 
   // default constructor
-  const_array3() :
-    array(3, Codec::type),
+  const_array2() :
+    array(2, Codec::type),
     cache(store)
   {}
 
-  // constructor of nx * ny * nz array using given configuration, at least
+  // constructor of nx * ny array using given configuration, at least
   // cache_size bytes of cache, and optionally initialized from flat array p
-  const_array3(size_t nx, size_t ny, size_t nz, const zfp_config& config, const value_type* p = 0, size_t cache_size = 0) :
-    array(3, Codec::type),
-    store(nx, ny, nz, config),
+  const_array2(size_t nx, size_t ny, const zfp_config& config, const value_type* p = 0, size_t cache_size = 0) :
+    array(2, Codec::type),
+    store(nx, ny, config),
     cache(store, cache_size)
   {
     this->nx = nx;
     this->ny = ny;
-    this->nz = nz;
     if (p)
       set(p);
   }
 
   // copy constructor--performs a deep copy
-  const_array3(const const_array3& a) :
+  const_array2(const const_array2& a) :
     cache(store)
   {
     deep_copy(a);
   }
 
   // virtual destructor
-  virtual ~const_array3() {}
+  virtual ~const_array2() {}
 
   // assignment operator--performs a deep copy
-  const_array3& operator=(const const_array3& a)
+  const_array2& operator=(const const_array2& a)
   {
     if (this != &a)
       deep_copy(a);
@@ -78,21 +77,19 @@ public:
   }
 
   // total number of elements in array
-  size_t size() const { return nx * ny * nz; }
+  size_t size() const { return nx * ny; }
 
   // array dimensions
   size_t size_x() const { return nx; }
   size_t size_y() const { return ny; }
-  size_t size_z() const { return nz; }
 
   // resize the array (all previously stored data will be lost)
-  void resize(size_t nx, size_t ny, size_t nz, bool clear = true)
+  void resize(size_t nx, size_t ny, bool clear = true)
   {
     cache.clear();
     this->nx = nx;
     this->ny = ny;
-    this->nz = nz;
-    store.resize(nx, ny, nz, clear);
+    store.resize(nx, ny, clear);
   }
 
   // compression mode
@@ -174,15 +171,12 @@ public:
   {
     const size_t bx = store.block_size_x();
     const size_t by = store.block_size_y();
-    const size_t bz = store.block_size_z();
     const ptrdiff_t sx = 1;
     const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
-    const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
     size_t block_index = 0;
-    for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
-      for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
-        for (size_t i = 0; i < bx; i++, p += 4)
-          cache.get_block(block_index++, p, sx, sy, sz);
+    for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
+      for (size_t i = 0; i < bx; i++, p += 4)
+        cache.get_block(block_index++, p, sx, sy);
   }
 
   // initialize array by copying and compressing data stored at p
@@ -192,47 +186,44 @@ public:
     cache.clear();
     const size_t bx = store.block_size_x();
     const size_t by = store.block_size_y();
-    const size_t bz = store.block_size_z();
     const ptrdiff_t sx = 1;
     const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
-    const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
     size_t block_index = 0;
-    for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
-      for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
-        for (size_t i = 0; i < bx; i++, p += 4)
-          cache.put_block(block_index++, p, sx, sy, sz);
+    for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
+      for (size_t i = 0; i < bx; i++, p += 4)
+        cache.put_block(block_index++, p, sx, sy);
     store.flush_index();
     if (compact)
       store.compact();
   }
 
-  // (i, j, k) accessor
-  const_reference operator()(size_t i, size_t j, size_t k) const { return const_reference(const_cast<container_type*>(this), i, j, k); }
+  // (i, j) accessor
+  const_reference operator()(size_t i, size_t j) const { return const_reference(const_cast<container_type*>(this), i, j); }
 
   // flat index accessor
   const_reference operator[](size_t index) const
   {
-    size_t i, j, k;
-    ijk(i, j, k, index);
-    return const_reference(const_cast<container_type*>(this), i, j, k);
+    size_t i, j;
+    ij(i, j, index);
+    return const_reference(const_cast<container_type*>(this), i, j);
   }
 
   // random access iterators
-  const_iterator cbegin() const { return const_iterator(this, 0, 0, 0); }
-  const_iterator cend() const { return const_iterator(this, 0, 0, nz); }
+  const_iterator cbegin() const { return const_iterator(this, 0, 0); }
+  const_iterator cend() const { return const_iterator(this, 0, ny); }
   const_iterator begin() const { return cbegin(); }
   const_iterator end() const { return cend(); }
 
 protected:
-  friend class zfp::internal::dim3::const_handle<const_array3>;
-  friend class zfp::internal::dim3::const_reference<const_array3>;
-  friend class zfp::internal::dim3::const_pointer<const_array3>;
-  friend class zfp::internal::dim3::const_iterator<const_array3>;
-  friend class zfp::internal::dim3::const_view<const_array3>;
-  friend class zfp::internal::dim3::private_const_view<const_array3>;
+  friend class zfp::internal::dim2::const_handle<const_array2>;
+  friend class zfp::internal::dim2::const_reference<const_array2>;
+  friend class zfp::internal::dim2::const_pointer<const_array2>;
+  friend class zfp::internal::dim2::const_iterator<const_array2>;
+  friend class zfp::internal::dim2::const_view<const_array2>;
+  friend class zfp::internal::dim2::private_const_view<const_array2>;
 
   // perform a deep copy
-  void deep_copy(const const_array3& a)
+  void deep_copy(const const_array2& a)
   {
     // copy base class members
     array::deep_copy(a);
@@ -247,26 +238,23 @@ protected:
   size_t max_x() const { return nx; }
   size_t min_y() const { return 0; }
   size_t max_y() const { return ny; }
-  size_t min_z() const { return 0; }
-  size_t max_z() const { return nz; }
 
   // inspector
-  value_type get(size_t i, size_t j, size_t k) const { return cache.get(i, j, k); }
+  value_type get(size_t i, size_t j) const { return cache.get(i, j); }
 
-  // convert flat index to (i, j, k)
-  void ijk(size_t& i, size_t& j, size_t& k, size_t index) const
+  // convert flat index to (i, j)
+  void ij(size_t& i, size_t& j, size_t index) const
   {
     i = index % nx; index /= nx;
-    j = index % ny; index /= ny;
-    k = index;
+    j = index % ny;
   }
 
-  BlockStore3<value_type, codec_type, index_type> store; // persistent storage of compressed blocks
-  BlockCache3<value_type, store_type> cache; // cache of decompressed blocks
+  BlockStore2<value_type, codec_type, index_type> store; // persistent storage of compressed blocks
+  BlockCache2<value_type, store_type> cache; // cache of decompressed blocks
 };
 
-typedef const_array3<float> const_array3f;
-typedef const_array3<double> const_array3d;
+typedef const_array2<float> const_array2f;
+typedef const_array2<double> const_array2d;
 
 }
 

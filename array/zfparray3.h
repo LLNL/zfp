@@ -67,7 +67,7 @@ public:
   // constructor, from previously-serialized compressed array
   array3(const zfp::array::header& header, const void* buffer = 0, size_t buffer_size_bytes = 0) :
     array(3, Codec::type, header),
-    store(header.size_x(), header.size_y(), header.size_z(), header.rate()),
+    store(header.size_x(), header.size_y(), header.size_z(), zfp_config_rate(header.rate(), true)),
     cache(store)
   {
     if (buffer) {
@@ -88,7 +88,7 @@ public:
   template <class View>
   array3(const View& v) :
     array(3, Codec::type),
-    store(v.size_x(), v.size_y(), v.size_z(), v.rate()),
+    store(v.size_x(), v.size_y(), v.size_z(), zfp_config_rate(v.rate(), true)),
     cache(store)
   {
     this->nx = v.size_x();
@@ -174,8 +174,8 @@ public:
     const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
     const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
     size_t block_index = 0;
-    for (size_t k = 0; k < bz; k++, p += 4 * nx * (ny - by))
-      for (size_t j = 0; j < by; j++, p += 4 * (nx - bx))
+    for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
+      for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
         for (size_t i = 0; i < bx; i++, p += 4)
           cache.get_block(block_index++, p, sx, sy, sz);
   }
@@ -190,8 +190,8 @@ public:
     const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
     const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
     size_t block_index = 0;
-    for (size_t k = 0; k < bz; k++, p += 4 * nx * (ny - by))
-      for (size_t j = 0; j < by; j++, p += 4 * (nx - bx))
+    for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
+      for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
         for (size_t i = 0; i < bx; i++, p += 4)
           cache.put_block(block_index++, p, sx, sy, sz);
   }

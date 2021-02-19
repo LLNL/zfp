@@ -69,7 +69,7 @@ public:
   // constructor, from previously-serialized compressed array
   array4(const zfp::array::header& header, const void* buffer = 0, size_t buffer_size_bytes = 0) :
     array(4, Codec::type, header),
-    store(header.size_x(), header.size_y(), header.size_z(), header.size_w(), header.rate()),
+    store(header.size_x(), header.size_y(), header.size_z(), header.size_w(), zfp_config_rate(header.rate(), true)),
     cache(store)
   {
     if (buffer) {
@@ -90,7 +90,7 @@ public:
   template <class View>
   array4(const View& v) :
     array(4, Codec::type),
-    store(v.size_x(), v.size_y(), v.size_z(), v.size_w(), v.rate()),
+    store(v.size_x(), v.size_y(), v.size_z(), v.size_w(), zfp_config_rate(v.rate(), true)),
     cache(store)
   {
     this->nx = v.size_x();
@@ -181,9 +181,9 @@ public:
     const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
     const ptrdiff_t sw = static_cast<ptrdiff_t>(nx * ny * nz);
     size_t block_index = 0;
-    for (size_t l = 0; l < bw; l++, p += 4 * nx * ny * (nz - bz))
-      for (size_t k = 0; k < bz; k++, p += 4 * nx * (ny - by))
-        for (size_t j = 0; j < by; j++, p += 4 * (nx - bx))
+    for (size_t l = 0; l < bw; l++, p += 4 * sz * (nz - bz))
+      for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
+        for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
           for (size_t i = 0; i < bx; i++, p += 4)
             cache.get_block(block_index++, p, sx, sy, sz, sw);
   }
@@ -200,9 +200,9 @@ public:
     const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
     const ptrdiff_t sw = static_cast<ptrdiff_t>(nx * ny * nz);
     size_t block_index = 0;
-    for (size_t l = 0; l < bw; l++, p += 4 * nx * ny * (nz - bz))
-      for (size_t k = 0; k < bz; k++, p += 4 * nx * (ny - by))
-        for (size_t j = 0; j < by; j++, p += 4 * (nx - bx))
+    for (size_t l = 0; l < bw; l++, p += 4 * sz * (nz - bz))
+      for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
+        for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
           for (size_t i = 0; i < bx; i++, p += 4)
             cache.put_block(block_index++, p, sx, sy, sz, sw);
   }
