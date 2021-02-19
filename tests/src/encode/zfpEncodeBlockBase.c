@@ -38,6 +38,7 @@ populateInitialArray(Scalar** dataArrPtr)
 static void
 populateInitialArraySpecial(Scalar* dataArr, int index)
 {
+#ifdef FL_PT_DATA
   // IEEE-754 special values
   static const uint32 special_float_values[] = {
     0x00000000u, // +0
@@ -63,6 +64,7 @@ populateInitialArraySpecial(Scalar* dataArr, int index)
     UINT64C(0x7ff8000000000000), // qNaN
     UINT64C(0x7ff4000000000000), // sNaN
   };
+#endif
 
   size_t i;
   for (i = 0; i < BLOCK_SIZE; i++) {

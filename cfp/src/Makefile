@@ -1,9 +1,9 @@
 include ../../Config
 
-CXXFLAGS += -I../../include -I../../src -I../../array
 LIBDIR = ../../lib
 TARGETS = $(LIBDIR)/libcfp.a $(LIBDIR)/libcfp.so
-OBJECTS = cfparrays.o
+OBJECTS = cfparray.o
+INCS = -I../include -I../../include -I../../array -I../../src
 
 static: $(LIBDIR)/libcfp.a
 
@@ -22,4 +22,4 @@ $(LIBDIR)/libcfp.so: $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -shared $(SOFLAGS) $^ -o $@
 
 .cpp.o:
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) $(INCS) -c $<

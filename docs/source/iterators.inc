@@ -45,37 +45,39 @@ given by the :code:`const_iterator` class.
 
 Per STL mandate, the iterators define several types:
 
-----
-
 .. cpp:namespace:: zfp::arrayANY
 
 .. cpp:type:: iterator::value_type
 
   The scalar type associated with the array that the iterator points into.
 
+----
+
 .. cpp:type:: iterator::difference_type
 
   Difference between two iterators in number of array elements.
+
+----
 
 .. cpp:type:: iterator::reference
 
   The :ref:`reference <references>` type associated with the iterator's parent
   array class.
 
+----
+
 .. cpp:type:: iterator::pointer
 
   The :ref:`pointer <pointers>` type associated with the iterator's parent
   array class.
 
+----
+
 .. cpp:type:: iterator::iterator_category
 
   Type of iterator: :cpp:type:`std::random_access_iterator_tag`.
 
-----
-
 For const iterators, the following additional types are defined:
-
-----
 
 .. cpp:type:: const_iterator::const_reference
 
@@ -85,11 +87,7 @@ For const iterators, the following additional types are defined:
 
   The immutable pointer type associated with the iterator's container class.
 
-----
-
 The following operations are defined on iterators:
-
-----
 
 .. cpp:function:: iterator iterator::operator=(const iterator& it)
 .. cpp:function:: const_iterator const_iterator::operator=(const const_iterator& it)
@@ -155,6 +153,7 @@ The following operations are defined on iterators:
 
 ----
 
+.. _iter_inequalities:
 .. cpp:function:: bool iterator::operator<=(const iterator& it) const
 .. cpp:function:: bool iterator::operator>=(const iterator& it) const
 .. cpp:function:: bool iterator::operator<(const iterator& it) const

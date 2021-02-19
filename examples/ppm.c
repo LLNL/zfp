@@ -272,15 +272,15 @@ int main(int argc, char* argv[])
 #if PPM_CHROMA == 1
     double chroma_rate = floor(8 * rate / 3 + 0.5) / 4;
     double luma_rate = rate - chroma_rate / 2;
-    zfp_stream_set_rate(zfp[0], luma_rate, zfp_type_int32, 2, 0);
-    zfp_stream_set_rate(zfp[1], chroma_rate, zfp_type_int32, 1, 0);
-    zfp_stream_set_rate(zfp[2], chroma_rate, zfp_type_int32, 1, 0);
+    zfp_stream_set_rate(zfp[0], luma_rate, zfp_type_int32, 2, zfp_false);
+    zfp_stream_set_rate(zfp[1], chroma_rate, zfp_type_int32, 1, zfp_false);
+    zfp_stream_set_rate(zfp[2], chroma_rate, zfp_type_int32, 1, zfp_false);
 #else
     double chroma_rate = floor(8 * rate / 3 + 0.5) / 16;
     double luma_rate = rate - 2 * chroma_rate;
-    zfp_stream_set_rate(zfp[0], luma_rate, zfp_type_int32, 2, 0);
-    zfp_stream_set_rate(zfp[1], chroma_rate, zfp_type_int32, 2, 0);
-    zfp_stream_set_rate(zfp[2], chroma_rate, zfp_type_int32, 2, 0);
+    zfp_stream_set_rate(zfp[0], luma_rate, zfp_type_int32, 2, zfp_false);
+    zfp_stream_set_rate(zfp[1], chroma_rate, zfp_type_int32, 2, zfp_false);
+    zfp_stream_set_rate(zfp[2], chroma_rate, zfp_type_int32, 2, zfp_false);
 #endif
   }
 

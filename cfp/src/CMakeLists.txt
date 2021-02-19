@@ -1,4 +1,4 @@
-add_library(cfp cfparrays.cpp)
+add_library(cfp cfparray.cpp)
 
 if(DEFINED CFP_NAMESPACE)
   list(APPEND cfp_public_defs "CFP_NAMESPACE=${CFP_NAMESPACE}")

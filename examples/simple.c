@@ -8,7 +8,7 @@
 
 /* compress or decompress array */
 static int
-compress(double* array, int nx, int ny, int nz, double tolerance, int decompress)
+compress(double* array, int nx, int ny, int nz, double tolerance, zfp_bool decompress)
 {
   int status = 0;    /* return value: 0 = success */
   zfp_type type;     /* array scalar type */
@@ -28,7 +28,7 @@ compress(double* array, int nx, int ny, int nz, double tolerance, int decompress
 
   /* set compression mode and parameters via one of four functions */
 /*  zfp_stream_set_reversible(zfp); */
-/*  zfp_stream_set_rate(zfp, rate, type, 3, zfp_false); */
+/*  zfp_stream_set_rate(zfp, rate, type, zfp_field_dimensionality(field), zfp_false); */
 /*  zfp_stream_set_precision(zfp, precision); */
   zfp_stream_set_accuracy(zfp, tolerance);
 
@@ -43,19 +43,21 @@ compress(double* array, int nx, int ny, int nz, double tolerance, int decompress
 
   /* compress or decompress entire array */
   if (decompress) {
-    /* read compressed stream and decompress array */
+    /* read compressed stream and decompress and output array */
     zfpsize = fread(buffer, 1, bufsize, stdin);
     if (!zfp_decompress(zfp, field)) {
       fprintf(stderr, "decompression failed\n");
-      status = 1;
+      status = EXIT_FAILURE;
     }
+    else
+      fwrite(array, sizeof(double), zfp_field_size(field, NULL), stdout);
   }
   else {
     /* compress array and output compressed stream */
     zfpsize = zfp_compress(zfp, field);
     if (!zfpsize) {
       fprintf(stderr, "compression failed\n");
-      status = 1;
+      status = EXIT_FAILURE;
     }
     else
       fwrite(buffer, 1, zfpsize, stdout);
@@ -74,7 +76,7 @@ compress(double* array, int nx, int ny, int nz, double tolerance, int decompress
 int main(int argc, char* argv[])
 {
   /* use -d to decompress rather than compress data */
-  int decompress = (argc == 2 && !strcmp(argv[1], "-d"));
+  zfp_bool decompress = (argc == 2 && !strcmp(argv[1], "-d"));
 
   /* allocate 100x100x100 array of doubles */
   int nx = 100;

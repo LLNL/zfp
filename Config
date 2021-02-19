@@ -6,7 +6,7 @@ FC = gfortran
 
 # language standard -----------------------------------------------------------
 
-# CSTD = -std=c89 -Wno-unused-function
+# CSTD = -std=c89
   CSTD = -std=c99
   CXXSTD = -std=c++98
 # CXXSTD = -std=c++11
@@ -14,12 +14,9 @@ FC = gfortran
 
 # common compiler options -----------------------------------------------------
 
-FLAGS = -O3 -fPIC -Wall -Wextra -pedantic -I../include
+OPTFLAGS = -O3
+FLAGS = $(OPTFLAGS) -fPIC -pedantic -Wall -Wextra
 SOFLAGS =
-
-# macOS compiler options (uncomment on macOS) ---------------------------------
-
-# SOFLAGS += -undefined dynamic_lookup
 
 # OpenMP compiler options -----------------------------------------------------
 
@@ -37,6 +34,9 @@ OMPFLAGS = -fopenmp
 # DEFS += -DBIT_STREAM_WORD_TYPE=uint16
 # DEFS += -DBIT_STREAM_WORD_TYPE=uint32
 # DEFS += -DBIT_STREAM_WORD_TYPE=uint64
+
+# cache alignment
+# DEFS += -DZFP_CACHE_LINE_SIZE=256
 
 # enable strided access for progressive zfp streams
 # DEFS += -DBIT_STREAM_STRIDED
@@ -87,6 +87,16 @@ endif
 
 # conditionals ----------------------------------------------------------------
 
+# macOS configuration; compile with "make OS=mac"
+ifeq ($(OS),mac)
+  SOFLAGS += -undefined dynamic_lookup
+endif
+
+# suppress unused function warnings when compiling C89
+ifeq ($(CSTD),-std=c89)
+  FLAGS += -Wno-unused-function
+endif
+
 # enable OpenMP?
 ifdef ZFP_WITH_OPENMP
   ifneq ($(ZFP_WITH_OPENMP),0)
@@ -96,6 +106,7 @@ ifdef ZFP_WITH_OPENMP
   endif
 endif
 
+# chroma mode for ppm example
 ifdef PPM_CHROMA
   PPM_FLAGS += -DPPM_CHROMA=$(PPM_CHROMA)
 endif

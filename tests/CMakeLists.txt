@@ -74,18 +74,19 @@ endif()
 # checksums are generated through C tests, no need to compile C++ tests
 if((NOT MINGW) AND (NOT DEFINED ZFP_OMP_TESTS_ONLY) AND (NOT PRINT_CHECKSUMS))
   # clone googletest into build/
-  configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+  configure_file(CMakeLists.txt.in ${ZFP_BINARY_DIR}/tests/googletest-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${GTEST_ARGS} .
     RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests/googletest-download
+    WORKING_DIRECTORY ${ZFP_BINARY_DIR}/tests/googletest-download
   )
+
   if(result)
     message(FATAL_ERROR "CMake step for googletest failed: ${result}")
   endif()
   # build gtest
   execute_process(COMMAND ${CMAKE_COMMAND} --build .
     RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests/googletest-download
+    WORKING_DIRECTORY ${ZFP_BINARY_DIR}/tests/googletest-download
   )
   if(result)
     message(FATAL_ERROR "Build step for googletest failed: ${result}")
@@ -93,8 +94,8 @@ if((NOT MINGW) AND (NOT DEFINED ZFP_OMP_TESTS_ONLY) AND (NOT PRINT_CHECKSUMS))
 
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-  add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
-    ${CMAKE_BINARY_DIR}/googletest-build
+  add_subdirectory(${ZFP_BINARY_DIR}/tests/googletest-src
+    ${ZFP_BINARY_DIR}/tests/googletest-build
   )
 
   if(CMAKE_VERSION VERSION_LESS 2.8.11)

@@ -92,8 +92,6 @@ array or to a rectangular subset of an array.  Note that like
 references, pointers, and iterators, views are types nested within
 the arrays that they reference.
 
-----
-
 ..
   .. cpp:class:: template<typename Scalar> array1::const_view
   .. cpp:class:: template<typename Scalar> array2::const_view
@@ -209,12 +207,8 @@ the arrays that they reference.
 
   Const iterator to end of view.
 
-----
-
 There are a number of common methods inherited from a base class,
 :code:`preview`, further up the class hierarchy.
-
-----
 
 .. cpp:function:: double arrayANY::const_view::rate() const
 
@@ -226,8 +220,6 @@ There are a number of common methods inherited from a base class,
 
   Total number of elements in view, e.g., *nx* |times| *ny* |times| *nz* for
   3D views.
-
-----
 
 With the above definitions, the following example shows how a 2D view is
 constructed and accessed::
@@ -730,8 +722,6 @@ are neither flat nor nested.
 
   Return const reference to scalar element of a 1D, 2D, 3D, or 4D array.
 
-----
-
 The following functions are common among all dimensionalities:
 
 .. cpp:function:: size_t arrayANY::private_const_view::cache_size() const
@@ -840,8 +830,6 @@ The :code:`private_view` class inherits all public functions from
 .. cpp:function:: array4::private_view::view_reference array4::private_view::operator()(size_t i, size_t j, size_t k, size_t l) const
 
   Return reference to a scalar element of a 1D, 2D, 3D, or 4D array.
-
-----
 
 The following functions are common among all dimensionalities:
 

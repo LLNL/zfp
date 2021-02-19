@@ -90,7 +90,7 @@ processed.
 PGM Image Compression
 ---------------------
 
-The :program:`pgm` program illustrates how zfp can be used to compress
+The :program:`pgm` program illustrates how |zfp| can be used to compress
 grayscale images in the
 `pgm format <http://netpbm.sourceforge.net/doc/pgm.html>`_.  The usage is::
 
@@ -106,6 +106,26 @@ compression formats, but exists merely to demonstrate how to compress 8-bit
 integer data with |zfp|.  See FAQs :ref:`#20 <q-relerr>` and
 :ref:`#21 <q-lossless>` for information on the effects of setting the
 precision.
+
+.. _ex-ppm:
+
+PPM Image Compression
+---------------------
+
+The :program:`ppm` program is analogous to the :program:`pgm` example, but
+has been designed for compressing color images in the
+`ppm format <http://netpbm.sourceforge.net/doc/ppm.html>`_.  Rather than
+compressing RGB channels independently, ppm exploits common strategies for
+color image compression such as color channel decorrelation and chroma
+subsampling.
+
+The usage is essentially the same as for :ref:`pgm <ex-pgm>`::
+
+    ppm <param> <input.ppm >output.ppm
+
+where a positive :code:`param` specifies the rate in bits per pixel; when
+negative, it specifies the precision (number of bit planes to encode) in
+fixed-precision mode.
 
 .. _ex-inplace:
 
@@ -136,3 +156,8 @@ compressed-array iterators and pointers for traversing arrays.  For
 instance, it gives an example of sorting a 1D compressed array
 using :cpp:func:`std::sort`.  This example takes no command-line
 options.
+
+The :program:`iteratorC` example illustrates the equivalent |cfp|
+iterator operations.  It closely follows the usage shown in the 
+:program:`iterator` example with some minor differences. It 
+likewise takes no command-line options.

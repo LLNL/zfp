@@ -7,6 +7,7 @@ Contributors
 * LLNL |zfp| team
 
   - Peter Lindstrom
+  - Garrett Morrison
   - Markus Salasoo
   - Matt Larsen
   - Stephen Herbein

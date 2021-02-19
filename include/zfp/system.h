@@ -33,13 +33,13 @@
   #endif
 #endif
 
-#ifdef __GNUC__
-  /* L1 cache line size for alignment purposes */
-  #ifndef ZFP_CACHE_LINE_SIZE
-    #define ZFP_CACHE_LINE_SIZE 0x100
-  #endif
-  #define align_(n) __attribute__((aligned(n)))
-  #define cache_align_(x) x align_(ZFP_CACHE_LINE_SIZE)
+/* L1 cache line size for alignment purposes */
+#ifndef ZFP_CACHE_LINE_SIZE
+  #define ZFP_CACHE_LINE_SIZE 0x100
+#endif
+/* ZFP_CACHE_LINE_SIZE=0 disables alignment */
+#if defined(__GNUC__) && ZFP_CACHE_LINE_SIZE
+  #define cache_align_(x) x __attribute__((aligned(ZFP_CACHE_LINE_SIZE)))
 #else
   #define cache_align_(x) x
 #endif

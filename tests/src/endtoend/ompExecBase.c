@@ -128,6 +128,8 @@ runCompressAcrossThreadsChunks(void **state, zfp_mode mode)
   if (failures > 0) {
     fail_msg("Overall compress/decompress test failure\n");
   }
+
+  return failures > 0;
 }
 
 static void

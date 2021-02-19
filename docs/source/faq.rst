@@ -124,9 +124,9 @@ A: Using a |zfp| array::
 the most straightforward (but perhaps not best) way is to read one
 floating-point value at a time and copy it into the array::
 
-  for (uint z = 0; z < nz; z++)
-    for (uint y = 0; y < ny; y++)
-      for (uint x = 0; x < nx; x++) {
+  for (size_t z = 0; z < nz; z++)
+    for (size_t y = 0; y < ny; y++)
+      for (size_t x = 0; x < nx; x++) {
         double f;
         if (fread(&f, sizeof(f), 1, file) == 1)
           a(x, y, z) = f;

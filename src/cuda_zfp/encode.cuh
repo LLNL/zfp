@@ -207,8 +207,8 @@ struct BlockWriter
       m_maxbits(maxbits),
       m_stream(stream)
   {
-    m_word_index = (block_idx * maxbits)  / (sizeof(Word) * 8); 
-    m_start_bit = uint((block_idx * maxbits) % (sizeof(Word) * 8)); 
+    m_word_index = ((size_t)block_idx * maxbits)  / (sizeof(Word) * 8); 
+    m_start_bit = uint(((size_t)block_idx * maxbits) % (sizeof(Word) * 8)); 
   }
 
   template<typename T>
