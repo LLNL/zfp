@@ -42,6 +42,16 @@ public:
       alloc(clear);
   }
 
+  // byte size of store data structure components indicated by mask
+  virtual size_t size_bytes(uint mask = ZFP_DATA_ALL) const
+  { 
+    size_t size = 0;
+    size += BlockStore<Codec, Index>::size_bytes(mask);
+    if (mask & ZFP_DATA_META)
+      size += sizeof(*this) - sizeof(BlockStore<Codec, Index>);
+    return size;
+  }
+
   // conservative buffer size 
   virtual size_t buffer_size() const
   {

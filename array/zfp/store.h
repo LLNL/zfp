@@ -94,7 +94,7 @@ public:
   }
 
   // byte size of store data structure components indicated by mask
-  size_t size_bytes(uint mask = ZFP_DATA_ALL) const
+  virtual size_t size_bytes(uint mask = ZFP_DATA_ALL) const
   {
     size_t size = 0;
     size += index.size_bytes(mask);
