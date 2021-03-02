@@ -22,15 +22,6 @@ public:
     this->set_config(config);
   }
 
-  // conservative buffer size 
-  virtual size_t buffer_size() const
-  {
-    zfp_field* field = zfp_field_1d(0, codec.type, nx);
-    size_t size = codec.buffer_size(field);
-    zfp_field_free(field);
-    return size;
-  }
-
   // perform a deep copy
   void deep_copy(const BlockStore1& s)
   {
@@ -47,6 +38,15 @@ public:
     set_size(nx);
     if (blocks())
       alloc(clear);
+  }
+
+  // conservative buffer size 
+  virtual size_t buffer_size() const
+  {
+    zfp_field* field = zfp_field_1d(0, codec.type, nx);
+    size_t size = codec.buffer_size(field);
+    zfp_field_free(field);
+    return size;
   }
 
   // number of elements per block
@@ -73,7 +73,6 @@ public:
   size_t encode(size_t block_index, const Scalar* block)
   {
     size_t size = codec.encode_block(offset(block_index), block_shape(block_index), block);
-//fprintf(stderr, "store1::encode(%zu)=%zu\n", block_index, size);
     index.set_block_size(block_index, size);
     return size;
   }
@@ -82,7 +81,6 @@ public:
   size_t encode(size_t block_index, const Scalar* p, ptrdiff_t sx)
   {
     size_t size = codec.encode_block_strided(offset(block_index), block_shape(block_index), p, sx);
-//fprintf(stderr, "store1::encode(%zu)=%zu\n", block_index, size);
     index.set_block_size(block_index, size);
     return size;
   }

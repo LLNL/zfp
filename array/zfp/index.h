@@ -50,9 +50,7 @@ public:
   void set_block_size(size_t size) { bits_per_block = size; }
 
   // set bit size of given block (ignored for performance reasons)
-  void set_block_size(size_t /*block_index*/, size_t /*size*/) {
-//fprintf(stderr, "index::set_block_size(%zu, %zu)\n", block_index, size);
-  }
+  void set_block_size(size_t /*block_index*/, size_t /*size*/) {}
 
   // does not support variable rate
   static bool variable_rate() { return false; }
@@ -222,10 +220,8 @@ public:
       // index has already been built; decode offset
       size_t chunk = block_index / 8;
       size_t which = block_index % 8;
-//    return offset(data[2 * chunk + 0], data[2 * chunk + 1], which);
       off = offset(data[2 * chunk + 0], data[2 * chunk + 1], which);
     }
-fprintf(stderr, "index(%zu)=%zu\n", block_index, off);
     return off;
   }
 
@@ -248,16 +244,12 @@ fprintf(stderr, "index(%zu)=%zu\n", block_index, off);
   void flush()
   {
     while (block & 0x7u)
-{
-fprintf(stderr, "flush block %zu\n", block);
       set_block_size(block, 0);
-}
   }
 
   // set bit size of all blocks
   void set_block_size(size_t size)
   {
-fprintf(stderr, "set_block_size(%zu)\n", size);
     clear();
     while (block < blocks)
       set_block_size(block, size);
@@ -268,18 +260,12 @@ fprintf(stderr, "set_block_size(%zu)\n", size);
   // set bit size of given block (in sequential order)
   void set_block_size(size_t block_index, size_t size)
   {
-fprintf(stderr, "set_block_size(%zu, %zu)\n", block_index, size);
+    // ensure block_index is next in sequence
     if (block_index != block)
-{
-fprintf(stderr, "block_index=%zu != block=%zu\n", block_index, block);
       throw zfp::exception("zfp index supports only sequential build");
-}
     // ensure block index is within bounds, but allow 0-size blocks for padding 
     if (block >= blocks && size)
-{
-fprintf(stderr, "block=%zu capacity=%zu\n", block, capacity());
       throw zfp::exception("zfp index overflow");
-}
     // ensure block size is valid
     if (size >> (hbits + lbits))
       throw zfp::exception("zfp block size is too large for hybrid index");

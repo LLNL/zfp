@@ -22,15 +22,6 @@ public:
     this->set_config(config);
   }
 
-  // conservative buffer size 
-  virtual size_t buffer_size() const
-  {
-    zfp_field* field = zfp_field_4d(0, codec.type, nx, ny, nz, nw);
-    size_t size = codec.buffer_size(field);
-    zfp_field_free(field);
-    return size;
-  }
-
   // perform a deep copy
   void deep_copy(const BlockStore4& s)
   {
@@ -53,6 +44,15 @@ public:
     set_size(nx, ny, nz, nw);
     if (blocks())
       alloc(clear);
+  }
+
+  // conservative buffer size 
+  virtual size_t buffer_size() const
+  {
+    zfp_field* field = zfp_field_4d(0, codec.type, nx, ny, nz, nw);
+    size_t size = codec.buffer_size(field);
+    zfp_field_free(field);
+    return size;
   }
 
   // number of elements per block

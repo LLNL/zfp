@@ -27,7 +27,6 @@ public:
   // set fixed rate in compressed bits per value
   double set_rate(double rate)
   {
-fprintf(stderr, "store::set_rate(%g, %zu, %zu)\n", rate, blocks(), block_size());
     rate = codec.set_rate(rate);
     index.set_block_size(codec.maxbits());
     alloc(true);
@@ -38,7 +37,6 @@ fprintf(stderr, "store::set_rate(%g, %zu, %zu)\n", rate, blocks(), block_size())
   uint set_precision(uint precision)
   {
     set_variable_rate();
-fprintf(stderr, "store::set_precision(%u)\n", precision);
     precision = codec.set_precision(precision);
     index.clear();
     alloc(true);
@@ -49,7 +47,6 @@ fprintf(stderr, "store::set_precision(%u)\n", precision);
   double set_accuracy(double tolerance)
   {
     set_variable_rate();
-fprintf(stderr, "store::set_accuracy(%g)\n", tolerance);
     tolerance = codec.set_accuracy(tolerance);
     index.clear();
     alloc(true);
@@ -164,7 +161,6 @@ protected:
   {
     free();
     bytes = buffer_size();
-fprintf(stderr, "store::alloc(%zu, %s) -> %zu\n", blocks(), clear ? "true" : "false", bytes);
     zfp::reallocate_aligned(data, bytes, ZFP_MEMORY_ALIGNMENT);
     if (clear)
       std::fill(static_cast<uint8*>(data), static_cast<uint8*>(data) + bytes, uint8(0));

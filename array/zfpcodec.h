@@ -31,7 +31,6 @@ public:
   // assignment operator--performs deep copy
   zfp_codec_base& operator=(const zfp_codec_base& codec)
   {
-fprintf(stderr, "codec_base::copy\n");
     if (this != &codec)
       deep_copy(codec);
     return *this;
@@ -40,8 +39,6 @@ fprintf(stderr, "codec_base::copy\n");
   // conservative buffer size for current codec settings
   size_t buffer_size(const zfp_field* field) const
   {
-//fprintf(stderr, "codec::buffer_size()\n");
-//fprintf(stderr, "zfp = (%u, %u, %u, %d)\n", zfp->minbits, zfp->maxbits, zfp->maxprec, zfp->minexp);
     // empty field case
     if (!field->nx && !field->ny && !field->nz && !field->nw)
       return 0;
@@ -88,14 +85,7 @@ fprintf(stderr, "codec_base::copy\n");
   uint maxbits() const { return zfp->maxbits; }
 
   // set rate in compressed bits/value
-//  double set_rate(double rate) { return zfp_stream_set_rate(zfp, rate, type, dims, zfp_true); }
-  double set_rate(double rate)
-  {
-fprintf(stderr, "codec%d::set_rate(%g)=", dims, rate);
-    rate = zfp_stream_set_rate(zfp, rate, type, dims, zfp_true);
-fprintf(stderr, "%g\n", rate);
-    return rate;
-  }
+  double set_rate(double rate) { return zfp_stream_set_rate(zfp, rate, type, dims, zfp_true); }
 
   // set precision in uncompressed bits/value
   uint set_precision(uint precision) { return zfp_stream_set_precision(zfp, precision); }
@@ -129,7 +119,6 @@ protected:
   // deep copy
   void deep_copy(const zfp_codec_base& codec)
   {
-fprintf(stderr, "codec::deep_copy\n");
     zfp = zfp_stream_open(0);
     *zfp = *codec.zfp;
     zfp->stream = 0;
