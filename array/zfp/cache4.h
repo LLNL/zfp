@@ -14,7 +14,17 @@ public:
     store(store)
   {}
 
-  // cache size in number of bytes
+  // byte size of cache data structure components indicated by mask
+  size_t size_bytes(uint mask = ZFP_DATA_ALL) const
+  {
+    size_t size = 0;
+    size += cache.size_bytes(mask);
+    if (mask & ZFP_DATA_META)
+      size += sizeof(*this);
+    return size;
+  }
+
+  // cache size in number of bytes (cache line payload data only)
   size_t size() const { return cache.size() * sizeof(CacheLine); }
 
   // set minimum cache size in bytes (inferred from blocks if zero)
