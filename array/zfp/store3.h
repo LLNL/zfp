@@ -64,50 +64,11 @@ public:
   size_t block_size_y() const { return by; }
   size_t block_size_z() const { return bz; }
 
-  // flat block index for block (i, j, k)
+  // flat block index for block containing element (i, j, k)
   size_t block_index(size_t i, size_t j, size_t k) const { return (i / 4) + bx * ((j / 4) + by * (k / 4)); }
 
   // encoding of block dimensions
-  uint block_shape(size_t block_index) const { return shape(block_index); }
-
-  // encode contiguous block with given index
-  size_t encode(size_t block_index, const Scalar* block)
-  {
-    size_t size = codec.encode_block(offset(block_index), shape(block_index), block);
-    index.set_block_size(block_index, size);
-    return size;
-  }
-
-  // encode block with given index from strided array
-  size_t encode(size_t block_index, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
-  {
-    size_t size = codec.encode_block_strided(offset(block_index), shape(block_index), p, sx, sy, sz);
-    index.set_block_size(block_index, size);
-    return size;
-  }
-
-  // decode contiguous block with given index
-  size_t decode(size_t block_index, Scalar* block) const
-  {
-    return codec.decode_block(offset(block_index), shape(block_index), block);
-  }
-
-  // decode block with given index to strided array
-  size_t decode(size_t block_index, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
-  {
-    return codec.decode_block_strided(offset(block_index), shape(block_index), p, sx, sy, sz);
-  }
-
-protected:
-  using BlockStore<Codec, Index>::alloc;
-  using BlockStore<Codec, Index>::free;
-  using BlockStore<Codec, Index>::offset;
-  using BlockStore<Codec, Index>::shape_code;
-  using BlockStore<Codec, Index>::index;
-  using BlockStore<Codec, Index>::codec;
-
-  // shape of block with given global block index
-  uint shape(size_t block_index) const
+  uint block_shape(size_t block_index) const
   {
     size_t i = 4 * (block_index % bx); block_index /= bx;
     size_t j = 4 * (block_index % by); block_index /= by;
@@ -117,6 +78,42 @@ protected:
     uint mz = shape_code(k, nz);
     return mx + 4 * (my + 4 * mz);
   }
+
+  // encode contiguous block with given index
+  size_t encode(size_t block_index, const Scalar* block)
+  {
+    size_t size = codec.encode_block(offset(block_index), block_shape(block_index), block);
+    index.set_block_size(block_index, size);
+    return size;
+  }
+
+  // encode block with given index from strided array
+  size_t encode(size_t block_index, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+  {
+    size_t size = codec.encode_block_strided(offset(block_index), block_shape(block_index), p, sx, sy, sz);
+    index.set_block_size(block_index, size);
+    return size;
+  }
+
+  // decode contiguous block with given index
+  size_t decode(size_t block_index, Scalar* block) const
+  {
+    return codec.decode_block(offset(block_index), block_shape(block_index), block);
+  }
+
+  // decode block with given index to strided array
+  size_t decode(size_t block_index, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
+  {
+    return codec.decode_block_strided(offset(block_index), block_shape(block_index), p, sx, sy, sz);
+  }
+
+protected:
+  using BlockStore<Codec, Index>::alloc;
+  using BlockStore<Codec, Index>::free;
+  using BlockStore<Codec, Index>::offset;
+  using BlockStore<Codec, Index>::shape_code;
+  using BlockStore<Codec, Index>::index;
+  using BlockStore<Codec, Index>::codec;
 
   // set array dimensions
   void set_size(size_t nx, size_t ny, size_t nz)

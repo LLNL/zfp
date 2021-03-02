@@ -58,16 +58,21 @@ public:
   // array size in blocks
   size_t block_size_x() const { return bx; }
 
-  // flat block index for block i
+  // flat block index for element i
   size_t block_index(size_t i) const { return i / 4; }
 
   // encoding of block dimensions
-  uint block_shape(size_t block_index) const { return shape(block_index); }
+  uint block_shape(size_t block_index) const
+  {
+    size_t i = 4 * block_index;
+    uint mx = shape_code(i, nx);
+    return mx;
+  }
 
   // encode contiguous block with given index
   size_t encode(size_t block_index, const Scalar* block)
   {
-    size_t size = codec.encode_block(offset(block_index), shape(block_index), block);
+    size_t size = codec.encode_block(offset(block_index), block_shape(block_index), block);
 //fprintf(stderr, "store1::encode(%zu)=%zu\n", block_index, size);
     index.set_block_size(block_index, size);
     return size;
@@ -76,7 +81,7 @@ public:
   // encode block with given index from strided array
   size_t encode(size_t block_index, const Scalar* p, ptrdiff_t sx)
   {
-    size_t size = codec.encode_block_strided(offset(block_index), shape(block_index), p, sx);
+    size_t size = codec.encode_block_strided(offset(block_index), block_shape(block_index), p, sx);
 //fprintf(stderr, "store1::encode(%zu)=%zu\n", block_index, size);
     index.set_block_size(block_index, size);
     return size;
@@ -85,13 +90,13 @@ public:
   // decode contiguous block with given index
   size_t decode(size_t block_index, Scalar* block) const
   {
-    return codec.decode_block(offset(block_index), shape(block_index), block);
+    return codec.decode_block(offset(block_index), block_shape(block_index), block);
   }
 
   // decode block with given index to strided array
   size_t decode(size_t block_index, Scalar* p, ptrdiff_t sx) const
   {
-    return codec.decode_block_strided(offset(block_index), shape(block_index), p, sx);
+    return codec.decode_block_strided(offset(block_index), block_shape(block_index), p, sx);
   }
 
 protected:
@@ -102,14 +107,6 @@ protected:
   using BlockStore<Codec, Index>::shape_code;
   using BlockStore<Codec, Index>::index;
   using BlockStore<Codec, Index>::codec;
-
-  // shape of block with given global block index
-  uint shape(size_t block_index) const
-  {
-    size_t i = 4 * block_index;
-    uint mx = shape_code(i, nx);
-    return mx;
-  }
 
   // set array dimensions
   void set_size(size_t nx)
