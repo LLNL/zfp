@@ -341,6 +341,7 @@ appropriate bias for unsigned integer data.
 .. c:function:: void zfp_promote_uint16_to_int32(int32* oblock, const uint16* iblock, uint dims)
 
   Convert *dims*-dimensional contiguous block to 32-bit integer type.
+  Use *dims* = 0 to promote a single value.
 
 ----
 
@@ -350,3 +351,4 @@ appropriate bias for unsigned integer data.
 .. c:function:: void zfp_demote_int32_to_uint16(uint16* oblock, const int32* iblock, uint dims)
 
   Convert *dims*-dimensional contiguous block from 32-bit integer type.
+  Use *dims* = 0 to demote a single value.
