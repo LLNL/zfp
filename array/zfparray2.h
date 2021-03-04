@@ -133,6 +133,17 @@ public:
     return store.set_rate(rate);
   }
 
+  // byte size of array data structure components indicated by mask
+  size_t size_bytes(uint mask = ZFP_DATA_ALL) const
+  {
+    size_t size = 0;
+    size += store.size_bytes(mask);
+    size += cache.size_bytes(mask);
+    if (mask & ZFP_DATA_META)
+      size += sizeof(*this);
+    return size;
+  }
+
   // number of bytes of compressed data
   size_t compressed_size() const { return store.compressed_size(); }
 

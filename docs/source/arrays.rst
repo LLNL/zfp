@@ -167,6 +167,15 @@ in the base class.
 
 ----
 
+.. cpp:function:: size_t array::size_bytes(uint mask = ZFP_DATA_ALL) const
+
+  Return storage size of components of array data structure indicated by
+  *mask*.  The mask is constructed via bitwise OR of
+  :ref:`predefined constants <data-macros>`.
+  Available as of |zfp| |carrrelease|.
+
+----
+
 .. cpp:function:: size_t array::compressed_size() const
 
   Return number of bytes of storage for the compressed data.  This amount
