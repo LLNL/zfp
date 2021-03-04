@@ -10,7 +10,7 @@ class BlockCache1 {
 public:
   // constructor of cache of given size
   BlockCache1(Store& store, size_t bytes = 0) :
-    cache((uint)((bytes + sizeof(CacheLine) - 1) / sizeof(CacheLine))),
+    cache(lines(bytes, store.blocks())),
     store(store)
   {}
 
