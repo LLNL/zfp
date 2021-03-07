@@ -561,6 +561,14 @@ Additional methods are documented below.
 
 ----
 
+.. cpp:class:: const_array : public array
+
+  Fictitious class used to denote one of the 1D, 2D, 3D, and 4D read-only
+  array classes.  This pseudo base class serves only to document the API
+  shared among the four arrays.
+
+----
+
 .. _carray_ctor_default:
 .. cpp:function:: const_array1::const_array1()
 .. cpp:function:: const_array2::const_array2()
@@ -686,6 +694,14 @@ Additional methods are documented below.
   This method destroys the previous contents of the array.  See also
   :cpp:func:`array::set_rate`.
 
+.. note::
+  Whereas the :ref:`read-write fixed-rate arrays <array_classes>`
+  (:cpp:class:`zfp::array`) require that block storage is word aligned, the
+  read-only arrays (:cpp:class:`zfp::const_array`) are not subject to such
+  restrictions and thefore support finer rate granularity.  For a
+  *d*-dimensional :cpp:class:`const_array`, the rate granularity is
+  4\ :sup:`-d` bits/value, e.g., a quarter bit/value for 1D arrays.
+
 ----
 
 .. cpp:function:: uint const_array::set_precision(uint precision)
@@ -765,11 +781,11 @@ Additional methods are documented below.
 .. cpp:function:: void const_array::set(const Scalar* p, bool compact = true)
 
   Initialize array by copying and compressing floating-point data stored at
-  *p*.  The uncompressed data is assumed to be stored as in the
-  :cpp:func:`get` method.  Since the size of compressed data may not be known
-  a priori, this method conservatively allocates enough space to hold it.  If
-  *compact* is true, any unused storage for compressed data is freed after
-  initialization.
+  *p*.  If *p* = 0, then the array is zero-initialized.  The uncompressed data
+  is assumed to be stored as in the :cpp:func:`get` method.  Since the size of
+  compressed data may not be known a priori, this method conservatively
+  allocates enough space to hold it.  If *compact* is true, any unused storage
+  for compressed data is freed after initialization.
 
 ----
 
