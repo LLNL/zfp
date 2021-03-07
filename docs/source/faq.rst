@@ -333,18 +333,21 @@ Issues may arise on architectures that do not support IEEE floating point.
 
 Q12: *How can I achieve finer rate granularity?*
 
-A: For *d*-dimensional arrays, |zfp| supports a rate granularity of 8 / |4powd|
-bits, i.e., the rate can be specified in increments of a fraction of a bit for
-2D and 3D arrays.  Such fine rate selection is always available for sequential
-compression (e.g., when calling :c:func:`zfp_compress`).
+A: For *d*-dimensional data, |zfp| supports a rate granularity of 1 / |4powd|
+bits, i.e., the rate can be specified in increments of a fraction of a bit.
+Such fine rate selection is always available for sequential compression
+(e.g., when calling :c:func:`zfp_compress`).
 
-Unlike in sequential compression, |zfp|'s compressed arrays require random
-access writes, which are supported only at the granularity of whole words.
-By default, a word is 64 bits, which gives a rate granularity of
-64 / |4powd| in *d* dimensions, i.e., 16 bits in 1D, 4 bits in 2D, and 1 bit
-in 3D.
+Unlike in sequential compression, |zfp|'s
+:ref:`read-write compressed-array classes <array_classes>` require
+random-access writes, which are supported only at the granularity of whole
+words.  By default, a word is 64 bits, which gives a rate granularity of
+64 / |4powd| in *d* dimensions, i.e., 16 bits in 1D, 4 bits in 2D, 1 bit
+in 3D, and 0.25 bits in 4D.
+:ref:`Read-only compressed arrays <carray_classes>` support the same fine
+granularity as sequential compression.
 
-To achieve finer granularity, recompile |zfp| with a smaller (but as large as
+To achieve finer granularity, build |zfp| with a smaller (but as large as
 possible) stream word size, e.g.::
 
   -DBIT_STREAM_WORD_TYPE=uint8
