@@ -189,6 +189,9 @@ protected:
   // number of cache lines corresponding to size (or suggested size if zero)
   static uint lines(size_t bytes, size_t blocks)
   {
+    // ensure block index fits in tag
+    if (blocks >> ((sizeof(uint) * CHAR_BIT) - 1))
+      throw zfp::exception("zfp array too large for cache");
     uint n = bytes ? static_cast<uint>((bytes + sizeof(CacheLine) - 1) / sizeof(CacheLine)) : lines(blocks);
     return std::max(n, 1u);
   }
