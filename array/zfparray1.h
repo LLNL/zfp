@@ -6,6 +6,7 @@
 #include <iterator>
 #include "zfparray.h"
 #include "zfpcodec.h"
+#include "zfpindex.h"
 #include "zfp/cache1.h"
 #include "zfp/store1.h"
 #include "zfp/handle1.h"
@@ -17,14 +18,20 @@
 namespace zfp {
 
 // compressed 2D array of scalars
-template < typename Scalar, class Codec = zfp::zfp_codec<Scalar, 1> >
+template <
+  typename Scalar,
+  class Codec = zfp::zfp_codec<Scalar, 1>,
+  class Index = zfp::index::implicit
+>
 class array1 : public array {
 public:
   // types utilized by nested classes
   typedef array1 container_type;
   typedef Scalar value_type;
   typedef Codec codec_type;
-  typedef BlockStore1<value_type, codec_type> store_type;
+  typedef Index index_type;
+  typedef BlockStore1<value_type, codec_type, index_type> store_type;
+  typedef BlockCache1<value_type, store_type> cache_type;
   typedef typename Codec::header header;
 
   // accessor classes
@@ -122,7 +129,7 @@ public:
   double set_rate(double rate)
   {
     cache.clear();
-    return store.set_rate(rate);
+    return store.set_rate(rate, true);
   }
 
   // byte size of array data structure components indicated by mask
@@ -236,8 +243,8 @@ protected:
   void mul(size_t i, value_type val) { cache.ref(i) *= val; }
   void div(size_t i, value_type val) { cache.ref(i) /= val; }
 
-  BlockStore1<value_type, codec_type> store; // persistent storage of compressed blocks
-  BlockCache1<value_type, store_type> cache; // cache of decompressed blocks
+  store_type store; // persistent storage of compressed blocks
+  cache_type cache; // cache of decompressed blocks
 };
 
 typedef array1<float> array1f;

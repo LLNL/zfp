@@ -6,6 +6,7 @@
 #include <iterator>
 #include "zfparray.h"
 #include "zfpcodec.h"
+#include "zfpindex.h"
 #include "zfp/cache4.h"
 #include "zfp/store4.h"
 #include "zfp/handle4.h"
@@ -17,14 +18,20 @@
 namespace zfp {
 
 // compressed 3D array of scalars
-template < typename Scalar, class Codec = zfp::zfp_codec<Scalar, 4> >
+template <
+  typename Scalar,
+  class Codec = zfp::zfp_codec<Scalar, 4>,
+  class Index = zfp::index::implicit
+>
 class array4 : public array {
 public:
   // types utilized by nested classes
   typedef array4 container_type;
   typedef Scalar value_type;
   typedef Codec codec_type;
-  typedef BlockStore4<value_type, codec_type> store_type;
+  typedef Index index_type;
+  typedef BlockStore4<value_type, codec_type, index_type> store_type;
+  typedef BlockCache4<value_type, store_type> cache_type;
   typedef typename Codec::header header;
 
   // accessor classes
@@ -140,7 +147,7 @@ public:
   double set_rate(double rate)
   {
     cache.clear();
-    return store.set_rate(rate);
+    return store.set_rate(rate, true);
   }
 
   // byte size of array data structure components indicated by mask
@@ -302,8 +309,8 @@ protected:
     l = index;
   }
 
-  BlockStore4<value_type, codec_type> store; // persistent storage of compressed blocks
-  BlockCache4<value_type, store_type> cache; // cache of decompressed blocks
+  store_type store; // persistent storage of compressed blocks
+  cache_type cache; // cache of decompressed blocks
 };
 
 typedef array4<float> array4f;

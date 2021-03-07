@@ -85,7 +85,7 @@ public:
   uint maxbits() const { return zfp->maxbits; }
 
   // set rate in compressed bits/value
-  double set_rate(double rate) { return zfp_stream_set_rate(zfp, rate, type, dims, zfp_true); }
+  double set_rate(double rate, bool align) { return zfp_stream_set_rate(zfp, rate, type, dims, align); }
 
   // set precision in uncompressed bits/value
   uint set_precision(uint precision) { return zfp_stream_set_precision(zfp, precision); }
@@ -129,7 +129,7 @@ protected:
   {
     stream_wseek(zfp->stream, offset);
     size_t size = cpp::encode_block<Scalar, dims>(zfp, block);
-    size += zfp_stream_flush(zfp);
+    zfp_stream_flush(zfp);
     return size;
   }
 
@@ -138,7 +138,7 @@ protected:
   {
     stream_rseek(zfp->stream, offset);
     size_t size = cpp::decode_block<Scalar, dims>(zfp, block);
-    size += zfp_stream_align(zfp);
+    zfp_stream_align(zfp);
     return size;
   }
 
@@ -173,7 +173,7 @@ public:
     }
     else
       size = cpp::encode_block_strided<Scalar>(zfp, p, sx);
-    size += zfp_stream_flush(zfp);
+    zfp_stream_flush(zfp);
     return size;
   }
 
@@ -195,7 +195,7 @@ public:
     }
     else
       size = cpp::decode_block_strided<Scalar>(zfp, p, sx);
-    size += zfp_stream_align(zfp);
+    zfp_stream_align(zfp);
     return size;
   }
 
@@ -228,7 +228,7 @@ public:
     }
     else
       size = cpp::encode_block_strided<Scalar>(zfp, p, sx, sy);
-    size += zfp_stream_flush(zfp);
+    zfp_stream_flush(zfp);
     return size;
   }
 
@@ -251,7 +251,7 @@ public:
     }
     else
       size = cpp::decode_block_strided<Scalar>(zfp, p, sx, sy);
-    size += zfp_stream_align(zfp);
+    zfp_stream_align(zfp);
     return size;
   }
 
@@ -285,7 +285,7 @@ public:
     }
     else
       size = cpp::encode_block_strided<Scalar>(zfp, p, sx, sy, sz);
-    size += zfp_stream_flush(zfp);
+    zfp_stream_flush(zfp);
     return size;
   }
 
@@ -309,7 +309,7 @@ public:
     }
     else
       size = cpp::decode_block_strided<Scalar>(zfp, p, sx, sy, sz);
-    size += zfp_stream_align(zfp);
+    zfp_stream_align(zfp);
     return size;
   }
 
@@ -344,7 +344,7 @@ public:
     }
     else
       size = cpp::encode_block_strided<Scalar>(zfp, p, sx, sy, sz, sw);
-    size += zfp_stream_flush(zfp);
+    zfp_stream_flush(zfp);
     return size;
   }
 
@@ -369,7 +369,7 @@ public:
     }
     else
       size = cpp::decode_block_strided<Scalar>(zfp, p, sx, sy, sz, sw);
-    size += zfp_stream_align(zfp);
+    zfp_stream_align(zfp);
     return size;
   }
 

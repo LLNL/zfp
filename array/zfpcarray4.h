@@ -6,6 +6,7 @@
 #include <iterator>
 #include "zfparray.h"
 #include "zfpcodec.h"
+#include "zfpindex.h"
 #include "zfp/cache4.h"
 #include "zfp/store4.h"
 #include "zfp/handle4.h"
@@ -20,7 +21,7 @@ namespace zfp {
 template <
   typename Scalar,
   class Codec = zfp::zfp_codec<Scalar, 4>,
-  class Index = zfp::internal::Hybrid8Index<4>
+  class Index = zfp::index::hybrid4
 >
 class const_array4 : public array {
 public:
@@ -30,6 +31,7 @@ public:
   typedef Codec codec_type;
   typedef Index index_type;
   typedef BlockStore4<value_type, codec_type, index_type> store_type;
+  typedef BlockCache4<value_type, store_type> cache_type;
   typedef typename Codec::header header;
 
   // accessor classes
@@ -56,8 +58,7 @@ public:
     this->ny = ny;
     this->nz = nz;
     this->nw = nw;
-    if (p)
-      set(p);
+    set(p);
   }
 
   // copy constructor--performs a deep copy
@@ -114,7 +115,7 @@ public:
   double set_rate(double rate)
   {
     cache.clear();
-    return store.set_rate(rate);
+    return store.set_rate(rate, false);
   }
 
   // set precision in uncompressed bits per value
@@ -194,23 +195,32 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const value_type* p, bool compact = true)
   {
-    store.clear_index();
     cache.clear();
+    store.clear();
     const size_t bx = store.block_size_x();
     const size_t by = store.block_size_y();
     const size_t bz = store.block_size_z();
     const size_t bw = store.block_size_w();
-    const ptrdiff_t sx = 1;
-    const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
-    const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
-    const ptrdiff_t sw = static_cast<ptrdiff_t>(nx * ny * nz);
     size_t block_index = 0;
-    for (size_t l = 0; l < bw; l++, p += 4 * sz * (nz - bz))
-      for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
-        for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
-          for (size_t i = 0; i < bx; i++, p += 4)
-            cache.put_block(block_index++, p, sx, sy, sz, sw);
-    store.flush_index();
+    if (p) {
+      // compress data stored at p
+      const ptrdiff_t sx = 1;
+      const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
+      const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
+      const ptrdiff_t sw = static_cast<ptrdiff_t>(nx * ny * nz);
+      for (size_t l = 0; l < bw; l++, p += 4 * sz * (nz - bz))
+        for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
+          for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
+            for (size_t i = 0; i < bx; i++, p += 4)
+              store.encode(block_index++, p, sx, sy, sz, sw);
+    }
+    else {
+      // zero-initialize array
+      const value_type block[4 * 4 * 4 * 4] = {};
+      while (block_index < bx * by * bz * bw)
+        store.encode(block_index++, block);
+    }
+    store.flush();
     if (compact)
       store.compact();
   }
@@ -273,8 +283,8 @@ protected:
     l = index;
   }
 
-  BlockStore4<value_type, codec_type, index_type> store; // persistent storage of compressed blocks
-  BlockCache4<value_type, store_type> cache; // cache of decompressed blocks
+  store_type store; // persistent storage of compressed blocks
+  cache_type cache; // cache of decompressed blocks
 };
 
 typedef const_array4<float> const_array4f;

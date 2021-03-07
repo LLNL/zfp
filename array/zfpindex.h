@@ -4,20 +4,20 @@
 #include <algorithm>
 
 namespace zfp {
-namespace internal {
+namespace index {
 
-// implicit block index that uses constant block size (0 bits/block) ----------
-class ImplicitIndex {
+// implicit block index (fixed-size blocks; 0 bits/block; 64-bit offsets) -----
+class implicit {
 public:
   // constructor
-  ImplicitIndex(size_t blocks) :
+  implicit(size_t blocks) :
     bits_per_block(0)
   {
     resize(blocks);
   }
 
   // destructor
-  ~ImplicitIndex() {}
+  ~implicit() {}
 
   // byte size of index data structure components indicated by mask
   size_t size_bytes(uint mask = ZFP_DATA_ALL) const
@@ -29,7 +29,7 @@ public:
   }
 
   // bit size of indexed data
-  size_t data_size() const { return bits_per_block * blocks; }
+  size_t data_size() const { return block_offset(blocks); }
 
   // bit size of given block
   size_t block_size(size_t /*block_index*/) const { return bits_per_block; }
@@ -60,21 +60,21 @@ protected:
   size_t bits_per_block; // fixed number of bits per block
 };
 
-// uncompressed block index (full offsets; 64 bits/block) ---------------------
-class VerbatimIndex {
+// verbatim block index (64 bits/block; 64-bit offsets) -----------------------
+class verbatim {
 public:
   // constructor for given nbumber of blocks
-  VerbatimIndex(size_t blocks) :
+  verbatim(size_t blocks) :
     data(0)
   {
     resize(blocks);
   }
 
   // destructor
-  ~VerbatimIndex() { delete[] data; }
+  ~verbatim() { delete[] data; }
 
   // assignment operator--performs a deep copy
-  VerbatimIndex& operator=(const VerbatimIndex& index)
+  verbatim& operator=(const verbatim& index)
   {
     if (this != &index)
       deep_copy(index);
@@ -93,10 +93,10 @@ public:
   }
 
   // bit size of indexed data
-  size_t data_size() const { return data[blocks]; }
+  size_t data_size() const { return block_offset(blocks); }
 
   // bit size of given block
-  size_t block_size(size_t block_index) const { return data[block_index + 1] - data[block_index]; }
+  size_t block_size(size_t block_index) const { return block_offset(block_index + 1) - block_offset(block_index); }
 
   // bit offset of given block
   size_t block_offset(size_t block_index) const
@@ -147,7 +147,7 @@ protected:
   size_t capacity() const { return blocks + 1; }
 
   // make a deep copy of index
-  void deep_copy(const VerbatimIndex& index)
+  void deep_copy(const verbatim& index)
   {
     zfp::clone(data, index.data, index.capacity());
     blocks = index.blocks;
@@ -159,22 +159,187 @@ protected:
   size_t block;  // current block index
 };
 
-// hybrid block index (full offset every 8 blocks; 16 bits/block) -------------
-template <uint dims>
-class Hybrid8Index {
+// hybrid block index (4 blocks/chunk; 24 bits/block; 44-bit offsets) ---------
+class hybrid4 {
 public:
   // constructor for given number of blocks
-  Hybrid8Index(size_t blocks) :
+  hybrid4(size_t blocks) :
     data(0)
   {
     resize(blocks);
   }
 
   // destructor
-  ~Hybrid8Index() { delete[] data; }
+  ~hybrid4() { delete[] data; }
 
   // assignment operator--performs a deep copy
-  Hybrid8Index& operator=(const Hybrid8Index& index)
+  hybrid4& operator=(const hybrid4& index)
+  {
+    if (this != &index)
+      deep_copy(index);
+    return *this;
+  }
+
+  // byte size of index data structure components indicated by mask
+  size_t size_bytes(uint mask = ZFP_DATA_ALL) const
+  {
+    size_t size = 0;
+    if (mask & ZFP_DATA_INDEX)
+      size += capacity() * sizeof(*data);
+    if (mask & ZFP_DATA_META)
+      size += sizeof(*this);
+    return size;
+  }
+
+  // bit size of indexed data
+  size_t data_size() const { return end; }
+
+  // bit size of given block
+  size_t block_size(size_t block_index) const
+  {
+    size_t chunk = block_index / 4;
+    size_t which = block_index % 4;
+    switch (which) {
+      case 3:
+        return (block_index + 1 == block ? ptr : block_offset(block_index + 1)) - block_offset(block_index);
+      default:
+        return data[chunk].lo[which + 1] - data[chunk].lo[which];
+    }
+  }
+
+  // bit offset of given block
+  size_t block_offset(size_t block_index) const
+  {
+    size_t off;
+    if (block_index == block) {
+      // index is being built; point offset to end
+      off = end;
+    }
+    else {
+      // index has already been built; decode offset
+      size_t chunk = block_index / 4;
+      size_t which = block_index % 4;
+      off = (size_t(data[chunk].hi) << shift) + data[chunk].lo[which];
+    }
+    return off;
+  }
+
+  // reset index
+  void clear()
+  {
+    block = 0;
+    ptr = 0;
+    end = 0;
+  }
+
+  void resize(size_t blocks)
+  {
+    this->blocks = blocks;
+    zfp::reallocate(data, capacity() * sizeof(*data));
+    clear();
+  }
+
+  // flush any buffered data
+  void flush()
+  {
+    while (block & 0x3u)
+      set_block_size(block, 0);
+  }
+
+  // set bit size of all blocks
+  void set_block_size(size_t size)
+  {
+    clear();
+    while (block < blocks)
+      set_block_size(block, size);
+    flush();
+    clear();
+  }
+
+  // set bit size of given block (in sequential order)
+  void set_block_size(size_t block_index, size_t size)
+  {
+    // ensure block_index is next in sequence
+    if (block_index != block)
+      throw zfp::exception("zfp index supports only sequential build");
+    // ensure block index is within bounds, but allow 0-size blocks for padding 
+    if (block >= blocks && size)
+      throw zfp::exception("zfp index overflow");
+    // ensure block size is valid
+    if (size > ZFP_MAX_BITS)
+      throw zfp::exception("zfp block size is too large for hybrid4 index");
+    // advance end pointer
+    end += size;
+    // buffer chunk of 4 block sizes at a time
+    size_t chunk = block / 4;
+    size_t which = block % 4;
+    buffer[which] = size;
+    if (which == 0x3u) {
+      // chunk is complete; encode it
+      if (((ptr >> 16) >> 16) >> shift)
+        throw zfp::exception("zfp block offset is too large for hybrid4 index");
+      // store high bits
+      data[chunk].hi = ptr >> shift;
+      size_t base = size_t(data[chunk].hi) << shift;
+      // store low bits
+      for (uint k = 0; k < 4; k++) {
+        data[chunk].lo[k] = ptr - base;
+        ptr += buffer[k];
+      }
+    }
+    block++;
+  }
+
+  // supports variable rate
+  static bool variable_rate() { return true; }
+
+protected:
+  // capacity of data array
+  size_t capacity() const { return (blocks + 3) / 4; }
+
+  // make a deep copy of index
+  void deep_copy(const hybrid4& index)
+  {
+    zfp::clone(data, index.data, index.capacity());
+    blocks = index.blocks;
+    block = index.block;
+    ptr = index.ptr;
+    end = index.end;
+    std::copy(index.buffer, index.buffer + 4, buffer);
+  }
+
+  // chunk record encoding 4 block offsets
+  typedef struct {
+    uint32 hi;    // 32 most significant bits of 44-bit base offset
+    uint16 lo[4]; // 16-bit offsets from base
+  } record;
+
+  static const uint shift = 12; // number of bits to shift hi bits
+
+  record* data;     // block offset array
+  size_t blocks;    // number of blocks
+  size_t block;     // current block index
+  size_t end;       // offset to last block
+  size_t ptr;       // offset to current chunk of blocks
+  size_t buffer[4]; // buffer of 4 blocks to be stored together
+};
+
+// hybrid block index (8 blocks/chunk; 16 bits/block; 86-14dims bit offsets) --
+template <uint dims>
+class hybrid8 {
+public:
+  // constructor for given number of blocks
+  hybrid8(size_t blocks) :
+    data(0)
+  {
+    resize(blocks);
+  }
+
+  // destructor
+  ~hybrid8() { delete[] data; }
+
+  // assignment operator--performs a deep copy
+  hybrid8& operator=(const hybrid8& index)
   {
     if (this != &index)
       deep_copy(index);
@@ -268,14 +433,13 @@ public:
       throw zfp::exception("zfp index overflow");
     // ensure block size is valid
     if (size >> (hbits + lbits))
-      throw zfp::exception("zfp block size is too large for hybrid index");
+      throw zfp::exception("zfp block size is too large for hybrid8 index");
     // advance end pointer
     end += size;
     // buffer chunk of 8 block sizes at a time
     size_t chunk = block / 8;
     size_t which = block % 8;
     buffer[which] = size;
-    block++;
     if (which == 0x7u) {
       // partition chunk offset into low and high bits
       uint64 h = ptr >> lbits;
@@ -284,7 +448,7 @@ public:
       uint64 lo = l << (7 * lbits);
       // make sure base offset does not overflow
       if ((hi >> (7 * hbits)) != h)
-        throw zfp::exception("zfp block offset is too large for hybrid index");
+        throw zfp::exception("zfp block offset is too large for hybrid8 index");
       // store sizes of blocks 0-6
       for (uint k = 0; k < 7; k++) {
         size = buffer[k];
@@ -299,6 +463,7 @@ public:
       data[2 * chunk + 0] = hi;
       data[2 * chunk + 1] = lo;
     }
+    block++;
   }
 
   // supports variable rate
@@ -309,7 +474,7 @@ protected:
   size_t capacity() const { return 2 * ((blocks + 7) / 8); }
 
   // make a deep copy of index
-  void deep_copy(const Hybrid8Index& index)
+  void deep_copy(const hybrid8& index)
   {
     zfp::clone(data, index.data, index.capacity());
     blocks = index.blocks;
@@ -379,12 +544,12 @@ protected:
   uint64* data;     // block offset array
   size_t blocks;    // number of blocks
   size_t block;     // current block index
-  uint64 ptr;       // offset to current set of blocks
-  uint64 end;       // offset to last block
+  size_t end;       // offset to last block
+  size_t ptr;       // offset to current set of blocks
   size_t buffer[8]; // buffer of 8 blocks to be stored together
 };
 
-} // internal
+} // index
 } // zfp
 
 #endif

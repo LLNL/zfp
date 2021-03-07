@@ -6,6 +6,7 @@
 #include <iterator>
 #include "zfparray.h"
 #include "zfpcodec.h"
+#include "zfpindex.h"
 #include "zfp/cache1.h"
 #include "zfp/store1.h"
 #include "zfp/handle1.h"
@@ -20,7 +21,7 @@ namespace zfp {
 template <
   typename Scalar,
   class Codec = zfp::zfp_codec<Scalar, 1>,
-  class Index = zfp::internal::Hybrid8Index<1>
+  class Index = zfp::index::hybrid4
 >
 class const_array1 : public array {
 public:
@@ -30,6 +31,7 @@ public:
   typedef Codec codec_type;
   typedef Index index_type;
   typedef BlockStore1<value_type, codec_type, index_type> store_type;
+  typedef BlockCache1<value_type, store_type> cache_type;
   typedef typename Codec::header header;
 
   // accessor classes
@@ -53,8 +55,7 @@ public:
     cache(store, cache_size)
   {
     this->nx = nx;
-    if (p)
-      set(p);
+    set(p);
   }
 
   // copy constructor--performs a deep copy
@@ -105,7 +106,7 @@ public:
   double set_rate(double rate)
   {
     cache.clear();
-    return store.set_rate(rate);
+    return store.set_rate(rate, false);
   }
 
   // set precision in uncompressed bits per value
@@ -176,14 +177,23 @@ public:
   // initialize array by copying and compressing data stored at p
   void set(const value_type* p, bool compact = true)
   {
-    store.clear_index();
     cache.clear();
+    store.clear();
     const size_t bx = store.block_size_x();
-    const ptrdiff_t sx = 1;
     size_t block_index = 0;
-    for (size_t i = 0; i < bx; i++, p += 4)
-      cache.put_block(block_index++, p, sx);
-    store.flush_index();
+    if (p) {
+      // compress data stored at p
+      const ptrdiff_t sx = 1;
+      for (size_t i = 0; i < bx; i++, p += 4)
+        store.encode(block_index++, p, sx);
+    }
+    else {
+      // zero-initialize array
+      const value_type block[4] = {};
+      while (block_index < bx)
+        store.encode(block_index++, block);
+    }
+    store.flush();
     if (compact)
       store.compact();
   }
@@ -226,8 +236,8 @@ protected:
   // inspector
   value_type get(size_t i) const { return cache.get(i); }
 
-  BlockStore1<value_type, codec_type, index_type> store; // persistent storage of compressed blocks
-  BlockCache1<value_type, store_type> cache; // cache of decompressed blocks
+  store_type store; // persistent storage of compressed blocks
+  cache_type cache; // cache of decompressed blocks
 };
 
 typedef const_array1<float> const_array1f;

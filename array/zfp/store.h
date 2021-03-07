@@ -4,12 +4,11 @@
 #include <climits>
 #include <cmath>
 #include "zfp/memory.h"
-#include "zfp/index.h"
 
 namespace zfp {
 
 // base class for block store
-template <class Codec, class Index = zfp::internal::ImplicitIndex>
+template <class Codec, class Index>
 class BlockStore {
 public:
   // compression mode
@@ -24,10 +23,10 @@ public:
   // accuracy as absolute error tolerance (fixed-accuracy mode only)
   double accuracy() const { return codec.accuracy(); }
 
-  // set fixed rate in compressed bits per value
-  double set_rate(double rate)
+  // set fixed rate in compressed bits per value with optional word alignment
+  double set_rate(double rate, bool align)
   {
-    rate = codec.set_rate(rate);
+    rate = codec.set_rate(rate, align);
     index.set_block_size(codec.maxbits());
     alloc(true);
     return rate;
@@ -38,8 +37,7 @@ public:
   {
     set_variable_rate();
     precision = codec.set_precision(precision);
-    index.clear();
-    alloc(true);
+    clear();
     return precision;
   }
 
@@ -48,8 +46,7 @@ public:
   {
     set_variable_rate();
     tolerance = codec.set_accuracy(tolerance);
-    index.clear();
-    alloc(true);
+    clear();
     return tolerance;
   }
 
@@ -58,8 +55,7 @@ public:
   {
     set_variable_rate();
     codec.set_reversible();
-    index.clear();
-    alloc(true);
+    clear();
   }
 
   // set compression mode and parameters
@@ -67,7 +63,10 @@ public:
   {
     switch (config.mode) {
       case zfp_mode_fixed_rate:
-        set_rate(std::fabs(config.arg.rate));
+        if (config.arg.rate < 0)
+          set_rate(-config.arg.rate, true);
+        else
+          set_rate(+config.arg.rate, false);
         break;
       case zfp_mode_fixed_precision:
         set_precision(config.arg.precision);
@@ -82,6 +81,16 @@ public:
         throw zfp::exception("zfp compression mode not supported by array");
     }
   }
+
+  // clear store and reallocate memory for buffer
+  void clear()
+  {
+    index.clear();
+    alloc(true);
+  }
+
+  // flush any buffered block index data
+  void flush() { index.flush(); }
 
   // shrink buffer to match size of compressed data
   void compact()
@@ -111,12 +120,6 @@ public:
 
   // pointer to compressed data for read or write access
   void* compressed_data() const { return data; }
-
-  // reset block index
-  void clear_index() { index.clear(); }
-
-  // flush any buffered block index data
-  void flush_index() { index.flush(); }
 
 protected:
   // protected default constructor
@@ -163,7 +166,7 @@ protected:
     bytes = buffer_size();
     zfp::reallocate_aligned(data, bytes, ZFP_MEMORY_ALIGNMENT);
     if (clear)
-      std::fill(static_cast<uint8*>(data), static_cast<uint8*>(data) + bytes, uint8(0));
+      std::fill(static_cast<uchar*>(data), static_cast<uchar*>(data) + bytes, uchar(0));
     codec.open(data, bytes);
   }
 

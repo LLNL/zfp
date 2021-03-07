@@ -6,7 +6,7 @@
 namespace zfp {
 
 // compressed block store for 3D array
-template <typename Scalar, class Codec, class Index = zfp::internal::ImplicitIndex>
+template <typename Scalar, class Codec, class Index>
 class BlockStore3 : public BlockStore<Codec, Index> {
 public:
   // default constructor
