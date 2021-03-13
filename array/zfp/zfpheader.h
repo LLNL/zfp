@@ -1,4 +1,4 @@
-// zfp::codec_base::header
+// zfp::codec::zfp_base::header
 class header : public zfp::array::header {
 public:
   // serialization: construct header from array

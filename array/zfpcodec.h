@@ -10,18 +10,19 @@
 #include "zfp/traits.h"
 
 namespace zfp {
+namespace codec {
 
-// base class for zfp coding of {float, double} x {1D, 2D, 3D, 4D} data
+// abstract base class for zfp coding of {float, double} x {1D, 2D, 3D, 4D} data
 template <typename Scalar, uint dims>
-class zfp_codec_base {
+class zfp_base {
 protected:
-  // constructor takes pre-allocated buffer of compressed blocks
-  zfp_codec_base() :
+  // default constructor
+  zfp_base() :
     zfp(zfp_stream_open(0))
   {}
 
   // destructor
-  ~zfp_codec_base()
+  ~zfp_base()
   {
     close();
     zfp_stream_close(zfp);
@@ -29,7 +30,7 @@ protected:
 
 public:
   // assignment operator--performs deep copy
-  zfp_codec_base& operator=(const zfp_codec_base& codec)
+  zfp_base& operator=(const zfp_base& codec)
   {
     if (this != &codec)
       deep_copy(codec);
@@ -57,15 +58,13 @@ public:
   // open bit stream
   void open(void* data, size_t size)
   {
-    bitstream* stream = stream_open(data, size);
-    zfp_stream_set_bit_stream(zfp, stream);
+    zfp_stream_set_bit_stream(zfp, stream_open(data, size));
   }
 
   // close bit stream
   void close()
   {
-    bitstream* stream = zfp_stream_bit_stream(zfp);
-    stream_close(stream);
+    stream_close(zfp_stream_bit_stream(zfp));
     zfp_stream_set_bit_stream(zfp, 0);
   }
 
@@ -112,12 +111,12 @@ public:
 
   static const zfp_type type = zfp::trait<Scalar>::type; // scalar type
 
-  // zfp::codec_base::header class for array (de)serialization
+  // zfp::codec::zfp_base::header class for array (de)serialization
   #include "zfp/zfpheader.h"
 
 protected:
   // deep copy
-  void deep_copy(const zfp_codec_base& codec)
+  void deep_copy(const zfp_base& codec)
   {
     zfp = zfp_stream_open(0);
     *zfp = *codec.zfp;
@@ -142,24 +141,22 @@ protected:
     return size;
   }
 
-  static const size_t block_size = 1u << (2 * dims); // block size in number of scalars
-
   zfp_stream* zfp; // compressed zfp stream
 };
 
 // zfp codec templated on scalar type and number of dimensions
 template <typename Scalar, uint dims>
-class zfp_codec;
+class zfp;
 
 // 1D codec
 template <typename Scalar>
-class zfp_codec<Scalar, 1> : public zfp_codec_base<Scalar, 1> {
+class zfp<Scalar, 1> : public zfp_base<Scalar, 1> {
 public:
   // encode contiguous 1D block
   size_t encode_block(size_t offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1)
-                 : zfp_codec_base<Scalar, 1>::encode_block(offset, block);
+                 : zfp_base<Scalar, 1>::encode_block(offset, block);
   }
 
   // encode 1D block from strided storage
@@ -200,14 +197,14 @@ public:
   }
 
 protected:
-  using zfp_codec_base<Scalar, 1>::encode_block;
-  using zfp_codec_base<Scalar, 1>::decode_block;
-  using zfp_codec_base<Scalar, 1>::zfp;
+  using zfp_base<Scalar, 1>::encode_block;
+  using zfp_base<Scalar, 1>::decode_block;
+  using zfp_base<Scalar, 1>::zfp;
 };
 
 // 2D codec
 template <typename Scalar>
-class zfp_codec<Scalar, 2> : public zfp_codec_base<Scalar, 2> {
+class zfp<Scalar, 2> : public zfp_base<Scalar, 2> {
 public:
   // encode contiguous 2D block
   size_t encode_block(size_t offset, uint shape, const Scalar* block) const
@@ -256,14 +253,14 @@ public:
   }
 
 protected:
-  using zfp_codec_base<Scalar, 2>::encode_block;
-  using zfp_codec_base<Scalar, 2>::decode_block;
-  using zfp_codec_base<Scalar, 2>::zfp;
+  using zfp_base<Scalar, 2>::encode_block;
+  using zfp_base<Scalar, 2>::decode_block;
+  using zfp_base<Scalar, 2>::zfp;
 };
 
 // 3D codec
 template <typename Scalar>
-class zfp_codec<Scalar, 3> : public zfp_codec_base<Scalar, 3> {
+class zfp<Scalar, 3> : public zfp_base<Scalar, 3> {
 public:
   // encode contiguous 3D block
   size_t encode_block(size_t offset, uint shape, const Scalar* block) const
@@ -314,14 +311,14 @@ public:
   }
 
 protected:
-  using zfp_codec_base<Scalar, 3>::encode_block;
-  using zfp_codec_base<Scalar, 3>::decode_block;
-  using zfp_codec_base<Scalar, 3>::zfp;
+  using zfp_base<Scalar, 3>::encode_block;
+  using zfp_base<Scalar, 3>::decode_block;
+  using zfp_base<Scalar, 3>::zfp;
 };
 
 // 4D codec
 template <typename Scalar>
-class zfp_codec<Scalar, 4> : public zfp_codec_base<Scalar, 4> {
+class zfp<Scalar, 4> : public zfp_base<Scalar, 4> {
 public:
   // encode contiguous 4D block
   size_t encode_block(size_t offset, uint shape, const Scalar* block) const
@@ -374,11 +371,12 @@ public:
   }
 
 protected:
-  using zfp_codec_base<Scalar, 4>::encode_block;
-  using zfp_codec_base<Scalar, 4>::decode_block;
-  using zfp_codec_base<Scalar, 4>::zfp;
+  using zfp_base<Scalar, 4>::encode_block;
+  using zfp_base<Scalar, 4>::decode_block;
+  using zfp_base<Scalar, 4>::zfp;
 };
 
-}
+} // codec
+} // zfp
 
 #endif
