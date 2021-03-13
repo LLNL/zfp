@@ -18,14 +18,14 @@ class zfp_base {
 protected:
   // default constructor
   zfp_base() :
-    zfp(zfp_stream_open(0))
+    stream(zfp_stream_open(0))
   {}
 
   // destructor
   ~zfp_base()
   {
     close();
-    zfp_stream_close(zfp);
+    zfp_stream_close(stream);
   }
 
 public:
@@ -44,63 +44,63 @@ public:
     if (!field->nx && !field->ny && !field->nz && !field->nw)
       return 0;
     // variable-rate case
-    if (zfp_stream_compression_mode(zfp) != zfp_mode_fixed_rate)
-      return zfp_stream_maximum_size(zfp, field);
+    if (zfp_stream_compression_mode(stream) != zfp_mode_fixed_rate)
+      return zfp_stream_maximum_size(stream, field);
     // fixed-rate case: exclude header
     size_t bx = (std::max(field->nx, 1u) + 3) / 4;
     size_t by = (std::max(field->ny, 1u) + 3) / 4;
     size_t bz = (std::max(field->nz, 1u) + 3) / 4;
     size_t bw = (std::max(field->nw, 1u) + 3) / 4;
     size_t blocks = bx * by * bz * bw;
-    return zfp::round_up(blocks * zfp->maxbits, stream_alignment()) / CHAR_BIT;
+    return zfp::round_up(blocks * stream->maxbits, stream_alignment()) / CHAR_BIT;
   }
 
   // open bit stream
   void open(void* data, size_t size)
   {
-    zfp_stream_set_bit_stream(zfp, stream_open(data, size));
+    zfp_stream_set_bit_stream(stream, stream_open(data, size));
   }
 
   // close bit stream
   void close()
   {
-    stream_close(zfp_stream_bit_stream(zfp));
-    zfp_stream_set_bit_stream(zfp, 0);
+    stream_close(zfp_stream_bit_stream(stream));
+    zfp_stream_set_bit_stream(stream, 0);
   }
 
   // compression mode
-  zfp_mode mode() const { return zfp_stream_compression_mode(zfp); }
+  zfp_mode mode() const { return zfp_stream_compression_mode(stream); }
 
   // rate in compressed bits/value (fixed-rate mode only)
-  double rate() const { return zfp_stream_rate(zfp, dims); }
+  double rate() const { return zfp_stream_rate(stream, dims); }
 
   // precision in uncompressed bits/value (fixed-precision mode only)
-  uint precision() const { return zfp_stream_precision(zfp); }
+  uint precision() const { return zfp_stream_precision(stream); }
 
   // accuracy as absolute error tolerance (fixed-accuracy mode only)
-  double accuracy() const { return zfp_stream_accuracy(zfp); }
+  double accuracy() const { return zfp_stream_accuracy(stream); }
 
   // maximum number of bits per block
-  uint maxbits() const { return zfp->maxbits; }
+  uint maxbits() const { return stream->maxbits; }
 
   // set rate in compressed bits/value
-  double set_rate(double rate, bool align) { return zfp_stream_set_rate(zfp, rate, type, dims, align); }
+  double set_rate(double rate, bool align) { return zfp_stream_set_rate(stream, rate, type, dims, align); }
 
   // set precision in uncompressed bits/value
-  uint set_precision(uint precision) { return zfp_stream_set_precision(zfp, precision); }
+  uint set_precision(uint precision) { return zfp_stream_set_precision(stream, precision); }
 
   // set accuracy as absolute error tolerance
-  double set_accuracy(double tolerance) { return zfp_stream_set_accuracy(zfp, tolerance); }
+  double set_accuracy(double tolerance) { return zfp_stream_set_accuracy(stream, tolerance); }
 
   // enable reversible (lossless) mode
-  void set_reversible() { zfp_stream_set_reversible(zfp); }
+  void set_reversible() { zfp_stream_set_reversible(stream); }
 
   // byte size of codec data structure components indicated by mask
   size_t size_bytes(uint mask = ZFP_DATA_ALL) const
   {
     size_t size = 0;
     if (mask & ZFP_DATA_META) {
-      size += sizeof(*zfp);
+      size += sizeof(*stream);
       size += sizeof(*this);
     }
     return size;
@@ -118,30 +118,30 @@ protected:
   // deep copy
   void deep_copy(const zfp_base& codec)
   {
-    zfp = zfp_stream_open(0);
-    *zfp = *codec.zfp;
-    zfp->stream = 0;
+    stream = zfp_stream_open(0);
+    *stream = *codec.stream;
+    stream->stream = 0;
   }
 
   // encode full contiguous block
   size_t encode_block(size_t offset, const Scalar* block) const
   {
-    stream_wseek(zfp->stream, offset);
-    size_t size = cpp::encode_block<Scalar, dims>(zfp, block);
-    zfp_stream_flush(zfp);
+    stream_wseek(stream->stream, offset);
+    size_t size = cpp::encode_block<Scalar, dims>(stream, block);
+    zfp_stream_flush(stream);
     return size;
   }
 
   // decode full contiguous block
   size_t decode_block(size_t offset, Scalar* block) const
   {
-    stream_rseek(zfp->stream, offset);
-    size_t size = cpp::decode_block<Scalar, dims>(zfp, block);
-    zfp_stream_align(zfp);
+    stream_rseek(stream->stream, offset);
+    size_t size = cpp::decode_block<Scalar, dims>(stream, block);
+    zfp_stream_align(stream);
     return size;
   }
 
-  zfp_stream* zfp; // compressed zfp stream
+  zfp_stream* stream; // compressed zfp stream
 };
 
 // zfp codec templated on scalar type and number of dimensions
@@ -163,14 +163,14 @@ public:
   size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx) const
   {
     size_t size;
-    stream_wseek(zfp->stream, offset);
+    stream_wseek(stream->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
-      size = cpp::encode_partial_block_strided<Scalar>(zfp, p, nx, sx);
+      size = cpp::encode_partial_block_strided<Scalar>(stream, p, nx, sx);
     }
     else
-      size = cpp::encode_block_strided<Scalar>(zfp, p, sx);
-    zfp_stream_flush(zfp);
+      size = cpp::encode_block_strided<Scalar>(stream, p, sx);
+    zfp_stream_flush(stream);
     return size;
   }
 
@@ -185,21 +185,21 @@ public:
   size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx) const
   {
     size_t size;
-    stream_rseek(zfp->stream, offset);
+    stream_rseek(stream->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
-      size = cpp::decode_partial_block_strided<Scalar>(zfp, p, nx, sx);
+      size = cpp::decode_partial_block_strided<Scalar>(stream, p, nx, sx);
     }
     else
-      size = cpp::decode_block_strided<Scalar>(zfp, p, sx);
-    zfp_stream_align(zfp);
+      size = cpp::decode_block_strided<Scalar>(stream, p, sx);
+    zfp_stream_align(stream);
     return size;
   }
 
 protected:
   using zfp_base<Scalar, 1>::encode_block;
   using zfp_base<Scalar, 1>::decode_block;
-  using zfp_base<Scalar, 1>::zfp;
+  using zfp_base<Scalar, 1>::stream;
 };
 
 // 2D codec
@@ -217,15 +217,15 @@ public:
   size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
   {
     size_t size;
-    stream_wseek(zfp->stream, offset);
+    stream_wseek(stream->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
       uint ny = 4 - (shape & 3u); shape >>= 2;
-      size = cpp::encode_partial_block_strided<Scalar>(zfp, p, nx, ny, sx, sy);
+      size = cpp::encode_partial_block_strided<Scalar>(stream, p, nx, ny, sx, sy);
     }
     else
-      size = cpp::encode_block_strided<Scalar>(zfp, p, sx, sy);
-    zfp_stream_flush(zfp);
+      size = cpp::encode_block_strided<Scalar>(stream, p, sx, sy);
+    zfp_stream_flush(stream);
     return size;
   }
 
@@ -240,22 +240,22 @@ public:
   size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
   {
     size_t size;
-    stream_rseek(zfp->stream, offset);
+    stream_rseek(stream->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
       uint ny = 4 - (shape & 3u); shape >>= 2;
-      size = cpp::decode_partial_block_strided<Scalar>(zfp, p, nx, ny, sx, sy);
+      size = cpp::decode_partial_block_strided<Scalar>(stream, p, nx, ny, sx, sy);
     }
     else
-      size = cpp::decode_block_strided<Scalar>(zfp, p, sx, sy);
-    zfp_stream_align(zfp);
+      size = cpp::decode_block_strided<Scalar>(stream, p, sx, sy);
+    zfp_stream_align(stream);
     return size;
   }
 
 protected:
   using zfp_base<Scalar, 2>::encode_block;
   using zfp_base<Scalar, 2>::decode_block;
-  using zfp_base<Scalar, 2>::zfp;
+  using zfp_base<Scalar, 2>::stream;
 };
 
 // 3D codec
@@ -273,16 +273,16 @@ public:
   size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
     size_t size;
-    stream_wseek(zfp->stream, offset);
+    stream_wseek(stream->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
       uint ny = 4 - (shape & 3u); shape >>= 2;
       uint nz = 4 - (shape & 3u); shape >>= 2;
-      size = cpp::encode_partial_block_strided<Scalar>(zfp, p, nx, ny, nz, sx, sy, sz);
+      size = cpp::encode_partial_block_strided<Scalar>(stream, p, nx, ny, nz, sx, sy, sz);
     }
     else
-      size = cpp::encode_block_strided<Scalar>(zfp, p, sx, sy, sz);
-    zfp_stream_flush(zfp);
+      size = cpp::encode_block_strided<Scalar>(stream, p, sx, sy, sz);
+    zfp_stream_flush(stream);
     return size;
   }
 
@@ -297,23 +297,23 @@ public:
   size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
     size_t size;
-    stream_rseek(zfp->stream, offset);
+    stream_rseek(stream->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
       uint ny = 4 - (shape & 3u); shape >>= 2;
       uint nz = 4 - (shape & 3u); shape >>= 2;
-      size = cpp::decode_partial_block_strided<Scalar>(zfp, p, nx, ny, nz, sx, sy, sz);
+      size = cpp::decode_partial_block_strided<Scalar>(stream, p, nx, ny, nz, sx, sy, sz);
     }
     else
-      size = cpp::decode_block_strided<Scalar>(zfp, p, sx, sy, sz);
-    zfp_stream_align(zfp);
+      size = cpp::decode_block_strided<Scalar>(stream, p, sx, sy, sz);
+    zfp_stream_align(stream);
     return size;
   }
 
 protected:
   using zfp_base<Scalar, 3>::encode_block;
   using zfp_base<Scalar, 3>::decode_block;
-  using zfp_base<Scalar, 3>::zfp;
+  using zfp_base<Scalar, 3>::stream;
 };
 
 // 4D codec
@@ -331,17 +331,17 @@ public:
   size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
   {
     size_t size;
-    stream_wseek(zfp->stream, offset);
+    stream_wseek(stream->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
       uint ny = 4 - (shape & 3u); shape >>= 2;
       uint nz = 4 - (shape & 3u); shape >>= 2;
       uint nw = 4 - (shape & 3u); shape >>= 2;
-      size = cpp::encode_partial_block_strided<Scalar>(zfp, p, nx, ny, nz, nw, sx, sy, sz, sw);
+      size = cpp::encode_partial_block_strided<Scalar>(stream, p, nx, ny, nz, nw, sx, sy, sz, sw);
     }
     else
-      size = cpp::encode_block_strided<Scalar>(zfp, p, sx, sy, sz, sw);
-    zfp_stream_flush(zfp);
+      size = cpp::encode_block_strided<Scalar>(stream, p, sx, sy, sz, sw);
+    zfp_stream_flush(stream);
     return size;
   }
 
@@ -356,24 +356,24 @@ public:
   size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
   {
     size_t size;
-    stream_rseek(zfp->stream, offset);
+    stream_rseek(stream->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
       uint ny = 4 - (shape & 3u); shape >>= 2;
       uint nz = 4 - (shape & 3u); shape >>= 2;
       uint nw = 4 - (shape & 3u); shape >>= 2;
-      size = cpp::decode_partial_block_strided<Scalar>(zfp, p, nx, ny, nz, nw, sx, sy, sz, sw);
+      size = cpp::decode_partial_block_strided<Scalar>(stream, p, nx, ny, nz, nw, sx, sy, sz, sw);
     }
     else
-      size = cpp::decode_block_strided<Scalar>(zfp, p, sx, sy, sz, sw);
-    zfp_stream_align(zfp);
+      size = cpp::decode_block_strided<Scalar>(stream, p, sx, sy, sz, sw);
+    zfp_stream_align(stream);
     return size;
   }
 
 protected:
   using zfp_base<Scalar, 4>::encode_block;
   using zfp_base<Scalar, 4>::decode_block;
-  using zfp_base<Scalar, 4>::zfp;
+  using zfp_base<Scalar, 4>::stream;
 };
 
 } // codec
