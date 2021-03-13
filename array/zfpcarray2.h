@@ -20,7 +20,7 @@ namespace zfp {
 // compressed 2D array of scalars
 template <
   typename Scalar,
-  class Codec = zfp::codec::zfp<Scalar, 2>,
+  class Codec = zfp::codec::zfp2<Scalar>,
   class Index = zfp::index::hybrid4
 >
 class const_array2 : public array {
