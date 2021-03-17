@@ -59,7 +59,7 @@ Macros
 .. c:macro:: ZFP_MIN_EXP
 
   Default compression parameter settings that impose no constraints.
-  The largest possible compressed block size, corresponding to 3D blocks
+  The largest possible compressed block size, corresponding to 4D blocks
   of doubles, is given by :c:macro:`ZFP_MAX_BITS`.  See also
   :c:type:`zfp_stream`.
 
@@ -225,6 +225,7 @@ Types
 
 ----
 
+.. _field:
 .. index::
    single: Strided Arrays
 .. c:type:: zfp_field
@@ -279,7 +280,7 @@ Types
   is assumed to vary fastest, |zfp| can be thought of as assuming
   Fortran ordering.  For C ordered arrays, the user should transpose
   the dimensions or specify strides to properly describe the memory layout.
-  See this :ref:`discussion <p-dimensions>` for further details.
+  See :ref:`this FAQ <q-layout>` for further details.
 
 .. c:type:: zfp_bool
 
@@ -563,8 +564,6 @@ Execution Policy
   If zero, use one chunk per thread.  This function also sets the execution
   policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
 
-
-.. _hl-func-field:
 
 .. _hl-func-field:
 
