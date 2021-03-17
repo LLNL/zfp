@@ -38,6 +38,7 @@ Questions answered in this FAQ:
   #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
   #. :ref:`Why are compressed arrays so slow? <q-1d-speed>`
   #. :ref:`Do compressed arrays use reference counting? <q-ref-count>`
+  #. :ref:`How large a buffer is needed for compressed storage? <q-max-size>`
 
 -------------------------------------------------------------------------------
 
@@ -1005,3 +1006,46 @@ array.  No reference counting and garbage collection is used to keep the
 array alive if there are external references to it.  Such references
 become invalid once the array is destructed, and dereferencing them will
 likely lead to segmentation faults.
+
+-------------------------------------------------------------------------------
+
+.. _q-max-size:
+
+Q28: *How large a buffer is needed for compressed storage?*
+
+A: :c:func:`zfp_compress` requires that memory has already been allocated to
+hold the compressed data.  But often the compressed size is data dependent
+and not known a priori.  The function :c:func:`zfp_stream_maximum_size`
+returns a buffer size that is guaranteed to be large enough.  This function,
+which should be called *after* setting the desired compression mode and
+parameters, computes the largest possible compressed data size based on the
+current settings and array size.  Note that by the pigeonhole principle, any
+(lossless) compressor must expand at least one input, so this buffer size may
+be larger than the size of the uncompressed input data.  :c:func:`zfp_compress`
+returns the actual number of bytes of compressed storage.
+
+When compressing individual blocks using the :ref:`low-level API <ll-api>`,
+it is useful to know the maximum number of bits that a compressed block
+can occupy.  In addition to the :c:macro:`ZFP_MAX_BITS` macro, the following
+table lists the maximum block size (in bits) for each scalar type, whether
+:ref:`reversible mode <mode-reversible>` is used, and block dimensionality.
+
+  +--------+---------+-------+-------+-------+-------+
+  | type   | rev.    |   1D  |   2D  |   3D  |   4D  |
+  +========+=========+=======+=======+=======+=======+
+  |        |         |   131 |   527 |  2111 |  8447 |
+  | int32  +---------+-------+-------+-------+-------+
+  |        | |check| |   136 |   532 |  2116 |  8452 |
+  +--------+---------+-------+-------+-------+-------+
+  |        |         |   140 |   536 |  2120 |  8456 |
+  | float  +---------+-------+-------+-------+-------+
+  |        | |check| |   146 |   542 |  2126 |  8462 |
+  +--------+---------+-------+-------+-------+-------+
+  |        |         |   259 |  1039 |  4159 | 16639 |
+  | int64  +---------+-------+-------+-------+-------+
+  |        | |check| |   265 |  1045 |  4165 | 16645 |
+  +--------+---------+-------+-------+-------+-------+
+  |        |         |   271 |  1051 |  4171 | 16651 |
+  | double +---------+-------+-------+-------+-------+
+  |        | |check| |   278 |  1058 |  4178 | 16658 |
+  +--------+---------+-------+-------+-------+-------+
