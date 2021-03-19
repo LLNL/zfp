@@ -401,7 +401,7 @@ int main(int argc, char* argv[])
   }
 
   std::cerr.unsetf(std::ios::fixed);
-  std::cerr << "sum=" << std::fixed << sum << " error=" << std::setprecision(6) << std::scientific << err << std::endl;
+  std::cerr << "sum=" << std::setprecision(6) << std::fixed << sum << " error=" << std::setprecision(6) << std::scientific << err << std::endl;
 
   return 0;
 }
