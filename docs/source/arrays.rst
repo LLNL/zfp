@@ -69,6 +69,8 @@ The following sections are available:
 * :ref:`pointers`
 * :ref:`iterators`
 * :ref:`views`
+* :ref:`codec`
+* :ref:`index`
 
 
 .. _array_classes:
@@ -389,6 +391,7 @@ type is omitted for readability, e.g.,
 
 ----
 
+.. _array_copy_constructor:
 .. cpp:function:: array1::array1(const array1& a)
 .. cpp:function:: array2::array2(const array2& a)
 .. cpp:function:: array3::array3(const array3& a)
@@ -669,30 +672,45 @@ Additional methods are documented below.
 
 .. cpp:function:: double const_array::rate() const
 
-  Return rate in compressed bits per value when fixed-rate mode is enabled,
-  else zero.
+  Return rate in compressed bits per value when
+  :ref:`fixed-rate mode <mode-fixed-rate>` is enabled, else zero.
 
 ----
 
 .. cpp:function:: uint const_array::precision() const
 
-  Return precision in uncompressed  bits per value when fixed-precision mode
-  is enabled, else zero.
+  Return precision in uncompressed bits per value when
+  :ref:`fixed-precision mode <mode-fixed-precision>` is enabled, else zero.
 
 ----
 
 .. cpp:function:: double const_array::accuracy() const
 
-  Return accuracy as absolute error tolerance when fixed-accuracy mode
-  is enabled, else zero.
+  Return accuracy as absolute error tolerance when
+  :ref:`fixed-accuracy mode <mode-fixed-accuracy>` is enabled, else zero.
+
+----
+
+.. cpp:function:: void const_array::params(uint* minbits, uint* maxbits, uint* maxprec, int* minexp) const
+
+  :ref:`Expert mode <mode-expert>` compression parameters (available for
+  all compression modes).  Pointers may be :code:`null` if the corresponding
+  parameter is not requested.
+
+----
+
+.. cpp:function:: double const_array::set_reversible()
+
+  Enable :ref:`reversible mode <mode-reversible>`.  This method destroys
+  the previous contents of the array.
 
 ----
 
 .. cpp:function:: double const_array::set_rate(double rate)
 
-  Set desired rate in compressed bits per value (enables fixed-rate mode).
-  This method destroys the previous contents of the array.  See also
-  :cpp:func:`array::set_rate`.
+  Set desired rate in compressed bits per value (enables
+  :ref:`fixed-rate mode <mode-fixed-rate>`).  This method destroys the
+  previous contents of the array.  See also :cpp:func:`array::set_rate`.
 
 .. note::
   Whereas the :ref:`read-write fixed-rate arrays <array_classes>`
@@ -706,22 +724,33 @@ Additional methods are documented below.
 
 .. cpp:function:: uint const_array::set_precision(uint precision)
 
-  Set desired precision in uncompressed bits per value (enables fixed-precision
-  mode).  This method destroys the previous contents of the array.
+  Set desired precision in uncompressed bits per value (enables
+  :ref:`fixed-precision mode <mode-fixed-precision>`).  This method destroys
+  the previous contents of the array.
 
 ----
 
 .. cpp:function:: double const_array::set_accuracy(double tolerance)
 
-  Set desired accuracy as absolute error tolerance (enables fixed-accuracy
-  mode).  This method destroys the previous contents of the array.
+  Set desired accuracy as absolute error tolerance (enables
+  :ref:`fixed-accuracy mode <mode-fixed-accuracy>`).  This method destroys
+  the previous contents of the array.
 
 ----
 
-.. cpp:function:: double const_array::set_reversible()
+.. cpp:function:: double const_array::set_params(uint minbits, uint maxbits, uint maxprec, int minexp)
 
-  Enable reversible (lossless) mode.  This method destroys the previous
-  contents of the array.
+  Set :ref:`expert mode <mode-expert>` parameters.  This method destroys the
+  previous contents of the array.
+
+----
+
+.. cpp:function:: void const_array::set_config(const zfp_config& config)
+
+  Set compression mode and parameters given by *config*
+  (see :ref:`configuration <hl-func-config>`).  This is a more general
+  method for setting compression parameters such as rate, precision, accuracy,
+  and :ref:`expert mode <mode-expert>` parameters.
 
 ----
 
@@ -825,3 +854,5 @@ Additional methods are documented below.
 .. include:: pointers.inc
 .. include:: iterators.inc
 .. include:: views.inc
+.. include:: codec.inc
+.. include:: index.inc

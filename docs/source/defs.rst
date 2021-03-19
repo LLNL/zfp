@@ -4,6 +4,7 @@
 .. |geq| unicode:: 0x2265
 .. |approx| unicode:: 0x2248
 .. |sqrt| unicode:: 0x221a
+.. |check| unicode:: 0x2713
 .. |reg| unicode:: 0x00ae
 .. |zfp| replace:: zfp
 .. |cfp| replace:: cfp
