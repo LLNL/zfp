@@ -80,8 +80,11 @@ public:
   // accuracy as absolute error tolerance (fixed-accuracy mode only)
   double accuracy() const { return zfp_stream_accuracy(stream); }
 
-  // maximum number of bits per block
-  uint maxbits() const { return stream->maxbits; }
+  // compression parameters (all compression modes)
+  void params(uint* minbits, uint* maxbits, uint* maxprec, int* minexp) const { zfp_stream_params(stream, minbits, maxbits, maxprec, minexp); }
+
+  // enable reversible (lossless) mode
+  void set_reversible() { zfp_stream_set_reversible(stream); }
 
   // set rate in compressed bits/value
   double set_rate(double rate, bool align) { return zfp_stream_set_rate(stream, rate, type, dims, align); }
@@ -92,8 +95,8 @@ public:
   // set accuracy as absolute error tolerance
   double set_accuracy(double tolerance) { return zfp_stream_set_accuracy(stream, tolerance); }
 
-  // enable reversible (lossless) mode
-  void set_reversible() { zfp_stream_set_reversible(stream); }
+  // set expert mode parameters
+  bool set_params(uint minbits, uint maxbits, uint maxprec, int maxexp) { return zfp_stream_set_params(stream, minbits, maxbits, maxprec, maxexp) == zfp_true; }
 
   // byte size of codec data structure components indicated by mask
   size_t size_bytes(uint mask = ZFP_DATA_ALL) const

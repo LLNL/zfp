@@ -14,7 +14,7 @@ public:
   // compression mode
   zfp_mode mode() const { return codec.mode(); }
 
-  // rate in bits per value (supported in all mode)
+  // rate in bits per value (fixed-rate mode only)
   double rate() const { return codec.rate(); }
 
   // precision in uncompressed bits per value (fixed-precision mode only)
@@ -23,11 +23,24 @@ public:
   // accuracy as absolute error tolerance (fixed-accuracy mode only)
   double accuracy() const { return codec.accuracy(); }
 
+  // compression parameters (all compression modes)
+  void params(uint* minbits, uint* maxbits, uint* maxprec, int* minexp) const { codec.params(minbits, maxbits, maxprec, minexp); }
+
+  // enable reversible (lossless) mode
+  void set_reversible()
+  {
+    set_variable_rate();
+    codec.set_reversible();
+    clear();
+  }
+
   // set fixed rate in compressed bits per value with optional word alignment
   double set_rate(double rate, bool align)
   {
     rate = codec.set_rate(rate, align);
-    index.set_block_size(codec.maxbits());
+    uint maxbits;
+    codec.params(0, &maxbits, 0, 0);
+    index.set_block_size(maxbits);
     alloc(true);
     return rate;
   }
@@ -50,18 +63,23 @@ public:
     return tolerance;
   }
 
-  // enable reversible (lossless) mode
-  void set_reversible()
+  // set expert mode compression parameters
+  bool set_params(uint minbits, uint maxbits, uint maxprec, int minexp)
   {
-    set_variable_rate();
-    codec.set_reversible();
+    if (minbits != maxbits)
+      set_variable_rate();
+    bool status = codec.set_params(minbits, maxbits, maxprec, minexp);
     clear();
+    return status;
   }
 
   // set compression mode and parameters
   void set_config(const zfp_config& config)
   {
     switch (config.mode) {
+      case zfp_mode_reversible:
+        set_reversible();
+        break;
       case zfp_mode_fixed_rate:
         if (config.arg.rate < 0)
           set_rate(-config.arg.rate, true);
@@ -74,8 +92,8 @@ public:
       case zfp_mode_fixed_accuracy:
         set_accuracy(config.arg.tolerance);
         break;
-      case zfp_mode_reversible:
-        set_reversible();
+      case zfp_mode_expert:
+        set_params(config.arg.expert.minbits, config.arg.expert.maxbits, config.arg.expert.maxprec, config.arg.expert.minexp);
         break;
       default:
         throw zfp::exception("zfp compression mode not supported by array");
@@ -95,7 +113,7 @@ public:
   // shrink buffer to match size of compressed data
   void compact()
   {
-    size_t size = zfp::round_up(index.data_size(), codec.alignment() * CHAR_BIT) / CHAR_BIT;
+    size_t size = zfp::round_up(index.range(), codec.alignment() * CHAR_BIT) / CHAR_BIT;
     if (bytes > size) {
       zfp::reallocate_aligned(data, size, ZFP_MEMORY_ALIGNMENT, bytes);
       bytes = size;
@@ -144,7 +162,7 @@ protected:
   // ensure variable rate is supported
   void set_variable_rate()
   {
-    if (!index.variable_rate())
+    if (!index.has_variable_rate())
       throw zfp::exception("zfp index does not support variable rate");
   }
 

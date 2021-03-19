@@ -130,6 +130,13 @@ public:
     store.set_reversible();
   }
 
+  // set compression mode and parameters
+  void set_config(const zfp_config& config)
+  {
+    cache.clear();
+    store.set_config(config);
+  }
+
   // byte size of array data structure components indicated by mask
   size_t size_bytes(uint mask = ZFP_DATA_ALL) const
   {

@@ -28,8 +28,8 @@ public:
     return size;
   }
 
-  // bit size of indexed data
-  size_t data_size() const { return block_offset(blocks); }
+  // range of offsets spanned by indexed data in bits
+  size_t range() const { return block_offset(blocks); }
 
   // bit size of given block
   size_t block_size(size_t /*block_index*/) const { return bits_per_block; }
@@ -53,7 +53,7 @@ public:
   void set_block_size(size_t /*block_index*/, size_t /*size*/) {}
 
   // does not support variable rate
-  static bool variable_rate() { return false; }
+  static bool has_variable_rate() { return false; }
 
 protected:
   size_t blocks;         // number of blocks
@@ -92,8 +92,8 @@ public:
     return size;
   }
 
-  // bit size of indexed data
-  size_t data_size() const { return block_offset(blocks); }
+  // range of offsets spanned by indexed data in bits
+  size_t range() const { return block_offset(blocks); }
 
   // bit size of given block
   size_t block_size(size_t block_index) const { return block_offset(block_index + 1) - block_offset(block_index); }
@@ -140,7 +140,7 @@ public:
   }
 
   // supports variable rate
-  static bool variable_rate() { return true; }
+  static bool has_variable_rate() { return true; }
 
 protected:
   // capacity of data array
@@ -191,37 +191,29 @@ public:
     return size;
   }
 
-  // bit size of indexed data
-  size_t data_size() const { return end; }
+  // range of offsets spanned by indexed data in bits
+  size_t range() const { return end; }
 
   // bit size of given block
   size_t block_size(size_t block_index) const
   {
     size_t chunk = block_index / 4;
     size_t which = block_index % 4;
-    switch (which) {
-      case 3:
-        return (block_index + 1 == block ? ptr : block_offset(block_index + 1)) - block_offset(block_index);
-      default:
-        return data[chunk].lo[which + 1] - data[chunk].lo[which];
-    }
+    return which == 3u
+             ? block_offset(block_index + 1) - block_offset(block_index)
+             : data[chunk].lo[which + 1] - data[chunk].lo[which];
   }
 
   // bit offset of given block
   size_t block_offset(size_t block_index) const
   {
-    size_t off;
-    if (block_index == block) {
-      // index is being built; point offset to end
-      off = end;
-    }
-    else {
-      // index has already been built; decode offset
-      size_t chunk = block_index / 4;
-      size_t which = block_index % 4;
-      off = (size_t(data[chunk].hi) << shift) + data[chunk].lo[which];
-    }
-    return off;
+    // if index is being built, point offset to end
+    if (block_index == block)
+      return end;
+    // index has already been built; decode offset
+    size_t chunk = block_index / 4;
+    size_t which = block_index % 4;
+    return (size_t(data[chunk].hi) << shift) + data[chunk].lo[which];
   }
 
   // reset index
@@ -274,16 +266,16 @@ public:
     size_t chunk = block / 4;
     size_t which = block % 4;
     buffer[which] = size;
-    if (which == 0x3u) {
-      // chunk is complete; encode it
+    if (which == 3u) {
+      // chunk is complete; encode it (double shift in case ptr is 32 bits)
       if (((ptr >> 16) >> 16) >> shift)
         throw zfp::exception("zfp block offset is too large for hybrid4 index");
       // store high bits
-      data[chunk].hi = ptr >> shift;
+      data[chunk].hi = static_cast<uint32>(ptr >> shift);
       size_t base = size_t(data[chunk].hi) << shift;
       // store low bits
       for (uint k = 0; k < 4; k++) {
-        data[chunk].lo[k] = ptr - base;
+        data[chunk].lo[k] = static_cast<uint16>(ptr - base);
         ptr += buffer[k];
       }
     }
@@ -291,9 +283,15 @@ public:
   }
 
   // supports variable rate
-  static bool variable_rate() { return true; }
+  static bool has_variable_rate() { return true; }
 
 protected:
+  // chunk record encoding 4 block offsets
+  typedef struct {
+    uint32 hi;    // 32 most significant bits of 44-bit base offset
+    uint16 lo[4]; // 16-bit offsets from base
+  } record;
+
   // capacity of data array
   size_t capacity() const { return (blocks + 3) / 4; }
 
@@ -307,12 +305,6 @@ protected:
     end = index.end;
     std::copy(index.buffer, index.buffer + 4, buffer);
   }
-
-  // chunk record encoding 4 block offsets
-  typedef struct {
-    uint32 hi;    // 32 most significant bits of 44-bit base offset
-    uint16 lo[4]; // 16-bit offsets from base
-  } record;
 
   static const uint shift = 12; // number of bits to shift hi bits
 
@@ -357,37 +349,29 @@ public:
     return size;
   }
 
-  // bit size of indexed data
-  size_t data_size() const { return end; }
+  // range of offsets spanned by indexed data in bits
+  size_t range() const { return end; }
 
   // bit size of given block
   size_t block_size(size_t block_index) const
   {
     size_t chunk = block_index / 8;
     size_t which = block_index % 8;
-    switch (which) {
-      case 7:
-        return (block_index + 1 == block ? ptr : block_offset(block_index + 1)) - block_offset(block_index);
-      default:
-        return size(data[2 * chunk + 0], data[2 * chunk + 1], which);
-    }
+    return which == 7u
+             ? block_offset(block_index + 1) - block_offset(block_index)
+             : size(data[2 * chunk + 0], data[2 * chunk + 1], which);
   }
 
   // bit offset of given block
   size_t block_offset(size_t block_index) const
   {
-    size_t off;
-    if (block_index == block) {
-      // index is being built; point offset to end
-      off = end;
-    }
-    else {
-      // index has already been built; decode offset
-      size_t chunk = block_index / 8;
-      size_t which = block_index % 8;
-      off = offset(data[2 * chunk + 0], data[2 * chunk + 1], which);
-    }
-    return off;
+    // if index is being built, point offset to end
+    if (block_index == block)
+      return end;
+    // index has already been built; decode offset
+    size_t chunk = block_index / 8;
+    size_t which = block_index % 8;
+    return offset(data[2 * chunk + 0], data[2 * chunk + 1], which);
   }
 
   // reset index
@@ -440,7 +424,7 @@ public:
     size_t chunk = block / 8;
     size_t which = block % 8;
     buffer[which] = size;
-    if (which == 0x7u) {
+    if (which == 7u) {
       // partition chunk offset into low and high bits
       uint64 h = ptr >> lbits;
       uint64 l = ptr - (h << lbits);
@@ -467,7 +451,7 @@ public:
   }
 
   // supports variable rate
-  static bool variable_rate() { return true; }
+  static bool has_variable_rate() { return true; }
 
 protected:
   // capacity of data array

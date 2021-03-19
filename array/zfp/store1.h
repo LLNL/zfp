@@ -108,7 +108,6 @@ public:
   }
 
 protected:
-  using BlockStore<Codec, Index>::set_config;
   using BlockStore<Codec, Index>::alloc;
   using BlockStore<Codec, Index>::free;
   using BlockStore<Codec, Index>::offset;
