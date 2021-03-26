@@ -53,8 +53,8 @@ important features, including:
   compression is available that produces compressed streams that
   are identical to serially compressed streams.  However, parallel
   decompression is not yet supported.  |zfp| also supports compression and
-  decompression on the GPU via CUDA.  However, only fixed-rate mode is
-  so far supported.
+  decompression on the GPU via CUDA and HIP.  However, only fixed-rate mode
+  is so far supported.
 
 - **Variable-rate arrays**.  |zfp| currently supports only fixed-rate
   compressed arrays, which wastes bits in smooth regions with little

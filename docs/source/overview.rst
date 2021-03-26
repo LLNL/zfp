@@ -31,7 +31,7 @@ components, specifically
 
 * Via the :ref:`C API <hl-api>` when doing I/O in an application or
   otherwise performing data (de)compression online.  High-speed,
-  parallel compression is supported via OpenMP and CUDA.
+  parallel compression is supported via OpenMP, CUDA, and HIP.
 
 * Via |zfp|'s in-memory :ref:`compressed-array classes <arrays>` when
   performing computations on very large arrays that demand random access to

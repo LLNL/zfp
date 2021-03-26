@@ -151,14 +151,15 @@ Types
 
 .. c:type:: zfp_exec_policy
 
-  Currently three execution policies are available: serial, OpenMP parallel,
-  and CUDA parallel.
+  Currently four execution policies are available: serial, OpenMP parallel,
+  CUDA parallel, and HIP parallel.
   ::
 
     typedef enum {
       zfp_exec_serial = 0, // serial execution (default)
       zfp_exec_omp    = 1, // OpenMP multi-threaded execution
-      zfp_exec_cuda   = 2  // CUDA parallel execution
+      zfp_exec_cuda   = 2, // CUDA parallel execution
+      zfp_exec_hip    = 3  // HIP parallel execution
     } zfp_exec_policy;
 
 ----

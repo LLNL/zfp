@@ -84,7 +84,7 @@ command-line utility.  To enable OpenMP parallel compression, type::
 
 .. note::
   GNU builds expose only limited functionality of |zfp|.  For instance,
-  CUDA and Python support are not included.  For full functionality,
+  CUDA, HIP, and Python support are not included.  For full functionality,
   build |zfp| using CMake.
 
 
@@ -241,14 +241,25 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 
 .. c:macro:: ZFP_WITH_CUDA
 
-  CMake macro for enabling or disabling CUDA support for
-  GPU compression and decompression.  When enabled, CUDA and a compatible
-  host compiler must be installed.  For a full list of compatible compilers,
-  please consult the
+  CMake macro for enabling or disabling CUDA support for parallel compression
+  and decompression on NVIDIA GPUs.  When enabled, CUDA and a compatible host
+  compiler must be installed.  For a full list of compatible compilers, please
+  consult the
   `NVIDIA documentation <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/>`_.
-  If a CUDA installation is in the user's path, it will be
-  automatically found by CMake.  Alternatively, the CUDA binary directory 
-  can be specified using the :envvar:`CUDA_BIN_DIR` environment variable.
+  If a CUDA installation is in the user's path, it will be automatically found
+  by CMake.  Alternatively, the CUDA binary directory can be specified using
+  the :envvar:`CUDA_BIN_DIR` environment variable.
+  CMake default: off.
+  GNU make default: off and ignored.
+
+
+.. c:macro:: ZFP_WITH_HIP
+
+  CMake macro for enabling or disabling HIP support for parallel compression
+  and decompression on AMD GPUs.  The :envvar:`HIP_PATH` environment variable
+  can be used to point to the root directory of the HIP compiler.  See the
+  `HIP Porting Guide <https://rocmdocs.amd.com/en/latest/Programming_Guides/HIP-porting-guide.html>`_
+  for additional details.
   CMake default: off.
   GNU make default: off and ignored.
 
@@ -344,6 +355,12 @@ CUDA
 
 CUDA support requires CMake and a compatible host compiler (see
 :c:macro:`ZFP_WITH_CUDA`).
+
+HIP
+^^^^
+
+HIP support requires CMake and the HIP compiler (see
+:c:macro:`ZFP_WITH_HIP`).
 
 Python
 ^^^^^^

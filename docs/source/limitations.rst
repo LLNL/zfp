@@ -64,8 +64,9 @@ that will address some of these limitations.
 - Version |omprelease| adds support for OpenMP compression.  However,
   OpenMP decompression is not yet supported.
 
-- Version |cudarelease| adds support for CUDA compression and decompression.
-  However, only the fixed-rate compression mode is so far supported.
+- Version |cudarelease| adds support for CUDA compression and decompression;
+  version |hiprelease| adds corresponding HIP support.  However, only the
+  fixed-rate compression mode is so far supported.
 
 - As of version |4drelease|, |zfp| supports compression and decompression
   of 4D arrays.  However, |zfp| does not yet implement a 4D compressed

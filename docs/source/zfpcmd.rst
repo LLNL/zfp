@@ -232,7 +232,8 @@ Execution parameters
   :code:`-x omp=threads,chunk_size` to specify the chunk size in number
   of blocks (see also :c:func:`zfp_stream_set_omp_chunk_size`).  A
   chunk size of zero is ignored and results in the default size.
-  Use :code:`-x cuda` to for parallel CUDA compression and decompression.
+  Use :code:`-x cuda` or :code:`-x hip` for parallel CUDA or HIP
+  compression and decompression, respectively.
 
 As of |cudarelease|, the execution policy applies to both compression
 and decompression.  If the execution policy is not supported for

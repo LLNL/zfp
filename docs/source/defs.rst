@@ -31,3 +31,4 @@
 .. |raiterrelease| replace:: 0.5.6
 .. |64bitrelease| replace:: 0.5.6
 .. |4darrrelease| replace:: 0.5.6
+.. |hiprelease| replace:: 0.5.7

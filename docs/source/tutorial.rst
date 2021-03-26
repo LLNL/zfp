@@ -113,8 +113,8 @@ with a bit stream used by the compressor to read and write bits::
   zfp_stream_set_bit_stream(zfp, stream);
 
 Compression can be accelerated via OpenMP multithreading (since |zfp|
-|omprelease|) and CUDA (since |zfp| |cudarelease|).  To enable OpenMP
-parallel compression, call::
+|omprelease|), CUDA (since |zfp| |cudarelease|), and HIP (since |zfp|
+|hiprelease|).  To enable OpenMP parallel compression, call::
 
   if (!zfp_stream_set_execution(zfp, zfp_exec_omp)) {
     // OpenMP not available; handle error
