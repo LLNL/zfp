@@ -78,8 +78,8 @@ c_gnu-7.3.0_test:
 
 cuda-10.1.168_build:
     variables:
-        ci_cxx_cmp: "c++"
-        ci_c_cmp: "cc"
+        ci_cxx_cmp: "nvcc"
+        ci_c_cmp: "nvcc"
         ci_cmp_mod: "cuda/10.1.168"
     extends: [.cuda, .surface_build_gpu]
     needs: []
