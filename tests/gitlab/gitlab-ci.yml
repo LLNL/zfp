@@ -58,6 +58,16 @@ stages:
         - module reset
         - module load opt
         - module load $ci_cmp_mod
+        - |-
+            export CXX=$(which $ci_cxx_cmp)
+            export CC=$(which $ci_cxx_cmp)
+            if [ -z ${CXX} ]; then
+                echo "cxx compiler not set"
+                exit 1
+            elif [ -z ${CC} ]; then
+                echo "c compiler not set"
+                exit 1
+            fi
     script:
         - mkdir build
         - cd build

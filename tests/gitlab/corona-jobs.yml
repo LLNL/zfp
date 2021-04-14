@@ -4,6 +4,8 @@
 
 rocm-3.9.0_build:
     variables:
+        ci_cxx_cmp: "hipcc"
+        ci_c_cmp: "hipcc"
         ci_cmp_mod: "rocm/3.9.0"
     extends: [.hip, .corona_build_gpu]
     needs: []
