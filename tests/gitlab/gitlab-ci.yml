@@ -58,16 +58,6 @@ stages:
         - module reset
         - module load opt
         - module load $ci_cmp_mod
-        - |-
-            export CXX=$(which $ci_cxx_cmp)
-            export CC=$(which $ci_cxx_cmp)
-            if [ -z ${CXX} ]; then
-                echo "cxx compiler not set"
-                exit 1
-            elif [ -z ${CC} ]; then
-                echo "c compiler not set"
-                exit 1
-            fi
     script:
         - mkdir build
         - cd build
@@ -118,7 +108,7 @@ stages:
 .hip:
     variables:
         ci_lang: "hip"
-        ci_cmake_flags: "-DZFP_WITH_HIP=ON -DHIP_PATH=/opt/rocm-3.9.0/hip -DCMAKE_CXX_STANDARD=11 -DCMAKE_C_STANDARD=11"
+        ci_cmake_flags: "-DZFP_WITH_HIP=ON -DHIP_PATH=/opt/rocm-3.9.0/hip -DCMAKE_CXX_STANDARD=11 -DCMAKE_C_STANDARD=11 -DCMAKE_C_COMPILER=hipcc -DCMAKE_CXX_COMPILER=hipcc"
 
 
 ############
