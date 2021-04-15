@@ -190,11 +190,14 @@ Exceptions
 
 .. cpp:class:: exception : public std::runtime_error
 
-  Compressed arrays can throw this exception upon serialization, when
+  Compressed arrays may throw this exception upon serialization, when
   constructing a header via its :ref:`constructor <header_ctor>`, or
   deserialization, when constructing a compressed array via its
   :ref:`constructor <array_ctor_header>` or
   :ref:`factory function <array_factory>`.
+  The :cpp:func:`exception::what` method returns a :code:`std::string`
+  error message that indicates the cause of the exception.
+  Most error messages changed in |zfp| |4darrrelease|.
 
 .. note::
   Compressed-array headers use |zfp|'s most concise representation of only

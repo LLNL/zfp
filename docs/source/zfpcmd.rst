@@ -8,7 +8,7 @@ File Compressor
 This section describes a simple, file-based |zfp| compression tool that is
 part of the |zfp| distribution named |zfpcmd|.  Other, third-party,
 file-based compression options are discussed in the
-:ref:`Overview <overview>` section.
+:ref:`app-support` section.
 
 The |zfpcmd| executable in the :file:`bin` directory is primarily
 intended for evaluating the rate-distortion (compression ratio and quality)

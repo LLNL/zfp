@@ -7,15 +7,15 @@ forward Euler finite difference solution to the heat equation on a 2D grid
 #include <stdlib.h>
 #include <math.h>
 
-#include "cfparrays.h"
+#include "cfparray.h"
 #define _ (CFP_NAMESPACE.array2d)
 
 #define MAX(x, y) (((nx) > (ny)) ? (nx) : (ny))
 
 /* constants used in the solution */
 typedef struct {
-  int nx;        /* grid points in x */
-  int ny;        /* grid points in y */
+  size_t nx;     /* grid points in x */
+  size_t ny;     /* grid points in y */
   int nt;        /* number of time steps (0 for default) */
   int x0;        /* x location of heat source */
   int y0;        /* y location of heat source */
@@ -49,8 +49,7 @@ time_step_indexed_compressed(cfp_array2d u, const constants* c)
 {
   /* compute du/dt */
   cfp_array2d du = _.ctor(c->nx, c->ny, _.rate(u), 0, _.cache_size(u));
-  int x, y;
-  uint i;
+  size_t i, x, y;
   for (y = 1; y < c->ny - 1; y++) {
     for (x = 1; x < c->nx - 1; x++) {
       double uxx = (_.get(u, x - 1, y) - 2 * _.get(u, x, y) + _.get(u, x + 1, y)) / (c->dx * c->dx);
@@ -76,8 +75,8 @@ time_step_iterated_compressed(cfp_array2d u, const constants* c)
   cfp_array2d du = _.ctor(c->nx, c->ny, _.rate(u), 0, _.cache_size(u));
   cfp_iter2d p, q;
   for (q = _.begin(du); _.iterator.neq(q, _.end(du)); q = _.iterator.inc(q)) {
-    int x = _.iterator.i(q);
-    int y = _.iterator.j(q);
+    size_t x = _.iterator.i(q);
+    size_t y = _.iterator.j(q);
     if (1 <= x && x <= c->nx - 2 &&
         1 <= y && y <= c->ny - 2) {
       double uxx = (_.get(u, x - 1, y) - 2 * _.get(u, x, y) + _.get(u, x + 1, y)) / (c->dx * c->dx);
@@ -101,20 +100,16 @@ time_step_indexed(double* u, const constants* c)
 {
   /* compute du/dt */
   double* du = calloc(c->nx * c->ny, sizeof(double));
-  int x, y;
-  int i;
-  for (y = 1; y < c->ny - 1; y++) {
+  size_t i, x, y;
+  for (y = 1; y < c->ny - 1; y++)
     for (x = 1; x < c->nx - 1; x++) {
       double uxx = (u[y*c->nx + (x - 1)] - 2 * u[y*c->nx + x] + u[y*c->nx + (x + 1)]) / (c->dx * c->dx);
       double uyy = (u[(y - 1)*c->nx + x] - 2 * u[y*c->nx + x] + u[(y + 1)*c->nx + x]) / (c->dy * c->dy);
       du[y*c->nx + x] = c->dt * c->k * (uxx + uyy);
     }
-  }
   /* take forward Euler step */
-  for (i = 0; i < (c->nx * c->ny); i++) {
-    /* u[i] += du[i] */
+  for (i = 0; i < c->nx * c->ny; i++)
     u[i] += du[i];
-  }
 
   free(du);
 }
@@ -163,9 +158,9 @@ static double
 total_compressed(const cfp_array2d u)
 {
   double s = 0;
-  const int nx = _.size_x(u);
-  const int ny = _.size_y(u);
-  int x, y;
+  const size_t nx = _.size_x(u);
+  const size_t ny = _.size_y(u);
+  size_t x, y;
   for (y = 1; y < ny - 1; y++)
     for (x = 1; x < nx - 1; x++)
       s += _.get(u, x, y);
@@ -174,10 +169,10 @@ total_compressed(const cfp_array2d u)
 
 /* compute sum of array values */
 static double
-total(const double* u, const int nx, const int ny)
+total(const double* u, size_t nx, size_t ny)
 {
   double s = 0;
-  int x, y;
+  size_t x, y;
   for (y = 1; y < ny - 1; y++)
     for (x = 1; x < nx - 1; x++)
       s += u[y*nx + x];
@@ -189,7 +184,7 @@ static double
 error_compressed(const cfp_array2d u, const constants* c, double t)
 {
   double e = 0;
-  int x, y;
+  size_t x, y;
   for (y = 1; y < c->ny - 1; y++) {
     double py = c->dy * (y - c->y0);
     for (x = 1; x < c->nx - 1; x++) {
@@ -207,7 +202,7 @@ static double
 error(const double* u, const constants* c, double t)
 {
   double e = 0;
-  int x, y;
+  size_t x, y;
   for (y = 1; y < c->ny - 1; y++) {
     double py = c->dy * (y - c->y0);
     for (x = 1; x < c->nx - 1; x++) {

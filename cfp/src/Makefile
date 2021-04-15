@@ -2,7 +2,7 @@ include ../../Config
 
 LIBDIR = ../../lib
 TARGETS = $(LIBDIR)/libcfp.a $(LIBDIR)/libcfp.so
-OBJECTS = cfparrays.o
+OBJECTS = cfparray.o
 INCS = -I../include -I../../include -I../../array -I../../src
 
 static: $(LIBDIR)/libcfp.a
