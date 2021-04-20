@@ -35,7 +35,7 @@ if [ $COMPILER == "msvc" ] && [ $BUILD_TYPE == "Release" ]; then
   BUILD_FLAGS="$BUILD_FLAGS -DBUILD_ZFPY=ON"
 
   # CMake/VS have changed how to select platform for VS 2019 generator
-  if [ $GENERATOR == "Visual Studio 16 2019" ] && [ $PLATFORM == "x64" ]
+  if [ $GENERATOR == "Visual Studio 16 2019" ] && [ $PLATFORM == "x64" ]; then
     BUILD_FLAGS="$BUILD_FLAGS -A x64"
   fi
 fi
