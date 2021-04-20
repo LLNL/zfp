@@ -20,7 +20,7 @@ BUILD_FLAGS="$BUILD_FLAGS -DBUILD_CFP=ON"
 BUILD_FLAGS="$BUILD_FLAGS -DCFP_NAMESPACE=cfp2"
 
 # zfpy only built for MSVC, Release builds
-if [ $COMPILER == "msvc" ] && [ $BUILD_TYPE == "Release" ]; then
+if [ "$COMPILER" = "msvc" ] && [ "$BUILD_TYPE" = "Release" ]; then
   # verify active python version matches what was specified in appveyor.yml
 
   # fetch python version X.Y (single digits only)
@@ -28,14 +28,14 @@ if [ $COMPILER == "msvc" ] && [ $BUILD_TYPE == "Release" ]; then
   # $PYTHON_VERSION comes from appveyor.yml and has form XY (no dot separating major and minor versions)
   ACTIVE_PY_VERSION=${ACTIVE_PY_VERSION:0:1}${ACTIVE_PY_VERSION:2:1}
 
-  if [ $ACTIVE_PY_VERSION != $PYTHON_VERSION ]; then
+  if [ "$ACTIVE_PY_VERSION" != "$PYTHON_VERSION" ]; then
     exit 1
   fi
 
   BUILD_FLAGS="$BUILD_FLAGS -DBUILD_ZFPY=ON"
 
   # CMake/VS have changed how to select platform for VS 2019 generator
-  if [ $GENERATOR == "Visual Studio 16 2019" ] && [ $PLATFORM == "x64" ]; then
+  if [ "$GENERATOR" = "Visual Studio 16 2019" ] && [ "$PLATFORM" = "x64" ]; then
     BUILD_FLAGS="$BUILD_FLAGS -A x64"
   fi
 fi
@@ -50,7 +50,7 @@ mkdir tmpBuild
 cd tmpBuild
 # (CMAKE_SH satisfies mingw builds)
 set +e
-if [ $COMPILER != "msvc" ]; then
+if [ "$COMPILER" != "msvc" ]; then
   cmake -G "$GENERATOR" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils" -DCMAKE_SH=CMAKE_SH-NOTFOUND
 else
   cmake -G "$GENERATOR" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils"
