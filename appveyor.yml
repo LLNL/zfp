@@ -2,19 +2,19 @@ version: 0.5.5-{build}
 
 environment:
   matrix:
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 16 2019
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      PLATFORM: x64
-      BUILD_TYPE: Release
-      PYTHON_VERSION: 38
+    #- COMPILER: msvc
+    #  GENERATOR: Visual Studio 16 2019
+    #  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    #  PLATFORM: x64
+    #  BUILD_TYPE: Release
+    #  PYTHON_VERSION: 38
 
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 16 2019
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      PLATFORM: Win32
-      BUILD_TYPE: Release
-      PYTHON_VERSION: 38
+    #- COMPILER: msvc
+    #  GENERATOR: Visual Studio 16 2019
+    #  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    #  PLATFORM: Win32
+    #  BUILD_TYPE: Release
+    #  PYTHON_VERSION: 38
 
     - COMPILER: msvc
       GENERATOR: Visual Studio 15 2017 Win64
