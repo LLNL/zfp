@@ -55,6 +55,22 @@ _t1(fwd_lift, Int)(Int* p, uint s)
   p -= s; *p = x;
 }
 
+#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
+/* bias values such that truncation is equivalent to round to nearest */
+static void
+_t1(fwd_round, Int)(Int* iblock, uint n, uint maxprec)
+{
+  /* add or subtract 1/6 ulp to unbias errors */
+  if (maxprec < CHAR_BIT * (uint)sizeof(Int)) {
+    Int bias = (NBMASK >> 2) >> maxprec;
+    if (maxprec & 1u)
+      do *iblock++ += bias; while (--n);
+    else
+      do *iblock++ -= bias; while (--n);
+  }
+}
+#endif
+
 /* map two's complement signed integer to negabinary unsigned integer */
 static UInt
 _t1(int2uint, Int)(Int x)
@@ -143,6 +159,10 @@ _t2(encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int ma
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* perform decorrelating transform */
   _t2(fwd_xform, Int, DIMS)(iblock);
+#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
+  /* bias values values to achieve proper rounding */
+  _t1(fwd_round, Int)(iblock, BLOCK_SIZE, maxprec);
+#endif
   /* reorder signed coefficients and convert to unsigned integer */
   _t1(fwd_order, Int)(ublock, iblock, PERM, BLOCK_SIZE);
   /* encode integer coefficients */

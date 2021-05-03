@@ -108,12 +108,14 @@ set(ZFP_BIT_STREAM_WORD_SIZE 64 CACHE STRING
   "Use smaller bit stream word type for finer rate granularity")
 set_property(CACHE ZFP_BIT_STREAM_WORD_SIZE PROPERTY STRINGS "8;16;32;64")
 
+set(ZFP_ROUNDING_MODE ZFP_ROUND_NEVER CACHE STRING
+  "Rounding mode for reducing bias")
+set_property(CACHE ZFP_ROUNDING_MODE PROPERTY STRINGS "ZFP_ROUND_NEVER;ZFP_ROUND_FIRST;ZFP_ROUND_LAST")
+
 option(ZFP_WITH_CUDA "Enable CUDA parallel compression" OFF)
 
 option(ZFP_WITH_BIT_STREAM_STRIDED
   "Enable strided access for progressive zfp streams" OFF)
-
-option(ZFP_WITH_UNBIASED_ERROR "Enforce unbiased error distribution" OFF)
 
 option(ZFP_WITH_TIGHT_ERROR "Reduce slack in absolute errors" OFF)
 
@@ -179,11 +181,14 @@ if(ZFP_WITH_BIT_STREAM_STRIDED)
   list(APPEND zfp_public_defs BIT_STREAM_STRIDED)
 endif()
 
-if(ZFP_WITH_UNBIASED_ERROR)
-  list(APPEND zfp_private_defs ZFP_WITH_UNBIASED_ERROR)
+if(NOT (ZFP_ROUNDING_MODE EQUAL ZFP_ROUND_NEVER))
+  list(APPEND zfp_private_defs ZFP_ROUNDING_MODE=${ZFP_ROUNDING_MODE})
 endif()
 
 if(ZFP_WITH_TIGHT_ERROR)
+  if((ZFP_ROUNDING_MODE EQUAL 0) OR (ZFP_ROUNDING_MODE STREQUAL ZFP_ROUND_NEVER))
+    message(FATAL_ERROR "ZFP_WITH_TIGHT_ERROR requires ZFP_ROUND_FIRST or ZFP_ROUND_LAST rounding mode")
+  endif()
   list(APPEND zfp_private_defs ZFP_WITH_TIGHT_ERROR)
 endif()
 

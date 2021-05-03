@@ -115,6 +115,11 @@
 #define ZFP_HEADER_MAX_BITS 148 /* max number of header bits */
 #define ZFP_MODE_SHORT_MAX  ((1u << ZFP_MODE_SHORT_BITS) - 2)
 
+/* rounding mode for reducing bias; see build option ZFP_ROUNDING_MODE */
+#define ZFP_ROUND_FIRST (-1) /* round during compression */
+#define ZFP_ROUND_NEVER 0    /* never round */
+#define ZFP_ROUND_LAST  1    /* round during decompression */
+
 /* types ------------------------------------------------------------------- */
 
 /* execution policy */

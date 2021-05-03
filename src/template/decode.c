@@ -33,6 +33,21 @@ _t1(inv_lift, Int)(Int* p, uint s)
   p -= s; *p = x;
 }
 
+#if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
+/* bias values such that truncation is equivalent to round to nearest */
+static void
+_t1(inv_round, UInt)(UInt* ublock, uint n, uint m, uint prec)
+{
+  /* add 1/6 ulp to unbias errors */
+  if (prec < CHAR_BIT * (uint)sizeof(UInt) - 1) {
+    /* the first m values (0 <= m <= n) have one more bit of precision */
+    n -= m;
+    while (m--) *ublock++ += ((NBMASK >> 2) >> prec);
+    while (n--) *ublock++ += ((NBMASK >> 1) >> prec);
+  }
+}
+#endif
+
 /* map two's complement signed integer to negabinary unsigned integer */
 static Int
 _t1(uint2int, UInt)(UInt x)
@@ -80,16 +95,9 @@ _t1(decode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, 
       data[i] += (UInt)(x & 1u) << k;
   }
 
-#ifdef ZFP_WITH_UNBIASED_ERROR
-  /* add offset to properly round truncated coefficients and center errors */
-  if (k + 1 > 2) {
-    /* the first m coefficients have k LSBs truncated */
-    for (i = 0; i < m; i++)
-      data[i] += (NBMASK >> 2) >> (intprec - k);
-    /* the remaining coefficients have k + 1 LSBs truncated */
-    for (k++; i < size; i++)
-      data[i] += (NBMASK >> 2) >> (intprec - k);
-  }
+#if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
+  /* bias values values to achieve proper rounding */
+  _t1(inv_round, UInt)(data, size, m, intprec - k);
 #endif
 
   *stream = s;
@@ -125,16 +133,9 @@ _t1(decode_many_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxp
         ;
   }
 
-#ifdef ZFP_WITH_UNBIASED_ERROR
-  /* add offset to properly round truncated coefficients and center errors */
-  if (k + 1 > 2) {
-    /* the first m coefficients have k LSBs truncated */
-    for (i = 0; i < m; i++)
-      data[i] += (NBMASK >> 2) >> (intprec - k);
-    /* the remaining coefficients have k + 1 LSBs truncated */
-    for (k++; i < size; i++)
-      data[i] += (NBMASK >> 2) >> (intprec - k);
-  }
+#if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
+  /* bias values values to achieve proper rounding */
+  _t1(inv_round, UInt)(data, size, m, intprec - k);
 #endif
 
   *stream = s;
