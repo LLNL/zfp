@@ -78,7 +78,7 @@ stages:
 .test_cpu:
     script:
         - cd build
-        - ctest -E "[Cuda|Hip]" -R "${ci_test_regex}"
+        - ctest -E "(Cuda|Hip)" -R "${ci_test_regex}"
     extends: [.test]
 
 .test_gpu:
@@ -108,7 +108,7 @@ stages:
 .hip:
     variables:
         ci_lang: "hip"
-        ci_cmake_flags: "-DZFP_WITH_HIP=ON -DHIP_PATH=/opt/rocm-3.9.0/hip -DCMAKE_CXX_STANDARD=11 -DCMAKE_C_STANDARD=11 -DCMAKE_C_COMPILER=hipcc -DCMAKE_CXX_COMPILER=hipcc"
+        ci_cmake_flags: "-DZFP_WITH_HIP=ON -DHIP_PATH=${ci_cmp_path} -DCMAKE_CXX_STANDARD=11 -DCMAKE_C_STANDARD=11 -DCMAKE_C_COMPILER=hipcc -DCMAKE_CXX_COMPILER=hipcc"
 
 
 ############
