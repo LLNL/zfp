@@ -495,10 +495,10 @@ allocated and must be explicitly destructed via
 
 ----
 
-.. c:function:: size_t cfp.array.header.size(const cfp_header self);
+.. c:function:: size_t cfp.array.header.size_bytes(const cfp_header self);
 
   Byte size of header data buffer needed for serializing the header.
-  See :cpp:func:`header::size`.
+  See :cpp:func:`header::size_bytes`.
 
 
 Array Accessors
