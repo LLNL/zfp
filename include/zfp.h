@@ -740,6 +740,9 @@ void zfp_demote_int32_to_uint8(uint8* oblock, const int32* iblock, uint dims);
 void zfp_demote_int32_to_int16(int16* oblock, const int32* iblock, uint dims);
 void zfp_demote_int32_to_uint16(uint16* oblock, const int32* iblock, uint dims);
 
+/* Conservative size (in bits) of a single compressed block */
+uint zfp_block_maxbits(const zfp_stream* zfp, const zfp_field* field);
+
 #ifdef __cplusplus
 }
 #endif
