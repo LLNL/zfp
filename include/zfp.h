@@ -422,6 +422,10 @@ zfp_field_size_bytes(
   const zfp_field* field /* field metadata */
 );
 
+/* number of ZFP blocks */
+size_t
+zfp_field_num_blocks (const zfp_field* field);
+
 /* field strides per dimension */
 zfp_bool                  /* true if array is not contiguous */
 zfp_field_stride(
