@@ -129,6 +129,7 @@ struct bitstream {
   word* ptr;   /* pointer to next word to be read/written */
   word* begin; /* beginning of stream */
   word* end;   /* end of stream (currently unused) */
+  ushort *bitlengths; /* Individual block lengths (for variable bit rate) */
 #ifdef BIT_STREAM_STRIDED
   size_t mask;     /* one less the block size in number of words */
   ptrdiff_t delta; /* number of words between consecutive blocks */
@@ -436,6 +437,7 @@ stream_open(void* buffer, size_t bytes)
   if (s) {
     s->begin = (word*)buffer;
     s->end = s->begin + bytes / sizeof(word);
+    s->bitlengths = NULL;
 #ifdef BIT_STREAM_STRIDED
     stream_set_stride(s, 0, 0);
 #endif

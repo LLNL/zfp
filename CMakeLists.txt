@@ -178,6 +178,12 @@ if(ZFP_WITH_CUDA)
   if(${CUDA_VERSION_MAJOR} LESS 7)
     message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
   endif()
+  if(${CUDA_VERSION_MAJOR} LESS 11)
+    # CUB is part of CUDA since CUDA 11
+    # Todo: get CUB from https://github.com/NVIDIA/cub.git
+    message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
+  endif()
+  # set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -G -g")
 endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
