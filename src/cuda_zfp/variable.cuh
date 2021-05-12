@@ -99,13 +99,8 @@ namespace cuZFP
                     mask &= 0xffffffff << misaligned;
                 if ((i + 1) * 32 > misaligned + length_bits)
                     mask &= ~(0xffffffff << ((misaligned + length_bits) & 31));
-
-                // If the mask is full, no need to use atomics
-                // TODO : Try atomics all the time
-                if (mask == 0xffffffff)
-                    sm_out[off_smout + i] = v1;
-                else
-                    atomicAdd(sm_out + off_smout + i, v1 & mask);
+                
+                atomicAdd(sm_out + off_smout + i, v1 & mask);
             }
         }
 
