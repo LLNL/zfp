@@ -470,6 +470,18 @@ void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes, long long int
 size_t
 cuda_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
 {
+
+#if (CUDART_VERSION < 9000)
+  if (variable_rate)
+    return 0; // Variable rate requires CUDA >= 9
+#endif
+
+  if (zfp_stream_compression_mode(stream) == zfp_mode_reversible)
+  {
+    // Reversible mode not supported on GPU
+    return 0;
+  }
+
   uint dims[3];
   dims[0] = field->nx;
   dims[1] = field->ny;
@@ -487,17 +499,6 @@ cuda_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
   if(d_data == NULL)
   {
     // null means the array is non-contiguous host mem which is not supported
-    return 0;
-  }
-
-#if (CUDART_VERSION < 9000)
-  if (variable_rate)
-    return 0; // Variable rate requires CUDA >= 9
-#endif
-
-  if (zfp_stream_compression_mode(stream) == zfp_mode_reversible)
-  {
-    // Reversible mode not supported on GPU
     return 0;
   }
 
