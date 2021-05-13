@@ -69,6 +69,7 @@ namespace cuZFP
                                    unsigned long long &offset0,     // Offset in bits of the first bitstream of the block
                                    const unsigned long long offset, // Offset in bits for this stream
                                    const int &length_bits,          // length of this stream
+                                   const int &add_padding,          // padding at the end of the block, in bits
                                    const int &tid,                  // global thread index inside the thread block
                                    uint *sm_in,                     // shared memory containing the compressed input data
                                    uint *sm_out,                    // shared memory to stage the compacted compressed data
@@ -105,8 +106,10 @@ namespace cuZFP
         }
 
         // First thread working on each bistream writes the length in shared memory
+        // Add zero-padding bits if needed (last bitstream of last chunk)
+        // The extra bits in shared mempory are already zeroed.
         if (threadIdx.x == 0)
-            sm_length[threadIdx.y] = length_bits;
+            sm_length[threadIdx.y] = length_bits + add_padding;
 
         // This synchthreads protects sm_out and sm_length.
         __syncthreads();
@@ -152,29 +155,31 @@ namespace cuZFP
     // threadIdx.y = Index of the stream
     // threadIdx.x = Threads working on the same stream
     // Must launch dim3(tile_size, num_tiles, 1) threads per block.
-    // Offsets has a length of (nstreams_chunk + 1), offsets[0] is the offset in bits
+    // Offsets has a length of (nstreams_chunk + 2), offsets[0] is the offset in bits
     // where stream 0 starts, it must be memset to zero before launching the very first chunk,
-    // and is updated at the end of this kernel.
+    // and is updated at the end of this kernel. The extra 2 elements are needed to handle
+    // unaligned data and potential zero-padding to the next multiple of 64 bits.
     template <int tile_size, int num_tiles>
     __launch_bounds__(tile_size *num_tiles)
         __global__ void concat_bitstreams_chunk(uint *__restrict__ streams,
                                                 unsigned long long *__restrict__ offsets,
                                                 unsigned long long first_stream_chunk,
                                                 int nstreams_chunk,
+                                                bool last_chunk,
                                                 int maxbits,
                                                 int maxpad32)
     {
         cg::grid_group grid = cg::this_grid();
         __shared__ uint sm_length[num_tiles];
         extern __shared__ uint sm_in[];              // sm_in[num_tiles * maxpad32]
-        uint *sm_out = sm_in + num_tiles * maxpad32; // sm_out[num_tiles * maxpad32 + 1]
+        uint *sm_out = sm_in + num_tiles * maxpad32; // sm_out[num_tiles * maxpad32 + 2]
         int tid = threadIdx.y * tile_size + threadIdx.x;
         int grid_stride = gridDim.x * num_tiles;
         int first_bitstream_block = blockIdx.x * num_tiles;
         int my_stream = first_bitstream_block + threadIdx.y;
 
         // Zero the output shared memory. Will be reset again inside process().
-        for (int i = tid; i < num_tiles * maxpad32 + 1; i += tile_size * num_tiles)
+        for (int i = tid; i < num_tiles * maxpad32 + 2; i += tile_size * num_tiles)
             sm_out[i] = 0;
 
         // Loop on all the bitstreams of the current chunk, using the whole resident grid.
@@ -185,12 +190,19 @@ namespace cuZFP
             unsigned long long offset0 = offsets[first_bitstream_block + i];
             unsigned long long offset = 0;
             uint length_bits = 0;
+            uint add_padding = 0;
             if (valid_stream)
             {
                 offset = offsets[my_stream + i];
                 unsigned long long offset_bits = (first_stream_chunk + my_stream + i) * maxbits;
-                length_bits = (uint)(offsets[my_stream + i + 1] - offset);
+                unsigned long long next_offset_bits = offsets[my_stream + i + 1];
+                length_bits = (uint)(next_offset_bits - offset);
                 load_to_shared<tile_size>(streams, sm_in, offset_bits, length_bits, maxpad32);
+                if (last_chunk && (my_stream + i == nstreams_chunk - 1))
+                {
+                    uint partial = next_offset_bits & 63;
+                    add_padding = (64 - partial) & 63;
+                }
             }
 
             // Check if there is overlap between input and output at the grid level.
@@ -204,8 +216,8 @@ namespace cuZFP
                 __syncthreads();
 
             // Compact the shared memory data and write it to global memory
-            process<tile_size, num_tiles>(valid_stream, offset0, offset, length_bits, tid,
-                                          sm_in, sm_out, maxpad32, sm_length, streams);
+            process<tile_size, num_tiles>(valid_stream, offset0, offset, length_bits, add_padding,
+                                          tid, sm_in, sm_out, maxpad32, sm_length, streams);
         }
 
         // Reset the base of the offsets array, for the next chunk's prefix sum
@@ -217,6 +229,7 @@ namespace cuZFP
                               unsigned long long *chunk_offsets,
                               unsigned long long first,
                               int nstream_chunk,
+                              bool last_chunk,
                               int nbitsmax,
                               int num_sm)
     {
@@ -225,6 +238,7 @@ namespace cuZFP
                               (void *)&chunk_offsets,
                               (void *)&first,
                               (void *)&nstream_chunk,
+                              (void *)&last_chunk,
                               (void *)&nbitsmax,
                               (void *)&maxpad32};
         // Increase the number of threads per ZFP block ("tile") as nbitsmax increases
@@ -237,7 +251,7 @@ namespace cuZFP
         {
             constexpr int tile_size = 1;
             constexpr int num_tiles = 512;
-            size_t shmem = (2 * num_tiles * maxpad32 + 1) * sizeof(uint);
+            size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
             cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
@@ -250,7 +264,7 @@ namespace cuZFP
         {
             constexpr int tile_size = 4;
             constexpr int num_tiles = 128;
-            size_t shmem = (2 * num_tiles * maxpad32 + 1) * sizeof(uint);
+            size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
             cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
@@ -263,7 +277,7 @@ namespace cuZFP
         {
             constexpr int tile_size = 16;
             constexpr int num_tiles = 32;
-            size_t shmem = (2 * num_tiles * maxpad32 + 1) * sizeof(uint);
+            size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
             cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
@@ -276,7 +290,7 @@ namespace cuZFP
         {
             constexpr int tile_size = 64;
             constexpr int num_tiles = 8;
-            size_t shmem = (2 * num_tiles * maxpad32 + 1) * sizeof(uint);
+            size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
             cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
