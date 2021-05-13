@@ -183,7 +183,10 @@ if(ZFP_WITH_CUDA)
     # Todo: get CUB from https://github.com/NVIDIA/cub.git
     message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
   endif()
-  # set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -G -g")
+  set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
+                        -gencode arch=compute_35,code=compute_35 \
+                        -gencode arch=compute_60,code=compute_60 \
+                        -gencode arch=compute_70,code=compute_70")
 endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
