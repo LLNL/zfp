@@ -175,13 +175,13 @@ if(ZFP_WITH_CUDA)
   if(NOT CUDA_FOUND)
     message(FATAL_ERROR "ZFP_WITH_CUDA is enabled, but a CUDA installation was not found.")
   endif()
-  if(${CUDA_VERSION_MAJOR} LESS 7)
-    message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
+  if(${CUDA_VERSION_MAJOR} LESS 9)
+    message(FATAL_ERROR "zfp requires at least CUDA 9.0.")
   endif()
   if(${CUDA_VERSION_MAJOR} LESS 11)
     # CUB is part of CUDA since CUDA 11
     # Todo: get CUB from https://github.com/NVIDIA/cub.git
-    message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
+    message(FATAL_ERROR "TODO: Install CUB for CUDA < 11")
   endif()
   set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
                         -gencode arch=compute_35,code=compute_35 \
