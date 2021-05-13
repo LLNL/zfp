@@ -556,7 +556,13 @@ cuda_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
     size_t blocks = zfp_field_num_blocks(field);
     for (size_t i = 0; i < blocks; i += chunk_size)
     {
-      int cur_blocks = i + chunk_size <= blocks ? chunk_size : (int)(blocks - i);
+      int cur_blocks = chunk_size;
+      bool last_chunk = false;
+      if (i + chunk_size > blocks)
+      {
+        cur_blocks = (int)(blocks - i);
+        last_chunk = true;
+      }
       // Copy the 16-bit lengths in the offset array
       cuZFP::copy_length_launch(d_bitlengths, d_offsets, i, cur_blocks);
 
@@ -564,7 +570,7 @@ cuda_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
       cub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, cur_blocks + 1);
 
       // Compact the stream array in-place
-      cuZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, buffer_maxbits, num_sm);
+      cuZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, last_chunk, buffer_maxbits, num_sm);
     }
     // The total length in bits is now in the base of the prefix sum.
     cudaMemcpy (&stream_bytes, d_offsets, sizeof (unsigned long long), cudaMemcpyDeviceToHost);
