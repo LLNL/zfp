@@ -495,6 +495,12 @@ cuda_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
     return 0; // Variable rate requires CUDA >= 9
 #endif
 
+  if (zfp_stream_compression_mode(stream) == zfp_mode_reversible)
+  {
+    // Reversible mode not supported on GPU
+    return 0;
+  }
+
   int num_sm;
   cudaDeviceGetAttribute(&num_sm, cudaDevAttrMultiProcessorCount, 0);
 
