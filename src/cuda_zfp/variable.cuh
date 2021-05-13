@@ -155,10 +155,9 @@ namespace cuZFP
     // threadIdx.y = Index of the stream
     // threadIdx.x = Threads working on the same stream
     // Must launch dim3(tile_size, num_tiles, 1) threads per block.
-    // Offsets has a length of (nstreams_chunk + 2), offsets[0] is the offset in bits
+    // Offsets has a length of (nstreams_chunk + 1), offsets[0] is the offset in bits
     // where stream 0 starts, it must be memset to zero before launching the very first chunk,
-    // and is updated at the end of this kernel. The extra 2 elements are needed to handle
-    // unaligned data and potential zero-padding to the next multiple of 64 bits.
+    // and is updated at the end of this kernel.
     template <int tile_size, int num_tiles>
     __launch_bounds__(tile_size *num_tiles)
         __global__ void concat_bitstreams_chunk(uint *__restrict__ streams,
@@ -243,9 +242,11 @@ namespace cuZFP
                               (void *)&maxpad32};
         // Increase the number of threads per ZFP block ("tile") as nbitsmax increases
         // Compromise between coalescing, inactive threads and shared memory size <= 48KB
-        // Total shared memory used = (2 * num_tiles * maxpad + 1) x 32-bit dynamic shared memory
+        // Total shared memory used = (2 * num_tiles * maxpad + 2) x 32-bit dynamic shared memory
         // and num_tiles x 32-bit static shared memory.
-        // Boundaries set so that the shared memory stays < 48KB.
+        // The extra 2 elements of dynamic shared memory are needed to handle unaligned output data
+        // and potential zero-padding to the next multiple of 64 bits.
+        // Block sizes set so that the shared memory stays < 48KB.
         int max_blocks = 0;
         if (nbitsmax <= 352)
         {
