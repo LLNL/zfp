@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "zfp.h"
 #include "zfp/macros.h"
+#include "zfp/version.h"
 #include "template/template.h"
 
 /* public data ------------------------------------------------------------- */

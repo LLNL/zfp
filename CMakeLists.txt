@@ -14,7 +14,7 @@ endif()
 #------------------------------------------------------------------------------#
 # Parse version number from zfp.h
 #------------------------------------------------------------------------------#
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/include/zfp.h _zfp_h_contents)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/include/zfp/version.h _zfp_h_contents)
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MAJOR[ \t]+([0-9]+).*"
      "\\1" ZFP_VERSION_MAJOR ${_zfp_h_contents})
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MINOR[ \t]+([0-9]+).*"
