@@ -25,6 +25,14 @@ See example code :file:`tests/fortran/testFortran.f` (on the GitHub
 `develop branch <https://github.com/LLNL/zfp/tree/develop>`_)
 for how the Fortran API is used to compress and decompress data.
 
+.. _zforp_changes:
+.. note::
+
+  |zfp| |fieldrelease| simplifies the |zforp| module name from zforp_module to zforp.
+  This will likely require changing associated use statements within existing code when 
+  updating from prior versions of zFORp.
+
+
 Types
 -----
 

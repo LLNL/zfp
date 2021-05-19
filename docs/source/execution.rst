@@ -235,25 +235,25 @@ decompression in this tool, see the :option:`-x` command-line option.
 The following table summarizes which execution policies are supported
 with which :ref:`compression modes <modes>`:
 
-  +---------------------------------+--------+--------+------+
-  | (de)compression mode            | serial | OpenMP | CUDA |
-  +===============+=================+========+========+======+
-  |               | fixed rate      |    x   |    x   |   x  |
-  |               +-----------------+--------+--------+------+
-  |               | fixed precision |    x   |    x   |      |
-  | compression   +-----------------+--------+--------+------+
-  |               | fixed accuracy  |    x   |    x   |      |
-  |               +-----------------+--------+--------+------+
-  |               | reversible      |    x   |    x   |      |
-  +---------------+-----------------+--------+--------+------+
-  |               | fixed rate      |    x   |        |   x  |
-  |               +-----------------+--------+--------+------+
-  |               | fixed precision |    x   |        |      |
-  | decompression +-----------------+--------+--------+------+
-  |               | fixed accuracy  |    x   |        |      |
-  |               +-----------------+--------+--------+------+
-  |               | reversible      |    x   |        |      |
-  +---------------+-----------------+--------+--------+------+
+  +---------------------------------+---------+---------+---------+
+  | (de)compression mode            | serial  | OpenMP  | CUDA    |
+  +===============+=================+=========+=========+=========+
+  |               | fixed rate      | |check| | |check| | |check| |
+  |               +-----------------+---------+---------+---------+
+  |               | fixed precision | |check| | |check| |         |
+  | compression   +-----------------+---------+---------+---------+
+  |               | fixed accuracy  | |check| | |check| |         |
+  |               +-----------------+---------+---------+---------+
+  |               | reversible      | |check| | |check| |         |
+  +---------------+-----------------+---------+---------+---------+
+  |               | fixed rate      | |check| |         | |check| |
+  |               +-----------------+---------+---------+---------+
+  |               | fixed precision | |check| |         |         |
+  | decompression +-----------------+---------+---------+---------+
+  |               | fixed accuracy  | |check| |         |         |
+  |               +-----------------+---------+---------+---------+
+  |               | reversible      | |check| |         |         |
+  +---------------+-----------------+---------+---------+---------+
 
 :c:func:`zfp_compress` and :c:func:`zfp_decompress` both return zero if the
 current execution policy is not supported for the requested compression

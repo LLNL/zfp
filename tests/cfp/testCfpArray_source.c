@@ -8,7 +8,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "cfparrays.h"
+#include "cfparray.h"
 #include "zfp.h"
 
 #include "utils/genSmoothRandNums.h"

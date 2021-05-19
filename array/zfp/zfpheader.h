@@ -100,7 +100,7 @@ public:
 
   // header data and byte size
   const void* data() const { return buffer; }
-  size_t size() const { return byte_size; }
+  size_t size_bytes() const { return byte_size; }
 
 protected:
   // header size measured in bits, bytes, and 64-bit words

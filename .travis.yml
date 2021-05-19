@@ -111,33 +111,6 @@ matrix:
       env: CC='gcc-4.9' CXX='g++-4.9' FC='gfortran-4.9' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
 
     - os: linux
-      dist: trusty
-      compiler: gcc-5
-      addons:
-        apt:
-          sources: ubuntu-toolchain-r-test
-          packages:
-            - gcc-5
-            - g++-5
-            - gfortran-5
-            - libpython2.7
-            - python-pip
-      env: CC='gcc-5' CXX='g++-5' FC='gfortran-5' FORTRAN_STANDARD='2003' PYTHON_VERSION='2.7'
-
-    - os: linux
-      dist: trusty
-      compiler: gcc-6
-      addons:
-        apt:
-          sources: ubuntu-toolchain-r-test
-          packages:
-            - gcc-6
-            - g++-6
-            - gfortran-6
-            - libpython2.7
-      env: CC='gcc-6' CXX='g++-6' FC='gfortran-6' FORTRAN_STANDARD='2003' PYTHON_VERSION='2.7'
-
-    - os: linux
       dist: xenial
       compiler: gcc-6
       addons:
@@ -265,7 +238,7 @@ script:
     fi
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-        $PYTHON_EXECUTABLE -m pip install --upgrade pip;
+        $PYTHON_EXECUTABLE -m pip install --upgrade 'pip<21';
         $PYTHON_EXECUTABLE -m pip install -r ${TRAVIS_BUILD_DIR}/python/requirements.txt;
     fi
 
@@ -283,12 +256,12 @@ script:
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$PYTHON_VERSION" = "3.5" ]; then
         export PYTHON_INCLUDE_DIR=/usr/include/python3.5m;
         export PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so;
-        sudo $PYTHON_EXECUTABLE -m pip install --upgrade pip;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade 'pip<21';
         sudo $PYTHON_EXECUTABLE -m pip install --upgrade cython;
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$DISTRIB_CODENAME" = "trusty" ] && [ "$PYTHON_VERSION" = "2.7" ]; then
-        sudo $PYTHON_EXECUTABLE -m pip install --upgrade pip;
+        sudo $PYTHON_EXECUTABLE -m pip install --upgrade 'pip<21';
         sudo $PYTHON_EXECUTABLE -m pip install -r ${TRAVIS_BUILD_DIR}/python/requirements.txt;
     fi
   - |

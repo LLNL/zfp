@@ -1,4 +1,4 @@
-module zFORp_module
+module zFORp
 
   use, intrinsic :: iso_c_binding, only: c_int, c_int64_t, c_size_t, c_double, c_ptr, c_null_ptr, c_loc
   implicit none
@@ -993,4 +993,4 @@ contains
     call zfp_stream_rewind(stream%object)
   end subroutine zFORp_stream_rewind
 
-end module zFORp_module
+end module zFORp

@@ -11,6 +11,7 @@ questions not answered here or elsewhere in the documentation, please
 
 Questions answered in this FAQ:
 
+  0. :ref:`Do zfp arrays use C or Fortran order? <q-layout>`
   #. :ref:`Can zfp compress vector fields? <q-vfields>`
   #. :ref:`Should I declare a 2D array as zfp::array1d a(nx * ny, rate)? <q-array2d>`
   #. :ref:`How can I initialize a zfp compressed array from disk? <q-read>`
@@ -38,6 +39,89 @@ Questions answered in this FAQ:
   #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
   #. :ref:`Why are compressed arrays so slow? <q-1d-speed>`
   #. :ref:`Do compressed arrays use reference counting? <q-ref-count>`
+  #. :ref:`How large a buffer is needed for compressed storage? <q-max-size>`
+
+-------------------------------------------------------------------------------
+
+.. _q-layout:
+
+Q0: *Do zfp arrays use C or Fortran order?*
+
+*This is such an important question that we added it as question zero to our
+FAQ, but do not let this C'ism fool you.*
+
+A: |zfp| :ref:`compressed-array classes <arrays>` and uncompressed
+:ref:`fields <field>` assume that the leftmost index varies fastest, which
+often is referred to as Fortran order.  By convention, |zfp| uses *x* (or *i*)
+to refer to the leftmost index, then *y* (or *j*), and so on.
+
+.. warning::
+  It is critical that the order of dimensions is specified correctly to
+  achieve good compression and accuracy.  If the order of dimensions is
+  transposed, |zfp| will still compress the data, but with no indication
+  that the order was wrong.  Compression ratio and/or accuracy will likely
+  suffer significantly, however.  Please see
+  :ref:`this section <p-dimensions>` for further discussion.
+
+In C order, the rightmost index varies fastest (e.g., *x* in
+:code:`arr[z][y][x]`), meaning that if we increment the rightmost index we
+move to the next consecutive address in memory.  If an uncompressed array,
+:code:`arr`, is stored in C order, we would for compatibility with |zfp|
+let *x* be the rightmost index in :code:`arr` but the leftmost index in the
+compressed |zfp| array, :code:`zarr`, e.g.,::
+
+  const size_t nx = 5;
+  const size_t ny = 3;
+  const size_t nz = 2;
+  float arr[nz][ny][nx] = { ... };
+  zfp::array3<float> zarr(nx, ny, nz, rate, &a[0][0][0]);
+
+Then :code:`arr[z][y][x]` and :code:`zarr(x, y, z)` refer to the same element,
+as do :code:`(&arr[0][0][0])[sx * x + sy * y + sz * z]` and
+:code:`zarr[sx * x + sy * y + sz * z]`, where
+::
+
+  ptrdiff_t sx = &arr[0][0][1] - &arr[0][0][0]; // sx = 1
+  ptrdiff_t sy = &arr[0][1][0] - &arr[0][0][0]; // sy = nx = 5
+  ptrdiff_t sz = &arr[1][0][0] - &arr[0][0][0]; // sz = nx * ny = 15
+
+Here *sx*, *sy*, and *sz* are the *strides* along the three dimensions,
+with *sx* < *sy* < *sz*.
+
+Of course, C vs. Fortran ordering matters only for multidimensional arrays
+and when the array dimensions (*nx*, *ny*, *nz*) are not all equal.
+
+Note that |zfp| :ref:`fields <field>` also support strides, which can be
+used to represent more general layouts than C and Fortran order, including
+non-contiguous storage, reversed dimensions via negative strides, and
+other advanced layouts.  With the default strides, however, it is correct
+to think of |zfp| as using Fortran order.
+
+For uncompressed data stored in C order, one easily translates to |zfp|
+Fortran order by reversing the order of dimensions or by specifying
+appropriate :ref:`strides <field>`.  We further note that |zfp| provides
+:ref:`nested views <nested_view>` of arrays that support C indexing syntax,
+e.g., :code:`view[z][y][x]` corresponds to :code:`arr(x, y, z)`.
+
+.. note::
+  The |zfp| :ref:`NumPy interface <zfpy>` uses the strides of the NumPy array
+  to infer the correct layout.  Although NumPy arrays use C order by default,
+  |zfp| handles such arrays correctly regardless of their memory layout.  The
+  actual order of dimensions for compressed storage are, however, reversed so
+  that NumPy arrays in C order are traversed sequentially during compression.
+
+Why does |zfp| use Fortran order when C is today a far more common language?
+This choice is somewhat arbitrary yet has strong proponents in either camp,
+similar to the preference between :ref:`little and big endian <q-portability>`
+byte order.  We believe that a single 2D array storing an (*x*, *y*) image is
+most naturally extended to a sequence of *nt* time-varying images by
+*appending* (not prepending) a time dimension *t* as (*x*, *y*, *t*).  This
+is the convention used in mathematics, e.g., we use (*x*, *y*) coordinates in
+2D and (*x*, *y*, *z*) coordinates in 3D.  Using Fortran order, each time
+slice, *t*, is still a 2D contiguous image, while C order
+(:code:`arr[x][y][t]`) would suggest that appending the *t* dimension now
+gives us *nx* 2D arrays indexed by (*y*, *t*), even though without the *t*
+dimension the images would be indexed by (*x*, *y*).
 
 -------------------------------------------------------------------------------
 
@@ -626,9 +710,10 @@ Q20: *Can zfp bound the point-wise relative error?*
 
 A: Yes, but with some caveats.  First, we define the relative error in a value
 *f* approximated by *g* as \|\ *f* - *g*\ \| / \|\ *f*\ \|, which converges to
-\|\ log(*f* / *g*)\ \| as *g* approaches *f*.  Below, we
-discuss three strategies for relative error control that may be applicable
-depending on the properties of the underlying floating-point data.
+\|\ log(*f* / *g*)\ \| = \|\ log(*f*) - \ log(*g*)\| as *g* approaches *f*,
+where log(*f*) denotes the natural logarithm of *f*.
+Below, we discuss three strategies for relative error control that may be
+applicable depending on the properties of the underlying floating-point data.
 
 If all floating-point values to be compressed are normalized, i.e., with no
 nonzero subnormal values smaller in magnitude than
@@ -638,10 +723,11 @@ can be bounded using |zfp|'s :ref:`expert mode <mode-expert>` settings by
 invoking :ref:`reversible mode <mode-reversible>`.  This is achieved by
 truncating (zeroing) some number of least significant bits of all
 floating-point values and then losslessly compressing the result.  The
-*q* least significant bits are truncated by |zfp| by specifying a
-maximum precision of 32 |minus| *q* (for floats) or 64 |minus| *q* (for
-doubles).  The resulting point-wise relative error is then at most
-2\ :sup:`q - 23` (for floats) or 2\ :sup:`q - 52` (for doubles).
+*q* least significant bits of *n*-bit floating-point numbers (*n* = 32
+for floats and *n* = 64 for doubles) are truncated by |zfp| by specifying a
+maximum precision of *p* = *n* |minus| *q*.  The resulting point-wise relative
+error is then at most 2\ :sup:`q - 23` (for floats) or 2\ :sup:`q - 52`
+(for doubles).
 
 .. note::
   For large enough *q*, floating-point exponent bits will be discarded,
@@ -654,11 +740,11 @@ To bound the relative error, set the expert mode parameters to::
 
   minbits = 0
   maxbits = 0
-  maxprec = q
+  maxprec = p
   minexp = ZFP_MIN_EXP - 1 = -1075
 
 For example, using the |zfpcmd| command-line tool, set the parameters using
-:option:`-c` :code:`0 0 q -1075`.
+:option:`-c` :code:`0 0 p -1075`.
 
 Note that while the above approach respects the error bound when the
 above conditions are met, it uses |zfp| for a purpose it was not designed
@@ -1005,3 +1091,46 @@ array.  No reference counting and garbage collection is used to keep the
 array alive if there are external references to it.  Such references
 become invalid once the array is destructed, and dereferencing them will
 likely lead to segmentation faults.
+
+-------------------------------------------------------------------------------
+
+.. _q-max-size:
+
+Q28: *How large a buffer is needed for compressed storage?*
+
+A: :c:func:`zfp_compress` requires that memory has already been allocated to
+hold the compressed data.  But often the compressed size is data dependent
+and not known a priori.  The function :c:func:`zfp_stream_maximum_size`
+returns a buffer size that is guaranteed to be large enough.  This function,
+which should be called *after* setting the desired compression mode and
+parameters, computes the largest possible compressed data size based on the
+current settings and array size.  Note that by the pigeonhole principle, any
+(lossless) compressor must expand at least one input, so this buffer size may
+be larger than the size of the uncompressed input data.  :c:func:`zfp_compress`
+returns the actual number of bytes of compressed storage.
+
+When compressing individual blocks using the :ref:`low-level API <ll-api>`,
+it is useful to know the maximum number of bits that a compressed block
+can occupy.  In addition to the :c:macro:`ZFP_MAX_BITS` macro, the following
+table lists the maximum block size (in bits) for each scalar type, whether
+:ref:`reversible mode <mode-reversible>` is used, and block dimensionality.
+
+  +--------+---------+-------+-------+-------+-------+
+  | type   | rev.    |   1D  |   2D  |   3D  |   4D  |
+  +========+=========+=======+=======+=======+=======+
+  |        |         |   131 |   527 |  2111 |  8447 |
+  | int32  +---------+-------+-------+-------+-------+
+  |        | |check| |   136 |   532 |  2116 |  8452 |
+  +--------+---------+-------+-------+-------+-------+
+  |        |         |   140 |   536 |  2120 |  8456 |
+  | float  +---------+-------+-------+-------+-------+
+  |        | |check| |   146 |   542 |  2126 |  8462 |
+  +--------+---------+-------+-------+-------+-------+
+  |        |         |   259 |  1039 |  4159 | 16639 |
+  | int64  +---------+-------+-------+-------+-------+
+  |        | |check| |   265 |  1045 |  4165 | 16645 |
+  +--------+---------+-------+-------+-------+-------+
+  |        |         |   271 |  1051 |  4171 | 16651 |
+  | double +---------+-------+-------+-------+-------+
+  |        | |check| |   278 |  1058 |  4178 | 16658 |
+  +--------+---------+-------+-------+-------+-------+

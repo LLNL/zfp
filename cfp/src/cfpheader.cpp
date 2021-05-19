@@ -18,4 +18,4 @@
 #define CFP_HEADER_TYPE cfp_header
 #define ZFP_HEADER_TYPE zfp::array::header
 
-#include "cfpheader_source.cpp"
+#include "template/cfpheader.cpp"

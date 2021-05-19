@@ -1,0 +1,122 @@
+#####################
+# Global Parameters #
+#####################
+
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -A asccasc"
+
+stages:
+    - build
+    - test
+
+
+####################
+# Global Templates #
+####################
+
+# Build Stage Templates
+
+.build:
+    stage: build
+    artifacts:
+        when: always
+        paths:
+            - build
+
+.build_cpu:
+    before_script:
+        - module reset
+        - module load $ci_cmp_mod
+        - |-
+            if [ "$ci_lang" == "cpp" ]; then
+                export CXX=$(which $ci_cxx_cmp)
+                export CC=$(which $ci_c_cmp)
+                if [ -z ${CXX} ]; then
+                    echo "cxx compiler not set"
+                    exit 1
+                elif [ -z ${CC} ]; then
+                    echo "c compiler not set"
+                    exit 1
+                fi
+            elif [ "$ci_lang" == "c" ]; then
+                export CC=$(which $ci_c_cmp)
+                if [ -z ${CC} ]; then
+                    echo "c compiler not set"
+                    exit 1
+                fi
+            fi
+    script:
+        - mkdir build
+        - cd build
+        - cmake -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ..
+        - make -j
+    extends: [.build]
+
+.build_gpu:
+    before_script:
+        - module reset
+        - module load opt
+        - module load $ci_cmp_mod
+    script:
+        - mkdir build
+        - cd build
+        - cmake -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags} ..
+        - make -j
+    extends: [.build]
+
+
+# Test Stage Templates
+
+.test:
+    stage: test
+    artifacts:
+        when: on_failure
+        paths:
+            - build/Testing
+
+.test_cpu:
+    script:
+        - cd build
+        - ctest -E "(Cuda|Hip)" -R "${ci_test_regex}"
+    extends: [.test]
+
+.test_gpu:
+    script:
+        - cd build
+        - ctest -R "${ci_test_regex}"
+    extends: [.test]
+
+
+# Language Templates
+
+.cpp:
+    variables:
+        ci_lang: "cpp"
+        ci_cmake_flags: "-DBUILD_CFP=OFF -DBUILD_ZFPY=OFF -DBUILD_ZFORP=OFF" 
+
+.c:
+    variables:
+        ci_lang: "c"
+        ci_cmake_flags: "-DBUILD_CFP=ON -DBUILD_ZFPY=OFF -DBUILD_ZFORP=OFF -DZFP_WITH_OPENMP=OFF" 
+
+.cuda:
+    variables:
+        ci_lang: "cuda"
+        ci_cmake_flags: "-DZFP_WITH_CUDA=ON"
+
+#.hip:
+#    variables:
+#        ci_lang: "hip"
+#        ci_cmake_flags: "-DZFP_WITH_HIP=ON -DHIP_PATH=${ci_cmp_path} -DCMAKE_CXX_STANDARD=11 -DCMAKE_C_STANDARD=11 -DCMAKE_C_COMPILER=hipcc -DCMAKE_CXX_COMPILER=hipcc"
+
+
+############
+# Includes #
+############
+
+include:
+    - local: tests/gitlab/surface-templates.yml
+    - local: tests/gitlab/surface-jobs.yml
+#    - local: tests/gitlab/corona-templates.yml
+#    - local: tests/gitlab/corona-jobs.yml
