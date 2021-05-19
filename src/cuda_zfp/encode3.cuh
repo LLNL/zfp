@@ -6,7 +6,6 @@
 #include "encode.cuh"
 #include "type_info.cuh"
 
-#define ZFP_3D_BLOCK_SIZE 64
 namespace cuZFP{
 
 template<typename Scalar> 
@@ -46,12 +45,15 @@ void gather3(Scalar* q, const Scalar* p, int sx, int sy, int sz)
         *q++ = *p;
 }
 
-template<class Scalar>
-__global__
-void 
-cudaEncode(const uint maxbits,
-           const Scalar* scalars,
+template <class Scalar, bool variable_rate>
+__global__ void
+cudaEncode(const uint minbits,
+           const int maxbits,
+           const int maxprec,
+           const int minexp,
+           const Scalar *scalars,
            Word *stream,
+           ushort *block_bits,
            const uint3 dims,
            const int3 stride,
            const uint3 padded_dims,
@@ -107,19 +109,25 @@ cudaEncode(const uint maxbits,
   {
     gather3(fblock, scalars + offset, stride.x, stride.y, stride.z);
   }
-  zfp_encode_block<Scalar, ZFP_3D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
-
+  uint bits = zfp_encode_block<Scalar, ZFP_3D_BLOCK_SIZE>(fblock, minbits, maxbits, maxprec,
+                                                          minexp, block_idx, stream);
+  if (variable_rate)
+    block_bits[block_idx] = bits;
 }
 
 //
 // Launch the encode kernel
 //
-template<class Scalar>
+template<class Scalar, bool variable_rate>
 size_t encode3launch(uint3 dims, 
                      int3 stride,
                      const Scalar *d_data,
                      Word *stream,
-                     const int maxbits)
+                     ushort *d_block_bits,
+                     const int minbits,
+                     const int maxbits,
+                     const int maxprec,
+                     const int minexp)
 {
 
   const int cuda_block_size = 128;
@@ -157,10 +165,14 @@ size_t encode3launch(uint3 dims,
   cudaEventRecord(start);
 #endif
 
-  cudaEncode<Scalar> <<<grid_size, block_size>>>
-    (maxbits,
+  cudaEncode<Scalar, variable_rate> <<<grid_size, block_size>>>
+    (minbits,
+     maxbits,
+     maxprec,
+     minexp,
      d_data,
      stream,
+     d_block_bits,
      dims,
      stride,
      zfp_pad,
@@ -187,15 +199,19 @@ size_t encode3launch(uint3 dims,
 //
 // Just pass the raw pointer to the "real" encode
 //
-template<class Scalar>
+template<class Scalar, bool variable_rate>
 size_t encode(uint3 dims, 
               int3 stride,
               Scalar *d_data,
               Word *stream,
-              const int bits_per_block)
+              ushort *d_block_bits,
+              const int minbits,
+              const int maxbits,
+              const int maxprec,
+              const int minexp)
 {
-  return encode3launch<Scalar>(dims, stride, d_data, stream, bits_per_block);
+  return encode3launch<Scalar, variable_rate>(dims, stride, d_data, stream, d_block_bits,
+                                              minbits, maxbits, maxprec, minexp);
 }
-
 }
 #endif

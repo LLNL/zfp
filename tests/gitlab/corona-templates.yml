@@ -1,0 +1,12 @@
+.corona_job:
+    tags:
+        - batch
+        - corona
+
+.corona_build_gpu:
+    extends: [.build_gpu, .corona_job]
+
+.corona_test_gpu:
+    variables:
+       ci_test_regex: "."
+    extends: [.test_gpu, .corona_job]

@@ -10,8 +10,8 @@
 #define ZFP_ARRAY_TYPE zfp::array1f
 #define ZFP_SCALAR_TYPE float
 
-#include "cfparray_source.cpp"
-#include "cfparray1_source.cpp"
+#include "template/cfparray.cpp"
+#include "template/cfparray1.cpp"
 
 #undef CFP_ARRAY_TYPE
 #undef CFP_REF_TYPE

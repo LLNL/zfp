@@ -7,7 +7,6 @@
 #include "type_info.cuh"
 
 #include <iostream>
-#define ZFP_1D_BLOCK_SIZE 4 
 
 namespace cuZFP
 {
@@ -31,16 +30,19 @@ void gather1(Scalar* q, const Scalar* p, int sx)
     *q++ = *p;
 }
 
-template<class Scalar>
-__global__
-void 
-cudaEncode1(const uint maxbits,
-           const Scalar* scalars,
-           Word *stream,
-           const uint dim,
-           const int sx,
-           const uint padded_dim,
-           const uint tot_blocks)
+template <class Scalar, bool variable_rate>
+__global__ void
+cudaEncode1(const int minbits,
+            const int maxbits,
+            const int maxprec,
+            const int minexp,
+            const Scalar *scalars,
+            Word *stream,
+            ushort *block_bits,
+            const uint dim,
+            const int sx,
+            const uint padded_dim,
+            const uint tot_blocks)
 {
 
   typedef unsigned long long int ull;
@@ -84,18 +86,24 @@ cudaEncode1(const uint maxbits,
     gather1(fblock, scalars + offset, sx);
   }
 
-  zfp_encode_block<Scalar, ZFP_1D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
-
+  uint bits = zfp_encode_block<Scalar, ZFP_1D_BLOCK_SIZE>(fblock, minbits, maxbits, maxprec,
+                                                          minexp, block_idx, stream);
+  if (variable_rate)
+    block_bits[block_idx] = bits;
 }
 //
 // Launch the encode kernel
 //
-template<class Scalar>
+template<class Scalar, bool variable_rate>
 size_t encode1launch(uint dim, 
                      int sx,
                      const Scalar *d_data,
                      Word *stream,
-                     const int maxbits)
+                     ushort *d_block_bits,
+                     const int minbits,
+                     const int maxbits,
+                     const int maxprec,
+                     const int minexp)
 {
   const int cuda_block_size = 128;
   dim3 block_size = dim3(cuda_block_size, 1, 1);
@@ -131,10 +139,14 @@ size_t encode1launch(uint dim,
   cudaEventRecord(start);
 #endif
 
-  cudaEncode1<Scalar> <<<grid_size, block_size>>>
-    (maxbits,
+  cudaEncode1<Scalar, variable_rate> <<<grid_size, block_size>>>
+    (minbits,
+     maxbits,
+     maxprec,
+     minexp,
      d_data,
      stream,
+     d_block_bits,
      dim,
      sx,
      zfp_pad,
@@ -159,14 +171,19 @@ size_t encode1launch(uint dim,
 //
 // Encode a host vector and output a encoded device vector
 //
-template<class Scalar>
+template<class Scalar, bool variable_rate>
 size_t encode1(int dim,
                int sx,
                Scalar *d_data,
                Word *stream,
-               const int maxbits)
+               ushort *d_block_bits,
+               const int minbits,
+               const int maxbits,
+               const int maxprec,
+               const int minexp)
 {
-  return encode1launch<Scalar>(dim, sx, d_data, stream, maxbits);
+  return encode1launch<Scalar, variable_rate>(dim, sx, d_data, stream, d_block_bits,
+                                              minbits, maxbits, maxprec, minexp);
 }
 
 }

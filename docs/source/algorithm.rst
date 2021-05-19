@@ -22,7 +22,7 @@ this sense, |zfp| is similar to current hardware texture compression schemes
 for image coding implemented on graphics cards and mobile devices.
 
 The lossy compression scheme implemented in this version of |zfp| has evolved
-from the method described in the :ref:`original paper <paper>`, and can
+from the method described in the :ref:`original paper <tvcg-paper>`, and can
 conceptually be thought of as consisting of eight sequential steps (in
 practice some steps are consolidated or exist only for illustrative
 purposes):

@@ -8,7 +8,6 @@
    :caption: Contents
 
    introduction
-   overview
    license
    installation
    algorithm

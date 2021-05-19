@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 
   /* allocate storage for compressed bit stream */
   zfp = zfp_stream_open(NULL);
-  zfp_stream_set_rate(zfp, rate, zfp_field_type(field), zfp_field_dimensionality(field), 0);
+  zfp_stream_set_rate(zfp, rate, zfp_field_type(field), zfp_field_dimensionality(field), zfp_false);
   bytes = zfp_stream_maximum_size(zfp, field);
   buffer = malloc(bytes);
   stream = stream_open(buffer, bytes);

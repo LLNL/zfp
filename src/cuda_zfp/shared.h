@@ -19,6 +19,11 @@ typedef unsigned long long Word;
 
 #define NBMASK 0xaaaaaaaaaaaaaaaaull
 
+#define ZFP_1D_BLOCK_SIZE 4 
+#define ZFP_2D_BLOCK_SIZE 16 
+#define ZFP_3D_BLOCK_SIZE 64
+#define ZFP_4D_BLOCK_SIZE 256
+
 namespace cuZFP
 {
 
@@ -124,7 +129,7 @@ dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
   if(dims == 2)
   {
     float sq_r = sqrt((float)grids);
-    float intpart = 0.;
+    float intpart = 0;
     modf(sq_r,&intpart); 
     uint base = intpart;
     grid_size.x = base; 
@@ -139,7 +144,7 @@ dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
   if(dims == 3)
   {
     float cub_r = pow((float)grids, 1.f/3.f);;
-    float intpart = 0.;
+    float intpart = 0;
     modf(cub_r,&intpart); 
     int base = intpart;
     grid_size.x = base; 

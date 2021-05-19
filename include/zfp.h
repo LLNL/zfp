@@ -40,7 +40,7 @@
 
 /* default compression parameters */
 #define ZFP_MIN_BITS     1 /* minimum number of bits per block */
-#define ZFP_MAX_BITS 16657 /* maximum number of bits per block */
+#define ZFP_MAX_BITS 16658 /* maximum number of bits per block */
 #define ZFP_MAX_PREC    64 /* maximum precision supported */
 #define ZFP_MIN_EXP  -1074 /* minimum floating-point base-2 exponent */
 
@@ -171,9 +171,28 @@ zfp_stream_bit_stream(
   const zfp_stream* stream /* compressed stream */
 );
 
-/* returns enum of compression mode */
-zfp_mode                   /* enum for compression mode */
+/* enumerated compression mode */
+zfp_mode                   /* compression mode or zfp_mode_null if not set */
 zfp_stream_compression_mode(
+  const zfp_stream* stream /* compressed stream */
+);
+
+/* rate in compressed bits/scalar (when in fixed-rate mode) */
+double                      /* rate or zero upon failure */
+zfp_stream_rate(
+  const zfp_stream* stream, /* compressed stream */
+  uint dims                 /* array dimensionality (1, 2, 3, or 4) */
+);
+
+/* precision in uncompressed bits/scalar (when in fixed-precision mode) */
+uint                       /* precision or zero upon failure */
+zfp_stream_precision(
+  const zfp_stream* stream /* compressed stream */
+);
+
+/* accuracy as absolute error tolerance (when in fixed-accuracy mode) */
+double                     /* tolerance or zero upon failure */
+zfp_stream_accuracy(
   const zfp_stream* stream /* compressed stream */
 );
 
@@ -367,6 +386,12 @@ zfp_field_pointer(
   const zfp_field* field /* field metadata */
 );
 
+/* pointer to lowest memory address spanned by field */
+void*
+zfp_field_begin(
+  const zfp_field* field /* field metadata */
+);
+
 /* field scalar type */
 zfp_type                 /* scalar type */
 zfp_field_type(
@@ -379,7 +404,7 @@ zfp_field_precision(
   const zfp_field* field /* field metadata */
 );
 
-/* field dimensionality (1, 2, or 3) */
+/* field dimensionality (1, 2, 3, or 4) */
 uint                     /* number of dimensions */
 zfp_field_dimensionality(
   const zfp_field* field /* field metadata */
@@ -392,11 +417,27 @@ zfp_field_size(
   uint* size              /* number of scalars per dimension (may be NULL) */
 );
 
+/* number of bytes spanned by field data including gaps (if any) */
+size_t
+zfp_field_size_bytes(
+  const zfp_field* field /* field metadata */
+);
+
+/* number of ZFP blocks */
+size_t
+zfp_field_num_blocks (const zfp_field* field);
+
 /* field strides per dimension */
 zfp_bool                  /* true if array is not contiguous */
 zfp_field_stride(
   const zfp_field* field, /* field metadata */
   int* stride             /* stride in scalars per dimension (may be NULL) */
+);
+
+/* field contiguity test */
+zfp_bool                 /* true if field layout is contiguous */
+zfp_field_is_contiguous(
+  const zfp_field* field /* field metadata */
 );
 
 /* field scalar type and dimensions */
@@ -703,6 +744,9 @@ void zfp_demote_int32_to_int8(int8* oblock, const int32* iblock, uint dims);
 void zfp_demote_int32_to_uint8(uint8* oblock, const int32* iblock, uint dims);
 void zfp_demote_int32_to_int16(int16* oblock, const int32* iblock, uint dims);
 void zfp_demote_int32_to_uint16(uint16* oblock, const int32* iblock, uint dims);
+
+/* Conservative size (in bits) of a single compressed block */
+uint zfp_block_maxbits(const zfp_stream* zfp, const zfp_field* field);
 
 #ifdef __cplusplus
 }
