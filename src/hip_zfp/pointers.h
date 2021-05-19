@@ -16,13 +16,13 @@ bool is_gpu_ptr(const void *ptr)
   // clear last error so other error checking does
   // not pick it up
   hipError_t error = hipGetLastError();
-#if HIPRT_VERSION >= 10000
+//#if HIPRT_VERSION >= 10000
   return perr == hipSuccess &&
                 (atts.type == hipMemoryTypeDevice ||
                  atts.type == hipMemoryTypeManaged);
-#else
-  return perr == hipSuccess && atts.memoryType == hipMemoryTypeDevice;
-#endif
+//#else
+//  return perr == hipSuccess && atts.memoryType == hipMemoryTypeDevice;
+//#endif
 }
 
 } // namespace hipZFP

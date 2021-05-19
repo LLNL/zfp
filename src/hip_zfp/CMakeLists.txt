@@ -1,6 +1,6 @@
 ###############################################################################
 #
-#  file: src/cuZFP/CMakeLists.txt 
+#  file: src/hipZFP/CMakeLists.txt 
 #
 ###############################################################################
 
@@ -15,7 +15,8 @@ set(hipZFP_sources
     encode2.h
     encode3.h
     pointers.h
-    type_info.h)
+    type_info.h
+    variable.h)
 
 set(hipZFP_headers
     shared.h
