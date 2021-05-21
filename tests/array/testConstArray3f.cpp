@@ -1,0 +1,45 @@
+#include "array/zfpcarray1.h"
+#include "array/zfpcarray2.h"
+#include "array/zfpcarray3.h"
+#include "array/zfpcarray4.h"
+#include "array/zfpfactory.h"
+using namespace zfp;
+
+extern "C" {
+  #include "constants/3dFloat.h"
+}
+
+#include "gtest/gtest.h"
+#include "utils/gtestFloatEnv.h"
+#include "utils/gtestBaseFixture.h"
+#include "utils/predicates.h"
+
+class CArray3fTestEnv : public ArrayFloatTestEnv {
+public:
+  virtual int getDims() { return 3; }
+};
+
+CArray3fTestEnv* const testEnv = new CArray3fTestEnv;
+
+class CArray3fTest : public CArrayNdTestFixture {};
+
+#define TEST_FIXTURE CArray3fTest
+
+#define ZFP_ARRAY_TYPE const_array3f
+#define ZFP_ARRAY_TYPE_WRONG_SCALAR const_array3d
+#define ZFP_ARRAY_TYPE_WRONG_DIM const_array4f
+#define ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM const_array4d
+#define ZFP_ARRAY_NOT_INCLUDED_TYPE const_array2f
+
+#define UINT uint32
+#define SCALAR float
+#define DIMS 3
+
+#include "testConstArrayBase.cpp"
+#include "testConstArray3Base.cpp"
+
+int main(int argc, char* argv[]) {
+  ::testing::InitGoogleTest(&argc, argv);
+  static_cast<void>(::testing::AddGlobalTestEnvironment(testEnv));
+  return RUN_ALL_TESTS();
+}
