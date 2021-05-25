@@ -4,13 +4,13 @@ extern "C" {
   #include "utils/zfpHash.h"
 }
 
-INSTANTIATE_TEST_CASE_P(TestManyCompressionRates, 
+INSTANTIATE_TEST_CASE_P(TestManyCompressionModes, 
                         TEST_FIXTURE,
                         ::testing::Values(
-                            testConfig(0,0,0), testConfig(0,1,0), testConfig(0,2,0),    /* rate */
-                            testConfig(1,0,0),                                          /* precision */
-                            testConfig(2,0,0),                                          /* tolerance */
-                            testConfig(3,0,0)                                           /* reversible */
+                            testConfig(TEST_RATE,0,0), testConfig(TEST_RATE,1,0), testConfig(TEST_RATE,2,0),
+                            testConfig(TEST_PREC,0,0),
+                            testConfig(TEST_ACCU,0,0),
+                            testConfig(TEST_RVRS,0,0)
                         )
 );
 
