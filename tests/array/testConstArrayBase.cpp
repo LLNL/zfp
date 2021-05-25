@@ -8,10 +8,11 @@ INSTANTIATE_TEST_CASE_P(TestManyCompressionModes,
                         TEST_FIXTURE,
                         ::testing::Values(
                             testConfig(TEST_RATE,0,0), testConfig(TEST_RATE,1,0), testConfig(TEST_RATE,2,0),
-                            testConfig(TEST_PREC,0,0),
-                            testConfig(TEST_ACCU,0,0),
+                            testConfig(TEST_PREC,0,0), testConfig(TEST_PREC,1,0), testConfig(TEST_PREC,2,0),
+                            testConfig(TEST_ACCU,0,0), testConfig(TEST_ACCU,1,0), testConfig(TEST_ACCU,2,0),
                             testConfig(TEST_RVRS,0,0)
-                        )
+                        ),
+                        TEST_FIXTURE::PrintToStringParamName()
 );
 
 TEST_P(TEST_FIXTURE, when_constructorCalledWithCacheSize_then_minCacheSizeEnforced)
