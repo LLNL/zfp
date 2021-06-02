@@ -3,7 +3,8 @@
 
 #include "shared.h"
 
-#include <hiphipb/hiphipb.hpp>
+#include "funnelshift.hpp"
+#include <hipcub/hipcub.hpp>
 
 #include <hip/hip_cooperative_groups.h> // Requires HIP >= 9
 namespace cg = cooperative_groups;
@@ -119,7 +120,8 @@ namespace hipZFP
         for (int i = tid & 31; i < num_tiles; i += 32)
             total_length += sm_length[i];
         for (int i = 1; i < 32; i *= 2)
-            total_length += __shfl_xor_sync(0xffffffff, total_length, i);
+            total_length += __shfl_xor(total_length, i);
+	    //total_length += __shfl_xor_sync(0xffffffff, total_length, i);
 
         // Write the shared memory output data to global memory, using all the threads
         for (int i = tid; i * 32 < misaligned0 + total_length; i += tile_size * num_tiles)
@@ -253,7 +255,7 @@ namespace hipZFP
             constexpr int tile_size = 1;
             constexpr int num_tiles = 512;
             size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
-            hipOchippancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
+            hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
@@ -266,7 +268,7 @@ namespace hipZFP
             constexpr int tile_size = 4;
             constexpr int num_tiles = 128;
             size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
-            hipOchippancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
+            hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
@@ -279,7 +281,7 @@ namespace hipZFP
             constexpr int tile_size = 16;
             constexpr int num_tiles = 32;
             size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
-            hipOchippancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
+            hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
@@ -292,7 +294,7 @@ namespace hipZFP
             constexpr int tile_size = 64;
             constexpr int num_tiles = 8;
             size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
-            hipOchippancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
+            hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;

@@ -251,7 +251,7 @@ struct BlockWriter
   }
 
 
-__device__
+  __device__
   long long unsigned int
   write_bits(const long long unsigned int &bits, const uint &n_bits)
   {
@@ -288,6 +288,25 @@ __device__
     else return bits >> (Word)n_bits;
   }
 
+  __device__
+  uint write_bit(const unsigned int &bit)
+  {
+    const uint wbits = sizeof(Word) * 8;
+    uint seg_start = (m_start_bit + m_current_bit) % wbits;
+    uint write_index = m_word_index + uint((m_start_bit + m_current_bit) / wbits);
+    uint shift = seg_start; 
+    // we may be asked to write less bits than exist in 'bits'
+    // so we have to make sure that anything after n is zero.
+    // If this does not happen, then we may write into a zfp
+    // block not at the specified index
+    // uint zero_shift = sizeof(Word) * 8 - n_bits;
+    
+    Word add = (Word)bit << shift;
+    atomicAdd(&m_stream[write_index], add); 
+    m_current_bit += 1;
+
+    return bit;
+  }
 };
 
 template<typename Int, int BlockSize> 

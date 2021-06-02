@@ -18,8 +18,8 @@ bool is_gpu_ptr(const void *ptr)
   hipError_t error = hipGetLastError();
 //#if HIPRT_VERSION >= 10000
   return perr == hipSuccess &&
-                (atts.type == hipMemoryTypeDevice ||
-                 atts.type == hipMemoryTypeManaged);
+                (atts.memoryType == hipMemoryTypeDevice ||
+                 atts.memoryType == hipMemoryTypeUnified);
 //#else
 //  return perr == hipSuccess && atts.memoryType == hipMemoryTypeDevice;
 //#endif

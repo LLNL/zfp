@@ -35,6 +35,7 @@ elseif(ZFP_WITH_HIP)
   set_source_files_properties(${zfp_source} 
 	  PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
   hip_add_library(zfp SHARED ${zfp_source})
+  target_link_libraries(zfp PRIVATE hip::hipcub)
 else()
   add_library(zfp ${zfp_source})
 endif()

@@ -2,7 +2,8 @@
 #include <hip/hip_runtime.h>
 #include <assert.h>
 
-#include <hiphipb/hiphipb.hpp>
+//#include <hiphipb/hiphipb.hpp>
+#include <hipcub/hipcub.hpp>
 
 #include "hipZFP.h"
 
@@ -417,8 +418,8 @@ void cleanup_device_nbits(zfp_stream *stream, const zfp_field *field,
 //#endif
 }
 
-void setup_device_chunking(int *chunk_size, unsigned long long **d_offsets, size_t *lhipbtemp,
-                            void **d_hipbtemp, int num_sm, int variable_rate)
+void setup_device_chunking(int *chunk_size, unsigned long long **d_offsets, size_t *lcubtemp,
+                            void **d_cubtemp, int num_sm, int variable_rate)
 {
   if (!variable_rate)
     return;
@@ -435,12 +436,12 @@ void setup_device_chunking(int *chunk_size, unsigned long long **d_offsets, size
 //#endif
   // Using HIPB for the prefix sum. HIPB needs a bit of temp memory too
   size_t tempsize;
-  hipb::DeviceScan::InclusiveSum(nullptr, tempsize, *d_offsets, *d_offsets, *chunk_size + 1);
-  *lhipbtemp = tempsize;
+  hipcub::DeviceScan::InclusiveSum(nullptr, tempsize, *d_offsets, *d_offsets, *chunk_size + 1);
+  *lcubtemp = tempsize;
 //#if (HIPRT_VERSION >= 11020)
-//  hipMallocAsync(d_hipbtemp, tempsize, 0);
+//  hipMallocAsync(d_cubtemp, tempsize, 0);
 //#else
-  hipMalloc(d_hipbtemp, tempsize);
+  hipMalloc(d_cubtemp, tempsize);
 //#endif
 }
 
@@ -513,9 +514,9 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
 
   int chunk_size;
   unsigned long long *d_offsets;
-  size_t lhipbtemp;
-  void *d_hipbtemp;
-  internal::setup_device_chunking(&chunk_size, &d_offsets, &lhipbtemp, &d_hipbtemp, num_sm, variable_rate);
+  size_t lcubtemp;
+  void *d_cubtemp;
+  internal::setup_device_chunking(&chunk_size, &d_offsets, &lcubtemp, &d_cubtemp, num_sm, variable_rate);
 
   uint buffer_maxbits = MIN (stream->maxbits, zfp_block_maxbits(stream, field));
 
@@ -576,7 +577,7 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
       hipZFP::copy_length_launch(d_bitlengths, d_offsets, i, hipr_blocks);
 
       // Prefix sum to turn length into offsets
-      hipb::DeviceScan::InclusiveSum(d_hipbtemp, lhipbtemp, d_offsets, d_offsets, hipr_blocks + 1);
+      hipcub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, hipr_blocks + 1);
 
       // Compact the stream array in-place
       hipZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, hipr_blocks, last_chunk, buffer_maxbits, num_sm);
@@ -596,7 +597,7 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
       internal::cleanup_device_ptr(stream->stream->bitlengths, d_bitlengths, size, 0, zfp_type_none);
     }
     internal::cleanup_device_ptr(NULL, d_offsets, 0, 0, zfp_type_none);
-    internal::cleanup_device_ptr(NULL, d_hipbtemp, 0, 0, zfp_type_none);
+    internal::cleanup_device_ptr(NULL, d_cubtemp, 0, 0, zfp_type_none);
   }
 
   // zfp wants to flush the stream.

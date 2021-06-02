@@ -16,7 +16,8 @@ set(hipZFP_sources
     encode3.h
     pointers.h
     type_info.h
-    variable.h)
+    variable.h
+    funnelshift.hpp)
 
 set(hipZFP_headers
     shared.h
