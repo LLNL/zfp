@@ -23,6 +23,7 @@ bool is_gpu_ptr(const void *ptr)
 //#else
 //  return perr == hipSuccess && atts.memoryType == hipMemoryTypeDevice;
 //#endif
+
 }
 
 } // namespace hipZFP

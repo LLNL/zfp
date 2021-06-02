@@ -7,6 +7,7 @@
 #include "ErrorCheck.h"
 #include "type_info.h"
 
+
 namespace hipZFP
 {
 

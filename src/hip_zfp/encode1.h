@@ -8,6 +8,7 @@
 
 #include <iostream>
 
+
 namespace hipZFP
 {
 
@@ -29,6 +30,7 @@ void gather1(Scalar* q, const Scalar* p, int sx)
   for (x = 0; x < 4; x++, p += sx)
     *q++ = *p;
 }
+
 
 template <class Scalar, bool variable_rate>
 __global__ void
@@ -90,11 +92,13 @@ hipEncode1(const int minbits,
                                                           minexp, block_idx, stream);
   if (variable_rate)
     block_bits[block_idx] = bits;
+
 }
 //
 // Launch the encode kernel
 //
 template<class Scalar, bool variable_rate>
+
 size_t encode1launch(uint dim, 
                      int sx,
                      const Scalar *d_data,

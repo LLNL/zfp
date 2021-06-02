@@ -13,6 +13,7 @@ precision(int maxexp, int maxprec, int minexp)
 {
   return MIN(maxprec, MAX(0, maxexp - minexp + 8));
 
+
 }
 
 template <int BlockSize>
@@ -372,7 +373,6 @@ uint inline __device__ zfp_encode_block(Scalar *fblock,
     typedef typename zfp_traits<Scalar>::Int Int;
     Int iblock[BlockSize];
     fwd_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);
-
     uint bits = encode_block<Int, BlockSize>(block_writer, maxbits - ebits, maxprec, iblock);
     return ebits + bits;
   }

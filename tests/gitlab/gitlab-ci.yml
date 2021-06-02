@@ -105,10 +105,10 @@ stages:
         ci_lang: "cuda"
         ci_cmake_flags: "-DZFP_WITH_CUDA=ON"
 
-#.hip:
-#    variables:
-#        ci_lang: "hip"
-#        ci_cmake_flags: "-DZFP_WITH_HIP=ON -DHIP_PATH=${ci_cmp_path} -DCMAKE_CXX_STANDARD=11 -DCMAKE_C_STANDARD=11 -DCMAKE_C_COMPILER=hipcc -DCMAKE_CXX_COMPILER=hipcc"
+.hip:
+    variables:
+        ci_lang: "hip"
+        ci_cmake_flags: "-DZFP_WITH_HIP=ON -DHIP_PATH=${ci_cmp_path} -DCMAKE_CXX_STANDARD=11 -DCMAKE_C_STANDARD=11 -DCMAKE_C_COMPILER=hipcc -DCMAKE_CXX_COMPILER=hipcc"
 
 
 ############
@@ -118,5 +118,5 @@ stages:
 include:
     - local: tests/gitlab/surface-templates.yml
     - local: tests/gitlab/surface-jobs.yml
-#    - local: tests/gitlab/corona-templates.yml
-#    - local: tests/gitlab/corona-jobs.yml
+    - local: tests/gitlab/corona-templates.yml
+    - local: tests/gitlab/corona-jobs.yml

@@ -19,7 +19,9 @@ set(hipZFP_sources
     variable.h
     funnelshift.hpp)
 
+
 set(hipZFP_headers
     shared.h
     hipZFP.h
     ErrorCheck.h)
+
