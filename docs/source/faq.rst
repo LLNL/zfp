@@ -710,9 +710,10 @@ Q20: *Can zfp bound the point-wise relative error?*
 
 A: Yes, but with some caveats.  First, we define the relative error in a value
 *f* approximated by *g* as \|\ *f* - *g*\ \| / \|\ *f*\ \|, which converges to
-\|\ log(*f* / *g*)\ \| as *g* approaches *f*.  Below, we
-discuss three strategies for relative error control that may be applicable
-depending on the properties of the underlying floating-point data.
+\|\ log(*f* / *g*)\ \| = \|\ log(*f*) - \ log(*g*)\| as *g* approaches *f*,
+where log(*f*) denotes the natural logarithm of *f*.
+Below, we discuss three strategies for relative error control that may be
+applicable depending on the properties of the underlying floating-point data.
 
 If all floating-point values to be compressed are normalized, i.e., with no
 nonzero subnormal values smaller in magnitude than
@@ -722,10 +723,11 @@ can be bounded using |zfp|'s :ref:`expert mode <mode-expert>` settings by
 invoking :ref:`reversible mode <mode-reversible>`.  This is achieved by
 truncating (zeroing) some number of least significant bits of all
 floating-point values and then losslessly compressing the result.  The
-*q* least significant bits are truncated by |zfp| by specifying a
-maximum precision of 32 |minus| *q* (for floats) or 64 |minus| *q* (for
-doubles).  The resulting point-wise relative error is then at most
-2\ :sup:`q - 23` (for floats) or 2\ :sup:`q - 52` (for doubles).
+*q* least significant bits of *n*-bit floating-point numbers (*n* = 32
+for floats and *n* = 64 for doubles) are truncated by |zfp| by specifying a
+maximum precision of *p* = *n* |minus| *q*.  The resulting point-wise relative
+error is then at most 2\ :sup:`q - 23` (for floats) or 2\ :sup:`q - 52`
+(for doubles).
 
 .. note::
   For large enough *q*, floating-point exponent bits will be discarded,
@@ -738,11 +740,11 @@ To bound the relative error, set the expert mode parameters to::
 
   minbits = 0
   maxbits = 0
-  maxprec = q
+  maxprec = p
   minexp = ZFP_MIN_EXP - 1 = -1075
 
 For example, using the |zfpcmd| command-line tool, set the parameters using
-:option:`-c` :code:`0 0 q -1075`.
+:option:`-c` :code:`0 0 p -1075`.
 
 Note that while the above approach respects the error bound when the
 above conditions are met, it uses |zfp| for a purpose it was not designed

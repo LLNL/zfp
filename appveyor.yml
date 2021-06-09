@@ -7,20 +7,8 @@ environment:
       GENERATOR: Visual Studio 15 2017 Win64
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       PLATFORM: x64
-      BUILD_TYPE: Debug
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 15 2017 Win64
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PLATFORM: x64
       BUILD_TYPE: Release
       PYTHON_VERSION: 35
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 15 2017
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PLATFORM: Win32
-      BUILD_TYPE: Debug
 
     - COMPILER: msvc
       GENERATOR: Visual Studio 15 2017
@@ -32,18 +20,8 @@ environment:
     - COMPILER: msvc
       GENERATOR: Visual Studio 14 2015 Win64
       PLATFORM: x64
-      BUILD_TYPE: Debug
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 14 2015 Win64
-      PLATFORM: x64
       BUILD_TYPE: Release
       PYTHON_VERSION: 35
-
-    - COMPILER: msvc
-      GENERATOR: Visual Studio 14 2015
-      PLATFORM: Win32
-      BUILD_TYPE: Debug
 
     - COMPILER: msvc
       GENERATOR: Visual Studio 14 2015
@@ -54,17 +32,7 @@ environment:
     - COMPILER: mingw
       GENERATOR: MinGW Makefiles
       PLATFORM: Win32
-      BUILD_TYPE: Debug
-
-    - COMPILER: mingw
-      GENERATOR: MinGW Makefiles
-      PLATFORM: Win32
       BUILD_TYPE: Release
-
-    - COMPILER: mingw-w64
-      GENERATOR: MinGW Makefiles
-      PLATFORM: x64
-      BUILD_TYPE: Debug
 
     - COMPILER: mingw-w64
       GENERATOR: MinGW Makefiles

@@ -19,6 +19,11 @@ typedef unsigned long long Word;
 
 #define NBMASK 0xaaaaaaaaaaaaaaaaull
 
+#define ZFP_1D_BLOCK_SIZE 4 
+#define ZFP_2D_BLOCK_SIZE 16 
+#define ZFP_3D_BLOCK_SIZE 64
+#define ZFP_4D_BLOCK_SIZE 256
+
 namespace hipZFP
 {
 
@@ -106,8 +111,8 @@ dim3 calhiplate_grid_size(size_t size, size_t hip_block_size)
   {
     dims = 2; 
   }
-  // avoiding overflow in HIP
-  if(grids > (unsigned long long)max_grid_dims.x * max_grid_dims.y)
+  
+  if(grids > max_grid_dims.x * max_grid_dims.y)
   {
     dims = 3;
   }
@@ -125,7 +130,7 @@ dim3 calhiplate_grid_size(size_t size, size_t hip_block_size)
   if(dims == 2)
   {
     float sq_r = sqrt((float)grids);
-    float intpart = 0.;
+    float intpart = 0;
     modf(sq_r,&intpart); 
     uint base = intpart;
     grid_size.x = base; 
@@ -140,7 +145,7 @@ dim3 calhiplate_grid_size(size_t size, size_t hip_block_size)
   if(dims == 3)
   {
     float hipb_r = pow((float)grids, 1.f/3.f);;
-    float intpart = 0.;
+    float intpart = 0;
     modf(hipb_r,&intpart); 
     int base = intpart;
     grid_size.x = base; 

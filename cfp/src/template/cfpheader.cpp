@@ -160,7 +160,7 @@ _t1(CFP_HEADER_TYPE, data)(CFP_HEADER_TYPE self)
 }
 
 static size_t
-_t1(CFP_HEADER_TYPE, size)(CFP_HEADER_TYPE self)
+_t1(CFP_HEADER_TYPE, size_bytes)(CFP_HEADER_TYPE self)
 {
-  return static_cast<const ZFP_HEADER_TYPE*>(self.object)->size();
+  return static_cast<const ZFP_HEADER_TYPE*>(self.object)->size_bytes();
 }

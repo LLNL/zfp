@@ -12,6 +12,25 @@ static int
 precision(int maxexp, int maxprec, int minexp)
 {
   return MIN(maxprec, MAX(0, maxexp - minexp + 8));
+
+}
+
+template <int BlockSize>
+__device__ 
+static int
+precision(int maxexp, int maxprec, int minexp)
+{
+  // Followig logic from precision() in zfp/src/template/codecf.c
+  if (BlockSize == ZFP_1D_BLOCK_SIZE)
+    return MIN(maxprec, MAX(0, maxexp - minexp + 4));
+  else if (BlockSize == ZFP_2D_BLOCK_SIZE)
+    return MIN(maxprec, MAX(0, maxexp - minexp + 6));
+  else if (BlockSize == ZFP_3D_BLOCK_SIZE)
+    return MIN(maxprec, MAX(0, maxexp - minexp + 8));
+  else if (BlockSize == ZFP_4D_BLOCK_SIZE)
+    return MIN(maxprec, MAX(0, maxexp - minexp + 10));
+  else
+    return 0;
 }
 
 template<typename Scalar>
@@ -285,7 +304,7 @@ struct BlockWriter
 };
 
 template<typename Int, int BlockSize> 
-void inline __device__ encode_block(BlockWriter<BlockSize> &stream,
+uint inline __device__ encode_block(BlockWriter<BlockSize> &stream,
                                     int maxbits,
                                     int maxprec,
                                     Int *iblock)
@@ -324,18 +343,21 @@ void inline __device__ encode_block(BlockWriter<BlockSize> &stream,
       }
     }
   }
-  
+  return maxbits - bits;
 }
 
 template<typename Scalar, int BlockSize>
-void inline __device__ zfp_encode_block(Scalar *fblock,
+uint inline __device__ zfp_encode_block(Scalar *fblock,
+                                        const int minbits,
                                         const int maxbits,
+                                        int maxprec,
+                                        const int minexp,
                                         const uint block_idx,
                                         Word *stream)
 {
   BlockWriter<BlockSize> block_writer(stream, maxbits, block_idx);
   int emax = max_exponent<Scalar, BlockSize>(fblock);
-  int maxprec = precision(emax, get_precision<Scalar>(), get_min_exp<Scalar>());
+  maxprec = precision<BlockSize>(emax, maxprec, minexp);
   uint e = maxprec ? emax + get_ebias<Scalar>() : 0;
   if(e)
   {
@@ -345,75 +367,102 @@ void inline __device__ zfp_encode_block(Scalar *fblock,
     Int iblock[BlockSize];
     fwd_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);
 
-
-    encode_block<Int, BlockSize>(block_writer, maxbits - ebits, maxprec, iblock);
+    uint bits = encode_block<Int, BlockSize>(block_writer, maxbits - ebits, maxprec, iblock);
+    return ebits + bits;
   }
+  else
+    // Single bit (already memset to zero) to indicate all values are zero
+    return max (minbits, 1);
 }
 
-template<>
-void inline __device__ zfp_encode_block<int, 64>(int *fblock,
-                                             const int maxbits,
-                                             const uint block_idx,
-                                             Word *stream)
+template <>
+uint inline __device__ zfp_encode_block<int, 64>(int *fblock,
+                                                 const int minbits,
+                                                 const int maxbits,
+                                                 int maxprec,
+                                                 const int minexp,
+                                                 const uint block_idx,
+                                                 Word *stream)
 {
   BlockWriter<64> block_writer(stream, maxbits, block_idx);
   const int intprec = get_precision<int>();
-  encode_block<int, 64>(block_writer, maxbits, intprec, fblock);
+  uint bits = encode_block<int, 64>(block_writer, maxbits, intprec, fblock);
+  return max (bits, minbits);
 }
 
-template<>
-void inline __device__ zfp_encode_block<long long int, 64>(long long int *fblock,
-                                                       const int maxbits,
-                                                       const uint block_idx,
-                                                       Word *stream)
+template <>
+uint inline __device__ zfp_encode_block<long long int, 64>(long long int *fblock,
+                                                           const int minbits,
+                                                           const int maxbits,
+                                                           int maxprec,
+                                                           const int minexp,
+                                                           const uint block_idx,
+                                                           Word *stream)
 {
   BlockWriter<64> block_writer(stream, maxbits, block_idx);
   const int intprec = get_precision<long long int>();
-  encode_block<long long int, 64>(block_writer, maxbits, intprec, fblock);
+  uint bits = encode_block<long long int, 64>(block_writer, maxbits, intprec, fblock);
+  return max (bits, minbits);
 }
 
-template<>
-void inline __device__ zfp_encode_block<int, 16>(int *fblock,
-                                             const int maxbits,
-                                             const uint block_idx,
-                                             Word *stream)
+template <>
+uint inline __device__ zfp_encode_block<int, 16>(int *fblock,
+                                                 const int minbits,
+                                                 const int maxbits,
+                                                 int maxprec,
+                                                 const int minexp,
+                                                 const uint block_idx,
+                                                 Word *stream)
 {
   BlockWriter<16> block_writer(stream, maxbits, block_idx);
   const int intprec = get_precision<int>();
-  encode_block<int, 16>(block_writer, maxbits, intprec, fblock);
+  uint bits = encode_block<int, 16>(block_writer, maxbits, intprec, fblock);
+  return max(bits, minbits);
 }
 
-template<>
-void inline __device__ zfp_encode_block<long long int, 16>(long long int *fblock,
-                                                       const int maxbits,
-                                                       const uint block_idx,
-                                                       Word *stream)
+template <>
+uint inline __device__ zfp_encode_block<long long int, 16>(long long int *fblock,
+                                                           const int minbits,
+                                                           const int maxbits,
+                                                           int maxprec,
+                                                           const int minexp,
+                                                           const uint block_idx,
+                                                           Word *stream)
 {
   BlockWriter<16> block_writer(stream, maxbits, block_idx);
   const int intprec = get_precision<long long int>();
-  encode_block<long long int, 16>(block_writer, maxbits, intprec, fblock);
+  uint bits = encode_block<long long int, 16>(block_writer, maxbits, intprec, fblock);
+  return max(bits, minbits);
 }
 
-template<>
-void inline __device__ zfp_encode_block<int, 4>(int *fblock,
-                                             const int maxbits,
-                                             const uint block_idx,
-                                             Word *stream)
+template <>
+uint inline __device__ zfp_encode_block<int, 4>(int *fblock,
+                                                const int minbits,
+                                                const int maxbits,
+                                                int maxprec,
+                                                const int minexp,
+                                                const uint block_idx,
+                                                Word *stream)
 {
   BlockWriter<4> block_writer(stream, maxbits, block_idx);
   const int intprec = get_precision<int>();
-  encode_block<int, 4>(block_writer, maxbits, intprec, fblock);
+  uint bits = encode_block<int, 4>(block_writer, maxbits, intprec, fblock);
+  return max(bits, minbits);
 }
 
-template<>
-void inline __device__ zfp_encode_block<long long int, 4>(long long int *fblock,
-                                                       const int maxbits,
-                                                       const uint block_idx,
-                                                       Word *stream)
+template <>
+uint inline __device__ zfp_encode_block<long long int, 4>(long long int *fblock,
+                                                          const int minbits,
+                                                          const int maxbits,
+                                                          int maxprec,
+                                                          const int minexp,
+                                                          const uint block_idx,
+                                                          Word *stream)
 {
   BlockWriter<4> block_writer(stream, maxbits, block_idx);
   const int intprec = get_precision<long long int>();
-  encode_block<long long int, 4>(block_writer, maxbits, intprec, fblock);
+  uint bits = encode_block<long long int, 4>(block_writer, maxbits, intprec, fblock);
+  return max(bits, minbits);
 }
 
 }  // namespace cuZFP

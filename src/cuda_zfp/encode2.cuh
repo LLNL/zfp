@@ -7,8 +7,6 @@
 #include "ErrorCheck.h"
 #include "type_info.cuh"
 
-#define ZFP_2D_BLOCK_SIZE 16 
-
 namespace cuZFP
 {
 
@@ -41,16 +39,19 @@ void gather2(Scalar* q, const Scalar* p, int sx, int sy)
       *q++ = *p;
 }
 
-template<class Scalar>
-__global__
-void 
-cudaEncode2(const uint maxbits,
-           const Scalar* scalars,
-           Word *stream,
-           const uint2 dims,
-           const int2 stride,
-           const uint2 padded_dims,
-           const uint tot_blocks)
+template <class Scalar, bool variable_rate>
+__global__ void
+cudaEncode2(const int minbits,
+            const int maxbits,
+            const int maxprec,
+            const int minexp,
+            const Scalar *scalars,
+            Word *stream,
+            ushort *block_bits,
+            const uint2 dims,
+            const int2 stride,
+            const uint2 padded_dims,
+            const uint tot_blocks)
 {
 
   typedef unsigned long long int ull;
@@ -99,19 +100,25 @@ cudaEncode2(const uint maxbits,
     gather2(fblock, scalars + offset, stride.x, stride.y);
   }
 
-  zfp_encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
-
+  uint bits = zfp_encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, minbits, maxbits, maxprec,
+                                                          minexp, block_idx, stream);
+  if (variable_rate)
+    block_bits[block_idx] = bits;
 }
 
 //
 // Launch the encode kernel
 //
-template<class Scalar>
+template<class Scalar, bool variable_rate>
 size_t encode2launch(uint2 dims, 
                      int2 stride,
                      const Scalar *d_data,
                      Word *stream,
-                     const int maxbits)
+                     ushort *d_block_bits,
+                     const int minbits,
+                     const int maxbits,
+                     const int maxprec,
+                     const int minexp)
 {
   const int cuda_block_size = 128;
   dim3 block_size = dim3(cuda_block_size, 1, 1);
@@ -148,10 +155,14 @@ size_t encode2launch(uint2 dims,
   cudaEventRecord(start);
 #endif
 
-  cudaEncode2<Scalar> <<<grid_size, block_size>>>
-    (maxbits,
+  cudaEncode2<Scalar, variable_rate> <<<grid_size, block_size>>>
+    (minbits,
+     maxbits,
+     maxprec,
+     minexp,
      d_data,
      stream,
+     d_block_bits,
      dims,
      stride,
      zfp_pad,
@@ -174,16 +185,20 @@ size_t encode2launch(uint2 dims,
   return stream_bytes;
 }
 
-template<class Scalar>
+template<class Scalar, bool variable_rate>
 size_t encode2(uint2 dims,
                int2 stride,
                Scalar *d_data,
                Word *stream,
-               const int maxbits)
+               ushort *d_block_bits,
+               const int minbits,
+               const int maxbits,
+               const int maxprec,
+               const int minexp)
 {
-  return encode2launch<Scalar>(dims, stride, d_data, stream, maxbits);
+  return encode2launch<Scalar, variable_rate>(dims, stride, d_data, stream, d_block_bits,
+                                              minbits, maxbits, maxprec, minexp);
 }
-
 }
 
 #endif

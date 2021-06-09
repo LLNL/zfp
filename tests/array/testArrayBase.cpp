@@ -80,11 +80,11 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
 void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, uint chosenSizeY, uint chosenSizeZ, uint chosenSizeW, double chosenRate)
 {
   // copy header into aligned memory suitable for bitstream r/w
-  size_t byte_size = h.size();
+  size_t byte_size = h.size_bytes();
   size_t num_64bit_entries = (byte_size + sizeof(uint64) - 1) / sizeof(uint64);
   uint64* buffer = new uint64[num_64bit_entries];
 
-  memcpy(buffer, h.data(), h.size());
+  memcpy(buffer, h.data(), h.size_bytes());
 
   // verify valid header (manually through C API)
   bitstream* stream = stream_open(buffer, byte_size);

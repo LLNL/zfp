@@ -15,7 +15,7 @@ endif()
 #------------------------------------------------------------------------------#
 # Parse version number from zfp.h
 #------------------------------------------------------------------------------#
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/include/zfp.h _zfp_h_contents)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/include/zfp/version.h _zfp_h_contents)
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MAJOR[ \t]+([0-9]+).*"
      "\\1" ZFP_VERSION_MAJOR ${_zfp_h_contents})
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MINOR[ \t]+([0-9]+).*"
@@ -176,9 +176,38 @@ if(ZFP_WITH_CUDA)
   if(NOT CUDA_FOUND)
     message(FATAL_ERROR "ZFP_WITH_CUDA is enabled, but a CUDA installation was not found.")
   endif()
-  if(${CUDA_VERSION_MAJOR} LESS 7)
-    message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
+  if(${CUDA_VERSION_MAJOR} LESS 9)
+    message(FATAL_ERROR "zfp requires at least CUDA 9.0.")
   endif()
+  if(${CUDA_VERSION_MAJOR} LESS 11)
+    # CUB is part of CUDA since CUDA 11
+    # Todo: get CUB from https://github.com/NVIDIA/cub.git
+    message(FATAL_ERROR "TODO: Install CUB for CUDA < 11")
+  endif()
+  set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
+                        -gencode arch=compute_35,code=compute_35 \
+                        -gencode arch=compute_60,code=compute_60 \
+                        -gencode arch=compute_70,code=compute_70")
+endif()
+
+if(ZFP_WITH_HIP)
+  if (DEFINED ENV{HIP_PATH} AND NOT $ENV{HIP_PATH} STREQUAL "")
+    set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
+  endif()
+  set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+  find_package(HIP REQUIRED)
+  if(HIP_FOUND)
+    message(STATUS "Found HIP(${HIP_VERSION}) in ${HIP_PATH}")
+  else()
+    message(FATAL_ERROR "Could not find HIP. Ensure that HIP is either installed in /opt/rocm/hip or the variable HIP_PATH is set to point to the right location.")
+  endif()
+  find_package(hipcub REQUIRED)
+  if(hipcub_FOUND)
+    message(STATUS "Found hipCUB.")
+  else()
+    message(FETAL_ERROR "Cound not find hipCUB.")
+  endif()
+  set(CMAKE_CXX_STANDARD 11)
 endif()
 
 if(ZFP_WITH_HIP)

@@ -66,7 +66,7 @@ Below is a simple example of serialization of a 3D compressed array of doubles
   ...
   a.flush_cache();
   zfp::array::header h(a);
-  fwrite(h.data(), h.size(), 1, file);
+  fwrite(h.data(), h.size_bytes(), 1, file);
   fwrite(a.compressed_data(), a.compressed_size(), 1, file);
 
 We may then deserialize this array using the factory function.  The following
@@ -74,7 +74,7 @@ example reads the compressed data directly into the array without making a
 copy::
 
   zfp::array::header h;
-  fread(h.data(), h.size(), 1, file);
+  fread(h.data(), h.size_bytes(), 1, file);
   zfp::array* p = zfp::array::construct(h);
   fread(p->compressed_data(), p->compressed_size(), 1, file);
   assert(p->dimensionality() == 3 && p->scalar_type() == zfp_type_double);
@@ -137,7 +137,7 @@ is to be stored in the header.  The header is also compatible with the |zfp|
   Deserialize header from memory buffer given by *buffer* of optional
   size *size_bytes*.  This memory buffer is obtained from an existing
   header during serialization via :cpp:func:`header::data` and
-  :cpp:func:`header::size`.  The constructor throws an
+  :cpp:func:`header::size_bytes`.  The constructor throws an
   :ref:`exception <exception>` upon failure.
 
 ----
@@ -176,7 +176,7 @@ is to be stored in the header.  The header is also compatible with the |zfp|
 
 ----
 
-.. cpp:function:: virtual size_t header::size() const = 0
+.. cpp:function:: virtual size_t header::size_bytes() const = 0
 
   Return header size in bytes.
 
