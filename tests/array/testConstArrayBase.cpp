@@ -4,7 +4,7 @@ extern "C" {
   #include "utils/zfpHash.h"
 }
 
-TEST_F(TEST_FIXTURE, when_constructorCalledForRate_then_rateSetWithWriteRandomAccess)
+TEST_F(TEST_FIXTURE, when_constructorCalledForRate_then_rateSet)
 {
   double rate = ZFP_RATE_PARAM_BITS;
   zfp_config config = zfp_config_rate(rate, true);
@@ -58,30 +58,29 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
   EXPECT_GT(oldCompressedSize, newCompressedSize);
 }
 
-void FailWhenNoExceptionThrown()
-{
-  FAIL() << "No exception was thrown when one was expected";
-}
-
-void FailAndPrintException(std::exception const & e)
-{
-  FAIL() << "Unexpected exception thrown: " << typeid(e).name() << std::endl << "With message: " << e.what();
-}
-
+#if DIMS == 1
 INSTANTIATE_TEST_CASE_P(TestManyCompressionModes, 
                         TEST_FIXTURE,
                         ::testing::Values(
-#if DIMS == 1
                             testConfig(TEST_RATE,1,0), testConfig(TEST_RATE,2,0),
-#else
-                            testConfig(TEST_RATE,0,0), testConfig(TEST_RATE,1,0), testConfig(TEST_RATE,2,0),
-#endif
                             testConfig(TEST_PREC,0,0), testConfig(TEST_PREC,1,0), testConfig(TEST_PREC,2,0),
                             testConfig(TEST_ACCU,0,0), testConfig(TEST_ACCU,1,0), testConfig(TEST_ACCU,2,0),
                             testConfig(TEST_RVRS,0,0)
                         ),
                         TEST_FIXTURE::PrintToStringParamName()
 );
+#else
+INSTANTIATE_TEST_CASE_P(TestManyCompressionModes, 
+                        TEST_FIXTURE,
+                        ::testing::Values(
+                            testConfig(TEST_RATE,0,0), testConfig(TEST_RATE,1,0), testConfig(TEST_RATE,2,0),
+                            testConfig(TEST_PREC,0,0), testConfig(TEST_PREC,1,0), testConfig(TEST_PREC,2,0),
+                            testConfig(TEST_ACCU,0,0), testConfig(TEST_ACCU,1,0), testConfig(TEST_ACCU,2,0),
+                            testConfig(TEST_RVRS,0,0)
+                        ),
+                        TEST_FIXTURE::PrintToStringParamName()
+);
+#endif
 
 TEST_P(TEST_FIXTURE, when_constructorCalledWithCacheSize_then_minCacheSizeEnforced)
 {

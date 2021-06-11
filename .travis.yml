@@ -52,21 +52,6 @@ matrix:
 
     - os: linux
       dist: xenial
-      compiler: gcc-4.4
-      addons:
-        apt:
-          sources: ubuntu-toolchain-r-test
-          packages:
-            - gcc-4.4
-            - g++-4.4
-            - gfortran-4.4
-            - libpython3.5-dev
-            - python3-numpy
-            - python3-pip
-      env: CC='gcc-4.4' CXX='g++-4.4' FC='gfortran-4.4' FORTRAN_STANDARD='2003' PYTHON_VERSION='3.5'
-
-    - os: linux
-      dist: xenial
       compiler: gcc-4.7
       addons:
         apt:

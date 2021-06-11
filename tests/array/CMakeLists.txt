@@ -1,5 +1,3 @@
-set(CMAKE_CXX_STANDARD 11)
-
 function(zfp_add_cpp_tests dims type bits)
   # test compressed array class
   set(test_name testArray${dims}${type})
