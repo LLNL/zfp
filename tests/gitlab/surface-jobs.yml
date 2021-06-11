@@ -76,14 +76,14 @@ c_gnu-7.3.0_test:
 # CUDA GPU #
 ############
 
-cuda-10.1.168_build:
+cuda-11.1.0_build:
     variables:
-        ci_cmp_mod: "cuda/10.1.168"
+        ci_cmp_mod: "cuda/11.1.0"
     extends: [.cuda, .surface_build_gpu]
     needs: []
 
-cuda-10.1.168_test:
+cuda-11.1.0_test:
     variables:
        ci_test_regex: "Cuda"
     extends: [.surface_test_gpu]
-    needs: [cuda-10.1.168_build]
+    needs: [cuda-11.1.0_build]
