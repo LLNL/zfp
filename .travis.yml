@@ -201,9 +201,14 @@ matrix:
       env: CC='gcc-7' CXX='g++-7' FC='gfortran-7' FORTRAN_STANDARD='2008' PYTHON_VERSION='3.5'
 
     - os: osx
-      osx_image: xcode7.3
-      compiler: gcc
-      env: CC='gcc' CXX='g++' PYTHON_VERSION='3.5'
+      osx_image: xcode8.3
+      compiler: clang
+      env: CC='clang' CXX='clang++' PYTHON_VERSION='2.7'
+
+    - os: osx
+      osx_image: xcode8.3
+      compiler: clang
+      env: CC='clang' CXX='clang++' PYTHON_VERSION='3.5'
 
     - os: osx
       osx_image: xcode8.3
@@ -211,14 +216,9 @@ matrix:
       env: CC='gcc' CXX='g++' PYTHON_VERSION='2.7'
 
     - os: osx
-      osx_image: xcode7.3
-      compiler: clang
-      env: CC='clang' CXX='clang++' PYTHON_VERSION='3.5'
-
-    - os: osx
       osx_image: xcode8.3
-      compiler: clang
-      env: CC='clang' CXX='clang++' PYTHON_VERSION='2.7'
+      compiler: gcc
+      env: CC='gcc' CXX='g++' PYTHON_VERSION='3.5'
 
 script:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then pyenv root; fi
