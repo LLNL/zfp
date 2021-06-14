@@ -1,8 +1,4 @@
-if(WIN32)
-  cmake_minimum_required(VERSION 3.4)
-else()
-  cmake_minimum_required(VERSION 3.1)
-endif()
+cmake_minimum_required(VERSION 3.9)
 
 # Fail immediately if not using an out-of-source build
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
