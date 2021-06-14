@@ -61,7 +61,7 @@ static void
 _t1(fwd_round, Int)(Int* iblock, uint n, uint maxprec)
 {
   /* add or subtract 1/6 ulp to unbias errors */
-  if (maxprec < CHAR_BIT * (uint)sizeof(Int)) {
+  if (maxprec < (uint)(CHAR_BIT * sizeof(Int))) {
     Int bias = (NBMASK >> 2) >> maxprec;
     if (maxprec & 1u)
       do *iblock++ += bias; while (--n);
@@ -93,7 +93,7 @@ _t1(encode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, 
 {
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
-  uint intprec = CHAR_BIT * (uint)sizeof(UInt);
+  uint intprec = (uint)(CHAR_BIT * sizeof(UInt));
   uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint bits = maxbits;
   uint i, k, m, n;
@@ -110,9 +110,21 @@ _t1(encode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, 
     bits -= m;
     x = stream_write_bits(&s, x, m);
     /* step 3: unary run-length encode remainder of bit plane */
-    for (; n < size && bits && (bits--, stream_write_bit(&s, !!x)); x >>= 1, n++)
-      for (; n < size - 1 && bits && (bits--, !stream_write_bit(&s, x & 1u)); x >>= 1, n++)
-        ;
+    for (; bits && n < size; x >>= 1, n++) {
+      bits--;
+      if (stream_write_bit(&s, !!x)) {
+        /* positive group test (x != 0); scan for one-bit */
+        for (; bits && n < size - 1; x >>= 1, n++) {
+          bits--;
+          if (stream_write_bit(&s, x & 1u))
+            break;
+        }
+      }
+      else {
+        /* negative group test (x == 0); done with bit plane */
+        break;
+      }
+    }
   }
 
   *stream = s;
@@ -125,7 +137,7 @@ _t1(encode_many_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxp
 {
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
-  uint intprec = CHAR_BIT * (uint)sizeof(UInt);
+  uint intprec = (uint)(CHAR_BIT * sizeof(UInt));
   uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint bits = maxbits;
   uint i, k, m, n, c;
@@ -142,13 +154,84 @@ _t1(encode_many_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxp
     for (i = m; i < size; i++)
       c += (data[i] >> k) & 1u;
     /* step 3: unary run-length encode remainder of bit plane */
-    for (; n < size && bits && (--bits, stream_write_bit(&s, !!c)); c--, n++)
-      for (; n < size - 1 && bits && (--bits, !stream_write_bit(&s, (data[n] >> k) & 1u)); n++)
-        ;
+    for (; bits && n < size; n++) {
+      bits--;
+      if (stream_write_bit(&s, !!c)) {
+        /* positive group test (c > 0); scan for one-bit */
+        for (c--; bits && n < size - 1; n++) {
+          bits--;
+          if (stream_write_bit(&s, (data[n] >> k) & 1u))
+            break;
+        }
+      }
+      else {
+        /* negative group test (c == 0); done with bit plane */
+        break;
+      }
+    }
   }
 
   *stream = s;
   return maxbits - bits;
+}
+
+/* compress sequence of size unsigned integers with no rate constraint */
+static uint
+_t1(encode_ints_prec, UInt)(bitstream* restrict_ stream, uint maxprec, const UInt* restrict_ data, uint size)
+{
+  /* make a copy of bit stream to avoid aliasing */
+  bitstream s = *stream;
+  size_t offset = stream_wtell(&s);
+  uint intprec = (uint)(CHAR_BIT * sizeof(UInt));
+  uint kmin = intprec > maxprec ? intprec - maxprec : 0;
+  uint i, k, n;
+
+  /* encode one bit plane at a time from MSB to LSB */
+  for (k = intprec, n = 0; k-- > kmin;) {
+    /* step 1: extract bit plane #k to x */
+    uint64 x = 0;
+    for (i = 0; i < size; i++)
+      x += (uint64)((data[i] >> k) & 1u) << i;
+    /* step 2: encode first n bits of bit plane */
+    x = stream_write_bits(&s, x, n);
+    /* step 3: unary run-length encode remainder of bit plane */
+    for (; n < size && stream_write_bit(&s, !!x); x >>= 1, n++)
+      for (; n < size - 1 && !stream_write_bit(&s, x & 1u); x >>= 1, n++)
+        ;
+  }
+
+  *stream = s;
+  return (uint)(stream_wtell(&s) - offset);
+}
+
+/* compress sequence of size > 64 unsigned integers with no rate constraint */
+static uint
+_t1(encode_many_ints_prec, UInt)(bitstream* restrict_ stream, uint maxprec, const UInt* restrict_ data, uint size)
+{
+  /* make a copy of bit stream to avoid aliasing */
+  bitstream s = *stream;
+  size_t offset = stream_wtell(&s);
+  uint intprec = (uint)(CHAR_BIT * sizeof(UInt));
+  uint kmin = intprec > maxprec ? intprec - maxprec : 0;
+  uint i, k, n, c;
+
+  /* encode one bit plane at a time from MSB to LSB */
+  for (k = intprec, n = 0; k-- > kmin;) {
+    /* step 1: encode first n bits of bit plane #k */
+    for (i = 0; i < n; i++)
+      stream_write_bit(&s, (data[i] >> k) & 1u);
+    /* step 2: count remaining one-bits in bit plane */
+    c = 0;
+    for (i = n; i < size; i++)
+      c += (data[i] >> k) & 1u;
+    /* step 3: unary run-length encode remainder of bit plane */
+    for (; n < size && stream_write_bit(&s, !!c); n++)
+      for (c--; n < size - 1 && !stream_write_bit(&s, (data[n] >> k) & 1u); n++)
+        ;
+  }
+
+  *stream = s;
+  return (uint)(stream_wtell(&s) - offset);
 }
 
 /* encode block of integers */
@@ -160,16 +243,22 @@ _t2(encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int ma
   /* perform decorrelating transform */
   _t2(fwd_xform, Int, DIMS)(iblock);
 #if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
-  /* bias values values to achieve proper rounding */
+  /* bias values to achieve proper rounding */
   _t1(fwd_round, Int)(iblock, BLOCK_SIZE, maxprec);
 #endif
   /* reorder signed coefficients and convert to unsigned integer */
   _t1(fwd_order, Int)(ublock, iblock, PERM, BLOCK_SIZE);
   /* encode integer coefficients */
-  if (BLOCK_SIZE <= 64)
-    bits = _t1(encode_ints, UInt)(stream, maxbits, maxprec, ublock, BLOCK_SIZE);
+  if (with_maxbits(maxbits, maxprec, BLOCK_SIZE))
+    if (BLOCK_SIZE <= 64)
+      bits = _t1(encode_ints, UInt)(stream, maxbits, maxprec, ublock, BLOCK_SIZE);
+    else
+      bits = _t1(encode_many_ints, UInt)(stream, maxbits, maxprec, ublock, BLOCK_SIZE);
   else
-    bits = _t1(encode_many_ints, UInt)(stream, maxbits, maxprec, ublock, BLOCK_SIZE);
+    if (BLOCK_SIZE <= 64)
+      bits = _t1(encode_ints_prec, UInt)(stream, maxprec, ublock, BLOCK_SIZE);
+    else
+      bits = _t1(encode_many_ints_prec, UInt)(stream, maxprec, ublock, BLOCK_SIZE);
   /* write at least minbits bits by padding with zeros */
   if (bits < minbits) {
     stream_pad(stream, minbits - bits);
