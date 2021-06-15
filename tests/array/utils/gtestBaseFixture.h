@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <tuple>
+#include <type_traits>
 
 // assumes a constants/<dim><type>.h is already included
 
@@ -10,12 +11,24 @@ protected:
   double getRate() { return 1u << (GetParam() + 3); }
 };
 
+
+
 typedef std::tuple<int,int,int> testConfig;
 
 #define TEST_RATE zfp_mode_fixed_rate
 #define TEST_PREC zfp_mode_fixed_precision
-#define TEST_ACCU  zfp_mode_fixed_accuracy
+#define TEST_ACCU zfp_mode_fixed_accuracy
 #define TEST_RVRS zfp_mode_reversible
+
+#define TEST_BLOCK_IMP 0
+#define TEST_BLOCK_VRB 1
+#define TEST_BLOCK_HY4 2
+#define TEST_BLOCK_HY8 3
+
+#define TEST_BLOCK_TYPE_IMP zfp::index::implicit
+#define TEST_BLOCK_TYPE_VRB zfp::index::verbatim
+#define TEST_BLOCK_TYPE_HY4 zfp::index::hybrid4
+#define TEST_BLOCK_TYPE_HY8 zfp::index::hybrid8
 
 class CArrayNdTestFixture : public ::testing::TestWithParam<testConfig> {
 protected:
@@ -25,7 +38,7 @@ protected:
 
   // get(0): config mode selection
   // get(1): config mode value selection
-  // get(2): for later testing across multiple different indexes
+  // get(2): block index type selection
   zfp_config getConfig()
   {
     zfp_config config;

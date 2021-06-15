@@ -85,18 +85,40 @@ INSTANTIATE_TEST_CASE_P(TestManyCompressionModes,
 TEST_P(TEST_FIXTURE, when_constructorCalledWithCacheSize_then_minCacheSizeEnforced)
 {
   size_t cacheSize = 300;
+  zfp_config config = getConfig();
 
-#if DIMS == 1
-  ZFP_ARRAY_TYPE arr(inputDataSideLen, getConfig(), 0, cacheSize);
-#elif DIMS == 2
-  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, getConfig(), 0, cacheSize);
-#elif DIMS == 3
-  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, getConfig(), 0, cacheSize);
-#elif DIMS == 4
-  ZFP_ARRAY_TYPE arr(inputDataSideLen, inputDataSideLen, inputDataSideLen, inputDataSideLen, getConfig(), 0, cacheSize);
-#endif
-
-  EXPECT_LE(cacheSize, arr.cache_size());
+  switch(std::get<2>(GetParam()))
+  {
+    case TEST_BLOCK_IMP:
+    {
+      if (std::get<0>(GetParam()) == TEST_RATE)
+      {
+        ZFP_FULL_ARRAY_TYPE(TEST_BLOCK_TYPE_IMP) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+        EXPECT_LE(cacheSize, arr.cache_size());
+      } else {
+        GTEST_SKIP() << "[ SKIPPED  ] Implicit index only supported for fixed rate" << std::endl;
+      }
+      break;
+    }
+    case TEST_BLOCK_VRB:
+    {
+      ZFP_FULL_ARRAY_TYPE(TEST_BLOCK_TYPE_VRB) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      EXPECT_LE(cacheSize, arr.cache_size());
+      break;
+    }
+    case TEST_BLOCK_HY4:
+    {
+      ZFP_FULL_ARRAY_TYPE(TEST_BLOCK_TYPE_HY4) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      EXPECT_LE(cacheSize, arr.cache_size());
+      break;
+    }
+    case TEST_BLOCK_HY8:
+    {
+      ZFP_FULL_ARRAY_TYPE(TEST_BLOCK_TYPE_HY8<DIMS>) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      EXPECT_LE(cacheSize, arr.cache_size());
+      break;
+    }
+  }
 }
 
 TEST_P(TEST_FIXTURE, given_dataset_when_set_then_underlyingBitstreamChecksumMatches)

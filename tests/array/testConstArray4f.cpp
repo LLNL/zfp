@@ -26,6 +26,7 @@ class CArray4fTest : public CArrayNdTestFixture {};
 #define TEST_FIXTURE CArray4fTest
 
 #define ZFP_ARRAY_TYPE const_array4f
+#define ZFP_FULL_ARRAY_TYPE(BLOCK_TYPE) const_array4<float, zfp::codec::zfp4<float>, BLOCK_TYPE>
 #define ZFP_ARRAY_TYPE_WRONG_SCALAR const_array4d
 #define ZFP_ARRAY_TYPE_WRONG_DIM const_array1f
 #define ZFP_ARRAY_TYPE_WRONG_SCALAR_DIM const_array1d

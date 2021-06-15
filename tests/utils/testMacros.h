@@ -29,3 +29,11 @@
   #define ASSERT_EQ_CHECKSUM(dims, zfpType, computedChecksum, key1, key2) assert_int_equal(computedChecksum, getChecksumByKey(dims, zfpType, key1, key2))
   #define COMPARE_NEQ_CHECKSUM(dims, zfpType, computedChecksum, key1, key2) (computedChecksum != getChecksumByKey(dims, zfpType, key1, key2))
 #endif
+
+// for condensing repeat tests across different dimensionalities into singular tests
+#define _REPEATARG(...)  _REPEATN(__VA_ARGS__)
+#define _REPEATN(x, n) _REPEAT ## n ( x )
+#define _REPEAT1(x) x
+#define _REPEAT2(x) x, x
+#define _REPEAT3(x) x, x, x
+#define _REPEAT4(x) x, x, x, x
