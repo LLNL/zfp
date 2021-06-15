@@ -62,10 +62,19 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
 INSTANTIATE_TEST_CASE_P(TestManyCompressionModes, 
                         TEST_FIXTURE,
                         ::testing::Values(
-                            testConfig(TEST_RATE,1,0), testConfig(TEST_RATE,2,0),
-                            testConfig(TEST_PREC,0,0), testConfig(TEST_PREC,1,0), testConfig(TEST_PREC,2,0),
-                            testConfig(TEST_ACCU,0,0), testConfig(TEST_ACCU,1,0), testConfig(TEST_ACCU,2,0),
-                            testConfig(TEST_RVRS,0,0)
+                            testConfig(TEST_RATE,1,TEST_INDEX_IMP), testConfig(TEST_RATE,2,TEST_INDEX_IMP),
+                            testConfig(TEST_RATE,1,TEST_INDEX_VRB), testConfig(TEST_RATE,2,TEST_INDEX_VRB),
+                            testConfig(TEST_PREC,0,TEST_INDEX_VRB), testConfig(TEST_PREC,1,TEST_INDEX_VRB), testConfig(TEST_PREC,2,TEST_INDEX_VRB),
+                            testConfig(TEST_ACCU,0,TEST_INDEX_VRB), testConfig(TEST_ACCU,1,TEST_INDEX_VRB), testConfig(TEST_ACCU,2,TEST_INDEX_VRB),
+                            testConfig(TEST_RVRS,0,TEST_INDEX_VRB),
+                            testConfig(TEST_RATE,1,TEST_INDEX_HY4), testConfig(TEST_RATE,2,TEST_INDEX_HY4),
+                            testConfig(TEST_PREC,0,TEST_INDEX_HY4), testConfig(TEST_PREC,1,TEST_INDEX_HY4), testConfig(TEST_PREC,2,TEST_INDEX_HY4),
+                            testConfig(TEST_ACCU,0,TEST_INDEX_HY4), testConfig(TEST_ACCU,1,TEST_INDEX_HY4), testConfig(TEST_ACCU,2,TEST_INDEX_HY4),
+                            testConfig(TEST_RVRS,0,TEST_INDEX_HY4),
+                            testConfig(TEST_RATE,1,TEST_INDEX_HY8), testConfig(TEST_RATE,2,TEST_INDEX_HY8),
+                            testConfig(TEST_PREC,0,TEST_INDEX_HY8), testConfig(TEST_PREC,1,TEST_INDEX_HY8), testConfig(TEST_PREC,2,TEST_INDEX_HY8),
+                            testConfig(TEST_ACCU,0,TEST_INDEX_HY8), testConfig(TEST_ACCU,1,TEST_INDEX_HY8), testConfig(TEST_ACCU,2,TEST_INDEX_HY8),
+                            testConfig(TEST_RVRS,0,TEST_INDEX_HY8)
                         ),
                         TEST_FIXTURE::PrintToStringParamName()
 );
@@ -73,10 +82,19 @@ INSTANTIATE_TEST_CASE_P(TestManyCompressionModes,
 INSTANTIATE_TEST_CASE_P(TestManyCompressionModes, 
                         TEST_FIXTURE,
                         ::testing::Values(
-                            testConfig(TEST_RATE,0,0), testConfig(TEST_RATE,1,0), testConfig(TEST_RATE,2,0),
-                            testConfig(TEST_PREC,0,0), testConfig(TEST_PREC,1,0), testConfig(TEST_PREC,2,0),
-                            testConfig(TEST_ACCU,0,0), testConfig(TEST_ACCU,1,0), testConfig(TEST_ACCU,2,0),
-                            testConfig(TEST_RVRS,0,0)
+                            testConfig(TEST_RATE,0,TEST_INDEX_IMP), testConfig(TEST_RATE,1,TEST_INDEX_IMP), testConfig(TEST_RATE,2,TEST_INDEX_IMP),
+                            testConfig(TEST_RATE,1,TEST_INDEX_VRB), testConfig(TEST_RATE,2,TEST_INDEX_VRB),
+                            testConfig(TEST_PREC,0,TEST_INDEX_VRB), testConfig(TEST_PREC,1,TEST_INDEX_VRB), testConfig(TEST_PREC,2,TEST_INDEX_VRB),
+                            testConfig(TEST_ACCU,0,TEST_INDEX_VRB), testConfig(TEST_ACCU,1,TEST_INDEX_VRB), testConfig(TEST_ACCU,2,TEST_INDEX_VRB),
+                            testConfig(TEST_RVRS,0,TEST_INDEX_VRB),
+                            testConfig(TEST_RATE,1,TEST_INDEX_HY4), testConfig(TEST_RATE,2,TEST_INDEX_HY4),
+                            testConfig(TEST_PREC,0,TEST_INDEX_HY4), testConfig(TEST_PREC,1,TEST_INDEX_HY4), testConfig(TEST_PREC,2,TEST_INDEX_HY4),
+                            testConfig(TEST_ACCU,0,TEST_INDEX_HY4), testConfig(TEST_ACCU,1,TEST_INDEX_HY4), testConfig(TEST_ACCU,2,TEST_INDEX_HY4),
+                            testConfig(TEST_RVRS,0,TEST_INDEX_HY4),
+                            testConfig(TEST_RATE,1,TEST_INDEX_HY8), testConfig(TEST_RATE,2,TEST_INDEX_HY8),
+                            testConfig(TEST_PREC,0,TEST_INDEX_HY8), testConfig(TEST_PREC,1,TEST_INDEX_HY8), testConfig(TEST_PREC,2,TEST_INDEX_HY8),
+                            testConfig(TEST_ACCU,0,TEST_INDEX_HY8), testConfig(TEST_ACCU,1,TEST_INDEX_HY8), testConfig(TEST_ACCU,2,TEST_INDEX_HY8),
+                            testConfig(TEST_RVRS,0,TEST_INDEX_HY8)
                         ),
                         TEST_FIXTURE::PrintToStringParamName()
 );
@@ -89,32 +107,32 @@ TEST_P(TEST_FIXTURE, when_constructorCalledWithCacheSize_then_minCacheSizeEnforc
 
   switch(std::get<2>(GetParam()))
   {
-    case TEST_BLOCK_IMP:
+    case TEST_INDEX_IMP:
     {
       if (std::get<0>(GetParam()) == TEST_RATE)
       {
-        ZFP_FULL_ARRAY_TYPE(TEST_BLOCK_TYPE_IMP) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+        ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_IMP) arr(_REPEATARG(inputDataSideLen, DIMS), config);
         EXPECT_LE(cacheSize, arr.cache_size());
       } else {
         GTEST_SKIP() << "[ SKIPPED  ] Implicit index only supported for fixed rate" << std::endl;
       }
       break;
     }
-    case TEST_BLOCK_VRB:
+    case TEST_INDEX_VRB:
     {
-      ZFP_FULL_ARRAY_TYPE(TEST_BLOCK_TYPE_VRB) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_VRB) arr(_REPEATARG(inputDataSideLen, DIMS), config);
       EXPECT_LE(cacheSize, arr.cache_size());
       break;
     }
-    case TEST_BLOCK_HY4:
+    case TEST_INDEX_HY4:
     {
-      ZFP_FULL_ARRAY_TYPE(TEST_BLOCK_TYPE_HY4) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY4) arr(_REPEATARG(inputDataSideLen, DIMS), config);
       EXPECT_LE(cacheSize, arr.cache_size());
       break;
     }
-    case TEST_BLOCK_HY8:
+    case TEST_INDEX_HY8:
     {
-      ZFP_FULL_ARRAY_TYPE(TEST_BLOCK_TYPE_HY8<DIMS>) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY8<DIMS>) arr(_REPEATARG(inputDataSideLen, DIMS), config);
       EXPECT_LE(cacheSize, arr.cache_size());
       break;
     }

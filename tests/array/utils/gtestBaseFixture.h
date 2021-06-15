@@ -20,15 +20,15 @@ typedef std::tuple<int,int,int> testConfig;
 #define TEST_ACCU zfp_mode_fixed_accuracy
 #define TEST_RVRS zfp_mode_reversible
 
-#define TEST_BLOCK_IMP 0
-#define TEST_BLOCK_VRB 1
-#define TEST_BLOCK_HY4 2
-#define TEST_BLOCK_HY8 3
+#define TEST_INDEX_IMP 0
+#define TEST_INDEX_VRB 1
+#define TEST_INDEX_HY4 2
+#define TEST_INDEX_HY8 3
 
-#define TEST_BLOCK_TYPE_IMP zfp::index::implicit
-#define TEST_BLOCK_TYPE_VRB zfp::index::verbatim
-#define TEST_BLOCK_TYPE_HY4 zfp::index::hybrid4
-#define TEST_BLOCK_TYPE_HY8 zfp::index::hybrid8
+#define TEST_INDEX_TYPE_IMP zfp::index::implicit
+#define TEST_INDEX_TYPE_VRB zfp::index::verbatim
+#define TEST_INDEX_TYPE_HY4 zfp::index::hybrid4
+#define TEST_INDEX_TYPE_HY8 zfp::index::hybrid8
 
 class CArrayNdTestFixture : public ::testing::TestWithParam<testConfig> {
 protected:
@@ -83,30 +83,67 @@ protected:
 public:
   struct PrintToStringParamName
   {
-     template <class ParamType>
-     std::string operator()(const testing::TestParamInfo<ParamType>& info) const
-     {
-        std::stringstream out;
-        switch(std::get<0>(info.param))
+    static std::string IndexToStr(int idx)
+    {
+      switch (idx)
+      {
+        case TEST_INDEX_IMP:
         {
-            case zfp_mode_fixed_rate:
-                out << "Fixed_Rate_val" << std::get<1>(info.param) << "_idx" << std::get<2>(info.param);
-                break;
-            case zfp_mode_fixed_precision:
-                out << "Fixed_Precision_val" << std::get<1>(info.param) << "_idx" << std::get<2>(info.param);
-                break;
-            case zfp_mode_fixed_accuracy:
-                out << "Fixed_Accuracy_val" << std::get<1>(info.param) << "_idx" << std::get<2>(info.param);
-                break;
-            case zfp_mode_reversible:
-                out << "Reversible_idx" << std::get<2>(info.param);
-                break;
-            case zfp_mode_expert:
-                out << "Expert_val" << std::get<1>(info.param) << "_idx" << std::get<2>(info.param);
-                break;
+            return "Implicit";
         }
-        return out.str();
-     }
+        case TEST_INDEX_VRB:
+        {
+            return "Verbatim";
+        }
+        case TEST_INDEX_HY4:
+        {
+            return "Hybrid4";
+        }
+        case TEST_INDEX_HY8:
+        {
+            return "Hybrid8";
+        }
+        default:
+        {
+            return "BadIdxType";
+        }
+      }
+    }
+
+    template <class ParamType>
+    std::string operator()(const testing::TestParamInfo<ParamType>& info) const
+    {
+       std::stringstream out;
+       switch(std::get<0>(info.param))
+       {
+          case zfp_mode_fixed_rate:
+          {
+             out << "Fixed_Rate_val" << std::get<1>(info.param) << "_idx" << IndexToStr(std::get<2>(info.param));
+             break;
+          }
+          case zfp_mode_fixed_precision:
+          {
+             out << "Fixed_Precision_val" << std::get<1>(info.param) << "_idx" << IndexToStr(std::get<2>(info.param));
+             break;
+          }
+          case zfp_mode_fixed_accuracy:
+          {
+             out << "Fixed_Accuracy_val" << std::get<1>(info.param) << "_idx" << IndexToStr(std::get<2>(info.param));
+             break;
+          }
+          case zfp_mode_reversible:
+          {
+             out << "Reversible_idx" << IndexToStr(std::get<2>(info.param));
+             break;
+          }
+          case zfp_mode_expert:
+          {
+             out << "Expert_val" << std::get<1>(info.param) << "_idx" << IndexToStr(std::get<2>(info.param));
+             break;
+          }
+       }
+       return out.str();
+    }
   };
 
 };
