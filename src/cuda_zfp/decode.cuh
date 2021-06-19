@@ -17,8 +17,8 @@ inv_round(UInt* ublock, uint m, uint prec)
   if (prec < (uint)(CHAR_BIT * sizeof(UInt) - 1)) {
     // the first m values (0 <= m <= n) have one more bit of precision
     uint n = BlockSize - m;
-    while (m--) *ublock++ += ((NBMASK >> 2) >> prec);
-    while (n--) *ublock++ += ((NBMASK >> 1) >> prec);
+    while (m--) *ublock++ += (((UInt)NBMASK >> 2) >> prec);
+    while (n--) *ublock++ += (((UInt)NBMASK >> 1) >> prec);
   }
 }
 #endif
@@ -132,13 +132,13 @@ void decode_ints(BlockReader<size> &reader, uint maxbits, UInt *data)
   // maxprec = 64;
   const uint kmin = 0; //= intprec > maxprec ? intprec - maxprec : 0;
   uint bits = maxbits;
-  uint m;
+  uint k, m, n;
 
   // initialize data array to all zeros
   memset(data, 0, size * sizeof(UInt));
 
   // decode one bit plane at a time from MSB to LSB
-  for (uint k = intprec, m = n = 0; bits && (m = 0, k-- > kmin);) {
+  for (k = intprec, m = n = 0; bits && (m = 0, k-- > kmin);) {
     // step 1: decode first n bits of bit plane #k
     m = min(n, bits);
     bits -= m;

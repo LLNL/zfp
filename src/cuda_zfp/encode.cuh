@@ -101,7 +101,7 @@ fwd_round(Int* iblock, uint maxprec)
 {
   // add or subtract 1/6 ulp to unbias errors
   if (maxprec < (uint)(CHAR_BIT * sizeof(Int))) {
-    Int bias = (NBMASK >> 2) >> maxprec;
+    Int bias = (static_cast<typename zfp_traits<Int>::UInt>(NBMASK) >> 2) >> maxprec;
     uint n = BlockSize;
     if (maxprec & 1u)
       do *iblock++ += bias; while (--n);
