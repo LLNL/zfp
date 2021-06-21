@@ -107,6 +107,16 @@ is to be stored in the header.  The header is also compatible with the |zfp|
 :ref:`command-line tool <zfpcmd>`.  Processing of the header may result in an
 :ref:`exception <exception>` being thrown.
 
+.. note::
+  Compressed-array headers use |zfp|'s most concise representation of only
+  96 bits.  Such short headers support compressed blocks up to 2048 bits long.
+  This implies that the highest rate for 3D arrays is 2048/4\ :sup:`3` = 32
+  bits/value; the highest rate for 4D arrays is only 2048/4\ :sup:`4` = 8
+  bits/value.  3D and 4D arrays whose rate exceeds these limits cannot be
+  serialized and result in an exception being thrown.  1D and 2D arrays
+  support rates up to 512 and 128 bits/value, respectively, which both
+  are large enough to represent all usable rates.
+
 .. cpp:class:: array::header
 
   The header stores information such as scalar type, array dimensions, and
@@ -198,13 +208,3 @@ Exceptions
   The :cpp:func:`exception::what` method returns a :code:`std::string`
   error message that indicates the cause of the exception.
   Most error messages changed in |zfp| |4darrrelease|.
-
-.. note::
-  Compressed-array headers use |zfp|'s most concise representation of only
-  96 bits.  Such short headers support compressed blocks up to 2048 bits long.
-  This implies that the highest rate for 3D arrays is 2048/4\ :sup:`3` = 32
-  bits/value; the highest rate for 4D arrays is only 2048/4\ :sup:`4` = 8
-  bits/value.  3D and 4D arrays whose rate exceeds these limits cannot be
-  serialized and result in an exception being thrown.  1D and 2D arrays
-  support rates up to 512 and 128 bits/value, respectively, which both
-  are large enough to represent all usable rates.
