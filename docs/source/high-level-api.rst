@@ -100,6 +100,14 @@ Macros
   only :c:macro:`ZFP_MODE_SHORT_BITS` bits of header information are stored
   to encode the mode (see :c:func:`zfp_stream_mode`).
 
+.. c:macro: ZFP_ROUND_FIRST
+.. c:macro: ZFP_ROUND_NEVER
+.. c:macro: ZFP_ROUND_LAST
+
+  Available rounding modes for :c:macro:`ZFP_ROUNDING_MODE`, which
+  specifies at build time how |zfp| performs rounding in lossy compression
+  mode.
+
 .. _hl-types:
 
 Types
