@@ -87,9 +87,9 @@ _t1(fwd_order, Int)(UInt* ublock, const Int* iblock, const uchar* perm, uint n)
   while (--n);
 }
 
-/* compress sequence of size unsigned integers */
+/* compress sequence of size <= 64 unsigned integers */
 static uint
-_t1(encode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, const UInt* restrict_ data, uint size)
+_t1(encode_few_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, const UInt* restrict_ data, uint size)
 {
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
@@ -175,9 +175,9 @@ _t1(encode_many_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxp
   return maxbits - bits;
 }
 
-/* compress sequence of size unsigned integers with no rate constraint */
+/* compress sequence of size <= 64 unsigned integers with no rate constraint */
 static uint
-_t1(encode_ints_prec, UInt)(bitstream* restrict_ stream, uint maxprec, const UInt* restrict_ data, uint size)
+_t1(encode_few_ints_prec, UInt)(bitstream* restrict_ stream, uint maxprec, const UInt* restrict_ data, uint size)
 {
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
@@ -234,6 +234,27 @@ _t1(encode_many_ints_prec, UInt)(bitstream* restrict_ stream, uint maxprec, cons
   return (uint)(stream_wtell(&s) - offset);
 }
 
+/* compress sequence of size unsigned integers */
+static uint
+_t1(encode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, const UInt* restrict_ data, uint size)
+{
+  /* use fastest available encoder implementation */
+  if (with_maxbits(maxbits, maxprec, size)) {
+    /* rate contrained path: encode partial bit planes */
+    if (size <= 64)
+      return _t1(encode_few_ints, UInt)(stream, maxbits, maxprec, data, size); /* 1D, 2D, 3D blocks */
+    else
+      return _t1(encode_many_ints, UInt)(stream, maxbits, maxprec, data, size); /* 4D blocks */
+  }
+  else {
+    /* variable-rate path: encode whole bit planes */
+    if (size <= 64)
+      return _t1(encode_few_ints_prec, UInt)(stream, maxprec, data, size); /* 1D, 2D, 3D blocks */
+    else
+      return _t1(encode_many_ints_prec, UInt)(stream, maxprec, data, size); /* 4D blocks */
+  }
+}
+
 /* encode block of integers */
 static uint
 _t2(encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock)
@@ -249,16 +270,7 @@ _t2(encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int ma
   /* reorder signed coefficients and convert to unsigned integer */
   _t1(fwd_order, Int)(ublock, iblock, PERM, BLOCK_SIZE);
   /* encode integer coefficients */
-  if (with_maxbits(maxbits, maxprec, BLOCK_SIZE))
-    if (BLOCK_SIZE <= 64)
-      bits = _t1(encode_ints, UInt)(stream, maxbits, maxprec, ublock, BLOCK_SIZE);
-    else
-      bits = _t1(encode_many_ints, UInt)(stream, maxbits, maxprec, ublock, BLOCK_SIZE);
-  else
-    if (BLOCK_SIZE <= 64)
-      bits = _t1(encode_ints_prec, UInt)(stream, maxprec, ublock, BLOCK_SIZE);
-    else
-      bits = _t1(encode_many_ints_prec, UInt)(stream, maxprec, ublock, BLOCK_SIZE);
+  bits = _t1(encode_ints, UInt)(stream, maxbits, maxprec, ublock, BLOCK_SIZE);
   /* write at least minbits bits by padding with zeros */
   if (bits < minbits) {
     stream_pad(stream, minbits - bits);
