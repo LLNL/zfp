@@ -16,7 +16,7 @@ precision(int maxexp, uint maxprec, int minexp, int dims)
 static Scalar
 _t1(dequantize, Scalar)(Int x, int e)
 {
-  return LDEXP((Scalar)x, e - (CHAR_BIT * (int)sizeof(Scalar) - 2));
+  return LDEXP((Scalar)x, e - ((int)(CHAR_BIT * sizeof(Scalar)) - 2));
 }
 
 /* inverse block-floating-point transform from signed integers */

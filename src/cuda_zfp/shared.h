@@ -12,7 +12,7 @@ typedef unsigned long long Word;
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
-#define bitsize(x) (CHAR_BIT * (uint)sizeof(x))
+#define bitsize(x) ((uint)(CHAR_BIT * sizeof(x)))
 
 #define LDEXP(x, e) ldexp(x, e)
 
@@ -190,7 +190,7 @@ __device__
 double
 dequantize<long long int, double>(const long long int &x, const int &e)
 {
-	return LDEXP((double)x, e - (CHAR_BIT * scalar_sizeof<double>() - 2));
+	return LDEXP((double)x, e - ((int)(CHAR_BIT * scalar_sizeof<double>()) - 2));
 }
 
 template<>
@@ -198,7 +198,7 @@ __device__
 float
 dequantize<int, float>(const int &x, const int &e)
 {
-	return LDEXP((float)x, e - (CHAR_BIT * scalar_sizeof<float>() - 2));
+	return LDEXP((float)x, e - ((int)(CHAR_BIT * scalar_sizeof<float>()) - 2));
 }
 
 template<>
