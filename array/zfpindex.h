@@ -38,7 +38,7 @@ public:
   size_t block_offset(size_t block_index) const { return bits_per_block * block_index; }
 
   // reset index
-  void clear() { bits_per_block = 0; }
+  void clear() {}
 
   // resize index in number of blocks
   void resize(size_t blocks) { this->blocks = blocks; }
