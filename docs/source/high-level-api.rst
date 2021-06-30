@@ -25,6 +25,7 @@ The following sections are available:
   * :ref:`hl-func-bitstream`
   * :ref:`hl-func-stream`
   * :ref:`hl-func-exec`
+  * :ref:`hl-func-config`
   * :ref:`hl-func-field`
   * :ref:`hl-func-codec`
 
@@ -76,25 +77,72 @@ Macros
 ----
 
 .. _header-macros:
+
+The :code:`ZFP_HEADER` bit mask specifies which portions of a header to output
+(if any).  The constants below should be bitwise ORed together.  Use
+:c:macro:`ZFP_HEADER_FULL` to output all header information available.  The
+compressor and decompressor must agree on which parts of the header to
+read/write.  See :c:func:`zfp_read_header` and :c:func:`zfp_write_header`
+for how to read and write header information.
+
 .. c:macro:: ZFP_HEADER_MAGIC
+
+  Magic constant that identifies the data as a |zfp| stream compressed using
+  a particular CODEC version.
+
 .. c:macro:: ZFP_HEADER_META
+
+  Array size and scalar type information stored in the :c:type:`zfp_field`
+  struct.
+
 .. c:macro:: ZFP_HEADER_MODE
+
+  Compression mode and parameters stored in the :c:type:`zfp_stream` struct.
+
 .. c:macro:: ZFP_HEADER_FULL
 
-  Bit masks for specifying which portions of a header to output (if any).
-  These constants should be bitwise ORed together.  Use
-  :c:macro:`ZFP_HEADER_FULL` to output all header information available.
-  The compressor and decompressor must agree on which parts of the header
-  to read/write.
+  Full header information (bitwise OR of all :code:`ZFP_HEADER` constants).
 
-  :c:macro:`ZFP_HEADER_META` in essence encodes the information stored in
-  the :c:type:`zfp_field` struct, while :c:macro:`ZFP_HEADER_MODE` encodes
-  the compression parameters stored in the :c:type:`zfp_stream` struct.
-  The magic, which includes the CODEC version, can be used to uniquely
-  identify the stream as a |zfp| stream.
 
-  See :c:func:`zfp_read_header` and :c:func:`zfp_write_header` for
-  how to read and write header information.
+----
+
+.. _data-macros:
+
+The :code:`ZFP_DATA` bit mask specifies which portions of array data
+structures to compute total storage size for.  These constants should be
+bitwise ORed together.  Use :c:macro:`ZFP_DATA_ALL` to count all storage used.
+
+.. c:macro:: ZFP_DATA_UNUSED
+
+  Allocated but unused data.
+
+.. c:macro:: ZFP_DATA_PADDING
+
+  Padding for alignment purposes.
+  
+.. c:macro:: ZFP_DATA_META
+
+  Class members and other fixed-size storage.
+
+.. c:macro:: ZFP_DATA_MISC
+
+  Miscellaneous uncategorized storage.
+
+.. c:macro:: ZFP_DATA_PAYLOAD
+
+  Compressed data.
+
+.. c:macro:: ZFP_DATA_INDEX
+
+  Block index information.
+
+.. c:macro:: ZFP_DATA_CACHE
+
+  Uncompressed cached data.
+
+.. c:macro:: ZFP_DATA_ALL
+
+  All storage (bitwise OR of all :code:`ZFP_DATA` constants).
 
 ----
 
@@ -118,6 +166,7 @@ Macros
   Available rounding modes for :c:macro:`ZFP_ROUNDING_MODE`, which
   specifies at build time how |zfp| performs rounding in lossy compression
   mode.
+
 
 .. _hl-types:
 
@@ -199,6 +248,7 @@ Types
 
 ----
 
+.. _mode_struct:
 .. c:type:: zfp_mode
 
   Enumerates the compression modes.
@@ -212,6 +262,29 @@ Types
       zfp_mode_fixed_accuracy  = 4, // fixed accuracy mode
       zfp_mode_reversible      = 5  // reversible (lossless) mode
     } zfp_mode;
+
+----
+
+.. _config_struct:
+.. c:type:: zfp_config
+
+  Encapsulates compression mode and parameters (if any).
+  ::
+
+    typedef struct {
+      zfp_mode mode;      // compression mode */
+      union {
+        double rate;      // compressed bits/value (negative for word alignment)
+        uint precision;   // uncompressed bits/value
+        double tolerance; // absolute error tolerance
+        struct {
+          uint minbits;   // min number of compressed bits/block
+          uint maxbits;   // max number of compressed bits/block
+          uint maxprec;   // max number of uncompressed bits/value
+          int minexp;     // min floating point bit plane number to store
+        } expert;         // expert mode arguments
+      } arg;              // arguments corresponding to compression mode
+    } zfp_config;
 
 ----
 
@@ -573,7 +646,55 @@ Execution Policy
   policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
 
 
-.. _hl-func-field:
+.. _hl-func-config:
+
+Compression Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These functions encode a desired compression mode and associated parameters
+(if any) in a single struct, e.g., for configuring |zfp|'s
+:ref:`read-only array classes <carray_classes>`.
+
+.. c:function:: zfp_config zfp_config_none()
+
+  Unspecified configuration.
+
+----
+
+.. c:function:: zfp_config zfp_config_rate(double rate, zfp_bool align)
+
+  :ref:`Fixed-rate mode <mode-fixed-rate>` using *rate* compressed bits per
+  value.  When *align* is true, word alignment is enforced to further
+  constrain the rate (see :c:func:`zfp_stream_set_rate`).
+
+----
+
+.. c:function:: zfp_config zfp_config_precision(uint precision)
+
+  :ref:`Fixed-precision mode <mode-fixed-precision>` using *precision*
+  uncompressed bits per value (see also :c:func:`zfp_stream_set_precision`).
+
+----
+
+.. c:function:: zfp_config zfp_config_accuracy(double tolerance)
+
+  :ref:`Fixed-accuracy mode <mode-fixed-accuracy>` with absolute error no
+  larger than *tolerance* (see also :c:func:`zfp_stream_set_accuracy`).
+
+----
+
+.. c:function:: zfp_config zfp_config_reversible()
+
+  :ref:`Reversible (lossless) mode <mode-reversible>` (see also
+  :c:func:`zfp_stream_set_reversible`).
+
+----
+
+.. c:function:: zfp_config zfp_config_expert(uint minbits, uint maxbits, uint maxprec, int minexp)
+
+  :ref:`Expert mode <mode-expert>` with given parameters (see also
+  :c:func:`zfp_stream_set_params`).
+
 
 Array Metadata
 ^^^^^^^^^^^^^^

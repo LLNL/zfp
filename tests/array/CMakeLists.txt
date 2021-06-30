@@ -55,7 +55,23 @@ function(zfp_add_cpp_tests dims type bits)
   target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
   add_test(NAME ${test_name} COMMAND ${test_name})
 
+  # test compressed const array class
+  set(test_name testConstArray${dims}${type})
+  add_executable(${test_name} ${test_name}.cpp)
+  target_link_libraries(${test_name}
+    gtest gtest_main zfp zfpHashLib genSmoothRandNumsLib zfpChecksumsLib)
+  target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
+  add_test(NAME ${test_name} COMMAND ${test_name})
+
 endfunction()
+
+# temporary const array test for one type/dim
+#set(test_name testConstArray1d)
+#add_executable(${test_name} ${test_name}.cpp)
+#target_link_libraries(${test_name}
+#  gtest gtest_main zfp zfpHashLib genSmoothRandNumsLib zfpChecksumsLib)
+#target_compile_definitions(${test_name} PRIVATE ${zfp_compressed_array_defs})
+#add_test(NAME ${test_name} COMMAND ${test_name})
 
 zfp_add_cpp_tests(1 f 32)
 zfp_add_cpp_tests(2 f 32)

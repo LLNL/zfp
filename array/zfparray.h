@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <climits>
-#include <stdexcept>
 #include <string>
 #include "zfp.h"
 #include "zfp/exception.h"

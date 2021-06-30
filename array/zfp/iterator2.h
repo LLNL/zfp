@@ -89,7 +89,7 @@ protected:
     size_t ymax = container->max_y();
     size_t nx = xmax - xmin;
     size_t ny = ymax - ymin;
-    if (p == nx * ny) {
+    if (size_t(p) == nx * ny) {
       x = xmin;
       y = ymax;
     }

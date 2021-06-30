@@ -38,7 +38,7 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForIntegerData_when_construct_expect_zfpArra
   EXPECT_EQ(ZFP_HEADER_SIZE_BITS, zfp_write_header(stream, field, ZFP_HEADER_FULL));
   zfp_stream_flush(stream);
 
-  zfp::zfp_codec<double, 2>::header h(buffer);
+  zfp::codec::zfp2<double>::header h(buffer);
 
   try {
     zfp::array* arr = zfp::array::construct(h);
@@ -64,7 +64,7 @@ TEST_F(TEST_FIXTURE, given_onlyInclude2D3D_and_zfpHeaderFor1D_when_construct_exp
   EXPECT_EQ(ZFP_HEADER_SIZE_BITS, zfp_write_header(stream, field, ZFP_HEADER_FULL));
   zfp_stream_flush(stream);
 
-  zfp::zfp_codec<float, 1>::header h(buffer);
+  zfp::codec::zfp1<float>::header h(buffer);
 
   try {
     zfp::array* arr = zfp::array::construct(h);

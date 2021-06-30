@@ -35,3 +35,4 @@
 .. |boolrelease| replace:: 0.5.6
 .. |4darrrelease| replace:: 0.5.6
 .. |fieldrelease| replace:: 0.5.6
+.. |carrrelease| replace:: 0.5.6

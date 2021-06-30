@@ -32,23 +32,39 @@ Diffusion Solver
 The :program:`diffusion` example is a simple forward Euler solver for the
 heat equation on a 2D regular grid, and is intended to show how to declare
 and work with |zfp|'s compressed arrays, as well as give an idea of how
-changing the compression rate and cache size affects the error in the
+changing the compression parameters and cache size affects the error in the
 solution and solution time.  The usage is::
 
-    diffusion [-i] [-n nx ny] [-p] [-t nt] [-r rate] [-c blocks]
+    diffusion [options]
+      -a <tolerance> : absolute error tolerance (requires -c)
+      -b <blocks> : cache size in number of 4x4 blocks
+      -c : use read-only arrays (needed for -a, -p, -R)
+      -i : traverse arrays using iterators instead of integer indices
+      -j : use OpenMP parallel execution
+      -n <nx> <ny> : grid dimensions
+      -p <precision> : precision in uncompressed bits/value (requires -c)
+      -r <rate> : rate in compressed bits/value
+      -R : reversible mode (requires -c)
+      -t <nt> : number of time steps
 
-where *rate* specifies the exact number of compressed bits to store per
+Here *rate* specifies the exact number of compressed bits to store per
 double-precision floating-point value (default = 64); *nx* and *ny*
 specify the grid size (default = 100 |times| 100); *nt* specifies the number
 of time steps to take (the default is to run until time *t* = 1); and *blocks*
-is the number of uncompressed blocks to cache (default = *nx* / 2).  The
-:code:`-i` option enables array traversal via iterators instead of indices.
+is the number of uncompressed blocks to cache
+(default = (|sqrt| *n*) / 4, where *n* = *nx* |times| *ny*).
+The :code:`-i` option enables array traversal via iterators instead of indices.
 
-The :code:`-p` option enables OpenMP parallel execution, which makes use
+The :code:`-j` option enables OpenMP parallel execution, which makes use
 of both mutable and immutable :ref:`private views <private_immutable_view>`
 for thread-safe array access.  Note that this example has not been
 optimized for parallel performance, but rather serves to show how to
 work with |zfp|'s compressed arrays in a multithreaded setting.
+
+This example also illustrates how :ref:`read-only arrays <carray_classes>`
+(:code:`-c`) may be used in conjunction with fixed-rate (:code:`-r`),
+fixed-precision (:code:`-p`), fixed-accuracy (:code:`-a`),
+or reversible (:code:`-R`) mode.
 
 Running diffusion with the following arguments::
 
@@ -59,13 +75,13 @@ Running diffusion with the following arguments::
 
 should result in this output::
 
-    rate=8 sum=0.996442 error=4.813938e-07
-    rate=12 sum=0.998338 error=1.967777e-07
-    rate=20 sum=0.998326 error=1.967952e-07
-    rate=64 sum=0.998326 error=1.967957e-07
+    sum=0.996442 error=4.813938e-07
+    sum=0.998338 error=1.967777e-07
+    sum=0.998326 error=1.967952e-07
+    sum=0.998326 error=1.967957e-07
 
 For speed and quality comparison, the solver solves the same problem using
-uncompressed double-precision arrays when :code:`-r` is omitted.
+uncompressed double-precision arrays when compression parameters are omitted.
 
 The :program:`diffusionC` program is the same example written entirely
 in C using the |cfp| :ref:`wrappers <cfp>` around the C++ compressed array

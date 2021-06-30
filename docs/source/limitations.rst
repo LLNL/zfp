@@ -28,6 +28,14 @@ that will address some of these limitations.
   the header; array dimensions are otherwise limited only by the size
   of an unsigned integer.
 
+- The :ref:`compressed-array classes <arrays>` have additional size
+  restrictions.  The :ref:`cache <caching>` supports at most
+  2\ :sup:`p-1` - 1 blocks, where *p* is the number of bits in a :code:`uint`
+  (usually *p* = 32).  Consequently, the number of elements in a
+  *d*-dimensional compressed array is at most
+  |4powd| |times| (2\ :sup:`p-1` - 1), or about 8 billion elements for 1D
+  arrays.
+
 - Conventional pointers and references to individual array elements are
   not available.  That is, constructions like :code:`double* ptr = &a[i];`
   are not possible when :code:`a` is a |zfp| array.  However, as of
@@ -72,8 +80,9 @@ that will address some of these limitations.
   array C++ class.  This will be added in the near future.
 
 - The :ref:`C wrappers <cfp>` for |zfp|'s compressed arrays support only
-  basic array accesses.  There is currently no C interface for proxy
-  references, pointers, iterators, or views.
+  a subset of the C++ API.  |zfp| |4darrrelease| adds support for proxy
+  references, pointers, and iterators, but views and read-only arrays are
+  not yet supported,
 
 - The Python and Fortran bindings do not yet support compressed arrays.
   Moreover, only a select subset of the :ref:`high-level API <hl-api>`

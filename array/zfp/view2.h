@@ -324,7 +324,7 @@ class private_const_view : public preview<Container> {
 public:
   typedef Container container_type;
   typedef typename container_type::value_type value_type;
-  typedef typename container_type::codec_type codec_type;
+  typedef typename container_type::store_type store_type;
   typedef typename zfp::internal::dim2::const_reference<private_const_view> const_reference;
   typedef typename zfp::internal::dim2::const_pointer<private_const_view> const_pointer;
   typedef typename zfp::internal::dim2::const_iterator<private_const_view> const_iterator;
@@ -379,7 +379,7 @@ protected:
   // inspector
   value_type get(size_t x, size_t y) const { return cache.get(x, y); }
 
-  BlockCache2<value_type, codec_type> cache; // cache of decompressed blocks
+  BlockCache2<value_type, store_type> cache; // cache of decompressed blocks
 };
 
 // thread-safe read-write view of private 2D (sub)array
@@ -388,7 +388,6 @@ class private_view : public private_const_view<Container> {
 public:
   typedef Container container_type;
   typedef typename container_type::value_type value_type;
-  typedef typename container_type::codec_type codec_type;
   typedef typename zfp::internal::dim2::reference<private_view> reference;
   typedef typename zfp::internal::dim2::pointer<private_view> pointer;
   typedef typename zfp::internal::dim2::iterator<private_view> iterator;
