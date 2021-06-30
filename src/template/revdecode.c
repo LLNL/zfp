@@ -38,10 +38,7 @@ _t2(rev_decode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, In
   int prec = (int)stream_read_bits(stream, PBITS) + 1;
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* decode integer coefficients */
-  if (BLOCK_SIZE <= 64)
-    bits += _t1(decode_ints, UInt)(stream, maxbits - bits, prec, ublock, BLOCK_SIZE);
-  else
-    bits += _t1(decode_many_ints, UInt)(stream, maxbits - bits, prec, ublock, BLOCK_SIZE);
+  bits += _t1(decode_ints, UInt)(stream, maxbits - bits, prec, ublock, BLOCK_SIZE);
   /* read at least minbits bits */
   if (bits < minbits) {
     stream_skip(stream, minbits - bits);

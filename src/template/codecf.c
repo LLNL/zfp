@@ -5,14 +5,18 @@
 static uint
 precision(int maxexp, uint maxprec, int minexp, int dims)
 {
-  return MIN(maxprec, (uint)MAX(0, maxexp - minexp + 2 * (dims + 1)));
+#if (ZFP_ROUNDING_MODE != ZFP_ROUND_NEVER) && defined(ZFP_WITH_TIGHT_ERROR)
+  return MIN(maxprec, (uint)MAX(0, maxexp - minexp + 2 * dims + 1));
+#else
+  return MIN(maxprec, (uint)MAX(0, maxexp - minexp + 2 * dims + 2));
+#endif
 }
 
 /* map integer x relative to exponent e to floating-point number */
 static Scalar
 _t1(dequantize, Scalar)(Int x, int e)
 {
-  return LDEXP((Scalar)x, e - (CHAR_BIT * (int)sizeof(Scalar) - 2));
+  return LDEXP((Scalar)x, e - ((int)(CHAR_BIT * sizeof(Scalar)) - 2));
 }
 
 /* inverse block-floating-point transform from signed integers */

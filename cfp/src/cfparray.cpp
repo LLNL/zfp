@@ -110,7 +110,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_header_size_w,
       cfp_header_rate,
       cfp_header_data,
-      cfp_header_size,
+      cfp_header_size_bytes,
     },
   },
   // array1d
@@ -212,7 +212,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_header_size_w,
       cfp_header_rate,
       cfp_header_data,
-      cfp_header_size,
+      cfp_header_size_bytes,
     },
   },
   // array2f
@@ -317,7 +317,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_header_size_w,
       cfp_header_rate,
       cfp_header_data,
-      cfp_header_size,
+      cfp_header_size_bytes,
     },
   },
   // array2d
@@ -422,7 +422,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_header_size_w,
       cfp_header_rate,
       cfp_header_data,
-      cfp_header_size,
+      cfp_header_size_bytes,
     },
   },
   // array3f
@@ -529,7 +529,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_header_size_w,
       cfp_header_rate,
       cfp_header_data,
-      cfp_header_size,
+      cfp_header_size_bytes,
     },
   },
   // array3d
@@ -636,7 +636,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_header_size_w,
       cfp_header_rate,
       cfp_header_data,
-      cfp_header_size,
+      cfp_header_size_bytes,
     },
   },
   // array4f
@@ -745,7 +745,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_header_size_w,
       cfp_header_rate,
       cfp_header_data,
-      cfp_header_size,
+      cfp_header_size_bytes,
     },
   },
   // array4d
@@ -854,7 +854,7 @@ const cfp_api CFP_NAMESPACE = {
       cfp_header_size_w,
       cfp_header_rate,
       cfp_header_data,
-      cfp_header_size,
+      cfp_header_size_bytes,
     },
   },
 };

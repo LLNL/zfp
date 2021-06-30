@@ -34,6 +34,11 @@ template<> inline __host__ __device__ int scalar_sizeof<long long int>() { retur
 template<> inline __host__ __device__ int scalar_sizeof<float>() { return 4; }
 template<> inline __host__ __device__ int scalar_sizeof<int>() { return 4; }
 
+template<typename T> inline __host__ __device__ T get_nbmask();
+
+template<> inline __host__ __device__ unsigned int get_nbmask<unsigned int>() { return 0xaaaaaaaau; }
+template<> inline __host__ __device__ unsigned long long int get_nbmask<unsigned long long int>() { return 0xaaaaaaaaaaaaaaaaull; }
+
 template<typename T> struct zfp_traits;
 
 template<> struct zfp_traits<double>

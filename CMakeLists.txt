@@ -1,8 +1,4 @@
-if(WIN32)
-  cmake_minimum_required(VERSION 3.4)
-else()
-  cmake_minimum_required(VERSION 3.1)
-endif()
+cmake_minimum_required(VERSION 3.9)
 
 # Fail immediately if not using an out-of-source build
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
@@ -14,7 +10,7 @@ endif()
 #------------------------------------------------------------------------------#
 # Parse version number from zfp.h
 #------------------------------------------------------------------------------#
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/include/zfp.h _zfp_h_contents)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/include/zfp/version.h _zfp_h_contents)
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MAJOR[ \t]+([0-9]+).*"
      "\\1" ZFP_VERSION_MAJOR ${_zfp_h_contents})
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MINOR[ \t]+([0-9]+).*"
@@ -117,10 +113,16 @@ endif()
 set(PPM_CHROMA 2 CACHE STRING "Chroma block dimensionality for ppm example")
 set_property(CACHE PPM_CHROMA PROPERTY STRINGS "1;2")
 
+set(ZFP_ROUNDING_MODE ZFP_ROUND_NEVER CACHE STRING
+  "Rounding mode for reducing bias")
+set_property(CACHE ZFP_ROUNDING_MODE PROPERTY STRINGS "ZFP_ROUND_NEVER;ZFP_ROUND_FIRST;ZFP_ROUND_LAST")
+
 option(ZFP_WITH_CUDA "Enable CUDA parallel compression" OFF)
 
 option(ZFP_WITH_BIT_STREAM_STRIDED "Enable strided access for progressive zfp streams" OFF)
 mark_as_advanced(ZFP_WITH_BIT_STREAM_STRIDED)
+
+option(ZFP_WITH_TIGHT_ERROR "Reduce slack in absolute errors" OFF)
 
 option(ZFP_WITH_ALIGNED_ALLOC "Enable aligned memory allocation" OFF)
 mark_as_advanced(ZFP_WITH_ALIGNED_ALLOC)
@@ -192,6 +194,17 @@ endif()
 
 if(ZFP_WITH_BIT_STREAM_STRIDED)
   list(APPEND zfp_public_defs BIT_STREAM_STRIDED)
+endif()
+
+if(NOT (ZFP_ROUNDING_MODE EQUAL ZFP_ROUND_NEVER))
+  list(APPEND zfp_private_defs ZFP_ROUNDING_MODE=${ZFP_ROUNDING_MODE})
+endif()
+
+if(ZFP_WITH_TIGHT_ERROR)
+  if((ZFP_ROUNDING_MODE EQUAL 0) OR (ZFP_ROUNDING_MODE STREQUAL ZFP_ROUND_NEVER))
+    message(FATAL_ERROR "ZFP_WITH_TIGHT_ERROR requires ZFP_ROUND_FIRST or ZFP_ROUND_LAST rounding mode")
+  endif()
+  list(APPEND zfp_private_defs ZFP_WITH_TIGHT_ERROR)
 endif()
 
 if(ZFP_WITH_ALIGNED_ALLOC)

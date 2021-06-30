@@ -21,7 +21,7 @@ The problems addressed in this section include:
   #. :ref:`Are the array dimensions large enough? <p-large>`
   #. :ref:`Is the data logically structured? <p-structured>`
   #. :ref:`Is the data set embedded in a regular grid? <p-embedded>`
-  #. :ref:`Is the data provided to the zfp executable a raw binary array? <p-binary>`
+  #. :ref:`Have fill values, NaNs, and infinities been removed? <p-invalid>`
   #. :ref:`Is the byte order correct? <p-endian>`
   #. :ref:`Is the floating-point precision correct? <p-float-precision>`
   #. :ref:`Is the integer precision correct? <p-int-precision>`
@@ -174,7 +174,7 @@ be invoked with::
 in this case.  Things will go horribly wrong if |zfp| in this case is called
 with *nx* = *d1*, *ny* = *d2*, *nz* = *d3*.  The entire data set will still
 compress and decompress, but compression ratio and quality will likely suffer
-greatly.
+greatly.  See :ref:`this FAQ <q-layout>` for more details.
 
 -------------------------------------------------------------------------------
 

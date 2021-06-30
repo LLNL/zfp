@@ -1,0 +1,20 @@
+.surface_job:
+    tags:
+        - batch
+        - surface
+
+.surface_build_cpu:
+    extends: [.build_cpu, .surface_job]
+
+.surface_test_cpu:
+    variables:
+       ci_test_regex: "."
+    extends: [.test_cpu, .surface_job]
+
+.surface_build_gpu:
+    extends: [.build_gpu, .surface_job]
+
+.surface_test_gpu:
+    variables:
+       ci_test_regex: "."
+    extends: [.test_gpu, .surface_job]

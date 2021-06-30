@@ -53,6 +53,11 @@ OMPFLAGS = -fopenmp
 # count cache misses
 # DEFS += -DZFP_WITH_CACHE_PROFILE
 
+# reduce bias and slack in errors
+# DEFS += -DZFP_ROUNDING_MODE=ZFP_ROUND_FIRST
+# DEFS += -DZFP_ROUNDING_MODE=ZFP_ROUND_LAST
+# DEFS += -DZFP_WITH_TIGHT_ERROR
+
 # build targets ---------------------------------------------------------------
 
 # default targets
@@ -102,6 +107,19 @@ ifdef ZFP_WITH_OPENMP
   ifneq ($(ZFP_WITH_OPENMP),0)
     ifneq ($(ZFP_WITH_OPENMP),OFF)
       FLAGS += $(OMPFLAGS)
+    endif
+  endif
+endif
+
+# rounding mode and slack in error
+ifdef ZFP_ROUNDING_MODE
+  FLAGS += -DZFP_ROUNDING_MODE=$(ZFP_ROUNDING_MODE)
+  ifneq ($(ZFP_ROUNDING_MODE),0)
+    # tight error bound requires round-first or round-last mode
+    ifdef ZFP_WITH_TIGHT_ERROR
+      ifneq ($(ZFP_WITH_TIGHT_ERROR),0)
+        FLAGS += -DZFP_WITH_TIGHT_ERROR
+      endif
     endif
   endif
 endif

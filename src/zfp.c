@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "zfp.h"
 #include "zfp/macros.h"
+#include "zfp/version.h"
 #include "template/template.h"
 
 /* public data ------------------------------------------------------------- */
@@ -19,13 +20,13 @@ type_precision(zfp_type type)
 {
   switch (type) {
     case zfp_type_int32:
-      return CHAR_BIT * (uint)sizeof(int32);
+      return (uint)(CHAR_BIT * sizeof(int32));
     case zfp_type_int64:
-      return CHAR_BIT * (uint)sizeof(int64);
+      return (uint)(CHAR_BIT * sizeof(int64));
     case zfp_type_float:
-      return CHAR_BIT * (uint)sizeof(float);
+      return (uint)(CHAR_BIT * sizeof(float));
     case zfp_type_double:
-      return CHAR_BIT * (uint)sizeof(double);
+      return (uint)(CHAR_BIT * sizeof(double));
     default:
       return 0;
   }

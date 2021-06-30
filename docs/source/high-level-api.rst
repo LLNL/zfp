@@ -60,7 +60,7 @@ Macros
 .. c:macro:: ZFP_MIN_EXP
 
   Default compression parameter settings that impose no constraints.
-  The largest possible compressed block size, corresponding to 3D blocks
+  The largest possible compressed block size, corresponding to 4D blocks
   of doubles, is given by :c:macro:`ZFP_MAX_BITS`.  See also
   :c:type:`zfp_stream`.
 
@@ -158,6 +158,14 @@ bitwise ORed together.  Use :c:macro:`ZFP_DATA_ALL` to count all storage used.
   the high-level API.  For most common compression parameter settings,
   only :c:macro:`ZFP_MODE_SHORT_BITS` bits of header information are stored
   to encode the mode (see :c:func:`zfp_stream_mode`).
+
+.. c:macro: ZFP_ROUND_FIRST
+.. c:macro: ZFP_ROUND_NEVER
+.. c:macro: ZFP_ROUND_LAST
+
+  Available rounding modes for :c:macro:`ZFP_ROUNDING_MODE`, which
+  specifies at build time how |zfp| performs rounding in lossy compression
+  mode.
 
 
 .. _hl-types:
@@ -298,6 +306,7 @@ Types
 
 ----
 
+.. _field:
 .. index::
    single: Strided Arrays
 .. c:type:: zfp_field
@@ -352,7 +361,7 @@ Types
   is assumed to vary fastest, |zfp| can be thought of as assuming
   Fortran ordering.  For C ordered arrays, the user should transpose
   the dimensions or specify strides to properly describe the memory layout.
-  See this :ref:`discussion <p-dimensions>` for further details.
+  See :ref:`this FAQ <q-layout>` for further details.
 
 .. c:type:: zfp_bool
 
@@ -686,8 +695,6 @@ These functions encode a desired compression mode and associated parameters
   :ref:`Expert mode <mode-expert>` with given parameters (see also
   :c:func:`zfp_stream_set_params`).
 
-
-.. _hl-func-field:
 
 Array Metadata
 ^^^^^^^^^^^^^^

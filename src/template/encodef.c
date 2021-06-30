@@ -35,7 +35,7 @@ _t1(exponent_block, Scalar)(const Scalar* p, uint n)
 static Scalar
 _t1(quantize, Scalar)(Scalar x, int e)
 {
-  return LDEXP(x, (CHAR_BIT * (int)sizeof(Scalar) - 2) - e);
+  return LDEXP(x, ((int)(CHAR_BIT * sizeof(Scalar)) - 2) - e);
 }
 
 /* forward block-floating-point transform to signed integers */
