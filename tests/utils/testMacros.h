@@ -31,9 +31,9 @@
 #endif
 
 // for condensing repeat tests across different dimensionalities into singular tests
-#define _REPEATARG(...)  _REPEATN(__VA_ARGS__)
-#define _REPEATN(x, n) _REPEAT ## n ( x )
-#define _REPEAT1(x) x
-#define _REPEAT2(x) x, x
-#define _REPEAT3(x) x, x, x
-#define _REPEAT4(x) x, x, x, x
+#define _repeat_arg(...)  _repeatN(__VA_ARGS__)
+#define _repeatN(x, n) _repeat ## n ( x )
+#define _repeat1(x) x
+#define _repeat2(x) x, x
+#define _repeat3(x) x, x, x
+#define _repeat4(x) x, x, x, x

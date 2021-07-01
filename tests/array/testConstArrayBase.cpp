@@ -127,7 +127,7 @@ TEST_P(TEST_FIXTURE, when_constructorCalledWithCacheSize_then_minCacheSizeEnforc
     {
       if (std::get<0>(GetParam()) == TEST_RATE)
       {
-        ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_IMP) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+        ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_IMP) arr(_repeat_arg(inputDataSideLen, DIMS), config);
         EXPECT_LE(cacheSize, arr.cache_size());
       } else {
         GTEST_SKIP() << "[ SKIPPED  ] Implicit index only supported for fixed rate" << std::endl;
@@ -136,19 +136,19 @@ TEST_P(TEST_FIXTURE, when_constructorCalledWithCacheSize_then_minCacheSizeEnforc
     }
     case TEST_INDEX_VRB:
     {
-      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_VRB) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_VRB) arr(_repeat_arg(inputDataSideLen, DIMS), config);
       EXPECT_LE(cacheSize, arr.cache_size());
       break;
     }
     case TEST_INDEX_HY4:
     {
-      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY4) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY4) arr(_repeat_arg(inputDataSideLen, DIMS), config);
       EXPECT_LE(cacheSize, arr.cache_size());
       break;
     }
     case TEST_INDEX_HY8:
     {
-      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY8<DIMS>) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY8<DIMS>) arr(_repeat_arg(inputDataSideLen, DIMS), config);
       EXPECT_LE(cacheSize, arr.cache_size());
       break;
     }
@@ -166,7 +166,7 @@ TEST_P(TEST_FIXTURE, given_dataset_when_set_then_underlyingBitstreamChecksumMatc
     {
       if (std::get<0>(GetParam()) == TEST_RATE)
       {
-        ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_IMP) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+        ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_IMP) arr(_repeat_arg(inputDataSideLen, DIMS), config);
 
         computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, dimLens, config.mode, std::get<1>(GetParam()), &key1, &key2);
         uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
@@ -183,7 +183,7 @@ TEST_P(TEST_FIXTURE, given_dataset_when_set_then_underlyingBitstreamChecksumMatc
     }
     case TEST_INDEX_VRB:
     {
-      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_VRB) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_VRB) arr(_repeat_arg(inputDataSideLen, DIMS), config);
 
       computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, dimLens, config.mode, std::get<1>(GetParam()), &key1, &key2);
       uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
@@ -197,7 +197,7 @@ TEST_P(TEST_FIXTURE, given_dataset_when_set_then_underlyingBitstreamChecksumMatc
     }
     case TEST_INDEX_HY4:
     {
-      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY4) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY4) arr(_repeat_arg(inputDataSideLen, DIMS), config);
 
       computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, dimLens, config.mode, std::get<1>(GetParam()), &key1, &key2);
       uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
@@ -211,7 +211,7 @@ TEST_P(TEST_FIXTURE, given_dataset_when_set_then_underlyingBitstreamChecksumMatc
     }
     case TEST_INDEX_HY8:
     {
-      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY8<DIMS>) arr(_REPEATARG(inputDataSideLen, DIMS), config);
+      ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_HY8<DIMS>) arr(_repeat_arg(inputDataSideLen, DIMS), config);
 
       computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, dimLens, config.mode, std::get<1>(GetParam()), &key1, &key2);
       uint64 expectedChecksum = getChecksumByKey(DIMS, ZFP_TYPE, key1, key2);
@@ -234,14 +234,9 @@ TEST_P(TEST_FIXTURE, when_implicitIndexForNonRate_then_exceptionThrown)
     GTEST_SKIP();
 
   try {
-    ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_IMP) arr(_REPEATARG(inputDataSideLen, DIMS), config); 
+    ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_IMP) arr(_repeat_arg(inputDataSideLen, DIMS), config); 
     FailWhenNoExceptionThrown();
   } 
   catch (zfp::exception const& e) { /* hitting this block is test success so do nothing */ }
   catch (std::exception const& e) { FailAndPrintException(e); }
-
-  //EXPECT_THROW(
-  //  ( [&]{ ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_IMP) arr(_REPEATARG(inputDataSideLen, DIMS), config); }() ), 
-  //  zfp::exception
-  //);
 }
