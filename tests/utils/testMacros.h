@@ -31,7 +31,7 @@
 #endif
 
 // for condensing repeat tests across different dimensionalities into singular tests
-#define _repeat_arg(...)  _repeatN(x, n)
+#define _repeat_arg(x, n)  _repeatN(x, n)
 #define _repeatN(x, n) _repeat ## n ( x )
 #define _repeat1(x) x
 #define _repeat2(x) x, x
