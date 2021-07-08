@@ -5,7 +5,6 @@
 
 // templated C++ wrappers around libzfp low-level C functions
 namespace zfp {
-namespace cpp {
 
 // encoder declarations -------------------------------------------------------
 
@@ -281,7 +280,6 @@ template <>
 inline size_t
 decode_partial_block_strided<double>(zfp_stream* zfp, double* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_decode_partial_block_strided_double_4(zfp, p, (uint)nx, (uint)ny, (uint)nz, (uint)nw, (int)sx, (int)sy, (int)sz, (int)sw); }
 
-}
 }
 
 #endif
