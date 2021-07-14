@@ -208,7 +208,7 @@ Using HIP
 ---------
 
 As with CUDA, HIP support is by default disabled.  To enable HIP execution,
-|zfp| must be built with CMake with the :c:macro:`ZFP_WIH_HIP` macro
+|zfp| must be built with CMake with the :c:macro:`ZFP_WITH_HIP` macro
 set.  The |zfp| HIP implementation is based off the CUDA implementation
 and therefore shares its requirements; see the :ref:`CUDA <using-cuda>`
 section above.
@@ -250,25 +250,25 @@ decompression in this tool, see the :option:`-x` command-line option.
 The following table summarizes which execution policies are supported
 with which :ref:`compression modes <modes>`:
 
-  +---------------------------------+---------+---------+---------+
-  | (de)compression mode            | serial  | OpenMP  | CUDA    |
-  +===============+=================+=========+=========+=========+
-  |               | fixed rate      | |check| | |check| | |check| |
-  |               +-----------------+---------+---------+---------+
-  |               | fixed precision | |check| | |check| |         |
-  | compression   +-----------------+---------+---------+---------+
-  |               | fixed accuracy  | |check| | |check| |         |
-  |               +-----------------+---------+---------+---------+
-  |               | reversible      | |check| | |check| |         |
-  +---------------+-----------------+---------+---------+---------+
-  |               | fixed rate      | |check| |         | |check| |
-  |               +-----------------+---------+---------+---------+
-  |               | fixed precision | |check| |         |         |
-  | decompression +-----------------+---------+---------+---------+
-  |               | fixed accuracy  | |check| |         |         |
-  |               +-----------------+---------+---------+---------+
-  |               | reversible      | |check| |         |         |
-  +---------------+-----------------+---------+---------+---------+
+  +---------------------------------+---------+---------+---------+---------+
+  | (de)compression mode            | serial  | OpenMP  | CUDA    | HIP     |
+  +===============+=================+=========+=========+=========+=========+
+  |               | fixed rate      | |check| | |check| | |check| | |check| |
+  |               +-----------------+---------+---------+---------+---------+
+  |               | fixed precision | |check| | |check| | |check| | |check| |
+  | compression   +-----------------+---------+---------+---------+---------+
+  |               | fixed accuracy  | |check| | |check| | |check| | |check| |
+  |               +-----------------+---------+---------+---------+---------+
+  |               | reversible      | |check| | |check| |         |         |
+  +---------------+-----------------+---------+---------+---------+---------+
+  |               | fixed rate      | |check| |         | |check| | |check| |
+  |               +-----------------+---------+---------+---------+---------+
+  |               | fixed precision | |check| |         |         |         |
+  | decompression +-----------------+---------+---------+---------+---------+
+  |               | fixed accuracy  | |check| |         |         |         |
+  |               +-----------------+---------+---------+---------+---------+
+  |               | reversible      | |check| |         |         |         |
+  +---------------+-----------------+---------+---------+---------+---------+
 
 :c:func:`zfp_compress` and :c:func:`zfp_decompress` both return zero if the
 current execution policy is not supported for the requested compression
