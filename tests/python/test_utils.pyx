@@ -63,13 +63,13 @@ cdef extern from "stridedOperations.h":
                            zfpy.zfp_type zfpType)
     void getReversedStrides(int dims,
                             size_t n[4],
-                            int s[4])
+                            ptrdiff_t s[4])
     void getInterleavedStrides(int dims,
                                size_t n[4],
-                               int s[4])
+                               ptrdiff_t s[4])
     void getPermutedStrides(int dims,
                             size_t n[4],
-                            int s[4])
+                            ptrdiff_t s[4])
 
 cdef extern from "zfpCompressionParams.h":
     int computeFixedPrecisionParam(int param)
@@ -139,16 +139,16 @@ cdef extern from "zfpHash.h":
                            size_t bufsizeBytes)
     uint32_t hashArray32(const uint32_t* arr,
                          size_t nx,
-                         int sx)
+                         ptrdiff_t sx)
     uint32_t hashStridedArray32(const uint32_t* arr,
                                 size_t n[4],
-                                int s[4])
+                                ptrdiff_t s[4])
     uint64_t hashArray64(const uint64_t* arr,
                          size_t nx,
-                         int sx)
+                         ptrdiff_t sx)
     uint64_t hashStridedArray64(const uint64_t* arr,
                                 size_t n[4],
-                                int s[4])
+                                ptrdiff_t s[4])
 
 # enums
 stride_as_is = AS_IS
@@ -410,7 +410,7 @@ cpdef hashStridedArray(
     cdef size_t[4] padded_shape
     for i in range(4):
         padded_shape[i] = zfpy.gen_padded_int_list(shape)[i]
-    cdef int[4] padded_strides
+    cdef ptrdiff_t[4] padded_strides
     for i in range(4):
         padded_strides[i] = zfpy.gen_padded_int_list(strides)[i]
 
@@ -430,7 +430,7 @@ cpdef hashNumpyArray(
         raise ValueError("Unsupported stride config: {}".format(stride_conf))
 
     size = int(nparray.size)
-    cdef int[4] strides
+    cdef ptrdiff_t[4] strides
     cdef size_t[4] shape
     if stride_conf in [AS_IS, INTERLEAVED]:
         stride_width = 1 if stride_conf is AS_IS else 2
@@ -468,7 +468,7 @@ cpdef generateStridedRandomNumpyArray(
     shape = [int(x) for x in randomArray.shape[:ndim]]
     dtype = randomArray.dtype
     cdef zfpy.zfp_type ztype = zfpy.dtype_to_ztype(dtype)
-    cdef int[4] strides
+    cdef ptrdiff_t[4] strides
     for i in range(4):
         strides[i] = 0
     cdef size_t[4] dims

@@ -92,42 +92,42 @@ permuteSquareArray(void* inputArr, void* outputArr, size_t sideLen, int dims, zf
 }
 
 static void
-completeStrides(int dims, size_t n[4], int s[4])
+completeStrides(int dims, size_t n[4], ptrdiff_t s[4])
 {
   int i;
   for (i = 1; i < dims; i++) {
-    s[i] = s[i-1] * (int)n[i-1];
+    s[i] = s[i-1] * (ptrdiff_t)n[i-1];
   }
 }
 
 void
-getReversedStrides(int dims, size_t n[4], int s[4])
+getReversedStrides(int dims, size_t n[4], ptrdiff_t s[4])
 {
   s[0] = -1;
   completeStrides(dims, n, s);
 }
 
 void
-getInterleavedStrides(int dims, size_t n[4], int s[4])
+getInterleavedStrides(int dims, size_t n[4], ptrdiff_t s[4])
 {
   s[0] = 2;
   completeStrides(dims, n, s);
 }
 
 void
-getPermutedStrides(int dims, size_t n[4], int s[4])
+getPermutedStrides(int dims, size_t n[4], ptrdiff_t s[4])
 {
   if (dims == 4) {
-    s[0] = (int)(n[0] * n[1] * n[2]);
-    s[1] = (int)(n[0] * n[1]);
-    s[2] = (int)n[0];
+    s[0] = (ptrdiff_t)(n[0] * n[1] * n[2]);
+    s[1] = (ptrdiff_t)(n[0] * n[1]);
+    s[2] = (ptrdiff_t)n[0];
     s[3] = 1;
   } else if (dims == 3) {
-    s[0] = (int)(n[0] * n[1]);
-    s[1] = (int)n[0];
+    s[0] = (ptrdiff_t)(n[0] * n[1]);
+    s[1] = (ptrdiff_t)n[0];
     s[2] = 1;
   } else if (dims == 2) {
-    s[0] = (int)n[0];
+    s[0] = (ptrdiff_t)n[0];
     s[1] = 1;
   }
 }

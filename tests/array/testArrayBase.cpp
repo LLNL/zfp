@@ -463,7 +463,7 @@ TEST_F(TEST_FIXTURE, given_compatibleHeaderWrittenViaCApi_when_constructorFromSe
     EXPECT_EQ(arr2.dimensionality(), zfp_field_dimensionality(field));
     EXPECT_EQ(arr2.scalar_type(), zfp_field_type(field));
 
-    uint n[4];
+    size_t n[4];
     EXPECT_EQ(arr2.size(), zfp_field_size(field, n));
 
 #if DIMS == 1

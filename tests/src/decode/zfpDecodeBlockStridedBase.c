@@ -257,7 +257,7 @@ hashStridedBlock(Scalar* dataArr)
     n[i] = (i < DIMS) ? BLOCK_SIDE_LEN : 0;
   }
 
-  int s[4] = {SX, SY, SZ, SW};
+  ptrdiff_t s[4] = {SX, SY, SZ, SW};
 
   return _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)dataArr, n, s);
 }
