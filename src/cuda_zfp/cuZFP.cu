@@ -580,8 +580,9 @@ cuda_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
       cuZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, last_chunk, buffer_maxbits, num_sm);
     }
     // The total length in bits is now in the base of the prefix sum.
+    // but it excludes the 64-bit "add_padding". -> Pad to 64b, convert to bytes
     cudaMemcpy (&stream_bytes, d_offsets, sizeof (unsigned long long), cudaMemcpyDeviceToHost);
-    stream_bytes = (stream_bytes + 7) / 8;
+    stream_bytes = ((stream_bytes + 63) / 64) * 8;
   }
 
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, stream_bytes, 0, field->type);
