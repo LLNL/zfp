@@ -53,7 +53,7 @@ setChunkSize(void **state, uint threadCount, int param)
 
     case 0:
       // default chunk size (0 implies 1 chunk per thread)
-      chunk_size = (computeTotalBlocks(bundle->field) + threadCount - 1) / threadCount;
+      chunk_size = (uint)((computeTotalBlocks(bundle->field) + threadCount - 1) / threadCount);
       break;
 
     default:

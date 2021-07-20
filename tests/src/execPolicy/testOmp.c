@@ -55,7 +55,7 @@ setupForCompress(void **state)
 
   /* offset bitstream, so we can distinguish 0 from stream_size() returned from zfp_decompress() */
   bundle->bs = stream_open(bundle->buffer, bufferSize);
-  stream_skip(bundle->bs, stream_word_bits + 1);
+  stream_skip(bundle->bs, (uint)(stream_word_bits + 1));
 
   bundle->streamSize = stream_size(bundle->bs);
   assert_int_not_equal(bundle->streamSize, 0);
