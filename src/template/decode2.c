@@ -2,7 +2,7 @@
 
 /* scatter 4*4 block to strided array */
 static void
-_t2(scatter, Scalar, 2)(const Scalar* q, Scalar* p, int sx, int sy)
+_t2(scatter, Scalar, 2)(const Scalar* q, Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
 {
   uint x, y;
   for (y = 0; y < 4; y++, p += sy - 4 * sx)
@@ -12,9 +12,9 @@ _t2(scatter, Scalar, 2)(const Scalar* q, Scalar* p, int sx, int sy)
 
 /* scatter nx*ny block to strided array */
 static void
-_t2(scatter_partial, Scalar, 2)(const Scalar* q, Scalar* p, uint nx, uint ny, int sx, int sy)
+_t2(scatter_partial, Scalar, 2)(const Scalar* q, Scalar* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy)
 {
-  uint x, y;
+  size_t x, y;
   for (y = 0; y < ny; y++, p += sy - (ptrdiff_t)nx * sx, q += 4 - nx)
     for (x = 0; x < nx; x++, p += sx, q++)
       *p = *q;
@@ -36,24 +36,24 @@ _t2(inv_xform, Int, 2)(Int* p)
 /* public functions -------------------------------------------------------- */
 
 /* decode 4*4 block and store at p using strides (sx, sy) */
-uint
-_t2(zfp_decode_block_strided, Scalar, 2)(zfp_stream* stream, Scalar* p, int sx, int sy)
+size_t
+_t2(zfp_decode_block_strided, Scalar, 2)(zfp_stream* stream, Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
 {
   /* decode contiguous block */
   cache_align_(Scalar block[16]);
-  uint bits = _t2(zfp_decode_block, Scalar, 2)(stream, block);
+  size_t bits = _t2(zfp_decode_block, Scalar, 2)(stream, block);
   /* scatter block to strided array */
   _t2(scatter, Scalar, 2)(block, p, sx, sy);
   return bits;
 }
 
 /* decode nx*ny block and store at p using strides (sx, sy) */
-uint
-_t2(zfp_decode_partial_block_strided, Scalar, 2)(zfp_stream* stream, Scalar* p, uint nx, uint ny, int sx, int sy)
+size_t
+_t2(zfp_decode_partial_block_strided, Scalar, 2)(zfp_stream* stream, Scalar* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy)
 {
   /* decode contiguous block */
   cache_align_(Scalar block[16]);
-  uint bits = _t2(zfp_decode_block, Scalar, 2)(stream, block);
+  size_t bits = _t2(zfp_decode_block, Scalar, 2)(stream, block);
   /* scatter block to strided array */
   _t2(scatter_partial, Scalar, 2)(block, p, nx, ny, sx, sy);
   return bits;

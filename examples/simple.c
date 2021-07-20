@@ -8,7 +8,7 @@
 
 /* compress or decompress array */
 static int
-compress(double* array, int nx, int ny, int nz, double tolerance, zfp_bool decompress)
+compress(double* array, size_t nx, size_t ny, size_t nz, double tolerance, zfp_bool decompress)
 {
   int status = 0;    /* return value: 0 = success */
   zfp_type type;     /* array scalar type */
@@ -79,9 +79,9 @@ int main(int argc, char* argv[])
   zfp_bool decompress = (argc == 2 && !strcmp(argv[1], "-d"));
 
   /* allocate 100x100x100 array of doubles */
-  int nx = 100;
-  int ny = 100;
-  int nz = 100;
+  size_t nx = 100;
+  size_t ny = 100;
+  size_t nz = 100;
   double* array = malloc(nx * ny * nz * sizeof(double));
 
   if (!decompress) {

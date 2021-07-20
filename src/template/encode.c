@@ -6,7 +6,7 @@ static void _t2(fwd_xform, Int, DIMS)(Int* p);
 
 /* pad partial block of width n <= 4 and stride s */
 static void
-_t1(pad_block, Scalar)(Scalar* p, uint n, uint s)
+_t1(pad_block, Scalar)(Scalar* p, size_t n, ptrdiff_t s)
 {
   switch (n) {
     case 0:
@@ -28,7 +28,7 @@ _t1(pad_block, Scalar)(Scalar* p, uint n, uint s)
 
 /* forward lifting transform of 4-vector */
 static void
-_t1(fwd_lift, Int)(Int* p, uint s)
+_t1(fwd_lift, Int)(Int* p, ptrdiff_t s)
 {
   Int x, y, z, w;
   x = *p; p += s;

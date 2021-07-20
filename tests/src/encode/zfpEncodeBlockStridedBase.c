@@ -285,7 +285,7 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
     n[i] = (i < DIMS) ? BLOCK_SIDE_LEN : 0;
   }
 
-  int s[4] = {SX, SY, SZ, SW};
+  ptrdiff_t s[4] = {SX, SY, SZ, SW};
 
   UInt checksum = _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)bundle->dataArr, n, s);
   uint64 key1, key2;

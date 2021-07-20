@@ -2,7 +2,7 @@
 
 /* gather 4*4*4*4 block from strided array */
 static void
-_t2(gather, Scalar, 4)(Scalar* q, const Scalar* p, int sx, int sy, int sz, int sw)
+_t2(gather, Scalar, 4)(Scalar* q, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
 {
   uint x, y, z, w;
   for (w = 0; w < 4; w++, p += sw - 4 * sz)
@@ -14,9 +14,9 @@ _t2(gather, Scalar, 4)(Scalar* q, const Scalar* p, int sx, int sy, int sz, int s
 
 /* gather nx*ny*nz*nw block from strided array */
 static void
-_t2(gather_partial, Scalar, 4)(Scalar* q, const Scalar* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw)
+_t2(gather_partial, Scalar, 4)(Scalar* q, const Scalar* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
 {
-  uint x, y, z, w;
+  size_t x, y, z, w;
   for (w = 0; w < nw; w++, p += sw - (ptrdiff_t)nz * sz) {
     for (z = 0; z < nz; z++, p += sz - (ptrdiff_t)ny * sy) {
       for (y = 0; y < ny; y++, p += sy - (ptrdiff_t)nx * sx) {
@@ -67,8 +67,8 @@ _t2(fwd_xform, Int, 4)(Int* p)
 /* public functions -------------------------------------------------------- */
 
 /* encode 4*4*4*4 block stored at p using strides (sx, sy, sz, sw) */
-uint
-_t2(zfp_encode_block_strided, Scalar, 4)(zfp_stream* stream, const Scalar* p, int sx, int sy, int sz, int sw)
+size_t
+_t2(zfp_encode_block_strided, Scalar, 4)(zfp_stream* stream, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
 {
   /* gather block from strided array */
   cache_align_(Scalar block[256]);
@@ -78,8 +78,8 @@ _t2(zfp_encode_block_strided, Scalar, 4)(zfp_stream* stream, const Scalar* p, in
 }
 
 /* encode nx*ny*nz*nw block stored at p using strides (sx, sy, sz, sw) */
-uint
-_t2(zfp_encode_partial_block_strided, Scalar, 4)(zfp_stream* stream, const Scalar* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw)
+size_t
+_t2(zfp_encode_partial_block_strided, Scalar, 4)(zfp_stream* stream, const Scalar* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
 {
   /* gather block from strided array */
   cache_align_(Scalar block[256]);

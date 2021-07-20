@@ -113,7 +113,7 @@ teardownRandomData(void** state)
 }
 
 static void
-setupZfpFields(struct setupVars* bundle, int s[4])
+setupZfpFields(struct setupVars* bundle, ptrdiff_t s[4])
 {
   uint* n = bundle->dimLens;
 
@@ -176,7 +176,7 @@ allocateFieldArrays(stride_config stride, size_t totalRandomGenArrLen, Scalar** 
 }
 
 static void
-generateStridedRandomArray(stride_config stride, Scalar* randomGenArr, zfp_type type, size_t n[4], int s[4], Scalar** compressedArrPtr, Scalar** decompressedArrPtr)
+generateStridedRandomArray(stride_config stride, Scalar* randomGenArr, zfp_type type, size_t n[4], ptrdiff_t s[4], Scalar** compressedArrPtr, Scalar** decompressedArrPtr)
 {
   int dims, i;
   for (i = 0; i < 4; i++) {
@@ -232,7 +232,7 @@ initStridedFields(struct setupVars* bundle, stride_config stride)
 
   allocateFieldArrays(stride, bundle->totalRandomGenArrLen, &bundle->compressedArr, &bundle->decompressedArr);
 
-  int s[4] = {0};
+  ptrdiff_t s[4] = {0};
   generateStridedRandomArray(stride, bundle->randomGenArr, ZFP_TYPE, bundle->randomGenArrSideLen, s, &bundle->compressedArr, &bundle->decompressedArr);
 
   setupZfpFields(bundle, s);
@@ -429,7 +429,7 @@ isDecompressedArrayChecksumsMatch(struct setupVars* bundle)
 
   // hash decompressedArr
   const UInt* arr = (const UInt*)bundle->decompressedArr;
-  int strides[4] = {0, 0, 0, 0};
+  ptrdiff_t strides[4] = {0, 0, 0, 0};
   zfp_field_stride(field, strides);
 
   uint64 checksum = 0;
@@ -536,7 +536,7 @@ runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
     case PERMUTED: {
         // test one scalar at a time for bitwise equality
         const size_t* n = bundle->randomGenArrSideLen;
-        int strides[4];
+        ptrdiff_t strides[4];
         ptrdiff_t offset = 0;
         size_t i, j, k, l;
         zfp_field_stride(field, strides);

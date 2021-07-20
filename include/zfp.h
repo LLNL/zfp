@@ -133,10 +133,10 @@ typedef enum {
 
 /* uncompressed array; use accessors to get/set members */
 typedef struct {
-  zfp_type type;       /* scalar type (e.g. int32, double) */
-  uint nx, ny, nz, nw; /* sizes (zero for unused dimensions) */
-  int sx, sy, sz, sw;  /* strides (zero for contiguous array a[nw][nz][ny][nx]) */
-  void* data;          /* pointer to array data */
+  zfp_type type;            /* scalar type (e.g. int32, double) */
+  size_t nx, ny, nz, nw;    /* sizes (zero for unused dimensions) */
+  ptrdiff_t sx, sy, sz, sw; /* strides (zero for contiguous array a[nw][nz][ny][nx]) */
+  void* data;               /* pointer to array data */
 } zfp_field;
 
 #ifdef __cplusplus
@@ -384,7 +384,7 @@ zfp_field*       /* allocated field metadata */
 zfp_field_1d(
   void* pointer, /* pointer to uncompressed scalars (may be NULL) */
   zfp_type type, /* scalar type */
-  uint nx        /* number of scalars */
+  size_t nx      /* number of scalars */
 );
 
 /* allocate metadata for 2D field f[ny][nx] */
@@ -392,8 +392,8 @@ zfp_field*       /* allocated field metadata */
 zfp_field_2d(
   void* pointer, /* pointer to uncompressed scalars (may be NULL) */
   zfp_type type, /* scalar type */
-  uint nx,       /* number of scalars in x dimension */
-  uint ny        /* number of scalars in y dimension */
+  size_t nx,     /* number of scalars in x dimension */
+  size_t ny      /* number of scalars in y dimension */
 );
 
 /* allocate metadata for 3D field f[nz][ny][nx] */
@@ -401,9 +401,9 @@ zfp_field*       /* allocated field metadata */
 zfp_field_3d(
   void* pointer, /* pointer to uncompressed scalars (may be NULL) */
   zfp_type type, /* scalar type */
-  uint nx,       /* number of scalars in x dimension */
-  uint ny,       /* number of scalars in y dimension */
-  uint nz        /* number of scalars in z dimension */
+  size_t nx,     /* number of scalars in x dimension */
+  size_t ny,     /* number of scalars in y dimension */
+  size_t nz      /* number of scalars in z dimension */
 );
 
 /* allocate metadata for 4D field f[nw][nz][ny][nx] */
@@ -411,10 +411,10 @@ zfp_field*       /* allocated field metadata */
 zfp_field_4d(
   void* pointer, /* pointer to uncompressed scalars (may be NULL) */
   zfp_type type, /* scalar type */
-  uint nx,       /* number of scalars in x dimension */
-  uint ny,       /* number of scalars in y dimension */
-  uint nz,       /* number of scalars in z dimension */
-  uint nw        /* number of scalars in w dimension */
+  size_t nx,     /* number of scalars in x dimension */
+  size_t ny,     /* number of scalars in y dimension */
+  size_t nz,     /* number of scalars in z dimension */
+  size_t nw      /* number of scalars in w dimension */
 );
 
 /* deallocate field metadata */
@@ -459,7 +459,7 @@ zfp_field_dimensionality(
 size_t                    /* total number of scalars */
 zfp_field_size(
   const zfp_field* field, /* field metadata */
-  uint* size              /* number of scalars per dimension (may be NULL) */
+  size_t* size            /* number of scalars per dimension (may be NULL) */
 );
 
 /* number of bytes spanned by field data including gaps (if any) */
@@ -472,7 +472,7 @@ zfp_field_size_bytes(
 zfp_bool                  /* true if array is not contiguous */
 zfp_field_stride(
   const zfp_field* field, /* field metadata */
-  int* stride             /* stride in scalars per dimension (may be NULL) */
+  ptrdiff_t* stride       /* stride in scalars per dimension (may be NULL) */
 );
 
 /* field contiguity test */
@@ -507,68 +507,68 @@ zfp_field_set_type(
 void
 zfp_field_set_size_1d(
   zfp_field* field, /* field metadata */
-  uint nx           /* number of scalars */
+  size_t nx         /* number of scalars */
 );
 
 /* set 2D field size */
 void
 zfp_field_set_size_2d(
   zfp_field* field, /* field metadata */
-  uint nx,          /* number of scalars in x dimension */
-  uint ny           /* number of scalars in y dimension */
+  size_t nx,        /* number of scalars in x dimension */
+  size_t ny         /* number of scalars in y dimension */
 );
 
 /* set 3D field size */
 void
 zfp_field_set_size_3d(
   zfp_field* field, /* field metadata */
-  uint nx,          /* number of scalars in x dimension */
-  uint ny,          /* number of scalars in y dimension */
-  uint nz           /* number of scalars in z dimension */
+  size_t nx,        /* number of scalars in x dimension */
+  size_t ny,        /* number of scalars in y dimension */
+  size_t nz         /* number of scalars in z dimension */
 );
 
 /* set 4D field size */
 void
 zfp_field_set_size_4d(
   zfp_field* field, /* field metadata */
-  uint nx,          /* number of scalars in x dimension */
-  uint ny,          /* number of scalars in y dimension */
-  uint nz,          /* number of scalars in z dimension */
-  uint nw           /* number of scalars in w dimension */
+  size_t nx,        /* number of scalars in x dimension */
+  size_t ny,        /* number of scalars in y dimension */
+  size_t nz,        /* number of scalars in z dimension */
+  size_t nw         /* number of scalars in w dimension */
 );
 
 /* set 1D field stride in number of scalars */
 void
 zfp_field_set_stride_1d(
   zfp_field* field, /* field metadata */
-  int sx            /* stride in number of scalars: &f[1] - &f[0] */
+  ptrdiff_t sx      /* stride in number of scalars: &f[1] - &f[0] */
 );
 
 /* set 2D field strides in number of scalars */
 void
 zfp_field_set_stride_2d(
   zfp_field* field, /* field metadata */
-  int sx,           /* stride in x dimension: &f[0][1] - &f[0][0] */
-  int sy            /* stride in y dimension: &f[1][0] - &f[0][0] */
+  ptrdiff_t sx,     /* stride in x dimension: &f[0][1] - &f[0][0] */
+  ptrdiff_t sy      /* stride in y dimension: &f[1][0] - &f[0][0] */
 );
 
 /* set 3D field strides in number of scalars */
 void
 zfp_field_set_stride_3d(
   zfp_field* field, /* field metadata */
-  int sx,           /* stride in x dimension: &f[0][0][1] - &f[0][0][0] */
-  int sy,           /* stride in y dimension: &f[0][1][0] - &f[0][0][0] */
-  int sz            /* stride in z dimension: &f[1][0][0] - &f[0][0][0] */
+  ptrdiff_t sx,     /* stride in x dimension: &f[0][0][1] - &f[0][0][0] */
+  ptrdiff_t sy,     /* stride in y dimension: &f[0][1][0] - &f[0][0][0] */
+  ptrdiff_t sz      /* stride in z dimension: &f[1][0][0] - &f[0][0][0] */
 );
 
 /* set 4D field strides in number of scalars */
 void
 zfp_field_set_stride_4d(
   zfp_field* field, /* field metadata */
-  int sx,           /* stride in x dimension: &f[0][0][0][1] - &f[0][0][0][0] */
-  int sy,           /* stride in y dimension: &f[0][0][1][0] - &f[0][0][0][0] */
-  int sz,           /* stride in z dimension: &f[0][1][0][0] - &f[0][0][0][0] */
-  int sw            /* stride in w dimension: &f[1][0][0][0] - &f[0][0][0][0] */
+  ptrdiff_t sx,     /* stride in x dimension: &f[0][0][0][1] - &f[0][0][0][0] */
+  ptrdiff_t sy,     /* stride in y dimension: &f[0][0][1][0] - &f[0][0][0][0] */
+  ptrdiff_t sz,     /* stride in z dimension: &f[0][1][0][0] - &f[0][0][0][0] */
+  ptrdiff_t sw      /* stride in w dimension: &f[1][0][0][0] - &f[0][0][0][0] */
 );
 
 /* set field scalar type and dimensions */
@@ -637,68 +637,68 @@ needed for the compressed block.
 */
 
 /* encode 1D contiguous block of 4 values */
-uint zfp_encode_block_int32_1(zfp_stream* stream, const int32* block);
-uint zfp_encode_block_int64_1(zfp_stream* stream, const int64* block);
-uint zfp_encode_block_float_1(zfp_stream* stream, const float* block);
-uint zfp_encode_block_double_1(zfp_stream* stream, const double* block);
+size_t zfp_encode_block_int32_1(zfp_stream* stream, const int32* block);
+size_t zfp_encode_block_int64_1(zfp_stream* stream, const int64* block);
+size_t zfp_encode_block_float_1(zfp_stream* stream, const float* block);
+size_t zfp_encode_block_double_1(zfp_stream* stream, const double* block);
 
 /* encode 1D complete or partial block from strided array */
-uint zfp_encode_block_strided_int32_1(zfp_stream* stream, const int32* p, int sx);
-uint zfp_encode_block_strided_int64_1(zfp_stream* stream, const int64* p, int sx);
-uint zfp_encode_block_strided_float_1(zfp_stream* stream, const float* p, int sx);
-uint zfp_encode_block_strided_double_1(zfp_stream* stream, const double* p, int sx);
-uint zfp_encode_partial_block_strided_int32_1(zfp_stream* stream, const int32* p, uint nx, int sx);
-uint zfp_encode_partial_block_strided_int64_1(zfp_stream* stream, const int64* p, uint nx, int sx);
-uint zfp_encode_partial_block_strided_float_1(zfp_stream* stream, const float* p, uint nx, int sx);
-uint zfp_encode_partial_block_strided_double_1(zfp_stream* stream, const double* p, uint nx, int sx);
+size_t zfp_encode_block_strided_int32_1(zfp_stream* stream, const int32* p, ptrdiff_t sx);
+size_t zfp_encode_block_strided_int64_1(zfp_stream* stream, const int64* p, ptrdiff_t sx);
+size_t zfp_encode_block_strided_float_1(zfp_stream* stream, const float* p, ptrdiff_t sx);
+size_t zfp_encode_block_strided_double_1(zfp_stream* stream, const double* p, ptrdiff_t sx);
+size_t zfp_encode_partial_block_strided_int32_1(zfp_stream* stream, const int32* p, size_t nx, ptrdiff_t sx);
+size_t zfp_encode_partial_block_strided_int64_1(zfp_stream* stream, const int64* p, size_t nx, ptrdiff_t sx);
+size_t zfp_encode_partial_block_strided_float_1(zfp_stream* stream, const float* p, size_t nx, ptrdiff_t sx);
+size_t zfp_encode_partial_block_strided_double_1(zfp_stream* stream, const double* p, size_t nx, ptrdiff_t sx);
 
 /* encode 2D contiguous block of 4x4 values */
-uint zfp_encode_block_int32_2(zfp_stream* stream, const int32* block);
-uint zfp_encode_block_int64_2(zfp_stream* stream, const int64* block);
-uint zfp_encode_block_float_2(zfp_stream* stream, const float* block);
-uint zfp_encode_block_double_2(zfp_stream* stream, const double* block);
+size_t zfp_encode_block_int32_2(zfp_stream* stream, const int32* block);
+size_t zfp_encode_block_int64_2(zfp_stream* stream, const int64* block);
+size_t zfp_encode_block_float_2(zfp_stream* stream, const float* block);
+size_t zfp_encode_block_double_2(zfp_stream* stream, const double* block);
 
 /* encode 2D complete or partial block from strided array */
-uint zfp_encode_partial_block_strided_int32_2(zfp_stream* stream, const int32* p, uint nx, uint ny, int sx, int sy);
-uint zfp_encode_partial_block_strided_int64_2(zfp_stream* stream, const int64* p, uint nx, uint ny, int sx, int sy);
-uint zfp_encode_partial_block_strided_float_2(zfp_stream* stream, const float* p, uint nx, uint ny, int sx, int sy);
-uint zfp_encode_partial_block_strided_double_2(zfp_stream* stream, const double* p, uint nx, uint ny, int sx, int sy);
-uint zfp_encode_block_strided_int32_2(zfp_stream* stream, const int32* p, int sx, int sy);
-uint zfp_encode_block_strided_int64_2(zfp_stream* stream, const int64* p, int sx, int sy);
-uint zfp_encode_block_strided_float_2(zfp_stream* stream, const float* p, int sx, int sy);
-uint zfp_encode_block_strided_double_2(zfp_stream* stream, const double* p, int sx, int sy);
+size_t zfp_encode_partial_block_strided_int32_2(zfp_stream* stream, const int32* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_encode_partial_block_strided_int64_2(zfp_stream* stream, const int64* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_encode_partial_block_strided_float_2(zfp_stream* stream, const float* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_encode_partial_block_strided_double_2(zfp_stream* stream, const double* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_encode_block_strided_int32_2(zfp_stream* stream, const int32* p, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_encode_block_strided_int64_2(zfp_stream* stream, const int64* p, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_encode_block_strided_float_2(zfp_stream* stream, const float* p, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_encode_block_strided_double_2(zfp_stream* stream, const double* p, ptrdiff_t sx, ptrdiff_t sy);
 
 /* encode 3D contiguous block of 4x4x4 values */
-uint zfp_encode_block_int32_3(zfp_stream* stream, const int32* block);
-uint zfp_encode_block_int64_3(zfp_stream* stream, const int64* block);
-uint zfp_encode_block_float_3(zfp_stream* stream, const float* block);
-uint zfp_encode_block_double_3(zfp_stream* stream, const double* block);
+size_t zfp_encode_block_int32_3(zfp_stream* stream, const int32* block);
+size_t zfp_encode_block_int64_3(zfp_stream* stream, const int64* block);
+size_t zfp_encode_block_float_3(zfp_stream* stream, const float* block);
+size_t zfp_encode_block_double_3(zfp_stream* stream, const double* block);
 
 /* encode 3D complete or partial block from strided array */
-uint zfp_encode_block_strided_int32_3(zfp_stream* stream, const int32* p, int sx, int sy, int sz);
-uint zfp_encode_block_strided_int64_3(zfp_stream* stream, const int64* p, int sx, int sy, int sz);
-uint zfp_encode_block_strided_float_3(zfp_stream* stream, const float* p, int sx, int sy, int sz);
-uint zfp_encode_block_strided_double_3(zfp_stream* stream, const double* p, int sx, int sy, int sz);
-uint zfp_encode_partial_block_strided_int32_3(zfp_stream* stream, const int32* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
-uint zfp_encode_partial_block_strided_int64_3(zfp_stream* stream, const int64* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
-uint zfp_encode_partial_block_strided_float_3(zfp_stream* stream, const float* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
-uint zfp_encode_partial_block_strided_double_3(zfp_stream* stream, const double* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
+size_t zfp_encode_block_strided_int32_3(zfp_stream* stream, const int32* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_encode_block_strided_int64_3(zfp_stream* stream, const int64* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_encode_block_strided_float_3(zfp_stream* stream, const float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_encode_block_strided_double_3(zfp_stream* stream, const double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_encode_partial_block_strided_int32_3(zfp_stream* stream, const int32* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_encode_partial_block_strided_int64_3(zfp_stream* stream, const int64* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_encode_partial_block_strided_float_3(zfp_stream* stream, const float* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_encode_partial_block_strided_double_3(zfp_stream* stream, const double* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
 
 /* encode 4D contiguous block of 4x4x4x4 values */
-uint zfp_encode_block_int32_4(zfp_stream* stream, const int32* block);
-uint zfp_encode_block_int64_4(zfp_stream* stream, const int64* block);
-uint zfp_encode_block_float_4(zfp_stream* stream, const float* block);
-uint zfp_encode_block_double_4(zfp_stream* stream, const double* block);
+size_t zfp_encode_block_int32_4(zfp_stream* stream, const int32* block);
+size_t zfp_encode_block_int64_4(zfp_stream* stream, const int64* block);
+size_t zfp_encode_block_float_4(zfp_stream* stream, const float* block);
+size_t zfp_encode_block_double_4(zfp_stream* stream, const double* block);
 
 /* encode 4D complete or partial block from strided array */
-uint zfp_encode_block_strided_int32_4(zfp_stream* stream, const int32* p, int sx, int sy, int sz, int sw);
-uint zfp_encode_block_strided_int64_4(zfp_stream* stream, const int64* p, int sx, int sy, int sz, int sw);
-uint zfp_encode_block_strided_float_4(zfp_stream* stream, const float* p, int sx, int sy, int sz, int sw);
-uint zfp_encode_block_strided_double_4(zfp_stream* stream, const double* p, int sx, int sy, int sz, int sw);
-uint zfp_encode_partial_block_strided_int32_4(zfp_stream* stream, const int32* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw);
-uint zfp_encode_partial_block_strided_int64_4(zfp_stream* stream, const int64* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw);
-uint zfp_encode_partial_block_strided_float_4(zfp_stream* stream, const float* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw);
-uint zfp_encode_partial_block_strided_double_4(zfp_stream* stream, const double* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw);
+size_t zfp_encode_block_strided_int32_4(zfp_stream* stream, const int32* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_encode_block_strided_int64_4(zfp_stream* stream, const int64* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_encode_block_strided_float_4(zfp_stream* stream, const float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_encode_block_strided_double_4(zfp_stream* stream, const double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_encode_partial_block_strided_int32_4(zfp_stream* stream, const int32* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_encode_partial_block_strided_int64_4(zfp_stream* stream, const int64* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_encode_partial_block_strided_float_4(zfp_stream* stream, const float* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_encode_partial_block_strided_double_4(zfp_stream* stream, const double* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
 
 /* low-level API: decoder -------------------------------------------------- */
 
@@ -709,68 +709,68 @@ further details.
 */
 
 /* decode 1D contiguous block of 4 values */
-uint zfp_decode_block_int32_1(zfp_stream* stream, int32* block);
-uint zfp_decode_block_int64_1(zfp_stream* stream, int64* block);
-uint zfp_decode_block_float_1(zfp_stream* stream, float* block);
-uint zfp_decode_block_double_1(zfp_stream* stream, double* block);
+size_t zfp_decode_block_int32_1(zfp_stream* stream, int32* block);
+size_t zfp_decode_block_int64_1(zfp_stream* stream, int64* block);
+size_t zfp_decode_block_float_1(zfp_stream* stream, float* block);
+size_t zfp_decode_block_double_1(zfp_stream* stream, double* block);
 
 /* decode 1D complete or partial block from strided array */
-uint zfp_decode_block_strided_int32_1(zfp_stream* stream, int32* p, int sx);
-uint zfp_decode_block_strided_int64_1(zfp_stream* stream, int64* p, int sx);
-uint zfp_decode_block_strided_float_1(zfp_stream* stream, float* p, int sx);
-uint zfp_decode_block_strided_double_1(zfp_stream* stream, double* p, int sx);
-uint zfp_decode_partial_block_strided_int32_1(zfp_stream* stream, int32* p, uint nx, int sx);
-uint zfp_decode_partial_block_strided_int64_1(zfp_stream* stream, int64* p, uint nx, int sx);
-uint zfp_decode_partial_block_strided_float_1(zfp_stream* stream, float* p, uint nx, int sx);
-uint zfp_decode_partial_block_strided_double_1(zfp_stream* stream, double* p, uint nx, int sx);
+size_t zfp_decode_block_strided_int32_1(zfp_stream* stream, int32* p, ptrdiff_t sx);
+size_t zfp_decode_block_strided_int64_1(zfp_stream* stream, int64* p, ptrdiff_t sx);
+size_t zfp_decode_block_strided_float_1(zfp_stream* stream, float* p, ptrdiff_t sx);
+size_t zfp_decode_block_strided_double_1(zfp_stream* stream, double* p, ptrdiff_t sx);
+size_t zfp_decode_partial_block_strided_int32_1(zfp_stream* stream, int32* p, size_t nx, ptrdiff_t sx);
+size_t zfp_decode_partial_block_strided_int64_1(zfp_stream* stream, int64* p, size_t nx, ptrdiff_t sx);
+size_t zfp_decode_partial_block_strided_float_1(zfp_stream* stream, float* p, size_t nx, ptrdiff_t sx);
+size_t zfp_decode_partial_block_strided_double_1(zfp_stream* stream, double* p, size_t nx, ptrdiff_t sx);
 
 /* decode 2D contiguous block of 4x4 values */
-uint zfp_decode_block_int32_2(zfp_stream* stream, int32* block);
-uint zfp_decode_block_int64_2(zfp_stream* stream, int64* block);
-uint zfp_decode_block_float_2(zfp_stream* stream, float* block);
-uint zfp_decode_block_double_2(zfp_stream* stream, double* block);
+size_t zfp_decode_block_int32_2(zfp_stream* stream, int32* block);
+size_t zfp_decode_block_int64_2(zfp_stream* stream, int64* block);
+size_t zfp_decode_block_float_2(zfp_stream* stream, float* block);
+size_t zfp_decode_block_double_2(zfp_stream* stream, double* block);
 
 /* decode 2D complete or partial block from strided array */
-uint zfp_decode_block_strided_int32_2(zfp_stream* stream, int32* p, int sx, int sy);
-uint zfp_decode_block_strided_int64_2(zfp_stream* stream, int64* p, int sx, int sy);
-uint zfp_decode_block_strided_float_2(zfp_stream* stream, float* p, int sx, int sy);
-uint zfp_decode_block_strided_double_2(zfp_stream* stream, double* p, int sx, int sy);
-uint zfp_decode_partial_block_strided_int32_2(zfp_stream* stream, int32* p, uint nx, uint ny, int sx, int sy);
-uint zfp_decode_partial_block_strided_int64_2(zfp_stream* stream, int64* p, uint nx, uint ny, int sx, int sy);
-uint zfp_decode_partial_block_strided_float_2(zfp_stream* stream, float* p, uint nx, uint ny, int sx, int sy);
-uint zfp_decode_partial_block_strided_double_2(zfp_stream* stream, double* p, uint nx, uint ny, int sx, int sy);
+size_t zfp_decode_block_strided_int32_2(zfp_stream* stream, int32* p, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_decode_block_strided_int64_2(zfp_stream* stream, int64* p, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_decode_block_strided_float_2(zfp_stream* stream, float* p, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_decode_block_strided_double_2(zfp_stream* stream, double* p, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_decode_partial_block_strided_int32_2(zfp_stream* stream, int32* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_decode_partial_block_strided_int64_2(zfp_stream* stream, int64* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_decode_partial_block_strided_float_2(zfp_stream* stream, float* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy);
+size_t zfp_decode_partial_block_strided_double_2(zfp_stream* stream, double* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy);
 
 /* decode 3D contiguous block of 4x4x4 values */
-uint zfp_decode_block_int32_3(zfp_stream* stream, int32* block);
-uint zfp_decode_block_int64_3(zfp_stream* stream, int64* block);
-uint zfp_decode_block_float_3(zfp_stream* stream, float* block);
-uint zfp_decode_block_double_3(zfp_stream* stream, double* block);
+size_t zfp_decode_block_int32_3(zfp_stream* stream, int32* block);
+size_t zfp_decode_block_int64_3(zfp_stream* stream, int64* block);
+size_t zfp_decode_block_float_3(zfp_stream* stream, float* block);
+size_t zfp_decode_block_double_3(zfp_stream* stream, double* block);
 
 /* decode 3D complete or partial block from strided array */
-uint zfp_decode_block_strided_int32_3(zfp_stream* stream, int32* p, int sx, int sy, int sz);
-uint zfp_decode_block_strided_int64_3(zfp_stream* stream, int64* p, int sx, int sy, int sz);
-uint zfp_decode_block_strided_float_3(zfp_stream* stream, float* p, int sx, int sy, int sz);
-uint zfp_decode_block_strided_double_3(zfp_stream* stream, double* p, int sx, int sy, int sz);
-uint zfp_decode_partial_block_strided_int32_3(zfp_stream* stream, int32* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
-uint zfp_decode_partial_block_strided_int64_3(zfp_stream* stream, int64* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
-uint zfp_decode_partial_block_strided_float_3(zfp_stream* stream, float* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
-uint zfp_decode_partial_block_strided_double_3(zfp_stream* stream, double* p, uint nx, uint ny, uint nz, int sx, int sy, int sz);
+size_t zfp_decode_block_strided_int32_3(zfp_stream* stream, int32* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_decode_block_strided_int64_3(zfp_stream* stream, int64* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_decode_block_strided_float_3(zfp_stream* stream, float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_decode_block_strided_double_3(zfp_stream* stream, double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_decode_partial_block_strided_int32_3(zfp_stream* stream, int32* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_decode_partial_block_strided_int64_3(zfp_stream* stream, int64* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_decode_partial_block_strided_float_3(zfp_stream* stream, float* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
+size_t zfp_decode_partial_block_strided_double_3(zfp_stream* stream, double* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz);
 
 /* decode 4D contiguous block of 4x4x4x4 values */
-uint zfp_decode_block_int32_4(zfp_stream* stream, int32* block);
-uint zfp_decode_block_int64_4(zfp_stream* stream, int64* block);
-uint zfp_decode_block_float_4(zfp_stream* stream, float* block);
-uint zfp_decode_block_double_4(zfp_stream* stream, double* block);
+size_t zfp_decode_block_int32_4(zfp_stream* stream, int32* block);
+size_t zfp_decode_block_int64_4(zfp_stream* stream, int64* block);
+size_t zfp_decode_block_float_4(zfp_stream* stream, float* block);
+size_t zfp_decode_block_double_4(zfp_stream* stream, double* block);
 
 /* decode 4D complete or partial block from strided array */
-uint zfp_decode_block_strided_int32_4(zfp_stream* stream, int32* p, int sx, int sy, int sz, int sw);
-uint zfp_decode_block_strided_int64_4(zfp_stream* stream, int64* p, int sx, int sy, int sz, int sw);
-uint zfp_decode_block_strided_float_4(zfp_stream* stream, float* p, int sx, int sy, int sz, int sw);
-uint zfp_decode_block_strided_double_4(zfp_stream* stream, double* p, int sx, int sy, int sz, int sw);
-uint zfp_decode_partial_block_strided_int32_4(zfp_stream* stream, int32* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw);
-uint zfp_decode_partial_block_strided_int64_4(zfp_stream* stream, int64* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw);
-uint zfp_decode_partial_block_strided_float_4(zfp_stream* stream, float* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw);
-uint zfp_decode_partial_block_strided_double_4(zfp_stream* stream, double* p, uint nx, uint ny, uint nz, uint nw, int sx, int sy, int sz, int sw);
+size_t zfp_decode_block_strided_int32_4(zfp_stream* stream, int32* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_decode_block_strided_int64_4(zfp_stream* stream, int64* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_decode_block_strided_float_4(zfp_stream* stream, float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_decode_block_strided_double_4(zfp_stream* stream, double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_decode_partial_block_strided_int32_4(zfp_stream* stream, int32* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_decode_partial_block_strided_int64_4(zfp_stream* stream, int64* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_decode_partial_block_strided_float_4(zfp_stream* stream, float* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
+size_t zfp_decode_partial_block_strided_double_4(zfp_stream* stream, double* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
 
 /* low-level API: utility functions ---------------------------------------- */
 

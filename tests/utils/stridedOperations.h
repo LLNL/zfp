@@ -26,12 +26,12 @@ int
 permuteSquareArray(void* inputArr, void* outputArr, size_t sideLen, int dims, zfp_type zfpType);
 
 void
-getReversedStrides(int dims, size_t n[4], int s[4]);
+getReversedStrides(int dims, size_t n[4], ptrdiff_t s[4]);
 
 void
-getInterleavedStrides(int dims, size_t n[4], int s[4]);
+getInterleavedStrides(int dims, size_t n[4], ptrdiff_t s[4]);
 
 void
-getPermutedStrides(int dims, size_t n[4], int s[4]);
+getPermutedStrides(int dims, size_t n[4], ptrdiff_t s[4]);
 
 #endif
