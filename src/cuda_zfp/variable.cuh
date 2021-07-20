@@ -186,10 +186,14 @@ namespace cuZFP
         for (int i = 0; i < nstreams_chunk; i += grid_stride)
         {
             bool valid_stream = my_stream + i < nstreams_chunk;
-            unsigned long long offset0 = offsets[first_bitstream_block + i];
+            bool active_thread_block = first_bitstream_block + i < nstreams_chunk;
+            unsigned long long offset0 = 0;
             unsigned long long offset = 0;
             uint length_bits = 0;
             uint add_padding = 0;
+            if (active_thread_block)
+                offset0 = offsets[first_bitstream_block + i];
+
             if (valid_stream)
             {
                 offset = offsets[my_stream + i];
@@ -206,6 +210,7 @@ namespace cuZFP
 
             // Check if there is overlap between input and output at the grid level.
             // Grid sync if needed, otherwise just syncthreads to protect the shared memory.
+            // All the threads launched must participate in a grid::sync
             int last_stream = min(nstreams_chunk, i + grid_stride);
             unsigned long long writing_to = (offsets[last_stream] + 31) / 32;
             unsigned long long reading_from = (first_stream_chunk + i) * maxbits;
@@ -214,9 +219,10 @@ namespace cuZFP
             else
                 __syncthreads();
 
-            // Compact the shared memory data and write it to global memory
-            process<tile_size, num_tiles>(valid_stream, offset0, offset, length_bits, add_padding,
-                                          tid, sm_in, sm_out, maxpad32, sm_length, streams);
+            // Compact the shared memory data of the whole thread block and write it to global memory
+            if (active_thread_block)
+                process<tile_size, num_tiles>(valid_stream, offset0, offset, length_bits, add_padding,
+                                            tid, sm_in, sm_out, maxpad32, sm_length, streams);
         }
 
         // Reset the base of the offsets array, for the next chunk's prefix sum
@@ -257,6 +263,7 @@ namespace cuZFP
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
+            max_blocks = min(nstream_chunk, max_blocks);
             dim3 threads(tile_size, num_tiles, 1);
             cudaLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
                                         dim3(max_blocks, 1, 1), threads, kernelArgs, shmem, 0);
@@ -270,6 +277,7 @@ namespace cuZFP
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
+            max_blocks = min(nstream_chunk, max_blocks);
             dim3 threads(tile_size, num_tiles, 1);
             cudaLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
                                         dim3(max_blocks, 1, 1), threads, kernelArgs, shmem, 0);
@@ -283,6 +291,7 @@ namespace cuZFP
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
+            max_blocks = min(nstream_chunk, max_blocks);
             dim3 threads(tile_size, num_tiles, 1);
             cudaLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
                                         dim3(max_blocks, 1, 1), threads, kernelArgs, shmem, 0);
@@ -296,6 +305,7 @@ namespace cuZFP
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
+            max_blocks = min(nstream_chunk, max_blocks);
             dim3 threads(tile_size, num_tiles, 1);
             cudaLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
                                         dim3(max_blocks, 1, 1), threads, kernelArgs, shmem, 0);
