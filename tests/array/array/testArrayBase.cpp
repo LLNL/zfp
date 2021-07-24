@@ -273,7 +273,7 @@ TEST_F(TEST_FIXTURE, given_serializedCompressedArrayFromWrongDimensionality_when
       FailWhenNoExceptionThrown();
     } catch (zfp::exception const & e) {
       // short headers are available in (1D, 2D, and) 3D when ZFP_RATE_PARAM_BITS <= 32
-      EXPECT_LT(arr.dimensionality(), 4);
+      EXPECT_LT(arr.dimensionality(), 4u);
       EXPECT_EQ(e.what(), std::string("zfp array dimensionality does not match header"));
     } catch (std::exception const & e) {
       FailAndPrintException(e);

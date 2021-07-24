@@ -136,7 +136,7 @@ _t1(CFP_ARRAY_TYPE, size_w)(CFP_ARRAY_TYPE self)
 static void
 _t1(CFP_ARRAY_TYPE, resize)(CFP_ARRAY_TYPE self, size_t nx, size_t ny, size_t nz, size_t nw, zfp_bool clear)
 {
-  static_cast<ZFP_ARRAY_TYPE*>(self.object)->resize(nx, ny, nz, nw, clear);
+  static_cast<ZFP_ARRAY_TYPE*>(self.object)->resize(nx, ny, nz, nw, !!clear);
 }
 
 static ZFP_SCALAR_TYPE

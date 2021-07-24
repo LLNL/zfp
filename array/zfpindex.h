@@ -101,7 +101,7 @@ public:
   // bit offset of given block
   size_t block_offset(size_t block_index) const
   {
-    return data[block_index];
+    return static_cast<size_t>(data[block_index]);
   }
 
   // reset index

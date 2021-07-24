@@ -9,7 +9,7 @@ _t1(CFP_ARRAY_TYPE, ctor)(size_t n, double rate, const ZFP_SCALAR_TYPE* p, size_
 static void
 _t1(CFP_ARRAY_TYPE, resize)(CFP_ARRAY_TYPE self, size_t n, zfp_bool clear)
 {
-  static_cast<ZFP_ARRAY_TYPE*>(self.object)->resize(n, clear);
+  static_cast<ZFP_ARRAY_TYPE*>(self.object)->resize(n, !!clear);
 }
 
 static ZFP_SCALAR_TYPE

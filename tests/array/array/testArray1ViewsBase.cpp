@@ -139,7 +139,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_length
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOnCount_then_setsUniqueBlockBounds)
 {
   uint count = 3;
-  uint prevOffset, prevLen, offset, len;
+  size_t prevOffset, prevLen, offset, len;
 
   /* partition such that each gets at least 1 block */
   uint blockSideLen = 4;
@@ -159,8 +159,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
   EXPECT_LE(blockSideLen, prevLen);
 
   /* successive cases are compared to previous */
-  uint i;
-  for (i = 1; i < count - 1; i++) {
+  for (uint i = 1; i < count - 1; i++) {
     ZFP_ARRAY_TYPE::private_view v2(&arr);
     v2.partition(i, count);
 
@@ -186,7 +185,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
 
   /* last partition could hold a partial block */
   len = v3.size_x();
-  EXPECT_LT(0, len);
+  EXPECT_LT(0u, len);
 
   /* expect to end on final index */
   EXPECT_EQ(arr.size_x(), offset + len);
