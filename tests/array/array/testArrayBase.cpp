@@ -589,9 +589,9 @@ TEST_F(TEST_FIXTURE, given_uncompatibleSerializedMem_when_factoryFuncConstruct_t
 
 #if DIMS == 1
 // with write random access in 1D, fixed-rate params rounded up to multiples of 16
-INSTANTIATE_TEST_CASE_P(TestManyCompressionRates, TEST_FIXTURE, ::testing::Values(1, 2));
+INSTANTIATE_TEST_SUITE_P(TestManyCompressionRates, TEST_FIXTURE, ::testing::Values(1, 2));
 #else
-INSTANTIATE_TEST_CASE_P(TestManyCompressionRates, TEST_FIXTURE, ::testing::Values(0, 1, 2));
+INSTANTIATE_TEST_SUITE_P(TestManyCompressionRates, TEST_FIXTURE, ::testing::Values(0, 1, 2));
 #endif
 
 TEST_P(TEST_FIXTURE, given_dataset_when_set_then_underlyingBitstreamChecksumMatches)

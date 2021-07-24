@@ -69,7 +69,7 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
 }
 
 #if DIMS == 1
-INSTANTIATE_TEST_CASE_P(TestManyCompressionModes, 
+INSTANTIATE_TEST_SUITE_P(TestManyCompressionModes, 
                         TEST_FIXTURE,
                         ::testing::Values(
                             testConfig(TEST_RATE,1,TEST_INDEX_IMP), testConfig(TEST_RATE,2,TEST_INDEX_IMP),
@@ -92,7 +92,7 @@ INSTANTIATE_TEST_CASE_P(TestManyCompressionModes,
                         TEST_FIXTURE::PrintToStringParamName()
 );
 #else
-INSTANTIATE_TEST_CASE_P(TestManyCompressionModes, 
+INSTANTIATE_TEST_SUITE_P(TestManyCompressionModes, 
                         TEST_FIXTURE,
                         ::testing::Values(
                             testConfig(TEST_RATE,0,TEST_INDEX_IMP), testConfig(TEST_RATE,1,TEST_INDEX_IMP), testConfig(TEST_RATE,2,TEST_INDEX_IMP),
