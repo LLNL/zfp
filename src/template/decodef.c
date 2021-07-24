@@ -36,7 +36,7 @@ _t2(decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock)
 /* public functions -------------------------------------------------------- */
 
 /* decode contiguous floating-point block */
-uint
+size_t
 _t2(zfp_decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock)
 {
   return REVERSIBLE(zfp) ? _t2(rev_decode_block, Scalar, DIMS)(zfp, fblock) : _t2(decode_block, Scalar, DIMS)(zfp, fblock);

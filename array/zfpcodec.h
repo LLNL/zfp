@@ -47,10 +47,10 @@ public:
     if (zfp_stream_compression_mode(stream) != zfp_mode_fixed_rate)
       return zfp_stream_maximum_size(stream, field);
     // fixed-rate case: exclude header
-    size_t bx = (std::max(field->nx, 1u) + 3) / 4;
-    size_t by = (std::max(field->ny, 1u) + 3) / 4;
-    size_t bz = (std::max(field->nz, 1u) + 3) / 4;
-    size_t bw = (std::max(field->nw, 1u) + 3) / 4;
+    size_t bx = (std::max(field->nx, size_t(1)) + 3) / 4;
+    size_t by = (std::max(field->ny, size_t(1)) + 3) / 4;
+    size_t bz = (std::max(field->nz, size_t(1)) + 3) / 4;
+    size_t bw = (std::max(field->nw, size_t(1)) + 3) / 4;
     size_t blocks = bx * by * bz * bw;
     return zfp::round_up(blocks * stream->maxbits, stream_alignment()) / CHAR_BIT;
   }

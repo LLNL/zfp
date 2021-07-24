@@ -6,7 +6,7 @@ static void _t2(inv_xform, Int, DIMS)(Int* p);
 
 /* inverse lifting transform of 4-vector */
 static void
-_t1(inv_lift, Int)(Int* p, uint s)
+_t1(inv_lift, Int)(Int* p, ptrdiff_t s)
 {
   Int x, y, z, w;
   x = *p; p += s;

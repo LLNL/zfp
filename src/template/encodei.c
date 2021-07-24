@@ -3,7 +3,7 @@ static uint _t2(rev_encode_block, Int, DIMS)(bitstream* stream, int minbits, int
 /* public functions -------------------------------------------------------- */
 
 /* encode contiguous integer block */
-uint
+size_t
 _t2(zfp_encode_block, Int, DIMS)(zfp_stream* zfp, const Int* iblock)
 {
   cache_align_(Int block[BLOCK_SIZE]);

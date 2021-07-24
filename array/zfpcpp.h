@@ -80,69 +80,69 @@ encode_block<double, 4>(zfp_stream* zfp, const double* block) { return zfp_encod
 
 template <>
 inline size_t
-encode_block_strided<float>(zfp_stream* zfp, const float* p, ptrdiff_t sx) { return zfp_encode_block_strided_float_1(zfp, p, (int)sx); }
+encode_block_strided<float>(zfp_stream* zfp, const float* p, ptrdiff_t sx) { return zfp_encode_block_strided_float_1(zfp, p, sx); }
 
 template <>
 inline size_t
-encode_block_strided<float>(zfp_stream* zfp, const float* p, ptrdiff_t sx, ptrdiff_t sy) { return zfp_encode_block_strided_float_2(zfp, p, (int)sx, (int)sy); }
+encode_block_strided<float>(zfp_stream* zfp, const float* p, ptrdiff_t sx, ptrdiff_t sy) { return zfp_encode_block_strided_float_2(zfp, p, sx, sy); }
 
 template <>
 inline size_t
-encode_block_strided<float>(zfp_stream* zfp, const float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_encode_block_strided_float_3(zfp, p, (int)sx, (int)sy, (int)sz); }
+encode_block_strided<float>(zfp_stream* zfp, const float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_encode_block_strided_float_3(zfp, p, sx, sy, sz); }
 
 template <>
 inline size_t
-encode_block_strided<float>(zfp_stream* zfp, const float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_encode_block_strided_float_4(zfp, p, (int)sx, (int)sy, (int)sz, (int)sw); }
+encode_block_strided<float>(zfp_stream* zfp, const float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_encode_block_strided_float_4(zfp, p, sx, sy, sz, sw); }
 
 template <>
 inline size_t
-encode_block_strided<double>(zfp_stream* zfp, const double* p, ptrdiff_t sx) { return zfp_encode_block_strided_double_1(zfp, p, (int)sx); }
+encode_block_strided<double>(zfp_stream* zfp, const double* p, ptrdiff_t sx) { return zfp_encode_block_strided_double_1(zfp, p, sx); }
 
 template <>
 inline size_t
-encode_block_strided<double>(zfp_stream* zfp, const double* p, ptrdiff_t sx, ptrdiff_t sy) { return zfp_encode_block_strided_double_2(zfp, p, (int)sx, (int)sy); }
+encode_block_strided<double>(zfp_stream* zfp, const double* p, ptrdiff_t sx, ptrdiff_t sy) { return zfp_encode_block_strided_double_2(zfp, p, sx, sy); }
 
 template <>
 inline size_t
-encode_block_strided<double>(zfp_stream* zfp, const double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_encode_block_strided_double_3(zfp, p, (int)sx, (int)sy, (int)sz); }
+encode_block_strided<double>(zfp_stream* zfp, const double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_encode_block_strided_double_3(zfp, p, sx, sy, sz); }
 
 template <>
 inline size_t
-encode_block_strided<double>(zfp_stream* zfp, const double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_encode_block_strided_double_4(zfp, p, (int)sx, (int)sy, (int)sz, (int)sw); }
+encode_block_strided<double>(zfp_stream* zfp, const double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_encode_block_strided_double_4(zfp, p, sx, sy, sz, sw); }
 
 template <>
 inline size_t
 encode_partial_block_strided<float>(zfp_stream* zfp, const float* p, size_t nx, ptrdiff_t sx)
-{ return zfp_encode_partial_block_strided_float_1(zfp, p, (uint)nx, (int)sx); }
+{ return zfp_encode_partial_block_strided_float_1(zfp, p, nx, sx); }
 
 template <>
 inline size_t
-encode_partial_block_strided<float>(zfp_stream* zfp, const float* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy) { return zfp_encode_partial_block_strided_float_2(zfp, p, (uint)nx, (uint)ny, (int)sx, (int)sy); }
+encode_partial_block_strided<float>(zfp_stream* zfp, const float* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy) { return zfp_encode_partial_block_strided_float_2(zfp, p, nx, ny, sx, sy); }
 
 template <>
 inline size_t
-encode_partial_block_strided<float>(zfp_stream* zfp, const float* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_encode_partial_block_strided_float_3(zfp, p, (uint)nx, (uint)ny, (uint)nz, (int)sx, (int)sy, (int)sz); }
+encode_partial_block_strided<float>(zfp_stream* zfp, const float* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_encode_partial_block_strided_float_3(zfp, p, nx, ny, nz, sx, sy, sz); }
 
 template <>
 inline size_t
-encode_partial_block_strided<float>(zfp_stream* zfp, const float* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_encode_partial_block_strided_float_4(zfp, p, (uint)nx, (uint)ny, (uint)nz, (uint)nw, (int)sx, (int)sy, (int)sz, (int)sw); }
+encode_partial_block_strided<float>(zfp_stream* zfp, const float* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_encode_partial_block_strided_float_4(zfp, p, nx, ny, nz, nw, sx, sy, sz, sw); }
 
 template <>
 inline size_t
 encode_partial_block_strided<double>(zfp_stream* zfp, const double* p, size_t nx, ptrdiff_t sx)
-{ return zfp_encode_partial_block_strided_double_1(zfp, p, (uint)nx, (int)sx); }
+{ return zfp_encode_partial_block_strided_double_1(zfp, p, nx, sx); }
 
 template <>
 inline size_t
-encode_partial_block_strided<double>(zfp_stream* zfp, const double* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy) { return zfp_encode_partial_block_strided_double_2(zfp, p, (uint)nx, (uint)ny, (int)sx, (int)sy); }
+encode_partial_block_strided<double>(zfp_stream* zfp, const double* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy) { return zfp_encode_partial_block_strided_double_2(zfp, p, nx, ny, sx, sy); }
 
 template <>
 inline size_t
-encode_partial_block_strided<double>(zfp_stream* zfp, const double* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_encode_partial_block_strided_double_3(zfp, p, (uint)nx, (uint)ny, (uint)nz, (int)sx, (int)sy, (int)sz); }
+encode_partial_block_strided<double>(zfp_stream* zfp, const double* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_encode_partial_block_strided_double_3(zfp, p, nx, ny, nz, sx, sy, sz); }
 
 template <>
 inline size_t
-encode_partial_block_strided<double>(zfp_stream* zfp, const double* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_encode_partial_block_strided_double_4(zfp, p, (uint)nx, (uint)ny, (uint)nz, (uint)nw, (int)sx, (int)sy, (int)sz, (int)sw); }
+encode_partial_block_strided<double>(zfp_stream* zfp, const double* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_encode_partial_block_strided_double_4(zfp, p, nx, ny, nz, nw, sx, sy, sz, sw); }
 
 // decoder declarations -------------------------------------------------------
 
@@ -218,67 +218,67 @@ decode_block<double, 4>(zfp_stream* zfp, double* block) { return zfp_decode_bloc
 
 template <>
 inline size_t
-decode_block_strided<float>(zfp_stream* zfp, float* p, ptrdiff_t sx) { return zfp_decode_block_strided_float_1(zfp, p, (int)sx); }
+decode_block_strided<float>(zfp_stream* zfp, float* p, ptrdiff_t sx) { return zfp_decode_block_strided_float_1(zfp, p, sx); }
 
 template <>
 inline size_t
-decode_block_strided<float>(zfp_stream* zfp, float* p, ptrdiff_t sx, ptrdiff_t sy) { return zfp_decode_block_strided_float_2(zfp, p, (int)sx, (int)sy); }
+decode_block_strided<float>(zfp_stream* zfp, float* p, ptrdiff_t sx, ptrdiff_t sy) { return zfp_decode_block_strided_float_2(zfp, p, sx, sy); }
 
 template <>
 inline size_t
-decode_block_strided<float>(zfp_stream* zfp, float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_decode_block_strided_float_3(zfp, p, (int)sx, (int)sy, (int)sz); }
+decode_block_strided<float>(zfp_stream* zfp, float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_decode_block_strided_float_3(zfp, p, sx, sy, sz); }
 
 template <>
 inline size_t
-decode_block_strided<float>(zfp_stream* zfp, float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_decode_block_strided_float_4(zfp, p, (int)sx, (int)sy, (int)sz, (int)sw); }
+decode_block_strided<float>(zfp_stream* zfp, float* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_decode_block_strided_float_4(zfp, p, sx, sy, sz, sw); }
 
 template <>
 inline size_t
-decode_block_strided<double>(zfp_stream* zfp, double* p, ptrdiff_t sx) { return zfp_decode_block_strided_double_1(zfp, p, (int)sx); }
+decode_block_strided<double>(zfp_stream* zfp, double* p, ptrdiff_t sx) { return zfp_decode_block_strided_double_1(zfp, p, sx); }
 
 template <>
 inline size_t
-decode_block_strided<double>(zfp_stream* zfp, double* p, ptrdiff_t sx, ptrdiff_t sy) { return zfp_decode_block_strided_double_2(zfp, p, (int)sx, (int)sy); }
+decode_block_strided<double>(zfp_stream* zfp, double* p, ptrdiff_t sx, ptrdiff_t sy) { return zfp_decode_block_strided_double_2(zfp, p, sx, sy); }
 
 template <>
 inline size_t
-decode_block_strided<double>(zfp_stream* zfp, double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_decode_block_strided_double_3(zfp, p, (int)sx, (int)sy, (int)sz); }
+decode_block_strided<double>(zfp_stream* zfp, double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_decode_block_strided_double_3(zfp, p, sx, sy, sz); }
 
 template <>
 inline size_t
-decode_block_strided<double>(zfp_stream* zfp, double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_decode_block_strided_double_4(zfp, p, (int)sx, (int)sy, (int)sz, (int)sw); }
+decode_block_strided<double>(zfp_stream* zfp, double* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_decode_block_strided_double_4(zfp, p, sx, sy, sz, sw); }
 
 template <>
 inline size_t
-decode_partial_block_strided<float>(zfp_stream* zfp, float* p, size_t nx, ptrdiff_t sx) { return zfp_decode_partial_block_strided_float_1(zfp, p, (uint)nx, (int)sx); }
+decode_partial_block_strided<float>(zfp_stream* zfp, float* p, size_t nx, ptrdiff_t sx) { return zfp_decode_partial_block_strided_float_1(zfp, p, nx, sx); }
 
 template <>
 inline size_t
-decode_partial_block_strided<float>(zfp_stream* zfp, float* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy) { return zfp_decode_partial_block_strided_float_2(zfp, p, (uint)nx, (uint)ny, (int)sx, (int)sy); }
+decode_partial_block_strided<float>(zfp_stream* zfp, float* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy) { return zfp_decode_partial_block_strided_float_2(zfp, p, nx, ny, sx, sy); }
 
 template <>
 inline size_t
-decode_partial_block_strided<float>(zfp_stream* zfp, float* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_decode_partial_block_strided_float_3(zfp, p, (uint)nx, (uint)ny, (uint)nz, (int)sx, (int)sy, (int)sz); }
+decode_partial_block_strided<float>(zfp_stream* zfp, float* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_decode_partial_block_strided_float_3(zfp, p, nx, ny, nz, sx, sy, sz); }
 
 template <>
 inline size_t
-decode_partial_block_strided<float>(zfp_stream* zfp, float* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_decode_partial_block_strided_float_4(zfp, p, (uint)nx, (uint)ny, (uint)nz, (uint)nw, (int)sx, (int)sy, (int)sz, (int)sw); }
+decode_partial_block_strided<float>(zfp_stream* zfp, float* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_decode_partial_block_strided_float_4(zfp, p, nx, ny, nz, nw, sx, sy, sz, sw); }
 
 template <>
 inline size_t
-decode_partial_block_strided<double>(zfp_stream* zfp, double* p, size_t nx, ptrdiff_t sx) { return zfp_decode_partial_block_strided_double_1(zfp, p, (uint)nx, (int)sx); }
+decode_partial_block_strided<double>(zfp_stream* zfp, double* p, size_t nx, ptrdiff_t sx) { return zfp_decode_partial_block_strided_double_1(zfp, p, nx, sx); }
 
 template <>
 inline size_t
-decode_partial_block_strided<double>(zfp_stream* zfp, double* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy) { return zfp_decode_partial_block_strided_double_2(zfp, p, (uint)nx, (uint)ny, (int)sx, (int)sy); }
+decode_partial_block_strided<double>(zfp_stream* zfp, double* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy) { return zfp_decode_partial_block_strided_double_2(zfp, p, nx, ny, sx, sy); }
 
 template <>
 inline size_t
-decode_partial_block_strided<double>(zfp_stream* zfp, double* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_decode_partial_block_strided_double_3(zfp, p, (uint)nx, (uint)ny, (uint)nz, (int)sx, (int)sy, (int)sz); }
+decode_partial_block_strided<double>(zfp_stream* zfp, double* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) { return zfp_decode_partial_block_strided_double_3(zfp, p, nx, ny, nz, sx, sy, sz); }
 
 template <>
 inline size_t
-decode_partial_block_strided<double>(zfp_stream* zfp, double* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_decode_partial_block_strided_double_4(zfp, p, (uint)nx, (uint)ny, (uint)nz, (uint)nw, (int)sx, (int)sy, (int)sz, (int)sw); }
+decode_partial_block_strided<double>(zfp_stream* zfp, double* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) { return zfp_decode_partial_block_strided_double_4(zfp, p, nx, ny, nz, nw, sx, sy, sz, sw); }
 
 }
 

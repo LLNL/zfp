@@ -10,14 +10,14 @@
 #define ZFP_TEST_OMP
 #include "zfpEndtoendBase.c"
 
-static uint
+static size_t
 computeTotalBlocks(zfp_field* field)
 {
-  uint bx = 1;
-  uint by = 1;
-  uint bz = 1;
-  uint bw = 1;
-  switch(zfp_field_dimensionality(field)) {
+  size_t bx = 1;
+  size_t by = 1;
+  size_t bz = 1;
+  size_t bw = 1;
+  switch (zfp_field_dimensionality(field)) {
     case 4:
       bw = (field->nw + 3) / 4;
     case 3:
@@ -43,7 +43,7 @@ setChunkSize(void **state, uint threadCount, int param)
   switch (param) {
     case 2:
       // largest chunk size: total num blocks
-      chunk_size = computeTotalBlocks(bundle->field);
+      chunk_size = (uint)computeTotalBlocks(bundle->field);
       break;
 
     case 1:
@@ -53,7 +53,7 @@ setChunkSize(void **state, uint threadCount, int param)
 
     case 0:
       // default chunk size (0 implies 1 chunk per thread)
-      chunk_size = (computeTotalBlocks(bundle->field) + threadCount - 1) / threadCount;
+      chunk_size = (uint)((computeTotalBlocks(bundle->field) + threadCount - 1) / threadCount);
       break;
 
     default:

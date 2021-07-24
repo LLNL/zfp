@@ -53,7 +53,7 @@ hashBitstream(uint64* ptrStart, size_t bufsizeBytes)
 // hash 32-bit valued arrays (int32, float)
 
 uint32
-hashArray32(const uint32* arr, size_t nx, int sx)
+hashArray32(const uint32* arr, size_t nx, ptrdiff_t sx)
 {
   uint32 h = 0;
 
@@ -66,14 +66,14 @@ hashArray32(const uint32* arr, size_t nx, int sx)
 
 // unused n[] entries are 0
 uint32
-hashStridedArray32(const uint32* arr, size_t n[4], int s[4])
+hashStridedArray32(const uint32* arr, size_t n[4], ptrdiff_t s[4])
 {
   uint32 h = 0;
 
   size_t i, j, k, l;
-  for (l = 0; l < (n[3] ? n[3] : 1); arr += (s[3] - n[2]*s[2]), l++) {
-    for (k = 0; k < (n[2] ? n[2] : 1); arr += (s[2] - n[1]*s[1]), k++) {
-      for (j = 0; j < (n[1] ? n[1] : 1); arr += (s[1] - n[0]*s[0]), j++) {
+  for (l = 0; l < (n[3] ? n[3] : 1); arr += (s[3] - (ptrdiff_t)n[2]*s[2]), l++) {
+    for (k = 0; k < (n[2] ? n[2] : 1); arr += (s[2] - (ptrdiff_t)n[1]*s[1]), k++) {
+      for (j = 0; j < (n[1] ? n[1] : 1); arr += (s[1] - (ptrdiff_t)n[0]*s[0]), j++) {
         for (i = 0; i < (n[0] ? n[0] : 1); arr += s[0], i++) {
           hashValue(*arr, &h);
         }
@@ -87,7 +87,7 @@ hashStridedArray32(const uint32* arr, size_t n[4], int s[4])
 // hash 64-bit valued arrays (int64, double)
 
 uint64
-hashArray64(const uint64* arr, size_t nx, int sx)
+hashArray64(const uint64* arr, size_t nx, ptrdiff_t sx)
 {
   uint32 h1 = 0;
   uint32 h2 = 0;
@@ -104,15 +104,15 @@ hashArray64(const uint64* arr, size_t nx, int sx)
 
 // unused n[] entries are 0
 uint64
-hashStridedArray64(const uint64* arr, size_t n[4], int s[4])
+hashStridedArray64(const uint64* arr, size_t n[4], ptrdiff_t s[4])
 {
   uint32 h1 = 0;
   uint32 h2 = 0;
 
   size_t i, j, k, l;
-  for (l = 0; l < (n[3] ? n[3] : 1); arr += (s[3] - n[2]*s[2]), l++) {
-    for (k = 0; k < (n[2] ? n[2] : 1); arr += (s[2] - n[1]*s[1]), k++) {
-      for (j = 0; j < (n[1] ? n[1] : 1); arr += (s[1] - n[0]*s[0]), j++) {
+  for (l = 0; l < (n[3] ? n[3] : 1); arr += (s[3] - (ptrdiff_t)n[2]*s[2]), l++) {
+    for (k = 0; k < (n[2] ? n[2] : 1); arr += (s[2] - (ptrdiff_t)n[1]*s[1]), k++) {
+      for (j = 0; j < (n[1] ? n[1] : 1); arr += (s[1] - (ptrdiff_t)n[0]*s[0]), j++) {
         for (i = 0; i < (n[0] ? n[0] : 1); arr += s[0], i++) {
           hashValue64(*arr, &h1, &h2);
         }

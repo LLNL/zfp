@@ -296,6 +296,37 @@ Compressed Stream
 
 ----
 
+.. f:function:: zFORp_stream_rate(stream, dims)
+
+  Wrapper for :c:func:`zfp_stream_rate`
+
+  :p zFORp_stream stream [in]: Compressed stream
+  :p integer dims [in]: Number of dimensions
+  :r rate_result: Rate in compressed bits/scalar
+  :rtype rate_result: real (kind=8)
+
+----
+
+.. f:function:: zFORp_stream_precision(stream)
+
+  Wrapper for :c:func:`zfp_stream_precision`
+
+  :p zFORp_stream stream [in]: Compressed stream
+  :r prec_result: Precision in uncompressed bits/scalar
+  :rtype prec_result: integer
+
+----
+
+.. f:function:: zFORp_stream_accuracy(stream)
+
+  Wrapper for :c:func:`zfp_stream_accuracy`
+
+  :p zFORp_stream stream [in]: Compressed stream
+  :r tol_result: Absolute error tolerance
+  :rtype tol_result: real (kind=8)
+
+----
+
 .. f:function:: zFORp_stream_mode(stream)
 
   Wrapper for :c:func:`zfp_stream_mode`
@@ -339,6 +370,14 @@ Compressed Stream
 
 ----
 
+.. f:subroutine:: zFORp_stream_rewind(stream)
+
+  Wrapper for :c:func:`zfp_stream_rewind`
+
+  :p zFORp_stream stream [in]: Compressed stream
+
+----
+
 .. f:subroutine:: zFORp_stream_set_bit_stream(stream, bs)
 
   Wrapper for :c:func:`zfp_stream_set_bit_stream`
@@ -346,13 +385,6 @@ Compressed Stream
   :p zFORp_stream stream [in]: Compressed stream
   :p zFORp_bitstream bs [in]: Bit stream
 
-----
-
-.. f:subroutine:: zFORp_stream_rewind(stream)
-
-  Wrapper for :c:func:`zfp_stream_rewind`
-
-  :p zFORp_stream stream [in]: Compressed stream
 
 Compression Parameters
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -365,7 +397,7 @@ Compression Parameters
 
 ----
 
-.. f:function:: zFORp_stream_set_rate(stream, rate, scalar_type, dims, wra)
+.. f:function:: zFORp_stream_set_rate(stream, rate, scalar_type, dims, align)
 
   Wrapper for :c:func:`zfp_stream_set_rate`
 
@@ -373,9 +405,9 @@ Compression Parameters
   :p real rate [in]: Desired rate
   :p integer scalar_type [in]: :ref:`zFORp_type <zforp_type>` enum
   :p integer dims [in]: Number of dimensions
-  :p integer wra [in]: Use write random access?
+  :p integer align [in]: Align blocks on words for write random access?
   :r rate_result: Actual set rate in bits/scalar
-  :rtype rate_result: real
+  :rtype rate_result: real (kind=8)
 
 ----
 
@@ -574,7 +606,17 @@ Array Metadata
 
 ----
 
-.. f:function:: zFORp_field_scalar_type(field)
+.. f:function:: zFORp_field_begin(field)
+
+  Wrapper for :c:func:`zfp_field_begin`
+
+  :p zFORp_field field [in]: Field metadata
+  :r begin_ptr: Pointer to lowest memory address spanned by field
+  :rtype begin_ptr: c_ptr
+
+----
+
+.. f:function:: zFORp_field_type(field)
 
   Wrapper for :c:func:`zfp_field_type`
 
@@ -616,6 +658,16 @@ Array Metadata
 
 ----
 
+.. f:function:: zFORp_field_size_bytes(field)
+
+  Wrapper for :c:func:`zfp_field_size_bytes`
+
+  :p zFORp_field field [in]: Field metadata
+  :r byte_size: Number of bytes spanned by field data including gaps (if any)
+  :rtype byte_size: integer (kind=8)
+
+----
+
 .. f:function:: zFORp_field_stride(field, stride_arr)
 
   Wrapper for :c:func:`zfp_field_stride`
@@ -625,6 +677,16 @@ Array Metadata
   :ptype stride_arr: integer,dimension(4),target
   :r is_strided: Indicate whether field is strided (1) or not (0)
   :rtype is_strided: integer
+
+----
+
+.. f:function:: zFORp_field_is_contiguous(field)
+
+  Wrapper for :c:func:`zfp_field_is_contiguous`
+
+  :p zFORp_field field [in]: Field metadata
+  :r is_contiguous: Indicate whether field is contiguous (1) or not (0)
+  :rtype is_contiguous: integer
 
 ----
 

@@ -84,7 +84,7 @@ _t2(encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
 /* public functions -------------------------------------------------------- */
 
 /* encode contiguous floating-point block */
-uint
+size_t
 _t2(zfp_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
 {
   return REVERSIBLE(zfp) ? _t2(rev_encode_block, Scalar, DIMS)(zfp, fblock) : _t2(encode_block, Scalar, DIMS)(zfp, fblock);
