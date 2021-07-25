@@ -27,8 +27,7 @@ public:
   virtual void SetUp() {
     generateSmoothRandFloats(MIN_TOTAL_ELEMENTS, getDims(), &inputDataArr, &inputDataSideLen, &inputDataTotalLen);
 
-    size_t i;
-    for (i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
       dimLens[i] = (i < getDims()) ? inputDataSideLen : 0;
     }
 

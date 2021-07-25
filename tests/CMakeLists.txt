@@ -54,6 +54,10 @@ endif()
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
   add_compile_options(-Wno-gnu-zero-variadic-macro-arguments)
 endif()
+# suppress googletest warning "conversion from 'float' to 'testing::internal::BiggestInt', possible loss of data"
+if(MSVC)
+  add_compile_options(/wd4244)
+endif()
 
 
 add_subdirectory(utils)

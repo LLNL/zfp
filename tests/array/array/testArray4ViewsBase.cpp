@@ -551,7 +551,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_length
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOnCount_then_setsUniqueBlockBoundsAlongLongestDimension)
 {
   const uint count = 3;
-  uint prevOffsetX, prevLenX, offsetX, lenX;
+  size_t prevOffsetX, prevLenX, offsetX, lenX;
 
   /* partition such that each gets at least 1 block */
   const uint blockSideLen = 4;
@@ -567,12 +567,12 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
   ZFP_ARRAY_TYPE::private_view v(&arr);
 
   /* get original dimensions that should stay constant */
-  uint offsetY = v.global_y(0);
-  uint offsetZ = v.global_z(0);
-  uint offsetW = v.global_w(0);
-  uint lenY = v.size_y();
-  uint lenZ = v.size_z();
-  uint lenW = v.size_w();
+  size_t offsetY = v.global_y(0);
+  size_t offsetZ = v.global_z(0);
+  size_t offsetW = v.global_w(0);
+  size_t lenY = v.size_y();
+  size_t lenZ = v.size_z();
+  size_t lenW = v.size_w();
 
   /* base case */
   v.partition(0, count);
@@ -593,8 +593,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
   EXPECT_EQ(lenW, v.size_w());
 
   /* successive cases are compared to previous */
-  uint i;
-  for (i = 1; i < count - 1; i++) {
+  for (uint i = 1; i < count - 1; i++) {
     ZFP_ARRAY_TYPE::private_view v2(&arr);
     v2.partition(i, count);
 
@@ -626,7 +625,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
   EXPECT_EQ(prevOffsetX + prevLenX, offsetX);
   /* last partition could hold a partial block */
   lenX = v3.size_x();
-  EXPECT_LT(0, lenX);
+  EXPECT_LT(0u, lenX);
   /* expect to end on final index */
   EXPECT_EQ(arr.size_x(), offsetX + lenX);
 

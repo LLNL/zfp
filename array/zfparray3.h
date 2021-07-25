@@ -192,8 +192,8 @@ public:
     const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
     const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
     size_t block_index = 0;
-    for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
-      for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
+    for (size_t k = 0; k < bz; k++, p += 4 * sy * ptrdiff_t(ny - by))
+      for (size_t j = 0; j < by; j++, p += 4 * sx * ptrdiff_t(nx - bx))
         for (size_t i = 0; i < bx; i++, p += 4)
           cache.get_block(block_index++, p, sx, sy, sz);
   }
@@ -208,8 +208,8 @@ public:
     const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
     const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
     size_t block_index = 0;
-    for (size_t k = 0; k < bz; k++, p += 4 * sy * (ny - by))
-      for (size_t j = 0; j < by; j++, p += 4 * sx * (nx - bx))
+    for (size_t k = 0; k < bz; k++, p += 4 * sy * ptrdiff_t(ny - by))
+      for (size_t j = 0; j < by; j++, p += 4 * sx * ptrdiff_t(nx - bx))
         for (size_t i = 0; i < bx; i++, p += 4)
           cache.put_block(block_index++, p, sx, sy, sz);
   }

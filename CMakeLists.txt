@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
 
+# Enable MACOSX_RPATH by default
+cmake_policy(SET CMP0042 NEW)
+
 # Fail immediately if not using an out-of-source build
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
   message(FATAL_ERROR
