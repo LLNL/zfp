@@ -6,14 +6,14 @@ extern "C" {
 
 #define SCALAR float
 
-const uint ARRAY_SIZE = 11;
+const size_t ARRAY_SIZE = 11;
 
 class Array1fTest : public ::testing::Test {
 public:
-  uint IterAbsOffset(array1f::iterator iter) {
+  size_t IterAbsOffset(array1f::iterator iter) {
     return iter.i();
   }
-  uint IterAbsOffset(array1f::const_iterator citer) {
+  size_t IterAbsOffset(array1f::const_iterator citer) {
     return citer.i();
   }
 
@@ -35,7 +35,7 @@ protected:
   static array1f::const_pointer cptr, cptr2;
   static array1f::iterator iter, iter2;
   static array1f::const_iterator citer, citer2;
-  static uint offset, viewLen;
+  static size_t offset, viewLen;
 };
 
 array1f Array1fTest::arr(ARRAY_SIZE, ZFP_RATE_PARAM_BITS);
@@ -44,4 +44,4 @@ array1f::pointer Array1fTest::ptr, Array1fTest::ptr2;
 array1f::const_pointer Array1fTest::cptr, Array1fTest::cptr2;
 array1f::iterator Array1fTest::iter, Array1fTest::iter2;
 array1f::const_iterator Array1fTest::citer, Array1fTest::citer2;
-uint Array1fTest::offset, Array1fTest::viewLen;
+size_t Array1fTest::offset, Array1fTest::viewLen;

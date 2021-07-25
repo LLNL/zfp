@@ -22,7 +22,7 @@
 #define DUMMY_VAL 99
 
 struct setupVars {
-  uint dimLens[4];
+  size_t dimLens[4];
   Scalar* dataArr;
   Scalar* decodedDataArr;
   void* buffer;
@@ -41,7 +41,7 @@ initializeStridedArray(Scalar** dataArrPtr, Scalar dummyVal)
   //   0 <= i < countX, (same for j,countY and k,countZ and l,countW)
   // strided entry iff
   //   i % countX/BLOCK_SIDE_LEN == 0 (and so on for j, k, l)
-  switch(DIMS) {
+  switch (DIMS) {
     case 1:
       countX = BLOCK_SIDE_LEN * SX;
       arrayLen = countX;
@@ -173,7 +173,7 @@ setupZfpStream(struct setupVars* bundle)
 #if DIMS >= 4
   bundle->dimLens[3] = BLOCK_SIDE_LEN;
 #endif
-  uint* n = bundle->dimLens;
+  size_t* n = bundle->dimLens;
 
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
@@ -262,10 +262,10 @@ hashStridedBlock(Scalar* dataArr)
   return _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)dataArr, n, s);
 }
 
-uint
+size_t
 encodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
 {
-  uint numBitsWritten;
+  size_t numBitsWritten;
   switch (DIMS) {
     case 1:
       numBitsWritten = _t2(zfp_encode_block_strided, Scalar, 1)(stream, dataArr, SX);
@@ -284,10 +284,10 @@ encodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
   return numBitsWritten;
 }
 
-uint
+size_t
 encodePartialBlockStrided(zfp_stream* stream, Scalar* dataArr)
 {
-  uint numBitsWritten;
+  size_t numBitsWritten;
   switch (DIMS) {
     case 1:
       numBitsWritten = _t2(zfp_encode_partial_block_strided, Scalar, 1)(stream, dataArr, PX, SX);
@@ -306,10 +306,10 @@ encodePartialBlockStrided(zfp_stream* stream, Scalar* dataArr)
   return numBitsWritten;
 }
 
-uint
+size_t
 decodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
 {
-  uint numBitsRead;
+  size_t numBitsRead;
   switch (DIMS) {
     case 1:
       numBitsRead = _t2(zfp_decode_block_strided, Scalar, 1)(stream, dataArr, SX);
@@ -328,10 +328,10 @@ decodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
   return numBitsRead;
 }
 
-uint
+size_t
 decodePartialBlockStrided(zfp_stream* stream, Scalar* dataArr)
 {
-  uint numBitsRead;
+  size_t numBitsRead;
   switch (DIMS) {
     case 1:
       numBitsRead = _t2(zfp_decode_partial_block_strided, Scalar, 1)(stream, dataArr, PX, SX);
@@ -354,7 +354,7 @@ void
 assertNonStridedEntriesZero(Scalar* data)
 {
   size_t i, j, k, l, countX, countY, countZ, countW;
-  switch(DIMS) {
+  switch (DIMS) {
     case 1:
       countX = BLOCK_SIDE_LEN * SX;
 
@@ -429,7 +429,7 @@ void
 assertEntriesOutsidePartialBlockBoundsZero(Scalar* data)
 {
   size_t i, j, k, l, countX, countY, countZ, countW;
-  switch(DIMS) {
+  switch (DIMS) {
     case 1:
       countX = BLOCK_SIDE_LEN * SX;
 

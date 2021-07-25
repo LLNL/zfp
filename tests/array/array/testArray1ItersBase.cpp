@@ -1,6 +1,6 @@
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_applyBrackets_then_returnsReferenceAtBracketPosition)
 {
-  int i = 1, i2 = 2;
+  size_t i = 1, i2 = 2;
   arr[i] = VAL;
   iter = arr.begin() + i2;
 
@@ -31,7 +31,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preDecrementIterator_then_advancedBefo
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_iteratorPlusEquals_then_iterAdvanced)
 {
-  uint i = 2;
+  size_t i = 2;
   arr[i] = VAL;
   iter = arr.begin();
 
@@ -43,7 +43,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_iteratorPlusEquals_then_iterAdvanced)
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_iteratorMinusEquals_then_iterAdvanced)
 {
-  uint iFromEnd = 2;
+  size_t iFromEnd = 2;
   arr[ARRAY_SIZE - iFromEnd] = VAL;
   iter = arr.end();
 
@@ -59,16 +59,16 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_incrementIterator_then_positionTravers
   EXPECT_NE(0u, arr.size() % BLOCK_SIDE_LEN);
 
   iter = arr.begin();
-  uint totalBlocks = (arr.size() + 3) / 4;
-  for (uint count = 0; count < totalBlocks; count++) {
+  size_t totalBlocks = (arr.size() + 3) / 4;
+  for (size_t count = 0; count < totalBlocks; count++) {
     // determine if block is complete or partial
-    uint distanceFromEnd = arr.size() - iter.i();
-    uint blockLen = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
+    size_t distanceFromEnd = arr.size() - iter.i();
+    size_t blockLen = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
 
     // ensure entries lie in same block
-    uint blockStartIndex = iter.i();
+    size_t blockStartIndex = iter.i();
 
-    for (uint i = 0; i < blockLen; i++) {
+    for (size_t i = 0; i < blockLen; i++) {
       EXPECT_EQ(blockStartIndex + i, iter.i());
       iter++;
     }
@@ -84,16 +84,16 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_decrementIterator_then_positionTravers
   EXPECT_NE(0u, arr.size() % BLOCK_SIDE_LEN);
 
   iter = arr.end();
-  uint totalBlocks = (arr.size() + 3) / 4;
-  for (uint count = 0; count < totalBlocks; count++) {
+  size_t totalBlocks = (arr.size() + 3) / 4;
+  for (size_t count = 0; count < totalBlocks; count++) {
     iter--;
 
     // determine if block is complete or partial
-    uint blockEndIndex = iter.i();
-    uint blockLen = (blockEndIndex % BLOCK_SIDE_LEN) + 1;
+    size_t blockEndIndex = iter.i();
+    size_t blockLen = (blockEndIndex % BLOCK_SIDE_LEN) + 1;
 
     // ensure entries lie in same block
-    for (uint i = 1; i < blockLen; i++) {
+    for (size_t i = 1; i < blockLen; i++) {
       iter--;
       EXPECT_EQ(blockEndIndex - i, iter.i());
     }
@@ -113,7 +113,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_subtractTwoIterators_then_resultIsDiff
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_addToIterator_then_returnsAdvancedIter)
 {
-  uint i = 2;
+  ptrdiff_t i = 2;
   arr[i] = VAL;
   iter = arr.begin();
 
@@ -123,7 +123,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_addToIterator_then_returnsAdvancedIter
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_subtractFromIterator_then_returnsAdvancedIter)
 {
-  uint iFromEnd = 1;
+  size_t iFromEnd = 1;
   arr[ARRAY_SIZE - iFromEnd] = VAL;
   iter = arr.end();
 
@@ -199,7 +199,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, given_sameArrayAndIndexIterators_when_compa
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_applyBrackets_then_returnsConstReferenceAtBracketPosition)
 {
-  int i = 1, i2 = 2;
+  size_t i = 1, i2 = 2;
   arr[i] = VAL;
   citer = arr.cbegin() + i2;
 
@@ -230,7 +230,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_preDecrementConstIterator_then_advance
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_const_iteratorPlusEquals_then_iterAdvanced)
 {
-  uint i = 2;
+  size_t i = 2;
   arr[i] = VAL;
   citer = arr.cbegin();
 
@@ -242,7 +242,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_const_iteratorPlusEquals_then_iterAdva
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_const_iteratorMinusEquals_then_iterAdvanced)
 {
-  uint iFromEnd = 2;
+  size_t iFromEnd = 2;
   arr[ARRAY_SIZE - iFromEnd] = VAL;
   citer = arr.cend();
 
@@ -258,8 +258,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_incrementConstIterator_then_positionTr
   EXPECT_NE(0u, arr.size() % BLOCK_SIDE_LEN);
 
   citer = arr.cbegin();
-  uint totalBlocks = (arr.size() + 3) / 4;
-  for (uint count = 0; count < totalBlocks; count++) {
+  size_t totalBlocks = (arr.size() + 3) / 4;
+  for (size_t count = 0; count < totalBlocks; count++) {
     // determine if block is complete or partial
     uint distanceFromEnd = arr.size() - citer.i();
     uint blockLen = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;

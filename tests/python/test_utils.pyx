@@ -96,12 +96,12 @@ cdef extern from "zfpChecksums.h":
         DECOMPRESSED_ARRAY = 2,
 
     void computeKeyOriginalInput(test_type tt,
-                                 unsigned int n[4],
+                                 size_t n[4],
                                  uint64_t* key1,
                                  uint64_t* key2)
     void computeKey(test_type tt,
                     subject sjt,
-                    unsigned int n[4],
+                    size_t n[4],
                     zfpy.zfp_mode mode,
                     int miscParam,
                     uint64_t* key1,
@@ -121,15 +121,15 @@ cdef extern from "zfpChecksums.h":
     uint64_t getChecksumDecodedPartialBlock(int dims,
                                             zfpy.zfp_type type)
     uint64_t getChecksumOriginalDataArray(int ndims,
-                                          unsigned int[4] dims,
+                                          size_t[4] dims,
                                           zfpy.zfp_type type)
     uint64_t getChecksumCompressedBitstream(int ndims,
-                                            unsigned int[4] dims,
+                                            size_t[4] dims,
                                             zfpy.zfp_type type,
                                             zfpy.zfp_mode mode,
                                             int compressParamNum)
     uint64_t getChecksumDecompressedArray(int ndims,
-                                          unsigned int[4] dims,
+                                          size_t[4] dims,
                                           zfpy.zfp_type ztype,
                                           zfpy.zfp_mode mode,
                                           int compressParamNum)
@@ -311,7 +311,7 @@ cdef uint64_t getChecksumDecodedPartialBlock(
 
 cdef uint64_t getChecksumOriginalDataArray(
     int ndims,
-    unsigned int[4] dims,
+    size_t[4] dims,
     zfpy.zfp_type ztype
 ):
     cdef uint64_t[1] key1, key2
@@ -320,7 +320,7 @@ cdef uint64_t getChecksumOriginalDataArray(
 
 cdef  uint64_t getChecksumCompressedBitstream(
     int ndims,
-    unsigned int[4] dims,
+    size_t[4] dims,
     zfpy.zfp_type ztype,
     zfpy.zfp_mode mode,
     int compressParamNum
@@ -331,7 +331,7 @@ cdef  uint64_t getChecksumCompressedBitstream(
 
 cdef uint64_t getChecksumDecompressedArray(
     int ndims,
-    unsigned int[4] dims,
+    size_t[4] dims,
     zfpy.zfp_type ztype,
     zfpy.zfp_mode mode,
     int compressParamNum
@@ -349,7 +349,7 @@ cpdef uint64_t getChecksumOrigArray(
     validate_num_dimensions(ndims)
     validate_ztype(ztype)
 
-    cdef unsigned int[4] d
+    cdef size_t[4] d
     for i in range(len(dims)):
         d[i] = dims[i]
     return getChecksumOriginalDataArray(ndims, d, ztype)
@@ -366,7 +366,7 @@ cpdef uint64_t getChecksumCompArray(
     validate_mode(mode)
     validate_compress_param(compressParamNum)
 
-    cdef unsigned int[4] d
+    cdef size_t[4] d
     for i in range(len(dims)):
         d[i] = dims[i]
     return getChecksumCompressedBitstream(ndims, d, ztype, mode, compressParamNum)
@@ -383,7 +383,7 @@ cpdef uint64_t getChecksumDecompArray(
     validate_mode(mode)
     validate_compress_param(compressParamNum)
 
-    cdef unsigned int[4] d
+    cdef size_t[4] d
     for i in range(len(dims)):
         d[i] = dims[i]
     return getChecksumDecompressedArray(ndims, d, ztype, mode, compressParamNum)

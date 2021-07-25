@@ -12,7 +12,7 @@ extern "C" {
 const size_t MIN_TOTAL_ELEMENTS = 1000000;
 
 size_t inputDataSideLen, inputDataTotalLen;
-uint dimLens[4];
+size_t dimLens[4];
 float* inputDataArr;
 
 uint64* buffer;

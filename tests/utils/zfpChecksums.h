@@ -24,10 +24,10 @@ typedef struct {
 } checksum_tuples;
 
 void
-computeKeyOriginalInput(test_type tt, uint n[4], uint64* key1, uint64* key2);
+computeKeyOriginalInput(test_type tt, size_t n[4], uint64* key1, uint64* key2);
 
 void
-computeKey(test_type tt, subject sjt, uint n[4], zfp_mode mode, int miscParam, uint64* key1, uint64* key2);
+computeKey(test_type tt, subject sjt, size_t n[4], zfp_mode mode, int miscParam, uint64* key1, uint64* key2);
 
 uint64
 getChecksumByKey(int dims, zfp_type type, uint64 key1, uint64 key2);

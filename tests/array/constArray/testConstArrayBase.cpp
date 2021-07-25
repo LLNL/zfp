@@ -237,6 +237,6 @@ TEST_P(TEST_FIXTURE, when_implicitIndexForNonRate_then_exceptionThrown)
     ZFP_FULL_ARRAY_TYPE(TEST_INDEX_TYPE_IMP) arr(_repeat_arg(inputDataSideLen, DIMS), config); 
     FailWhenNoExceptionThrown();
   } 
-  catch (zfp::exception const& e) { /* hitting this block is test success so do nothing */ }
+  catch (zfp::exception const&) { /* hitting this block is test success so do nothing */ }
   catch (std::exception const& e) { FailAndPrintException(e); }
 }

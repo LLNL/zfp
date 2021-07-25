@@ -37,7 +37,7 @@ struct setupVars {
   size_t bufsizeBytes;
   void* buffer;
   // dimensions of data that gets compressed (currently same as randomGenArrSideLen)
-  uint dimLens[4];
+  size_t dimLens[4];
   zfp_field* field;
   zfp_field* decompressField;
   zfp_stream* stream;
@@ -90,11 +90,10 @@ setupRandomData(void** state)
   assert_non_null(bundle->randomGenArr);
 
   // set remaining indices (square for now)
-  int i;
-  for (i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     bundle->randomGenArrSideLen[i] = (i < DIMS) ? bundle->randomGenArrSideLen[0] : 0;
     // for now, entire randomly generated array always entirely compressed
-    bundle->dimLens[i] = (uint)bundle->randomGenArrSideLen[i];
+    bundle->dimLens[i] = bundle->randomGenArrSideLen[i];
   }
 
   *state = bundle;
@@ -115,14 +114,14 @@ teardownRandomData(void** state)
 static void
 setupZfpFields(struct setupVars* bundle, ptrdiff_t s[4])
 {
-  uint* n = bundle->dimLens;
+  size_t* n = bundle->dimLens;
 
   // setup zfp_fields: source/destination arrays for compression/decompression
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   zfp_field* decompressField;
 
-  switch(DIMS) {
+  switch (DIMS) {
     case 1:
       field = zfp_field_1d(bundle->compressedArr, type, n[0]);
       zfp_field_set_stride_1d(field, s[0]);
@@ -384,7 +383,7 @@ runZfpCompress(zfp_stream* stream, const zfp_field* field, zfp_timer* timer, siz
 
 // returns 1 on failure, 0 on success
 static int
-isCompressedBitstreamChecksumsMatch(zfp_stream* stream, bitstream* bs, uint dimLens[4], zfp_mode mode, int compressParamNum)
+isCompressedBitstreamChecksumsMatch(zfp_stream* stream, bitstream* bs, size_t dimLens[4], zfp_mode mode, int compressParamNum)
 {
   uint64 checksum = hashBitstream(stream_data(bs), stream_size(bs));
   uint64 key1, key2;

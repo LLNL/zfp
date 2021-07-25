@@ -22,7 +22,7 @@
 #define DUMMY_VAL 99
 
 struct setupVars {
-  uint dimLens[4];
+  size_t dimLens[4];
   Scalar* dataArr;
   void* buffer;
   zfp_stream* stream;
@@ -160,7 +160,7 @@ setupZfpStream(struct setupVars* bundle)
 #if DIMS >= 4
   bundle->dimLens[3] = BLOCK_SIDE_LEN;
 #endif
-  uint* n = bundle->dimLens;
+  size_t* n = bundle->dimLens;
 
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
@@ -230,10 +230,10 @@ teardown(void **state)
   return 0;
 }
 
-uint
+size_t
 encodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
 {
-  uint numBitsWritten;
+  size_t numBitsWritten;
   switch (DIMS) {
     case 1:
       numBitsWritten = _t2(zfp_encode_block_strided, Scalar, 1)(stream, dataArr, SX);
@@ -252,10 +252,10 @@ encodeBlockStrided(zfp_stream* stream, Scalar* dataArr)
   return numBitsWritten;
 }
 
-uint
+size_t
 encodePartialBlockStrided(zfp_stream* stream, Scalar* dataArr)
 {
-  uint numBitsWritten;
+  size_t numBitsWritten;
   switch (DIMS) {
     case 1:
       numBitsWritten = _t2(zfp_encode_partial_block_strided, Scalar, 1)(stream, dataArr, PX, SX);
@@ -280,8 +280,7 @@ when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
   struct setupVars *bundle = *state;
 
   size_t n[4];
-  int i;
-  for (i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     n[i] = (i < DIMS) ? BLOCK_SIDE_LEN : 0;
   }
 

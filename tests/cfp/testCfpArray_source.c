@@ -34,7 +34,7 @@ struct setupVars {
   Scalar* decompressedArr;
 
   // dimensions of data that gets compressed (currently same as dataSideLen)
-  uint dimLens[4];
+  size_t dimLens[4];
 
   CFP_ARRAY_TYPE cfpArr;
 
@@ -126,7 +126,7 @@ setupCfpArrMinimal(void** state)
 }
 
 static int
-setupCfpArrSizeRate(void** state, uint sizeX, uint sizeY, uint sizeZ, uint sizeW)
+setupCfpArrSizeRate(void** state, size_t sizeX, size_t sizeY, size_t sizeZ, size_t sizeW)
 {
   struct setupVars *bundle = *state;
 

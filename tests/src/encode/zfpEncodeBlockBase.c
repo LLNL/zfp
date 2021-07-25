@@ -12,7 +12,7 @@
 #include "utils/zfpHash.h"
 
 struct setupVars {
-  uint dimLens[4];
+  size_t dimLens[4];
   Scalar* dataArr;
   void* buffer;
   size_t bufsizeBytes;
@@ -25,8 +25,7 @@ populateInitialArray(Scalar** dataArrPtr)
   *dataArrPtr = malloc(sizeof(Scalar) * BLOCK_SIZE);
   assert_non_null(*dataArrPtr);
 
-  int i;
-  for (i = 0; i < BLOCK_SIZE; i++) {
+  for (int i = 0; i < BLOCK_SIZE; i++) {
 #ifdef FL_PT_DATA
     (*dataArrPtr)[i] = nextSignedRandFlPt();
 #else
@@ -66,8 +65,7 @@ populateInitialArraySpecial(Scalar* dataArr, int index)
   };
 #endif
 
-  size_t i;
-  for (i = 0; i < BLOCK_SIZE; i++) {
+  for (size_t i = 0; i < BLOCK_SIZE; i++) {
 #ifdef FL_PT_DATA
     // generate special values
     if ((i & 3u) == 0) {
@@ -105,11 +103,11 @@ setupZfpStream(struct setupVars* bundle, int specialValueIndex)
 #if DIMS >= 4
   bundle->dimLens[3] = BLOCK_SIDE_LEN;
 #endif
-  uint* n = bundle->dimLens;
+  size_t* n = bundle->dimLens;
 
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
-  switch(DIMS) {
+  switch (DIMS) {
     case 1:
       field = zfp_field_1d(bundle->dataArr, type, n[0]);
       break;

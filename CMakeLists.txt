@@ -53,7 +53,9 @@ if(MSVC)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
   # Silence extraneous Visual Studio specific warnings
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS /wd4146 /wd4305)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+  add_compile_options(/wd4146)
+  add_compile_options(/wd4305)
 endif()
 
 # Suggest C99

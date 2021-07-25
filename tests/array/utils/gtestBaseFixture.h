@@ -8,7 +8,7 @@
 
 class ArrayNdTestFixture : public ::testing::TestWithParam<int> {
 protected:
-  double getRate() { return 1u << (GetParam() + 3); }
+  double getRate() { return std::ldexp(1.0, GetParam() + 3); }
 };
 
 
@@ -32,7 +32,7 @@ typedef std::tuple<int,int,int> testConfig;
 
 class CArrayNdTestFixture : public ::testing::TestWithParam<testConfig> {
 protected:
-  static size_t         getRate(int param)      { return (size_t)(1u << (param + 3)); }
+  static double         getRate(int param)      { return std::ldexp(1.0, param + 3); }
   static unsigned int   getPrecision(int param) { return 1u << (param + 3); }
   static double         getTolerance(int param) { return std::ldexp(1.0, -(1u << param)); }
 
