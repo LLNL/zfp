@@ -30,9 +30,9 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorParens_then_co
 {
   ZFP_ARRAY_TYPE::const_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
-  for (uint k = 0; k < viewLenZ; k++) {
-    for (uint j = 0; j < viewLenY; j++) {
-      for(uint i = 0; i < viewLenX; i++) {
+  for (size_t k = 0; k < viewLenZ; k++) {
+    for (size_t j = 0; j < viewLenY; j++) {
+      for (size_t i = 0; i < viewLenX; i++) {
         size_t offset = (offsetZ + k)*arr.size_x()*arr.size_y() + (offsetY + j)*arr.size_x() + offsetX + i;
         EXPECT_EQ(arr[offset], v(i, j, k));
       }
@@ -103,7 +103,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_isShallowCopy
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithParens_then_originalArrayUpdated)
 {
   ZFP_ARRAY_TYPE::view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
-  uint i = 1, j = 2, k = 1;
+  size_t i = 1, j = 2, k = 1;
   SCALAR val = 3.14;
 
   EXPECT_NE(val, arr(offsetX + i, offsetY + j, offsetZ + k));
@@ -154,7 +154,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_flatView_when_index_then_returnsFlatI
 {
   ZFP_ARRAY_TYPE::flat_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
-  uint i = 2, j = 1, k = 2;
+  size_t i = 2, j = 1, k = 2;
   EXPECT_EQ(k*viewLenX*viewLenY + j*viewLenX + i, v.index(i, j, k));
 }
 
@@ -162,8 +162,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_flatView_when_ijk_then_returnsUnflatI
 {
   ZFP_ARRAY_TYPE::flat_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
-  uint i = 2, j = 1, k = 2;
-  uint flatIndex = v.index(i, j, k);
+  size_t i = 2, j = 1, k = 2;
+  size_t flatIndex = v.index(i, j, k);
 
   size_t vI, vJ, vK;
   v.ijk(vI, vJ, vK, flatIndex);
@@ -176,7 +176,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_flatView_when_bracketAccessor_then_re
 {
   ZFP_ARRAY_TYPE::flat_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
-  uint i = 2, j = 1, k = 2;
+  size_t i = 2, j = 1, k = 2;
   size_t arrOffset = (offsetZ + k)*arr.size_x()*arr.size_y() + (offsetY + j)*arr.size_x() + (offsetX + i);
   EXPECT_EQ(arr[arrOffset], v[v.index(i, j, k)]);
 }
@@ -202,12 +202,12 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_nestedView_when_parensAccessor_then_r
   ZFP_ARRAY_TYPE::nested_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
   /* indices for view and array */
-  uint vI = 1;
-  uint vJ = 2;
-  uint vK = 1;
-  uint aI = offsetX + vI;
-  uint aJ = offsetY + vJ;
-  uint aK = offsetZ + vK;
+  size_t vI = 1;
+  size_t vJ = 2;
+  size_t vK = 1;
+  size_t aI = offsetX + vI;
+  size_t aJ = offsetY + vJ;
+  size_t aK = offsetZ + vK;
 
   arr(aI, aJ, aK) = 5.5;
   EXPECT_EQ(arr(aI, aJ, aK), v(vI, vJ, vK));
@@ -218,12 +218,12 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_nestedView_when_parensMutator_then_se
   ZFP_ARRAY_TYPE::nested_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
   /* indices for view and array */
-  uint vI = 1;
-  uint vJ = 2;
-  uint vK = 1;
-  uint aI = offsetX + vI;
-  uint aJ = offsetY + vJ;
-  uint aK = offsetZ + vK;
+  size_t vI = 1;
+  size_t vJ = 2;
+  size_t vK = 1;
+  size_t aI = offsetX + vI;
+  size_t aJ = offsetY + vJ;
+  size_t aK = offsetZ + vK;
 
   SCALAR val = 5.5;
   v(vI, vJ, vK) = val;
@@ -246,12 +246,12 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_nestedView2_when_parensAccessor_then_
   ZFP_ARRAY_TYPE::nested_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
   /* indices for view and array */
-  uint vI = 1;
-  uint vJ = 2;
-  uint vK = 1;
-  uint aI = offsetX + vI;
-  uint aJ = offsetY + vJ;
-  uint aK = offsetZ + vK;
+  size_t vI = 1;
+  size_t vJ = 2;
+  size_t vK = 1;
+  size_t aI = offsetX + vI;
+  size_t aJ = offsetY + vJ;
+  size_t aK = offsetZ + vK;
 
   arr(aI, aJ, aK) = 5.5;
   EXPECT_EQ(arr(aI, aJ, aK), v[vK](vI, vJ));
@@ -262,12 +262,12 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_nestedView2_when_parensMutator_then_s
   ZFP_ARRAY_TYPE::nested_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
   /* indices for view and array */
-  uint vI = 1;
-  uint vJ = 2;
-  uint vK = 1;
-  uint aI = offsetX + vI;
-  uint aJ = offsetY + vJ;
-  uint aK = offsetZ + vK;
+  size_t vI = 1;
+  size_t vJ = 2;
+  size_t vK = 1;
+  size_t aI = offsetX + vI;
+  size_t aJ = offsetY + vJ;
+  size_t aK = offsetZ + vK;
 
   SCALAR val = 5.5;
   v[vK](vI, vJ) = val;
@@ -289,18 +289,18 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_nestedView1_when_bracketAccessor_then
   ZFP_ARRAY_TYPE::nested_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
   /* indices for view and array */
-  uint vJ = 2;
-  uint vK = 1;
-  uint aJ = offsetY + vJ;
-  uint aK = offsetZ + vK;
+  size_t vJ = 2;
+  size_t vK = 1;
+  size_t aJ = offsetY + vJ;
+  size_t aK = offsetZ + vK;
 
   /* initialize values into row that will become slice */
-  for (uint aI = 0; aI < arr.size_x(); aI++) {
+  for (size_t aI = 0; aI < arr.size_x(); aI++) {
     arr(aI, aJ, aK) = (SCALAR)aI;
   }
 
   EXPECT_EQ(viewLenX, v[vK][vJ].size_x());
-  for (uint vI = 0; vI < viewLenX; vI++) {
+  for (size_t vI = 0; vI < viewLenX; vI++) {
     EXPECT_EQ(arr(offsetX + vI, aJ, aK), v[vK][vJ][vI]);
   }
 }
@@ -310,18 +310,18 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_nestedView1_when_parensAccessor_then_
   ZFP_ARRAY_TYPE::nested_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
   /* indices for view and array */
-  uint vJ = 2;
-  uint vK = 1;
-  uint aJ = offsetY + vJ;
-  uint aK = offsetZ + vK;
+  size_t vJ = 2;
+  size_t vK = 1;
+  size_t aJ = offsetY + vJ;
+  size_t aK = offsetZ + vK;
 
   /* initialize values into row that will become slice */
-  for (uint aI = 0; aI < arr.size_x(); aI++) {
+  for (size_t aI = 0; aI < arr.size_x(); aI++) {
     arr(aI, aJ, aK) = (SCALAR)aI;
   }
 
   EXPECT_EQ(viewLenX, v[vK][vJ].size_x());
-  for (uint vI = 0; vI < viewLenX; vI++) {
+  for (size_t vI = 0; vI < viewLenX; vI++) {
     EXPECT_EQ(arr(offsetX + vI, aJ, aK), v[vK][vJ](vI));
   }
 }
@@ -331,17 +331,17 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_nestedView1_when_bracketMutator_then_
   ZFP_ARRAY_TYPE::nested_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
   /* indices for view and array */
-  uint vJ = 2;
-  uint vK = 1;
-  uint aJ = offsetY + vJ;
-  uint aK = offsetZ + vK;
+  size_t vJ = 2;
+  size_t vK = 1;
+  size_t aJ = offsetY + vJ;
+  size_t aK = offsetZ + vK;
 
   /* initialize values into slice */
-  for (uint vI = 0; vI < v[vK][vJ].size_x(); vI++) {
+  for (size_t vI = 0; vI < v[vK][vJ].size_x(); vI++) {
     v[vK][vJ][vI] = (SCALAR)vI;
   }
 
-  for (uint vI = 0; vI < v[vK][vJ].size_x(); vI++) {
+  for (size_t vI = 0; vI < v[vK][vJ].size_x(); vI++) {
     EXPECT_EQ(v[vK][vJ][vI], arr(offsetX + vI, aJ, aK));
   }
 }
@@ -351,17 +351,17 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_nestedView1_when_parensMutator_then_s
   ZFP_ARRAY_TYPE::nested_view v(&arr, offsetX, offsetY, offsetZ, viewLenX, viewLenY, viewLenZ);
 
   /* indices for view and array */
-  uint vJ = 2;
-  uint vK = 1;
-  uint aJ = offsetY + vJ;
-  uint aK = offsetZ + vK;
+  size_t vJ = 2;
+  size_t vK = 1;
+  size_t aJ = offsetY + vJ;
+  size_t aK = offsetZ + vK;
 
   /* initialize values into slice */
-  for (uint vI = 0; vI < v[vK][vJ].size_x(); vI++) {
+  for (size_t vI = 0; vI < v[vK][vJ].size_x(); vI++) {
     v[vK][vJ](vI) = (SCALAR)vI;
   }
 
-  for (uint vI = 0; vI < v[vK][vJ].size_x(); vI++) {
+  for (size_t vI = 0; vI < v[vK][vJ].size_x(); vI++) {
     EXPECT_EQ(v[vK][vJ][vI], arr(offsetX + vI, aJ, aK));
   }
 }
@@ -409,14 +409,14 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_length
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOnCount_then_setsUniqueBlockBoundsAlongLongestDimension)
 {
-  const uint count = 3;
+  const size_t count = 3;
   size_t prevOffsetY, prevLenY, offsetY, lenY;
 
   /* partition such that each gets at least 1 block */
-  const uint blockSideLen = 4;
-  uint arrBlockCountX = (arr.size_x() + (blockSideLen - 1)) / blockSideLen;
-  uint arrBlockCountY = (arr.size_y() + (blockSideLen - 1)) / blockSideLen;
-  uint arrBlockCountZ = (arr.size_z() + (blockSideLen - 1)) / blockSideLen;
+  const size_t blockSideLen = 4;
+  size_t arrBlockCountX = (arr.size_x() + (blockSideLen - 1)) / blockSideLen;
+  size_t arrBlockCountY = (arr.size_y() + (blockSideLen - 1)) / blockSideLen;
+  size_t arrBlockCountZ = (arr.size_z() + (blockSideLen - 1)) / blockSideLen;
   /* ensure partition will happen along Y */
   EXPECT_GT(arrBlockCountY, std::max(arrBlockCountX, arrBlockCountZ));
   EXPECT_LE(count, arrBlockCountY);
@@ -447,7 +447,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
   EXPECT_EQ(lenZ, v.size_z());
 
   /* successive cases are compared to previous */
-  for (uint i = 1; i < count - 1; i++) {
+  for (size_t i = 1; i < count - 1; i++) {
     ZFP_ARRAY_TYPE::private_view v2(&arr);
     v2.partition(i, count);
 

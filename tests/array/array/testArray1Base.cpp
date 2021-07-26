@@ -15,8 +15,8 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromConstView_then_sizeConse
 {
   ZFP_ARRAY_TYPE arr(inputDataSideLen, getRate(), inputDataArr);
 
-  uint offsetX = 5;
-  uint viewLenX = 3;
+  size_t offsetX = 5;
+  size_t viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 
   /* create view and construct from it */
@@ -30,8 +30,8 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromConstView_then_performsD
 {
   ZFP_ARRAY_TYPE arr(inputDataSideLen, getRate(), inputDataArr);
 
-  uint offsetX = 5;
-  uint viewLenX = 3;
+  size_t offsetX = 5;
+  size_t viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 
   /* create view and construct from it */
@@ -39,7 +39,7 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromConstView_then_performsD
   ZFP_ARRAY_TYPE arr2(v);
 
   /* verify array entries */
-  for (uint i = 0; i < viewLenX; i++) {
+  for (size_t i = 0; i < viewLenX; i++) {
     EXPECT_EQ(arr(offsetX + i), arr2(i));
   }
 
@@ -63,8 +63,8 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromView_then_sizeConserved)
 {
   ZFP_ARRAY_TYPE arr(inputDataSideLen, getRate(), inputDataArr);
 
-  uint offsetX = 5;
-  uint viewLenX = 3;
+  size_t offsetX = 5;
+  size_t viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 
   /* create view and construct from it */
@@ -78,8 +78,8 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromView_then_performsDeepCo
 {
   ZFP_ARRAY_TYPE arr(inputDataSideLen, getRate(), inputDataArr);
 
-  uint offsetX = 5;
-  uint viewLenX = 3;
+  size_t offsetX = 5;
+  size_t viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 
   /* create view and construct from it */
@@ -87,7 +87,7 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromView_then_performsDeepCo
   ZFP_ARRAY_TYPE arr2(v);
 
   /* verify array entries */
-  for (uint i = 0; i < viewLenX; i++) {
+  for (size_t i = 0; i < viewLenX; i++) {
     EXPECT_EQ(arr(offsetX + i), arr2(i));
   }
 
@@ -111,8 +111,8 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromPrivateConstView_then_si
 {
   ZFP_ARRAY_TYPE arr(inputDataSideLen, getRate(), inputDataArr);
 
-  uint offsetX = 5;
-  uint viewLenX = 3;
+  size_t offsetX = 5;
+  size_t viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 
   /* create view and construct from it */
@@ -126,8 +126,8 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromPrivateConstView_then_pe
 {
   ZFP_ARRAY_TYPE arr(inputDataSideLen, getRate(), inputDataArr);
 
-  uint offsetX = 5;
-  uint viewLenX = 3;
+  size_t offsetX = 5;
+  size_t viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 
   /* create view and construct from it */
@@ -135,7 +135,7 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromPrivateConstView_then_pe
   ZFP_ARRAY_TYPE arr2(v);
 
   /* verify array entries */
-  for (uint i = 0; i < viewLenX; i++) {
+  for (size_t i = 0; i < viewLenX; i++) {
     EXPECT_EQ(arr(offsetX + i), arr2(i));
   }
 
@@ -159,8 +159,8 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromPrivateView_then_sizeCon
 {
   ZFP_ARRAY_TYPE arr(inputDataSideLen, getRate(), inputDataArr);
 
-  uint offsetX = 5;
-  uint viewLenX = 3;
+  size_t offsetX = 5;
+  size_t viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 
   /* create view and construct from it */
@@ -174,8 +174,8 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromPrivateView_then_perform
 {
   ZFP_ARRAY_TYPE arr(inputDataSideLen, getRate(), inputDataArr);
 
-  uint offsetX = 5;
-  uint viewLenX = 3;
+  size_t offsetX = 5;
+  size_t viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 
   /* create view and construct from it */
@@ -183,7 +183,7 @@ TEST_P(TEST_FIXTURE, when_construct1dCompressedArrayFromPrivateView_then_perform
   ZFP_ARRAY_TYPE arr2(v);
 
   /* verify array entries */
-  for (uint i = 0; i < viewLenX; i++) {
+  for (size_t i = 0; i < viewLenX; i++) {
     EXPECT_EQ(arr(offsetX + i), arr2(i));
   }
 

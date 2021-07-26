@@ -56,7 +56,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_setCacheSize_then_properlySet)
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_getIndexWithBrackets_then_refReturned)
 {
-  uint i = 0;
+  size_t i = 0;
   arr[i] = VAL;
 
   EXPECT_EQ(VAL, arr[i]);
@@ -64,7 +64,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_getIndexWithBrackets_then_refReturned)
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_setEntryWithAnotherEntryValue_then_valueSet)
 {
-  uint i = 0, i2 = 1;
+  size_t i = 0, i2 = 1;
   arr[i] = VAL;
 
   arr[i2] = arr[i];
@@ -74,7 +74,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_setEntryWithAnotherEntryValue_then_valu
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_plusEqualsOnEntry_then_valueSet)
 {
-  uint i = 0, i2 = 1;
+  size_t i = 0, i2 = 1;
   arr[i] = VAL;
   arr[i2] = VAL;
 
@@ -85,7 +85,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_plusEqualsOnEntry_then_valueSet)
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_minusEqualsOnEntry_then_valueSet)
 {
-  uint i = 0, i2 = 1;
+  size_t i = 0, i2 = 1;
   arr[i] = VAL;
   arr[i2] = VAL;
 
@@ -96,7 +96,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_minusEqualsOnEntry_then_valueSet)
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_timesEqualsOnEntry_then_valueSet)
 {
-  uint i = 0, i2 = 1;
+  size_t i = 0, i2 = 1;
   arr[i] = VAL;
   arr[i2] = VAL;
 
@@ -107,7 +107,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_timesEqualsOnEntry_then_valueSet)
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_divideEqualsOnEntry_then_valueSet)
 {
-  uint i = 0, i2 = 1;
+  size_t i = 0, i2 = 1;
   arr[i] = VAL;
   arr[i2] = VAL;
 
@@ -118,7 +118,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_divideEqualsOnEntry_then_valueSet)
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_swapTwoEntries_then_valuesSwapped)
 {
-  uint i = 0, i2 = 1;
+  size_t i = 0, i2 = 1;
   arr[i] = VAL;
 
   swap(arr[i], arr[i2]);

@@ -4,8 +4,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_resize_then_sizeChanges)
   EXPECT_EQ(ARRAY_SIZE_Y, arr.size_y());
   EXPECT_EQ(ARRAY_SIZE_X * ARRAY_SIZE_Y, arr.size());
 
-  uint newLenX = ARRAY_SIZE_X + 1;
-  uint newLenY = ARRAY_SIZE_Y - 2;
+  size_t newLenX = ARRAY_SIZE_X + 1;
+  size_t newLenY = ARRAY_SIZE_Y - 2;
   arr.resize(newLenX, newLenY);
 
   EXPECT_EQ(newLenX, arr.size_x());
@@ -15,7 +15,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_resize_then_sizeChanges)
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_getIndexWithParentheses_then_refReturned)
 {
-  uint i = 1, j = 1;
+  size_t i = 1, j = 1;
   arr(i, j) = VAL;
 
   EXPECT_EQ(VAL, arr(i, j));
@@ -23,8 +23,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_getIndexWithParentheses_then_refReturne
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_indexWithBracketsAlongsideParentheses_then_indexedProperly)
 {
-  uint i = 1, j = 1;
-  uint absIndex = j * arr.size_x() + i;
+  size_t i = 1, j = 1;
+  size_t absIndex = j * arr.size_x() + i;
 
   arr[absIndex] = VAL;
   EXPECT_EQ(VAL, arr(i, j));
@@ -35,7 +35,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, when_indexWithBracketsAlongsideParentheses_t
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, given_constCompressedArray_when_getIndexWithBrackets_then_valReturned)
 {
-  uint i = 1;
+  size_t i = 1;
   arr[i] = VAL;
 
   const array2<SCALAR> arrConst = arr;
@@ -45,8 +45,8 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, given_constCompressedArray_when_getIndexWith
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_REFS, given_constCompressedArray_when_getIndexWithParentheses_then_valReturned)
 {
-  uint i = 1, j = 1;
-  uint absIndex = j * arr.size_x() + i;
+  size_t i = 1, j = 1;
+  size_t absIndex = j * arr.size_x() + i;
   arr[absIndex] = VAL;
 
   const array2<SCALAR> arrConst = arr;

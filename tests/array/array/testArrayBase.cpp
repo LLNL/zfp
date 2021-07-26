@@ -77,7 +77,7 @@ TEST_F(TEST_FIXTURE, when_setRate_then_compressionRateChanged)
   EXPECT_GT(oldCompressedSize, newCompressedSize);
 }
 
-void VerifyProperHeaderWritten(const zfp::array::header& h, uint chosenSizeX, uint chosenSizeY, uint chosenSizeZ, uint chosenSizeW, double chosenRate)
+void VerifyProperHeaderWritten(const zfp::array::header& h, size_t chosenSizeX, size_t chosenSizeY, size_t chosenSizeZ, size_t chosenSizeW, double chosenRate)
 {
   // copy header into aligned memory suitable for bitstream r/w
   size_t byte_size = h.size_bytes();
@@ -120,7 +120,7 @@ TEST_F(TEST_FIXTURE, when_writeHeader_then_cCompatibleHeaderWritten)
 {
   double chosenRate = ZFP_RATE_PARAM_BITS;
 
-  uint chosenSizeX, chosenSizeY, chosenSizeZ, chosenSizeW;
+  size_t chosenSizeX, chosenSizeY, chosenSizeZ, chosenSizeW;
 #if DIMS == 1
   chosenSizeX = 55;
   chosenSizeY = 0;

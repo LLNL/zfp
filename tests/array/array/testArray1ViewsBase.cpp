@@ -22,7 +22,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorBrackets_then_
 {
   ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
 
-  for(uint i = 0; i < viewLen; i++) {
+  for (size_t i = 0; i < viewLen; i++) {
     EXPECT_EQ(arr[offset + i], v[i]);
   }
 }
@@ -31,7 +31,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_constView_when_accessorParens_then_co
 {
   ZFP_ARRAY_TYPE::const_view v(&arr, offset, viewLen);
 
-  for(uint i = 0; i < viewLen; i++) {
+  for (size_t i = 0; i < viewLen; i++) {
     EXPECT_EQ(arr[offset + i], v(i));
   }
 }
@@ -67,7 +67,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_lengthAndOffs
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithBrackets_then_originalArrayUpdated)
 {
   ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
-  uint i = 1;
+  size_t i = 1;
   SCALAR val = 3.14;
 
   EXPECT_NE(val, arr(offset + i));
@@ -97,7 +97,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewFullConstructor_then_isShallowCopy
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_view_when_setEntryWithParens_then_originalArrayUpdated)
 {
   ZFP_ARRAY_TYPE::view v(&arr, offset, viewLen);
-  uint i = 1;
+  size_t i = 1;
   SCALAR val = 3.14;
 
   EXPECT_NE(val, arr(offset + i));
@@ -138,12 +138,12 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_length
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOnCount_then_setsUniqueBlockBounds)
 {
-  uint count = 3;
+  size_t count = 3;
   size_t prevOffset, prevLen, offset, len;
 
   /* partition such that each gets at least 1 block */
-  uint blockSideLen = 4;
-  uint arrBlockCount = (arr.size_x() + (blockSideLen - 1)) / blockSideLen;
+  size_t blockSideLen = 4;
+  size_t arrBlockCount = (arr.size_x() + (blockSideLen - 1)) / blockSideLen;
   EXPECT_LE(count, arrBlockCount);
 
   /* base case */
@@ -159,7 +159,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateView_when_partitionWithLimitOn
   EXPECT_LE(blockSideLen, prevLen);
 
   /* successive cases are compared to previous */
-  for (uint i = 1; i < count - 1; i++) {
+  for (size_t i = 1; i < count - 1; i++) {
     ZFP_ARRAY_TYPE::private_view v2(&arr);
     v2.partition(i, count);
 

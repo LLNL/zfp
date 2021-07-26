@@ -67,19 +67,19 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_constViewMinConstructor_then_spansEnti
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_constViewMinConstructor_then_isShallowCopyOfCompressedArray)
 {
   ZFP_ARRAY_TYPE::const_view v(&arr);
-  uint i = 0;
+  size_t i = 0;
   SCALAR val;
   size_t arrOffset = i;
 #if DIMS >= 2
-  uint j = 0;
+  size_t j = 0;
   arrOffset += j*arr.size_x();
 #endif
 #if DIMS >= 3
-  uint k = 0;
+  size_t k = 0;
   arrOffset = k*arr.size_x()*arr.size_y();
 #endif
 #if DIMS >= 4
-  uint l = 0;
+  size_t l = 0;
   arrOffset = l*arr.size_x()*arr.size_y()*arr.size_z();
 #endif
 
@@ -143,20 +143,20 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewMinConstructor_then_spansEntireArr
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_viewMinConstructor_then_isShallowCopyOfCompressedArray)
 {
   ZFP_ARRAY_TYPE::view v(&arr);
-  uint i = 0;
+  size_t i = 0;
   SCALAR val;
   size_t arrOffset = i;
 
 #if DIMS >= 2
-  uint j = 0;
+  size_t j = 0;
   arrOffset += j*arr.size_x();
 #endif
 #if DIMS >= 3
-  uint k = 0;
+  size_t k = 0;
   arrOffset += k*arr.size_x()*arr.size_y();
 #endif
 #if DIMS >= 4
-  uint l = 0;
+  size_t l = 0;
   arrOffset += l*arr.size_x()*arr.size_y()*arr.size_z();
 #endif
 
@@ -220,20 +220,20 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_flatViewMinConstructor_then_spansEntir
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_flatViewMinConstructor_then_isShallowCopyOfCompressedArray)
 {
   ZFP_ARRAY_TYPE::flat_view v(&arr);
-  uint i = 0;
+  size_t i = 0;
   SCALAR val;
   size_t arrOffset = i;
 
 #if DIMS >= 2
-  uint j = 0;
+  size_t j = 0;
   arrOffset += j*arr.size_x();
 #endif
 #if DIMS >= 3
-  uint k = 0;
+  size_t k = 0;
   arrOffset += k*arr.size_x()*arr.size_y();
 #endif
 #if DIMS >= 4
-  uint l = 0;
+  size_t l = 0;
   arrOffset += l*arr.size_x()*arr.size_y()*arr.size_z();
 #endif
 
@@ -294,18 +294,18 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_nestedViewMinConstructor_then_spansEnt
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_nestedViewMinConstructor_then_isShallowCopyOfCompressedArray)
 {
   ZFP_ARRAY_TYPE::nested_view v(&arr);
-  uint i = 0;
+  size_t i = 0;
   SCALAR val;
   size_t arrOffset = i;
 
-  uint j = 0;
+  size_t j = 0;
   arrOffset += j*arr.size_x();
 #if DIMS >= 3
-  uint k = 0;
+  size_t k = 0;
   arrOffset += k*arr.size_x()*arr.size_y();
 #endif
 #if DIMS >= 4
-  uint l = 0;
+  size_t l = 0;
   arrOffset += l*arr.size_x()*arr.size_y()*arr.size_w();
 #endif
 
@@ -376,18 +376,18 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateConstViewFullConstructor_then_c
   arr.set_cache_size(999);
   size_t cacheSize = arr.cache_size();
 
-  uint offsetX = 5, viewLenX = 3;
+  size_t offsetX = 5, viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 #if DIMS >= 2
-  uint offsetY = 1, viewLenY = 3;
+  size_t offsetY = 1, viewLenY = 3;
   EXPECT_LT(offsetY + viewLenY, arr.size_y());
 #endif
 #if DIMS >= 3
-  uint offsetZ = 0, viewLenZ = 2;
+  size_t offsetZ = 0, viewLenZ = 2;
   EXPECT_LT(offsetZ + viewLenZ, arr.size_z());
 #endif
 #if DIMS >= 4
-  uint offsetW = 1, viewLenW = 4;
+  size_t offsetW = 1, viewLenW = 4;
   EXPECT_LT(offsetW + viewLenW, arr.size_w());
 #endif
 
@@ -418,19 +418,19 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateConstView_when_setCacheSize_th
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateConstViewWithDirtyCache_when_clearCache_then_entriesCleared)
 {
   SCALAR val = 3.3;
-  uint i = 2;
+  size_t i = 2;
   size_t arrOffset = i;
 
 #if DIMS >= 2
-  uint j = 1;
+  size_t j = 1;
   arrOffset += j*arr.size_x();
 #endif
 #if DIMS >= 3
-  uint k = 1;
+  size_t k = 1;
   arrOffset += k*arr.size_x()*arr.size_y();
 #endif
 #if DIMS >= 4
-  uint l = 1;
+  size_t l = 1;
   arrOffset += l*arr.size_x()*arr.size_y()*arr.size_z();
 #endif
 
@@ -521,18 +521,18 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_cacheS
   arr.set_cache_size(999);
   size_t cacheSize = arr.cache_size();
 
-  uint offsetX = 5, viewLenX = 3;
+  size_t offsetX = 5, viewLenX = 3;
   EXPECT_LT(offsetX + viewLenX, arr.size_x());
 #if DIMS >= 2
-  uint offsetY = 1, viewLenY = 3;
+  size_t offsetY = 1, viewLenY = 3;
   EXPECT_LT(offsetY + viewLenY, arr.size_y());
 #endif
 #if DIMS >= 3
-  uint offsetZ = 0, viewLenZ = 2;
+  size_t offsetZ = 0, viewLenZ = 2;
   EXPECT_LT(offsetZ + viewLenZ, arr.size_z());
 #endif
 #if DIMS >= 4
-  uint offsetW = 1, viewLenW = 4;
+  size_t offsetW = 1, viewLenW = 4;
   EXPECT_LT(offsetW + viewLenW, arr.size_w());
 #endif
 
@@ -553,19 +553,19 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, when_privateViewFullConstructor_then_cacheS
 TEST_F(ARRAY_DIMS_SCALAR_TEST_VIEWS, given_privateViewWithDirtyCache_when_flushCache_thenValuesPersistedToArray)
 {
   SCALAR val = 5.5;
-  const uint i = 3;
+  const size_t i = 3;
   size_t arrOffset = i;
 
 #if DIMS >= 2
-  uint j = 1;
+  size_t j = 1;
   arrOffset += j*arr.size_x();
 #endif
 #if DIMS >= 3
-  uint k = 1;
+  size_t k = 1;
   arrOffset += k*arr.size_x()*arr.size_y();
 #endif
 #if DIMS >= 4
-  uint l = 1;
+  size_t l = 1;
   arrOffset += l*arr.size_x()*arr.size_y()*arr.size_z();
 #endif
 

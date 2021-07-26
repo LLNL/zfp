@@ -4,25 +4,25 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, given_partialBlocks_when_incrementIterator_
   EXPECT_NE(0u, arr.size_x() % BLOCK_SIDE_LEN);
   EXPECT_NE(0u, arr.size_y() % BLOCK_SIDE_LEN);
 
-  uint totalBlocksX = (arr.size_x() + 3) / 4;
-  uint totalBlocksY = (arr.size_y() + 3) / 4;
-  uint totalBlocks = totalBlocksX * totalBlocksY;
+  size_t totalBlocksX = (arr.size_x() + 3) / 4;
+  size_t totalBlocksY = (arr.size_y() + 3) / 4;
+  size_t totalBlocks = totalBlocksX * totalBlocksY;
 
   iter = arr.begin();
-  for (uint count = 0; count < totalBlocks; count++) {
+  for (size_t count = 0; count < totalBlocks; count++) {
     // determine if block is complete or partial
-    uint distanceFromEnd = arr.size_x() - iter.i();
-    uint blockLenX = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
+    size_t distanceFromEnd = arr.size_x() - iter.i();
+    size_t blockLenX = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
 
     distanceFromEnd = arr.size_y() - iter.j();
-    uint blockLenY = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
+    size_t blockLenY = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
 
     // ensure entries lie in same block
-    uint blockStartIndexI = iter.i();
-    uint blockStartIndexJ = iter.j();
+    size_t blockStartIndexI = iter.i();
+    size_t blockStartIndexJ = iter.j();
 
-    for (uint j = 0; j < blockLenY; j++) {
-      for (uint i = 0; i < blockLenX; i++) {
+    for (size_t j = 0; j < blockLenY; j++) {
+      for (size_t i = 0; i < blockLenX; i++) {
         EXPECT_EQ(blockStartIndexI + i, iter.i());
         EXPECT_EQ(blockStartIndexJ + j, iter.j());
         iter++;
@@ -42,25 +42,25 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, given_partialBlocks_when_incrementConstIter
   EXPECT_NE(0u, arr.size_x() % BLOCK_SIDE_LEN);
   EXPECT_NE(0u, arr.size_y() % BLOCK_SIDE_LEN);
 
-  uint totalBlocksX = (arr.size_x() + 3) / 4;
-  uint totalBlocksY = (arr.size_y() + 3) / 4;
-  uint totalBlocks = totalBlocksX * totalBlocksY;
+  size_t totalBlocksX = (arr.size_x() + 3) / 4;
+  size_t totalBlocksY = (arr.size_y() + 3) / 4;
+  size_t totalBlocks = totalBlocksX * totalBlocksY;
 
   citer = arr.cbegin();
-  for (uint count = 0; count < totalBlocks; count++) {
+  for (size_t count = 0; count < totalBlocks; count++) {
     // determine if block is complete or partial
-    uint distanceFromEnd = arr.size_x() - citer.i();
-    uint blockLenX = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
+    size_t distanceFromEnd = arr.size_x() - citer.i();
+    size_t blockLenX = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
 
     distanceFromEnd = arr.size_y() - citer.j();
-    uint blockLenY = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
+    size_t blockLenY = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
 
     // ensure entries lie in same block
-    uint blockStartIndexI = citer.i();
-    uint blockStartIndexJ = citer.j();
+    size_t blockStartIndexI = citer.i();
+    size_t blockStartIndexJ = citer.j();
 
-    for (uint j = 0; j < blockLenY; j++) {
-      for (uint i = 0; i < blockLenX; i++) {
+    for (size_t j = 0; j < blockLenY; j++) {
+      for (size_t i = 0; i < blockLenX; i++) {
         EXPECT_EQ(blockStartIndexI + i, citer.i());
         EXPECT_EQ(blockStartIndexJ + j, citer.j());
         citer++;

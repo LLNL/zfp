@@ -261,13 +261,13 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_incrementConstIterator_then_positionTr
   size_t totalBlocks = (arr.size() + 3) / 4;
   for (size_t count = 0; count < totalBlocks; count++) {
     // determine if block is complete or partial
-    uint distanceFromEnd = arr.size() - citer.i();
-    uint blockLen = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
+    size_t distanceFromEnd = arr.size() - citer.i();
+    size_t blockLen = distanceFromEnd < BLOCK_SIDE_LEN ? distanceFromEnd : BLOCK_SIDE_LEN;
 
     // ensure entries lie in same block
-    uint blockStartIndex = citer.i();
+    size_t blockStartIndex = citer.i();
 
-    for (uint i = 0; i < blockLen; i++) {
+    for (size_t i = 0; i < blockLen; i++) {
       EXPECT_EQ(blockStartIndex + i, citer.i());
       citer++;
     }
@@ -283,16 +283,16 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_decrementConstIterator_then_positionTr
   EXPECT_NE(0u, arr.size() % BLOCK_SIDE_LEN);
 
   citer = arr.cend();
-  uint totalBlocks = (arr.size() + 3) / 4;
-  for (uint count = 0; count < totalBlocks; count++) {
+  size_t totalBlocks = (arr.size() + 3) / 4;
+  for (size_t count = 0; count < totalBlocks; count++) {
     citer--;
 
     // determine if block is complete or partial
-    uint blockEndIndex = citer.i();
-    uint blockLen = (blockEndIndex % BLOCK_SIDE_LEN) + 1;
+    size_t blockEndIndex = citer.i();
+    size_t blockLen = (blockEndIndex % BLOCK_SIDE_LEN) + 1;
 
     // ensure entries lie in same block
-    for (uint i = 1; i < blockLen; i++) {
+    for (size_t i = 1; i < blockLen; i++) {
       citer--;
       EXPECT_EQ(blockEndIndex - i, citer.i());
     }
@@ -312,7 +312,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_subtractTwoConstIterators_then_resultI
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_addToConstIterator_then_returnsAdvancedIter)
 {
-  uint i = 2;
+  size_t i = 2;
   arr[i] = VAL;
   citer = arr.cbegin();
 
@@ -322,7 +322,7 @@ TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_addToConstIterator_then_returnsAdvance
 
 TEST_F(ARRAY_DIMS_SCALAR_TEST_ITERS, when_subtractFromConstIterator_then_returnsAdvancedIter)
 {
-  uint iFromEnd = 1;
+  size_t iFromEnd = 1;
   arr[ARRAY_SIZE - iFromEnd] = VAL;
   citer = arr.cend();
 
