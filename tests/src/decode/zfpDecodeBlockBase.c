@@ -22,10 +22,11 @@ struct setupVars {
 static void
 populateInitialArray(Scalar** dataArrPtr)
 {
+  size_t i;
   *dataArrPtr = malloc(sizeof(Scalar) * BLOCK_SIZE);
   assert_non_null(*dataArrPtr);
 
-  for (int i = 0; i < BLOCK_SIZE; i++) {
+  for (i = 0; i < BLOCK_SIZE; i++) {
 #ifdef FL_PT_DATA
     (*dataArrPtr)[i] = nextSignedRandFlPt();
 #else
@@ -65,8 +66,8 @@ populateInitialArraySpecial(Scalar* dataArr, int index)
     UINT64C(0x7ff4000000000000), // sNaN
   };
 #endif
-
   size_t i;
+
   for (i = 0; i < BLOCK_SIZE; i++) {
 #ifdef FL_PT_DATA
     // generate special values
