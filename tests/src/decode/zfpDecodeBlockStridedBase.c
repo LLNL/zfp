@@ -251,13 +251,13 @@ teardown(void **state)
 UInt
 hashStridedBlock(Scalar* dataArr)
 {
+  ptrdiff_t s[4] = {SX, SY, SZ, SW};
   size_t n[4];
   int i;
+
   for (i = 0; i < 4; i++) {
     n[i] = (i < DIMS) ? BLOCK_SIDE_LEN : 0;
   }
-
-  ptrdiff_t s[4] = {SX, SY, SZ, SW};
 
   return _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)dataArr, n, s);
 }

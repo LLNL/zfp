@@ -278,13 +278,13 @@ static void
 when_seededRandomDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
-
+  ptrdiff_t s[4] = {SX, SY, SZ, SW};
   size_t n[4];
-  for (int i = 0; i < 4; i++) {
+  int i;
+
+  for (i = 0; i < 4; i++) {
     n[i] = (i < DIMS) ? BLOCK_SIDE_LEN : 0;
   }
-
-  ptrdiff_t s[4] = {SX, SY, SZ, SW};
 
   UInt checksum = _catFunc2(hashStridedArray, SCALAR_BITS)((const UInt*)bundle->dataArr, n, s);
   uint64 key1, key2;
