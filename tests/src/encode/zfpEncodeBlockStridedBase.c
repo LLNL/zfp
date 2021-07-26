@@ -300,7 +300,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlockStrided_expect_ReturnValRef
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  uint returnValBits = encodeBlockStrided(stream, bundle->dataArr);
+  size_t returnValBits = encodeBlockStrided(stream, bundle->dataArr);
   // do not flush, otherwise extra zeros included in count
 
   assert_int_equal(returnValBits, stream_wtell(s));
@@ -361,7 +361,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodePartialBlockStrided_expect_Retur
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  uint returnValBits = encodePartialBlockStrided(stream, bundle->dataArr);
+  size_t returnValBits = encodePartialBlockStrided(stream, bundle->dataArr);
   // do not flush, otherwise extra zeros included in count
 
   assert_int_equal(returnValBits, stream_wtell(s));

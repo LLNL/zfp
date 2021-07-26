@@ -271,7 +271,7 @@ template <typename Scalar>
 inline void
 initialize(Scalar* p, uint dims, ArraySize array_size)
 {
-  size_t size = 1ul << ((array_size == Small ? 12 : 24) / dims);
+  size_t size = size_t(1) << ((array_size == Small ? 12 : 24) / dims);
 
   switch (dims) {
     default:

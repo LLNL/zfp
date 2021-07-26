@@ -60,6 +60,7 @@ struct setupVars {
 static int
 setupRandomData(void** state)
 {
+  int i;
   struct setupVars *bundle = calloc(1, sizeof(struct setupVars));
   assert_non_null(bundle);
 
@@ -90,7 +91,7 @@ setupRandomData(void** state)
   assert_non_null(bundle->randomGenArr);
 
   // set remaining indices (square for now)
-  for (int i = 0; i < 4; i++) {
+  for (i = 0; i < 4; i++) {
     bundle->randomGenArrSideLen[i] = (i < DIMS) ? bundle->randomGenArrSideLen[0] : 0;
     // for now, entire randomly generated array always entirely compressed
     bundle->dimLens[i] = bundle->randomGenArrSideLen[i];
