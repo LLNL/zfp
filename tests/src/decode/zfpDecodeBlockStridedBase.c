@@ -521,7 +521,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlockStrided_expect_ReturnValRef
   zfp_stream_flush(stream);
   zfp_stream_rewind(stream);
 
-  uint returnValBits = decodeBlockStrided(stream, bundle->decodedDataArr);
+  size_t returnValBits = decodeBlockStrided(stream, bundle->decodedDataArr);
 
   assert_int_equal(returnValBits, stream_rtell(s));
 }
@@ -569,7 +569,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodePartialBlockStrided_expect_Retur
   zfp_stream_flush(stream);
   zfp_stream_rewind(stream);
 
-  uint returnValBits = decodePartialBlockStrided(stream, bundle->decodedDataArr);
+  size_t returnValBits = decodePartialBlockStrided(stream, bundle->decodedDataArr);
 
   assert_int_equal(returnValBits, stream_rtell(s));
 }

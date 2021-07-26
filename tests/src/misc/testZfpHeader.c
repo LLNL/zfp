@@ -107,9 +107,9 @@ when_zfpFieldMetadataCalled_expect_LSBBits5To53EncodeArrayDimensions(void **stat
 
   // setup uses a 2d field
   uint64 metadataEncodedDims = (metadata >> 4) & MASK_48_BITS;
-  uint nx = (metadataEncodedDims & MASK_24_BITS) + 1;
+  uint nx = (uint)((metadataEncodedDims & MASK_24_BITS) + 1);
   metadataEncodedDims >>= 24;
-  uint ny = (metadataEncodedDims & MASK_24_BITS) + 1;
+  uint ny = (uint)((metadataEncodedDims & MASK_24_BITS) + 1);
 
   assert_int_equal(nx, FIELD_X_LEN);
   assert_int_equal(ny, FIELD_Y_LEN);
@@ -278,9 +278,9 @@ given_properHeader_when_zfpReadHeaderMetadata_expect_fieldArrayDimsSet(void **st
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
   zfp_field* field = bundle->field;
-  uint nx = field->nx;
-  uint ny = field->ny;
-  uint nz = field->nz;
+  size_t nx = field->nx;
+  size_t ny = field->ny;
+  size_t nz = field->nz;
 
   // write header to bitstream
   assert_int_equal(zfp_write_header(stream, bundle->field, ZFP_HEADER_META), ZFP_META_BITS);

@@ -99,10 +99,7 @@ public:
   size_t block_size(size_t block_index) const { return block_offset(block_index + 1) - block_offset(block_index); }
 
   // bit offset of given block
-  size_t block_offset(size_t block_index) const
-  {
-    return static_cast<size_t>(data[block_index]);
-  }
+  size_t block_offset(size_t block_index) const { return static_cast<size_t>(data[block_index]); }
 
   // reset index
   void clear() { block = 0; }
@@ -359,7 +356,7 @@ public:
     size_t which = block_index % 8;
     return which == 7u
              ? block_offset(block_index + 1) - block_offset(block_index)
-             : size(data[2 * chunk + 0], data[2 * chunk + 1], which);
+             : static_cast<size_t>(size(data[2 * chunk + 0], data[2 * chunk + 1], static_cast<uint>(which)));
   }
 
   // bit offset of given block
@@ -371,7 +368,7 @@ public:
     // index has already been built; decode offset
     size_t chunk = block_index / 8;
     size_t which = block_index % 8;
-    return offset(data[2 * chunk + 0], data[2 * chunk + 1], which);
+    return static_cast<size_t>(offset(data[2 * chunk + 0], data[2 * chunk + 1], static_cast<uint>(which)));
   }
 
   // reset index

@@ -210,7 +210,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_EncodeBlock_expect_ReturnValReflectsNu
   zfp_stream* stream = bundle->stream;
   bitstream* s = zfp_stream_bit_stream(stream);
 
-  uint returnValBits = _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
+  size_t returnValBits = _t2(zfp_encode_block, Scalar, DIMS)(stream, bundle->dataArr);
   // do not flush, otherwise extra zeros included in count
 
   assert_int_equal(returnValBits, stream_wtell(s));

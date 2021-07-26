@@ -214,7 +214,7 @@ _catFunc3(given_, DIM_INT_STR, Block_when_DecodeBlock_expect_ReturnValReflectsNu
   zfp_stream_flush(stream);
   zfp_stream_rewind(stream);
 
-  uint returnValBits = _t2(zfp_decode_block, Scalar, DIMS)(stream, bundle->dataArr);
+  size_t returnValBits = _t2(zfp_decode_block, Scalar, DIMS)(stream, bundle->dataArr);
 
   assert_int_equal(returnValBits, stream_rtell(s));
 }
