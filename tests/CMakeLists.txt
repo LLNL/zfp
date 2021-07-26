@@ -17,7 +17,7 @@ ExternalProject_Add(
   SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
   BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
   CMAKE_ARGS        ${CMOCKA_ARGS}
-  BUILD_COMMAND     ${CMAKE_COMMAND} --build . WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
+  BUILD_COMMAND     ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
   INSTALL_COMMAND   ""
   STEP_TARGETS build
   EXCLUDE_FROM_ALL TRUE
@@ -29,7 +29,7 @@ add_library(cmocka STATIC IMPORTED GLOBAL)
 
 # choose proper library path & extension
 if(MSVC)
-  set(IMPORTED_LOCATION_PATH "${binary_dir}/src/Debug/cmocka.lib")
+  set(IMPORTED_LOCATION_PATH "${binary_dir}/src/${CMAKE_BUILD_TYPE}/cmocka.lib")
 else()
   set(IMPORTED_LOCATION_PATH "${binary_dir}/src/libcmocka.a")
 endif()
