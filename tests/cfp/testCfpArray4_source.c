@@ -87,7 +87,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_get_expect_entryReturned)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
+  size_t i = 1, j = 2, k = 1, l = 1;
   CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, i, j, k, l, (SCALAR)VAL);
 
   // dirty cache doesn't immediately apply compression
@@ -99,7 +99,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_ref_expect_arrayObjectValid)(void **stat
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
+  size_t i = 1, j = 2, k = 1, l = 1;
   CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.ref(cfpArr, i, j, k, l);
 
   assert_ptr_equal(cfpArrRef.array.object, cfpArr.object);
@@ -110,7 +110,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_ptr_expect_arrayObjectValid)(void **stat
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
+  size_t i = 1, j = 2, k = 1, l = 1;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k, l);
 
   assert_ptr_equal(cfpArrPtr.reference.array.object, cfpArr.object);
@@ -153,7 +153,7 @@ _catFunc3(given_, CFP_REF_TYPE, _when_get_expect_entryReturned)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
+  size_t i = 1, j = 2, k = 1, l = 1;
   CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.ref(cfpArr, i, j, k, l);
   CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, i, j, k, l, VAL);
 
@@ -165,7 +165,7 @@ _catFunc3(given_, CFP_REF_TYPE, _when_set_expect_arrayUpdated)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
+  size_t i = 1, j = 2, k = 1, l = 1;
   CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.ref(cfpArr, i, j, k, l);
   CFP_NAMESPACE.SUB_NAMESPACE.reference.set(cfpArrRef, VAL);
 
@@ -177,7 +177,7 @@ _catFunc3(given_, CFP_REF_TYPE, _when_copy_expect_arrayUpdated)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i1 = 1, j1 = 2, k1 = 1, l1 = 1, i2 = 2, j2 = 1, k2 = 2, l2 = 2;
+  size_t i1 = 1, j1 = 2, k1 = 1, l1 = 1, i2 = 2, j2 = 1, k2 = 2, l2 = 2;
   CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, i1, j1, k1, l1, VAL);
   CFP_REF_TYPE cfpArrRef_a = CFP_NAMESPACE.SUB_NAMESPACE.ref(cfpArr, i1, j1, k1, l1);
   CFP_REF_TYPE cfpArrRef_b = CFP_NAMESPACE.SUB_NAMESPACE.ref(cfpArr, i2, j2, k2, l2);
@@ -191,7 +191,7 @@ _catFunc3(given_, CFP_REF_TYPE, _when_ptr_expect_addressMatches)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
+  size_t i = 1, j = 2, k = 1, l = 1;
   CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.ref(cfpArr, i, j, k, l);
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.reference.ptr(cfpArrRef);
 
@@ -208,7 +208,7 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_get_set_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 3, l = 4;
+  size_t i = 1, j = 2, k = 3, l = 4;
   SCALAR val = 5;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k, l);
   CFP_NAMESPACE.SUB_NAMESPACE.pointer.set(cfpArrPtr, val);
@@ -222,7 +222,7 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_get_at_set_at_expect_correct)(void **state
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 3, l = 4, io = 5;
+  size_t i = 1, j = 2, k = 3, l = 4, io = 5;
   SCALAR val = 5;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k, l);
   CFP_NAMESPACE.SUB_NAMESPACE.pointer.set_at(cfpArrPtr, io, val);
@@ -236,7 +236,7 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_ref_expect_addressMatches)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
+  size_t i = 1, j = 2, k = 1, l = 1;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k, l);
   CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.pointer.ref(cfpArrPtr);
 
@@ -248,8 +248,8 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_ref_at_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
-  uint oi = 10;
+  size_t i = 1, j = 2, k = 1, l = 1;
+  size_t oi = 10;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k, l);
   CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.pointer.ref_at(cfpArrPtr, oi);
 
@@ -262,10 +262,10 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_lt_expect_less)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i1 = 1, i2 = 2;
-  uint j1 = 1, j2 = 2;
-  uint k1 = 1, k2 = 2;
-  uint l1 = 1, l2 = 2;
+  size_t i1 = 1, i2 = 2;
+  size_t j1 = 1, j2 = 2;
+  size_t k1 = 1, k2 = 2;
+  size_t l1 = 1, l2 = 2;
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1, k1, l1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2, j2, k2, l2);
 
@@ -277,10 +277,10 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_gt_expect_greater)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i1 = 1, i2 = 2;
-  uint j1 = 1, j2 = 2;
-  uint k1 = 1, k2 = 2;
-  uint l1 = 1, l2 = 2;
+  size_t i1 = 1, i2 = 2;
+  size_t j1 = 1, j2 = 2;
+  size_t k1 = 1, k2 = 2;
+  size_t l1 = 1, l2 = 2;
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1, k1, l1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2, j2, k2, l2);
 
@@ -292,10 +292,10 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_leq_expect_less_or_equal)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i1 = 1, i2 = 2;
-  uint j1 = 1, j2 = 2;
-  uint k1 = 1, k2 = 2;
-  uint l1 = 1, l2 = 2;
+  size_t i1 = 1, i2 = 2;
+  size_t j1 = 1, j2 = 2;
+  size_t k1 = 1, k2 = 2;
+  size_t l1 = 1, l2 = 2;
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1, k1, l1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2, j2, k2, l2);
 
@@ -308,10 +308,10 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_geq_expect_greater_or_equal)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i1 = 1, i2 = 2;
-  uint j1 = 1, j2 = 2;
-  uint k1 = 1, k2 = 2;
-  uint l1 = 1, l2 = 2;
+  size_t i1 = 1, i2 = 2;
+  size_t j1 = 1, j2 = 2;
+  size_t k1 = 1, k2 = 2;
+  size_t l1 = 1, l2 = 2;
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1, k1, l1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2, j2, k2, l2);
 
@@ -324,7 +324,7 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_eq_expect_equal)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i1 = 1, j1 = 2, k1 = 1, l1 = 1;
+  size_t i1 = 1, j1 = 2, k1 = 1, l1 = 1;
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1, k1, l1);
 
   assert_true(CFP_NAMESPACE.SUB_NAMESPACE.pointer.eq(cfpArrPtrA, cfpArrPtrA));
@@ -335,10 +335,10 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_neq_expect_not_equal)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i1 = 1, i2 = 2;
-  uint j1 = 2, j2 = 1;
-  uint k1 = 1, k2 = 2;
-  uint l1 = 1, l2 = 2;
+  size_t i1 = 1, i2 = 2;
+  size_t j1 = 2, j2 = 1;
+  size_t k1 = 1, k2 = 2;
+  size_t l1 = 1, l2 = 2;
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1, k1, l1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2, j2, k2, l2);
 
@@ -350,8 +350,8 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_distance_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i1 = 1, i2 = 2, k1 = 1, l1 = 1;
-  uint j1 = 2, j2 = 1, k2 = 2, l2 = 2;
+  size_t i1 = 1, i2 = 2, k1 = 1, l1 = 1;
+  size_t j1 = 2, j2 = 1, k2 = 2, l2 = 2;
   CFP_PTR_TYPE cfpArrPtrA = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i1, j1, k1, l1);
   CFP_PTR_TYPE cfpArrPtrB = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i2, j2, k2, l2);
 
@@ -372,19 +372,15 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_next_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1, oi = 10;
+  size_t i = 1, j = 2, k = 1, l = 1, oi = 10;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k, l);
   cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.next(cfpArrPtr, oi);
 
-  uint idx = (int)(i + 
-                   j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) + 
-                   k*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) + 
-                   l*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)) + 
-                   oi;
-  uint x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
-  uint y = ((idx - x) / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) %  CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
-  uint z = ((idx - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x) / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)))            % CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr); 
-  uint w = (idx - z * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x)            / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)); 
+  size_t idx = (i + CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * (j + CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * (k + CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr) * l))) + oi;
+  size_t x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
+  size_t y = ((idx - x) / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) %  CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
+  size_t z = ((idx - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x) / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)))            % CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr); 
+  size_t w = (idx - z * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x)            / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)); 
 
   assert_int_equal(cfpArrPtr.reference.x, x);
   assert_int_equal(cfpArrPtr.reference.y, y);
@@ -398,19 +394,15 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_prev_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 8, j = 4, k = 1, l = 1, oi = 10;
+  size_t i = 8, j = 4, k = 1, l = 1, oi = 10;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k, l);
   cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.prev(cfpArrPtr, oi);
 
-  uint idx = (int)(i + 
-                   j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) + 
-                   k*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) + 
-                   l*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)) - 
-                   oi;
-  uint x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
-  uint y = ((idx - x) / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) %  CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
-  uint z = ((idx - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x) / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)))            % CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr); 
-  uint w = (idx - z * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x)            / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)); 
+  size_t idx = (i + CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * (j + CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * (k + CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr) * l))) - oi;
+  size_t x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
+  size_t y = ((idx - x) / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) %  CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
+  size_t z = ((idx - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x) / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)))            % CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr); 
+  size_t w = (idx - z * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x)            / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)); 
 
   assert_int_equal(cfpArrPtr.reference.x, x);
   assert_int_equal(cfpArrPtr.reference.y, y);
@@ -424,19 +416,15 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_inc_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
+  size_t i = 1, j = 2, k = 1, l = 1;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k, l);
   cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.inc(cfpArrPtr);
 
-  uint idx = (int)(i + 
-                   j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) + 
-                   k*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) + 
-                   l*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)) + 
-                   1;
-  uint x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
-  uint y = ((idx - x) / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) %  CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
-  uint z = ((idx - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x) / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)))            % CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr); 
-  uint w = (idx - z * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x)            / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)); 
+  size_t idx = (i + CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * (j + CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * (k + CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr) * l))) + 1; 
+  size_t x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
+  size_t y = ((idx - x) / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) %  CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
+  size_t z = ((idx - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x) / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)))            % CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr); 
+  size_t w = (idx - z * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x)            / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)); 
 
   assert_int_equal(cfpArrPtr.reference.x, x);
   assert_int_equal(cfpArrPtr.reference.y, y);
@@ -450,19 +438,15 @@ _catFunc3(given_, CFP_PTR_TYPE, _when_dec_expect_correct)(void **state)
 {
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
-  uint i = 1, j = 2, k = 1, l = 1;
+  size_t i = 1, j = 2, k = 1, l = 1;
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr(cfpArr, i, j, k, l);
   cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.pointer.dec(cfpArrPtr);
 
-  uint idx = (int)(i + 
-                   j*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) + 
-                   k*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) + 
-                   l*CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)*CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)) - 
-                   1;
-  uint x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
-  uint y = ((idx - x) / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) %  CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
-  uint z = ((idx - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x) / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)))            % CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr); 
-  uint w = (idx - z * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x)            / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)); 
+  size_t idx = (i + CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * (j + CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * (k + CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr) * l))) - 1;
+  size_t x = idx % CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr);
+  size_t y = ((idx - x) / CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr)) %  CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr);
+  size_t z = ((idx - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x) / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr)))            % CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr); 
+  size_t w = (idx - z * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - y * CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) - x)            / (CFP_NAMESPACE.SUB_NAMESPACE.size_x(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_y(cfpArr) * CFP_NAMESPACE.SUB_NAMESPACE.size_z(cfpArr)); 
 
   assert_int_equal(cfpArrPtr.reference.x, x);
   assert_int_equal(cfpArrPtr.reference.y, y);
@@ -498,7 +482,7 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_ref_at_expect_correct)(void **state)
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
-  uint io = 38709;
+  size_t io = 38709;
 
   CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
   CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.iterator.ref_at(cfpArrIter, io);
@@ -532,7 +516,7 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_ptr_at_expect_correct)(void **state)
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
-  uint io = 38709;
+  size_t io = 38709;
 
   CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
   CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.iterator.ptr_at(cfpArrIter, io);
@@ -696,13 +680,13 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_get_index_expect_correct)(void **state)
   cfpArrIter.z = 2;
   cfpArrIter.w = 1;
 
-  int i_idx = CFP_NAMESPACE.SUB_NAMESPACE.iterator.i(cfpArrIter);
-  int j_idx = CFP_NAMESPACE.SUB_NAMESPACE.iterator.j(cfpArrIter);
-  int k_idx = CFP_NAMESPACE.SUB_NAMESPACE.iterator.k(cfpArrIter);
-  int l_idx = CFP_NAMESPACE.SUB_NAMESPACE.iterator.l(cfpArrIter);
+  size_t i_idx = CFP_NAMESPACE.SUB_NAMESPACE.iterator.i(cfpArrIter);
+  size_t j_idx = CFP_NAMESPACE.SUB_NAMESPACE.iterator.j(cfpArrIter);
+  size_t k_idx = CFP_NAMESPACE.SUB_NAMESPACE.iterator.k(cfpArrIter);
+  size_t l_idx = CFP_NAMESPACE.SUB_NAMESPACE.iterator.l(cfpArrIter);
 
-  assert_int_equal(i_idx, 1);
-  assert_int_equal(j_idx, 3);
-  assert_int_equal(k_idx, 2);
-  assert_int_equal(l_idx, 1);
+  assert_int_equal(i_idx, 1u);
+  assert_int_equal(j_idx, 3u);
+  assert_int_equal(k_idx, 2u);
+  assert_int_equal(l_idx, 1u);
 }

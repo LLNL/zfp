@@ -301,7 +301,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_copyCtor_expect_cacheCopied)(void **stat
   uchar* srcData = CFP_NAMESPACE.SUB_NAMESPACE.compressed_data(srcCfpArr);
 
   // create dirty cache
-  uint i = 5;
+  size_t i = 5;
   CFP_NAMESPACE.SUB_NAMESPACE.set_flat(srcCfpArr, i, (SCALAR)VAL);
 
   // exec copy constructor
@@ -542,7 +542,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_ref_flat_expect_entryReturned)(void **st
     struct setupVars *bundle = *state;
     CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
-    uint i = 10;
+    size_t i = 10;
     CFP_REF_TYPE cfpArrRef = CFP_NAMESPACE.SUB_NAMESPACE.ref_flat(cfpArr, i);
 
     assert_true(CFP_NAMESPACE.SUB_NAMESPACE.reference.get(cfpArrRef) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, i));
@@ -554,7 +554,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_ptr_flat_expect_entryReturned)(void **st
     struct setupVars *bundle = *state;
     CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
-    uint i = 10;
+    size_t i = 10;
     CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr_flat(cfpArr, i);
 
     assert_true(CFP_NAMESPACE.SUB_NAMESPACE.reference.get(cfpArrPtr.reference) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, i));
@@ -584,7 +584,7 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_get_at_set_at_expect_correct)(void **stat
   struct setupVars *bundle = *state;
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
 
-  uint i = 3;
+  size_t i = 3;
   SCALAR val = 5;
 
   CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
