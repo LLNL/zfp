@@ -1,7 +1,7 @@
 include ../Config
 
 BINDIR = ../bin
-TARGETS = $(BINDIR)/testzfp $(BINDIR)/testviews
+TARGETS = $(BINDIR)/testzfp $(BINDIR)/testviews $(BINDIR)/testexec
 INCS = -I../include -I../array
 LIBS = -L../lib -lzfp
 
@@ -12,6 +12,9 @@ $(BINDIR)/testzfp: testzfp.cpp ../lib/$(LIBZFP)
 
 $(BINDIR)/testviews: testviews.cpp ../lib/$(LIBZFP)
 	$(CXX) $(CXXFLAGS) $(INCS) testviews.cpp $(LIBS) -o $@
+
+$(BINDIR)/testexec: testexec.cpp ../lib/$(LIBZFP)
+	$(CXX) $(CXXFLAGS) $(INCS) testexec.cpp $(LIBS) -o $@
 
 test: $(BINDIR)/testzfp
 	$(BINDIR)/testzfp
