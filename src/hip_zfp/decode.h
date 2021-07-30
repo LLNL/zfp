@@ -84,7 +84,7 @@ public:
     // first mask 
     // bit shift behave differently in HIP
     Word mask;
-    if (first_read == 64) mask = 18446744073709551615;
+    if (first_read == 64) mask = UINT64C(18446744073709551615);
     else mask = ((Word)1<<((first_read)))-1;
     bits = m_buffer & mask;
    
@@ -108,7 +108,7 @@ public:
     // be a conditional without divergence
 
     // bit shift behave differently in HIP
-    if (next_read == 64) mask = 18446744073709551615;
+    if (next_read == 64) mask = UINT64C(18446744073709551615);
     else mask = ((Word)1<<((next_read)))-1;
 
     bits += (m_buffer & mask) << first_read;
