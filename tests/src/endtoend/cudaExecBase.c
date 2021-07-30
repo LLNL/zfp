@@ -22,6 +22,32 @@ _catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressDecompressFixedRate_
 }
 
 static void
+_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != REVERSED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  if (runCompressDecompressAcrossParamsGivenMode(state, 0, zfp_mode_fixed_precision, 1) > 0) {
+    fail_msg("Overall compress test failure\n");
+  }
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressFixedAccuracy_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != REVERSED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  if (runCompressDecompressAcrossParamsGivenMode(state, 0, zfp_mode_fixed_accuracy, 1) > 0) {
+    fail_msg("Overall compress test failure\n");
+  }
+}
+
+static void
 _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressDecompressFixedRate_expect_BitstreamAndArrayChecksumsMatch)(void **state)
 {
   struct setupVars *bundle = *state;
@@ -30,6 +56,32 @@ _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressDecompressFixedRate_
   }
 
   runCompressDecompressTests(state, zfp_mode_fixed_rate, 1);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != PERMUTED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  if (runCompressDecompressAcrossParamsGivenMode(state, 0, zfp_mode_fixed_precision, 1) > 0) {
+    fail_msg("Overall compress test failure\n");
+  }
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedAccuracy_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != PERMUTED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  if (runCompressDecompressAcrossParamsGivenMode(state, 0, zfp_mode_fixed_accuracy, 1) > 0) {
+    fail_msg("Overall compress test failure\n");
+  }
 }
 
 // returns 0 on success, 1 on test failure
@@ -80,6 +132,51 @@ runZfpCompressDecompressIsNoop(void **state)
   return 0;
 }
 
+// returns 0 on success, 1 on test failure
+static int
+runZfpDecompressIsNoop(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_field* field = bundle->field;
+  zfp_stream* stream = bundle->stream;
+  zfp_exec_policy exec = zfp_stream_execution(stream);
+  bitstream* s = zfp_stream_bit_stream(stream);
+  uint bits;
+  word buffer;
+  word* ptr;
+
+  // perform compression in serial to produce compressed data; expect success
+  zfp_stream_rewind(stream);
+  zfp_stream_set_execution(stream, zfp_exec_serial);
+  if (!zfp_compress(stream, field)) {
+    printf("Compression failed\n");
+    return 1;
+  }
+
+  // grab bitstream member vars
+  zfp_stream_rewind(stream);
+  bits = s->bits;
+  buffer = s->buffer;
+  ptr = s->ptr;
+
+  // perform decompression using desired execution policy; expect bitstream not to advance
+  zfp_stream_set_execution(stream, exec);
+  if (zfp_decompress(stream, field)) {
+    printf("Decompression advanced the bitstream when expected to be a no-op\n");
+    return 1;
+  }
+
+  // expect bitstream untouched
+  if ((s->bits != bits) ||
+      (s->buffer != buffer) ||
+      (s->ptr != ptr)) {
+    printf("Decompression modified the bitstream when expected to be a no-op\n");
+    return 1;
+  }
+
+  return 0;
+}
+
 static void
 runCompressDecompressNoopTest(void **state, zfp_mode mode)
 {
@@ -90,6 +187,19 @@ runCompressDecompressNoopTest(void **state, zfp_mode mode)
 
   if (runZfpCompressDecompressIsNoop(state) == 1) {
     fail_msg("Compression/Decompression no-op test failed");
+  }
+}
+
+static void
+runDecompressNoopTest(void **state, zfp_mode mode)
+{
+  struct setupVars *bundle = *state;
+  if (setupCompressParam(bundle, mode, 1) == 1) {
+    fail_msg("ERROR while setting zfp mode");
+  }
+
+  if (runZfpDecompressIsNoop(state) == 1) {
+    fail_msg("Decompression no-op test failed");
   }
 }
 
@@ -110,34 +220,42 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedRate_expect_B
   runCompressDecompressTests(state, zfp_mode_fixed_rate, 3);
 }
 
-// cover all non=fixed-rate modes (except expert)
 static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  if (runCompressDecompressAcrossParamsGivenMode(state, 0, zfp_mode_fixed_precision, 3) > 0) {
+    fail_msg("Overall compress test failure\n");
+  }
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  if (runCompressDecompressAcrossParamsGivenMode(state, 0, zfp_mode_fixed_accuracy, 3) > 0) {
+    fail_msg("Overall compress test failure\n");
+  }
+}
+
+// ensure reversible mode is not supported
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressReversible_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+{
+  runCompressDecompressNoopTest(state, zfp_mode_reversible);
+}
+
+// ensure fixed-precision and -accuracy decompression are not supported
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecisionOrAccuracy_expect_BitstreamUntouchedAndReturnsZero)(void **state)
 {
   struct setupVars *bundle = *state;
+  zfp_type type = zfp_field_type(bundle->field);
 
-  // loop over fixed prec, fixed acc, reversible
-  zfp_mode mode;
-  int failures = 0;
-  for (mode = zfp_mode_fixed_precision; mode <= zfp_mode_reversible; mode++) {
-    zfp_type type = zfp_field_type(bundle->field);
-    if ((mode == zfp_mode_fixed_accuracy) && (type == zfp_type_int32 || type == zfp_type_int64)) {
-      // skip fixed accuracy when unsupported
-      continue;
-    }
-
-    if (setupCompressParam(bundle, mode, 1) == 1) {
-      failures++;
-      continue;
-    }
-
-    if (runZfpCompressDecompressIsNoop(state) == 1) {
-      failures++;
-    }
-  }
-
-  if (failures > 0) {
-    fail_msg("Compression/Decompression no-op test failed\n");
+  runDecompressNoopTest(state, zfp_mode_fixed_precision);
+  switch (type) {
+    case zfp_type_float:
+    case zfp_type_double:
+      runDecompressNoopTest(state, zfp_mode_fixed_accuracy);
+      break;
   }
 }
 
