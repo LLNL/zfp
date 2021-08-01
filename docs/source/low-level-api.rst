@@ -11,7 +11,8 @@ complete, i.e., contains fewer than |4powd| values, then |zfp|'s partial
 block support should be favored over padding the block with, say, zeros
 or other fill values.  The blocks (de)compressed need not be contiguous
 and can be gathered from or scattered to a larger array by setting
-appropriate strides.
+appropriate strides.  As of |zfp| |cpprelease|, templated C++ wrappers
+are also available to simplify calling the low-level API from C++.
 
 The following topics are available:
 
@@ -32,6 +33,8 @@ The following topics are available:
   * :ref:`ll-4d-decoder`
 
 * :ref:`ll-utilities`
+
+* :ref:`ll-cpp-wrappers`
 
 .. _ll-stream:
 
@@ -352,3 +355,74 @@ appropriate bias for unsigned integer data.
 
   Convert *dims*-dimensional contiguous block from 32-bit integer type.
   Use *dims* = 0 to demote a single value.
+
+.. _ll-cpp-wrappers:
+
+C++ Wrappers
+------------
+
+.. cpp:namespace:: zfp
+
+To facilitate calling the low-level API from C++, a number of wrappers are
+available that are templated on scalar type and dimensionality.  Each function
+of the form :code:`zfp_function_type_dims`, where *type* denotes scalar type
+and *dims* denotes dimensionality, has a corresponding C++ wrapper
+:code:`zfp::function<type, dims>`.  For example, the C function
+:c:func:`zfp_encode_block_float_2` has a C++ wrapper
+:cpp:func:`zfp::encode_block\<float, 2>`.  Often *dims* can be inferred from
+the parameters of overloaded functions, in which case it is omitted as
+template parameter.  The C++ wrappers are defined in :code:`zfpcpp.h`.
+
+Encoder
+^^^^^^^
+
+.. cpp:function:: template<typename Scalar, uint dims> size_t encode_block(zfp_stream* stream, const Scalar* block)
+
+  Encode contiguous block of dimensionality *dims*.
+
+----
+
+.. cpp:function:: template<typename Scalar> size_t encode_block_strided(zfp_stream* stream, const Scalar* p, ptrdiff_t sx)
+.. cpp:function:: template<typename Scalar> size_t encode_block_strided(zfp_stream* stream, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
+.. cpp:function:: template<typename Scalar> size_t encode_block_strided(zfp_stream* stream, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+.. cpp:function:: template<typename Scalar> size_t encode_block_strided(zfp_stream* stream, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
+
+  Encode complete block from strided array with strides *sx*, *sy*, *sz*, and
+  *sw*.
+
+----
+
+.. cpp:function:: template<typename Scalar> size_t encode_partial_block_strided(zfp_stream* stream, const Scalar* p, size_t nx, ptrdiff_t sx)
+.. cpp:function:: template<typename Scalar> size_t encode_partial_block_strided(zfp_stream* stream, const Scalar* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy)
+.. cpp:function:: template<typename Scalar> size_t encode_partial_block_strided(zfp_stream* stream, const Scalar* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+.. cpp:function:: template<typename Scalar> size_t encode_partial_block_strided(zfp_stream* stream, const Scalar* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
+
+  Encode partial block of size *nx* |times| *ny* |times| *nz* |times| *nw*
+  from strided array with strides *sx*, *sy*, *sz*, and *sw*.
+
+Decoder
+^^^^^^^
+
+.. cpp:function:: template<typename Scalar, uint dims> size_t decode_block(zfp_stream* stream, Scalar* block)
+
+  Decode contiguous block of dimensionality *dims*.
+
+----
+
+.. cpp:function:: template<typename Scalar> size_t decode_block_strided(zfp_stream* stream, Scalar* p, ptrdiff_t sx)
+.. cpp:function:: template<typename Scalar> size_t decode_block_strided(zfp_stream* stream, Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
+.. cpp:function:: template<typename Scalar> size_t decode_block_strided(zfp_stream* stream, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+.. cpp:function:: template<typename Scalar> size_t decode_block_strided(zfp_stream* stream, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
+
+  Decode complete block to strided array with strides *sx*, *sy*, *sz*, and
+  *sw*.
+
+----
+
+.. cpp:function:: template<typename Scalar> size_t decode_partial_block_strided(zfp_stream* stream, Scalar* p, size_t nx, ptrdiff_t sx)
+.. cpp:function:: template<typename Scalar> size_t decode_partial_block_strided(zfp_stream* stream, Scalar* p, size_t nx, size_t ny, ptrdiff_t sx, ptrdiff_t sy)
+.. cpp:function:: template<typename Scalar> size_t decode_partial_block_strided(zfp_stream* stream, Scalar* p, size_t nx, size_t ny, size_t nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+.. cpp:function:: template<typename Scalar> size_t decode_partial_block_strided(zfp_stream* stream, Scalar* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
+
+  Decode partial block of size *nx* |times| *ny* |times| *nz* |times| *nw* to
+  strided array with strides *sx*, *sy*, *sz*, and *sw*.
