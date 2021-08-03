@@ -15,23 +15,6 @@ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (May 
 
 /* private functions ------------------------------------------------------- */
 
-static uint
-type_precision(zfp_type type)
-{
-  switch (type) {
-    case zfp_type_int32:
-      return (uint)(CHAR_BIT * sizeof(int32));
-    case zfp_type_int64:
-      return (uint)(CHAR_BIT * sizeof(int64));
-    case zfp_type_float:
-      return (uint)(CHAR_BIT * sizeof(float));
-    case zfp_type_double:
-      return (uint)(CHAR_BIT * sizeof(double));
-    default:
-      return 0;
-  }
-}
-
 static size_t
 field_index_span(const zfp_field* field, ptrdiff_t* min, ptrdiff_t* max)
 {
@@ -203,9 +186,13 @@ zfp_field_pointer(const zfp_field* field)
 void*
 zfp_field_begin(const zfp_field* field)
 {
-  ptrdiff_t min;
-  field_index_span(field, &min, NULL);
-  return (void*)((uchar*)field->data + min * (ptrdiff_t)type_precision(field->type));
+  if (field->data) {
+    ptrdiff_t min;
+    field_index_span(field, &min, NULL);
+    return (void*)((uchar*)field->data + min * (ptrdiff_t)zfp_type_size(field->type));
+  }
+  else
+    return NULL;
 }
 
 zfp_type
@@ -217,7 +204,7 @@ zfp_field_type(const zfp_field* field)
 uint
 zfp_field_precision(const zfp_field* field)
 {
-  return type_precision(field->type);
+  return (uint)(CHAR_BIT * zfp_type_size(field->type));
 }
 
 uint
@@ -250,7 +237,7 @@ zfp_field_size(const zfp_field* field, size_t* size)
 size_t
 zfp_field_size_bytes(const zfp_field* field)
 {
-  return field_index_span(field, NULL, NULL) * type_precision(field->type);
+  return field_index_span(field, NULL, NULL) * zfp_type_size(field->type);
 }
 
 zfp_bool
@@ -733,7 +720,7 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
     default:
       return 0;
   }
-  maxbits += values - 1 + values * MIN(zfp->maxprec, type_precision(field->type));
+  maxbits += values - 1 + values * MIN(zfp->maxprec, zfp_field_precision(field));
   maxbits = MIN(maxbits, zfp->maxbits);
   maxbits = MAX(maxbits, zfp->minbits);
   return ((ZFP_HEADER_MAX_BITS + blocks * maxbits + stream_word_bits - 1) & ~(stream_word_bits - 1)) / CHAR_BIT;
