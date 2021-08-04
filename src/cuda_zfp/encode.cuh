@@ -42,13 +42,19 @@ __device__
 static int
 exponent(Scalar x)
 {
-  if (x > 0) {
-    int e;
+  int e = -get_ebias<Scalar>();
+#ifdef ZFP_WITH_DAZ
+  // treat subnormals as zero; resolves issue #119 by avoiding overflow
+  if (x >= get_scalar_min<Scalar>())
     frexp(x, &e);
-    // clamp exponent in case x is denormalized
-    return max(e, 1 - get_ebias<Scalar>());
+#else
+  if (x > 0) {
+    frexp(x, &e);
+    // clamp exponent in case x is subnormal; may still result in overflow
+    e = max(e, 1 - get_ebias<Scalar>());
   }
-  return -get_ebias<Scalar>();
+#endif
+  return e;
 }
 
 template<class Scalar, int BlockSize>

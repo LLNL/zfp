@@ -268,7 +268,11 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   effective at reducing bias, but is invoked only with
   :ref:`fixed-precision <mode-fixed-precision>` and
   :ref:`fixed-accuracy <mode-fixed-accuracy>` compression modes.
-  Either of these rounding modes break the regression tests.
+  Both of these rounding modes break the regression tests since they alter
+  the compressed or decompressed representation, but they may be used with
+  libraries built with the default rounding mode, :code:`ZFP_ROUND_NEVER`,
+  and versions of |zfp| that do not support a rounding mode with no adverse
+  effects.
   Default: :code:`ZFP_ROUND_NEVER`.
 
 .. c:macro:: ZFP_WITH_TIGHT_ERROR
@@ -281,6 +285,22 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   enabled, the observed maximum absolute error is closer to the tolerance and
   the compression ratio is increased.  This feature requires the rounding mode
   to be :code:`ZFP_ROUND_FIRST` or :code:`ZFP_ROUND_LAST`.
+  Default: undefined/off.
+
+.. c:macro:: ZFP_WITH_DAZ
+
+  When enabled, blocks consisting solely of subnormal floating-point numbers
+  (tiny numbers close to zero) are treated as blocks of all zeros
+  (DAZ = denormals-are-zero).  The main purpose of this option is to avoid the
+  potential for floating-point overflow in the |zfp| implementation that may
+  occur in step 2 of the
+  :ref:`lossy compression algorithm <algorithm-lossy>` when converting to
+  |zfp|'s block-floating-point representation (see
+  `Issue #119 <https://github.com/LLNL/zfp/issues/119>`__).
+  Such overflow tends to be benign but loses all precision and usually
+  results in "random" subnormals upon decompression.  When enabled, compressed
+  streams may differ slightly but are decompressed correctly by libraries
+  built without this option.  This option may break some regression tests.
   Default: undefined/off.
 
 .. c:macro:: ZFP_WITH_ALIGNED_ALLOC

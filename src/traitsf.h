@@ -7,6 +7,7 @@
 #define PBITS 5            /* number of bits needed to encode precision */
 #define NBMASK 0xaaaaaaaau /* negabinary mask */
 #define TCMASK 0x7fffffffu /* two's complement mask */
+#define SCALAR_MIN FLT_MIN /* smallest positive normal number */
 
 #if __STDC_VERSION__ >= 199901L
   #define FABS(x)     fabsf(x)

@@ -58,6 +58,9 @@ OMPFLAGS = -fopenmp
 # DEFS += -DZFP_ROUNDING_MODE=ZFP_ROUND_LAST
 # DEFS += -DZFP_WITH_TIGHT_ERROR
 
+# treat subnormals as zero to avoid overflow
+# DEFS += -DZFP_WITH_DAZ
+
 # build targets ---------------------------------------------------------------
 
 # default targets
@@ -121,6 +124,13 @@ ifdef ZFP_ROUNDING_MODE
         FLAGS += -DZFP_WITH_TIGHT_ERROR
       endif
     endif
+  endif
+endif
+
+# treat subnormals as zero to avoid overflow
+ifdef ZFP_WITH_DAZ
+  ifneq ($(ZFP_WITH_DAZ),0)
+    FLAGS += -DZFP_WITH_DAZ
   endif
 endif
 

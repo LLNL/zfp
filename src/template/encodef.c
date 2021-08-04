@@ -1,3 +1,4 @@
+#include <float.h>
 #include <limits.h>
 #include <math.h>
 
@@ -9,13 +10,20 @@ static uint _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* f
 static int
 _t1(exponent, Scalar)(Scalar x)
 {
-  if (x > 0) {
-    int e;
+  /* use e = -EBIAS when x = 0 */
+  int e = -EBIAS;
+#ifdef ZFP_WITH_DAZ
+  /* treat subnormals as zero; resolves issue #119 by avoiding overflow */
+  if (x >= SCALAR_MIN)
     FREXP(x, &e);
-    /* clamp exponent in case x is denormal */
-    return MAX(e, 1 - EBIAS);
+#else
+  if (x > 0) {
+    FREXP(x, &e);
+    /* clamp exponent in case x is subnormal; may still result in overflow */
+    e = MAX(e, 1 - EBIAS);
   }
-  return -EBIAS;
+#endif
+  return e;
 }
 
 /* compute maximum floating-point exponent in block of n values */

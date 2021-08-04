@@ -1023,6 +1023,7 @@ inline uint
 common_tests()
 {
   uint failures = 0;
+  uint warnings = 0;
   // test library version
   if (zfp_codec_version != ZFP_CODEC || zfp_library_version != ZFP_VERSION) {
     std::cout << "library header and binary version mismatch" << std::endl;
@@ -1065,6 +1066,21 @@ common_tests()
     std::cout << "regression testing requires BIT_STREAM_WORD_TYPE=uint64" << std::endl;
     failures++;
   }
+  // warn if non-default compiler options are used
+#if ZFP_ROUNDING_MODE != 0
+  std::cout << "warning: selected ZFP_ROUNDING_MODE may break tests" << std::endl;
+  warnings++;
+#ifdef ZFP_WITH_TIGHT_ERROR
+  std::cout << "warning: ZFP_WITH_TIGHT_ERROR option may break tests" << std::endl;
+  warnings++;
+#endif
+#endif
+#ifdef ZFP_WITH_DAZ
+  std::cout << "warning: ZFP_WITH_DAZ option may break tests" << std::endl;
+  warnings++;
+#endif
+  if (failures || warnings)
+    std::cout << std::endl;
   return failures;
 }
 
