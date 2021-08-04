@@ -362,13 +362,13 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _header_when_bufferCtor_expect_copied)(void **
   // get header
   CFP_HEADER_TYPE srcCfpHdr = CFP_NAMESPACE.SUB_NAMESPACE.header.ctor(srcCfpArr);
   const void* srcBuff = CFP_NAMESPACE.SUB_NAMESPACE.header.data(srcCfpHdr);
-  size_t srcSz = CFP_NAMESPACE.SUB_NAMESPACE.header.size(srcCfpHdr);
+  size_t srcSz = CFP_NAMESPACE.SUB_NAMESPACE.header.size_bytes(srcCfpHdr, ZFP_DATA_HEADER);
 
   // exec new header construct from source header
   CFP_HEADER_TYPE newCfpHdr = CFP_NAMESPACE.SUB_NAMESPACE.header.ctor_buffer(srcBuff, srcSz);
 
   const void* newBuff = CFP_NAMESPACE.SUB_NAMESPACE.header.data(newCfpHdr);
-  size_t newSz = CFP_NAMESPACE.SUB_NAMESPACE.header.size(newCfpHdr);
+  size_t newSz = CFP_NAMESPACE.SUB_NAMESPACE.header.size_bytes(newCfpHdr, ZFP_DATA_HEADER);
 
   assert_int_equal(srcSz, newSz);
   assert_memory_equal(srcBuff, newBuff, newSz);
@@ -387,7 +387,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _header_when_bufferCtor_expect_paramsCopied)(v
   // get header
   CFP_HEADER_TYPE srcCfpHdr = CFP_NAMESPACE.SUB_NAMESPACE.header.ctor(srcCfpArr);
   const void* hBuff = CFP_NAMESPACE.SUB_NAMESPACE.header.data(srcCfpHdr);
-  size_t hSz = CFP_NAMESPACE.SUB_NAMESPACE.header.size(srcCfpHdr);
+  size_t hSz = CFP_NAMESPACE.SUB_NAMESPACE.header.size_bytes(srcCfpHdr, ZFP_DATA_HEADER);
 
   // exec new header construct from source header
   CFP_HEADER_TYPE newCfpHdr = CFP_NAMESPACE.SUB_NAMESPACE.header.ctor_buffer(hBuff, hSz);
@@ -395,7 +395,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _header_when_bufferCtor_expect_paramsCopied)(v
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.scalar_type(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.scalar_type(newCfpHdr));
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.dimensionality(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.dimensionality(newCfpHdr));
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.rate(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.rate(newCfpHdr));
-  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.size(newCfpHdr));
+  assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size_bytes(srcCfpHdr, ZFP_DATA_HEADER), CFP_NAMESPACE.SUB_NAMESPACE.header.size_bytes(newCfpHdr, ZFP_DATA_HEADER));
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size_x(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.size_x(newCfpHdr));
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size_y(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.size_y(newCfpHdr));
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.header.size_z(srcCfpHdr), CFP_NAMESPACE.SUB_NAMESPACE.header.size_z(newCfpHdr));

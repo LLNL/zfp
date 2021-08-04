@@ -35,7 +35,8 @@
 #define ZFP_DATA_PAYLOAD 0x10u /* compressed data */
 #define ZFP_DATA_INDEX   0x20u /* variable-rate block index information */
 #define ZFP_DATA_CACHE   0x40u /* uncompressed cached data */
-#define ZFP_DATA_ALL     0x7fu /* all storage */
+#define ZFP_DATA_HEADER  0x80u /* header information */
+#define ZFP_DATA_ALL     0xffu /* all storage */
 
 /* field metadata indeterminate state and error code */
 #define ZFP_META_NULL (UINT64C(-1))

@@ -93,7 +93,7 @@ typedef struct {
   double (*rate)(const cfp_header self);
   /* header payload: data pointer and byte size */
   const void* (*data)(const cfp_header self);
-  size_t (*size)(const cfp_header self);
+  size_t (*size_bytes)(const cfp_header self, uint mask);
 } cfp_header2d_api;
 
 typedef struct {

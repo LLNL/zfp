@@ -130,15 +130,19 @@ bitwise ORed together.  Use :c:macro:`ZFP_DATA_ALL` to count all storage used.
 
 .. c:macro:: ZFP_DATA_PAYLOAD
 
-  Compressed data.
+  Compressed data encoding array elements.
 
 .. c:macro:: ZFP_DATA_INDEX
 
-  Block index information.
+  Block :ref:`index <index>` information.
 
 .. c:macro:: ZFP_DATA_CACHE
 
-  Uncompressed cached data.
+  Uncompressed :ref:`cached <caching>` data.
+
+.. C:macro:: ZFP_DATA_HEADER
+
+  :ref:`header` information.
 
 .. c:macro:: ZFP_DATA_ALL
 

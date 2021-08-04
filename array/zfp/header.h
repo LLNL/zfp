@@ -33,7 +33,7 @@ public:
 
   // header payload: data pointer and byte size
   virtual const void* data() const = 0;
-  virtual size_t size_bytes() const = 0;
+  virtual size_t size_bytes(uint mask = ZFP_DATA_HEADER) const = 0;
 
 protected:
   zfp_type type;         // array scalar type

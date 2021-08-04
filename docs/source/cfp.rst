@@ -495,10 +495,10 @@ allocated and must be explicitly destructed via
 
 ----
 
-.. c:function:: size_t cfp.array.header.size_bytes(const cfp_header self);
+.. c:function:: size_t cfp.array.header.size_bytes(const cfp_header self, uint mask);
 
-  Byte size of header data buffer needed for serializing the header.
-  See :cpp:func:`header::size_bytes`.
+  When *mask* = :c:macro:`ZFP_DATA_HEADER`, byte size of header data buffer needed
+  for serializing the header.  See :cpp:func:`header::size_bytes`.
 
 
 Array Accessors

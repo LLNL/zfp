@@ -186,9 +186,12 @@ is to be stored in the header.  The header is also compatible with the |zfp|
 
 ----
 
-.. cpp:function:: virtual size_t header::size_bytes() const = 0
+.. cpp:function:: virtual size_t header::size_bytes(uint mask = ZFP_DATA_HEADER) const = 0
 
-  Return header size in bytes.
+  When *mask* = :c:macro:`ZFP_DATA_HEADER`, return header payload size in
+  bytes pointed to by :cpp:func:`header::data`.  Only those bytes are needed
+  to (de)serialize a header.  The header object stores additional (redundant)
+  metadata whose size can be queried via :c:macro:`ZFP_DATA_META`.
 
 .. index::
    single: Exceptions

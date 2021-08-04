@@ -98,9 +98,19 @@ public:
   // rate in bits per value
   double rate() const { return bit_rate; }
 
-  // header data and byte size
+  // header data
   const void* data() const { return buffer; }
-  size_t size_bytes() const { return byte_size; }
+
+  // header byte size
+  size_t size_bytes(uint mask = ZFP_DATA_HEADER) const
+  {
+    size_t size = 0;
+    if (mask & ZFP_DATA_META)
+      size += sizeof(*this) - byte_size;
+    if (mask & ZFP_DATA_HEADER)
+      size += byte_size;
+    return size;
+  }
 
 protected:
   // header size measured in bits, bytes, and 64-bit words
