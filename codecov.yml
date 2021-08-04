@@ -1,5 +1,4 @@
 coverage:
-  token: 7c38b048-6bd5-4b03-9958-fa62c5929c0c
   ignore:
     - docs/*
     - examples/*
