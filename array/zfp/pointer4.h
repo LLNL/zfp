@@ -14,6 +14,9 @@ public:
 
   // default constructor
   const_pointer() : const_handle<Container>(0, 0, 0, 0, 0) {}
+#if defined(__cplusplus) && __cplusplus >= 201103L
+  const_pointer(std::nullptr_t) : const_handle<Container>(0, 0, 0, 0, 0) {}
+#endif
 
   // constructor
   explicit const_pointer(const container_type* container, size_t x, size_t y, size_t z, size_t w) : const_handle<Container>(container, x, y, z, w) {}
@@ -98,6 +101,9 @@ public:
 
   // default constructor
   pointer() : const_pointer<Container>(0, 0, 0, 0, 0) {}
+#if defined(__cplusplus) && __cplusplus >= 201103L
+  pointer(std::nullptr_t) : const_pointer<Container>(0, 0, 0, 0, 0) {}
+#endif
 
   // constructor
   explicit pointer(container_type* container, size_t x, size_t y, size_t z, size_t w) : const_pointer<Container>(container, x, y, z, w) {}
