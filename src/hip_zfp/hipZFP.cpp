@@ -433,6 +433,7 @@ void setup_device_chunking(int *chunk_size, unsigned long long **d_offsets, size
 //  hipMallocAsync(d_offsets, size, 0);
 //#else
   hipMalloc(d_offsets, size);
+  hipMemset(*d_offsets, 0, size);
 //#endif
   // Using HIPB for the prefix sum. HIPB needs a bit of temp memory too
   size_t tempsize;
