@@ -85,6 +85,9 @@ test(zfp_mode mode, int param, zfp_stream* zfp, const zfp_field* field, zfp_exec
       if (exec == zfp_exec_serial)
         fprintf(stderr, "tol=%g ", tol);
       break;
+    default:
+      fprintf(stderr, "invalid execution mode\n");
+      return 1;
   }
 
   zfp_stream_rewind(zfp);
@@ -98,13 +101,13 @@ test(zfp_mode mode, int param, zfp_stream* zfp, const zfp_field* field, zfp_exec
 
   switch (exec) {
     case zfp_exec_serial:
-      fprintf(stderr, "size=%zu checksum=%#x\n", zsize, zsum);
+      fprintf(stderr, "size=%lu checksum=%#x\n", (unsigned long)zsize, zsum);
       size = zsize;
       sum = zsum;
       break;
     default:
       if (zsize != size) {
-        fprintf(stderr, "  ERROR: %s size (%zu) does not match serial\n", exec_string(exec), zsize);
+        fprintf(stderr, "  ERROR: %s size (%lu) does not match serial\n", exec_string(exec), (unsigned long)zsize);
         return 1;
       }
       else {
@@ -136,8 +139,6 @@ usage()
 
 int main(int argc, char* argv[])
 {
-  uint tests = 0;
-  uint failures = 0;
   bool test_float = true;
   bool test_double = true;
   bool test_rate = true;
@@ -176,7 +177,7 @@ int main(int argc, char* argv[])
       // FALLTHROUGH
     case 3:
       test_rate = test_prec = test_acc = false;
-      for (int i = 0; i < strlen(argv[2]); i++)
+      for (size_t i = 0; i < strlen(argv[2]); i++)
         switch (argv[2][i]) {
           case 'r':
             test_rate = true;
@@ -193,7 +194,7 @@ int main(int argc, char* argv[])
       // FALLTHROUGH
     case 2:
       test_float = test_double = false;
-      for (int i = 0; i < strlen(argv[1]); i++)
+      for (size_t i = 0; i < strlen(argv[1]); i++)
         switch (argv[1][i]) {
           case 'f':
             test_float = true;
@@ -215,6 +216,9 @@ int main(int argc, char* argv[])
   for (size_t i = 0; i < exec_modes; i++)
     fprintf(stderr, "%s%s", exec_string(exec[i]), i == exec_modes - 1 ? "}" : ", ");
   fprintf(stderr, "\n\n");
+
+  uint tests[exec_modes] = {};
+  uint failures[exec_modes] = {};
 
   // loop over float, double
   for (int data_type = 0; data_type < 2; data_type++) {
@@ -273,8 +277,8 @@ int main(int argc, char* argv[])
           size_t size;
           uint32 sum;
           for (size_t j = 0; j < exec_modes; j++) {
-            failures += test(zfp_mode_fixed_rate, rate, zfp[j], field, exec[j], size, sum);
-            tests++;
+            failures[j] += test(zfp_mode_fixed_rate, rate, zfp[j], field, exec[j], size, sum);
+            tests[j]++;
           }
         }
       }
@@ -285,8 +289,8 @@ int main(int argc, char* argv[])
           size_t size;
           uint32 sum;
           for (size_t j = 0; j < exec_modes; j++) {
-            failures += test(zfp_mode_fixed_precision, prec, zfp[j], field, exec[j], size, sum);
-            tests++;
+            failures[j] += test(zfp_mode_fixed_precision, prec, zfp[j], field, exec[j], size, sum);
+            tests[j]++;
           }
         }
       }
@@ -297,8 +301,8 @@ int main(int argc, char* argv[])
           size_t size;
           uint32 sum;
           for (size_t j = 0; j < exec_modes; j++) {
-            failures += test(zfp_mode_fixed_accuracy, acc, zfp[j], field, exec[j], size, sum);
-            tests++;
+            failures[j] += test(zfp_mode_fixed_accuracy, acc, zfp[j], field, exec[j], size, sum);
+            tests[j]++;
           }
         }
       }
@@ -307,12 +311,26 @@ int main(int argc, char* argv[])
     }
   }
 
-  if (failures) {
-    fprintf(stderr, "%u of %u tests failed\n", failures, tests);
+  // count total tests and failures
+  uint total_tests = 0;
+  uint total_failures = 0;
+  for (size_t j = 0; j < exec_modes; j++) {
+    total_tests += tests[j];
+    total_failures += failures[j];
+  }
+
+  // print results
+  if (total_failures) {
+    fprintf(stderr, "%u of %u tests failed\n", total_failures, total_tests);
+    for (size_t j = 0; j < exec_modes; j++)
+      if (failures[j])
+        fprintf(stderr, "  %u of %u %s tests failed\n", failures[j], tests[j], exec_string(exec[j]));
+      else
+        fprintf(stderr, "  all %u %s tests passed\n", tests[j], exec_string(exec[j]));
     return EXIT_FAILURE;
   }
   else {
-    fprintf(stderr, "all %u tests passed\n", tests);
+    fprintf(stderr, "all %u tests passed\n", total_tests);
     return EXIT_SUCCESS;
   }
 }
