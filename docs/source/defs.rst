@@ -34,6 +34,5 @@
 .. |64bitrelease| replace:: 0.5.6
 .. |boolrelease| replace:: 0.5.6
 .. |4darrrelease| replace:: 0.5.6
-.. |hiprelease| replace:: 0.5.7
-=======
 .. |fieldrelease| replace:: 0.5.6
+.. |hiprelease| replace:: 0.5.7
