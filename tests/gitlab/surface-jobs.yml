@@ -70,20 +70,3 @@ c_gnu-7.3.0_test:
        ci_test_regex: "Cfp"
     extends: [.surface_test_cpu]
     needs: [c_gnu-7.3.0_build]
-
-
-############
-# CUDA GPU #
-############
-
-cuda-10.1.168_build:
-    variables:
-        ci_cmp_mod: "cuda/10.1.168"
-    extends: [.cuda, .surface_build_gpu]
-    needs: []
-
-cuda-10.1.168_test:
-    variables:
-       ci_test_regex: "Cuda"
-    extends: [.surface_test_gpu]
-    needs: [cuda-10.1.168_build]
