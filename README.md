@@ -1,6 +1,6 @@
 ZFP
 ===
-[![Travis CI Build Status](https://travis-ci.org/LLNL/zfp.svg?branch=develop)](https://travis-ci.org/LLNL/zfp)
+[![Travis CI Build Status](https://travis-ci.com/LLNL/zfp.svg?branch=develop)](https://travis-ci.com/LLNL/zfp)
 [![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/qb3ld7j11segy52k/branch/develop?svg=true)](https://ci.appveyor.com/project/lindstro/zfp)
 [![Documentation Status](https://readthedocs.org/projects/zfp/badge/?version=release0.5.5)](https://zfp.readthedocs.io/en/release0.5.5/?badge=release0.5.5)
 [![Code Coverage](https://codecov.io/gh/LLNL/zfp/branch/develop/graph/badge.svg)](https://codecov.io/gh/LLNL/zfp)
