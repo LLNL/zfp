@@ -476,10 +476,12 @@ size_t
 hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
 {
 
+/*
 #if (HIPRT_VERSION < 9000)
   if (variable_rate)
     return 0; // Variable rate requires HIP >= 9
 #endif
+*/
 
   if (zfp_stream_compression_mode(stream) == zfp_mode_reversible)
   {
