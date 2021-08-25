@@ -169,6 +169,9 @@ else()
   option(ZFP_WITH_OPENMP "Enable OpenMP parallel compression" ${OPENMP_FOUND})
 endif()
 
+# Suppress CMake warning about unused variable in this file
+set(TOUCH_UNUSED_VARIABLE ${ZFP_OMP_TESTS_ONLY})
+
 # Some compilers don't use explicit libraries on the link line for OpenMP but
 # instead need to treat the OpenMP C flags as both compile and link flags
 # i.e. -fopenmp for compiling and -lgomp for linking, use -fomp for both
