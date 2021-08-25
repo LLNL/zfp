@@ -140,10 +140,185 @@ void populateStridedArray(SCALAR** dataArr, SCALAR dummyVal)
     }
 }
 
+void assertStridedBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
+{
+  size_t i, j, k, l, countX, countY, countZ, countW;
+  switch (DIMS) {
+    case 1:
+        countX = BLOCK_SIDE_LEN * SX;
+
+        for (size_t i = 0; i < countX; i++) {
+          if (!(i % (countX/BLOCK_SIDE_LEN))) {
+            ASSERT_SCALAR_EQ(data1[i], data2[i]) << 
+                        "index " << i << " mismatch: " << data1[i] << " != " << data2[i];
+          }
+        }
+
+        break;
+
+    case 2:
+        countX = BLOCK_SIDE_LEN * SX;
+        countY = SY / SX;
+
+        for (size_t j = 0; j < countY; j++) {
+          for (size_t i = 0; i < countX; i++) {
+            if (!(i % (countX/BLOCK_SIDE_LEN))
+                && !(j % (countY/BLOCK_SIDE_LEN))) {
+              ASSERT_SCALAR_EQ(data1[countX*j + i], data2[countX*j + i]) << 
+                          "index " << (countX*j + i) << " mismatch: " << data1[countX*j + i] << " != " << data2[countX*j + i];
+            }
+          }
+        }
+
+        break;
+
+    case 3:
+        countX = BLOCK_SIDE_LEN * SX;
+        countY = SY / SX;
+        countZ = SZ / SY;
+
+        for (size_t k = 0; k < countZ; k++) {
+          for (size_t j = 0; j < countY; j++) {
+            for (size_t i = 0; i < countX; i++) {
+              if (!(i % (countX/BLOCK_SIDE_LEN))
+                  && !(j % (countY/BLOCK_SIDE_LEN))
+                  && !(k % (countZ/BLOCK_SIDE_LEN))) {
+                  ASSERT_SCALAR_EQ(data1[countX*countY*k + countX*j + i], data2[countX*countY*k + countX*j + i]) << 
+                              "index " << (countX*countY*k + countX*j + i) << " mismatch: " << 
+                              data1[countX*countY*k + countX*j + i] << " != " <<
+                              data2[countX*countY*k + countX*j + i];
+              }
+            }
+          }
+        }
+
+        break;
+
+    case 4:
+        countX = BLOCK_SIDE_LEN * SX;
+        countY = SY / SX;
+        countZ = SZ / SY;
+        countW = SW / SZ;
+
+        for (size_t l = 0; l < countW; l++) {
+          for (size_t k = 0; k < countZ; k++) {
+            for (size_t j = 0; j < countY; j++) {
+              for (size_t i = 0; i < countX; i++) {
+                if (!(i % (countX/BLOCK_SIDE_LEN))
+                    && !(j % (countY/BLOCK_SIDE_LEN))
+                    && !(k % (countZ/BLOCK_SIDE_LEN))
+                    && !(l % (countW/BLOCK_SIDE_LEN))) {
+                      ASSERT_SCALAR_EQ(data1[countX*countY*countZ*l + countX*countY*k + countX*j + i], data2[countX*countY*countZ*l + countX*countY*k + countX*j + i]) << 
+                                  "index " << (countX*countY*countZ*l + countX*countY*k + countX*j + i) << " mismatch: " << 
+                                  data1[countX*countY*countZ*l + countX*countY*k + countX*j + i] << " != " <<
+                                  data2[countX*countY*countZ*l + countX*countY*k + countX*j + i];
+                }
+              }
+            }
+          }
+        }
+
+        break;
+  }
+}
+
+void assertPartialBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
+{
+  size_t i, j, k, l, countX, countY, countZ, countW;
+  switch (DIMS) {
+    case 1:
+        countX = BLOCK_SIDE_LEN * SX;
+
+        for (size_t i = 0; i < countX; i++) {
+          if (i/(countX/BLOCK_SIDE_LEN) < PX
+              && !(i % (countX/BLOCK_SIDE_LEN))) {
+            ASSERT_SCALAR_EQ(data1[i], data2[i]) << 
+                        "index " << i << " mismatch: " << data1[i] << " != " << data2[i];
+          }
+        }
+
+        break;
+
+    case 2:
+        countX = BLOCK_SIDE_LEN * SX;
+        countY = SY / SX;
+
+        for (size_t j = 0; j < countY; j++) {
+          for (size_t i = 0; i < countX; i++) {
+            if (i/(countX/BLOCK_SIDE_LEN) < PX
+                && j/(countY/BLOCK_SIDE_LEN) < PY
+                && !(i % (countX/BLOCK_SIDE_LEN))
+                && !(j % (countY/BLOCK_SIDE_LEN))) {
+              ASSERT_SCALAR_EQ(data1[countX*j + i], data2[countX*j + i]) << 
+                          "index " << (countX*j + i) << " mismatch: " << data1[countX*j + i] << " != " << data2[countX*j + i];
+            }
+          }
+        }
+
+        break;
+
+    case 3:
+        countX = BLOCK_SIDE_LEN * SX;
+        countY = SY / SX;
+        countZ = SZ / SY;
+
+        for (size_t k = 0; k < countZ; k++) {
+          for (size_t j = 0; j < countY; j++) {
+            for (size_t i = 0; i < countX; i++) {
+              if (i/(countX/BLOCK_SIDE_LEN) < PX
+                  && j/(countY/BLOCK_SIDE_LEN) < PY
+                  && k/(countZ/BLOCK_SIDE_LEN) < PZ
+                  && !(i % (countX/BLOCK_SIDE_LEN))
+                  && !(j % (countY/BLOCK_SIDE_LEN))
+                  && !(k % (countZ/BLOCK_SIDE_LEN))) {
+                  ASSERT_SCALAR_EQ(data1[countX*countY*k + countX*j + i], data2[countX*countY*k + countX*j + i]) << 
+                              "index " << (countX*countY*k + countX*j + i) << " mismatch: " << 
+                              data1[countX*countY*k + countX*j + i] << " != " <<
+                              data2[countX*countY*k + countX*j + i];
+              }
+            }
+          }
+        }
+
+        break;
+
+    case 4:
+        countX = BLOCK_SIDE_LEN * SX;
+        countY = SY / SX;
+        countZ = SZ / SY;
+        countW = SW / SZ;
+
+        for (size_t l = 0; l < countW; l++) {
+          for (size_t k = 0; k < countZ; k++) {
+            for (size_t j = 0; j < countY; j++) {
+              for (size_t i = 0; i < countX; i++) {
+                if (i/(countX/BLOCK_SIDE_LEN) < PX
+                    && j/(countY/BLOCK_SIDE_LEN) < PY
+                    && k/(countZ/BLOCK_SIDE_LEN) < PZ
+                    && l/(countW/BLOCK_SIDE_LEN) < PW
+                    && !(i % (countX/BLOCK_SIDE_LEN))
+                    && !(j % (countY/BLOCK_SIDE_LEN))
+                    && !(k % (countZ/BLOCK_SIDE_LEN))
+                    && !(l % (countW/BLOCK_SIDE_LEN))) {
+                      ASSERT_SCALAR_EQ(data1[countX*countY*countZ*l + countX*countY*k + countX*j + i], data2[countX*countY*countZ*l + countX*countY*k + countX*j + i]) << 
+                                  "index " << (countX*countY*countZ*l + countX*countY*k + countX*j + i) << " mismatch: " << 
+                                  data1[countX*countY*countZ*l + countX*countY*k + countX*j + i] << " != " <<
+                                  data2[countX*countY*countZ*l + countX*countY*k + countX*j + i];
+                }
+              }
+            }
+          }
+        }
+
+        break;
+  }
+}
+
 void setupStream(zfp_field** field, zfp_stream** stream, bool isStrided = false)
 {
     *stream = zfp_stream_open(NULL);
-    zfp_stream_set_rate(*stream, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, zfp_false);
+    //zfp_stream_set_rate(*stream, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, zfp_false);
+    zfp_stream_set_accuracy(*stream, 0);
 
     size_t bufsizeBytes = zfp_stream_maximum_size(*stream, *field);
     char* buffer = (char*)calloc(bufsizeBytes, sizeof(char));
@@ -193,11 +368,13 @@ TEST(TemplatedDecodeTests, given_TemplatedDecodeBlock_resultsMatchNonTemplated)
     setupStream(&field, &stream);
     ZFP_ENCODE_BLOCK_FUNC(stream, dataArr);
     zfp_stream_flush(stream);
+    zfp_stream_rewind(stream);
 
     zfp_stream* tstream;
     setupStream(&field, &tstream);
     encode_block<SCALAR, DIMS>(tstream, dataArr);
     zfp_stream_flush(tstream);
+    zfp_stream_rewind(tstream);
 
     SCALAR* data1 = new SCALAR[BLOCK_SIZE];
     size_t sz = ZFP_DECODE_BLOCK_FUNC(stream, data1);
@@ -251,43 +428,46 @@ TEST(TemplatedDecodeTests, given_TemplatedDecodeBlockStrided_resultsMatchNonTemp
     encode_block_strided<SCALAR>(tstream, dataArr, SX, SY, SZ, SW);
 #endif
     zfp_stream_flush(stream);
+    zfp_stream_rewind(stream);
+
     zfp_stream_flush(tstream);
+    zfp_stream_rewind(tstream);
 
 #if DIMS == 1
-    SCALAR* data1 = (SCALAR*)calloc(countX, sizeof(SCALAR));
+    SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX);
     ASSERT_TRUE(data1 != nullptr);
 
-    SCALAR* data2 = (SCALAR*)calloc(countX, sizeof(SCALAR));
+    SCALAR *data2 = (SCALAR*)malloc(sizeof(SCALAR) * countX);
     ASSERT_TRUE(data2 != nullptr);
 
     size_t sz = ZFP_DECODE_BLOCK_STRIDED_FUNC(stream, data1, SX);
     size_t tsz = decode_block_strided<SCALAR>(tstream, data2, SX);
     size_t count = countX;
 #elif DIMS == 2
-    SCALAR* data1 = (SCALAR*)calloc(countX * countY, sizeof(SCALAR));
+    SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY);
     ASSERT_TRUE(data1 != nullptr);
 
-    SCALAR* data2 = (SCALAR*)calloc(countX * countY, sizeof(SCALAR));
+    SCALAR *data2 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY);
     ASSERT_TRUE(data2 != nullptr);
 
     size_t sz = ZFP_DECODE_BLOCK_STRIDED_FUNC(stream, data1, SX, SY);
     size_t tsz = decode_block_strided<SCALAR>(tstream, data2, SX, SY);
     size_t count = countX * countY;
 #elif DIMS == 3
-    SCALAR* data1 = (SCALAR*)calloc(countX * countY * countZ, sizeof(SCALAR));
+    SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ);
     ASSERT_TRUE(data1 != nullptr);
 
-    SCALAR* data2 = (SCALAR*)calloc(countX * countY * countZ, sizeof(SCALAR));
+    SCALAR *data2 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ);
     ASSERT_TRUE(data2 != nullptr);
 
     size_t sz = ZFP_DECODE_BLOCK_STRIDED_FUNC(stream, data1, SX, SY, SZ);
     size_t tsz = decode_block_strided<SCALAR>(tstream, data2, SX, SY, SZ);
     size_t count = countX * countY * countZ;
 #elif DIMS == 4
-    SCALAR* data1 = (SCALAR*)calloc(countX * countY * countZ * countW, sizeof(SCALAR));
+    SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ * countW);
     ASSERT_TRUE(data1 != nullptr);
 
-    SCALAR* data2 = (SCALAR*)calloc(countX * countY * countZ * countW, sizeof(SCALAR));
+    SCALAR *data2 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ * countW);
     ASSERT_TRUE(data2 != nullptr);
 
     size_t sz = ZFP_DECODE_BLOCK_STRIDED_FUNC(stream, data1, SX, SY, SZ, SW);
@@ -296,8 +476,7 @@ TEST(TemplatedDecodeTests, given_TemplatedDecodeBlockStrided_resultsMatchNonTemp
 #endif
 
     ASSERT_TRUE(sz == tsz);
-    for (int i = 0; i < count; i++)
-        ASSERT_SCALAR_EQ(data1[i], data2[i]);
+    assertStridedBlockEntriesEqual(data1, data2);
 
     zfp_field_free(field);
     stream_close(zfp_stream_bit_stream(stream));
@@ -312,5 +491,92 @@ TEST(TemplatedDecodeTests, given_TemplatedDecodeBlockStrided_resultsMatchNonTemp
 
 TEST(TemplatedDecodeTests, given_TemplatedDecodePartialBlockStrided_resultsMatchNonTemplated)
 {
-    //TODO
+    size_t countX = 4 * SX;
+    size_t countY = SY / SX;
+    size_t countZ = SZ / SY;
+    size_t countW = SW / SZ;
+
+    SCALAR* dataArr;
+    populateStridedArray(&dataArr, DUMMY_VAL);
+    ASSERT_TRUE(dataArr != nullptr);
+
+    zfp_field* field = ZFP_FIELD_FUNC(dataArr, ZFP_TYPE, _repeat_arg(BLOCK_SIDE_LEN, DIMS));
+
+    zfp_stream* stream;
+    zfp_stream* tstream;
+    setupStream(&field, &stream, true);
+    setupStream(&field, &tstream, true);
+#if DIMS == 1
+    size_t sz = ZFP_ENCODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, dataArr, PX, SX);
+    size_t tsz = encode_partial_block_strided<SCALAR>(tstream, dataArr, PX, SX);
+#elif DIMS == 2
+    size_t sz = ZFP_ENCODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, dataArr, PX, PY, SX, SY);
+    size_t tsz = encode_partial_block_strided<SCALAR>(tstream, dataArr, PX, PY, SX, SY);
+#elif DIMS == 3
+    size_t sz = ZFP_ENCODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, dataArr, PX, PY, PZ, SX, SY, SZ);
+    size_t tsz = encode_partial_block_strided<SCALAR>(tstream, dataArr, PX, PY, PZ, SX, SY, SZ);
+#elif DIMS == 4
+    size_t sz = ZFP_ENCODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, dataArr, PX, PY, PZ, PW, SX, SY, SZ, SW);
+    size_t tsz = encode_partial_block_strided<SCALAR>(tstream, dataArr, PX, PY, PZ, PW, SX, SY, SZ, SW);
+#endif
+    zfp_stream_flush(stream);
+    zfp_stream_rewind(stream);
+
+    zfp_stream_flush(tstream);
+    zfp_stream_rewind(tstream);
+
+#if DIMS == 1
+    SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX);
+    ASSERT_TRUE(data1 != nullptr);
+
+    SCALAR *data2 = (SCALAR*)malloc(sizeof(SCALAR) * countX);
+    ASSERT_TRUE(data2 != nullptr);
+
+    size_t d_sz = ZFP_DECODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, data1, PX, SX);
+    size_t d_tsz = decode_partial_block_strided<SCALAR>(tstream, data2, PX, SX);
+    size_t count = countX;
+#elif DIMS == 2
+    SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY);
+    ASSERT_TRUE(data1 != nullptr);
+
+    SCALAR *data2 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY);
+    ASSERT_TRUE(data2 != nullptr);
+
+    size_t d_sz = ZFP_DECODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, data1, PX, PY, SX, SY);
+    size_t d_tsz = decode_partial_block_strided<SCALAR>(tstream, data2, PX, PY, SX, SY);
+    size_t count = countX * countY;
+#elif DIMS == 3
+    SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ);
+    ASSERT_TRUE(data1 != nullptr);
+
+    SCALAR *data2 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ);
+    ASSERT_TRUE(data2 != nullptr);
+
+    size_t d_sz = ZFP_DECODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, data1, PX, PY, PZ, SX, SY, SZ);
+    size_t d_tsz = decode_partial_block_strided<SCALAR>(tstream, data2, PX, PY, PZ, SX, SY, SZ);
+    size_t count = countX * countY * countZ;
+#elif DIMS == 4
+    SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ * countW);
+    ASSERT_TRUE(data1 != nullptr);
+
+    SCALAR *data2 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ * countW);
+    ASSERT_TRUE(data2 != nullptr);
+
+    size_t d_sz = ZFP_DECODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, data1, PX, PY, PZ, PW, SX, SY, SZ, SW);
+    size_t d_tsz = decode_partial_block_strided<SCALAR>(tstream, data2, PX, PY, PZ, PW, SX, SY, SZ, SW);
+    size_t count = countX * countY * countZ * countW;
+#endif
+
+    ASSERT_TRUE(d_sz == d_tsz);
+    assertPartialBlockEntriesEqual(data1, data2);
+
+    zfp_field_free(field);
+    stream_close(zfp_stream_bit_stream(stream));
+    stream_close(zfp_stream_bit_stream(tstream));
+    zfp_stream_close(stream);
+    zfp_stream_close(tstream);
+
+    free(dataArr);
+    free(data1);
+    free(data2);
 }
