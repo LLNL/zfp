@@ -23,6 +23,10 @@ typedef struct {
 } cfp_iter1d;
 
 typedef struct {
+  void* object;
+} cfp_constview1d;
+
+typedef struct {
   /* member functions */
   double (*get)(const cfp_ref1d self);
   void (*set)(cfp_ref1d self, double val);
@@ -76,6 +80,20 @@ typedef struct {
   cfp_iter1d (*inc)(const cfp_iter1d it);
   cfp_iter1d (*dec)(const cfp_iter1d it);
 } cfp_iter1d_api;
+
+typedef struct {
+  /* constructor/destructor */
+  cfp_constview1d (*ctor)(const cfp_array1d a);
+  cfp_constview1d (*ctor_subset)(cfp_array1d a, size_t x);
+  void (*dtor)(cfp_constview1d self);
+  /* member functions */
+  size_t (*global_x)(cfp_constview1d self, size_t i);
+  size_t (*size_x)(cfp_constview1d self);
+  double (*get_flat)(const cfp_constview1d self, size_t i);
+  double (*get)(const cfp_constview1d self, size_t i);
+  double (*rate)(const cfp_constview1d self);
+  size_t (*size)(cfp_constview1d self);
+} cfp_constview1d_api;
 
 typedef struct {
   /* constructor/destructor */
@@ -134,6 +152,7 @@ typedef struct {
   cfp_ref1d_api reference;
   cfp_ptr1d_api pointer;
   cfp_iter1d_api iterator;
+  cfp_constview1d_api const_view;
   cfp_header1d_api header;
 } cfp_array1d_api;
 

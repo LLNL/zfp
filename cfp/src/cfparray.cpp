@@ -99,6 +99,18 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
+      cfp_constview1f_ctor,
+      cfp_constview1f_ctor_subset,
+      cfp_constview1f_dtor,
+      cfp_constview1f_global_x,
+      cfp_constview1f_size_x,
+      cfp_constview1f_get_flat,
+      cfp_constview1f_get,
+      cfp_constview1f_rate,
+      cfp_constview1f_size,
+    },
+
+    {
       cfp_header_ctor_array1f,
       cfp_header_ctor_buffer,
       cfp_header_dtor,
@@ -198,6 +210,18 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array1d_cfp_iter1d_prev,
       cfp_array1d_cfp_iter1d_inc,
       cfp_array1d_cfp_iter1d_dec,
+    },
+
+    {
+      cfp_constview1d_ctor,
+      cfp_constview1d_ctor_subset,
+      cfp_constview1d_dtor,
+      cfp_constview1d_global_x,
+      cfp_constview1d_size_x,
+      cfp_constview1d_get_flat,
+      cfp_constview1d_get,
+      cfp_constview1d_rate,
+      cfp_constview1d_size,
     },
 
     {
