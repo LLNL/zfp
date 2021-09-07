@@ -10,8 +10,23 @@
 #define ZFP_ARRAY_TYPE zfp::array4d
 #define ZFP_SCALAR_TYPE double
 
+#define CFP_CONTAINER_TYPE CFP_ARRAY_TYPE
+#define ZFP_CONTAINER_TYPE ZFP_ARRAY_TYPE
+#include "template/cfpcontainer.cpp"
+#include "template/cfpcontainer4.cpp"
 #include "template/cfparray.cpp"
 #include "template/cfparray4.cpp"
+#undef CFP_CONTAINER_TYPE
+#undef ZFP_CONTAINER_TYPE
+
+#define CFP_CONTAINER_TYPE cfp_view4d
+#define ZFP_CONTAINER_TYPE zfp::array4d::view
+#include "template/cfpcontainer.cpp"
+#include "template/cfpcontainer4.cpp"
+#include "template/cfpview.cpp"
+#include "template/cfpview4.cpp"
+#undef CFP_CONTAINER_TYPE
+#undef ZFP_CONTAINER_TYPE
 
 #undef CFP_ARRAY_TYPE
 #undef CFP_REF_TYPE

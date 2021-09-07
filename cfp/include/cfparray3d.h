@@ -23,6 +23,10 @@ typedef struct {
 } cfp_iter3d;
 
 typedef struct {
+  void* object;
+} cfp_view3d;
+
+typedef struct {
   /* member functions */
   double (*get)(const cfp_ref3d self);
   void (*set)(cfp_ref3d self, double val);
@@ -78,6 +82,24 @@ typedef struct {
   cfp_iter3d (*inc)(const cfp_iter3d it);
   cfp_iter3d (*dec)(const cfp_iter3d it);
 } cfp_iter3d_api;
+
+typedef struct {
+  /* constructor/destructor */
+  cfp_view3d (*ctor)(const cfp_array3d a);
+  cfp_view3d (*ctor_subset)(cfp_array3d a, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz);
+  void (*dtor)(cfp_view3d self);
+  /* member functions */
+  size_t (*global_x)(cfp_view3d self, size_t i);
+  size_t (*global_y)(cfp_view3d self, size_t j);
+  size_t (*global_z)(cfp_view3d self, size_t k);
+  size_t (*size_x)(cfp_view3d self);
+  size_t (*size_y)(cfp_view3d self);
+  size_t (*size_z)(cfp_view3d self);
+  double (*get)(const cfp_view3d self, size_t i, size_t j, size_t k);
+  double (*rate)(const cfp_view3d self);
+  size_t (*size)(cfp_view3d self);
+    /* TODO: iterators */
+} cfp_view3d_api;
 
 typedef struct {
   /* constructor/destructor */
@@ -139,6 +161,7 @@ typedef struct {
   cfp_ref3d_api reference;
   cfp_ptr3d_api pointer;
   cfp_iter3d_api iterator;
+  cfp_view3d_api view;
   cfp_header3d_api header;
 } cfp_array3d_api;
 

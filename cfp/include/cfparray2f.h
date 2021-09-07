@@ -23,6 +23,10 @@ typedef struct {
 } cfp_iter2f;
 
 typedef struct {
+  void* object;
+} cfp_view2f;
+
+typedef struct {
   /* member functions */
   float (*get)(const cfp_ref2f self);
   void (*set)(cfp_ref2f self, float val);
@@ -77,6 +81,22 @@ typedef struct {
   cfp_iter2f (*inc)(const cfp_iter2f it);
   cfp_iter2f (*dec)(const cfp_iter2f it);
 } cfp_iter2f_api;
+
+typedef struct {
+  /* constructor/destructor */
+  cfp_view2f (*ctor)(const cfp_array2f a);
+  cfp_view2f (*ctor_subset)(cfp_array2f a, size_t x, size_t y, size_t nx, size_t ny);
+  void (*dtor)(cfp_view2f self);
+  /* member functions */
+  size_t (*global_x)(cfp_view2f self, size_t i);
+  size_t (*global_y)(cfp_view2f self, size_t j);
+  size_t (*size_x)(cfp_view2f self);
+  size_t (*size_y)(cfp_view2f self);
+  float (*get)(const cfp_view2f self, size_t i, size_t j);
+  double (*rate)(const cfp_view2f self);
+  size_t (*size)(cfp_view2f self);
+    /* TODO: iterators */
+} cfp_view2f_api;
 
 typedef struct {
   /* constructor/destructor */
@@ -137,6 +157,7 @@ typedef struct {
   cfp_ref2f_api reference;
   cfp_ptr2f_api pointer;
   cfp_iter2f_api iterator;
+  cfp_view2f_api view;
   cfp_header2f_api header;
 } cfp_array2f_api;
 

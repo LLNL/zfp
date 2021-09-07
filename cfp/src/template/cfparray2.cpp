@@ -77,34 +77,10 @@ _t1(CFP_ARRAY_TYPE, ctor)(size_t nx, size_t ny, double rate, const ZFP_SCALAR_TY
   return a;
 }
 
-static size_t
-_t1(CFP_ARRAY_TYPE, size_x)(CFP_ARRAY_TYPE self)
-{
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->size_x();
-}
-
-static size_t
-_t1(CFP_ARRAY_TYPE, size_y)(CFP_ARRAY_TYPE self)
-{
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->size_y();
-}
-
 static void
 _t1(CFP_ARRAY_TYPE, resize)(CFP_ARRAY_TYPE self, size_t nx, size_t ny, zfp_bool clear)
 {
   static_cast<ZFP_ARRAY_TYPE*>(self.object)->resize(nx, ny, !!clear);
-}
-
-static ZFP_SCALAR_TYPE
-_t1(CFP_ARRAY_TYPE, get)(CFP_ARRAY_TYPE self, size_t i, size_t j)
-{
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->operator()(i, j);
-}
-
-static void
-_t1(CFP_ARRAY_TYPE, set)(CFP_ARRAY_TYPE self, size_t i, size_t j, ZFP_SCALAR_TYPE val)
-{
-  static_cast<ZFP_ARRAY_TYPE*>(self.object)->operator()(i, j) = val;
 }
 
 static CFP_REF_TYPE

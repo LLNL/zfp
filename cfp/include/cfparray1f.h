@@ -24,7 +24,7 @@ typedef struct {
 
 typedef struct {
   void* object;
-} cfp_constview1f;
+} cfp_view1f;
 
 typedef struct {
   /* member functions */
@@ -83,17 +83,17 @@ typedef struct {
 
 typedef struct {
   /* constructor/destructor */
-  cfp_constview1f (*ctor)(const cfp_array1f a);
-  cfp_constview1f (*ctor_subset)(cfp_array1f a, size_t x);
-  void (*dtor)(cfp_constview1f self);
+  cfp_view1f (*ctor)(const cfp_array1f a);
+  cfp_view1f (*ctor_subset)(cfp_array1f a, size_t x, size_t nx);
+  void (*dtor)(cfp_view1f self);
   /* member functions */
-  size_t (*global_x)(cfp_constview1f self, size_t i);
-  size_t (*size_x)(cfp_constview1f self);
-  float (*get_flat)(const cfp_constview1f self, size_t i);
-  float (*get)(const cfp_constview1f self, size_t i);
-  double (*rate)(const cfp_constview1f self);
-  size_t (*size)(cfp_constview1f self);
-} cfp_constview1f_api;
+  size_t (*global_x)(cfp_view1f self, size_t i);
+  size_t (*size_x)(cfp_view1f self);
+  float (*get)(const cfp_view1f self, size_t i);
+  double (*rate)(const cfp_view1f self);
+  size_t (*size)(cfp_view1f self);
+    /* TODO: iterators */
+} cfp_view1f_api;
 
 typedef struct {
   /* constructor/destructor */
@@ -152,7 +152,7 @@ typedef struct {
   cfp_ref1f_api reference;
   cfp_ptr1f_api pointer;
   cfp_iter1f_api iterator;
-  cfp_constview1f_api const_view;
+  cfp_view1f_api view;
   cfp_header1f_api header;
 } cfp_array1f_api;
 

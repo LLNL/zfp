@@ -23,6 +23,10 @@ typedef struct {
 } cfp_iter4d;
 
 typedef struct {
+  void* object;
+} cfp_view4d;
+
+typedef struct {
   /* member functions */
   double (*get)(const cfp_ref4d self);
   void (*set)(cfp_ref4d self, double val);
@@ -79,6 +83,26 @@ typedef struct {
   cfp_iter4d (*inc)(const cfp_iter4d it);
   cfp_iter4d (*dec)(const cfp_iter4d it);
 } cfp_iter4d_api;
+
+typedef struct {
+  /* constructor/destructor */
+  cfp_view4d (*ctor)(const cfp_array4d a);
+  cfp_view4d (*ctor_subset)(cfp_array4d a, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw);
+  void (*dtor)(cfp_view4d self);
+  /* member functions */
+  size_t (*global_x)(cfp_view4d self, size_t i);
+  size_t (*global_y)(cfp_view4d self, size_t j);
+  size_t (*global_z)(cfp_view4d self, size_t k);
+  size_t (*global_w)(cfp_view4d self, size_t l);
+  size_t (*size_x)(cfp_view4d self);
+  size_t (*size_y)(cfp_view4d self);
+  size_t (*size_z)(cfp_view4d self);
+  size_t (*size_w)(cfp_view4d self);
+  double (*get)(const cfp_view4d self, size_t i, size_t j, size_t k, size_t l);
+  double (*rate)(const cfp_view4d self);
+  size_t (*size)(cfp_view4d self);
+    /* TODO: iterators */
+} cfp_view4d_api;
 
 typedef struct {
   /* constructor/destructor */
@@ -141,6 +165,7 @@ typedef struct {
   cfp_ref4d_api reference;
   cfp_ptr4d_api pointer;
   cfp_iter4d_api iterator;
+  cfp_view4d_api view;
   cfp_header4d_api header;
 } cfp_array4d_api;
 

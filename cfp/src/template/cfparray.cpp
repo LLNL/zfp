@@ -23,19 +23,7 @@ _t1(CFP_ARRAY_TYPE, ctor_header)(CFP_HEADER_TYPE h, const void* buffer, size_t b
   return a;
 }
 
-static void
-_t1(CFP_ARRAY_TYPE, dtor)(CFP_ARRAY_TYPE self)
-{
-  delete static_cast<ZFP_ARRAY_TYPE*>(self.object);
-}
-
 // functions defined in zfparray.h (base class)
-static double
-_t1(CFP_ARRAY_TYPE, rate)(CFP_ARRAY_TYPE self)
-{
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->rate();
-}
-
 static double
 _t1(CFP_ARRAY_TYPE, set_rate)(CFP_ARRAY_TYPE self, double rate)
 {
@@ -61,12 +49,6 @@ _t1(CFP_ARRAY_TYPE, deep_copy)(CFP_ARRAY_TYPE self, const CFP_ARRAY_TYPE src)
 }
 
 // functions defined in subclasses
-static size_t
-_t1(CFP_ARRAY_TYPE, size)(CFP_ARRAY_TYPE self)
-{
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->size();
-}
-
 static size_t
 _t1(CFP_ARRAY_TYPE, cache_size)(CFP_ARRAY_TYPE self)
 {

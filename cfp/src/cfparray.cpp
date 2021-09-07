@@ -99,15 +99,14 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_constview1f_ctor,
-      cfp_constview1f_ctor_subset,
-      cfp_constview1f_dtor,
-      cfp_constview1f_global_x,
-      cfp_constview1f_size_x,
-      cfp_constview1f_get_flat,
-      cfp_constview1f_get,
-      cfp_constview1f_rate,
-      cfp_constview1f_size,
+      cfp_view1f_ctor,
+      cfp_view1f_ctor_subset,
+      cfp_view1f_dtor,
+      cfp_view1f_global_x,
+      cfp_view1f_size_x,
+      cfp_view1f_get,
+      cfp_view1f_rate,
+      cfp_view1f_size,
     },
 
     {
@@ -213,15 +212,14 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
-      cfp_constview1d_ctor,
-      cfp_constview1d_ctor_subset,
-      cfp_constview1d_dtor,
-      cfp_constview1d_global_x,
-      cfp_constview1d_size_x,
-      cfp_constview1d_get_flat,
-      cfp_constview1d_get,
-      cfp_constview1d_rate,
-      cfp_constview1d_size,
+      cfp_view1d_ctor,
+      cfp_view1d_ctor_subset,
+      cfp_view1d_dtor,
+      cfp_view1d_global_x,
+      cfp_view1d_size_x,
+      cfp_view1d_get,
+      cfp_view1d_rate,
+      cfp_view1d_size,
     },
 
     {
@@ -330,6 +328,19 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
+      cfp_view2f_ctor,
+      cfp_view2f_ctor_subset,
+      cfp_view2f_dtor,
+      cfp_view2f_global_x,
+      cfp_view2f_global_y,
+      cfp_view2f_size_x,
+      cfp_view2f_size_y,
+      cfp_view2f_get,
+      cfp_view2f_rate,
+      cfp_view2f_size,
+    },
+
+    {
       cfp_header_ctor_array2f,
       cfp_header_ctor_buffer,
       cfp_header_dtor,
@@ -432,6 +443,19 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array2d_cfp_iter2d_prev,
       cfp_array2d_cfp_iter2d_inc,
       cfp_array2d_cfp_iter2d_dec,
+    },
+
+    {
+      cfp_view2d_ctor,
+      cfp_view2d_ctor_subset,
+      cfp_view2d_dtor,
+      cfp_view2d_global_x,
+      cfp_view2d_global_y,
+      cfp_view2d_size_x,
+      cfp_view2d_size_y,
+      cfp_view2d_get,
+      cfp_view2d_rate,
+      cfp_view2d_size,
     },
 
     {
@@ -542,6 +566,21 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
+      cfp_view3f_ctor,
+      cfp_view3f_ctor_subset,
+      cfp_view3f_dtor,
+      cfp_view3f_global_x,
+      cfp_view3f_global_y,
+      cfp_view3f_global_z,
+      cfp_view3f_size_x,
+      cfp_view3f_size_y,
+      cfp_view3f_size_z,
+      cfp_view3f_get,
+      cfp_view3f_rate,
+      cfp_view3f_size,
+    },
+
+    {
       cfp_header_ctor_array3f,
       cfp_header_ctor_buffer,
       cfp_header_dtor,
@@ -646,6 +685,21 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array3d_cfp_iter3d_prev,
       cfp_array3d_cfp_iter3d_inc,
       cfp_array3d_cfp_iter3d_dec,
+    },
+
+    {
+      cfp_view3d_ctor,
+      cfp_view3d_ctor_subset,
+      cfp_view3d_dtor,
+      cfp_view3d_global_x,
+      cfp_view3d_global_y,
+      cfp_view3d_global_z,
+      cfp_view3d_size_x,
+      cfp_view3d_size_y,
+      cfp_view3d_size_z,
+      cfp_view3d_get,
+      cfp_view3d_rate,
+      cfp_view3d_size,
     },
 
     {
@@ -758,6 +812,23 @@ const cfp_api CFP_NAMESPACE = {
     },
 
     {
+      cfp_view4f_ctor,
+      cfp_view4f_ctor_subset,
+      cfp_view4f_dtor,
+      cfp_view4f_global_x,
+      cfp_view4f_global_y,
+      cfp_view4f_global_z,
+      cfp_view4f_global_w,
+      cfp_view4f_size_x,
+      cfp_view4f_size_y,
+      cfp_view4f_size_z,
+      cfp_view4f_size_w,
+      cfp_view4f_get,
+      cfp_view4f_rate,
+      cfp_view4f_size,
+    },
+
+    {
       cfp_header_ctor_array4f,
       cfp_header_ctor_buffer,
       cfp_header_dtor,
@@ -864,6 +935,23 @@ const cfp_api CFP_NAMESPACE = {
       cfp_array4d_cfp_iter4d_prev,
       cfp_array4d_cfp_iter4d_inc,
       cfp_array4d_cfp_iter4d_dec,
+    },
+
+    {
+      cfp_view4d_ctor,
+      cfp_view4d_ctor_subset,
+      cfp_view4d_dtor,
+      cfp_view4d_global_x,
+      cfp_view4d_global_y,
+      cfp_view4d_global_z,
+      cfp_view4d_global_w,
+      cfp_view4d_size_x,
+      cfp_view4d_size_y,
+      cfp_view4d_size_z,
+      cfp_view4d_size_w,
+      cfp_view4d_get,
+      cfp_view4d_rate,
+      cfp_view4d_size,
     },
 
     {
