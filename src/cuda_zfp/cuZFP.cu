@@ -431,6 +431,7 @@ void setup_device_chunking(int *chunk_size, unsigned long long **d_offsets, size
 #else
   cudaMalloc(d_offsets, size);
 #endif
+  cudaMemset(*d_offsets, 0, size); // ensure offsets are zeroed
   // Using CUB for the prefix sum. CUB needs a bit of temp memory too
   size_t tempsize;
   cub::DeviceScan::InclusiveSum(nullptr, tempsize, *d_offsets, *d_offsets, *chunk_size + 1);
