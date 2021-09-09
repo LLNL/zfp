@@ -18,9 +18,13 @@ typedef struct {
 } cfp_ptr4d;
 
 typedef struct {
-  cfp_array4d array;
+  void* container;
   size_t x, y, z, w;
-} cfp_iter4d;
+} cfp_iter_base4d;
+
+typedef cfp_iter_base4d cfp_iter4d;
+typedef cfp_iter_base4d cfp_iter_array4d;
+typedef cfp_iter_base4d cfp_iter_view4d;
 
 typedef struct {
   void* object;
@@ -58,30 +62,30 @@ typedef struct {
 
 typedef struct {
   /* member functions */
-  double (*get)(const cfp_iter4d self);
-  double (*get_at)(const cfp_iter4d self, ptrdiff_t d);
-  void (*set)(cfp_iter4d self, double val);
-  void (*set_at)(cfp_iter4d self, ptrdiff_t d, double val);
-  cfp_ref4d (*ref)(cfp_iter4d self);
-  cfp_ref4d (*ref_at)(cfp_iter4d self, ptrdiff_t d);
-  cfp_ptr4d (*ptr)(cfp_iter4d self);
-  cfp_ptr4d (*ptr_at)(cfp_iter4d self, ptrdiff_t d);
-  size_t (*i)(const cfp_iter4d self);
-  size_t (*j)(const cfp_iter4d self);
-  size_t (*k)(const cfp_iter4d self);
-  size_t (*l)(const cfp_iter4d self);
+  double (*get)(const cfp_iter_base4d self);
+  double (*get_at)(const cfp_iter_base4d self, ptrdiff_t d);
+  void (*set)(cfp_iter_base4d self, double val);
+  void (*set_at)(cfp_iter_base4d self, ptrdiff_t d, double val);
+  cfp_ref4d (*ref)(cfp_iter_base4d self);
+  cfp_ref4d (*ref_at)(cfp_iter_base4d self, ptrdiff_t d);
+  cfp_ptr4d (*ptr)(cfp_iter_base4d self);
+  cfp_ptr4d (*ptr_at)(cfp_iter_base4d self, ptrdiff_t d);
+  size_t (*i)(const cfp_iter_base4d self);
+  size_t (*j)(const cfp_iter_base4d self);
+  size_t (*k)(const cfp_iter_base4d self);
+  size_t (*l)(const cfp_iter_base4d self);
   /* non-member functions */
-  zfp_bool (*lt)(const cfp_iter4d lhs, const cfp_iter4d rhs);
-  zfp_bool (*gt)(const cfp_iter4d lhs, const cfp_iter4d rhs);
-  zfp_bool (*leq)(const cfp_iter4d lhs, const cfp_iter4d rhs);
-  zfp_bool (*geq)(const cfp_iter4d lhs, const cfp_iter4d rhs);
-  zfp_bool (*eq)(const cfp_iter4d lhs, const cfp_iter4d rhs);
-  zfp_bool (*neq)(const cfp_iter4d lhs, const cfp_iter4d rhs);
-  ptrdiff_t (*distance)(const cfp_iter4d first, const cfp_iter4d last);
-  cfp_iter4d (*next)(const cfp_iter4d it, ptrdiff_t d);
-  cfp_iter4d (*prev)(const cfp_iter4d it, ptrdiff_t d);
-  cfp_iter4d (*inc)(const cfp_iter4d it);
-  cfp_iter4d (*dec)(const cfp_iter4d it);
+  zfp_bool (*lt)(const cfp_iter_base4d lhs, const cfp_iter_base4d rhs);
+  zfp_bool (*gt)(const cfp_iter_base4d lhs, const cfp_iter_base4d rhs);
+  zfp_bool (*leq)(const cfp_iter_base4d lhs, const cfp_iter_base4d rhs);
+  zfp_bool (*geq)(const cfp_iter_base4d lhs, const cfp_iter_base4d rhs);
+  zfp_bool (*eq)(const cfp_iter_base4d lhs, const cfp_iter_base4d rhs);
+  zfp_bool (*neq)(const cfp_iter_base4d lhs, const cfp_iter_base4d rhs);
+  ptrdiff_t (*distance)(const cfp_iter_base4d first, const cfp_iter_base4d last);
+  cfp_iter_base4d (*next)(const cfp_iter_base4d it, ptrdiff_t d);
+  cfp_iter_base4d (*prev)(const cfp_iter_base4d it, ptrdiff_t d);
+  cfp_iter_base4d (*inc)(const cfp_iter_base4d it);
+  cfp_iter_base4d (*dec)(const cfp_iter_base4d it);
 } cfp_iter4d_api;
 
 typedef struct {

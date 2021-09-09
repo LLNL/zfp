@@ -50,7 +50,7 @@ static CFP_ITER_TYPE
 _t1(CFP_ARRAY_TYPE, begin)(CFP_ARRAY_TYPE self)
 {
   CFP_ITER_TYPE it;
-  it.array = self;
+  it.container = self.object;
   it.x = 0;
   return it;
 }
@@ -59,7 +59,7 @@ static CFP_ITER_TYPE
 _t1(CFP_ARRAY_TYPE, end)(CFP_ARRAY_TYPE self)
 {
   CFP_ITER_TYPE it;
-  it.array = self;
+  it.container = self.object;
   it.x = static_cast<const ZFP_ARRAY_TYPE*>(self.object)->size_x();
   return it;
 }
@@ -194,31 +194,31 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, ref_at)(CFP_PTR_TYPE self, ptrdiff_t d)
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, lt)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
 {
-  return lhs.array.object == rhs.array.object && lhs.x < rhs.x;
+  return lhs.container == rhs.container && lhs.x < rhs.x;
 }
 
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, gt)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
 {
-  return lhs.array.object == rhs.array.object && lhs.x > rhs.x;
+  return lhs.container == rhs.container && lhs.x > rhs.x;
 }
 
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, leq)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
 {
-  return lhs.array.object == rhs.array.object && lhs.x <= rhs.x;
+  return lhs.container == rhs.container && lhs.x <= rhs.x;
 }
 
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, geq)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
 {
-  return lhs.array.object == rhs.array.object && lhs.x >= rhs.x;
+  return lhs.container == rhs.container && lhs.x >= rhs.x;
 }
 
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, eq)(CFP_ITER_TYPE lhs, CFP_ITER_TYPE rhs)
 {
-  return lhs.array.object == rhs.array.object && lhs.x == rhs.x;
+  return lhs.container == rhs.container && lhs.x == rhs.x;
 }
 
 static zfp_bool
@@ -264,53 +264,61 @@ _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, dec)(CFP_ITER_TYPE it)
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, get)(CFP_ITER_TYPE self)
 {
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.container)->operator()(self.x);
 }
 
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, get_at)(CFP_ITER_TYPE self, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.container)->operator()(self.x);
 }
 
 static void
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, set)(CFP_ITER_TYPE self, ZFP_SCALAR_TYPE val)
 {
-  static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.container)->operator()(self.x) = val;
 }
 
 static void
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, set_at)(CFP_ITER_TYPE self, ptrdiff_t d, ZFP_SCALAR_TYPE val)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
-  static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.container)->operator()(self.x) = val;
 }
 
 static CFP_REF_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, ref)(CFP_ITER_TYPE self)
 {
-  return _t1(CFP_ARRAY_TYPE, ref)(self.array, self.x);
+  CFP_ARRAY_TYPE a;
+  a.object = self.container;
+  return _t1(CFP_ARRAY_TYPE, ref)(a, self.x);
 }
 
 static CFP_REF_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, ref_at)(CFP_ITER_TYPE self, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
-  return _t1(CFP_ARRAY_TYPE, ref)(self.array, self.x);
+  CFP_ARRAY_TYPE a;
+  a.object = self.container;
+  return _t1(CFP_ARRAY_TYPE, ref)(a, self.x);
 }
 
 static CFP_PTR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, ptr)(CFP_ITER_TYPE self)
 {
-  return _t1(CFP_ARRAY_TYPE, ptr)(self.array, self.x);
+  CFP_ARRAY_TYPE a;
+  a.object = self.container;
+  return _t1(CFP_ARRAY_TYPE, ptr)(a, self.x);
 }
 
 static CFP_PTR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, ptr_at)(CFP_ITER_TYPE self, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_ITER_TYPE, next)(self, d);
-  return _t1(CFP_ARRAY_TYPE, ptr)(self.array, self.x);
+  CFP_ARRAY_TYPE a;
+  a.object = self.container;
+  return _t1(CFP_ARRAY_TYPE, ptr)(a, self.x);
 }
 
 static size_t

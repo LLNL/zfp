@@ -18,9 +18,13 @@ typedef struct {
 } cfp_ptr3d;
 
 typedef struct {
-  cfp_array3d array;
+  void* container;
   size_t x, y, z;
-} cfp_iter3d;
+} cfp_iter_base3d;
+
+typedef cfp_iter_base3d cfp_iter3d;
+typedef cfp_iter_base3d cfp_iter_array3d;
+typedef cfp_iter_base3d cfp_iter_view3d;
 
 typedef struct {
   void* object;
@@ -58,29 +62,29 @@ typedef struct {
 
 typedef struct {
   /* member functions */
-  double (*get)(const cfp_iter3d self);
-  double (*get_at)(const cfp_iter3d self, ptrdiff_t d);
-  void (*set)(cfp_iter3d self, double val);
-  void (*set_at)(cfp_iter3d self, ptrdiff_t d, double val);
-  cfp_ref3d (*ref)(cfp_iter3d self);
-  cfp_ref3d (*ref_at)(cfp_iter3d self, ptrdiff_t d);
-  cfp_ptr3d (*ptr)(cfp_iter3d self);
-  cfp_ptr3d (*ptr_at)(cfp_iter3d self, ptrdiff_t d);
-  size_t (*i)(const cfp_iter3d self);
-  size_t (*j)(const cfp_iter3d self);
-  size_t (*k)(const cfp_iter3d self);
+  double (*get)(const cfp_iter_base3d self);
+  double (*get_at)(const cfp_iter_base3d self, ptrdiff_t d);
+  void (*set)(cfp_iter_base3d self, double val);
+  void (*set_at)(cfp_iter_base3d self, ptrdiff_t d, double val);
+  cfp_ref3d (*ref)(cfp_iter_base3d self);
+  cfp_ref3d (*ref_at)(cfp_iter_base3d self, ptrdiff_t d);
+  cfp_ptr3d (*ptr)(cfp_iter_base3d self);
+  cfp_ptr3d (*ptr_at)(cfp_iter_base3d self, ptrdiff_t d);
+  size_t (*i)(const cfp_iter_base3d self);
+  size_t (*j)(const cfp_iter_base3d self);
+  size_t (*k)(const cfp_iter_base3d self);
   /* non-member functions */
-  zfp_bool (*lt)(const cfp_iter3d lhs, const cfp_iter3d rhs);
-  zfp_bool (*gt)(const cfp_iter3d lhs, const cfp_iter3d rhs);
-  zfp_bool (*leq)(const cfp_iter3d lhs, const cfp_iter3d rhs);
-  zfp_bool (*geq)(const cfp_iter3d lhs, const cfp_iter3d rhs);
-  zfp_bool (*eq)(const cfp_iter3d lhs, const cfp_iter3d rhs);
-  zfp_bool (*neq)(const cfp_iter3d lhs, const cfp_iter3d rhs);
-  ptrdiff_t (*distance)(const cfp_iter3d first, const cfp_iter3d last);
-  cfp_iter3d (*next)(const cfp_iter3d it, ptrdiff_t d);
-  cfp_iter3d (*prev)(const cfp_iter3d it, ptrdiff_t d);
-  cfp_iter3d (*inc)(const cfp_iter3d it);
-  cfp_iter3d (*dec)(const cfp_iter3d it);
+  zfp_bool (*lt)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
+  zfp_bool (*gt)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
+  zfp_bool (*leq)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
+  zfp_bool (*geq)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
+  zfp_bool (*eq)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
+  zfp_bool (*neq)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
+  ptrdiff_t (*distance)(const cfp_iter_base3d first, const cfp_iter_base3d last);
+  cfp_iter_base3d (*next)(const cfp_iter_base3d it, ptrdiff_t d);
+  cfp_iter_base3d (*prev)(const cfp_iter_base3d it, ptrdiff_t d);
+  cfp_iter_base3d (*inc)(const cfp_iter_base3d it);
+  cfp_iter_base3d (*dec)(const cfp_iter_base3d it);
 } cfp_iter3d_api;
 
 typedef struct {

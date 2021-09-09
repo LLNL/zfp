@@ -111,7 +111,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_begin_expect_objectValid)(void **state)
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
   CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
 
-  assert_ptr_equal(cfpArrIter.array.object, cfpArr.object);
+  assert_ptr_equal(cfpArrIter.container, cfpArr.object);
   assert_int_equal(cfpArrIter.x, 0);
 }
 
@@ -122,7 +122,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_end_expect_objectValid)(void **state)
   CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
   CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.end(cfpArr);
 
-  assert_ptr_equal(cfpArrIter.array.object, cfpArr.object);
+  assert_ptr_equal(cfpArrIter.container, cfpArr.object);
   assert_int_equal(cfpArrIter.x, SIZE_X);
 }
 
@@ -448,7 +448,7 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_inc_expect_correct)(void **state)
   CFP_ITER_TYPE cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.begin(cfpArr);
   cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.iterator.inc(cfpArrIter);
 
-  assert_ptr_equal(cfpArrIter.array.object, cfpArr.object);
+  assert_ptr_equal(cfpArrIter.container, cfpArr.object);
   assert_int_equal(cfpArrIter.x, 1);
 }
 
@@ -462,7 +462,7 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_dec_expect_correct)(void **state)
   cfpArrIter.x = 4;
   cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.iterator.dec(cfpArrIter);
 
-  assert_ptr_equal(cfpArrIter.array.object, cfpArr.object);
+  assert_ptr_equal(cfpArrIter.container, cfpArr.object);
   assert_int_equal(cfpArrIter.x, 3);
 }
 
@@ -476,7 +476,7 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_next_expect_correct)(void **state)
   cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.iterator.next(cfpArrIter, 4);
   cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.iterator.next(cfpArrIter, 3);
 
-  assert_ptr_equal(cfpArrIter.array.object, cfpArr.object);
+  assert_ptr_equal(cfpArrIter.container, cfpArr.object);
   assert_int_equal(cfpArrIter.x, 7);
 }
 
@@ -490,7 +490,7 @@ _catFunc3(given_, CFP_ITER_TYPE, _when_prev_expect_correct)(void **state)
   cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.iterator.next(cfpArrIter, 7);
   cfpArrIter = CFP_NAMESPACE.SUB_NAMESPACE.iterator.prev(cfpArrIter, 3);
 
-  assert_ptr_equal(cfpArrIter.array.object, cfpArr.object);
+  assert_ptr_equal(cfpArrIter.container, cfpArr.object);
   assert_int_equal(cfpArrIter.x, 4);
 }
 
