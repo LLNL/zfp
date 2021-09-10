@@ -105,7 +105,9 @@ typedef struct {
   float (*get)(const cfp_view4f self, size_t i, size_t j, size_t k, size_t l);
   double (*rate)(const cfp_view4f self);
   size_t (*size)(cfp_view4f self);
-    /* TODO: iterators */
+    /* iterators */
+  cfp_iter_view4f (*begin)(cfp_view4f self);
+  cfp_iter_view4f (*end)(cfp_view4f self);
 } cfp_view4f_api;
 
 typedef struct {
@@ -170,6 +172,7 @@ typedef struct {
   cfp_ptr4f_api pointer;
   cfp_iter4f_api iterator;
   cfp_view4f_api view;
+  cfp_iter4f_api view_iterator;
   cfp_header4f_api header;
 } cfp_array4f_api;
 

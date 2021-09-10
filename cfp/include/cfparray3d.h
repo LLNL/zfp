@@ -102,7 +102,9 @@ typedef struct {
   double (*get)(const cfp_view3d self, size_t i, size_t j, size_t k);
   double (*rate)(const cfp_view3d self);
   size_t (*size)(cfp_view3d self);
-    /* TODO: iterators */
+    /* iterators */
+  cfp_iter_view3d (*begin)(cfp_view3d self);
+  cfp_iter_view3d (*end)(cfp_view3d self);
 } cfp_view3d_api;
 
 typedef struct {
@@ -166,6 +168,7 @@ typedef struct {
   cfp_ptr3d_api pointer;
   cfp_iter3d_api iterator;
   cfp_view3d_api view;
+  cfp_iter3d_api view_iterator;
   cfp_header3d_api header;
 } cfp_array3d_api;
 
