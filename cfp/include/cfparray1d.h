@@ -9,18 +9,22 @@ typedef struct {
 } cfp_array1d;
 
 typedef struct {
-  cfp_array1d array;
+  void* container;
   size_t x;
-} cfp_ref1d;
+} cfp_ref_base1d;
 
 typedef struct {
-  cfp_ref1d reference;
+  cfp_ref_base1d reference;
 } cfp_ptr1d;
 
 typedef struct {
   void* container;
   size_t x;
 } cfp_iter_base1d;
+
+typedef cfp_ref_base1d cfp_ref1d;
+typedef cfp_ref_base1d cfp_ref_array1d;
+typedef cfp_ref_base1d cfp_ref_view1d;
 
 typedef cfp_iter_base1d cfp_iter1d;
 typedef cfp_iter_base1d cfp_iter_array1d;
@@ -32,10 +36,10 @@ typedef struct {
 
 typedef struct {
   /* member functions */
-  double (*get)(const cfp_ref1d self);
-  void (*set)(cfp_ref1d self, double val);
-  cfp_ptr1d (*ptr)(cfp_ref1d self);
-  void (*copy)(cfp_ref1d self, const cfp_ref1d src);
+  double (*get)(const cfp_ref_base1d self);
+  void (*set)(cfp_ref_base1d self, double val);
+  cfp_ptr1d (*ptr)(cfp_ref_base1d self);
+  void (*copy)(cfp_ref_base1d self, const cfp_ref_base1d src);
 } cfp_ref1d_api;
 
 typedef struct {
@@ -44,8 +48,8 @@ typedef struct {
   double (*get_at)(const cfp_ptr1d self, ptrdiff_t d);
   void (*set)(cfp_ptr1d self, double val);
   void (*set_at)(cfp_ptr1d self, ptrdiff_t d, double val);
-  cfp_ref1d (*ref)(cfp_ptr1d self);
-  cfp_ref1d (*ref_at)(cfp_ptr1d self, ptrdiff_t d);
+  cfp_ref_base1d (*ref)(cfp_ptr1d self);
+  cfp_ref_base1d (*ref_at)(cfp_ptr1d self, ptrdiff_t d);
   /* non-member functions */
   zfp_bool (*lt)(const cfp_ptr1d lhs, const cfp_ptr1d rhs);
   zfp_bool (*gt)(const cfp_ptr1d lhs, const cfp_ptr1d rhs);
@@ -66,8 +70,8 @@ typedef struct {
   double (*get_at)(const cfp_iter_base1d self, ptrdiff_t d);
   void (*set)(cfp_iter_base1d self, double val);
   void (*set_at)(cfp_iter_base1d self, ptrdiff_t d, double val);
-  cfp_ref1d (*ref)(cfp_iter_base1d self);
-  cfp_ref1d (*ref_at)(cfp_iter_base1d self, ptrdiff_t d);
+  cfp_ref_base1d (*ref)(cfp_iter_base1d self);
+  cfp_ref_base1d (*ref_at)(cfp_iter_base1d self, ptrdiff_t d);
   cfp_ptr1d (*ptr)(cfp_iter_base1d self);
   cfp_ptr1d (*ptr_at)(cfp_iter_base1d self, ptrdiff_t d);
   size_t (*i)(const cfp_iter_base1d self);
@@ -96,7 +100,8 @@ typedef struct {
   double (*get)(const cfp_view1d self, size_t i);
   double (*rate)(const cfp_view1d self);
   size_t (*size)(cfp_view1d self);
-    /* iterators */
+
+  cfp_ref_view1d (*ref)(cfp_view1d self, size_t i);
   cfp_iter_view1d (*begin)(cfp_view1d self);
   cfp_iter_view1d (*end)(cfp_view1d self);
 } cfp_view1d_api;
@@ -146,8 +151,8 @@ typedef struct {
   double (*get)(const cfp_array1d self, size_t i);
   void (*set)(cfp_array1d self, size_t i, double val);
 
-  cfp_ref1d (*ref)(cfp_array1d self, size_t i);
-  cfp_ref1d (*ref_flat)(cfp_array1d self, size_t i);
+  cfp_ref_array1d (*ref)(cfp_array1d self, size_t i);
+  cfp_ref_array1d (*ref_flat)(cfp_array1d self, size_t i);
 
   cfp_ptr1d (*ptr)(cfp_array1d self, size_t i);
   cfp_ptr1d (*ptr_flat)(cfp_array1d self, size_t i);

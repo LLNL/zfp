@@ -13,29 +13,12 @@ _t1(CFP_ARRAY_TYPE, resize)(CFP_ARRAY_TYPE self, size_t n, zfp_bool clear)
 }
 
 static CFP_REF_TYPE
-_t1(CFP_ARRAY_TYPE, ref)(CFP_ARRAY_TYPE self, size_t i)
-{
-  CFP_REF_TYPE r;
-  r.array = self;
-  r.x = i;
-  return r;
-}
-
-static CFP_REF_TYPE
 _t1(CFP_ARRAY_TYPE, ref_flat)(CFP_ARRAY_TYPE self, size_t i)
 {
   CFP_REF_TYPE r;
-  r.array = self;
+  r.container = self.object;
   r.x = i;
   return r;
-}
-
-static CFP_PTR_TYPE
-_t1(CFP_ARRAY_TYPE, ptr)(CFP_ARRAY_TYPE self, size_t i)
-{
-  CFP_PTR_TYPE p;
-  p.reference = _t1(CFP_ARRAY_TYPE, ref)(self, i);
-  return p;
 }
 
 static CFP_PTR_TYPE
@@ -46,57 +29,38 @@ _t1(CFP_ARRAY_TYPE, ptr_flat)(CFP_ARRAY_TYPE self, size_t i)
   return p;
 }
 
-static ZFP_SCALAR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, get)(CFP_REF_TYPE self)
-{
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x);
-}
-
-static void
-_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, set)(CFP_REF_TYPE self, ZFP_SCALAR_TYPE val)
-{
-  static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x) = val;
-}
-
-static void
-_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
-{
-  static_cast<ZFP_ARRAY_TYPE*>(self.array.object)->operator()(self.x) =
-    static_cast<const ZFP_ARRAY_TYPE*>(src.array.object)->operator()(src.x);
-}
-
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, lt)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return lhs.reference.array.object == rhs.reference.array.object &&
+  return lhs.reference.container == rhs.reference.container &&
          lhs.reference.x < rhs.reference.x;
 }
 
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, gt)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return lhs.reference.array.object == rhs.reference.array.object &&
+  return lhs.reference.container == rhs.reference.container &&
          lhs.reference.x > rhs.reference.x;
 }
 
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, leq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return lhs.reference.array.object == rhs.reference.array.object &&
+  return lhs.reference.container == rhs.reference.container &&
          lhs.reference.x <= rhs.reference.x;
 }
 
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, geq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return lhs.reference.array.object == rhs.reference.array.object &&
+  return lhs.reference.container == rhs.reference.container &&
          lhs.reference.x >= rhs.reference.x;
 }
 
 static zfp_bool
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, eq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
 {
-  return lhs.reference.array.object == rhs.reference.array.object &&
+  return lhs.reference.container == rhs.reference.container &&
          lhs.reference.x == rhs.reference.x;
 }
 
@@ -143,27 +107,27 @@ _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, dec)(CFP_PTR_TYPE p)
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, get)(CFP_PTR_TYPE self)
 {
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.x);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.reference.container)->operator()(self.reference.x);
 }
 
 static ZFP_SCALAR_TYPE
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, get_at)(CFP_PTR_TYPE self, ptrdiff_t d)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, d);
-  return static_cast<const ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.x);
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.reference.container)->operator()(self.reference.x);
 }
 
 static void
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, set)(CFP_PTR_TYPE self, ZFP_SCALAR_TYPE val)
 {
-  static_cast<ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.x) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.reference.container)->operator()(self.reference.x) = val;
 }
 
 static void
 _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, set_at)(CFP_PTR_TYPE self, ptrdiff_t d, ZFP_SCALAR_TYPE val)
 {
   self = _t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, next)(self, d);
-  static_cast<ZFP_ARRAY_TYPE*>(self.reference.array.object)->operator()(self.reference.x) = val;
+  static_cast<ZFP_ARRAY_TYPE*>(self.reference.container)->operator()(self.reference.x) = val;
 }
 
 static CFP_REF_TYPE

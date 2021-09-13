@@ -9,18 +9,22 @@ typedef struct {
 } cfp_array3d;
 
 typedef struct {
-  cfp_array3d array;
+  void* container;
   size_t x, y, z;
-} cfp_ref3d;
+} cfp_ref_base3d;
 
 typedef struct {
-  cfp_ref3d reference;
+  cfp_ref_base3d reference;
 } cfp_ptr3d;
 
 typedef struct {
   void* container;
   size_t x, y, z;
 } cfp_iter_base3d;
+
+typedef cfp_ref_base3d cfp_ref3d;
+typedef cfp_ref_base3d cfp_ref_array3d;
+typedef cfp_ref_base3d cfp_ref_view3d;
 
 typedef cfp_iter_base3d cfp_iter3d;
 typedef cfp_iter_base3d cfp_iter_array3d;
@@ -32,10 +36,10 @@ typedef struct {
 
 typedef struct {
   /* member functions */
-  double (*get)(const cfp_ref3d self);
-  void (*set)(cfp_ref3d self, double val);
-  cfp_ptr3d (*ptr)(cfp_ref3d self);
-  void (*copy)(cfp_ref3d self, const cfp_ref3d src);
+  double (*get)(const cfp_ref_base3d self);
+  void (*set)(cfp_ref_base3d self, double val);
+  cfp_ptr3d (*ptr)(cfp_ref_base3d self);
+  void (*copy)(cfp_ref_base3d self, const cfp_ref_base3d src);
 } cfp_ref3d_api;
 
 typedef struct {
@@ -44,8 +48,8 @@ typedef struct {
   double (*get_at)(const cfp_ptr3d self, ptrdiff_t d);
   void (*set)(cfp_ptr3d self, double val);
   void (*set_at)(cfp_ptr3d self, ptrdiff_t d, double val);
-  cfp_ref3d (*ref)(cfp_ptr3d self);
-  cfp_ref3d (*ref_at)(cfp_ptr3d self, ptrdiff_t d);
+  cfp_ref_base3d (*ref)(cfp_ptr3d self);
+  cfp_ref_base3d (*ref_at)(cfp_ptr3d self, ptrdiff_t d);
   /* non-member functions */
   zfp_bool (*lt)(const cfp_ptr3d lhs, const cfp_ptr3d rhs);
   zfp_bool (*gt)(const cfp_ptr3d lhs, const cfp_ptr3d rhs);
@@ -66,8 +70,8 @@ typedef struct {
   double (*get_at)(const cfp_iter_base3d self, ptrdiff_t d);
   void (*set)(cfp_iter_base3d self, double val);
   void (*set_at)(cfp_iter_base3d self, ptrdiff_t d, double val);
-  cfp_ref3d (*ref)(cfp_iter_base3d self);
-  cfp_ref3d (*ref_at)(cfp_iter_base3d self, ptrdiff_t d);
+  cfp_ref_base3d (*ref)(cfp_iter_base3d self);
+  cfp_ref_base3d (*ref_at)(cfp_iter_base3d self, ptrdiff_t d);
   cfp_ptr3d (*ptr)(cfp_iter_base3d self);
   cfp_ptr3d (*ptr_at)(cfp_iter_base3d self, ptrdiff_t d);
   size_t (*i)(const cfp_iter_base3d self);
@@ -102,7 +106,8 @@ typedef struct {
   double (*get)(const cfp_view3d self, size_t i, size_t j, size_t k);
   double (*rate)(const cfp_view3d self);
   size_t (*size)(cfp_view3d self);
-    /* iterators */
+
+  cfp_ref_view3d (*ref)(cfp_view3d self, size_t i, size_t j, size_t k);
   cfp_iter_view3d (*begin)(cfp_view3d self);
   cfp_iter_view3d (*end)(cfp_view3d self);
 } cfp_view3d_api;
@@ -155,8 +160,8 @@ typedef struct {
   double (*get)(const cfp_array3d self, size_t i, size_t j, size_t k);
   void (*set)(cfp_array3d self, size_t i, size_t j, size_t k, double val);
 
-  cfp_ref3d (*ref)(cfp_array3d self, size_t i, size_t j, size_t k);
-  cfp_ref3d (*ref_flat)(cfp_array3d self, size_t i);
+  cfp_ref_array3d (*ref)(cfp_array3d self, size_t i, size_t j, size_t k);
+  cfp_ref_array3d (*ref_flat)(cfp_array3d self, size_t i);
 
   cfp_ptr3d (*ptr)(cfp_array3d self, size_t i, size_t j, size_t k);
   cfp_ptr3d (*ptr_flat)(cfp_array3d self, size_t i);
