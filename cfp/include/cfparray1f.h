@@ -1,12 +1,13 @@
 #ifndef CFP_ARRAY_1F
 #define CFP_ARRAY_1F
 
+#include "cfptypes.h"
 #include <stddef.h>
 #include "zfp.h"
 
-typedef struct {
-  void* object;
-} cfp_array1f;
+/* Cfp Types */
+CFP_DECL_CONTAINER(array, 1, f)
+CFP_DECL_CONTAINER(view, 1, f)
 
 typedef struct {
   void* container;
@@ -30,10 +31,7 @@ typedef cfp_iter_base1f cfp_iter1f;
 typedef cfp_iter_base1f cfp_iter_array1f;
 typedef cfp_iter_base1f cfp_iter_view1f;
 
-typedef struct {
-  void* object;
-} cfp_view1f;
-
+/* API */
 typedef struct {
   /* member functions */
   float (*get)(const cfp_ref_base1f self);

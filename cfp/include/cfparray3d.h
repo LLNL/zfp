@@ -4,9 +4,9 @@
 #include <stddef.h>
 #include "zfp.h"
 
-typedef struct {
-  void* object;
-} cfp_array3d;
+/* Cfp Types */
+CFP_DECL_CONTAINER(array, 3, d)
+CFP_DECL_CONTAINER(view, 3, d)
 
 typedef struct {
   void* container;
@@ -30,10 +30,7 @@ typedef cfp_iter_base3d cfp_iter3d;
 typedef cfp_iter_base3d cfp_iter_array3d;
 typedef cfp_iter_base3d cfp_iter_view3d;
 
-typedef struct {
-  void* object;
-} cfp_view3d;
-
+/* API */
 typedef struct {
   /* member functions */
   double (*get)(const cfp_ref_base3d self);
