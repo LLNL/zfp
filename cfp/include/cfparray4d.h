@@ -8,19 +8,12 @@
 CFP_DECL_CONTAINER(array, 4, d)
 CFP_DECL_CONTAINER(view, 4, d)
 
-typedef struct {
-  void* container;
-  size_t x, y, z, w;
-} cfp_ref_base4d;
+CFP_DECL_ACCESSOR(ref_base, 4, d)
+CFP_DECL_ACCESSOR(iter_base, 4, d)
 
 typedef struct {
   cfp_ref_base4d reference;
 } cfp_ptr4d;
-
-typedef struct {
-  void* container;
-  size_t x, y, z, w;
-} cfp_iter_base4d;
 
 typedef cfp_ref_base4d cfp_ref4d;
 typedef cfp_ref_base4d cfp_ref_array4d;
