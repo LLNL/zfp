@@ -9,77 +9,129 @@
 CFP_DECL_CONTAINER(array, 1, f)
 CFP_DECL_CONTAINER(view, 1, f)
 
-CFP_DECL_ACCESSOR(ref_base, 1, f)
-CFP_DECL_ACCESSOR(ptr_base, 1, f)
-CFP_DECL_ACCESSOR(iter_base, 1, f)
+CFP_DECL_ACCESSOR(ref_array, 1, f)
+CFP_DECL_ACCESSOR(ptr_array, 1, f)
+CFP_DECL_ACCESSOR(iter_array, 1, f)
 
-typedef cfp_ref_base1f cfp_ref1f;
-typedef cfp_ref_base1f cfp_ref_array1f;
-typedef cfp_ref_base1f cfp_ref_view1f;
+CFP_DECL_ACCESSOR(ref_view, 1, f)
+CFP_DECL_ACCESSOR(ptr_view, 1, f)
+CFP_DECL_ACCESSOR(iter_view, 1, f)
 
-typedef cfp_ptr_base1f cfp_ptr1f;
-typedef cfp_ptr_base1f cfp_ptr_array1f;
-typedef cfp_ptr_base1f cfp_ptr_view1f;
-
-typedef cfp_iter_base1f cfp_iter1f;
-typedef cfp_iter_base1f cfp_iter_array1f;
-typedef cfp_iter_base1f cfp_iter_view1f;
+/* Aliases */
+typedef cfp_ref_array1f cfp_ref1f;
+typedef cfp_ptr_array1f cfp_ptr1f;
+typedef cfp_iter_array1f cfp_iter1f;
 
 /* API */
 typedef struct {
   /* member functions */
-  float (*get)(const cfp_ref_base1f self);
-  void (*set)(cfp_ref_base1f self, float val);
-  cfp_ptr_base1f (*ptr)(cfp_ref_base1f self);
-  void (*copy)(cfp_ref_base1f self, const cfp_ref_base1f src);
-} cfp_ref1f_api;
+  float (*get)(const cfp_ref_array1f self);
+  void (*set)(cfp_ref_array1f self, float val);
+  cfp_ptr_array1f (*ptr)(cfp_ref_array1f self);
+  void (*copy)(cfp_ref_array1f self, const cfp_ref_array1f src);
+} cfp_ref_array1f_api;
 
 typedef struct {
   /* member functions */
-  float (*get)(const cfp_ptr_base1f self);
-  float (*get_at)(const cfp_ptr_base1f self, ptrdiff_t d);
-  void (*set)(cfp_ptr_base1f self, float val);
-  void (*set_at)(cfp_ptr_base1f self, ptrdiff_t d, float val);
-  cfp_ref_base1f (*ref)(cfp_ptr_base1f self);
-  cfp_ref_base1f (*ref_at)(cfp_ptr_base1f self, ptrdiff_t d);
-  /* non-member functions */
-  zfp_bool (*lt)(const cfp_ptr_base1f lhs, const cfp_ptr_base1f rhs);
-  zfp_bool (*gt)(const cfp_ptr_base1f lhs, const cfp_ptr_base1f rhs);
-  zfp_bool (*leq)(const cfp_ptr_base1f lhs, const cfp_ptr_base1f rhs);
-  zfp_bool (*geq)(const cfp_ptr_base1f lhs, const cfp_ptr_base1f rhs);
-  zfp_bool (*eq)(const cfp_ptr_base1f lhs, const cfp_ptr_base1f rhs);
-  zfp_bool (*neq)(const cfp_ptr_base1f lhs, const cfp_ptr_base1f rhs);
-  ptrdiff_t (*distance)(const cfp_ptr_base1f first, const cfp_ptr_base1f last);
-  cfp_ptr_base1f (*next)(const cfp_ptr_base1f p, ptrdiff_t d);
-  cfp_ptr_base1f (*prev)(const cfp_ptr_base1f p, ptrdiff_t d);
-  cfp_ptr_base1f (*inc)(const cfp_ptr_base1f p);
-  cfp_ptr_base1f (*dec)(const cfp_ptr_base1f p);
-} cfp_ptr1f_api;
+  float (*get)(const cfp_ref_view1f self);
+  void (*set)(cfp_ref_view1f self, float val);
+  cfp_ptr_view1f (*ptr)(cfp_ref_view1f self);
+  void (*copy)(cfp_ref_view1f self, const cfp_ref_view1f src);
+} cfp_ref_view1f_api;
 
 typedef struct {
   /* member functions */
-  float (*get)(const cfp_iter_base1f self);
-  float (*get_at)(const cfp_iter_base1f self, ptrdiff_t d);
-  void (*set)(cfp_iter_base1f self, float val);
-  void (*set_at)(cfp_iter_base1f self, ptrdiff_t d, float val);
-  cfp_ref_base1f (*ref)(cfp_iter_base1f self);
-  cfp_ref_base1f (*ref_at)(cfp_iter_base1f self, ptrdiff_t d);
-  cfp_ptr_base1f (*ptr)(cfp_iter_base1f self);
-  cfp_ptr_base1f (*ptr_at)(cfp_iter_base1f self, ptrdiff_t d);
-  size_t (*i)(const cfp_iter_base1f self);
+  float (*get)(const cfp_ptr_array1f self);
+  float (*get_at)(const cfp_ptr_array1f self, ptrdiff_t d);
+  void (*set)(cfp_ptr_array1f self, float val);
+  void (*set_at)(cfp_ptr_array1f self, ptrdiff_t d, float val);
+  cfp_ref_array1f (*ref)(cfp_ptr_array1f self);
+  cfp_ref_array1f (*ref_at)(cfp_ptr_array1f self, ptrdiff_t d);
   /* non-member functions */
-  zfp_bool (*lt)(const cfp_iter_base1f lhs, const cfp_iter_base1f rhs);
-  zfp_bool (*gt)(const cfp_iter_base1f lhs, const cfp_iter_base1f rhs);
-  zfp_bool (*leq)(const cfp_iter_base1f lhs, const cfp_iter_base1f rhs);
-  zfp_bool (*geq)(const cfp_iter_base1f lhs, const cfp_iter_base1f rhs);
-  zfp_bool (*eq)(const cfp_iter_base1f lhs, const cfp_iter_base1f rhs);
-  zfp_bool (*neq)(const cfp_iter_base1f lhs, const cfp_iter_base1f rhs);
-  ptrdiff_t (*distance)(const cfp_iter_base1f first, const cfp_iter_base1f last);
-  cfp_iter_base1f (*next)(const cfp_iter_base1f it, ptrdiff_t d);
-  cfp_iter_base1f (*prev)(const cfp_iter_base1f it, ptrdiff_t d);
-  cfp_iter_base1f (*inc)(const cfp_iter_base1f it);
-  cfp_iter_base1f (*dec)(const cfp_iter_base1f it);
-} cfp_iter1f_api;
+  zfp_bool (*lt)(const cfp_ptr_array1f lhs, const cfp_ptr_array1f rhs);
+  zfp_bool (*gt)(const cfp_ptr_array1f lhs, const cfp_ptr_array1f rhs);
+  zfp_bool (*leq)(const cfp_ptr_array1f lhs, const cfp_ptr_array1f rhs);
+  zfp_bool (*geq)(const cfp_ptr_array1f lhs, const cfp_ptr_array1f rhs);
+  zfp_bool (*eq)(const cfp_ptr_array1f lhs, const cfp_ptr_array1f rhs);
+  zfp_bool (*neq)(const cfp_ptr_array1f lhs, const cfp_ptr_array1f rhs);
+  ptrdiff_t (*distance)(const cfp_ptr_array1f first, const cfp_ptr_array1f last);
+  cfp_ptr_array1f (*next)(const cfp_ptr_array1f p, ptrdiff_t d);
+  cfp_ptr_array1f (*prev)(const cfp_ptr_array1f p, ptrdiff_t d);
+  cfp_ptr_array1f (*inc)(const cfp_ptr_array1f p);
+  cfp_ptr_array1f (*dec)(const cfp_ptr_array1f p);
+} cfp_ptr_array1f_api;
+
+typedef struct {
+  /* member functions */
+  float (*get)(const cfp_ptr_view1f self);
+  float (*get_at)(const cfp_ptr_view1f self, ptrdiff_t d);
+  void (*set)(cfp_ptr_view1f self, float val);
+  void (*set_at)(cfp_ptr_view1f self, ptrdiff_t d, float val);
+  cfp_ref_view1f (*ref)(cfp_ptr_view1f self);
+  cfp_ref_view1f (*ref_at)(cfp_ptr_view1f self, ptrdiff_t d);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_ptr_view1f lhs, const cfp_ptr_view1f rhs);
+  zfp_bool (*gt)(const cfp_ptr_view1f lhs, const cfp_ptr_view1f rhs);
+  zfp_bool (*leq)(const cfp_ptr_view1f lhs, const cfp_ptr_view1f rhs);
+  zfp_bool (*geq)(const cfp_ptr_view1f lhs, const cfp_ptr_view1f rhs);
+  zfp_bool (*eq)(const cfp_ptr_view1f lhs, const cfp_ptr_view1f rhs);
+  zfp_bool (*neq)(const cfp_ptr_view1f lhs, const cfp_ptr_view1f rhs);
+  ptrdiff_t (*distance)(const cfp_ptr_view1f first, const cfp_ptr_view1f last);
+  cfp_ptr_view1f (*next)(const cfp_ptr_view1f p, ptrdiff_t d);
+  cfp_ptr_view1f (*prev)(const cfp_ptr_view1f p, ptrdiff_t d);
+  cfp_ptr_view1f (*inc)(const cfp_ptr_view1f p);
+  cfp_ptr_view1f (*dec)(const cfp_ptr_view1f p);
+} cfp_ptr_view1f_api;
+
+typedef struct {
+  /* member functions */
+  float (*get)(const cfp_iter_array1f self);
+  float (*get_at)(const cfp_iter_array1f self, ptrdiff_t d);
+  void (*set)(cfp_iter_array1f self, float val);
+  void (*set_at)(cfp_iter_array1f self, ptrdiff_t d, float val);
+  cfp_ref_array1f (*ref)(cfp_iter_array1f self);
+  cfp_ref_array1f (*ref_at)(cfp_iter_array1f self, ptrdiff_t d);
+  cfp_ptr_array1f (*ptr)(cfp_iter_array1f self);
+  cfp_ptr_array1f (*ptr_at)(cfp_iter_array1f self, ptrdiff_t d);
+  size_t (*i)(const cfp_iter_array1f self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_iter_array1f lhs, const cfp_iter_array1f rhs);
+  zfp_bool (*gt)(const cfp_iter_array1f lhs, const cfp_iter_array1f rhs);
+  zfp_bool (*leq)(const cfp_iter_array1f lhs, const cfp_iter_array1f rhs);
+  zfp_bool (*geq)(const cfp_iter_array1f lhs, const cfp_iter_array1f rhs);
+  zfp_bool (*eq)(const cfp_iter_array1f lhs, const cfp_iter_array1f rhs);
+  zfp_bool (*neq)(const cfp_iter_array1f lhs, const cfp_iter_array1f rhs);
+  ptrdiff_t (*distance)(const cfp_iter_array1f first, const cfp_iter_array1f last);
+  cfp_iter_array1f (*next)(const cfp_iter_array1f it, ptrdiff_t d);
+  cfp_iter_array1f (*prev)(const cfp_iter_array1f it, ptrdiff_t d);
+  cfp_iter_array1f (*inc)(const cfp_iter_array1f it);
+  cfp_iter_array1f (*dec)(const cfp_iter_array1f it);
+} cfp_iter_array1f_api;
+
+typedef struct {
+  /* member functions */
+  float (*get)(const cfp_iter_view1f self);
+  float (*get_at)(const cfp_iter_view1f self, ptrdiff_t d);
+  void (*set)(cfp_iter_view1f self, float val);
+  void (*set_at)(cfp_iter_view1f self, ptrdiff_t d, float val);
+  cfp_ref_view1f (*ref)(cfp_iter_view1f self);
+  cfp_ref_view1f (*ref_at)(cfp_iter_view1f self, ptrdiff_t d);
+  cfp_ptr_view1f (*ptr)(cfp_iter_view1f self);
+  cfp_ptr_view1f (*ptr_at)(cfp_iter_view1f self, ptrdiff_t d);
+  size_t (*i)(const cfp_iter_view1f self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_iter_view1f lhs, const cfp_iter_view1f rhs);
+  zfp_bool (*gt)(const cfp_iter_view1f lhs, const cfp_iter_view1f rhs);
+  zfp_bool (*leq)(const cfp_iter_view1f lhs, const cfp_iter_view1f rhs);
+  zfp_bool (*geq)(const cfp_iter_view1f lhs, const cfp_iter_view1f rhs);
+  zfp_bool (*eq)(const cfp_iter_view1f lhs, const cfp_iter_view1f rhs);
+  zfp_bool (*neq)(const cfp_iter_view1f lhs, const cfp_iter_view1f rhs);
+  ptrdiff_t (*distance)(const cfp_iter_view1f first, const cfp_iter_view1f last);
+  cfp_iter_view1f (*next)(const cfp_iter_view1f it, ptrdiff_t d);
+  cfp_iter_view1f (*prev)(const cfp_iter_view1f it, ptrdiff_t d);
+  cfp_iter_view1f (*inc)(const cfp_iter_view1f it);
+  cfp_iter_view1f (*dec)(const cfp_iter_view1f it);
+} cfp_iter_view1f_api;
 
 typedef struct {
   /* constructor/destructor */
@@ -146,17 +198,21 @@ typedef struct {
   cfp_ref_array1f (*ref)(cfp_array1f self, size_t i);
   cfp_ref_array1f (*ref_flat)(cfp_array1f self, size_t i);
 
-  cfp_ptr_base1f (*ptr)(cfp_array1f self, size_t i);
-  cfp_ptr_base1f (*ptr_flat)(cfp_array1f self, size_t i);
+  cfp_ptr_array1f (*ptr)(cfp_array1f self, size_t i);
+  cfp_ptr_array1f (*ptr_flat)(cfp_array1f self, size_t i);
 
-  cfp_iter1f (*begin)(cfp_array1f self);
-  cfp_iter1f (*end)(cfp_array1f self);
+  cfp_iter_array1f (*begin)(cfp_array1f self);
+  cfp_iter_array1f (*end)(cfp_array1f self);
 
-  cfp_ref1f_api reference;
-  cfp_ptr1f_api pointer;
-  cfp_iter1f_api iterator;
+  cfp_ref_array1f_api reference;
+  cfp_ptr_array1f_api pointer;
+  cfp_iter_array1f_api iterator;
+
   cfp_view1f_api view;
-  cfp_iter1f_api view_iterator;
+  cfp_ref_view1f_api view_reference;
+  cfp_ptr_view1f_api view_pointer;
+  cfp_iter_view1f_api view_iterator;
+
   cfp_header1f_api header;
 } cfp_array1f_api;
 

@@ -4,9 +4,9 @@
 #include "constants/1dDouble.h"
 
 #define CFP_ARRAY_TYPE cfp_array1d
-#define CFP_REF_TYPE cfp_ref1d
-#define CFP_PTR_TYPE cfp_ptr1d
-#define CFP_ITER_TYPE cfp_iter1d
+#define CFP_REF_TYPE cfp_ref_array1d
+#define CFP_PTR_TYPE cfp_ptr_array1d
+#define CFP_ITER_TYPE cfp_iter_array1d
 #define SUB_NAMESPACE array1d
 #define SCALAR double
 #define SCALAR_TYPE zfp_type_double
@@ -48,46 +48,46 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_array1d_when_begin_expect_objectValid, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_array1d_when_end_expect_objectValid, setupCfpArrSmall, teardownCfpArr),
 
-    cmocka_unit_test_setup_teardown(given_cfp_ref1d_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ref1d_when_set_expect_arrayUpdated, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ref1d_when_ptr_expect_addressMatches, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ref1d_when_copy_expect_arrayUpdated, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ref_array1d_when_get_expect_entryReturned, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ref_array1d_when_set_expect_arrayUpdated, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ref_array1d_when_ptr_expect_addressMatches, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ref_array1d_when_copy_expect_arrayUpdated, setupCfpArrSmall, teardownCfpArr),
 
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_get_set_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_get_at_set_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_ref_expect_addressMatches, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_ref_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_lt_expect_less, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_gt_expect_greater, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_leq_expect_less_or_equal, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_geq_expect_greater_or_equal, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_eq_expect_equal, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_neq_expect_not_equal, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_distance_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_next_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_prev_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_inc_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_ptr1d_when_dec_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_get_set_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_get_at_set_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_ref_expect_addressMatches, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_ref_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_lt_expect_less, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_gt_expect_greater, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_leq_expect_less_or_equal, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_geq_expect_greater_or_equal, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_eq_expect_equal, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_neq_expect_not_equal, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_distance_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_next_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_prev_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_inc_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_array1d_when_dec_expect_correct, setupCfpArrSmall, teardownCfpArr),
 
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_get_set_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_get_at_set_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_ref_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_ref_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_ptr_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_ptr_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_lt_expect_less, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_gt_expect_greater, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_leq_expect_less_or_equal, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_geq_expect_greater_or_equal, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_eq_expect_equal, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_neq_expect_not_equal, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_distance_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_next_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_prev_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_inc_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_dec_expect_correct, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_iterate_touch_all, setupCfpArrSmall, teardownCfpArr),
-    cmocka_unit_test_setup_teardown(given_cfp_iter1d_when_get_index_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_get_set_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_get_at_set_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_ref_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_ref_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_ptr_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_ptr_at_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_lt_expect_less, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_gt_expect_greater, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_leq_expect_less_or_equal, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_geq_expect_greater_or_equal, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_eq_expect_equal, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_neq_expect_not_equal, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_distance_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_next_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_prev_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_inc_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_dec_expect_correct, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_iterate_touch_all, setupCfpArrSmall, teardownCfpArr),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_array1d_when_get_index_expect_correct, setupCfpArrSmall, teardownCfpArr),
 
 
     // fixed rate rounds up to multiples of 16 (omit fixed rate 8)

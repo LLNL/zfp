@@ -9,79 +9,133 @@
 CFP_DECL_CONTAINER(array, 3, d)
 CFP_DECL_CONTAINER(view, 3, d)
 
-CFP_DECL_ACCESSOR(ref_base, 3, d)
-CFP_DECL_ACCESSOR(ptr_base, 3, d)
-CFP_DECL_ACCESSOR(iter_base, 3, d)
+CFP_DECL_ACCESSOR(ref_array, 3, d)
+CFP_DECL_ACCESSOR(ref_view, 3, d)
 
-typedef cfp_ref_base3d cfp_ref3d;
-typedef cfp_ref_base3d cfp_ref_array3d;
-typedef cfp_ref_base3d cfp_ref_view3d;
+CFP_DECL_ACCESSOR(ptr_array, 3, d)
+CFP_DECL_ACCESSOR(ptr_view, 3, d)
 
-typedef cfp_ptr_base3d cfp_ptr3d;
-typedef cfp_ptr_base3d cfp_ptr_array3d;
-typedef cfp_ptr_base3d cfp_ptr_view3d;
+CFP_DECL_ACCESSOR(iter_array, 3, d)
+CFP_DECL_ACCESSOR(iter_view, 3, d)
 
-typedef cfp_iter_base3d cfp_iter3d;
-typedef cfp_iter_base3d cfp_iter_array3d;
-typedef cfp_iter_base3d cfp_iter_view3d;
+typedef cfp_ref_array3d cfp_ref3d;
+typedef cfp_ptr_array3d cfp_ptr3d;
+typedef cfp_iter_array3d cfp_iter3d;
 
 /* API */
 typedef struct {
   /* member functions */
-  double (*get)(const cfp_ref_base3d self);
-  void (*set)(cfp_ref_base3d self, double val);
-  cfp_ptr_base3d (*ptr)(cfp_ref_base3d self);
-  void (*copy)(cfp_ref_base3d self, const cfp_ref_base3d src);
-} cfp_ref3d_api;
+  double (*get)(const cfp_ref_array3d self);
+  void (*set)(cfp_ref_array3d self, double val);
+  cfp_ptr_array3d (*ptr)(cfp_ref_array3d self);
+  void (*copy)(cfp_ref_array3d self, const cfp_ref_array3d src);
+} cfp_ref_array3d_api;
 
 typedef struct {
   /* member functions */
-  double (*get)(const cfp_ptr_base3d self);
-  double (*get_at)(const cfp_ptr_base3d self, ptrdiff_t d);
-  void (*set)(cfp_ptr_base3d self, double val);
-  void (*set_at)(cfp_ptr_base3d self, ptrdiff_t d, double val);
-  cfp_ref_base3d (*ref)(cfp_ptr_base3d self);
-  cfp_ref_base3d (*ref_at)(cfp_ptr_base3d self, ptrdiff_t d);
-  /* non-member functions */
-  zfp_bool (*lt)(const cfp_ptr_base3d lhs, const cfp_ptr_base3d rhs);
-  zfp_bool (*gt)(const cfp_ptr_base3d lhs, const cfp_ptr_base3d rhs);
-  zfp_bool (*leq)(const cfp_ptr_base3d lhs, const cfp_ptr_base3d rhs);
-  zfp_bool (*geq)(const cfp_ptr_base3d lhs, const cfp_ptr_base3d rhs);
-  zfp_bool (*eq)(const cfp_ptr_base3d lhs, const cfp_ptr_base3d rhs);
-  zfp_bool (*neq)(const cfp_ptr_base3d lhs, const cfp_ptr_base3d rhs);
-  ptrdiff_t (*distance)(const cfp_ptr_base3d first, const cfp_ptr_base3d last);
-  cfp_ptr_base3d (*next)(const cfp_ptr_base3d p, ptrdiff_t d);
-  cfp_ptr_base3d (*prev)(const cfp_ptr_base3d p, ptrdiff_t d);
-  cfp_ptr_base3d (*inc)(const cfp_ptr_base3d p);
-  cfp_ptr_base3d (*dec)(const cfp_ptr_base3d p);
-} cfp_ptr3d_api;
+  double (*get)(const cfp_ref_view3d self);
+  void (*set)(cfp_ref_view3d self, double val);
+  cfp_ptr_view3d (*ptr)(cfp_ref_view3d self);
+  void (*copy)(cfp_ref_view3d self, const cfp_ref_view3d src);
+} cfp_ref_view3d_api;
 
 typedef struct {
   /* member functions */
-  double (*get)(const cfp_iter_base3d self);
-  double (*get_at)(const cfp_iter_base3d self, ptrdiff_t d);
-  void (*set)(cfp_iter_base3d self, double val);
-  void (*set_at)(cfp_iter_base3d self, ptrdiff_t d, double val);
-  cfp_ref_base3d (*ref)(cfp_iter_base3d self);
-  cfp_ref_base3d (*ref_at)(cfp_iter_base3d self, ptrdiff_t d);
-  cfp_ptr_base3d (*ptr)(cfp_iter_base3d self);
-  cfp_ptr_base3d (*ptr_at)(cfp_iter_base3d self, ptrdiff_t d);
-  size_t (*i)(const cfp_iter_base3d self);
-  size_t (*j)(const cfp_iter_base3d self);
-  size_t (*k)(const cfp_iter_base3d self);
+  double (*get)(const cfp_ptr_array3d self);
+  double (*get_at)(const cfp_ptr_array3d self, ptrdiff_t d);
+  void (*set)(cfp_ptr_array3d self, double val);
+  void (*set_at)(cfp_ptr_array3d self, ptrdiff_t d, double val);
+  cfp_ref_array3d (*ref)(cfp_ptr_array3d self);
+  cfp_ref_array3d (*ref_at)(cfp_ptr_array3d self, ptrdiff_t d);
   /* non-member functions */
-  zfp_bool (*lt)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
-  zfp_bool (*gt)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
-  zfp_bool (*leq)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
-  zfp_bool (*geq)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
-  zfp_bool (*eq)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
-  zfp_bool (*neq)(const cfp_iter_base3d lhs, const cfp_iter_base3d rhs);
-  ptrdiff_t (*distance)(const cfp_iter_base3d first, const cfp_iter_base3d last);
-  cfp_iter_base3d (*next)(const cfp_iter_base3d it, ptrdiff_t d);
-  cfp_iter_base3d (*prev)(const cfp_iter_base3d it, ptrdiff_t d);
-  cfp_iter_base3d (*inc)(const cfp_iter_base3d it);
-  cfp_iter_base3d (*dec)(const cfp_iter_base3d it);
-} cfp_iter3d_api;
+  zfp_bool (*lt)(const cfp_ptr_array3d lhs, const cfp_ptr_array3d rhs);
+  zfp_bool (*gt)(const cfp_ptr_array3d lhs, const cfp_ptr_array3d rhs);
+  zfp_bool (*leq)(const cfp_ptr_array3d lhs, const cfp_ptr_array3d rhs);
+  zfp_bool (*geq)(const cfp_ptr_array3d lhs, const cfp_ptr_array3d rhs);
+  zfp_bool (*eq)(const cfp_ptr_array3d lhs, const cfp_ptr_array3d rhs);
+  zfp_bool (*neq)(const cfp_ptr_array3d lhs, const cfp_ptr_array3d rhs);
+  ptrdiff_t (*distance)(const cfp_ptr_array3d first, const cfp_ptr_array3d last);
+  cfp_ptr_array3d (*next)(const cfp_ptr_array3d p, ptrdiff_t d);
+  cfp_ptr_array3d (*prev)(const cfp_ptr_array3d p, ptrdiff_t d);
+  cfp_ptr_array3d (*inc)(const cfp_ptr_array3d p);
+  cfp_ptr_array3d (*dec)(const cfp_ptr_array3d p);
+} cfp_ptr_array3d_api;
+
+typedef struct {
+  /* member functions */
+  double (*get)(const cfp_ptr_view3d self);
+  double (*get_at)(const cfp_ptr_view3d self, ptrdiff_t d);
+  void (*set)(cfp_ptr_view3d self, double val);
+  void (*set_at)(cfp_ptr_view3d self, ptrdiff_t d, double val);
+  cfp_ref_view3d (*ref)(cfp_ptr_view3d self);
+  cfp_ref_view3d (*ref_at)(cfp_ptr_view3d self, ptrdiff_t d);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_ptr_view3d lhs, const cfp_ptr_view3d rhs);
+  zfp_bool (*gt)(const cfp_ptr_view3d lhs, const cfp_ptr_view3d rhs);
+  zfp_bool (*leq)(const cfp_ptr_view3d lhs, const cfp_ptr_view3d rhs);
+  zfp_bool (*geq)(const cfp_ptr_view3d lhs, const cfp_ptr_view3d rhs);
+  zfp_bool (*eq)(const cfp_ptr_view3d lhs, const cfp_ptr_view3d rhs);
+  zfp_bool (*neq)(const cfp_ptr_view3d lhs, const cfp_ptr_view3d rhs);
+  ptrdiff_t (*distance)(const cfp_ptr_view3d first, const cfp_ptr_view3d last);
+  cfp_ptr_view3d (*next)(const cfp_ptr_view3d p, ptrdiff_t d);
+  cfp_ptr_view3d (*prev)(const cfp_ptr_view3d p, ptrdiff_t d);
+  cfp_ptr_view3d (*inc)(const cfp_ptr_view3d p);
+  cfp_ptr_view3d (*dec)(const cfp_ptr_view3d p);
+} cfp_ptr_view3d_api;
+
+typedef struct {
+  /* member functions */
+  double (*get)(const cfp_iter_array3d self);
+  double (*get_at)(const cfp_iter_array3d self, ptrdiff_t d);
+  void (*set)(cfp_iter_array3d self, double val);
+  void (*set_at)(cfp_iter_array3d self, ptrdiff_t d, double val);
+  cfp_ref_array3d (*ref)(cfp_iter_array3d self);
+  cfp_ref_array3d (*ref_at)(cfp_iter_array3d self, ptrdiff_t d);
+  cfp_ptr_array3d (*ptr)(cfp_iter_array3d self);
+  cfp_ptr_array3d (*ptr_at)(cfp_iter_array3d self, ptrdiff_t d);
+  size_t (*i)(const cfp_iter_array3d self);
+  size_t (*j)(const cfp_iter_array3d self);
+  size_t (*k)(const cfp_iter_array3d self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_iter_array3d lhs, const cfp_iter_array3d rhs);
+  zfp_bool (*gt)(const cfp_iter_array3d lhs, const cfp_iter_array3d rhs);
+  zfp_bool (*leq)(const cfp_iter_array3d lhs, const cfp_iter_array3d rhs);
+  zfp_bool (*geq)(const cfp_iter_array3d lhs, const cfp_iter_array3d rhs);
+  zfp_bool (*eq)(const cfp_iter_array3d lhs, const cfp_iter_array3d rhs);
+  zfp_bool (*neq)(const cfp_iter_array3d lhs, const cfp_iter_array3d rhs);
+  ptrdiff_t (*distance)(const cfp_iter_array3d first, const cfp_iter_array3d last);
+  cfp_iter_array3d (*next)(const cfp_iter_array3d it, ptrdiff_t d);
+  cfp_iter_array3d (*prev)(const cfp_iter_array3d it, ptrdiff_t d);
+  cfp_iter_array3d (*inc)(const cfp_iter_array3d it);
+  cfp_iter_array3d (*dec)(const cfp_iter_array3d it);
+} cfp_iter_array3d_api;
+
+typedef struct {
+  /* member functions */
+  double (*get)(const cfp_iter_view3d self);
+  double (*get_at)(const cfp_iter_view3d self, ptrdiff_t d);
+  void (*set)(cfp_iter_view3d self, double val);
+  void (*set_at)(cfp_iter_view3d self, ptrdiff_t d, double val);
+  cfp_ref_view3d (*ref)(cfp_iter_view3d self);
+  cfp_ref_view3d (*ref_at)(cfp_iter_view3d self, ptrdiff_t d);
+  cfp_ptr_view3d (*ptr)(cfp_iter_view3d self);
+  cfp_ptr_view3d (*ptr_at)(cfp_iter_view3d self, ptrdiff_t d);
+  size_t (*i)(const cfp_iter_view3d self);
+  size_t (*j)(const cfp_iter_view3d self);
+  size_t (*k)(const cfp_iter_view3d self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_iter_view3d lhs, const cfp_iter_view3d rhs);
+  zfp_bool (*gt)(const cfp_iter_view3d lhs, const cfp_iter_view3d rhs);
+  zfp_bool (*leq)(const cfp_iter_view3d lhs, const cfp_iter_view3d rhs);
+  zfp_bool (*geq)(const cfp_iter_view3d lhs, const cfp_iter_view3d rhs);
+  zfp_bool (*eq)(const cfp_iter_view3d lhs, const cfp_iter_view3d rhs);
+  zfp_bool (*neq)(const cfp_iter_view3d lhs, const cfp_iter_view3d rhs);
+  ptrdiff_t (*distance)(const cfp_iter_view3d first, const cfp_iter_view3d last);
+  cfp_iter_view3d (*next)(const cfp_iter_view3d it, ptrdiff_t d);
+  cfp_iter_view3d (*prev)(const cfp_iter_view3d it, ptrdiff_t d);
+  cfp_iter_view3d (*inc)(const cfp_iter_view3d it);
+  cfp_iter_view3d (*dec)(const cfp_iter_view3d it);
+} cfp_iter_view3d_api;
 
 typedef struct {
   /* constructor/destructor */
@@ -155,17 +209,21 @@ typedef struct {
   cfp_ref_array3d (*ref)(cfp_array3d self, size_t i, size_t j, size_t k);
   cfp_ref_array3d (*ref_flat)(cfp_array3d self, size_t i);
 
-  cfp_ptr_base3d (*ptr)(cfp_array3d self, size_t i, size_t j, size_t k);
-  cfp_ptr_base3d (*ptr_flat)(cfp_array3d self, size_t i);
+  cfp_ptr_array3d (*ptr)(cfp_array3d self, size_t i, size_t j, size_t k);
+  cfp_ptr_array3d (*ptr_flat)(cfp_array3d self, size_t i);
 
-  cfp_iter3d (*begin)(cfp_array3d self);
-  cfp_iter3d (*end)(cfp_array3d self);
+  cfp_iter_array3d (*begin)(cfp_array3d self);
+  cfp_iter_array3d (*end)(cfp_array3d self);
 
-  cfp_ref3d_api reference;
-  cfp_ptr3d_api pointer;
-  cfp_iter3d_api iterator;
+  cfp_ref_array3d_api reference;
+  cfp_ptr_array3d_api pointer;
+  cfp_iter_array3d_api iterator;
+
   cfp_view3d_api view;
-  cfp_iter3d_api view_iterator;
+  cfp_ref_view3d_api view_reference;
+  cfp_ptr_view3d_api view_pointer;
+  cfp_iter_view3d_api view_iterator;
+
   cfp_header3d_api header;
 } cfp_array3d_api;
 
