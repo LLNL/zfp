@@ -1,6 +1,7 @@
 #ifndef CFP_ARRAY_3F
 #define CFP_ARRAY_3F
 
+#include "cfptypes.h"
 #include <stddef.h>
 #include "zfp.h"
 
@@ -9,15 +10,16 @@ CFP_DECL_CONTAINER(array, 3, f)
 CFP_DECL_CONTAINER(view, 3, f)
 
 CFP_DECL_ACCESSOR(ref_base, 3, f)
+CFP_DECL_ACCESSOR(ptr_base, 3, f)
 CFP_DECL_ACCESSOR(iter_base, 3, f)
-
-typedef struct {
-  cfp_ref_base3f reference;
-} cfp_ptr3f;
 
 typedef cfp_ref_base3f cfp_ref3f;
 typedef cfp_ref_base3f cfp_ref_array3f;
 typedef cfp_ref_base3f cfp_ref_view3f;
+
+typedef cfp_ptr_base3f cfp_ptr3f;
+typedef cfp_ptr_base3f cfp_ptr_array3f;
+typedef cfp_ptr_base3f cfp_ptr_view3f;
 
 typedef cfp_iter_base3f cfp_iter3f;
 typedef cfp_iter_base3f cfp_iter_array3f;
@@ -28,30 +30,30 @@ typedef struct {
   /* member functions */
   float (*get)(const cfp_ref_base3f self);
   void (*set)(cfp_ref_base3f self, float val);
-  cfp_ptr3f (*ptr)(cfp_ref_base3f self);
+  cfp_ptr_base3f (*ptr)(cfp_ref_base3f self);
   void (*copy)(cfp_ref_base3f self, const cfp_ref_base3f src);
 } cfp_ref3f_api;
 
 typedef struct {
   /* member functions */
-  float (*get)(const cfp_ptr3f self);
-  float (*get_at)(const cfp_ptr3f self, ptrdiff_t d);
-  void (*set)(cfp_ptr3f self, float val);
-  void (*set_at)(cfp_ptr3f self, ptrdiff_t d, float val);
-  cfp_ref_base3f (*ref)(cfp_ptr3f self);
-  cfp_ref_base3f (*ref_at)(cfp_ptr3f self, ptrdiff_t d);
+  float (*get)(const cfp_ptr_base3f self);
+  float (*get_at)(const cfp_ptr_base3f self, ptrdiff_t d);
+  void (*set)(cfp_ptr_base3f self, float val);
+  void (*set_at)(cfp_ptr_base3f self, ptrdiff_t d, float val);
+  cfp_ref_base3f (*ref)(cfp_ptr_base3f self);
+  cfp_ref_base3f (*ref_at)(cfp_ptr_base3f self, ptrdiff_t d);
   /* non-member functions */
-  zfp_bool (*lt)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
-  zfp_bool (*gt)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
-  zfp_bool (*leq)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
-  zfp_bool (*geq)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
-  zfp_bool (*eq)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
-  zfp_bool (*neq)(const cfp_ptr3f lhs, const cfp_ptr3f rhs);
-  ptrdiff_t (*distance)(const cfp_ptr3f first, const cfp_ptr3f last);
-  cfp_ptr3f (*next)(const cfp_ptr3f p, ptrdiff_t d);
-  cfp_ptr3f (*prev)(const cfp_ptr3f p, ptrdiff_t d);
-  cfp_ptr3f (*inc)(const cfp_ptr3f p);
-  cfp_ptr3f (*dec)(const cfp_ptr3f p);
+  zfp_bool (*lt)(const cfp_ptr_base3f lhs, const cfp_ptr_base3f rhs);
+  zfp_bool (*gt)(const cfp_ptr_base3f lhs, const cfp_ptr_base3f rhs);
+  zfp_bool (*leq)(const cfp_ptr_base3f lhs, const cfp_ptr_base3f rhs);
+  zfp_bool (*geq)(const cfp_ptr_base3f lhs, const cfp_ptr_base3f rhs);
+  zfp_bool (*eq)(const cfp_ptr_base3f lhs, const cfp_ptr_base3f rhs);
+  zfp_bool (*neq)(const cfp_ptr_base3f lhs, const cfp_ptr_base3f rhs);
+  ptrdiff_t (*distance)(const cfp_ptr_base3f first, const cfp_ptr_base3f last);
+  cfp_ptr_base3f (*next)(const cfp_ptr_base3f p, ptrdiff_t d);
+  cfp_ptr_base3f (*prev)(const cfp_ptr_base3f p, ptrdiff_t d);
+  cfp_ptr_base3f (*inc)(const cfp_ptr_base3f p);
+  cfp_ptr_base3f (*dec)(const cfp_ptr_base3f p);
 } cfp_ptr3f_api;
 
 typedef struct {
@@ -62,8 +64,8 @@ typedef struct {
   void (*set_at)(cfp_iter_base3f self, ptrdiff_t d, float val);
   cfp_ref_base3f (*ref)(cfp_iter_base3f self);
   cfp_ref_base3f (*ref_at)(cfp_iter_base3f self, ptrdiff_t d);
-  cfp_ptr3f (*ptr)(cfp_iter_base3f self);
-  cfp_ptr3f (*ptr_at)(cfp_iter_base3f self, ptrdiff_t d);
+  cfp_ptr_base3f (*ptr)(cfp_iter_base3f self);
+  cfp_ptr_base3f (*ptr_at)(cfp_iter_base3f self, ptrdiff_t d);
   size_t (*i)(const cfp_iter_base3f self);
   size_t (*j)(const cfp_iter_base3f self);
   size_t (*k)(const cfp_iter_base3f self);
@@ -153,8 +155,8 @@ typedef struct {
   cfp_ref_array3f (*ref)(cfp_array3f self, size_t i, size_t j, size_t k);
   cfp_ref_array3f (*ref_flat)(cfp_array3f self, size_t i);
 
-  cfp_ptr3f (*ptr)(cfp_array3f self, size_t i, size_t j, size_t k);
-  cfp_ptr3f (*ptr_flat)(cfp_array3f self, size_t i);
+  cfp_ptr_base3f (*ptr)(cfp_array3f self, size_t i, size_t j, size_t k);
+  cfp_ptr_base3f (*ptr_flat)(cfp_array3f self, size_t i);
 
   cfp_iter3f (*begin)(cfp_array3f self);
   cfp_iter3f (*end)(cfp_array3f self);

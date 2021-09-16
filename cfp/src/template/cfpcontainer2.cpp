@@ -1,68 +1,18 @@
-static size_t
-_t1(CFP_CONTAINER_TYPE, size_x)(const CFP_CONTAINER_TYPE self)
+/* utility function: compute onedimensional offset from multidimensional index */
+static ptrdiff_t
+_t1(CFP_CONTAINER_TYPE, ref_offset)(const CFP_REF_TYPE& self)
 {
-  return static_cast<const ZFP_CONTAINER_TYPE*>(self.object)->size_x();
+  size_t nx = static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->size_x();
+  return static_cast<ptrdiff_t>(self.x + nx * self.y);
 }
 
-static size_t
-_t1(CFP_CONTAINER_TYPE, size_y)(const CFP_CONTAINER_TYPE self)
+static ptrdiff_t
+_t1(CFP_CONTAINER_TYPE, ptr_offset)(const CFP_PTR_TYPE& self)
 {
-  return static_cast<const ZFP_CONTAINER_TYPE*>(self.object)->size_y();
+  size_t nx = static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->size_x();
+  return static_cast<ptrdiff_t>(self.x + nx * self.y);
 }
 
-static ZFP_SCALAR_TYPE
-_t1(CFP_CONTAINER_TYPE, get)(const CFP_CONTAINER_TYPE self, size_t i, size_t j)
-{
-  return static_cast<const ZFP_CONTAINER_TYPE*>(self.object)->operator()(i, j);
-}
-
-static void
-_t1(CFP_CONTAINER_TYPE, set)(CFP_CONTAINER_TYPE self, size_t i, size_t j, ZFP_SCALAR_TYPE val)
-{
-  static_cast<ZFP_CONTAINER_TYPE*>(self.object)->operator()(i, j) = val;
-}
-
-/* References */
-static CFP_REF_TYPE
-_t1(CFP_CONTAINER_TYPE, ref)(CFP_CONTAINER_TYPE self, size_t i, size_t j)
-{
-  CFP_REF_TYPE r;
-  r.container = self.object;
-  r.x = i;
-  r.y = j;
-  return r;
-}
-
-static ZFP_SCALAR_TYPE
-_t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, get)(CFP_REF_TYPE self)
-{
-  return static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y);
-}
-
-static void
-_t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, set)(CFP_REF_TYPE self, ZFP_SCALAR_TYPE val)
-{
-  static_cast<ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y) = val;
-}
-
-static void
-_t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
-{
-  static_cast<ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y) =
-    static_cast<const ZFP_CONTAINER_TYPE*>(src.container)->operator()(src.x, src.y);
-}
-
-/* Pointers */
-static CFP_PTR_TYPE
-_t1(CFP_CONTAINER_TYPE, ptr)(CFP_CONTAINER_TYPE self, size_t i, size_t j)
-{
-  CFP_PTR_TYPE p;
-  p.reference = _t1(CFP_CONTAINER_TYPE, ref)(self, i, j);
-  return p;
-}
-
-/* Iterators */
-  /* utility function: compute one-dimensional offset from multi-dimensional index */
 static ptrdiff_t
 _t1(CFP_CONTAINER_TYPE, iter_offset)(const CFP_ITER_TYPE& self)
 {
@@ -88,7 +38,23 @@ _t1(CFP_CONTAINER_TYPE, iter_offset)(const CFP_ITER_TYPE& self)
   return static_cast<ptrdiff_t>(p);
 }
 
-  /* utility function: compute multi-dimensional index from one-dimensional offset */
+/* utility function: compute multidimensional index from onedimensional offset */
+static void
+_t1(CFP_CONTAINER_TYPE, ref_set_offset)(CFP_REF_TYPE& self, size_t offset)
+{
+  size_t nx = static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->size_x();
+  self.x = offset % nx; offset /= nx;
+  self.y = offset;
+}
+
+static void
+_t1(CFP_CONTAINER_TYPE, ptr_set_offset)(CFP_PTR_TYPE& self, size_t offset)
+{
+  size_t nx = static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->size_x();
+  self.x = offset % nx; offset /= nx;
+  self.y = offset;
+}
+
 static void
 _t1(CFP_CONTAINER_TYPE, iter_set_offset)(CFP_ITER_TYPE& self, size_t offset)
 {
@@ -116,6 +82,217 @@ _t1(CFP_CONTAINER_TYPE, iter_set_offset)(CFP_ITER_TYPE& self, size_t offset)
   self.y = y;
 }
 
+/* Containers */
+static size_t
+_t1(CFP_CONTAINER_TYPE, size_x)(const CFP_CONTAINER_TYPE self)
+{
+  return static_cast<const ZFP_CONTAINER_TYPE*>(self.object)->size_x();
+}
+
+static size_t
+_t1(CFP_CONTAINER_TYPE, size_y)(const CFP_CONTAINER_TYPE self)
+{
+  return static_cast<const ZFP_CONTAINER_TYPE*>(self.object)->size_y();
+}
+
+static ZFP_SCALAR_TYPE
+_t1(CFP_CONTAINER_TYPE, get)(const CFP_CONTAINER_TYPE self, size_t i, size_t j)
+{
+  return static_cast<const ZFP_CONTAINER_TYPE*>(self.object)->operator()(i, j);
+}
+
+static void
+_t1(CFP_CONTAINER_TYPE, set)(CFP_CONTAINER_TYPE self, size_t i, size_t j, ZFP_SCALAR_TYPE val)
+{
+  static_cast<ZFP_CONTAINER_TYPE*>(self.object)->operator()(i, j) = val;
+}
+
+static CFP_REF_TYPE
+_t1(CFP_CONTAINER_TYPE, ref)(CFP_CONTAINER_TYPE self, size_t i, size_t j)
+{
+  CFP_REF_TYPE r;
+  r.container = self.object;
+  r.x = i;
+  r.y = j;
+  return r;
+}
+
+static CFP_PTR_TYPE
+_t1(CFP_CONTAINER_TYPE, ptr)(CFP_CONTAINER_TYPE self, size_t i, size_t j)
+{
+  CFP_PTR_TYPE p;
+  p.container = self.object;
+  p.x = i;
+  p.y = j;
+  return p;
+}
+
+static CFP_REF_TYPE
+_t1(CFP_CONTAINER_TYPE, ref_flat)(CFP_CONTAINER_TYPE self, size_t i)
+{
+  CFP_REF_TYPE r;
+  r.container = self.object;
+  _t1(CFP_CONTAINER_TYPE, ref_set_offset)(r, i);
+  return r;
+}
+
+static CFP_PTR_TYPE
+_t1(CFP_CONTAINER_TYPE, ptr_flat)(CFP_CONTAINER_TYPE self, size_t i)
+{
+  CFP_PTR_TYPE p;
+  p.container = self.object;
+  _t1(CFP_CONTAINER_TYPE, ptr_set_offset)(p, i);
+  return p;
+}
+
+/* References */
+static CFP_PTR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, ptr)(CFP_REF_TYPE self)
+{
+  CFP_PTR_TYPE p;
+  p.container = self.container;
+  p.x = self.x;
+  p.y = self.y;
+  return p;
+}
+
+static ZFP_SCALAR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, get)(CFP_REF_TYPE self)
+{
+  return static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y);
+}
+
+static void
+_t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, set)(CFP_REF_TYPE self, ZFP_SCALAR_TYPE val)
+{
+  static_cast<ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y) = val;
+}
+
+static void
+_t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
+{
+  static_cast<ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y) =
+    static_cast<const ZFP_CONTAINER_TYPE*>(src.container)->operator()(src.x, src.y);
+}
+
+/* Pointers */
+static CFP_REF_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, ref)(CFP_PTR_TYPE self)
+{
+  CFP_REF_TYPE r;
+  r.container = self.container;
+  r.x = self.x;
+  r.y = self.y;
+  return r;
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, lt)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container && _t1(CFP_CONTAINER_TYPE, ptr_offset)(lhs) < _t1(CFP_CONTAINER_TYPE, ptr_offset)(rhs);
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, gt)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container && _t1(CFP_CONTAINER_TYPE, ptr_offset)(lhs) > _t1(CFP_CONTAINER_TYPE, ptr_offset)(rhs);
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, leq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container && _t1(CFP_CONTAINER_TYPE, ptr_offset)(lhs) <= _t1(CFP_CONTAINER_TYPE, ptr_offset)(rhs);
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, geq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container && _t1(CFP_CONTAINER_TYPE, ptr_offset)(lhs) >= _t1(CFP_CONTAINER_TYPE, ptr_offset)(rhs);
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, eq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container &&
+         lhs.x == rhs.x &&
+         lhs.y == rhs.y;
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, neq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return !_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, eq)(lhs, rhs);
+}
+
+static ptrdiff_t
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, distance)(CFP_PTR_TYPE first, CFP_PTR_TYPE last)
+{
+  return _t1(CFP_CONTAINER_TYPE, ptr_offset)(last) - _t1(CFP_CONTAINER_TYPE, ptr_offset)(first);
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(CFP_PTR_TYPE p, ptrdiff_t d)
+{
+  _t1(CFP_CONTAINER_TYPE, ptr_set_offset)(p, _t1(CFP_CONTAINER_TYPE, ptr_offset)(p) + d);
+  return p;
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, prev)(CFP_PTR_TYPE p, ptrdiff_t d)
+{
+  return _t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(p, -d);
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, inc)(CFP_PTR_TYPE p)
+{
+  return _t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(p, +1);
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, dec)(CFP_PTR_TYPE p)
+{
+  return _t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(p, -1);
+}
+
+static ZFP_SCALAR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, get)(CFP_PTR_TYPE self)
+{
+  return static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y);
+}
+
+static ZFP_SCALAR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, get_at)(CFP_PTR_TYPE self, ptrdiff_t d)
+{
+  self = _t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(self, d);
+  return static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y);
+}
+
+static void
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, set)(CFP_PTR_TYPE self, ZFP_SCALAR_TYPE val)
+{
+  static_cast<ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y) = val;
+}
+
+static void
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, set_at)(CFP_PTR_TYPE self, ptrdiff_t d, ZFP_SCALAR_TYPE val)
+{
+  self = _t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(self, d);
+  static_cast<ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x, self.y) = val;
+}
+
+static CFP_REF_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, ref_at)(CFP_PTR_TYPE self, ptrdiff_t d)
+{
+  self = _t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(self, d);
+  CFP_REF_TYPE r;
+  r.container = self.container;
+  r.x = self.x;
+  r.y = self.y;
+  return r;
+}
+
+/* Iterators */
 static CFP_ITER_TYPE
 _t1(CFP_CONTAINER_TYPE, begin)(CFP_CONTAINER_TYPE self)
 {

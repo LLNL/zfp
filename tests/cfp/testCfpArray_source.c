@@ -557,7 +557,7 @@ _catFunc3(given_, CFP_ARRAY_TYPE, _when_ptr_flat_expect_entryReturned)(void **st
     size_t i = 10;
     CFP_PTR_TYPE cfpArrPtr = CFP_NAMESPACE.SUB_NAMESPACE.ptr_flat(cfpArr, i);
 
-    assert_true(CFP_NAMESPACE.SUB_NAMESPACE.reference.get(cfpArrPtr.reference) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, i));
+    assert_true(CFP_NAMESPACE.SUB_NAMESPACE.pointer.get(cfpArrPtr) == CFP_NAMESPACE.SUB_NAMESPACE.get_flat(cfpArr, i));
 }
 
 // ##############

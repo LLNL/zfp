@@ -96,17 +96,3 @@ _t1(CFP_ARRAY_TYPE, set_flat)(CFP_ARRAY_TYPE self, size_t i, ZFP_SCALAR_TYPE val
 {
   static_cast<ZFP_ARRAY_TYPE*>(self.object)->operator[](i) = val;
 }
-
-static CFP_PTR_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_REF_TYPE, ptr)(CFP_REF_TYPE self)
-{
-  CFP_PTR_TYPE p;
-  p.reference = self;
-  return p;
-}
-
-static CFP_REF_TYPE
-_t2(CFP_ARRAY_TYPE, CFP_PTR_TYPE, ref)(CFP_PTR_TYPE self)
-{
-  return self.reference;
-}

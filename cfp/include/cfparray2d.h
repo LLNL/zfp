@@ -1,6 +1,7 @@
 #ifndef CFP_ARRAY_2D
 #define CFP_ARRAY_2D
 
+#include "cfptypes.h"
 #include <stddef.h>
 #include "zfp.h"
 
@@ -9,15 +10,16 @@ CFP_DECL_CONTAINER(array, 2, d)
 CFP_DECL_CONTAINER(view, 2, d)
 
 CFP_DECL_ACCESSOR(ref_base, 2, d)
+CFP_DECL_ACCESSOR(ptr_base, 2, d)
 CFP_DECL_ACCESSOR(iter_base, 2, d)
-
-typedef struct {
-  cfp_ref_base2d reference;
-} cfp_ptr2d;
 
 typedef cfp_ref_base2d cfp_ref2d;
 typedef cfp_ref_base2d cfp_ref_array2d;
 typedef cfp_ref_base2d cfp_ref_view2d;
+
+typedef cfp_ptr_base2d cfp_ptr2d;
+typedef cfp_ptr_base2d cfp_ptr_array2d;
+typedef cfp_ptr_base2d cfp_ptr_view2d;
 
 typedef cfp_iter_base2d cfp_iter2d;
 typedef cfp_iter_base2d cfp_iter_array2d;
@@ -28,30 +30,30 @@ typedef struct {
   /* member functions */
   double (*get)(const cfp_ref_base2d self);
   void (*set)(cfp_ref_base2d self, double val);
-  cfp_ptr2d (*ptr)(cfp_ref_base2d self);
+  cfp_ptr_base2d (*ptr)(cfp_ref_base2d self);
   void (*copy)(cfp_ref_base2d self, const cfp_ref_base2d src);
 } cfp_ref2d_api;
 
 typedef struct {
   /* member functions */
-  double (*get)(const cfp_ptr2d self);
-  double (*get_at)(const cfp_ptr2d self, ptrdiff_t d);
-  void (*set)(cfp_ptr2d self, double val);
-  void (*set_at)(cfp_ptr2d self, ptrdiff_t d, double val);
-  cfp_ref_base2d (*ref)(cfp_ptr2d self);
-  cfp_ref_base2d (*ref_at)(cfp_ptr2d self, ptrdiff_t d);
+  double (*get)(const cfp_ptr_base2d self);
+  double (*get_at)(const cfp_ptr_base2d self, ptrdiff_t d);
+  void (*set)(cfp_ptr_base2d self, double val);
+  void (*set_at)(cfp_ptr_base2d self, ptrdiff_t d, double val);
+  cfp_ref_base2d (*ref)(cfp_ptr_base2d self);
+  cfp_ref_base2d (*ref_at)(cfp_ptr_base2d self, ptrdiff_t d);
   /* non-member functions */
-  zfp_bool (*lt)(const cfp_ptr2d lhs, const cfp_ptr2d rhs);
-  zfp_bool (*gt)(const cfp_ptr2d lhs, const cfp_ptr2d rhs);
-  zfp_bool (*leq)(const cfp_ptr2d lhs, const cfp_ptr2d rhs);
-  zfp_bool (*geq)(const cfp_ptr2d lhs, const cfp_ptr2d rhs);
-  zfp_bool (*eq)(const cfp_ptr2d lhs, const cfp_ptr2d rhs);
-  zfp_bool (*neq)(const cfp_ptr2d lhs, const cfp_ptr2d rhs);
-  ptrdiff_t (*distance)(const cfp_ptr2d first, const cfp_ptr2d last);
-  cfp_ptr2d (*next)(const cfp_ptr2d p, ptrdiff_t d);
-  cfp_ptr2d (*prev)(const cfp_ptr2d p, ptrdiff_t d);
-  cfp_ptr2d (*inc)(const cfp_ptr2d p);
-  cfp_ptr2d (*dec)(const cfp_ptr2d p);
+  zfp_bool (*lt)(const cfp_ptr_base2d lhs, const cfp_ptr_base2d rhs);
+  zfp_bool (*gt)(const cfp_ptr_base2d lhs, const cfp_ptr_base2d rhs);
+  zfp_bool (*leq)(const cfp_ptr_base2d lhs, const cfp_ptr_base2d rhs);
+  zfp_bool (*geq)(const cfp_ptr_base2d lhs, const cfp_ptr_base2d rhs);
+  zfp_bool (*eq)(const cfp_ptr_base2d lhs, const cfp_ptr_base2d rhs);
+  zfp_bool (*neq)(const cfp_ptr_base2d lhs, const cfp_ptr_base2d rhs);
+  ptrdiff_t (*distance)(const cfp_ptr_base2d first, const cfp_ptr_base2d last);
+  cfp_ptr_base2d (*next)(const cfp_ptr_base2d p, ptrdiff_t d);
+  cfp_ptr_base2d (*prev)(const cfp_ptr_base2d p, ptrdiff_t d);
+  cfp_ptr_base2d (*inc)(const cfp_ptr_base2d p);
+  cfp_ptr_base2d (*dec)(const cfp_ptr_base2d p);
 } cfp_ptr2d_api;
 
 typedef struct {
@@ -62,8 +64,8 @@ typedef struct {
   void (*set_at)(cfp_iter_base2d self, ptrdiff_t d, double value);
   cfp_ref_base2d (*ref)(cfp_iter_base2d self);
   cfp_ref_base2d (*ref_at)(cfp_iter_base2d self, ptrdiff_t d);
-  cfp_ptr2d (*ptr)(cfp_iter_base2d self);
-  cfp_ptr2d (*ptr_at)(cfp_iter_base2d self, ptrdiff_t d);
+  cfp_ptr_base2d (*ptr)(cfp_iter_base2d self);
+  cfp_ptr_base2d (*ptr_at)(cfp_iter_base2d self, ptrdiff_t d);
   size_t (*i)(const cfp_iter_base2d self);
   size_t (*j)(const cfp_iter_base2d self);
   /* non-member functions */
@@ -149,8 +151,8 @@ typedef struct {
   cfp_ref_array2d (*ref)(cfp_array2d self, size_t i, size_t j);
   cfp_ref_array2d (*ref_flat)(cfp_array2d self, size_t i);
 
-  cfp_ptr2d (*ptr)(cfp_array2d self, size_t i, size_t j);
-  cfp_ptr2d (*ptr_flat)(cfp_array2d self, size_t i);
+  cfp_ptr_base2d (*ptr)(cfp_array2d self, size_t i, size_t j);
+  cfp_ptr_base2d (*ptr_flat)(cfp_array2d self, size_t i);
 
   cfp_iter2d (*begin)(cfp_array2d self);
   cfp_iter2d (*end)(cfp_array2d self);

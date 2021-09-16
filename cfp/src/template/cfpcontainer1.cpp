@@ -1,3 +1,4 @@
+/* Containers */
 static size_t
 _t1(CFP_CONTAINER_TYPE, size_x)(const CFP_CONTAINER_TYPE self)
 {
@@ -16,8 +17,6 @@ _t1(CFP_CONTAINER_TYPE, set)(CFP_CONTAINER_TYPE self, size_t i, ZFP_SCALAR_TYPE 
   static_cast<ZFP_CONTAINER_TYPE*>(self.object)->operator()(i) = val;
 }
 
-/* References */
-
 static CFP_REF_TYPE
 _t1(CFP_CONTAINER_TYPE, ref)(CFP_CONTAINER_TYPE self, size_t i)
 {
@@ -27,6 +26,16 @@ _t1(CFP_CONTAINER_TYPE, ref)(CFP_CONTAINER_TYPE self, size_t i)
   return r;
 }
 
+static CFP_PTR_TYPE
+_t1(CFP_CONTAINER_TYPE, ptr)(CFP_CONTAINER_TYPE self, size_t i)
+{
+  CFP_PTR_TYPE p;
+  p.container = self.object;
+  p.x = i;
+  return p;
+}
+
+/* References */
 static ZFP_SCALAR_TYPE
 _t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, get)(CFP_REF_TYPE self)
 {
@@ -46,14 +55,134 @@ _t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, copy)(CFP_REF_TYPE self, CFP_REF_TYPE src)
     static_cast<const ZFP_CONTAINER_TYPE*>(src.container)->operator()(src.x);
 }
 
-/* Pointers */
-
 static CFP_PTR_TYPE
-_t1(CFP_CONTAINER_TYPE, ptr)(CFP_CONTAINER_TYPE self, size_t i)
+_t2(CFP_CONTAINER_TYPE, CFP_REF_TYPE, ptr)(CFP_REF_TYPE self)
 {
   CFP_PTR_TYPE p;
-  p.reference = _t1(CFP_CONTAINER_TYPE, ref)(self, i);
+  p.container = self.container;
+  p.x = self.x;
   return p;
+}
+
+/* Pointers */
+static CFP_REF_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, ref)(CFP_PTR_TYPE self)
+{
+  CFP_REF_TYPE r;
+  r.container = self.container;
+  r.x = self.x;
+  return r;
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, lt)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container &&
+         lhs.x < rhs.x;
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, gt)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container &&
+         lhs.x > rhs.x;
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, leq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container &&
+         lhs.x <= rhs.x;
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, geq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container &&
+         lhs.x >= rhs.x;
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, eq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return lhs.container == rhs.container &&
+         lhs.x == rhs.x;
+}
+
+static zfp_bool
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, neq)(CFP_PTR_TYPE lhs, CFP_PTR_TYPE rhs)
+{
+  return !_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, eq)(lhs, rhs);
+}
+
+static ptrdiff_t
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, distance)(CFP_PTR_TYPE first, CFP_PTR_TYPE last)
+{
+  return last.x - first.x;
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(CFP_PTR_TYPE p, ptrdiff_t d)
+{
+  p.x += d;
+  return p;
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, prev)(CFP_PTR_TYPE p, ptrdiff_t d)
+{
+  p.x -= d;
+  return p;
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, inc)(CFP_PTR_TYPE p)
+{
+  p.x++;
+  return p;
+}
+
+static CFP_PTR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, dec)(CFP_PTR_TYPE p)
+{
+  p.x--;
+  return p;
+}
+
+static ZFP_SCALAR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, get)(CFP_PTR_TYPE self)
+{
+  return static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x);
+}
+
+static ZFP_SCALAR_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, get_at)(CFP_PTR_TYPE self, ptrdiff_t d)
+{
+  self = _t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(self, d);
+  return static_cast<const ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x);
+}
+
+static void
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, set)(CFP_PTR_TYPE self, ZFP_SCALAR_TYPE val)
+{
+  static_cast<ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x) = val;
+}
+
+static void
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, set_at)(CFP_PTR_TYPE self, ptrdiff_t d, ZFP_SCALAR_TYPE val)
+{
+  self = _t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(self, d);
+  static_cast<ZFP_CONTAINER_TYPE*>(self.container)->operator()(self.x) = val;
+}
+
+static CFP_REF_TYPE
+_t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, ref_at)(CFP_PTR_TYPE self, ptrdiff_t d)
+{
+  self = _t2(CFP_CONTAINER_TYPE, CFP_PTR_TYPE, next)(self, d);
+  CFP_REF_TYPE r;
+  r.container = self.container;
+  r.x = self.x;
+  return r;
 }
 
 /* Iterators */
