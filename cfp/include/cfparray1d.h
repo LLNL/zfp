@@ -8,15 +8,19 @@
 /* Cfp Types */
 CFP_DECL_CONTAINER(array, 1, d)
 CFP_DECL_CONTAINER(view, 1, d)
+CFP_DECL_CONTAINER(private_view, 1, d)
 
 CFP_DECL_ACCESSOR(ref_array, 1, d)
-CFP_DECL_ACCESSOR(ref_view, 1, d)
-
 CFP_DECL_ACCESSOR(ptr_array, 1, d)
-CFP_DECL_ACCESSOR(ptr_view, 1, d)
-
 CFP_DECL_ACCESSOR(iter_array, 1, d)
+
+CFP_DECL_ACCESSOR(ref_view, 1, d)
+CFP_DECL_ACCESSOR(ptr_view, 1, d)
 CFP_DECL_ACCESSOR(iter_view, 1, d)
+
+CFP_DECL_ACCESSOR(ref_private_view, 1, d)
+CFP_DECL_ACCESSOR(ptr_private_view, 1, d)
+CFP_DECL_ACCESSOR(iter_private_view, 1, d)
 
 /* Aliases */
 typedef cfp_ref_array1d cfp_ref1d;
@@ -39,6 +43,14 @@ typedef struct {
   cfp_ptr_view1d (*ptr)(cfp_ref_view1d self);
   void (*copy)(cfp_ref_view1d self, const cfp_ref_view1d src);
 } cfp_ref_view1d_api;
+
+typedef struct {
+  /* member functions */
+  double (*get)(const cfp_ref_private_view1d self);
+  void (*set)(cfp_ref_private_view1d self, double val);
+  cfp_ptr_private_view1d (*ptr)(cfp_ref_private_view1d self);
+  void (*copy)(cfp_ref_private_view1d self, const cfp_ref_private_view1d src);
+} cfp_ref_private_view1d_api;
 
 typedef struct {
   /* member functions */
@@ -83,6 +95,28 @@ typedef struct {
   cfp_ptr_view1d (*inc)(const cfp_ptr_view1d p);
   cfp_ptr_view1d (*dec)(const cfp_ptr_view1d p);
 } cfp_ptr_view1d_api;
+
+typedef struct {
+  /* member functions */
+  double (*get)(const cfp_ptr_private_view1d self);
+  double (*get_at)(const cfp_ptr_private_view1d self, ptrdiff_t d);
+  void (*set)(cfp_ptr_private_view1d self, double val);
+  void (*set_at)(cfp_ptr_private_view1d self, ptrdiff_t d, double val);
+  cfp_ref_private_view1d (*ref)(cfp_ptr_private_view1d self);
+  cfp_ref_private_view1d (*ref_at)(cfp_ptr_private_view1d self, ptrdiff_t d);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_ptr_private_view1d lhs, const cfp_ptr_private_view1d rhs);
+  zfp_bool (*gt)(const cfp_ptr_private_view1d lhs, const cfp_ptr_private_view1d rhs);
+  zfp_bool (*leq)(const cfp_ptr_private_view1d lhs, const cfp_ptr_private_view1d rhs);
+  zfp_bool (*geq)(const cfp_ptr_private_view1d lhs, const cfp_ptr_private_view1d rhs);
+  zfp_bool (*eq)(const cfp_ptr_private_view1d lhs, const cfp_ptr_private_view1d rhs);
+  zfp_bool (*neq)(const cfp_ptr_private_view1d lhs, const cfp_ptr_private_view1d rhs);
+  ptrdiff_t (*distance)(const cfp_ptr_private_view1d first, const cfp_ptr_private_view1d last);
+  cfp_ptr_private_view1d (*next)(const cfp_ptr_private_view1d p, ptrdiff_t d);
+  cfp_ptr_private_view1d (*prev)(const cfp_ptr_private_view1d p, ptrdiff_t d);
+  cfp_ptr_private_view1d (*inc)(const cfp_ptr_private_view1d p);
+  cfp_ptr_private_view1d (*dec)(const cfp_ptr_private_view1d p);
+} cfp_ptr_private_view1d_api;
 
 typedef struct {
   /* member functions */
@@ -135,6 +169,31 @@ typedef struct {
 } cfp_iter_view1d_api;
 
 typedef struct {
+  /* member functions */
+  double (*get)(const cfp_iter_private_view1d self);
+  double (*get_at)(const cfp_iter_private_view1d self, ptrdiff_t d);
+  void (*set)(cfp_iter_private_view1d self, double val);
+  void (*set_at)(cfp_iter_private_view1d self, ptrdiff_t d, double val);
+  cfp_ref_private_view1d (*ref)(cfp_iter_private_view1d self);
+  cfp_ref_private_view1d (*ref_at)(cfp_iter_private_view1d self, ptrdiff_t d);
+  cfp_ptr_private_view1d (*ptr)(cfp_iter_private_view1d self);
+  cfp_ptr_private_view1d (*ptr_at)(cfp_iter_private_view1d self, ptrdiff_t d);
+  size_t (*i)(const cfp_iter_private_view1d self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_iter_private_view1d lhs, const cfp_iter_private_view1d rhs);
+  zfp_bool (*gt)(const cfp_iter_private_view1d lhs, const cfp_iter_private_view1d rhs);
+  zfp_bool (*leq)(const cfp_iter_private_view1d lhs, const cfp_iter_private_view1d rhs);
+  zfp_bool (*geq)(const cfp_iter_private_view1d lhs, const cfp_iter_private_view1d rhs);
+  zfp_bool (*eq)(const cfp_iter_private_view1d lhs, const cfp_iter_private_view1d rhs);
+  zfp_bool (*neq)(const cfp_iter_private_view1d lhs, const cfp_iter_private_view1d rhs);
+  ptrdiff_t (*distance)(const cfp_iter_private_view1d first, const cfp_iter_private_view1d last);
+  cfp_iter_private_view1d (*next)(const cfp_iter_private_view1d it, ptrdiff_t d);
+  cfp_iter_private_view1d (*prev)(const cfp_iter_private_view1d it, ptrdiff_t d);
+  cfp_iter_private_view1d (*inc)(const cfp_iter_private_view1d it);
+  cfp_iter_private_view1d (*dec)(const cfp_iter_private_view1d it);
+} cfp_iter_private_view1d_api;
+
+typedef struct {
   /* constructor/destructor */
   cfp_view1d (*ctor)(const cfp_array1d a);
   cfp_view1d (*ctor_subset)(cfp_array1d a, size_t x, size_t nx);
@@ -150,6 +209,26 @@ typedef struct {
   cfp_iter_view1d (*begin)(cfp_view1d self);
   cfp_iter_view1d (*end)(cfp_view1d self);
 } cfp_view1d_api;
+
+typedef struct {
+  /* constructor/destructor */
+  cfp_private_view1d (*ctor)(const cfp_array1d a);
+  cfp_private_view1d (*ctor_subset)(cfp_array1d a, size_t x, size_t nx);
+  void (*dtor)(cfp_private_view1d self);
+  /* member functions */
+  size_t (*global_x)(cfp_private_view1d self, size_t i);
+  size_t (*size_x)(cfp_private_view1d self);
+  double (*get)(const cfp_private_view1d self, size_t i);
+  double (*rate)(const cfp_private_view1d self);
+  size_t (*size)(cfp_private_view1d self);
+
+  cfp_ref_private_view1d (*ref)(cfp_private_view1d self, size_t i);
+  cfp_iter_private_view1d (*begin)(cfp_private_view1d self);
+  cfp_iter_private_view1d (*end)(cfp_private_view1d self);
+
+  void (*partition)(cfp_private_view1d self, size_t index, size_t count);
+  void (*flush_cache)(cfp_private_view1d self);
+} cfp_private_view1d_api;
 
 typedef struct {
   /* constructor/destructor */
@@ -213,6 +292,11 @@ typedef struct {
   cfp_ref_view1d_api view_reference;
   cfp_ptr_view1d_api view_pointer;
   cfp_iter_view1d_api view_iterator;
+
+  cfp_private_view1d_api private_view;
+  cfp_ref_private_view1d_api private_view_reference;
+  cfp_ptr_private_view1d_api private_view_pointer;
+  cfp_iter_private_view1d_api private_view_iterator;
 
   cfp_header1d_api header;
 } cfp_array1d_api;
