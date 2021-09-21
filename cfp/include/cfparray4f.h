@@ -8,6 +8,7 @@
 /* Cfp Types */
 CFP_DECL_CONTAINER(array, 4, f)
 CFP_DECL_CONTAINER(view, 4, f)
+CFP_DECL_CONTAINER(flat_view, 4, f)
 CFP_DECL_CONTAINER(private_view, 4, f)
 
 CFP_DECL_ACCESSOR(ref_array, 4, f)
@@ -17,6 +18,10 @@ CFP_DECL_ACCESSOR(iter_array, 4, f)
 CFP_DECL_ACCESSOR(ref_view, 4, f)
 CFP_DECL_ACCESSOR(ptr_view, 4, f)
 CFP_DECL_ACCESSOR(iter_view, 4, f)
+
+CFP_DECL_ACCESSOR(ref_flat_view, 4, f)
+CFP_DECL_ACCESSOR(ptr_flat_view, 4, f)
+CFP_DECL_ACCESSOR(iter_flat_view, 4, f)
 
 CFP_DECL_ACCESSOR(ref_private_view, 4, f)
 CFP_DECL_ACCESSOR(ptr_private_view, 4, f)
@@ -42,6 +47,14 @@ typedef struct {
   cfp_ptr_view4f (*ptr)(cfp_ref_view4f self);
   void (*copy)(cfp_ref_view4f self, const cfp_ref_view4f src);
 } cfp_ref_view4f_api;
+
+typedef struct {
+  /* member functions */
+  float (*get)(const cfp_ref_flat_view4f self);
+  void (*set)(cfp_ref_flat_view4f self, float val);
+  cfp_ptr_flat_view4f (*ptr)(cfp_ref_flat_view4f self);
+  void (*copy)(cfp_ref_flat_view4f self, const cfp_ref_flat_view4f src);
+} cfp_ref_flat_view4f_api;
 
 typedef struct {
   /* member functions */
@@ -94,6 +107,28 @@ typedef struct {
   cfp_ptr_view4f (*inc)(const cfp_ptr_view4f p);
   cfp_ptr_view4f (*dec)(const cfp_ptr_view4f p);
 } cfp_ptr_view4f_api;
+
+typedef struct {
+  /* member functions */
+  float (*get)(const cfp_ptr_flat_view4f self);
+  float (*get_at)(const cfp_ptr_flat_view4f self, ptrdiff_t d);
+  void (*set)(cfp_ptr_flat_view4f self, float val);
+  void (*set_at)(cfp_ptr_flat_view4f self, ptrdiff_t d, float val);
+  cfp_ref_flat_view4f (*ref)(cfp_ptr_flat_view4f self);
+  cfp_ref_flat_view4f (*ref_at)(cfp_ptr_flat_view4f self, ptrdiff_t d);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_ptr_flat_view4f lhs, const cfp_ptr_flat_view4f rhs);
+  zfp_bool (*gt)(const cfp_ptr_flat_view4f lhs, const cfp_ptr_flat_view4f rhs);
+  zfp_bool (*leq)(const cfp_ptr_flat_view4f lhs, const cfp_ptr_flat_view4f rhs);
+  zfp_bool (*geq)(const cfp_ptr_flat_view4f lhs, const cfp_ptr_flat_view4f rhs);
+  zfp_bool (*eq)(const cfp_ptr_flat_view4f lhs, const cfp_ptr_flat_view4f rhs);
+  zfp_bool (*neq)(const cfp_ptr_flat_view4f lhs, const cfp_ptr_flat_view4f rhs);
+  ptrdiff_t (*distance)(const cfp_ptr_flat_view4f first, const cfp_ptr_flat_view4f last);
+  cfp_ptr_flat_view4f (*next)(const cfp_ptr_flat_view4f p, ptrdiff_t d);
+  cfp_ptr_flat_view4f (*prev)(const cfp_ptr_flat_view4f p, ptrdiff_t d);
+  cfp_ptr_flat_view4f (*inc)(const cfp_ptr_flat_view4f p);
+  cfp_ptr_flat_view4f (*dec)(const cfp_ptr_flat_view4f p);
+} cfp_ptr_flat_view4f_api;
 
 typedef struct {
   /* member functions */
@@ -175,6 +210,34 @@ typedef struct {
 
 typedef struct {
   /* member functions */
+  float (*get)(const cfp_iter_flat_view4f self);
+  float (*get_at)(const cfp_iter_flat_view4f self, ptrdiff_t d);
+  void (*set)(cfp_iter_flat_view4f self, float val);
+  void (*set_at)(cfp_iter_flat_view4f self, ptrdiff_t d, float val);
+  cfp_ref_flat_view4f (*ref)(cfp_iter_flat_view4f self);
+  cfp_ref_flat_view4f (*ref_at)(cfp_iter_flat_view4f self, ptrdiff_t d);
+  cfp_ptr_flat_view4f (*ptr)(cfp_iter_flat_view4f self);
+  cfp_ptr_flat_view4f (*ptr_at)(cfp_iter_flat_view4f self, ptrdiff_t d);
+  size_t (*i)(const cfp_iter_flat_view4f self);
+  size_t (*j)(const cfp_iter_flat_view4f self);
+  size_t (*k)(const cfp_iter_flat_view4f self);
+  size_t (*l)(const cfp_iter_flat_view4f self);
+  /* non-member functions */
+  zfp_bool (*lt)(const cfp_iter_flat_view4f lhs, const cfp_iter_flat_view4f rhs);
+  zfp_bool (*gt)(const cfp_iter_flat_view4f lhs, const cfp_iter_flat_view4f rhs);
+  zfp_bool (*leq)(const cfp_iter_flat_view4f lhs, const cfp_iter_flat_view4f rhs);
+  zfp_bool (*geq)(const cfp_iter_flat_view4f lhs, const cfp_iter_flat_view4f rhs);
+  zfp_bool (*eq)(const cfp_iter_flat_view4f lhs, const cfp_iter_flat_view4f rhs);
+  zfp_bool (*neq)(const cfp_iter_flat_view4f lhs, const cfp_iter_flat_view4f rhs);
+  ptrdiff_t (*distance)(const cfp_iter_flat_view4f first, const cfp_iter_flat_view4f last);
+  cfp_iter_flat_view4f (*next)(const cfp_iter_flat_view4f it, ptrdiff_t d);
+  cfp_iter_flat_view4f (*prev)(const cfp_iter_flat_view4f it, ptrdiff_t d);
+  cfp_iter_flat_view4f (*inc)(const cfp_iter_flat_view4f it);
+  cfp_iter_flat_view4f (*dec)(const cfp_iter_flat_view4f it);
+} cfp_iter_flat_view4f_api;
+
+typedef struct {
+  /* member functions */
   float (*get)(const cfp_iter_private_view4f self);
   float (*get_at)(const cfp_iter_private_view4f self, ptrdiff_t d);
   void (*set)(cfp_iter_private_view4f self, float val);
@@ -223,6 +286,32 @@ typedef struct {
   cfp_iter_view4f (*begin)(cfp_view4f self);
   cfp_iter_view4f (*end)(cfp_view4f self);
 } cfp_view4f_api;
+
+typedef struct {
+  /* constructor/destructor */
+  cfp_flat_view4f (*ctor)(const cfp_array4f a);
+  cfp_flat_view4f (*ctor_subset)(cfp_array4f a, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw);
+  void (*dtor)(cfp_flat_view4f self);
+  /* member functions */
+  size_t (*global_x)(cfp_flat_view4f self, size_t i);
+  size_t (*global_y)(cfp_flat_view4f self, size_t j);
+  size_t (*global_z)(cfp_flat_view4f self, size_t k);
+  size_t (*global_w)(cfp_flat_view4f self, size_t l);
+  size_t (*size_x)(cfp_flat_view4f self);
+  size_t (*size_y)(cfp_flat_view4f self);
+  size_t (*size_z)(cfp_flat_view4f self);
+  size_t (*size_w)(cfp_flat_view4f self);
+  float (*get)(const cfp_flat_view4f self, size_t i, size_t j, size_t k, size_t l);
+  double (*rate)(const cfp_flat_view4f self);
+  size_t (*size)(cfp_flat_view4f self);
+
+  cfp_ref_flat_view4f (*ref)(cfp_flat_view4f self, size_t i, size_t j, size_t k, size_t l);
+  cfp_iter_flat_view4f (*begin)(cfp_flat_view4f self);
+  cfp_iter_flat_view4f (*end)(cfp_flat_view4f self);
+
+  size_t (*index)(cfp_flat_view4f self, size_t i, size_t j, size_t k, size_t l);
+  void (*ijkl)(cfp_flat_view4f self, size_t* i, size_t* j, size_t* k, size_t* l, size_t index);
+} cfp_flat_view4f_api;
 
 typedef struct {
   /* constructor/destructor */
@@ -316,6 +405,11 @@ typedef struct {
   cfp_ref_view4f_api view_reference;
   cfp_ptr_view4f_api view_pointer;
   cfp_iter_view4f_api view_iterator;
+
+  cfp_flat_view4f_api flat_view;
+  cfp_ref_flat_view4f_api flat_view_reference;
+  cfp_ptr_flat_view4f_api flat_view_pointer;
+  cfp_iter_flat_view4f_api flat_view_iterator;
 
   cfp_private_view4f_api private_view;
   cfp_ref_private_view4f_api private_view_reference;

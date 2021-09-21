@@ -37,6 +37,22 @@
 #undef CFP_CONTAINER_TYPE
 #undef ZFP_CONTAINER_TYPE
 
+#define CFP_CONTAINER_TYPE cfp_flat_view4f
+#define ZFP_CONTAINER_TYPE zfp::array4f::flat_view
+#define CFP_REF_TYPE cfp_ref_flat_view4f
+#define CFP_PTR_TYPE cfp_ptr_flat_view4f
+#define CFP_ITER_TYPE cfp_iter_flat_view4f
+#include "template/cfpcontainer.cpp"
+#include "template/cfpcontainer4.cpp"
+#include "template/cfpview.cpp"
+#include "template/cfpview4.cpp"
+#include "template/cfpflatview4.cpp"
+#undef CFP_REF_TYPE
+#undef CFP_PTR_TYPE
+#undef CFP_ITER_TYPE
+#undef CFP_CONTAINER_TYPE
+#undef ZFP_CONTAINER_TYPE
+
 #define CFP_CONTAINER_TYPE cfp_private_view4f
 #define ZFP_CONTAINER_TYPE zfp::array4f::private_view
 #define CFP_REF_TYPE cfp_ref_private_view4f
