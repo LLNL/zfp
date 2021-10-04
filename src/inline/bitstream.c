@@ -463,4 +463,14 @@ stream_clone(const bitstream* s)
   return c;
 }
 
+/* memory set bit stream to zeros */
+inline_ void
+stream_memset(bitstream* s)
+{
+  for (size_t i = 0; i < stream_capacity(s); i++)
+  {
+    ((uint8_t*)stream_data(s))[i] = 0;
+  }
+}
+
 #undef unused_

@@ -89,6 +89,9 @@ void stream_copy(bitstream* dst, bitstream* src, size_t n);
 int stream_set_stride(bitstream* stream, size_t block, ptrdiff_t delta);
 #endif
 
+/* memory set stream to 0 */
+void stream_memset(bitstream* s);
+
 #ifdef __cplusplus
 }
 #endif

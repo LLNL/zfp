@@ -221,6 +221,7 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
 //  hipMallocAsync(&d_stream, max_size, 0);
 //#else
   hipMalloc(&d_stream, max_size);
+  hipMemset(d_stream, 0, max_size);
 //#endif
   return d_stream;
 }
@@ -242,7 +243,9 @@ Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
 //  hipMallocAsync(&d_stream, size, 0);
 //#else
   hipMalloc(&d_stream, size);
+  hipMemset(d_stream, 0, size);
 //#endif
+
 
   hipMemcpy(d_stream, stream->stream->begin, size, hipMemcpyHostToDevice);
   return d_stream;
@@ -311,6 +314,7 @@ void *setup_device_field_compress(const zfp_field *field, const int3 &stride, lo
 //    hipMallocAsync(&d_data, field_bytes, 0);
 //#else
     hipMalloc(&d_data, field_bytes);
+    hipMemset(d_data, 0, field_bytes);
 //#endif
 
 
@@ -355,6 +359,7 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, 
 //    hipMallocAsync(&d_data, field_bytes, 0);
 //#else
     hipMalloc(&d_data, field_bytes);
+    hipMemset(d_data, 0, field_bytes);
 //#endif
   }
   return offset_void(field->type, d_data, -offset);
@@ -375,6 +380,7 @@ ushort *setup_device_nbits_compress(zfp_stream *stream, const zfp_field *field, 
 //  hipMallocAsync(&d_bitlengths, size, 0);
 //#else
   hipMalloc(&d_bitlengths, size);
+	hipMemset(d_bitlengths, 0, size);
 //#endif
   return d_bitlengths;
 }
@@ -393,6 +399,7 @@ ushort *setup_device_nbits_decompress(zfp_stream *stream, const zfp_field *field
 //  hipMallocAsync(&d_bitlengths, size, 0);
 //#else
   hipMalloc(&d_bitlengths, size);
+  hipMemset(d_bitlengths, 0, size);
 //#endif
   hipMemcpy(d_bitlengths, stream->stream->bitlengths, size, hipMemcpyHostToDevice);
   return d_bitlengths;
@@ -443,6 +450,7 @@ void setup_device_chunking(int *chunk_size, unsigned long long **d_offsets, size
 //  hipMallocAsync(d_cubtemp, tempsize, 0);
 //#else
   hipMalloc(d_cubtemp, tempsize);
+  hipMemset(*d_cubtemp, 0, tempsize);
 //#endif
 }
 
@@ -476,16 +484,19 @@ size_t
 hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
 {
 
+/*
 #if (HIPRT_VERSION < 9000)
   if (variable_rate)
     return 0; // Variable rate requires HIP >= 9
 #endif
-
+*/
   if (zfp_stream_compression_mode(stream) == zfp_mode_reversible)
   {
     // Reversible mode not supported on GPU
     return 0;
   }
+
+  stream_memset(stream->stream);
 
   uint dims[3];
   dims[0] = field->nx;
