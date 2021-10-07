@@ -9,6 +9,27 @@ if(ZFP_WITH_CUDA)
   add_definitions(-DZFP_WITH_CUDA)
 endif()
 
+if(ZFP_WITH_SYCL)
+  if(ZFP_WITH_SYCL_FOR_CUDA)
+    set(CMAKE_CXX_COMPILER "clang++")
+    SET(CMAKE_CXX_FLAGS_PREVIOUS ${CMAKE_CXX_FLAGS})
+    SET(CMAKE_CXX_STANDARD "17")
+    SET(CMAKE_CXX_FLAGS  "-fPIC -std=c++17 -fsycl -fsycl-unnamed-lambda -fsycl-targets=nvptx64-nvidia-cuda-sycldevice" )
+    #SET(CMAKE_CXX_FLAGS  "-fPIC -std=c++17 -fsycl" )
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lOpenCL -lsycl")
+    add_definitions(-DZFP_WITH_SYCL)
+    set(SYCLZFP_SOURCE dpcpp_zfp/syclZFP.dp.cpp)
+  else()
+    set(CMAKE_CXX_COMPILER "dpcpp")
+    SET(CMAKE_CXX_FLAGS_PREVIOUS ${CMAKE_CXX_FLAGS})
+    SET(CMAKE_CXX_STANDARD "17")
+    #SET(CMAKE_CXX_FLAGS  "-fPIC -std=c++17 -fsycl -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xs \"-device skl,kbl,cfl\"" )
+    SET(CMAKE_CXX_FLAGS  "-fPIC -std=c++17 -fsycl" )
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lOpenCL -lsycl")
+    add_definitions(-DZFP_WITH_SYCL)
+    set(SYCLZFP_SOURCE dpcpp_zfp/syclZFP.dp.cpp)
+  endif()
+endif()
 
 set(zfp_source
   zfp.c
@@ -21,11 +42,17 @@ set(zfp_source
   encode3f.c encode3d.c encode3i.c encode3l.c
   decode3f.c decode3d.c decode3i.c decode3l.c
   encode4f.c encode4d.c encode4i.c encode4l.c
-  decode4f.c decode4d.c decode4i.c decode4l.c)
+  decode4f.c decode4d.c decode4i.c decode4l.c
+  ${SYCLZFP_SOURCE})
 
-add_library(zfp ${zfp_source}
+if(ZFP_WITH_CUDA)
+  add_library(zfp ${zfp_source}
                 ${zfp_cuda_backend_obj})
-add_library(zfp::zfp ALIAS zfp)
+  add_library(zfp::zfp ALIAS zfp)
+elseif(ZFP_WITH_SYCL)
+  add_library(zfp ${zfp_source})
+  add_library(zfp::zfp ALIAS zfp)
+endif()
 
 if(ZFP_WITH_OPENMP)
   target_link_libraries(zfp PRIVATE OpenMP::OpenMP_C)

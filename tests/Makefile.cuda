@@ -1,0 +1,23 @@
+include ../Config
+
+BINDIR = ../bin
+TARGETS = $(BINDIR)/gpu_sanity_check_3d $(BINDIR)/gpu_sanity_check_2d $(BINDIR)/gpu_sanity_check_1d $(BINDIR)/zfpGPU
+CXXLIBS = -L../build_cuda/lib -lzfp
+INC_FLAGS = -I../src/cuda_zfp/ -I../include/ -I../src/
+CXXFLAGS = -DZFP_WITH_CUDA
+
+all: $(TARGETS)
+
+$(BINDIR)/zfpGPU: gpu_tests/zfp.cpp
+	$(CXX) $(CXXFLAGS) -I../array $(INC_FLAGS) gpu_tests/zfp.cpp $(CXXLIBS) -o $@
+
+$(BINDIR)/gpu_sanity_check_3d: gpu_tests/gpu_sanity_check_3d.cpp
+	$(CXX) $(CXXFLAGS) $(INC_FLAGS) gpu_tests/gpu_sanity_check_3d.cpp $(CXXLIBS) -o $@
+
+$(BINDIR)/gpu_sanity_check_2d: gpu_tests/gpu_sanity_check_2d.cpp
+	$(CXX) $(CXXFLAGS) $(INC_FLAGS) gpu_tests/gpu_sanity_check_2d.cpp $(CXXLIBS) -o $@
+
+$(BINDIR)/gpu_sanity_check_1d: gpu_tests/gpu_sanity_check_1d.cpp
+	$(CXX) $(CXXFLAGS) $(INC_FLAGS) gpu_tests/gpu_sanity_check_1d.cpp $(CXXLIBS) -o $@
+clean:
+	rm -f $(TARGETS)

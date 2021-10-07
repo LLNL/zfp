@@ -49,6 +49,22 @@ function(zfp_add_test dims type bits)
       add_test(NAME ${cuda_test_name} COMMAND ${cuda_test_name})
       set_property(TEST ${cuda_test_name} PROPERTY RUN_SERIAL TRUE)
     endif()
+
+    if(ZFP_WITH_SYCL AND (${dims} LESS 4))
+      add_definitions(-DZFP_WITH_SYCL)
+
+      set(sycl_test_name testZfpSycl${dims}d${type})
+      add_executable(${sycl_test_name} ${sycl_test_name}.c)
+      target_compile_definitions(${sycl_test_name} PRIVATE ${zfp_private_defs})
+      target_link_libraries(${sycl_test_name}
+        cmocka zfp zfpHashLib genSmoothRandNumsLib stridedOperationsLib
+        zfpChecksumsLib zfpTimerLib zfpCompressionParamsLib)
+      if(HAVE_LIBM_MATH)
+        target_link_libraries(${sycl_test_name} m)
+      endif()
+      add_test(NAME ${sycl_test_name} COMMAND ${sycl_test_name})
+      set_property(TEST ${sycl_test_name} PROPERTY RUN_SERIAL TRUE)
+    endif()
   endif()
 endfunction()
 

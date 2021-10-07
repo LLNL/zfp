@@ -1,0 +1,33 @@
+CC = clang
+CXX = dpcpp
+CXXFLAGS = -fPIC -DZFP_WITH_SYCL
+CCFLAGS = -fPIC -DZFP_WITH_SYCL
+#CXXFLAGS = -fPIC -DZFP_WITH_SYCL -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xs '-device kbl'  #For AOT
+INC_FLAGS = -I../include/ -I../include/zfp/ -I../src/dpcpp_zfp/ 
+SHARED_INC_FLAGS = -I../include/ 
+LDFLAGS = -lOpenCL -lsycl
+
+LIBDIR = ../lib
+TARGETS = $(LIBDIR)/libzfp.so
+OBJECTS = bitstream.o decode1i.o decode1l.o decode1f.o decode1d.o encode1i.o encode1l.o encode1f.o encode1d.o decode2i.o decode2l.o decode2f.o decode2d.o encode2i.o encode2l.o encode2f.o encode2d.o decode3i.o decode3l.o decode3f.o decode3d.o encode3i.o encode3l.o encode3f.o encode3d.o decode4i.o decode4l.o decode4f.o decode4d.o encode4i.o encode4l.o encode4f.o encode4d.o 
+
+ZFP_OBJECT = zfpGPU.o
+
+DPC_OBJECT = syclZFP.dp.o
+
+SRC = dpcpp_zfp/syclZFP.dp.cpp
+
+shared: $(LIBDIR)/libzfp.so
+
+clean:
+	rm -f $(TARGETS) $(OBJECTS) $(DPC_OBJECT) $(ZFP_OBJECT)
+
+zfpGPU.o: zfp.c
+	$(CC) $(CCFLAGS) $(SHARED_INC_FLAGS) -o zfpGPU.o -c $<
+
+syclZFP.dp.o: $(SRC) 
+	$(CXX) $(CXXFLAGS) $(INC_FLAGS) -c $<
+
+$(LIBDIR)/libzfp.so: $(DPC_OBJECT) $(ZFP_OBJECT)
+	mkdir -p $(LIBDIR)
+	$(CXX) $(CXXFLAGS) $(SHARED_INC_FLAGS) -shared $(OBJECTS) $(LDFLAGS) $^ -o $@
