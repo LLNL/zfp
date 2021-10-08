@@ -1,8 +1,8 @@
 include ../Config
 
 BINDIR = ../bin
-TARGETS = $(BINDIR)/gpu_sanity_check_3d $(BINDIR)/gpu_sanity_check_2d $(BINDIR)/gpu_sanity_check_1d $(BINDIR)/zfpGPU
-CXXLIBS = -L../build_nvidia/lib -lzfp
+TARGETS = $(BINDIR)/gpu_sanity_check_3d $(BINDIR)/gpu_sanity_check_2d $(BINDIR)/gpu_sanity_check_1d $(BINDIR)/zfpGPU $(BINDIR)/testexec
+CXXLIBS = -L../build_nv/lib -lzfp
 INC_FLAGS = -I../src/dpcpp_zfp/ -I../include/ -I../src/
 CXXFLAGS = -DZFP_WITH_SYCL
 
@@ -10,6 +10,9 @@ all: $(TARGETS)
 
 $(BINDIR)/zfpGPU: gpu_tests/zfp.cpp
 	$(CXX) $(CXXFLAGS) -I../array $(INC_FLAGS) gpu_tests/zfp.cpp $(CXXLIBS) -o $@
+
+$(BINDIR)/testexec: testexec.cpp
+	$(CXX) $(CXXFLAGS) -I../array $(INC_FLAGS) testexec.cpp $(CXXLIBS) -o $@
 
 $(BINDIR)/gpu_sanity_check_3d: gpu_tests/gpu_sanity_check_3d.cpp
 	$(CXX) $(CXXFLAGS) $(INC_FLAGS) gpu_tests/gpu_sanity_check_3d.cpp $(CXXLIBS) -o $@
