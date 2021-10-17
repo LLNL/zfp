@@ -118,6 +118,9 @@ class view : public const_view<Container> {
 public:
   typedef Container container_type;
   typedef typename container_type::value_type value_type;
+  typedef typename zfp::internal::dim4::const_reference<view> const_reference;
+  typedef typename zfp::internal::dim4::const_pointer<view> const_pointer;
+  typedef typename zfp::internal::dim4::const_iterator<view> const_iterator;
   typedef typename zfp::internal::dim4::reference<view> reference;
   typedef typename zfp::internal::dim4::pointer<view> pointer;
   typedef typename zfp::internal::dim4::iterator<view> iterator;
@@ -126,13 +129,17 @@ public:
   view(container_type* array) : const_view<Container>(array) {}
   view(container_type* array, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw) : const_view<Container>(array, x, y, z, w, nx, ny, nz, nw) {}
 
-  // (i) inspector from base class
-  using const_view<Container>::operator();
+  // (i, j, k, l) inspector
+  const_reference operator()(size_t i, size_t j, size_t k, size_t l) const { return const_reference(this, x + i, y + j, z + k, w + l); }
 
-  // (i) mutator
+  // (i, j, k, l) mutator
   reference operator()(size_t i, size_t j, size_t k, size_t l) { return reference(this, x + i, y + j, z + k, w + l); }
 
   // random access iterators
+  const_iterator cbegin() const { return const_iterator(this, x, y, z, w); }
+  const_iterator cend() const { return const_iterator(this, x, y, z, w + nw); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
   iterator begin() { return iterator(this, x, y, z, w); }
   iterator end() { return iterator(this, x, y, z, w + nw); }
 
@@ -200,19 +207,27 @@ public:
     l = index;
   }
 
-  // flat index inspectors
+  // flat index [] inspector
   const_reference operator[](size_t index) const
   {
     size_t i, j, k, l;
     ijkl(i, j, k, l, index);
     return const_reference(this, x + i, y + j, z + k, w + l);
   }
+
+  // flat index [] mutator
   reference operator[](size_t index)
   {
     size_t i, j, k, l;
     ijkl(i, j, k, l, index);
     return reference(this, x + i, y + j, z + k, w + l);
   }
+
+  // (i, j, k, l) inspector
+  const_reference operator()(size_t i, size_t j, size_t k, size_t l) const { return const_reference(this, x + i, y + j, z + k, w + l); }
+
+  // (i, j, k, l) mutator
+  reference operator()(size_t i, size_t j, size_t k, size_t l) { return reference(this, x + i, y + j, z + k, w + l); }
 
 protected:
   friend class zfp::internal::dim4::const_handle<flat_view>;
@@ -553,6 +568,9 @@ class private_view : public private_const_view<Container> {
 public:
   typedef Container container_type;
   typedef typename container_type::value_type value_type;
+  typedef typename zfp::internal::dim4::const_reference<private_view> const_reference;
+  typedef typename zfp::internal::dim4::const_pointer<private_view> const_pointer;
+  typedef typename zfp::internal::dim4::const_iterator<private_view> const_iterator;
   typedef typename zfp::internal::dim4::reference<private_view> reference;
   typedef typename zfp::internal::dim4::pointer<private_view> pointer;
   typedef typename zfp::internal::dim4::iterator<private_view> iterator;
@@ -581,13 +599,17 @@ public:
   // flush cache by compressing all modified cached blocks
   void flush_cache() const { cache.flush(); }
 
-  // (i, j, k, l) inspector from base class
-  using private_const_view<Container>::operator();
+  // (i, j, k, l) inspector
+  const_reference operator()(size_t i, size_t j, size_t k, size_t l) const { return const_reference(this, x + i, y + j, z + k, w + l); }
 
   // (i, j, k, l) mutator
   reference operator()(size_t i, size_t j, size_t k, size_t l) { return reference(this, x + i, y + j, z + k, w + l); }
 
   // random access iterators
+  const_iterator cbegin() const { return const_iterator(this, x, y, z, w); }
+  const_iterator cend() const { return const_iterator(this, x, y, z, w + nw); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
   iterator begin() { return iterator(this, x, y, z, w); }
   iterator end() { return iterator(this, x, y, z, w + nw); }
 
