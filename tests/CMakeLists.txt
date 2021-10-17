@@ -117,6 +117,7 @@ if((NOT MINGW) AND (NOT DEFINED ZFP_OMP_TESTS_ONLY) AND (NOT PRINT_CHECKSUMS))
 endif()
 
 
+# testzfp
 add_executable(testzfp testzfp.cpp)
 target_link_libraries(testzfp zfp)
 target_compile_definitions(testzfp PRIVATE ${zfp_compressed_array_defs})
@@ -138,6 +139,12 @@ if(ZFP_BUILD_TESTING_LARGE)
     endforeach()
   endforeach()
 endif()
+
+# testviews
+add_executable(testviews testviews.cpp)
+target_link_libraries(testviews zfp)
+target_compile_definitions(testviews PRIVATE ${zfp_compressed_array_defs})
+add_test(NAME testviews COMMAND testviews)
 
 if(BUILD_ZFPY)
   add_subdirectory(python)
