@@ -40,6 +40,7 @@ Questions answered in this FAQ:
   #. :ref:`Why are compressed arrays so slow? <q-1d-speed>`
   #. :ref:`Do compressed arrays use reference counting? <q-ref-count>`
   #. :ref:`How large a buffer is needed for compressed storage? <q-max-size>`
+  #. :ref:`How can I print array values? <q-printf>`
 
 -------------------------------------------------------------------------------
 
@@ -1143,3 +1144,50 @@ table lists the maximum block size (in bits) for each scalar type, whether
   | double +---------+-------+-------+-------+-------+
   |        | |check| |   278 |  1058 |  4178 | 16658 |
   +--------+---------+-------+-------+-------+-------+
+
+-------------------------------------------------------------------------------
+
+.. _q-printf:
+
+Q29: *How can I print array values?*
+
+Consider the following seemingly reasonable piece of code::
+
+  #include <cstdio>
+  #include "zfparray1.h"
+
+  int main()
+  {
+    zfp::array1<double> a(100, 16.0);
+    printf("%f\n", a[0]); // does not compile
+    return 0;
+  }
+
+The compiler will complain about :code:`a[0]` being a non-POD object.  This
+is because :code:`a[0]` is a :ref:`proxy reference <references>` object
+rather than a :code:`double`.  To make this work, :code:`a[0]` must be
+explicitly converted to :code:`double`, e.g., using a cast::
+
+    printf("%f\n", (double)a[0]);
+
+For similar reasons, one may not use :code:`scanf` to initialize the value
+of :code:`a[0]` because :code:`&a[0]` is a :ref:`proxy pointer <pointers>`
+object, not a :code:`double*`.  Rather, one must use a temporary variable,
+e.g.
+::
+
+  double t;
+  scanf("%lf", &t);
+  a[0] = t;
+
+Note that using :code:`iostream`, expressions like
+::
+
+  std::cout << a[0] << std::endl;
+
+do work, but
+::
+
+  std::cin >> a[0];
+
+does not.
