@@ -186,18 +186,30 @@ stream is copied back to the host and device memory is deallocated.  If both
 pointers are device pointers, then no copies are made.  Additionally, any
 combination of mixing host and device pointers is supported.
 
-Additional Requirements
-^^^^^^^^^^^^^^^^^^^^^^^
+.. _cuda-limitations:
 
-The CUDA implementation supports strided fields.  However, when the field
-is stored in host memory, it must occupy contiguous storage, i.e., with
-no unused memory addresses between the minimum and maximum address spanned
-by the field.  This requirement avoids having to copy and allocate more
-temporary memory than needed to hold the array if it were not strided.
-Note that the strides can still be arbitrary as long as they serve only to
-permute the array elements.  Moreover, this restriction applies only to the
-CUDA execution policy and the case where the uncompressed field resides on
-the host.
+CUDA Limitations
+^^^^^^^^^^^^^^^^
+
+The CUDA implementation has a number of limitations:
+
+* Only the :ref:`fixed-rate mode <mode-fixed-rate>` mode is supported.
+  Other modes will be supported in a future release.
+* 4D arrays are not supported.
+* :ref:`Headers <header>` are not supported.  Any header already present in
+  the stream will be silently overwritten on compression.
+* |zfp| must be built with a :c:macro:`ZFP_BIT_STREAM_WORD_SIZE` of 64 bits.
+* Although :ref:`strides <field>` are supported, fields must be contiguous
+  when stored in host memory, i.e., with no unused memory addresses between
+  the minimum and maximum address spanned by the field (see
+  :c:func:`zfp_field_is_contiguous`).  This requirement avoids having to copy
+  and allocate more temporary memory than needed to hold the array if it were
+  not strided.  Note that the strides can still be arbitrary as long as they
+  serve only to permute the array elements.  Moreover, this restriction
+  applies only to the CUDA execution policy and the case where the
+  uncompressed field resides on the host.
+
+We expect to address these limitations over time.
 
 
 Setting the Execution Policy
