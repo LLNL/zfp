@@ -41,6 +41,7 @@ Questions answered in this FAQ:
   #. :ref:`Do compressed arrays use reference counting? <q-ref-count>`
   #. :ref:`How large a buffer is needed for compressed storage? <q-max-size>`
   #. :ref:`How can I print array values? <q-printf>`
+  #. :ref:`What is known about zfp compression errors? <q-err-dist>`
 
 -------------------------------------------------------------------------------
 
@@ -1003,9 +1004,10 @@ for 3D data, while the difference is smaller for 2D and 1D data.
 We recommend experimenting with tolerances and evaluating what error levels
 are appropriate for each application, e.g., by starting with a low,
 conservative tolerance and successively doubling it.  The distribution of
-errors produced by |zfp| is approximately Gaussian, so even if the maximum
-error may seem large at an individual grid point, most errors tend to be
-much smaller and tightly clustered around zero.
+errors produced by |zfp| is approximately Gaussian (see
+:ref:`FAQ #30 <q-err-dist>`), so even if the maximum error may seem large at
+an individual grid point, most errors tend to be much smaller and tightly
+clustered around zero.
 
 -------------------------------------------------------------------------------
 
@@ -1217,3 +1219,51 @@ do work, but
   std::cin >> a[0];
 
 does not.
+
+-------------------------------------------------------------------------------
+
+.. _q-err-dist:
+
+Q30: *What is known about zfp compression errors?*
+
+A: Significant effort has been spent on characterizing compression errors
+resulting from |zfp|, as detailed in the following publications:
+
+* P. Lindstrom,
+  "`Error Distributions of Lossy Floating-Point Compressors <https://www.osti.gov/servlets/purl/1526183>`__,"
+  JSM 2017 Proceedings.
+* J. Diffenderfer, A. Fox, J. Hittinger, G. Sanders, P. Lindstrom,
+  "`Error Analysis of ZFP Compression for Floating-Point Data <http://doi.org/10.1137/18M1168832>`__,"
+  SIAM Journal on Scientific Computing, 2019.
+* D. Hammerling, A. Baker, A. Pinard, P. Lindstrom,
+  "`A Collaborative Effort to Improve Lossy Compression Methods for Climate Data <http://doi.org/10.1109/DRBSD-549595.2019.00008>`__,"
+  5th International Workshop on Data Analysis and Reduction for Big Scientific Data, 2019.
+* A. Fox, J. Diffenderfer, J. Hittinger, G. Sanders, P. Lindstrom.
+  "`Stability Analysis of Inline ZFP Compression for Floating-Point Data in Iterative Methods <http://doi.org/10.1137/19M126904X>`__,"
+  SIAM Journal on Scientific Computing, 2020.
+
+In short, |zfp| compression errors are roughly normally distributed as a
+consequence of the central limit theorem, and can be bounded.  Because the
+error distribution is normal and because the worst-case error is often much
+larger than errors observed in practice, it is common that measured errors
+are far smaller than the absolute error tolerance specified in
+:ref:`fixed-accuracy mode <mode-fixed-accuracy>`
+(see :ref:`FAQ #22 <q-abserr>`).
+
+It is known that |zfp| errors can be slightly biased and correlated (see
+:numref:`zfp-rounding` and the third paper above).  Recent work has been
+done to combat such issues by supporting optional
+:ref:`rounding modes <rounding>`.
+
+.. _zfp-rounding:
+.. figure:: zfp-rounding.pdf
+  :figwidth: 90 %
+  :align: center
+  :alt: "zfp rounding modes"
+
+  |zfp| errors are normally distributed.  This figure illustrates the
+  agreement between theoretical (lines) and observed (dots) error
+  distributions (*X*, *Y*, *Z*, *W*) for 1D blocks.  Without proper rounding
+  (left), errors are biased and depend on the relative location within a |zfp|
+  block, resulting in errors not centered on zero.  With proper rounding
+  (right), errors are both smaller and unbiased.
