@@ -552,17 +552,40 @@ Q17: *Why does zfp sometimes not respect my error tolerance?*
 A: First, |zfp| does not support
 :ref:`fixed-accuracy mode <mode-fixed-accuracy>` for integer data and
 will ignore any tolerance requested via :c:func:`zfp_stream_set_accuracy`
-or associated :ref:`expert mode <mode-expert>` parameter settings.
+or associated :ref:`expert mode <mode-expert>` parameter settings.  So this
+FAQ pertains to floating-point data only.
 
-For floating-point data, |zfp| does not store each scalar value independently
-but represents a group of values (4, 16, 64, or 256 values, depending on
-dimensionality) as linear combinations like averages by evaluating arithmetic
-expressions.  Just like in uncompressed IEEE floating-point arithmetic, both
-representation error and roundoff error in the least significant bit(s) often
-occur.
+The short answer is that, given finite precision, the |zfp| and IEEE
+floating-point number systems represent distinct subsets of the reals
+(or, in case of |zfp|, blocks of reals).  Although these subsets have
+significant overlap, they are not equal.  Consequently, there are some
+combinations of floating-point values that |zfp| cannot represent exactly;
+conversely, there are some |zfp| blocks that cannot be represented exactly
+as IEEE floating point.  If the user-specified tolerance is smaller than the
+difference between the IEEE floating-point representation to be compressed
+and its closest |zfp| representation, then the tolerance necessarily will
+be violated (except in :ref:`reversible mode <mode-reversible>`).  In
+practice, absolute tolerances have to be extremely small relative to the
+numbers being compressed for this issue to occur, however.
+
+Note that this issue is not particular to |zfp| but occurs in the conversion
+between any two number systems of equal precision; we may just as well fault
+IEEE floating point for not being able to represent all |zfp| blocks
+accurately enough!  By analogy, not all 32-bit integers can be represented
+exactly in 32-bit floating point.  The integer 123456789 is one example; the
+closest float is 123456792.  And, obviously, not all floats (e.g., 0.5) can
+be represented exactly as integers.
+
+To further demonstrate this point, let us consider a concrete example.  |zfp|
+does not store each floating-point scalar value independently but represents
+a group of values (4, 16, 64, or 256 values, depending on dimensionality) as
+linear combinations like averages by evaluating arithmetic expressions.
+Just like in uncompressed IEEE floating-point arithmetic, both representation
+error and roundoff error in the least significant bit(s) often occur.
 
 To illustrate this, consider compressing the following 1D array of four
-floats::
+floats
+::
 
   float f[4] = { 1, 1e-1, 1e-2, 1e-3 };
 
@@ -580,20 +603,23 @@ is even smaller: 5.424e-9.  This reconstruction error is primarily due to
 |zfp|'s block-floating-point representation, which expresses the four values
 in a block relative to a single, common binary exponent.  Such exponent
 alignment occurs also in regular IEEE floating-point operations like addition.
-For instance,::
+For instance,
+::
 
   float x = (f[0] + f[3]) - 1;
 
 should of course result in :code:`x = f[3] = 1e-3`, but due to exponent
 alignment a few of the least significant bits of f[3] are lost in the
-addition, giving a result of :code:`x = 1.0000467e-3` and a roundoff error
-of 4.668e-8.  Similarly,::
+rounded result of the addition, giving :code:`x = 1.0000467e-3` and a
+roundoff error of 4.668e-8.  Similarly,
+::
 
   float sum = f[0] + f[1] + f[2] + f[3];
 
 should return :code:`sum = 1.111`, but is computed as 1.1110000610.  Moreover,
 the value 1.111 cannot even be represented exactly in (radix-2) floating-point;
-the closest float is 1.1109999.  Thus the computed error::
+the closest float is 1.1109999.  Thus the computed error
+::
 
   float error = sum - 1.111f;
 
@@ -601,7 +627,7 @@ which itself has some roundoff error, is 1.192e-7.
 
 *Phew*!  Note how the error introduced by |zfp| (5.472e-9) is in fact one to
 two orders of magnitude smaller than the roundoff errors (4.668e-8 and
-1.192e-7) introduced by IEEE floating-point in these computations.  This lower
+1.192e-7) introduced by IEEE floating point in these computations.  This lower
 error is in part due to |zfp|'s use of 30-bit significands compared to IEEE's
 24-bit single-precision significands.  Note that data sets with a large dynamic
 range, e.g., where adjacent values differ a lot in magnitude, are more
@@ -611,9 +637,9 @@ The moral of the story is that error tolerances smaller than machine epsilon
 (relative to the data range) cannot always be satisfied by |zfp|.  Nor are such
 tolerances necessarily meaningful for representing floating-point data that
 originated in floating-point arithmetic expressions, since accumulated
-roundoff errors are likely to swamp compression errors.  Because such roundoff
-errors occur frequently in floating-point arithmetic, insisting on lossless
-compression on the grounds of accuracy is tenuous at best.
+roundoff errors are likely to swamp compression errors.  Because such
+roundoff errors occur frequently in floating-point arithmetic, insisting on
+lossless compression on the grounds of accuracy is tenuous at best.
 
 -------------------------------------------------------------------------------
 
