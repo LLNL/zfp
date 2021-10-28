@@ -3,7 +3,8 @@
 # It defines the following variables
 #  ZFP_INCLUDE_DIRS - include directories for zfp
 #  ZFP_LIBRARIES    - libraries to link against
-#  ZFP_WITH_OPENMP  - Indicates if the zfp library has been built with OpenMP support.
+#  ZFP_WITH_OPENMP  - indicates if the zfp library has been built with OpenMP support
+#  ZFP_WITH_CUDA    - indicates if the zfp library has been built with CUDA support
 #
 # And the following imported targets:
 #   zfp::zfp
