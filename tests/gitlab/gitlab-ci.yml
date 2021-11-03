@@ -19,13 +19,6 @@ stages:
 # Global Templates #
 ####################
 
-.pre-build:
-    stage: pre-build
-    script:
-        - echo "branch: '${CI_COMMIT_BRANCH}'"
-        - echo "root dir: '${CI_PROJECT_DIR}'"
-        - echo "runner: '${CI_RUNNER_DESCRIPTION}'"
-
 # Build Stage Templates
 
 .build:
@@ -37,6 +30,11 @@ stages:
 
 .build_cpu:
     before_script:
+        - echo "config:"
+        - echo "branch: '${CI_COMMIT_BRANCH}'"
+        - echo "root dir: '${CI_PROJECT_DIR}'"
+        - echo "runner: '${CI_RUNNER_DESCRIPTION}'"
+        - echo "-----"
         - module reset
         - module load $ci_cmp_mod
         - |-
@@ -66,6 +64,11 @@ stages:
 
 .build_gpu:
     before_script:
+        - echo "config:"
+        - echo "branch: '${CI_COMMIT_BRANCH}'"
+        - echo "root dir: '${CI_PROJECT_DIR}'"
+        - echo "runner: '${CI_RUNNER_DESCRIPTION}'"
+        - echo "-----"
         - module reset
         - module load opt
         - module load $ci_cmp_mod
