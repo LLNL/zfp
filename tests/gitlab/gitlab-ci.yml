@@ -5,9 +5,9 @@
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
     LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -A asccasc"
-    CI_COMMIT_BRANCH: $CI_COMMIT_BRANCH
-    CI_PROJECT_DIR: $CI_PROJECT_DIR
-    CI_RUNNER_DESCRIPTION: $CI_RUNNER_DESCRIPTION
+    ZFP_COMMIT_BRANCH: $CI_COMMIT_BRANCH
+    ZFP_PROJECT_DIR: $CI_PROJECT_DIR
+    ZFP_RUNNER_DESCRIPTION: $CI_RUNNER_DESCRIPTION
 
 stages:
     - build
@@ -50,8 +50,8 @@ stages:
                 fi
             fi
     script:
-        - echo "CI Project Dir: $CI_PROJECT_DIR"
-        - echo "-----"
+        - echo "project dir"
+        - echo ${CI_PROJECT_DIR}
         - mkdir build
         - cd build
         - cmake -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} $CI_PROJECT_DIR
@@ -64,8 +64,6 @@ stages:
         - module load opt
         - module load $ci_cmp_mod
     script:
-        - echo "CI Project Dir: $CI_PROJECT_DIR"
-        - echo "-----"
         - mkdir build
         - cd build
         - cmake -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags} $CI_PROJECT_DIR
