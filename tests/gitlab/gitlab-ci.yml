@@ -5,6 +5,9 @@
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
     LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -A asccasc"
+    CI_COMMIT_BRANCH: $CI_COMMIT_BRANCH
+    CI_PROJECT_DIR: $CI_PROJECT_DIR
+    CI_RUNNER_DESCRIPTION: $CI_RUNNER_DESCRIPTION
 
 stages:
     - build
@@ -49,7 +52,7 @@ stages:
     script:
         - mkdir build
         - cd build
-        - cmake -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ..
+        - cmake -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} $CI_PROJECT_DIR
         - make -j
     extends: [.build]
 
@@ -61,7 +64,7 @@ stages:
     script:
         - mkdir build
         - cd build
-        - cmake -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags} ..
+        - cmake -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags} $CI_PROJECT_DIR
         - make -j
     extends: [.build]
 
@@ -78,13 +81,13 @@ stages:
 .test_cpu:
     script:
         - cd build
-        - ctest -E "(Cuda|Hip)" -R "${ci_test_regex}"
+        - ctest -E "(Cuda|Hip)" -R "${ci_test_regex}" -V -S "${CI_PROJECT_DIR}/cmake/gitlab.cmake"
     extends: [.test]
 
 .test_gpu:
     script:
         - cd build
-        - ctest -R "${ci_test_regex}"
+        - ctest -R "${ci_test_regex}" -V -S "${CI_PROJECT_DIR}/cmake/gitlab.cmake"
     extends: [.test]
 
 
