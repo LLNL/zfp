@@ -33,8 +33,8 @@ stages:
         - module load $ci_cmp_mod
         - echo "----------"
         - echo "CI Config:"
-        - echo "branch: ${CI_COMMIT_BRANCH}"
-        - echo "runner: ${CI_RUNNER_DESCRIPTION}"
+        - echo "branch: ${ZFP_COMMIT_BRANCH}"
+        - echo "runner: ${ZFP_RUNNER_DESCRIPTION}"
         - |-
             if [ "$ci_lang" == "cpp" ]; then
                 export CXX=$(which $ci_cxx_cmp)
@@ -70,8 +70,8 @@ stages:
         - module load $ci_cmp_mod
         - echo "----------"
         - echo "CI Config:"
-        - echo "branch: ${CI_COMMIT_BRANCH}"
-        - echo "runner: ${CI_RUNNER_DESCRIPTION}"
+        - echo "branch: ${ZFP_COMMIT_BRANCH}"
+        - echo "runner: ${ZFP_RUNNER_DESCRIPTION}"
         - echo "gpu mode: $ci_lang"
         - echo "----------"
     script:
