@@ -31,6 +31,10 @@ stages:
     before_script:
         - module reset
         - module load $ci_cmp_mod
+        - echo "----------"
+        - echo "CI Config:"
+        - echo "branch: ${CI_COMMIT_BRANCH}"
+        - echo "runner: ${CI_RUNNER_DESCRIPTION}"
         - |-
             if [ "$ci_lang" == "cpp" ]; then
                 export CXX=$(which $ci_cxx_cmp)
@@ -42,16 +46,17 @@ stages:
                     echo "c compiler not set"
                     exit 1
                 fi
+                echo "cxx compiler: $ci_cxx_cmp -> $(which $ci_cxx_cmp)"
             elif [ "$ci_lang" == "c" ]; then
                 export CC=$(which $ci_c_cmp)
                 if [ -z ${CC} ]; then
                     echo "c compiler not set"
                     exit 1
                 fi
+                echo "c compiler: $ci_c_cmp -> $(which $ci_c_cmp)"
             fi
+        - echo "----------"
     script:
-        - echo "project dir"
-        - echo ${CI_PROJECT_DIR}
         - mkdir build
         - cd build
         - cmake -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} $CI_PROJECT_DIR
@@ -63,6 +68,12 @@ stages:
         - module reset
         - module load opt
         - module load $ci_cmp_mod
+        - echo "----------"
+        - echo "CI Config:"
+        - echo "branch: ${CI_COMMIT_BRANCH}"
+        - echo "runner: ${CI_RUNNER_DESCRIPTION}"
+        - echo "gpu mode: $ci_lang"
+        - echo "----------"
     script:
         - mkdir build
         - cd build
