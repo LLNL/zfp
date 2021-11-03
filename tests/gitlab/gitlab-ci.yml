@@ -31,10 +31,11 @@ stages:
     before_script:
         - module reset
         - module load $ci_cmp_mod
-        - echo "----------"
-        - echo "CI Config:"
-        - echo "branch: ${ZFP_COMMIT_BRANCH}"
-        - echo "runner: ${ZFP_RUNNER_DESCRIPTION}"
+        - |-
+            echo "----------"
+            echo "CI Config"
+            echo "branch - ${ZFP_COMMIT_BRANCH}"
+            echo "runner - ${ZFP_RUNNER_DESCRIPTION}"
         - |-
             if [ "$ci_lang" == "cpp" ]; then
                 export CXX=$(which $ci_cxx_cmp)
@@ -46,14 +47,14 @@ stages:
                     echo "c compiler not set"
                     exit 1
                 fi
-                echo "cxx compiler: $ci_cxx_cmp -> $(which $ci_cxx_cmp)"
+                echo "cxx compiler $ci_cxx_cmp"
             elif [ "$ci_lang" == "c" ]; then
                 export CC=$(which $ci_c_cmp)
                 if [ -z ${CC} ]; then
                     echo "c compiler not set"
                     exit 1
                 fi
-                echo "c compiler: $ci_c_cmp -> $(which $ci_c_cmp)"
+                echo "c compiler $ci_c_cmp"
             fi
         - echo "----------"
     script:
@@ -68,12 +69,13 @@ stages:
         - module reset
         - module load opt
         - module load $ci_cmp_mod
-        - echo "----------"
-        - echo "CI Config:"
-        - echo "branch: ${ZFP_COMMIT_BRANCH}"
-        - echo "runner: ${ZFP_RUNNER_DESCRIPTION}"
-        - echo "gpu mode: $ci_lang"
-        - echo "----------"
+        - |-
+            echo "----------"
+            echo "CI Config"
+            echo "branch   - ${ZFP_COMMIT_BRANCH}"
+            echo "runner   - ${ZFP_RUNNER_DESCRIPTION}"
+            echo "gpu mode - $ci_lang"
+            echo "----------"
     script:
         - mkdir build
         - cd build
