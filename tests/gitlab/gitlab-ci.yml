@@ -29,7 +29,7 @@ stages:
 
 .build_cpu:
     before_script:
-        - echo "CI Project Dir: $CI_PROJECT_DIR"
+        - echo "CI Project Dir\: $CI_PROJECT_DIR"
         - echo "-----"
         - module reset
         - module load $ci_cmp_mod
@@ -60,7 +60,7 @@ stages:
 
 .build_gpu:
     before_script:
-        - echo "CI Project Dir: $CI_PROJECT_DIR"
+        - echo "CI Project Dir\: $CI_PROJECT_DIR"
         - echo "-----"
         - module reset
         - module load opt
