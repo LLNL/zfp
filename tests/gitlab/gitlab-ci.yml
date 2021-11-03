@@ -29,8 +29,6 @@ stages:
 
 .build_cpu:
     before_script:
-        - echo "CI Project Dir\: $CI_PROJECT_DIR"
-        - echo "-----"
         - module reset
         - module load $ci_cmp_mod
         - |-
@@ -52,6 +50,8 @@ stages:
                 fi
             fi
     script:
+        - echo "CI Project Dir: $CI_PROJECT_DIR"
+        - echo "-----"
         - mkdir build
         - cd build
         - cmake -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} $CI_PROJECT_DIR
@@ -60,12 +60,12 @@ stages:
 
 .build_gpu:
     before_script:
-        - echo "CI Project Dir\: $CI_PROJECT_DIR"
-        - echo "-----"
         - module reset
         - module load opt
         - module load $ci_cmp_mod
     script:
+        - echo "CI Project Dir: $CI_PROJECT_DIR"
+        - echo "-----"
         - mkdir build
         - cd build
         - cmake -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags} $CI_PROJECT_DIR
