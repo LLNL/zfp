@@ -66,7 +66,7 @@ if(WITH_COVERAGE)
   set(CTEST_SITE "${CTEST_SITE}_coverage")
 endif()
 
-ctest_start(Experimental TRACK Gitlab GROUP Gitlab)
+ctest_start(Experimental TRACK Gitlab)
 ctest_configure(OPTIONS "${cfg_options}")
 ctest_submit(PARTS Update Notes Configure 
              RETRY_COUNT 3
