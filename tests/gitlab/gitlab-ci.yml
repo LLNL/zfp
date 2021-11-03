@@ -10,7 +10,6 @@ variables:
     CI_RUNNER_DESCRIPTION: $CI_RUNNER_DESCRIPTION
 
 stages:
-    - pre-build
     - build
     - test
 
@@ -30,10 +29,7 @@ stages:
 
 .build_cpu:
     before_script:
-        - echo "config:"
-        - echo "branch: '${CI_COMMIT_BRANCH}'"
-        - echo "root dir: '${CI_PROJECT_DIR}'"
-        - echo "runner: '${CI_RUNNER_DESCRIPTION}'"
+        - echo "CI Project Dir: $CI_PROJECT_DIR"
         - echo "-----"
         - module reset
         - module load $ci_cmp_mod
@@ -58,16 +54,13 @@ stages:
     script:
         - mkdir build
         - cd build
-        - cmake -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ${CI_PROJECT_DIR}
+        - cmake -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} $CI_PROJECT_DIR
         - make -j
     extends: [.build]
 
 .build_gpu:
     before_script:
-        - echo "config:"
-        - echo "branch: '${CI_COMMIT_BRANCH}'"
-        - echo "root dir: '${CI_PROJECT_DIR}'"
-        - echo "runner: '${CI_RUNNER_DESCRIPTION}'"
+        - echo "CI Project Dir: $CI_PROJECT_DIR"
         - echo "-----"
         - module reset
         - module load opt
@@ -75,7 +68,7 @@ stages:
     script:
         - mkdir build
         - cd build
-        - cmake -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags} ${CI_PROJECT_DIR}
+        - cmake -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags} $CI_PROJECT_DIR
         - make -j
     extends: [.build]
 
