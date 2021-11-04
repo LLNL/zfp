@@ -7,7 +7,7 @@ variables:
     LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -A asccasc"
     ZFP_COMMIT_BRANCH: $CI_COMMIT_BRANCH
     ZFP_PROJECT_DIR: $CI_PROJECT_DIR
-    ZFP_RUNNER_DESCRIPTION: $CI_RUNNER_DESCRIPTION
+    ZFP_RUNNER_DESCRIPTION: $CI_RUNNER_EXECUTABLE_ARCH
 
 stages:
     - build
@@ -48,6 +48,7 @@ stages:
                     exit 1
                 fi
                 echo "cxx compiler $ci_cxx_cmp"
+                export ZFP_COMPILER=$ci_cxx_cmp
             elif [ "$ci_lang" == "c" ]; then
                 export CC=$(which $ci_c_cmp)
                 if [ -z ${CC} ]; then
@@ -55,6 +56,7 @@ stages:
                     exit 1
                 fi
                 echo "c compiler $ci_c_cmp"
+                export ZFP_COMPILER=$ci_c_cmp
             fi
         - echo "----------"
     script:
@@ -76,6 +78,7 @@ stages:
             echo "runner   - ${ZFP_RUNNER_DESCRIPTION}"
             echo "gpu mode - $ci_lang"
             echo "----------"
+        - export ZFP_COMPILER="gpu nvidia"
     script:
         - mkdir build
         - cd build
@@ -96,13 +99,17 @@ stages:
 .test_cpu:
     script:
         - cd build
-        - ctest -E "(Cuda|Hip)" -R "${ci_test_regex}" -V -S "${CI_PROJECT_DIR}/cmake/gitlab.cmake"
+        - |-
+            ctest -E "(Cuda|Hip)" -R "${ci_test_regex}" -V -S "${CI_PROJECT_DIR}/cmake/gitlab.cmake" \
+                  -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} 
     extends: [.test]
 
 .test_gpu:
     script:
         - cd build
-        - ctest -R "${ci_test_regex}" -V -S "${CI_PROJECT_DIR}/cmake/gitlab.cmake"
+        - |-
+            ctest -R "${ci_test_regex}" -V -S "${CI_PROJECT_DIR}/cmake/gitlab.cmake" \
+                  -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags}
     extends: [.test]
 
 
