@@ -35,281 +35,255 @@ void populateArray(SCALAR** dataArr)
 
 void populateStridedArray(SCALAR** dataArr, SCALAR dummyVal)
 {
-    size_t i, j, k, l, countX, countY, countZ, countW;
+#if DIMS == 1
+    size_t countX = BLOCK_SIDE_LEN * SX;
+    *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX);
+    ASSERT_TRUE(*dataArr != nullptr);
 
+    for (size_t i = 0; i < countX; i++) {
+        if (i % SX) {
+            (*dataArr)[i] = dummyVal;
+        } else {
+#ifdef FL_PT_DATA
+	        (*dataArr)[i] = nextSignedRandFlPt();
+#else
+	        (*dataArr)[i] = nextSignedRandInt();
+#endif
+        }
+    }
 
-    switch(DIMS) {
-        case 1:
-            countX = BLOCK_SIDE_LEN * SX;
-            *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX);
-            ASSERT_TRUE(*dataArr != nullptr);
+#elif DIMS == 2
+    size_t countX = BLOCK_SIDE_LEN * SX;
+    size_t countY = SY / SX;
+    *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY);
+    ASSERT_TRUE(*dataArr != nullptr);
 
-            for (i = 0; i < countX; i++) {
-                if (i % SX) {
-                    (*dataArr)[i] = dummyVal;
+    for (size_t j = 0; j < countY; j++) {
+        for (size_t i = 0; i < countX; i++) {
+            size_t index = countX*j + i;
+            if (i % (countX/BLOCK_SIDE_LEN)
+                    || j % (countY/BLOCK_SIDE_LEN)) {
+                (*dataArr)[index] = dummyVal;
+            } else {
+#ifdef FL_PT_DATA
+	            (*dataArr)[index] = nextSignedRandFlPt();
+#else
+	            (*dataArr)[index] = nextSignedRandInt();
+#endif
+            }
+        }
+    }
+
+#elif DIMS == 3
+    size_t countX = BLOCK_SIDE_LEN * SX;
+    size_t countY = SY / SX;
+    size_t countZ = SZ / SY;
+    *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ);
+    ASSERT_TRUE(*dataArr != nullptr);
+
+    for (size_t k = 0; k < countZ; k++) {
+        for (size_t j = 0; j < countY; j++) {
+            for (size_t i = 0; i < countX; i++) {
+                size_t index = countX*countY*k + countX*j + i;
+                if (i % (countX/BLOCK_SIDE_LEN)
+                        || j % (countY/BLOCK_SIDE_LEN)
+                        || k % (countZ/BLOCK_SIDE_LEN)) {
+                    (*dataArr)[index] = dummyVal;
                 } else {
 #ifdef FL_PT_DATA
-	    (*dataArr)[i] = nextSignedRandFlPt();
+                    (*dataArr)[index] = nextSignedRandFlPt();
 #else
-	    (*dataArr)[i] = nextSignedRandInt();
+                    (*dataArr)[index] = nextSignedRandInt();
 #endif
                 }
             }
-            break;
+        }
+    }
 
-        case 2:
-            countX = BLOCK_SIDE_LEN * SX;
-            countY = SY / SX;
-            *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY);
-            ASSERT_TRUE(*dataArr != nullptr);
+#elif DIMS == 4
+    size_t countX = BLOCK_SIDE_LEN * SX;
+    size_t countY = SY / SX;
+    size_t countZ = SZ / SY;
+    size_t countW = SW / SZ;
+    *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ * countW);
+    ASSERT_TRUE(*dataArr != nullptr);
 
-            for (j = 0; j < countY; j++) {
-                for (i = 0; i < countX; i++) {
-                    size_t index = countX*j + i;
+    for (size_t l = 0; l < countW; l++) {
+        for (size_t k = 0; k < countZ; k++) {
+            for (size_t j = 0; j < countY; j++) {
+                for (size_t i = 0; i < countX; i++) {
+                    size_t index = countX*countY*countZ*l + countX*countY*k + countX*j + i;
                     if (i % (countX/BLOCK_SIDE_LEN)
-                            || j % (countY/BLOCK_SIDE_LEN)) {
+                            || j % (countY/BLOCK_SIDE_LEN)
+                            || k % (countZ/BLOCK_SIDE_LEN)
+                            || l % (countW/BLOCK_SIDE_LEN)) {
                         (*dataArr)[index] = dummyVal;
                     } else {
 #ifdef FL_PT_DATA
-	        (*dataArr)[index] = nextSignedRandFlPt();
+                        (*dataArr)[index] = nextSignedRandFlPt();
 #else
-	        (*dataArr)[index] = nextSignedRandInt();
+                        (*dataArr)[index] = nextSignedRandInt();
 #endif
                     }
                 }
             }
-            break;
-
-        case 3:
-            countX = BLOCK_SIDE_LEN * SX;
-            countY = SY / SX;
-            countZ = SZ / SY;
-            *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ);
-            ASSERT_TRUE(*dataArr != nullptr);
-
-            for (k = 0; k < countZ; k++) {
-                for (j = 0; j < countY; j++) {
-                    for (i = 0; i < countX; i++) {
-                        size_t index = countX*countY*k + countX*j + i;
-                        if (i % (countX/BLOCK_SIDE_LEN)
-                                || j % (countY/BLOCK_SIDE_LEN)
-                                || k % (countZ/BLOCK_SIDE_LEN)) {
-                            (*dataArr)[index] = dummyVal;
-                        } else {
-#ifdef FL_PT_DATA
-                            (*dataArr)[index] = nextSignedRandFlPt();
-#else
-                            (*dataArr)[index] = nextSignedRandInt();
-#endif
-                        }
-                    }
-                }
-            }
-            break;
-
-        case 4:
-            countX = BLOCK_SIDE_LEN * SX;
-            countY = SY / SX;
-            countZ = SZ / SY;
-            countW = SW / SZ;
-            *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ * countW);
-            ASSERT_TRUE(*dataArr != nullptr);
-
-            for (l = 0; l < countW; l++) {
-                for (k = 0; k < countZ; k++) {
-                    for (j = 0; j < countY; j++) {
-                        for (i = 0; i < countX; i++) {
-                            size_t index = countX*countY*countZ*l + countX*countY*k + countX*j + i;
-                            if (i % (countX/BLOCK_SIDE_LEN)
-                                    || j % (countY/BLOCK_SIDE_LEN)
-                                    || k % (countZ/BLOCK_SIDE_LEN)
-                                    || l % (countW/BLOCK_SIDE_LEN)) {
-                                (*dataArr)[index] = dummyVal;
-                            } else {
-#ifdef FL_PT_DATA
-                                (*dataArr)[index] = nextSignedRandFlPt();
-#else
-                                (*dataArr)[index] = nextSignedRandInt();
-#endif
-                            }
-                        }
-                    }
-                }
-            }
-            break;
+        }
     }
+#endif
 }
 
 void assertStridedBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
 {
-  switch (DIMS) {
-    case 1:
-        size_t countX = BLOCK_SIDE_LEN * SX;
+#if DIMS == 1
+  size_t countX = BLOCK_SIDE_LEN * SX;
 
-        for (size_t i = 0; i < countX; i++) {
-          if (!(i % (countX/BLOCK_SIDE_LEN))) {
-            ASSERT_SCALAR_EQ(data1[i], data2[i]) << 
-                        "index " << i << " mismatch: " << data1[i] << " != " << data2[i];
-          }
-        }
-
-        break;
-
-    case 2:
-        size_t countX = BLOCK_SIDE_LEN * SX;
-        size_t countY = SY / SX;
-
-        for (size_t j = 0; j < countY; j++) {
-          for (size_t i = 0; i < countX; i++) {
-            if (!(i % (countX/BLOCK_SIDE_LEN))
-                && !(j % (countY/BLOCK_SIDE_LEN))) {
-              ASSERT_SCALAR_EQ(data1[countX*j + i], data2[countX*j + i]) << 
-                          "index " << (countX*j + i) << " mismatch: " << data1[countX*j + i] << " != " << data2[countX*j + i];
-            }
-          }
-        }
-
-        break;
-
-    case 3:
-        size_t countX = BLOCK_SIDE_LEN * SX;
-        size_t countY = SY / SX;
-        size_t countZ = SZ / SY;
-
-        for (size_t k = 0; k < countZ; k++) {
-          for (size_t j = 0; j < countY; j++) {
-            for (size_t i = 0; i < countX; i++) {
-              if (!(i % (countX/BLOCK_SIDE_LEN))
-                  && !(j % (countY/BLOCK_SIDE_LEN))
-                  && !(k % (countZ/BLOCK_SIDE_LEN))) {
-                  ASSERT_SCALAR_EQ(data1[countX*countY*k + countX*j + i], data2[countX*countY*k + countX*j + i]) << 
-                              "index " << (countX*countY*k + countX*j + i) << " mismatch: " << 
-                              data1[countX*countY*k + countX*j + i] << " != " <<
-                              data2[countX*countY*k + countX*j + i];
-              }
-            }
-          }
-        }
-
-        break;
-
-    case 4:
-        size_t countX = BLOCK_SIDE_LEN * SX;
-        size_t countY = SY / SX;
-        size_t countZ = SZ / SY;
-        size_t countW = SW / SZ;
-
-        for (size_t l = 0; l < countW; l++) {
-          for (size_t k = 0; k < countZ; k++) {
-            for (size_t j = 0; j < countY; j++) {
-              for (size_t i = 0; i < countX; i++) {
-                if (!(i % (countX/BLOCK_SIDE_LEN))
-                    && !(j % (countY/BLOCK_SIDE_LEN))
-                    && !(k % (countZ/BLOCK_SIDE_LEN))
-                    && !(l % (countW/BLOCK_SIDE_LEN))) {
-                      ASSERT_SCALAR_EQ(data1[countX*countY*countZ*l + countX*countY*k + countX*j + i], data2[countX*countY*countZ*l + countX*countY*k + countX*j + i]) << 
-                                  "index " << (countX*countY*countZ*l + countX*countY*k + countX*j + i) << " mismatch: " << 
-                                  data1[countX*countY*countZ*l + countX*countY*k + countX*j + i] << " != " <<
-                                  data2[countX*countY*countZ*l + countX*countY*k + countX*j + i];
-                }
-              }
-            }
-          }
-        }
-
-        break;
+  for (size_t i = 0; i < countX; i++) {
+    if (!(i % (countX/BLOCK_SIDE_LEN))) {
+      ASSERT_SCALAR_EQ(data1[i], data2[i]) << 
+                  "index " << i << " mismatch: " << data1[i] << " != " << data2[i];
+    }
   }
+
+#elif DIMS == 2
+  size_t countX = BLOCK_SIDE_LEN * SX;
+  size_t countY = SY / SX;
+
+  for (size_t j = 0; j < countY; j++) {
+    for (size_t i = 0; i < countX; i++) {
+      if (!(i % (countX/BLOCK_SIDE_LEN))
+          && !(j % (countY/BLOCK_SIDE_LEN))) {
+        ASSERT_SCALAR_EQ(data1[countX*j + i], data2[countX*j + i]) << 
+                    "index " << (countX*j + i) << " mismatch: " << data1[countX*j + i] << " != " << data2[countX*j + i];
+      }
+    }
+  }
+
+#elif DIMS == 3
+  size_t countX = BLOCK_SIDE_LEN * SX;
+  size_t countY = SY / SX;
+  size_t countZ = SZ / SY;
+
+  for (size_t k = 0; k < countZ; k++) {
+    for (size_t j = 0; j < countY; j++) {
+      for (size_t i = 0; i < countX; i++) {
+        if (!(i % (countX/BLOCK_SIDE_LEN))
+            && !(j % (countY/BLOCK_SIDE_LEN))
+            && !(k % (countZ/BLOCK_SIDE_LEN))) {
+            ASSERT_SCALAR_EQ(data1[countX*countY*k + countX*j + i], data2[countX*countY*k + countX*j + i]) << 
+                        "index " << (countX*countY*k + countX*j + i) << " mismatch: " << 
+                        data1[countX*countY*k + countX*j + i] << " != " <<
+                        data2[countX*countY*k + countX*j + i];
+        }
+      }
+    }
+  }
+
+#elif DIMS == 4
+  size_t countX = BLOCK_SIDE_LEN * SX;
+  size_t countY = SY / SX;
+  size_t countZ = SZ / SY;
+  size_t countW = SW / SZ;
+
+  for (size_t l = 0; l < countW; l++) {
+    for (size_t k = 0; k < countZ; k++) {
+      for (size_t j = 0; j < countY; j++) {
+        for (size_t i = 0; i < countX; i++) {
+          if (!(i % (countX/BLOCK_SIDE_LEN))
+              && !(j % (countY/BLOCK_SIDE_LEN))
+              && !(k % (countZ/BLOCK_SIDE_LEN))
+              && !(l % (countW/BLOCK_SIDE_LEN))) {
+                ASSERT_SCALAR_EQ(data1[countX*countY*countZ*l + countX*countY*k + countX*j + i], data2[countX*countY*countZ*l + countX*countY*k + countX*j + i]) << 
+                            "index " << (countX*countY*countZ*l + countX*countY*k + countX*j + i) << " mismatch: " << 
+                            data1[countX*countY*countZ*l + countX*countY*k + countX*j + i] << " != " <<
+                            data2[countX*countY*countZ*l + countX*countY*k + countX*j + i];
+          }
+        }
+      }
+    }
+  }
+#endif
 }
 
 void assertPartialBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
 {
-  switch (DIMS) {
-    case 1:
-        size_t countX = BLOCK_SIDE_LEN * SX;
+#if DIMS == 1
+  size_t countX = BLOCK_SIDE_LEN * SX;
 
+  for (size_t i = 0; i < countX; i++) {
+    if (i/(countX/BLOCK_SIDE_LEN) < PX
+        && !(i % (countX/BLOCK_SIDE_LEN))) {
+      ASSERT_SCALAR_EQ(data1[i], data2[i]) << 
+                  "index " << i << " mismatch: " << data1[i] << " != " << data2[i];
+    }
+  }
+
+#elif DIMS == 2
+  size_t countX = BLOCK_SIDE_LEN * SX;
+  size_t countY = SY / SX;
+
+  for (size_t j = 0; j < countY; j++) {
+    for (size_t i = 0; i < countX; i++) {
+      if (i/(countX/BLOCK_SIDE_LEN) < PX
+          && j/(countY/BLOCK_SIDE_LEN) < PY
+          && !(i % (countX/BLOCK_SIDE_LEN))
+          && !(j % (countY/BLOCK_SIDE_LEN))) {
+        ASSERT_SCALAR_EQ(data1[countX*j + i], data2[countX*j + i]) << 
+                    "index " << (countX*j + i) << " mismatch: " << data1[countX*j + i] << " != " << data2[countX*j + i];
+      }
+    }
+  }
+
+#elif DIMS == 3
+  size_t countX = BLOCK_SIDE_LEN * SX;
+  size_t countY = SY / SX;
+  size_t countZ = SZ / SY;
+
+  for (size_t k = 0; k < countZ; k++) {
+    for (size_t j = 0; j < countY; j++) {
+      for (size_t i = 0; i < countX; i++) {
+        if (i/(countX/BLOCK_SIDE_LEN) < PX
+            && j/(countY/BLOCK_SIDE_LEN) < PY
+            && k/(countZ/BLOCK_SIDE_LEN) < PZ
+            && !(i % (countX/BLOCK_SIDE_LEN))
+            && !(j % (countY/BLOCK_SIDE_LEN))
+            && !(k % (countZ/BLOCK_SIDE_LEN))) {
+            ASSERT_SCALAR_EQ(data1[countX*countY*k + countX*j + i], data2[countX*countY*k + countX*j + i]) << 
+                        "index " << (countX*countY*k + countX*j + i) << " mismatch: " << 
+                        data1[countX*countY*k + countX*j + i] << " != " <<
+                        data2[countX*countY*k + countX*j + i];
+        }
+      }
+    }
+  }
+
+#elif DIMS == 4
+  size_t countX = BLOCK_SIDE_LEN * SX;
+  size_t countY = SY / SX;
+  size_t countZ = SZ / SY;
+  size_t countW = SW / SZ;
+
+  for (size_t l = 0; l < countW; l++) {
+    for (size_t k = 0; k < countZ; k++) {
+      for (size_t j = 0; j < countY; j++) {
         for (size_t i = 0; i < countX; i++) {
           if (i/(countX/BLOCK_SIDE_LEN) < PX
-              && !(i % (countX/BLOCK_SIDE_LEN))) {
-            ASSERT_SCALAR_EQ(data1[i], data2[i]) << 
-                        "index " << i << " mismatch: " << data1[i] << " != " << data2[i];
+              && j/(countY/BLOCK_SIDE_LEN) < PY
+              && k/(countZ/BLOCK_SIDE_LEN) < PZ
+              && l/(countW/BLOCK_SIDE_LEN) < PW
+              && !(i % (countX/BLOCK_SIDE_LEN))
+              && !(j % (countY/BLOCK_SIDE_LEN))
+              && !(k % (countZ/BLOCK_SIDE_LEN))
+              && !(l % (countW/BLOCK_SIDE_LEN))) {
+                ASSERT_SCALAR_EQ(data1[countX*countY*countZ*l + countX*countY*k + countX*j + i], data2[countX*countY*countZ*l + countX*countY*k + countX*j + i]) << 
+                            "index " << (countX*countY*countZ*l + countX*countY*k + countX*j + i) << " mismatch: " << 
+                            data1[countX*countY*countZ*l + countX*countY*k + countX*j + i] << " != " <<
+                            data2[countX*countY*countZ*l + countX*countY*k + countX*j + i];
           }
         }
-
-        break;
-
-    case 2:
-        size_t countX = BLOCK_SIDE_LEN * SX;
-        size_t countY = SY / SX;
-
-        for (size_t j = 0; j < countY; j++) {
-          for (size_t i = 0; i < countX; i++) {
-            if (i/(countX/BLOCK_SIDE_LEN) < PX
-                && j/(countY/BLOCK_SIDE_LEN) < PY
-                && !(i % (countX/BLOCK_SIDE_LEN))
-                && !(j % (countY/BLOCK_SIDE_LEN))) {
-              ASSERT_SCALAR_EQ(data1[countX*j + i], data2[countX*j + i]) << 
-                          "index " << (countX*j + i) << " mismatch: " << data1[countX*j + i] << " != " << data2[countX*j + i];
-            }
-          }
-        }
-
-        break;
-
-    case 3:
-        size_t countX = BLOCK_SIDE_LEN * SX;
-        size_t countY = SY / SX;
-        size_t countZ = SZ / SY;
-
-        for (size_t k = 0; k < countZ; k++) {
-          for (size_t j = 0; j < countY; j++) {
-            for (size_t i = 0; i < countX; i++) {
-              if (i/(countX/BLOCK_SIDE_LEN) < PX
-                  && j/(countY/BLOCK_SIDE_LEN) < PY
-                  && k/(countZ/BLOCK_SIDE_LEN) < PZ
-                  && !(i % (countX/BLOCK_SIDE_LEN))
-                  && !(j % (countY/BLOCK_SIDE_LEN))
-                  && !(k % (countZ/BLOCK_SIDE_LEN))) {
-                  ASSERT_SCALAR_EQ(data1[countX*countY*k + countX*j + i], data2[countX*countY*k + countX*j + i]) << 
-                              "index " << (countX*countY*k + countX*j + i) << " mismatch: " << 
-                              data1[countX*countY*k + countX*j + i] << " != " <<
-                              data2[countX*countY*k + countX*j + i];
-              }
-            }
-          }
-        }
-
-        break;
-
-    case 4:
-        size_t countX = BLOCK_SIDE_LEN * SX;
-        size_t countY = SY / SX;
-        size_t countZ = SZ / SY;
-        size_t countW = SW / SZ;
-
-        for (size_t l = 0; l < countW; l++) {
-          for (size_t k = 0; k < countZ; k++) {
-            for (size_t j = 0; j < countY; j++) {
-              for (size_t i = 0; i < countX; i++) {
-                if (i/(countX/BLOCK_SIDE_LEN) < PX
-                    && j/(countY/BLOCK_SIDE_LEN) < PY
-                    && k/(countZ/BLOCK_SIDE_LEN) < PZ
-                    && l/(countW/BLOCK_SIDE_LEN) < PW
-                    && !(i % (countX/BLOCK_SIDE_LEN))
-                    && !(j % (countY/BLOCK_SIDE_LEN))
-                    && !(k % (countZ/BLOCK_SIDE_LEN))
-                    && !(l % (countW/BLOCK_SIDE_LEN))) {
-                      ASSERT_SCALAR_EQ(data1[countX*countY*countZ*l + countX*countY*k + countX*j + i], data2[countX*countY*countZ*l + countX*countY*k + countX*j + i]) << 
-                                  "index " << (countX*countY*countZ*l + countX*countY*k + countX*j + i) << " mismatch: " << 
-                                  data1[countX*countY*countZ*l + countX*countY*k + countX*j + i] << " != " <<
-                                  data2[countX*countY*countZ*l + countX*countY*k + countX*j + i];
-                }
-              }
-            }
-          }
-        }
-
-        break;
+      }
+    }
   }
+#endif
 }
 
 void setupStream(zfp_field** field, zfp_stream** stream, bool isStrided = false)
