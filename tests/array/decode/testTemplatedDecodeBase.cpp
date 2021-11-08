@@ -142,10 +142,9 @@ void populateStridedArray(SCALAR** dataArr, SCALAR dummyVal)
 
 void assertStridedBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
 {
-  size_t i, j, k, l, countX, countY, countZ, countW;
   switch (DIMS) {
     case 1:
-        countX = BLOCK_SIDE_LEN * SX;
+        size_t countX = BLOCK_SIDE_LEN * SX;
 
         for (size_t i = 0; i < countX; i++) {
           if (!(i % (countX/BLOCK_SIDE_LEN))) {
@@ -157,8 +156,8 @@ void assertStridedBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
         break;
 
     case 2:
-        countX = BLOCK_SIDE_LEN * SX;
-        countY = SY / SX;
+        size_t countX = BLOCK_SIDE_LEN * SX;
+        size_t countY = SY / SX;
 
         for (size_t j = 0; j < countY; j++) {
           for (size_t i = 0; i < countX; i++) {
@@ -173,9 +172,9 @@ void assertStridedBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
         break;
 
     case 3:
-        countX = BLOCK_SIDE_LEN * SX;
-        countY = SY / SX;
-        countZ = SZ / SY;
+        size_t countX = BLOCK_SIDE_LEN * SX;
+        size_t countY = SY / SX;
+        size_t countZ = SZ / SY;
 
         for (size_t k = 0; k < countZ; k++) {
           for (size_t j = 0; j < countY; j++) {
@@ -195,10 +194,10 @@ void assertStridedBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
         break;
 
     case 4:
-        countX = BLOCK_SIDE_LEN * SX;
-        countY = SY / SX;
-        countZ = SZ / SY;
-        countW = SW / SZ;
+        size_t countX = BLOCK_SIDE_LEN * SX;
+        size_t countY = SY / SX;
+        size_t countZ = SZ / SY;
+        size_t countW = SW / SZ;
 
         for (size_t l = 0; l < countW; l++) {
           for (size_t k = 0; k < countZ; k++) {
@@ -224,10 +223,9 @@ void assertStridedBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
 
 void assertPartialBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
 {
-  size_t i, j, k, l, countX, countY, countZ, countW;
   switch (DIMS) {
     case 1:
-        countX = BLOCK_SIDE_LEN * SX;
+        size_t countX = BLOCK_SIDE_LEN * SX;
 
         for (size_t i = 0; i < countX; i++) {
           if (i/(countX/BLOCK_SIDE_LEN) < PX
@@ -240,8 +238,8 @@ void assertPartialBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
         break;
 
     case 2:
-        countX = BLOCK_SIDE_LEN * SX;
-        countY = SY / SX;
+        size_t countX = BLOCK_SIDE_LEN * SX;
+        size_t countY = SY / SX;
 
         for (size_t j = 0; j < countY; j++) {
           for (size_t i = 0; i < countX; i++) {
@@ -258,9 +256,9 @@ void assertPartialBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
         break;
 
     case 3:
-        countX = BLOCK_SIDE_LEN * SX;
-        countY = SY / SX;
-        countZ = SZ / SY;
+        size_t countX = BLOCK_SIDE_LEN * SX;
+        size_t countY = SY / SX;
+        size_t countZ = SZ / SY;
 
         for (size_t k = 0; k < countZ; k++) {
           for (size_t j = 0; j < countY; j++) {
@@ -283,10 +281,10 @@ void assertPartialBlockEntriesEqual(SCALAR* data1, SCALAR* data2)
         break;
 
     case 4:
-        countX = BLOCK_SIDE_LEN * SX;
-        countY = SY / SX;
-        countZ = SZ / SY;
-        countW = SW / SZ;
+        size_t countX = BLOCK_SIDE_LEN * SX;
+        size_t countY = SY / SX;
+        size_t countZ = SZ / SY;
+        size_t countW = SW / SZ;
 
         for (size_t l = 0; l < countW; l++) {
           for (size_t k = 0; k < countZ; k++) {
