@@ -155,6 +155,7 @@ when_zfpFieldMetadataCalled_onInvalidSize_expect_ZFP_META_NULL(void **state)
   zfp_field* field = bundle->field;
   uint64 metadata = zfp_field_metadata(field);
 
+  // setup uses a 2d field
   field->nx = 1 << 25;
   field->ny = 1 << 25;
 
@@ -168,10 +169,8 @@ when_zfpFieldSetMetadataCalled_forInvalidMeta_expect_false(void **state)
 {
   struct setupVars *bundle = *state;
   zfp_field* field = bundle->field;
-  uint64 metadata = zfp_field_metadata(field);
 
   uint64 meta = 1ULL << (ZFP_META_BITS + 1);
-
   zfp_bool status = zfp_field_set_metadata(field, meta); 
 
   assert_int_equal(status, zfp_false);
