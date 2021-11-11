@@ -77,7 +77,7 @@ jobs:
       - name: Run Tests
         id: test
         working-directory: ${{github.workspace}}/build
-        run: ctest -C ${{env.BUILD_TYPE}}
+        run: ctest -C ${{env.BUILD_TYPE}} -VV
       
       # Interactive Debug -> see: https://github.com/mxschmitt/action-tmate
       #- name: Setup Debug Session
