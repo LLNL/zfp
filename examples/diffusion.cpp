@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
       }
       break;
     default:
-      break;
+      return EXIT_FAILURE;
   }
 
   std::cerr.unsetf(std::ios::fixed);
