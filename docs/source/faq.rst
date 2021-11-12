@@ -11,6 +11,7 @@ questions not answered here or elsewhere in the documentation, please
 
 Questions answered in this FAQ:
 
+  0. :ref:`Do zfp arrays use C or Fortran order? <q-layout>`
   #. :ref:`Can zfp compress vector fields? <q-vfields>`
   #. :ref:`Should I declare a 2D array as zfp::array1d a(nx * ny, rate)? <q-array2d>`
   #. :ref:`How can I initialize a zfp compressed array from disk? <q-read>`
@@ -30,7 +31,7 @@ Questions answered in this FAQ:
   #. :ref:`Why does zfp sometimes not respect my error tolerance? <q-tolerance>`
   #. :ref:`Why is the actual rate sometimes not what I requested? <q-rate>`
   #. :ref:`Can zfp perform compression in place? <q-inplace>`
-  #. :ref:`How should I set the precision to bound the relative error? <q-relerr>`
+  #. :ref:`Can zfp bound the point-wise relative error? <q-relerr>`
   #. :ref:`Does zfp support lossless compression? <q-lossless>`
   #. :ref:`Why is my actual, measured error so much smaller than the tolerance? <q-abserr>`
   #. :ref:`Are parallel compressed streams identical to serial streams? <q-parallel>`
@@ -38,6 +39,91 @@ Questions answered in this FAQ:
   #. :ref:`Why does parallel compression performance not match my expectations? <q-omp-perf>`
   #. :ref:`Why are compressed arrays so slow? <q-1d-speed>`
   #. :ref:`Do compressed arrays use reference counting? <q-ref-count>`
+  #. :ref:`How large a buffer is needed for compressed storage? <q-max-size>`
+  #. :ref:`How can I print array values? <q-printf>`
+  #. :ref:`What is known about zfp compression errors? <q-err-dist>`
+
+-------------------------------------------------------------------------------
+
+.. _q-layout:
+
+Q0: *Do zfp arrays use C or Fortran order?*
+
+*This is such an important question that we added it as question zero to our
+FAQ, but do not let this C'ism fool you.*
+
+A: |zfp| :ref:`compressed-array classes <arrays>` and uncompressed
+:ref:`fields <field>` assume that the leftmost index varies fastest, which
+often is referred to as Fortran order.  By convention, |zfp| uses *x* (or *i*)
+to refer to the leftmost index, then *y* (or *j*), and so on.
+
+.. warning::
+  It is critical that the order of dimensions is specified correctly to
+  achieve good compression and accuracy.  If the order of dimensions is
+  transposed, |zfp| will still compress the data, but with no indication
+  that the order was wrong.  Compression ratio and/or accuracy will likely
+  suffer significantly, however.  Please see
+  :ref:`this section <p-dimensions>` for further discussion.
+
+In C order, the rightmost index varies fastest (e.g., *x* in
+:code:`arr[z][y][x]`), meaning that if we increment the rightmost index we
+move to the next consecutive address in memory.  If an uncompressed array,
+:code:`arr`, is stored in C order, we would for compatibility with |zfp|
+let *x* be the rightmost index in :code:`arr` but the leftmost index in the
+compressed |zfp| array, :code:`zarr`, e.g.,::
+
+  const size_t nx = 5;
+  const size_t ny = 3;
+  const size_t nz = 2;
+  float arr[nz][ny][nx] = { ... };
+  zfp::array3<float> zarr(nx, ny, nz, rate, &a[0][0][0]);
+
+Then :code:`arr[z][y][x]` and :code:`zarr(x, y, z)` refer to the same element,
+as do :code:`(&arr[0][0][0])[sx * x + sy * y + sz * z]` and
+:code:`zarr[sx * x + sy * y + sz * z]`, where
+::
+
+  ptrdiff_t sx = &arr[0][0][1] - &arr[0][0][0]; // sx = 1
+  ptrdiff_t sy = &arr[0][1][0] - &arr[0][0][0]; // sy = nx = 5
+  ptrdiff_t sz = &arr[1][0][0] - &arr[0][0][0]; // sz = nx * ny = 15
+
+Here *sx*, *sy*, and *sz* are the *strides* along the three dimensions,
+with *sx* < *sy* < *sz*.
+
+Of course, C vs. Fortran ordering matters only for multidimensional arrays
+and when the array dimensions (*nx*, *ny*, *nz*) are not all equal.
+
+Note that |zfp| :ref:`fields <field>` also support strides, which can be
+used to represent more general layouts than C and Fortran order, including
+non-contiguous storage, reversed dimensions via negative strides, and
+other advanced layouts.  With the default strides, however, it is correct
+to think of |zfp| as using Fortran order.
+
+For uncompressed data stored in C order, one easily translates to |zfp|
+Fortran order by reversing the order of dimensions or by specifying
+appropriate :ref:`strides <field>`.  We further note that |zfp| provides
+:ref:`nested views <nested_view>` of arrays that support C indexing syntax,
+e.g., :code:`view[z][y][x]` corresponds to :code:`arr(x, y, z)`.
+
+.. note::
+  The |zfp| :ref:`NumPy interface <zfpy>` uses the strides of the NumPy array
+  to infer the correct layout.  Although NumPy arrays use C order by default,
+  |zfp| handles such arrays correctly regardless of their memory layout.  The
+  actual order of dimensions for compressed storage are, however, reversed so
+  that NumPy arrays in C order are traversed sequentially during compression.
+
+Why does |zfp| use Fortran order when C is today a far more common language?
+This choice is somewhat arbitrary yet has strong proponents in either camp,
+similar to the preference between :ref:`little and big endian <q-portability>`
+byte order.  We believe that a single 2D array storing an (*x*, *y*) image is
+most naturally extended to a sequence of *nt* time-varying images by
+*appending* (not prepending) a time dimension *t* as (*x*, *y*, *t*).  This
+is the convention used in mathematics, e.g., we use (*x*, *y*) coordinates in
+2D and (*x*, *y*, *z*) coordinates in 3D.  Using Fortran order, each time
+slice, *t*, is still a 2D contiguous image, while C order
+(:code:`arr[x][y][t]`) would suggest that appending the *t* dimension now
+gives us *nx* 2D arrays indexed by (*y*, *t*), even though without the *t*
+dimension the images would be indexed by (*x*, *y*).
 
 -------------------------------------------------------------------------------
 
@@ -124,9 +210,9 @@ A: Using a |zfp| array::
 the most straightforward (but perhaps not best) way is to read one
 floating-point value at a time and copy it into the array::
 
-  for (uint z = 0; z < nz; z++)
-    for (uint y = 0; y < ny; y++)
-      for (uint x = 0; x < nx; x++) {
+  for (size_t z = 0; z < nz; z++)
+    for (size_t y = 0; y < ny; y++)
+      for (size_t x = 0; x < nx; x++) {
         double f;
         if (fread(&f, sizeof(f), 1, file) == 1)
           a(x, y, z) = f;
@@ -229,7 +315,7 @@ digital elevation models?
 
 A: Yes (as of version 0.4.0), but the data has to be promoted to 32-bit signed
 integers first.  This should be done one block at a time using an appropriate
-:c:func:`zfp_promote_*_to_int32` function call (see :file:`zfp.h`).  Future
+:code:`zfp_promote_*_to_int32` function call (see :ref:`ll-utilities`).  Future
 versions of |zfp| may provide a high-level interface that automatically
 performs promotion and demotion.
 
@@ -333,18 +419,21 @@ Issues may arise on architectures that do not support IEEE floating point.
 
 Q12: *How can I achieve finer rate granularity?*
 
-A: For *d*-dimensional arrays, |zfp| supports a rate granularity of 8 / |4powd|
-bits, i.e., the rate can be specified in increments of a fraction of a bit for
-2D and 3D arrays.  Such fine rate selection is always available for sequential
-compression (e.g., when calling :c:func:`zfp_compress`).
+A: For *d*-dimensional data, |zfp| supports a rate granularity of 1 / |4powd|
+bits, i.e., the rate can be specified in increments of a fraction of a bit.
+Such fine rate selection is always available for sequential compression
+(e.g., when calling :c:func:`zfp_compress`).
 
-Unlike in sequential compression, |zfp|'s compressed arrays require random
-access writes, which are supported only at the granularity of whole words.
-By default, a word is 64 bits, which gives a rate granularity of
-64 / |4powd| in *d* dimensions, i.e., 16 bits in 1D, 4 bits in 2D, and 1 bit
-in 3D.
+Unlike in sequential compression, |zfp|'s
+:ref:`read-write compressed-array classes <array_classes>` require
+random-access writes, which are supported only at the granularity of whole
+words.  By default, a word is 64 bits, which gives a rate granularity of
+64 / |4powd| in *d* dimensions, i.e., 16 bits in 1D, 4 bits in 2D, 1 bit
+in 3D, and 0.25 bits in 4D.
+:ref:`Read-only compressed arrays <carray_classes>` support the same fine
+granularity as sequential compression.
 
-To achieve finer granularity, recompile |zfp| with a smaller (but as large as
+To achieve finer granularity, build |zfp| with a smaller (but as large as
 possible) stream word size, e.g.::
 
   -DBIT_STREAM_WORD_TYPE=uint8
@@ -464,17 +553,40 @@ Q17: *Why does zfp sometimes not respect my error tolerance?*
 A: First, |zfp| does not support
 :ref:`fixed-accuracy mode <mode-fixed-accuracy>` for integer data and
 will ignore any tolerance requested via :c:func:`zfp_stream_set_accuracy`
-or associated :ref:`expert mode <mode-expert>` parameter settings.
+or associated :ref:`expert mode <mode-expert>` parameter settings.  So this
+FAQ pertains to floating-point data only.
 
-For floating-point data, |zfp| does not store each scalar value independently
-but represents a group of values (4, 16, 64, or 256 values, depending on
-dimensionality) as linear combinations like averages by evaluating arithmetic
-expressions.  Just like in uncompressed IEEE floating-point arithmetic, both
-representation error and roundoff error in the least significant bit(s) often
-occur.
+The short answer is that, given finite precision, the |zfp| and IEEE
+floating-point number systems represent distinct subsets of the reals
+(or, in case of |zfp|, blocks of reals).  Although these subsets have
+significant overlap, they are not equal.  Consequently, there are some
+combinations of floating-point values that |zfp| cannot represent exactly;
+conversely, there are some |zfp| blocks that cannot be represented exactly
+as IEEE floating point.  If the user-specified tolerance is smaller than the
+difference between the IEEE floating-point representation to be compressed
+and its closest |zfp| representation, then the tolerance necessarily will
+be violated (except in :ref:`reversible mode <mode-reversible>`).  In
+practice, absolute tolerances have to be extremely small relative to the
+numbers being compressed for this issue to occur, however.
+
+Note that this issue is not particular to |zfp| but occurs in the conversion
+between any two number systems of equal precision; we may just as well fault
+IEEE floating point for not being able to represent all |zfp| blocks
+accurately enough!  By analogy, not all 32-bit integers can be represented
+exactly in 32-bit floating point.  The integer 123456789 is one example; the
+closest float is 123456792.  And, obviously, not all floats (e.g., 0.5) can
+be represented exactly as integers.
+
+To further demonstrate this point, let us consider a concrete example.  |zfp|
+does not store each floating-point scalar value independently but represents
+a group of values (4, 16, 64, or 256 values, depending on dimensionality) as
+linear combinations like averages by evaluating arithmetic expressions.
+Just like in uncompressed IEEE floating-point arithmetic, both representation
+error and roundoff error in the least significant bit(s) often occur.
 
 To illustrate this, consider compressing the following 1D array of four
-floats::
+floats
+::
 
   float f[4] = { 1, 1e-1, 1e-2, 1e-3 };
 
@@ -492,20 +604,23 @@ is even smaller: 5.424e-9.  This reconstruction error is primarily due to
 |zfp|'s block-floating-point representation, which expresses the four values
 in a block relative to a single, common binary exponent.  Such exponent
 alignment occurs also in regular IEEE floating-point operations like addition.
-For instance,::
+For instance,
+::
 
   float x = (f[0] + f[3]) - 1;
 
 should of course result in :code:`x = f[3] = 1e-3`, but due to exponent
 alignment a few of the least significant bits of f[3] are lost in the
-addition, giving a result of :code:`x = 1.0000467e-3` and a roundoff error
-of 4.668e-8.  Similarly,::
+rounded result of the addition, giving :code:`x = 1.0000467e-3` and a
+roundoff error of 4.668e-8.  Similarly,
+::
 
   float sum = f[0] + f[1] + f[2] + f[3];
 
 should return :code:`sum = 1.111`, but is computed as 1.1110000610.  Moreover,
 the value 1.111 cannot even be represented exactly in (radix-2) floating-point;
-the closest float is 1.1109999.  Thus the computed error::
+the closest float is 1.1109999.  Thus the computed error
+::
 
   float error = sum - 1.111f;
 
@@ -513,7 +628,7 @@ which itself has some roundoff error, is 1.192e-7.
 
 *Phew*!  Note how the error introduced by |zfp| (5.472e-9) is in fact one to
 two orders of magnitude smaller than the roundoff errors (4.668e-8 and
-1.192e-7) introduced by IEEE floating-point in these computations.  This lower
+1.192e-7) introduced by IEEE floating point in these computations.  This lower
 error is in part due to |zfp|'s use of 30-bit significands compared to IEEE's
 24-bit single-precision significands.  Note that data sets with a large dynamic
 range, e.g., where adjacent values differ a lot in magnitude, are more
@@ -523,9 +638,9 @@ The moral of the story is that error tolerances smaller than machine epsilon
 (relative to the data range) cannot always be satisfied by |zfp|.  Nor are such
 tolerances necessarily meaningful for representing floating-point data that
 originated in floating-point arithmetic expressions, since accumulated
-roundoff errors are likely to swamp compression errors.  Because such roundoff
-errors occur frequently in floating-point arithmetic, insisting on lossless
-compression on the grounds of accuracy is tenuous at best.
+roundoff errors are likely to swamp compression errors.  Because such
+roundoff errors occur frequently in floating-point arithmetic, insisting on
+lossless compression on the grounds of accuracy is tenuous at best.
 
 -------------------------------------------------------------------------------
 
@@ -562,7 +677,11 @@ compressed array classes, the user may request write random access to the
 fixed-rate stream.  To support this, each block must be aligned on a stream
 word boundary (see :ref:`Q12 <q-granularity>`), and therefore the rate when
 write random access is requested must be a multiple of *wordsize* / |4powd|
-bits.  By default *wordsize* = 64 bits.
+bits.  By default *wordsize* = 64 bits.  Even when write random access is
+not requested, the compressed stream is written in units of *wordsize*.
+Hence, once the stream is flushed, either by a :c:func:`zfp_compress` or
+:c:func:`zfp_stream_flush` call, to output any buffered bits, its size
+will be a multiple of *wordsize* bits.
 
 Fourth, for floating-point data, each block must hold at least the common
 exponent and one additional bit, which places a lower bound on the rate.
@@ -571,6 +690,8 @@ Finally, the user may optionally include a header with each array.  Although
 the header is small, it must be accounted for in the rate.  The function
 :c:func:`zfp_stream_maximum_size` conservatively includes space for a header,
 for instance.
+
+Aside from these caveats, |zfp| is guaranteed to meet the exact rate specified.
 
 -------------------------------------------------------------------------------
 
@@ -622,24 +743,93 @@ can be done.
 
 .. _q-relerr:
 
-Q20: *How should I set the precision to bound the relative error?*
+Q20: *Can zfp bound the point-wise relative error?*
 
-A: In general, |zfp| cannot bound the point-wise relative error due to its
-use of a block-floating-point representation, in which all values within a
-block are represented in relation to a single common exponent.  For a high
-enough dynamic range within a block there may simply not be enough precision
-available to guard against loss.  For instance, a block containing the values
-2\ :sup:`0` = 1 and 2\ :sup:`-n` would require a precision of *n* + 3 bits to
-represent losslessly, and |zfp| uses at most 64-bit integers to represent
-values.  Thus, if *n* |geq| 62, then 2\ :sup:`-n` is replaced with 0, which
-is a 100% relative error.  Note that such loss also occurs when, for instance,
-2\ :sup:`0` and 2\ :sup:`-n` are added using floating-point arithmetic (see
-also :ref:`Q17 <q-tolerance>`).
+A: Yes, but with some caveats.  First, we define the relative error in a value
+*f* approximated by *g* as \|\ *f* - *g*\ \| / \|\ *f*\ \|, which converges to
+\|\ log(*f* / *g*)\ \| = \|\ log(*f*) - \ log(*g*)\| as *g* approaches *f*,
+where log(*f*) denotes the natural logarithm of *f*.
+Below, we discuss three strategies for relative error control that may be
+applicable depending on the properties of the underlying floating-point data.
 
-It is, however, possible to bound the error relative to the largest (in
-magnitude) value, *fmax*, within a block, which if the magnitude of values
-does not change too rapidly may serve as a reasonable proxy for point-wise
-relative errors.
+If all floating-point values to be compressed are normalized, i.e., with no
+nonzero subnormal values smaller in magnitude than
+2\ :sup:`-126` |approx| 10\ :sup:`-38` (for floats) or
+2\ :sup:`-1022` |approx| 10\ :sup:`-308` (for doubles), then the relative error
+can be bounded using |zfp|'s :ref:`expert mode <mode-expert>` settings by
+invoking :ref:`reversible mode <mode-reversible>`.  This is achieved by
+truncating (zeroing) some number of least significant bits of all
+floating-point values and then losslessly compressing the result.  The
+*q* least significant bits of *n*-bit floating-point numbers (*n* = 32
+for floats and *n* = 64 for doubles) are truncated by |zfp| by specifying a
+maximum precision of *p* = *n* |minus| *q*.  The resulting point-wise relative
+error is then at most 2\ :sup:`q - 23` (for floats) or 2\ :sup:`q - 52`
+(for doubles).
+
+.. note::
+  For large enough *q*, floating-point exponent bits will be discarded,
+  in which case the bound no longer holds, but then the relative error
+  is already above 100%.  Also, as mentioned, the bound does not hold
+  for subnormals; however, such values are likely too small for relative
+  errors to be meaningful.
+
+To bound the relative error, set the expert mode parameters to::
+
+  minbits = 0
+  maxbits = 0
+  maxprec = p
+  minexp = ZFP_MIN_EXP - 1 = -1075
+
+For example, using the |zfpcmd| command-line tool, set the parameters using
+:option:`-c` :code:`0 0 p -1075`.
+
+Note that while the above approach respects the error bound when the
+above conditions are met, it uses |zfp| for a purpose it was not designed
+for, and the compression ratio may not be competitive with those obtained
+using compressors designed to bound the relative error.
+
+Other forms of relative error control can be achieved using |zfp|'s lossy
+compression modes.  In :ref:`fixed-accuracy mode <mode-fixed-accuracy>`,
+the *absolute error* \|\ *f* - *g*\ \| is bounded by a user-specified error
+tolerance.  For a field whose values are all positive (or all negative), we
+may pre-transform values by taking the natural logarithm, replacing
+each value *f* with log(*f*) before compression, and then exponentiating
+values after decompression.  This ensures that
+\|\ log(*f*) - log(*g*)\ \| = \|\ log(*f* / *g*)\ \| is bounded.  (Note,
+however, that many implementations of the math library make no guarantees
+on the accuracy of the logarithm function.)  For fields whose values are
+signed, an approximate bound can be achieved by using
+log(*f*) |approx| asinh(*f* / 2), where asinh is the inverse of the
+hyperbolic sine function, which is defined for both positive and negative
+numbers.  One benefit of this approach is that it de-emphasizes the
+importance of relative errors for small values that straddle zero, where
+relative errors rarely make sense, e.g., because of round-off and other
+errors already present in the data.
+
+Finally, in :ref:`fixed-precision mode <mode-fixed-precision>`, the
+precision of |zfp| transform coefficients is fixed, resulting in an error
+that is no more than a constant factor of the largest (in magnitude)
+value, *fmax*, within the same |zfp| block.  This can be thought of as a
+weaker version of relative error, where the error is measured relative
+to values in a local neighborhood.
+
+In fixed-precision mode, |zfp| cannot bound the point-wise relative error
+due to its use of a block-floating-point representation, in which all
+values within a block are represented in relation to a single common
+exponent.  For a high enough dynamic range within a block, there may
+simply not be enough precision available to guard against loss.  For
+instance, a block containing the values 2\ :sup:`0` = 1 and 2\ :sup:`-n`
+would require a precision of *n* + 3 bits to represent losslessly, and
+|zfp| uses at most 64-bit integers to represent values.  Thus, if
+*n* |geq| 62, then 2\ :sup:`-n` is replaced with 0, which is a 100%
+relative error.  Note that such loss also occurs when, for instance,
+2\ :sup:`0` and 2\ :sup:`-n` are added using floating-point arithmetic
+(see also :ref:`Q17 <q-tolerance>`).
+
+As alluded to, it is possible to bound the error relative to the largest
+value, *fmax*, within a block, which if the magnitude of values does not
+change too rapidly may serve as a reasonable proxy for point-wise relative
+errors.
 
 One might then ask if using |zfp|'s fixed-precision mode with *p* bits of
 precision ensures that the block-wise relative error is at most
@@ -814,9 +1004,10 @@ for 3D data, while the difference is smaller for 2D and 1D data.
 We recommend experimenting with tolerances and evaluating what error levels
 are appropriate for each application, e.g., by starting with a low,
 conservative tolerance and successively doubling it.  The distribution of
-errors produced by |zfp| is approximately Gaussian, so even if the maximum
-error may seem large at an individual grid point, most errors tend to be
-much smaller and tightly clustered around zero.
+errors produced by |zfp| is approximately Gaussian (see
+:ref:`FAQ #30 <q-err-dist>`), so even if the maximum error may seem large at
+an individual grid point, most errors tend to be much smaller and tightly
+clustered around zero.
 
 -------------------------------------------------------------------------------
 
@@ -938,3 +1129,141 @@ array.  No reference counting and garbage collection is used to keep the
 array alive if there are external references to it.  Such references
 become invalid once the array is destructed, and dereferencing them will
 likely lead to segmentation faults.
+
+-------------------------------------------------------------------------------
+
+.. _q-max-size:
+
+Q28: *How large a buffer is needed for compressed storage?*
+
+A: :c:func:`zfp_compress` requires that memory has already been allocated to
+hold the compressed data.  But often the compressed size is data dependent
+and not known a priori.  The function :c:func:`zfp_stream_maximum_size`
+returns a buffer size that is guaranteed to be large enough.  This function,
+which should be called *after* setting the desired compression mode and
+parameters, computes the largest possible compressed data size based on the
+current settings and array size.  Note that by the pigeonhole principle, any
+(lossless) compressor must expand at least one input, so this buffer size may
+be larger than the size of the uncompressed input data.  :c:func:`zfp_compress`
+returns the actual number of bytes of compressed storage.
+
+When compressing individual blocks using the :ref:`low-level API <ll-api>`,
+it is useful to know the maximum number of bits that a compressed block
+can occupy.  In addition to the :c:macro:`ZFP_MAX_BITS` macro, the following
+table lists the maximum block size (in bits) for each scalar type, whether
+:ref:`reversible mode <mode-reversible>` is used, and block dimensionality.
+
+  +--------+---------+-------+-------+-------+-------+
+  | type   | rev.    |   1D  |   2D  |   3D  |   4D  |
+  +========+=========+=======+=======+=======+=======+
+  |        |         |   131 |   527 |  2111 |  8447 |
+  | int32  +---------+-------+-------+-------+-------+
+  |        | |check| |   136 |   532 |  2116 |  8452 |
+  +--------+---------+-------+-------+-------+-------+
+  |        |         |   140 |   536 |  2120 |  8456 |
+  | float  +---------+-------+-------+-------+-------+
+  |        | |check| |   146 |   542 |  2126 |  8462 |
+  +--------+---------+-------+-------+-------+-------+
+  |        |         |   259 |  1039 |  4159 | 16639 |
+  | int64  +---------+-------+-------+-------+-------+
+  |        | |check| |   265 |  1045 |  4165 | 16645 |
+  +--------+---------+-------+-------+-------+-------+
+  |        |         |   271 |  1051 |  4171 | 16651 |
+  | double +---------+-------+-------+-------+-------+
+  |        | |check| |   278 |  1058 |  4178 | 16658 |
+  +--------+---------+-------+-------+-------+-------+
+
+-------------------------------------------------------------------------------
+
+.. _q-printf:
+
+Q29: *How can I print array values?*
+
+Consider the following seemingly reasonable piece of code::
+
+  #include <cstdio>
+  #include "zfparray1.h"
+
+  int main()
+  {
+    zfp::array1<double> a(100, 16.0);
+    printf("%f\n", a[0]); // does not compile
+    return 0;
+  }
+
+The compiler will complain about :code:`a[0]` being a non-POD object.  This
+is because :code:`a[0]` is a :ref:`proxy reference <references>` object
+rather than a :code:`double`.  To make this work, :code:`a[0]` must be
+explicitly converted to :code:`double`, e.g., using a cast::
+
+    printf("%f\n", (double)a[0]);
+
+For similar reasons, one may not use :code:`scanf` to initialize the value
+of :code:`a[0]` because :code:`&a[0]` is a :ref:`proxy pointer <pointers>`
+object, not a :code:`double*`.  Rather, one must use a temporary variable,
+e.g.
+::
+
+  double t;
+  scanf("%lf", &t);
+  a[0] = t;
+
+Note that using :code:`iostream`, expressions like
+::
+
+  std::cout << a[0] << std::endl;
+
+do work, but
+::
+
+  std::cin >> a[0];
+
+does not.
+
+-------------------------------------------------------------------------------
+
+.. _q-err-dist:
+
+Q30: *What is known about zfp compression errors?*
+
+A: Significant effort has been spent on characterizing compression errors
+resulting from |zfp|, as detailed in the following publications:
+
+* P. Lindstrom,
+  "`Error Distributions of Lossy Floating-Point Compressors <https://www.osti.gov/servlets/purl/1526183>`__,"
+  JSM 2017 Proceedings.
+* J. Diffenderfer, A. Fox, J. Hittinger, G. Sanders, P. Lindstrom,
+  "`Error Analysis of ZFP Compression for Floating-Point Data <http://doi.org/10.1137/18M1168832>`__,"
+  SIAM Journal on Scientific Computing, 2019.
+* D. Hammerling, A. Baker, A. Pinard, P. Lindstrom,
+  "`A Collaborative Effort to Improve Lossy Compression Methods for Climate Data <http://doi.org/10.1109/DRBSD-549595.2019.00008>`__,"
+  5th International Workshop on Data Analysis and Reduction for Big Scientific Data, 2019.
+* A. Fox, J. Diffenderfer, J. Hittinger, G. Sanders, P. Lindstrom.
+  "`Stability Analysis of Inline ZFP Compression for Floating-Point Data in Iterative Methods <http://doi.org/10.1137/19M126904X>`__,"
+  SIAM Journal on Scientific Computing, 2020.
+
+In short, |zfp| compression errors are roughly normally distributed as a
+consequence of the central limit theorem, and can be bounded.  Because the
+error distribution is normal and because the worst-case error is often much
+larger than errors observed in practice, it is common that measured errors
+are far smaller than the absolute error tolerance specified in
+:ref:`fixed-accuracy mode <mode-fixed-accuracy>`
+(see :ref:`FAQ #22 <q-abserr>`).
+
+It is known that |zfp| errors can be slightly biased and correlated (see
+:numref:`zfp-rounding` and the third paper above).  Recent work has been
+done to combat such issues by supporting optional
+:ref:`rounding modes <rounding>`.
+
+.. _zfp-rounding:
+.. figure:: zfp-rounding.pdf
+  :figwidth: 90 %
+  :align: center
+  :alt: "zfp rounding modes"
+
+  |zfp| errors are normally distributed.  This figure illustrates the
+  agreement between theoretical (lines) and observed (dots) error
+  distributions (*X*, *Y*, *Z*, *W*) for 1D blocks.  Without proper rounding
+  (left), errors are biased and depend on the relative location within a |zfp|
+  block, resulting in errors not centered on zero.  With proper rounding
+  (right), errors are both smaller and unbiased.

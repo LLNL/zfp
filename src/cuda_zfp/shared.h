@@ -7,19 +7,16 @@ typedef unsigned long long Word;
 
 #include "type_info.cuh"
 #include "zfp.h"
+#include "constants.h"
 #include <stdio.h>
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
-#define bitsize(x) (CHAR_BIT * (uint)sizeof(x))
+#define bitsize(x) ((uint)(CHAR_BIT * sizeof(x)))
 
 #define LDEXP(x, e) ldexp(x, e)
 
 #define NBMASK 0xaaaaaaaaaaaaaaaaull
-
-__constant__ unsigned char c_perm_1[4];
-__constant__ unsigned char c_perm_2[16];
-__constant__ unsigned char c_perm[64];
 
 namespace cuZFP
 {
@@ -87,9 +84,17 @@ size_t calc_device_mem3d(const uint3 encoded_dims,
 
 dim3 get_max_grid_dims()
 {
-  cudaDeviceProp prop; 
-  int device = 0;
-  cudaGetDeviceProperties(&prop, device);
+  static cudaDeviceProp prop;
+  static bool firstTime = true;
+
+  if( firstTime )
+  {
+    firstTime = false;
+
+    int device = 0;
+    cudaGetDeviceProperties(&prop, device);
+  }
+
   dim3 grid_dims;
   grid_dims.x = prop.maxGridSize[0];
   grid_dims.y = prop.maxGridSize[1];
@@ -126,7 +131,7 @@ dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
   if(dims == 2)
   {
     float sq_r = sqrt((float)grids);
-    float intpart = 0.;
+    float intpart = 0;
     modf(sq_r,&intpart); 
     uint base = intpart;
     grid_size.x = base; 
@@ -141,7 +146,7 @@ dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
   if(dims == 3)
   {
     float cub_r = pow((float)grids, 1.f/3.f);;
-    float intpart = 0.;
+    float intpart = 0;
     modf(cub_r,&intpart); 
     int base = intpart;
     grid_size.x = base; 
@@ -185,7 +190,7 @@ __device__
 double
 dequantize<long long int, double>(const long long int &x, const int &e)
 {
-	return LDEXP((double)x, e - (CHAR_BIT * scalar_sizeof<double>() - 2));
+	return LDEXP((double)x, e - ((int)(CHAR_BIT * scalar_sizeof<double>()) - 2));
 }
 
 template<>
@@ -193,7 +198,7 @@ __device__
 float
 dequantize<int, float>(const int &x, const int &e)
 {
-	return LDEXP((float)x, e - (CHAR_BIT * scalar_sizeof<float>() - 2));
+	return LDEXP((float)x, e - ((int)(CHAR_BIT * scalar_sizeof<float>()) - 2));
 }
 
 template<>
@@ -245,28 +250,28 @@ inv_lift(Int* p)
 
 
 template<int BlockSize>
-__device__
-unsigned char* get_perm();
+__device__ inline
+const unsigned char* get_perm();
 
 template<>
-__device__
-unsigned char* get_perm<64>()
+__device__ inline
+const unsigned char* get_perm<64>()
 {
-  return c_perm;
+  return perm_3d;
 }
 
 template<>
-__device__
-unsigned char* get_perm<16>()
+__device__ inline
+const unsigned char* get_perm<16>()
 {
-  return c_perm_2;
+  return perm_2;
 }
 
 template<>
-__device__
-unsigned char* get_perm<4>()
+__device__ inline
+const unsigned char* get_perm<4>()
 {
-  return c_perm_1;
+  return perm_1;
 }
 
 

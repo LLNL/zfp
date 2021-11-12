@@ -14,7 +14,7 @@ class AlignedMemoryTest : public TestFixture {};
 
 #define TEST_FIXTURE AlignedMemoryTest
 
-INSTANTIATE_TEST_CASE_P(TestManyMemoryAlignments, TEST_FIXTURE, ::testing::Range(4, 11));
+INSTANTIATE_TEST_SUITE_P(TestManyMemoryAlignments, TEST_FIXTURE, ::testing::Range(4, 11));
 
 TEST_P(TEST_FIXTURE, when_allocateAlignedMem_expect_addressAligned)
 {

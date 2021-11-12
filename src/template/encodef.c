@@ -1,3 +1,4 @@
+#include <float.h>
 #include <limits.h>
 #include <math.h>
 
@@ -9,13 +10,20 @@ static uint _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* f
 static int
 _t1(exponent, Scalar)(Scalar x)
 {
-  if (x > 0) {
-    int e;
+  /* use e = -EBIAS when x = 0 */
+  int e = -EBIAS;
+#ifdef ZFP_WITH_DAZ
+  /* treat subnormals as zero; resolves issue #119 by avoiding overflow */
+  if (x >= SCALAR_MIN)
     FREXP(x, &e);
-    /* clamp exponent in case x is denormal */
-    return MAX(e, 1 - EBIAS);
+#else
+  if (x > 0) {
+    FREXP(x, &e);
+    /* clamp exponent in case x is subnormal; may still result in overflow */
+    e = MAX(e, 1 - EBIAS);
   }
-  return -EBIAS;
+#endif
+  return e;
 }
 
 /* compute maximum floating-point exponent in block of n values */
@@ -35,7 +43,7 @@ _t1(exponent_block, Scalar)(const Scalar* p, uint n)
 static Scalar
 _t1(quantize, Scalar)(Scalar x, int e)
 {
-  return LDEXP(x, (CHAR_BIT * (int)sizeof(Scalar) - 2) - e);
+  return LDEXP(x, ((int)(CHAR_BIT * sizeof(Scalar)) - 2) - e);
 }
 
 /* forward block-floating-point transform to signed integers */
@@ -84,7 +92,7 @@ _t2(encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
 /* public functions -------------------------------------------------------- */
 
 /* encode contiguous floating-point block */
-uint
+size_t
 _t2(zfp_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
 {
   return REVERSIBLE(zfp) ? _t2(rev_encode_block, Scalar, DIMS)(zfp, fblock) : _t2(encode_block, Scalar, DIMS)(zfp, fblock);

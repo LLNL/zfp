@@ -7,6 +7,7 @@
 #define PBITS 6                            /* number of bits needed to encode precision */
 #define NBMASK UINT64C(0xaaaaaaaaaaaaaaaa) /* negabinary mask */
 #define TCMASK UINT64C(0x7fffffffffffffff) /* two's complement mask */
+#define SCALAR_MIN DBL_MIN                 /* smallest positive normal number */
 
 #define FABS(x) fabs(x)
 #define FREXP(x, e) frexp(x, e)

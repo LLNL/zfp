@@ -34,10 +34,14 @@ struct setupVars {
   Scalar* compressedArr;
   Scalar* decompressedArr;
 
+  size_t bufsizeBytes;
   void* buffer;
+  // dimensions of data that gets compressed (currently same as randomGenArrSideLen)
+  size_t dimLens[4];
   zfp_field* field;
   zfp_field* decompressField;
   zfp_stream* stream;
+  zfp_mode mode;
 
   // compressParamNum is 0, 1, or 2
   //   used to compute fixed mode param
@@ -56,6 +60,7 @@ struct setupVars {
 static int
 setupRandomData(void** state)
 {
+  int i;
   struct setupVars *bundle = calloc(1, sizeof(struct setupVars));
   assert_non_null(bundle);
 
@@ -86,9 +91,10 @@ setupRandomData(void** state)
   assert_non_null(bundle->randomGenArr);
 
   // set remaining indices (square for now)
-  int i;
-  for (i = 1; i < 4; i++) {
+  for (i = 0; i < 4; i++) {
     bundle->randomGenArrSideLen[i] = (i < DIMS) ? bundle->randomGenArrSideLen[0] : 0;
+    // for now, entire randomly generated array always entirely compressed
+    bundle->dimLens[i] = bundle->randomGenArrSideLen[i];
   }
 
   *state = bundle;
@@ -107,48 +113,45 @@ teardownRandomData(void** state)
 }
 
 static void
-setupZfpFields(struct setupVars* bundle, int s[4])
+setupZfpFields(struct setupVars* bundle, ptrdiff_t s[4])
 {
-  uint nx = (uint)bundle->randomGenArrSideLen[0];
-  uint ny = (uint)bundle->randomGenArrSideLen[1];
-  uint nz = (uint)bundle->randomGenArrSideLen[2];
-  uint nw = (uint)bundle->randomGenArrSideLen[3];
+  size_t* n = bundle->dimLens;
 
   // setup zfp_fields: source/destination arrays for compression/decompression
   zfp_type type = ZFP_TYPE;
   zfp_field* field;
   zfp_field* decompressField;
 
-  switch(DIMS) {
+  switch (DIMS) {
     case 1:
-      field = zfp_field_1d(bundle->compressedArr, type, nx);
+      field = zfp_field_1d(bundle->compressedArr, type, n[0]);
       zfp_field_set_stride_1d(field, s[0]);
 
-      decompressField = zfp_field_1d(bundle->decompressedArr, type, nx);
+      decompressField = zfp_field_1d(bundle->decompressedArr, type, n[0]);
       zfp_field_set_stride_1d(decompressField, s[0]);
       break;
 
     case 2:
-      field = zfp_field_2d(bundle->compressedArr, type, nx, ny);
+      field = zfp_field_2d(bundle->compressedArr, type, n[0], n[1]);
       zfp_field_set_stride_2d(field, s[0], s[1]);
 
-      decompressField = zfp_field_2d(bundle->decompressedArr, type, nx, ny);
+      decompressField = zfp_field_2d(bundle->decompressedArr, type, n[0], n[1]);
       zfp_field_set_stride_2d(decompressField, s[0], s[1]);
       break;
 
     case 3:
-      field = zfp_field_3d(bundle->compressedArr, type, nx, ny, nz);
+      field = zfp_field_3d(bundle->compressedArr, type, n[0], n[1], n[2]);
       zfp_field_set_stride_3d(field, s[0], s[1], s[2]);
 
-      decompressField = zfp_field_3d(bundle->decompressedArr, type, nx, ny, nz);
+      decompressField = zfp_field_3d(bundle->decompressedArr, type, n[0], n[1], n[2]);
       zfp_field_set_stride_3d(decompressField, s[0], s[1], s[2]);
       break;
 
     case 4:
-      field = zfp_field_4d(bundle->compressedArr, type, nx, ny, nz, nw);
+      field = zfp_field_4d(bundle->compressedArr, type, n[0], n[1], n[2], n[3]);
       zfp_field_set_stride_4d(field, s[0], s[1], s[2], s[3]);
 
-      decompressField = zfp_field_4d(bundle->decompressedArr, type, nx, ny, nz, nw);
+      decompressField = zfp_field_4d(bundle->decompressedArr, type, n[0], n[1], n[2], n[3]);
       zfp_field_set_stride_4d(decompressField, s[0], s[1], s[2], s[3]);
       break;
   }
@@ -173,7 +176,7 @@ allocateFieldArrays(stride_config stride, size_t totalRandomGenArrLen, Scalar** 
 }
 
 static void
-generateStridedRandomArray(stride_config stride, Scalar* randomGenArr, zfp_type type, size_t n[4], int s[4], Scalar** compressedArrPtr, Scalar** decompressedArrPtr)
+generateStridedRandomArray(stride_config stride, Scalar* randomGenArr, zfp_type type, size_t n[4], ptrdiff_t s[4], Scalar** compressedArrPtr, Scalar** decompressedArrPtr)
 {
   int dims, i;
   for (i = 0; i < 4; i++) {
@@ -229,7 +232,7 @@ initStridedFields(struct setupVars* bundle, stride_config stride)
 
   allocateFieldArrays(stride, bundle->totalRandomGenArrLen, &bundle->compressedArr, &bundle->decompressedArr);
 
-  int s[4] = {0};
+  ptrdiff_t s[4] = {0};
   generateStridedRandomArray(stride, bundle->randomGenArr, ZFP_TYPE, bundle->randomGenArrSideLen, s, &bundle->compressedArr, &bundle->decompressedArr);
 
   setupZfpFields(bundle, s);
@@ -242,11 +245,11 @@ setupZfpStream(struct setupVars* bundle)
   zfp_stream* stream = zfp_stream_open(NULL);
   assert_non_null(stream);
 
-  size_t bufsizeBytes = zfp_stream_maximum_size(stream, bundle->field);
-  char* buffer = calloc(bufsizeBytes, sizeof(char));
+  bundle->bufsizeBytes = zfp_stream_maximum_size(stream, bundle->field);
+  char* buffer = calloc(bundle->bufsizeBytes, sizeof(char));
   assert_non_null(buffer);
 
-  bitstream* s = stream_open(buffer, bufsizeBytes);
+  bitstream* s = stream_open(buffer, bundle->bufsizeBytes);
   assert_non_null(s);
 
   zfp_stream_set_bit_stream(stream, s);
@@ -256,12 +259,16 @@ setupZfpStream(struct setupVars* bundle)
   bundle->buffer = buffer;
 }
 
-static void
+// returns 1 on failure, 0 on success
+static int
 setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParamNum)
 {
+  bundle->mode = zfpMode;
+
   // set compression mode for this compressParamNum
   if (compressParamNum > 2 || compressParamNum < 0) {
-    fail_msg("Unknown compressParamNum during setupChosenZfpMode()");
+    printf("ERROR: Unknown compressParamNum %d during setupCompressParam()\n", compressParamNum);
+    return 1;
   }
   bundle->compressParamNum = compressParamNum;
 
@@ -269,14 +276,14 @@ setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParam
     case zfp_mode_fixed_precision:
       bundle->precParam = computeFixedPrecisionParam(bundle->compressParamNum);
       zfp_stream_set_precision(bundle->stream, bundle->precParam);
-      printf("\t\tFixed precision param: %u\n", bundle->precParam);
+      printf("\t\t\t\tFixed precision param: %u\n", bundle->precParam);
 
       break;
 
     case zfp_mode_fixed_rate:
       bundle->rateParam = computeFixedRateParam(bundle->compressParamNum);
-      zfp_stream_set_rate(bundle->stream, (double)bundle->rateParam, ZFP_TYPE, DIMS, 0);
-      printf("\t\tFixed rate param: %lu\n", (unsigned long)bundle->rateParam);
+      zfp_stream_set_rate(bundle->stream, (double)bundle->rateParam, ZFP_TYPE, DIMS, zfp_false);
+      printf("\t\t\t\tFixed rate param: %lu\n", (unsigned long)bundle->rateParam);
 
       break;
 
@@ -284,31 +291,33 @@ setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParam
     case zfp_mode_fixed_accuracy:
       bundle->accParam = computeFixedAccuracyParam(bundle->compressParamNum);
       zfp_stream_set_accuracy(bundle->stream, bundle->accParam);
-      printf("\t\tFixed accuracy param: %lf\n", bundle->accParam);
+      printf("\t\t\t\tFixed accuracy param: %lf\n", bundle->accParam);
 
       break;
 #endif
 
     case zfp_mode_reversible:
       zfp_stream_set_reversible(bundle->stream);
+      printf("\t\t\t\tReversible mode\n");
 
       break;
 
     default:
-      fail_msg("Invalid zfp mode during setupChosenZfpMode()");
-      break;
+      printf("ERROR: Invalid zfp mode %d during setupCompressParam()\n", zfpMode);
+      return 1;
   }
+
+  return 0;
 }
 
 // assumes setupRandomData() already run (having set some setupVars members)
 static int
-setupChosenZfpMode(void **state, zfp_mode zfpMode, int compressParamNum, stride_config stride)
+initZfpStreamAndField(void **state, stride_config stride)
 {
   struct setupVars *bundle = *state;
 
   initStridedFields(bundle, stride);
   setupZfpStream(bundle);
-  setupCompressParam(bundle, zfpMode, compressParamNum);
 
   bundle->timer = zfp_timer_alloc();
 
@@ -346,195 +355,84 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 {
   struct setupVars *bundle = *state;
   UInt checksum = _catFunc2(hashArray, SCALAR_BITS)((const UInt*)bundle->randomGenArr, bundle->totalRandomGenArrLen, 1);
-  uint64 expectedChecksum = getChecksumOriginalDataArray(DIMS, ZFP_TYPE);
-  assert_int_equal(checksum, expectedChecksum);
+  uint64 key1, key2;
+  computeKeyOriginalInput(ARRAY_TEST, bundle->dimLens, &key1, &key2);
+  ASSERT_EQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2);
 }
 
-static void
-assertZfpCompressBitstreamChecksumMatches(void **state)
+// returns 1 on failure, 0 on success
+static int
+runZfpCompress(zfp_stream* stream, const zfp_field* field, zfp_timer* timer, size_t* compressedBytes)
 {
-  struct setupVars *bundle = *state;
-  zfp_field* field = bundle->field;
-  zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
-
   // perform compression and time it
-  if (zfp_timer_start(bundle->timer)) {
-    fail_msg("Unknown platform (none of linux, win, osx)");
-  }
-  size_t result = zfp_compress(stream, field);
-  double time = zfp_timer_stop(bundle->timer);
-  printf("\t\tCompress time (s): %lf\n", time);
-  assert_int_not_equal(result, 0);
-
-  uint64 checksum = hashBitstream(stream_data(s), stream_size(s));
-  uint64 expectedChecksum = getChecksumCompressedBitstream(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
-  assert_int_equal(checksum, expectedChecksum);
-}
-
-#ifdef ZFP_TEST_SERIAL
-static void
-_catFunc3(given_, DESCRIPTOR, ZfpStream_when_SetRateWithWriteRandomAccess_expect_RateRoundedUpProperly)(void **state)
-{
-  zfp_stream* zfp = zfp_stream_open(NULL);
-
-  // wra currently requires blocks to start at the beginning of a word
-  // rate will be rounded up such that a block fills the rest of the word
-  // (would be wasted space otherwise, padded with zeros)
-  double rateWithoutWra = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 0);
-  double rateWithWra = zfp_stream_set_rate(zfp, ZFP_RATE_PARAM_BITS, ZFP_TYPE, DIMS, 1);
-  if (!(rateWithWra >= rateWithoutWra)) {
-    fail_msg("rateWithWra (%lf) >= rateWithoutWra (%lf) failed\n", rateWithWra, rateWithoutWra);
+  if (zfp_timer_start(timer)) {
+    printf("ERROR: Unknown platform (none of linux, win, osx) when starting timer\n");
+    return 1;
   }
 
-  uint bitsPerBlock = (uint)floor(rateWithWra * intPow(4, DIMS) + 0.5);
-  assert_int_equal(0, bitsPerBlock % stream_word_bits);
+  *compressedBytes = zfp_compress(stream, field);
+  double time = zfp_timer_stop(timer);
+  printf("\t\t\t\t\tCompress time (s): %lf\n", time);
 
-  zfp_stream_close(zfp);
-}
-#endif
-
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_precision) {
-    fail_msg("Invalid zfp mode during test");
+  if (compressedBytes == 0) {
+    printf("ERROR: Compression failed, nothing was written to bitstream\n");
+    return 1;
+  } else {
+    return 0;
   }
-
-  assertZfpCompressBitstreamChecksumMatches(state);
 }
 
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
+// returns 1 on failure, 0 on success
+static int
+isCompressedBitstreamChecksumsMatch(zfp_stream* stream, bitstream* bs, size_t dimLens[4], zfp_mode mode, int compressParamNum)
 {
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
-    fail_msg("Invalid zfp mode during test");
+  uint64 checksum = hashBitstream(stream_data(bs), stream_size(bs));
+  uint64 key1, key2;
+  computeKey(ARRAY_TEST, COMPRESSED_BITSTREAM, dimLens, mode, compressParamNum, &key1, &key2);
+
+  if (COMPARE_NEQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2)) {
+    printf("ERROR: Compressed bitstream checksums were different: 0x%"UINT64PRIx" != 0x%"UINT64PRIx"\n", checksum, getChecksumByKey(DIMS, ZFP_TYPE, key1, key2));
+    return 1;
+  } else {
+    return 0;
   }
-
-  assertZfpCompressBitstreamChecksumMatches(state);
 }
 
-#ifdef FL_PT_DATA
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_BitstreamChecksumMatches)(void **state)
+// returns 1 on failure, 0 on success
+static int
+runZfpDecompress(zfp_stream* stream, zfp_field* decompressField, zfp_timer* timer, size_t compressedBytes)
 {
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_accuracy) {
-    fail_msg("Invalid zfp mode during test");
-  }
-
-  assertZfpCompressBitstreamChecksumMatches(state);
-}
-#endif
-
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressReversible_expect_BitstreamChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_reversible) {
-    fail_msg("Invalid zfp mode during test");
-  }
-
-  assertZfpCompressBitstreamChecksumMatches(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != REVERSED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != INTERLEAVED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != PERMUTED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedPrecision_expect_BitstreamChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != REVERSED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != INTERLEAVED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != PERMUTED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_BitstreamChecksumMatches)(state);
-}
-
-static void
-assertZfpCompressDecompressChecksumMatches(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_field* field = bundle->field;
-  zfp_stream* stream = bundle->stream;
-
-  size_t compressedBytes = zfp_compress(stream, field);
-  assert_int_not_equal(compressedBytes, 0);
-
-  zfp_stream_rewind(stream);
-
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location
-  if (zfp_timer_start(bundle->timer)) {
-    fail_msg("Unknown platform (none of linux, win, osx)");
+  if (zfp_timer_start(timer)) {
+    printf("ERROR: Unknown platform (none of linux, win, osx)\n");
+    return 1;
   }
-  size_t result = zfp_decompress(stream, bundle->decompressField);
-  double time = zfp_timer_stop(bundle->timer);
-  printf("\t\tDecompress time (s): %lf\n", time);
-  assert_int_equal(compressedBytes, result);
+
+  size_t result = zfp_decompress(stream, decompressField);
+  double time = zfp_timer_stop(timer);
+  printf("\t\t\t\t\tDecompress time (s): %lf\n", time);
+
+  if (compressedBytes != result) {
+    printf("ERROR: Decompression advanced the bitstream to a different position than after compression: %zu != %zu\n", result, compressedBytes);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+// returns 1 on failure, 0 on success
+static int
+isDecompressedArrayChecksumsMatch(struct setupVars* bundle)
+{
+  zfp_field* field = bundle->field;
 
   // hash decompressedArr
   const UInt* arr = (const UInt*)bundle->decompressedArr;
-  int strides[4] = {0, 0, 0, 0};
+  ptrdiff_t strides[4] = {0, 0, 0, 0};
   zfp_field_stride(field, strides);
-  size_t* n = bundle->randomGenArrSideLen;
 
-  UInt checksum = 0;
+  uint64 checksum = 0;
   switch(bundle->stride) {
     case REVERSED:
       // arr already points to last element (so strided traverse is legal)
@@ -554,32 +452,82 @@ assertZfpCompressDecompressChecksumMatches(void **state)
       break;
   }
 
-  uint64 expectedChecksum = getChecksumDecompressedArray(DIMS, ZFP_TYPE, zfp_stream_compression_mode(stream), bundle->compressParamNum);
-  assert_int_equal(checksum, expectedChecksum);
+  uint64 key1, key2;
+  computeKey(ARRAY_TEST, DECOMPRESSED_ARRAY, bundle->dimLens, bundle->mode, bundle->compressParamNum, &key1, &key2);
+
+  if (COMPARE_NEQ_CHECKSUM(DIMS, ZFP_TYPE, checksum, key1, key2)) {
+    printf("ERROR: Decompressed array checksums were different: 0x%"UINT64PRIx" != 0x%"UINT64PRIx"\n", checksum, getChecksumByKey(DIMS, ZFP_TYPE, key1, key2));
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
-static void
-assertZfpCompressDecompressArrayMatchesBitForBit(void **state)
+// returns 0 on all tests pass, 1 on test failure
+// will skip decompression if compression fails
+static int
+isZfpCompressDecompressChecksumsMatch(void **state, int doDecompress)
 {
   struct setupVars *bundle = *state;
-  zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
+  zfp_field* field = bundle->field;
+  zfp_timer* timer = bundle->timer;
 
-  size_t compressedBytes = zfp_compress(stream, field);
-  assert_int_not_equal(compressedBytes, 0);
-
-  zfp_stream_rewind(stream);
-
-  // zfp_decompress() will write to bundle->decompressedArr
-  // assert bitstream ends in same location
-  if (zfp_timer_start(bundle->timer)) {
-    fail_msg("Unknown platform (none of linux, win, osx)");
+  size_t compressedBytes;
+  if (runZfpCompress(stream, field, timer, &compressedBytes) == 1) {
+    return 1;
   }
-  size_t result = zfp_decompress(stream, bundle->decompressField);
-  double time = zfp_timer_stop(bundle->timer);
-  printf("\t\tDecompress time (s): %lf\n", time);
-  assert_int_equal(compressedBytes, result);
 
+  bitstream* bs = zfp_stream_bit_stream(stream);
+  if (isCompressedBitstreamChecksumsMatch(stream, bs, bundle->dimLens, bundle->mode, bundle->compressParamNum) == 1) {
+    return 1;
+  }
+
+  if (doDecompress == 0) {
+    return 0;
+  }
+
+  // rewind stream for decompression
+  zfp_stream_rewind(stream);
+  if (runZfpDecompress(stream, bundle->decompressField, timer, compressedBytes) == 1) {
+    return 1;
+  }
+
+  if (isDecompressedArrayChecksumsMatch(bundle) == 1) {
+    return 1;
+  }
+
+  return 0;
+}
+
+// this test is run by itself as its own test case, so it can use fail_msg() instead of accumulating error counts
+// will skip decompression if compression fails
+static void
+runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
+{
+  zfp_stream* stream = bundle->stream;
+  zfp_field* field = bundle->field;
+  zfp_timer* timer = bundle->timer;
+
+  size_t compressedBytes;
+  if (runZfpCompress(stream, field, timer, &compressedBytes) == 1) {
+    fail_msg("Reversible test failed.");
+  }
+
+  bitstream* bs = zfp_stream_bit_stream(stream);
+  if (isCompressedBitstreamChecksumsMatch(stream, bs, bundle->dimLens, zfp_mode_reversible, bundle->compressParamNum) == 1) {
+    fail_msg("Reversible test failed.");
+  }
+
+  if (doDecompress == 0) {
+    return;
+  }
+
+  // rewind stream for decompression
+  zfp_stream_rewind(stream);
+  if (runZfpDecompress(stream, bundle->decompressField, timer, compressedBytes) == 1) {
+    fail_msg("Reversible test failed.");
+  }
 
   // verify that uncompressed and decompressed arrays match bit for bit
   switch(bundle->stride) {
@@ -588,7 +536,7 @@ assertZfpCompressDecompressArrayMatchesBitForBit(void **state)
     case PERMUTED: {
         // test one scalar at a time for bitwise equality
         const size_t* n = bundle->randomGenArrSideLen;
-        int strides[4];
+        ptrdiff_t strides[4];
         ptrdiff_t offset = 0;
         size_t i, j, k, l;
         zfp_field_stride(field, strides);
@@ -610,331 +558,34 @@ assertZfpCompressDecompressArrayMatchesBitForBit(void **state)
   }
 }
 
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
+// returns number of testcase failures
+// (not allowed to call fail_msg() because all tests must run before signaling test failure)
+static int
+runCompressDecompressAcrossParamsGivenMode(void** state, int doDecompress, zfp_mode mode, int numCompressParams)
 {
   struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_precision) {
-    fail_msg("Invalid zfp mode during test");
-  }
 
-  assertZfpCompressDecompressChecksumMatches(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
-    fail_msg("Invalid zfp mode during test");
-  }
-
-  assertZfpCompressDecompressChecksumMatches(state);
-}
-
-#ifdef FL_PT_DATA
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedAccuracy_expect_ArrayChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_accuracy) {
-    fail_msg("Invalid zfp mode during test");
-  }
-
-  assertZfpCompressDecompressChecksumMatches(state);
-}
-#endif
-
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressReversible_expect_ArrayMatchesBitForBit)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_reversible) {
-    fail_msg("Invalid zfp mode during test");
-  }
-
-  assertZfpCompressDecompressArrayMatchesBitForBit(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != REVERSED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != INTERLEAVED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != PERMUTED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedPrecision_expect_ArrayChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != REVERSED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != INTERLEAVED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != PERMUTED) {
-    fail_msg("Invalid stride during test");
-  }
-
-  _catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressFixedRate_expect_ArrayChecksumMatches)(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedRate_expect_CompressedBitrateComparableToChosenRate)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
-    fail_msg("Test requires fixed rate mode");
-  }
-
-  zfp_field* field = bundle->field;
-  zfp_stream* stream = bundle->stream;
-
-  // integer arithemetic allows exact comparison
-  size_t compressedBytes = zfp_compress(stream, field);
-  assert_int_not_equal(compressedBytes, 0);
-  size_t compressedBits = compressedBytes * 8;
-
-  // compute padded lengths (multiples of block-side-len, 4)
-  size_t paddedNx = (bundle->randomGenArrSideLen[0] + 3) & ~0x3;
-  size_t paddedNy = (bundle->randomGenArrSideLen[1] + 3) & ~0x3;
-  size_t paddedNz = (bundle->randomGenArrSideLen[2] + 3) & ~0x3;
-  size_t paddedNw = (bundle->randomGenArrSideLen[3] + 3) & ~0x3;
-
-  size_t paddedArrayLen = 1;
-  switch (DIMS) {
-    case 4:
-      paddedArrayLen *= paddedNw;
-    case 3:
-      paddedArrayLen *= paddedNz;
-    case 2:
-      paddedArrayLen *= paddedNy;
-    case 1:
-      paddedArrayLen *= paddedNx;
-  }
-
-  // expect bitrate to scale wrt padded array length
-  size_t expectedTotalBits = bundle->rateParam * paddedArrayLen;
-  // account for zfp_compress() ending with stream_flush()
-  expectedTotalBits = (expectedTotalBits + stream_word_bits - 1) & ~(stream_word_bits - 1);
-
-  if(compressedBits != expectedTotalBits)
-    fail_msg("compressedBits (%lu) == expectedTotalBits (%lu) failed", (unsigned long)compressedBits, (unsigned long)expectedTotalBits);
-}
-
-#ifdef FL_PT_DATA
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_accuracy) {
-    fail_msg("Test requires fixed accuracy mode");
-  }
-
-  zfp_field* field = bundle->field;
-  zfp_stream* stream = bundle->stream;
-
-  size_t compressedBytes = zfp_compress(stream, field);
-  assert_int_not_equal(0, compressedBytes);
-
-  // zfp_decompress() will write to bundle->decompressedArr
-  // assert bitstream ends in same location
-  zfp_stream_rewind(stream);
-  assert_int_equal(compressedBytes, zfp_decompress(stream, bundle->decompressField));
-
-  int strides[4];
-  zfp_field_stride(field, strides);
-
-  // apply strides
-  ptrdiff_t offset = 0;
-  size_t* n = bundle->randomGenArrSideLen;
-  float maxDiffF = 0;
-  double maxDiffD = 0;
-
-  size_t i, j, k, l;
-  for (l = (n[3] ? n[3] : 1); l--; offset += strides[3] - n[2]*strides[2]) {
-    for (k = (n[2] ? n[2] : 1); k--; offset += strides[2] - n[1]*strides[1]) {
-      for (j = (n[1] ? n[1] : 1); j--; offset += strides[1] - n[0]*strides[0]) {
-        for (i = (n[0] ? n[0] : 1); i--; offset += strides[0]) {
-          float absDiffF;
-          double absDiffD;
-
-          switch(ZFP_TYPE) {
-            case zfp_type_float:
-              absDiffF = fabsf((float)bundle->decompressedArr[offset] - (float)bundle->compressedArr[offset]);
-
-              assert_true(absDiffF < bundle->accParam);
-
-              if (absDiffF > maxDiffF) {
-                maxDiffF = absDiffF;
-              }
-
-              break;
-
-            case zfp_type_double:
-              absDiffD = fabs(bundle->decompressedArr[offset] - bundle->compressedArr[offset]);
-
-              assert_true(absDiffD < bundle->accParam);
-
-              if (absDiffD > maxDiffD) {
-                maxDiffD = absDiffD;
-              }
-
-              break;
-
-            default:
-              fail_msg("Test requires zfp_type float or double");
-          }
-        }
-      }
+  int failures = 0;
+  int compressParam;
+  for (compressParam = 0; compressParam < numCompressParams; compressParam++) {
+    if (setupCompressParam(bundle, mode, compressParam) == 1) {
+      failures++;
+      continue;
     }
+
+    failures += isZfpCompressDecompressChecksumsMatch(state, doDecompress);
+
+    zfp_stream_rewind(bundle->stream);
+    memset(bundle->buffer, 0, bundle->bufsizeBytes);
   }
 
-  if (ZFP_TYPE == zfp_type_float) {
-    printf("\t\tMax abs error: %f\n", maxDiffF);
-  } else {
-    printf("\t\tMax abs error: %lf\n", maxDiffD);
-  }
-}
-#endif
-
-#ifdef ZFP_TEST_CUDA
-static void
-assertZfpCompressIsNoop(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_field* field = bundle->field;
-  zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
-
-  // grab bitstream member vars
-  uint bits = s->bits;
-  word buffer = s->buffer;
-  word* ptr = s->ptr;
-  size_t streamSize = stream_size(s);
-
-  // perform compression, expect bitstream not to advance
-  assert_int_equal(zfp_compress(stream, field), streamSize);
-
-  // expect bitstream untouched
-  assert_int_equal(s->bits, bits);
-  assert_int_equal(s->buffer, buffer);
-  assert_ptr_equal(s->ptr, ptr);
-  assert_int_equal(*s->ptr, *ptr);
+  return failures;
 }
 
 static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+runCompressDecompressTests(void** state, zfp_mode mode, int numCompressParams)
 {
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) == zfp_mode_fixed_rate) {
-    fail_msg("Invalid zfp mode during test");
+  if (runCompressDecompressAcrossParamsGivenMode(state, 1, mode, numCompressParams) > 0) {
+    fail_msg("Overall compress/decompress test failure\n");
   }
-
-  assertZfpCompressIsNoop(state);
 }
-
-static void
-_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != INTERLEAVED) {
-    fail_msg("Invalid stride during test");
-  } else if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
-    fail_msg("Invalid zfp mode during test");
-  }
-
-  assertZfpCompressIsNoop(state);
-}
-
-static void
-assertZfpDecompressIsNoop(void **state)
-{
-  struct setupVars *bundle = *state;
-  zfp_field* field = bundle->field;
-  zfp_stream* stream = bundle->stream;
-  bitstream* s = zfp_stream_bit_stream(stream);
-
-  // grab bitstream member vars
-  uint bits = s->bits;
-  word buffer = s->buffer;
-  word* ptr = s->ptr;
-  size_t streamSize = stream_size(s);
-
-  // perform decompression, expect bitstream not to advance
-  assert_int_equal(zfp_decompress(stream, field), streamSize);
-
-  // expect bitstream untouched
-  assert_int_equal(s->bits, bits);
-  assert_int_equal(s->buffer, buffer);
-  assert_ptr_equal(s->ptr, ptr);
-  assert_int_equal(*s->ptr, *ptr);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (zfp_stream_compression_mode(bundle->stream) == zfp_mode_fixed_rate) {
-    fail_msg("Invalid zfp mode during test");
-  }
-
-  assertZfpDecompressIsNoop(state);
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpDecompressFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
-{
-  struct setupVars *bundle = *state;
-  if (bundle->stride != INTERLEAVED) {
-    fail_msg("Invalid stride during test");
-  } else if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
-    fail_msg("Invalid zfp mode during test");
-  }
-
-  assertZfpDecompressIsNoop(state);
-}
-#endif

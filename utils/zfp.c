@@ -137,10 +137,10 @@ int main(int argc, char* argv[])
   zfp_type type = zfp_type_none;
   size_t typesize = 0;
   uint dims = 0;
-  uint nx = 0;
-  uint ny = 0;
-  uint nz = 0;
-  uint nw = 0;
+  size_t nx = 0;
+  size_t ny = 0;
+  size_t nz = 0;
+  size_t nw = 0;
   size_t count = 0;
   double rate = 0;
   uint precision = 0;
@@ -149,9 +149,9 @@ int main(int argc, char* argv[])
   uint maxbits = ZFP_MAX_BITS;
   uint maxprec = ZFP_MAX_PREC;
   int minexp = ZFP_MIN_EXP;
-  int header = 0;
-  int quiet = 0;
-  int stats = 0;
+  zfp_bool header = zfp_false;
+  zfp_bool quiet = zfp_false;
+  zfp_bool stats = zfp_false;
   char* inpath = 0;
   char* zfppath = 0;
   char* outpath = 0;
@@ -181,31 +181,31 @@ int main(int argc, char* argv[])
       usage();
     switch (argv[i][1]) {
       case '1':
-        if (++i == argc || sscanf(argv[i], "%u", &nx) != 1)
+        if (++i == argc || sscanf(argv[i], "%zu", &nx) != 1)
           usage();
         ny = nz = nw = 1;
         dims = 1;
         break;
       case '2':
-        if (++i == argc || sscanf(argv[i], "%u", &nx) != 1 ||
-            ++i == argc || sscanf(argv[i], "%u", &ny) != 1)
+        if (++i == argc || sscanf(argv[i], "%zu", &nx) != 1 ||
+            ++i == argc || sscanf(argv[i], "%zu", &ny) != 1)
           usage();
         nz = nw = 1;
         dims = 2;
         break;
       case '3':
-        if (++i == argc || sscanf(argv[i], "%u", &nx) != 1 ||
-            ++i == argc || sscanf(argv[i], "%u", &ny) != 1 ||
-            ++i == argc || sscanf(argv[i], "%u", &nz) != 1)
+        if (++i == argc || sscanf(argv[i], "%zu", &nx) != 1 ||
+            ++i == argc || sscanf(argv[i], "%zu", &ny) != 1 ||
+            ++i == argc || sscanf(argv[i], "%zu", &nz) != 1)
           usage();
         nw = 1;
         dims = 3;
         break;
       case '4':
-        if (++i == argc || sscanf(argv[i], "%u", &nx) != 1 ||
-            ++i == argc || sscanf(argv[i], "%u", &ny) != 1 ||
-            ++i == argc || sscanf(argv[i], "%u", &nz) != 1 ||
-            ++i == argc || sscanf(argv[i], "%u", &nw) != 1)
+        if (++i == argc || sscanf(argv[i], "%zu", &nx) != 1 ||
+            ++i == argc || sscanf(argv[i], "%zu", &ny) != 1 ||
+            ++i == argc || sscanf(argv[i], "%zu", &nz) != 1 ||
+            ++i == argc || sscanf(argv[i], "%zu", &nw) != 1)
           usage();
         dims = 4;
         break;
@@ -229,7 +229,7 @@ int main(int argc, char* argv[])
         type = zfp_type_float;
         break;
       case 'h':
-        header = 1;
+        header = zfp_true;
         break;
       case 'i':
         if (++i == argc)
@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
         mode = 'p';
         break;
       case 'q':
-        quiet = 1;
+        quiet = zfp_true;
         break;
       case 'r':
         if (++i == argc || sscanf(argv[i], "%lf", &rate) != 1)
@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
         mode = 'R';
         break;
       case 's':
-        stats = 1;
+        stats = zfp_true;
         break;
       case 't':
         if (++i == argc)
@@ -307,7 +307,7 @@ int main(int argc, char* argv[])
   }
 
   typesize = zfp_type_size(type);
-  count = (size_t)nx * (size_t)ny * (size_t)nz * (size_t)nw;
+  count = nx * ny * nz * nw;
 
   /* make sure one of the array dimensions is not zero */
   if (!count && dims) {
@@ -456,7 +456,7 @@ int main(int argc, char* argv[])
         zfp_stream_set_precision(zfp, precision);
         break;
       case 'r':
-        zfp_stream_set_rate(zfp, rate, type, dims, 0);
+        zfp_stream_set_rate(zfp, rate, type, dims, zfp_false);
         break;
       case 'c':
         if (!maxbits)
@@ -556,22 +556,16 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
       }
       type = field->type;
-      switch (type) {
-        case zfp_type_float:
-          typesize = sizeof(float);
-          break;
-        case zfp_type_double:
-          typesize = sizeof(double);
-          break;
-        default:
-          fprintf(stderr, "unsupported type\n");
-          return EXIT_FAILURE;
+      typesize = zfp_type_size(type);
+      if (!typesize) {
+        fprintf(stderr, "unsupported type\n");
+        return EXIT_FAILURE;
       }
       nx = MAX(field->nx, 1u);
       ny = MAX(field->ny, 1u);
       nz = MAX(field->nz, 1u);
       nw = MAX(field->nw, 1u);
-      count = (size_t)nx * (size_t)ny * (size_t)nz * (size_t)nw;
+      count = nx * ny * nz * nw;
     }
 
     /* allocate memory for decompressed data */
@@ -616,7 +610,7 @@ int main(int argc, char* argv[])
   /* print compression and error statistics */
   if (!quiet) {
     const char* type_name[] = { "int32", "int64", "float", "double" };
-    fprintf(stderr, "type=%s nx=%u ny=%u nz=%u nw=%u", type_name[type - zfp_type_int32], nx, ny, nz, nw);
+    fprintf(stderr, "type=%s nx=%zu ny=%zu nz=%zu nw=%zu", type_name[type - zfp_type_int32], nx, ny, nz, nw);
     fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / count);
     if (stats)
       print_error(fi, fo, type, count);

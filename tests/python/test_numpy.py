@@ -59,12 +59,13 @@ class TestNumpy(unittest.TestCase):
                 compress_param_num
             ),
         }
-        compressed_array = zfpy.compress_numpy(
+        compressed_array_tmp = zfpy.compress_numpy(
             random_array,
             write_header=False,
             **compression_kwargs
         )
-
+        mem = memoryview(compressed_array_tmp)
+        compressed_array = np.array(mem, copy=False)
         # Decompression using the "advanced" interface which enforces no header,
         # and the user must provide all the metadata
         decompressed_array = np.empty_like(random_array)
@@ -75,8 +76,9 @@ class TestNumpy(unittest.TestCase):
             out=decompressed_array,
             **compression_kwargs
         )
+        decompressed_array_dims = decompressed_array.shape + tuple(0 for i in range(4 - decompressed_array.ndim))
         decompressed_checksum = test_utils.getChecksumDecompArray(
-            ndims,
+            decompressed_array_dims,
             ztype,
             mode,
             compress_param_num
@@ -113,7 +115,8 @@ class TestNumpy(unittest.TestCase):
                     (zfpy.type_int64,  "int64"),
             ]:
                 orig_random_array = test_utils.getRandNumpyArray(ndims, ztype)
-                orig_checksum = test_utils.getChecksumOrigArray(ndims, ztype)
+                orig_random_array_dims = orig_random_array.shape + tuple(0 for i in range(4 - orig_random_array.ndim))
+                orig_checksum = test_utils.getChecksumOrigArray(orig_random_array_dims, ztype)
                 actual_checksum = test_utils.hashNumpyArray(orig_random_array)
                 self.assertEqual(orig_checksum, actual_checksum)
 
@@ -130,6 +133,7 @@ class TestNumpy(unittest.TestCase):
                         stride_config,
                         orig_random_array
                     )
+                    random_array_dims = random_array.shape + tuple(0 for i in range(4 - random_array.ndim))
                     self.assertTrue(np.equal(orig_random_array, random_array).all())
 
                     for compress_param_num in range(3):
@@ -153,7 +157,7 @@ class TestNumpy(unittest.TestCase):
                                 **compression_kwargs
                             )
                             compressed_checksum = test_utils.getChecksumCompArray(
-                                ndims,
+                                random_array_dims,
                                 ztype,
                                 mode,
                                 compress_param_num
@@ -165,7 +169,7 @@ class TestNumpy(unittest.TestCase):
 
                             # Decompression
                             decompressed_checksum = test_utils.getChecksumDecompArray(
-                                ndims,
+                                random_array_dims,
                                 ztype,
                                 mode,
                                 compress_param_num
@@ -174,11 +178,13 @@ class TestNumpy(unittest.TestCase):
                             # Decompression using the "public" interface
                             # requires a header, so re-compress with the header
                             # included in the stream
-                            compressed_array = zfpy.compress_numpy(
+                            compressed_array_tmp = zfpy.compress_numpy(
                                 random_array,
                                 write_header=True,
                                 **compression_kwargs
                             )
+                            mem = memoryview(compressed_array_tmp)
+                            compressed_array = np.array(mem, copy=False)
                             decompressed_array = zfpy.decompress_numpy(
                                 compressed_array,
                             )

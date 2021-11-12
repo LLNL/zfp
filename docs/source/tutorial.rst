@@ -77,7 +77,7 @@ We may now specify the rate, precision, or accuracy (see :ref:`modes`
 for more details on the meaning of these parameters)::
 
   // set compression mode and parameters
-  zfp_stream_set_rate(zfp, rate, type, dims, 0);
+  zfp_stream_set_rate(zfp, rate, type, dims, zfp_false);
   zfp_stream_set_precision(zfp, precision);
   zfp_stream_set_accuracy(zfp, tolerance);
 
@@ -166,7 +166,7 @@ Tying it all together, the code example below (see also the
 :ref:`simple <ex-simple>` program) shows how to compress a 3D array
 :code:`double array[nz][ny][nx]`::
 
-  // input: (void* array, int nx, int ny, int nz, double tolerance)
+  // input: (void* array, size_t nx, size_t ny, size_t nz, double tolerance)
 
   // initialize metadata for the 3D array a[nz][ny][nx]
   zfp_type type = zfp_type_double;                          // array scalar type
@@ -176,7 +176,7 @@ Tying it all together, the code example below (see also the
   zfp_stream* zfp = zfp_stream_open(NULL);                  // compressed stream and parameters
   zfp_stream_set_accuracy(zfp, tolerance);                  // set tolerance for fixed-accuracy mode
   //  zfp_stream_set_precision(zfp, precision);             // alternative: fixed-precision mode
-  //  zfp_stream_set_rate(zfp, rate, type, 3, 0);           // alternative: fixed-rate mode
+  //  zfp_stream_set_rate(zfp, rate, type, 3, zfp_false);   // alternative: fixed-rate mode
 
   // allocate buffer for compressed data
   size_t bufsize = zfp_stream_maximum_size(zfp, field);     // capacity of compressed buffer (conservative)
@@ -215,7 +215,7 @@ assumed to be stored contiguously.  For example,
 
   // compress a single contiguous block
   double block[4 * 4 * 4] = { /* some set of values */ };
-  uint bits = zfp_encode_block_double_3(zfp, block);
+  size_t bits = zfp_encode_block_double_3(zfp, block);
 
 The return value is the number of bits of compressed storage for the block.
 For fixed-rate streams, if random write access is desired, then the stream
@@ -232,12 +232,12 @@ The block above could also have been compressed as follows using strides::
 
   // compress a single contiguous block using strides
   double block[4][4][4] = { /* some set of values */ };
-  int sx = &block[0][0][1] - &block[0][0][0]; // x stride =  1
-  int sy = &block[0][1][0] - &block[0][0][0]; // y stride =  4
-  int sz = &block[1][0][0] - &block[0][0][0]; // z stride = 16
-  uint bits = zfp_encode_block_strided_double_3(zfp, block, sx, sy, sz);
+  ptrdiff_t sx = &block[0][0][1] - &block[0][0][0]; // x stride =  1
+  ptrdiff_t sy = &block[0][1][0] - &block[0][0][0]; // y stride =  4
+  ptrdiff_t sz = &block[1][0][0] - &block[0][0][0]; // z stride = 16
+  size_t bits = zfp_encode_block_strided_double_3(zfp, block, sx, sy, sz);
 
-The strides are measured in number of scalars, not in bytes.
+The strides are measured in number of array elements, not in bytes.
 
 For partial blocks, e.g., near the boundaries of arrays whose dimensions
 are not multiples of four, there are corresponding functions that accept
@@ -399,7 +399,7 @@ The compressed representation of an array can also be queried or initialized
 directly without having to convert to/from its floating-point representation::
 
   size_t bytes = compressed_size(); // number of bytes of compressed storage
-  uchar* compressed_data(); // pointer to compressed data
+  void* compressed_data(); // pointer to compressed data
 
 The array can through this pointer be initialized from offline compressed
 storage, but only after its dimensions and rate have been specified (see
@@ -450,18 +450,26 @@ the array :code:`a` clearly must be mutable to allow assignment to
 :cpp:class:`array::reference`.  The value associated with the read access
 is obtained via an implicit conversion.
 
-Array dimensions *nx*, *ny*, and *nz* can be queried using these functions::
+When the array is const qualified, the operators :code:`[]` and :code:`()`
+are inspectors that return a proxy :ref:`const reference <references>` that
+implicitly converts to a value.  If used as arguments in :code:`printf` or
+other functions that take a variable number of arguments, implicit conversion
+is not done and the reference has to be explicitly cast to value, e.g.,
+:code:`printf("%f", (double)a[i]);`.
 
-  size_t size(); // total number of elements nx * ny * nz
-  uint size_x(); // nx
-  uint size_y(); // ny
-  uint size_z(); // nz
+Array dimensions *nx*, *ny*, *nz*, and *nw* can be queried using these functions::
+
+  size_t size(); // total number of elements nx * ny * nz * nw
+  size_t size_x(); // nx
+  size_t size_y(); // ny
+  size_t size_z(); // nz
+  size_t size_w(); // nw
 
 The array dimensions can also be changed dynamically, e.g., if not known
 at time of construction, using
 ::
 
-  void resize(uint nx, uint ny, uint nz, bool clear = true);
+  void resize(size_t nx, size_t ny, size_t nz, size_t nw, bool clear = true);
 
 When *clear* = true, the array is explicitly zeroed.  In either case, all
 previous contents of the array are lost.  If *nx* = *ny* = *nz* = 0, all
@@ -499,9 +507,9 @@ from the cache and compressed, perhaps with some values in the block being
 uninitialized.  Here is an example of initializing a 3D array::
 
   for (zfp::array3d::iterator it = a.begin(); it != a.end(); it++) {
-    int i = it.i();
-    int j = it.j();
-    int k = it.k();
+    size_t i = it.i();
+    size_t j = it.j();
+    size_t k = it.k();
     a(i, j, k) = some_function(i, j, k);
   }
 
@@ -511,10 +519,10 @@ that expect uncompressed arrays, e.g., by using the pointer type as template
 argument.  For example::
 
   template <typename double_ptr>
-  void sum(double_ptr p, int count)
+  void sum(double_ptr p, size_t count)
   {
     double s = 0;
-    for (int i = 0; i < count; i++)
+    for (size_t i = 0; i < count; i++)
       s += p[i];
     return s;
   }
@@ -557,9 +565,12 @@ references.
 The following table shows the equivalent zfp type to standard types when
 working with 1D arrays::
 
-  double&                         zfp::array1d::reference
-  double*                         zfp::array1d::pointer
-  std::vector<double>::iterator   zfp::array1d::iterator
+  double&                               zfp::array1d::reference
+  double*                               zfp::array1d::pointer
+  std::vector<double>::iterator         zfp::array1d::iterator
+  const double&                         zfp::array1d::const_reference
+  const double*                         zfp::array1d::const_pointer
+  std::vector<double>::const_iterator   zfp::array1d::const_iterator
 
 .. _tut-caching:
 

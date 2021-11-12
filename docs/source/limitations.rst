@@ -26,18 +26,26 @@ that will address some of these limitations.
   2\ :sup:`48`, 2\ :sup:`24`, 2\ :sup:`16`, and 2\ :sup:`12` for 1D through
   4D arrays, respectively.  Note that this limitation applies only to
   the header; array dimensions are otherwise limited only by the size
-  of an unsigned integer.
+  supported by :code:`size_t`.
+
+- The :ref:`compressed-array classes <arrays>` have additional size
+  restrictions.  The :ref:`cache <caching>` supports at most
+  2\ :sup:`p-1` - 1 blocks, where *p* is the number of bits in a :code:`uint`
+  (usually *p* = 32).  Consequently, the number of elements in a
+  *d*-dimensional compressed array is at most
+  |4powd| |times| (2\ :sup:`p-1` - 1), or about 8 billion elements for 1D
+  arrays.
 
 - Conventional pointers and references to individual array elements are
   not available.  That is, constructions like :code:`double* ptr = &a[i];`
   are not possible when :code:`a` is a |zfp| array.  However, as of
-  |zfp| 0.5.2, :ref:`proxy pointers <pointers>` are available that act much
-  like pointers to uncompressed data.  Similarly, operators :code:`[]`
+  |zfp| |proxyrelease|, :ref:`proxy pointers <pointers>` are available that
+  act much like pointers to uncompressed data.  Similarly, operators :code:`[]`
   and :code:`()` do not return regular C++ references.  Instead, a
-  :ref:`proxy reference <references>` class is used (similar to how STL bit
-  vectors are implemented).  These proxy references and pointers can,
-  however, safely be passed to functions and used where regular references
-  and pointers can.
+  :ref:`proxy reference <references>` class is used (similar to how
+  `STL bit vectors <https://en.cppreference.com/w/cpp/container/vector_bool>`__
+  are implemented).  These proxy references and pointers can, however, safely
+  be passed to functions and used where regular references and pointers can.
 
 - Although the current version of |zfp| supports :ref:`iterators <iterators>`,
   :ref:`pointers <pointers>`, and :ref:`references <references>` to array
@@ -50,11 +58,11 @@ that will address some of these limitations.
   computations, where catastrophic cancellation can be an issue when
   insufficient precision is available.
 
-- Only single and double precision types are supported.  Generalizations
-  to IEEE half and quad precision would be useful.  For instance,
-  compressed 64-bit-per-value storage of 128-bit quad-precision numbers
-  could greatly improve the accuracy of double-precision floating-point
-  computations using the same amount of storage.
+- Only single and double precision floating types are supported.
+  Generalizations to IEEE half and quad precision would be useful.  For
+  instance, compressed 64-bit-per-value storage of 128-bit quad-precision
+  numbers could greatly improve the accuracy of double-precision
+  floating-point computations using the same amount of storage.
 
 - Complex-valued arrays are not directly supported.  Real and imaginary
   components must be stored as separate arrays, which may result in lost
@@ -66,14 +74,17 @@ that will address some of these limitations.
 
 - Version |cudarelease| adds support for CUDA compression and decompression.
   However, only the fixed-rate compression mode is so far supported.
+  The CUDA implementation is further subject to
+  :ref:`additional limitations <cuda-limitations>`.
 
 - As of version |4drelease|, |zfp| supports compression and decompression
   of 4D arrays.  However, |zfp| does not yet implement a 4D compressed
   array C++ class.  This will be added in the near future.
 
 - The :ref:`C wrappers <cfp>` for |zfp|'s compressed arrays support only
-  basic array accesses.  There is currently no C interface for proxy
-  references, pointers, iterators, or views.
+  a subset of the C++ API.  |zfp| |4darrrelease| adds support for proxy
+  references, pointers, and iterators, but views and read-only arrays are
+  not yet supported,
 
 - The Python and Fortran bindings do not yet support compressed arrays.
   Moreover, only a select subset of the :ref:`high-level API <hl-api>`

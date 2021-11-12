@@ -1,0 +1,17 @@
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Lindstrom
+    given-names: Peter
+    orcid: https://orcid.org/0000-0003-3817-4199
+title: "Fixed-Rate Compressed Floating-Point Arrays"
+journal: "IEEE Transactions on Visualization and Computer Graphics"
+volume: 20
+number: 12
+start: 2674
+end: 2683
+year: 2014
+month: 12
+version: develop
+doi: 10.1109/TVCG.2014.2346458
+date-released: 2014-11-05

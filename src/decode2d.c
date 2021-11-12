@@ -6,6 +6,7 @@
 #include "template/template.h"
 #include "template/codec.h"
 #include "inline/bitstream.c"
+#include "template/codec.c"
 #include "template/codecf.c"
 #include "template/codec2.c"
 #include "template/decode.c"

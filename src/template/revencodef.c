@@ -71,7 +71,7 @@ _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
   else {
     /* transform is irreversible; reinterpret floating values as integers */
     _t1(rev_fwd_reinterpret, Scalar)(iblock, fblock, BLOCK_SIZE);
-    bits++;
+    bits += 2;
     stream_write_bits(zfp->stream, 3, 2);
   }
   /* losslessly encode integers */

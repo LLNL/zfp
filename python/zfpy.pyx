@@ -4,8 +4,7 @@ import functools
 import cython
 from libc.stdlib cimport malloc, free
 from cython cimport view
-from cpython cimport array
-import array
+from libc.stdint cimport uint8_t
 
 import itertools
 if sys.version_info[0] == 2:
@@ -142,8 +141,8 @@ cpdef bytes compress_numpy(
     cdef zfp_field* field = _init_field(arr)
     cdef zfp_stream* stream = zfp_stream_open(NULL)
 
-    cdef zfp_type ztype = zfp_type_none;
-    cdef int ndim = arr.ndim;
+    cdef zfp_type ztype = zfp_type_none
+    cdef int ndim = arr.ndim
     _set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
 
     # Allocate space based on the maximum size potentially required by zfp to
@@ -245,7 +244,7 @@ cdef _validate_4d_list(in_list, list_name):
         )
 
 cpdef np.ndarray _decompress(
-    bytes compressed_data,
+    const uint8_t[::1] compressed_data,
     zfp_type ztype,
     shape,
     out=None,
@@ -253,17 +252,16 @@ cpdef np.ndarray _decompress(
     double rate = -1,
     int precision = -1,
 ):
-
     if compressed_data is None:
         raise TypeError("compressed_data cannot be None")
     if compressed_data is out:
         raise ValueError("Cannot decompress in-place")
     _validate_4d_list(shape, "shape")
 
-    cdef char* comp_data_pointer = compressed_data
+    cdef const void* comp_data_pointer = <const void*>&compressed_data[0]
     cdef zfp_field* field = zfp_field_alloc()
     cdef bitstream* bstream = stream_open(
-        comp_data_pointer,
+        <void *>comp_data_pointer,
         len(compressed_data)
     )
     cdef zfp_stream* stream = zfp_stream_open(bstream)
@@ -329,15 +327,15 @@ cpdef np.ndarray _decompress(
     return output
 
 cpdef np.ndarray decompress_numpy(
-    bytes compressed_data,
+    const uint8_t[::1] compressed_data,
 ):
     if compressed_data is None:
         raise TypeError("compressed_data cannot be None")
 
-    cdef char* comp_data_pointer = compressed_data
+    cdef const void* comp_data_pointer = <const void *>&compressed_data[0]
     cdef zfp_field* field = zfp_field_alloc()
     cdef bitstream* bstream = stream_open(
-        comp_data_pointer,
+        <void *>comp_data_pointer,
         len(compressed_data)
     )
     cdef zfp_stream* stream = zfp_stream_open(bstream)

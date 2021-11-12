@@ -36,7 +36,7 @@ setup(void **state)
   zfp_field* field = zfp_field_2d(NULL, type, FIELD_X_LEN, FIELD_Y_LEN);
 
   zfp_stream* stream = zfp_stream_open(NULL);
-  zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, 0);
+  zfp_stream_set_rate(stream, ZFP_RATE_PARAM_BITS, type, DIMS, zfp_false);
 
   size_t bufsizeBytes = zfp_stream_maximum_size(stream, field);
   bundle->buffer = calloc(bufsizeBytes, sizeof(char));
@@ -107,9 +107,9 @@ when_zfpFieldMetadataCalled_expect_LSBBits5To53EncodeArrayDimensions(void **stat
 
   // setup uses a 2d field
   uint64 metadataEncodedDims = (metadata >> 4) & MASK_48_BITS;
-  uint nx = (metadataEncodedDims & MASK_24_BITS) + 1;
+  uint nx = (uint)((metadataEncodedDims & MASK_24_BITS) + 1);
   metadataEncodedDims >>= 24;
-  uint ny = (metadataEncodedDims & MASK_24_BITS) + 1;
+  uint ny = (uint)((metadataEncodedDims & MASK_24_BITS) + 1);
 
   assert_int_equal(nx, FIELD_X_LEN);
   assert_int_equal(ny, FIELD_Y_LEN);
@@ -146,6 +146,35 @@ when_zfpFieldSetMetadataCalled_expect_arrayDimensionsSet(void **state)
   assert_int_equal(field->nx, FIELD_X_LEN);
   assert_int_equal(field->ny, FIELD_Y_LEN);
   assert_int_equal(field->nz, 0);
+}
+
+static void
+when_zfpFieldMetadataCalled_onInvalidSize_expect_ZFP_META_NULL(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_field* field = bundle->field;
+  uint64 metadata = zfp_field_metadata(field);
+
+  field->nx = 1 << 25;
+  field->ny = 1 << 25;
+
+  uint64 meta = zfp_field_metadata(field); 
+
+  assert_int_equal(meta, ZFP_META_NULL);
+}
+
+static void
+when_zfpFieldSetMetadataCalled_forInvalidMeta_expect_false(void **state)
+{
+  struct setupVars *bundle = *state;
+  zfp_field* field = bundle->field;
+  uint64 metadata = zfp_field_metadata(field);
+
+  uint64 meta = 1ULL << (ZFP_META_BITS + 1);
+
+  zfp_bool status = zfp_field_set_metadata(field, meta); 
+
+  assert_int_equal(status, zfp_false);
 }
 
 static void
@@ -278,9 +307,9 @@ given_properHeader_when_zfpReadHeaderMetadata_expect_fieldArrayDimsSet(void **st
   struct setupVars *bundle = *state;
   zfp_stream* stream = bundle->stream;
   zfp_field* field = bundle->field;
-  uint nx = field->nx;
-  uint ny = field->ny;
-  uint nz = field->nz;
+  size_t nx = field->nx;
+  size_t ny = field->ny;
+  size_t nz = field->nz;
 
   // write header to bitstream
   assert_int_equal(zfp_write_header(stream, bundle->field, ZFP_HEADER_META), ZFP_META_BITS);
@@ -436,6 +465,8 @@ int main()
 
     // write header
     cmocka_unit_test_setup_teardown(when_zfpWriteHeaderMagic_expect_numBitsWrittenEqualToZFP_MAGIC_BITS, setup, teardown),
+    cmocka_unit_test_setup_teardown(when_zfpFieldMetadataCalled_onInvalidSize_expect_ZFP_META_NULL, setup, teardown),
+    cmocka_unit_test_setup_teardown(when_zfpFieldSetMetadataCalled_forInvalidMeta_expect_false, setup, teardown),
     cmocka_unit_test_setup_teardown(when_zfpWriteHeaderMagic_expect_24BitsAreCharsZfpFollowedBy8BitsZfpCodecVersion, setup, teardown),
 
     cmocka_unit_test_setup_teardown(when_zfpWriteHeaderMetadata_expect_numBitsWrittenEqualToZFP_META_BITS, setup, teardown),

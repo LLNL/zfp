@@ -24,6 +24,8 @@ The following sections are available:
 
   * :ref:`hl-func-bitstream`
   * :ref:`hl-func-stream`
+  * :ref:`hl-func-exec`
+  * :ref:`hl-func-config`
   * :ref:`hl-func-field`
   * :ref:`hl-func-codec`
 
@@ -43,10 +45,14 @@ Macros
   :c:macro:`ZFP_VERSION_STRING` is a string literal.  See also
   :c:data:`zfp_library_version` and :c:data:`zfp_version_string`.
 
+----
+
 .. c:macro:: ZFP_CODEC
 
   Macro identifying the version of the compression CODEC.  See also
   :c:data:`zfp_codec_version`.
+
+----
 
 .. c:macro:: ZFP_MIN_BITS
 .. c:macro:: ZFP_MAX_BITS
@@ -54,9 +60,11 @@ Macros
 .. c:macro:: ZFP_MIN_EXP
 
   Default compression parameter settings that impose no constraints.
-  The largest possible compressed block size, corresponding to 3D blocks
+  The largest possible compressed block size, corresponding to 4D blocks
   of doubles, is given by :c:macro:`ZFP_MAX_BITS`.  See also
   :c:type:`zfp_stream`.
+
+----
 
 .. c:macro:: ZFP_META_NULL
 
@@ -66,26 +74,81 @@ Macros
   (see :ref:`limitations`).  In addition to signaling error, this value
   is guaranteed not to represent valid metadata.
 
+----
+
 .. _header-macros:
+
+The :code:`ZFP_HEADER` bit mask specifies which portions of a header to output
+(if any).  The constants below should be bitwise ORed together.  Use
+:c:macro:`ZFP_HEADER_FULL` to output all header information available.  The
+compressor and decompressor must agree on which parts of the header to
+read/write.  See :c:func:`zfp_read_header` and :c:func:`zfp_write_header`
+for how to read and write header information.
+
 .. c:macro:: ZFP_HEADER_MAGIC
+
+  Magic constant that identifies the data as a |zfp| stream compressed using
+  a particular CODEC version.
+
 .. c:macro:: ZFP_HEADER_META
+
+  Array size and scalar type information stored in the :c:type:`zfp_field`
+  struct.
+
 .. c:macro:: ZFP_HEADER_MODE
+
+  Compression mode and parameters stored in the :c:type:`zfp_stream` struct.
+
 .. c:macro:: ZFP_HEADER_FULL
 
-  Bit masks for specifying which portions of a header to output (if any).
-  These constants should be bitwise ORed together.  Use
-  :c:macro:`ZFP_HEADER_FULL` to output all header information available.
-  The compressor and decompressor must agree on which parts of the header
-  to read/write.
+  Full header information (bitwise OR of all :code:`ZFP_HEADER` constants).
 
-  :c:macro:`ZFP_HEADER_META` in essence encodes the information stored in
-  the :c:type:`zfp_field` struct, while :c:macro:`ZFP_HEADER_MODE` encodes
-  the compression parameters stored in the :c:type:`zfp_stream` struct.
-  The magic, which includes the CODEC version, can be used to uniquely
-  identify the stream as a |zfp| stream.
 
-  See :c:func:`zfp_read_header` and :c:func:`zfp_write_header` for
-  how to read and write header information.
+----
+
+.. _data-macros:
+
+The :code:`ZFP_DATA` bit mask specifies which portions of array data
+structures to compute total storage size for.  These constants should be
+bitwise ORed together.  Use :c:macro:`ZFP_DATA_ALL` to count all storage used.
+
+.. c:macro:: ZFP_DATA_UNUSED
+
+  Allocated but unused data.
+
+.. c:macro:: ZFP_DATA_PADDING
+
+  Padding for alignment purposes.
+  
+.. c:macro:: ZFP_DATA_META
+
+  Class members and other fixed-size storage.
+
+.. c:macro:: ZFP_DATA_MISC
+
+  Miscellaneous uncategorized storage.
+
+.. c:macro:: ZFP_DATA_PAYLOAD
+
+  Compressed data encoding array elements.
+
+.. c:macro:: ZFP_DATA_INDEX
+
+  Block :ref:`index <index>` information.
+
+.. c:macro:: ZFP_DATA_CACHE
+
+  Uncompressed :ref:`cached <caching>` data.
+
+.. C:macro:: ZFP_DATA_HEADER
+
+  :ref:`header` information.
+
+.. c:macro:: ZFP_DATA_ALL
+
+  All storage (bitwise OR of all :code:`ZFP_DATA` constants).
+
+----
 
 .. c:macro:: ZFP_MAGIC_BITS
 .. c:macro:: ZFP_META_BITS
@@ -99,6 +162,15 @@ Macros
   the high-level API.  For most common compression parameter settings,
   only :c:macro:`ZFP_MODE_SHORT_BITS` bits of header information are stored
   to encode the mode (see :c:func:`zfp_stream_mode`).
+
+.. c:macro: ZFP_ROUND_FIRST
+.. c:macro: ZFP_ROUND_NEVER
+.. c:macro: ZFP_ROUND_LAST
+
+  Available rounding modes for :c:macro:`ZFP_ROUNDING_MODE`, which
+  specifies at build time how |zfp| performs rounding in lossy compression
+  mode.
+
 
 .. _hl-types:
 
@@ -122,6 +194,8 @@ Types
       zfp_execution exec; // execution policy and parameters
     } zfp_stream;
 
+----
+
 .. c:type:: zfp_execution
 
   The :c:type:`zfp_stream` also stores information about how to execute
@@ -135,6 +209,8 @@ Types
       zfp_exec_params params; // execution parameters
     } zfp_execution;
 
+----
+
 .. c:type:: zfp_exec_policy
 
   Currently three execution policies are available: serial, OpenMP parallel,
@@ -147,6 +223,8 @@ Types
       zfp_exec_cuda   = 2  // CUDA parallel execution
     } zfp_exec_policy;
 
+----
+
 .. c:type:: zfp_exec_params
 
   Execution parameters are shared among policies in a union.  Currently
@@ -156,6 +234,8 @@ Types
     typedef union {
       zfp_exec_params_omp omp; // OpenMP parameters
     } zfp_exec_params;
+
+----
 
 .. c:type:: zfp_exec_params_omp
 
@@ -170,6 +250,9 @@ Types
       uint chunk_size; // number of blocks per chunk (1D only)
     } zfp_exec_params_omp;
 
+----
+
+.. _mode_struct:
 .. c:type:: zfp_mode
 
   Enumerates the compression modes.
@@ -183,6 +266,31 @@ Types
       zfp_mode_fixed_accuracy  = 4, // fixed accuracy mode
       zfp_mode_reversible      = 5  // reversible (lossless) mode
     } zfp_mode;
+
+----
+
+.. _config_struct:
+.. c:type:: zfp_config
+
+  Encapsulates compression mode and parameters (if any).
+  ::
+
+    typedef struct {
+      zfp_mode mode;      // compression mode */
+      union {
+        double rate;      // compressed bits/value (negative for word alignment)
+        uint precision;   // uncompressed bits/value
+        double tolerance; // absolute error tolerance
+        struct {
+          uint minbits;   // min number of compressed bits/block
+          uint maxbits;   // max number of compressed bits/block
+          uint maxprec;   // max number of uncompressed bits/value
+          int minexp;     // min floating point bit plane number to store
+        } expert;         // expert mode arguments
+      } arg;              // arguments corresponding to compression mode
+    } zfp_config;
+
+----
 
 .. c:type:: zfp_type
 
@@ -200,6 +308,9 @@ Types
       zfp_type_double = 4  // double precision floating point
     } zfp_type;
 
+----
+
+.. _field:
 .. index::
    single: Strided Arrays
 .. c:type:: zfp_field
@@ -209,10 +320,10 @@ Types
   ::
 
     typedef struct {
-      zfp_type type;       // scalar type (e.g., int32, double)
-      uint nx, ny, nz, nw; // sizes (zero for unused dimensions)
-      int sx, sy, sz, sw;  // strides (zero for contiguous array a[nw][nz][ny][nx])
-      void* data;          // pointer to array data
+      zfp_type type;            // scalar type (e.g., int32, double)
+      size_t nx, ny, nz, nw;    // sizes (zero for unused dimensions)
+      ptrdiff_t sx, sy, sz, sw; // strides (zero for contiguous array a[nw][nz][ny][nx])
+      void* data;               // pointer to array data
     } zfp_field;
 
   For example, a static multidimensional C array declared as
@@ -232,13 +343,26 @@ Types
   Strides can be used in case multiple fields are stored interleaved via
   "array of struct" (AoS) rather than "struct of array" (SoA) storage,
   or if the dimensions should be transposed during (de)compression.
-  Given 4D array indices (*x*, *y*, *z*, *w*), the corresponding array
-  element is stored at
+  Strides may even be negative, allowing one or more dimensions to be
+  traversed in reverse order.  Given 4D array indices (*x*, *y*, *z*, *w*),
+  the corresponding array element is stored at
   ::
 
     data[x * sx + y * sy + z * sz + w * sw]
 
   where :code:`data` is a pointer to the first array element.
+
+
+.. _new-field:
+.. warning::
+  The :c:type:`zfp_field` struct was modified in |zfp| |64bitrelease| to
+  use :code:`size_t` and :code:`ptrdiff_t` for array dimensions and
+  strides, respectively, to support 64-bit addressing of very large arrays
+  (previously, :code:`uint` and :code:`int` were used).  This ABI
+  incompatible change may require rebuilding applications that use |zfp|
+  and may in some cases also require code changes to handle pointers to
+  :code:`size_t` instead of pointers to :code:`uint` (see
+  :c:func:`zfp_field_size`, for instance).
 
 .. _indexing:
 .. index::
@@ -253,7 +377,30 @@ Types
   is assumed to vary fastest, |zfp| can be thought of as assuming
   Fortran ordering.  For C ordered arrays, the user should transpose
   the dimensions or specify strides to properly describe the memory layout.
-  See this :ref:`discussion <p-dimensions>` for further details.
+  See :ref:`this FAQ <q-layout>` for further details.
+
+.. c:type:: zfp_bool
+
+  :c:type:`zfp_bool` is new as of |zfp| |boolrelease|.  Although merely
+  an alias for :code:`int`, this type serves to document that a return
+  value or function parameter should be treated as Boolean.  Two enumerated
+  constants are available::
+
+    enum {
+      zfp_false = 0,
+      zfp_true = !zfp_false
+    };
+
+  The reason why :c:type:`zfp_bool` is not an enumerated type itself is
+  that in C++ this would require an explicit cast between the :code:`bool`
+  type resulting from logical expressions, e.g.,
+  :code:`zfp_bool done = static_cast<zfp_bool>(queue.empty() && work == 0)`.
+  Such casts from :code:`bool` to a non-enumerated :code:`int` are not
+  necessary.
+
+  The |zfp| |boolrelease| API has changed to use :c:type:`zfp_bool` in
+  place of :code:`int` where appropriate; this change should not affect
+  existing code.
 
 .. _hl-data:
 
@@ -267,10 +414,14 @@ Constants
   To ensure that the :file:`zfp.h` header matches the binary library linked to,
   :c:data:`zfp_codec_version` should match :c:macro:`ZFP_CODEC`.
 
+----
+
 .. c:var:: const uint zfp_library_version
 
   The library version.  The binary library and headers are compatible if
   :c:data:`zfp_library_version` matches :c:macro:`ZFP_VERSION`.
+
+----
 
 .. c:var:: const char* const zfp_version_string
 
@@ -283,6 +434,7 @@ Constants
 
 Functions
 ---------
+
 
 .. c:function:: size_t zfp_type_size(zfp_type type)
 
@@ -300,19 +452,127 @@ Compressed Stream
   and writing bits to/from memory.  *stream* may be :c:macro:`NULL` and
   attached later via :c:func:`zfp_stream_set_bit_stream`.
 
+----
+
 .. c:function:: void zfp_stream_close(zfp_stream* stream)
 
   Close and deallocate compressed stream.  This does not affect the
   attached bit stream.
 
+----
+
+.. c:function:: void zfp_stream_rewind(zfp_stream* stream)
+
+  Rewind bit stream to beginning for compression or decompression.
+
+----
+
 .. c:function:: bitstream* zfp_stream_bit_stream(const zfp_stream* stream)
 
-  Return bit stream associated with compressed stream.
+  Return bit stream associated with compressed stream (see
+  :c:func:`zfp_stream_set_bit_stream`).
+
+----
+
+.. c:function:: void zfp_stream_set_bit_stream(zfp_stream* stream, bitstream* bs)
+
+  Associate bit stream with compressed stream.
+
+----
+
+.. c:function:: size_t zfp_stream_compressed_size(const zfp_stream* stream)
+
+  Number of bytes of compressed storage.  This function returns the
+  current byte offset within the bit stream from the beginning of the
+  bit stream memory buffer.  To ensure all buffered compressed data has
+  been output call :c:func:`zfp_stream_flush` first.
+
+----
+
+.. c:function:: size_t zfp_stream_maximum_size(const zfp_stream* stream, const zfp_field* field)
+
+  Conservative estimate of the compressed byte size for the compression
+  parameters stored in *stream* and the array whose scalar type and dimensions
+  are given by *field*.  This function may be used to determine how large a
+  memory buffer to allocate to safely hold the entire compressed array.
+
+
+.. _hl-func-stream:
+
+Compression Parameters
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. c:function:: zfp_mode zfp_stream_compression_mode(const zfp_stream* stream)
 
   Return compression mode associated with compression parameters. Return
   :code:`zfp_mode_null` when compression parameters are invalid.
+
+----
+
+.. c:function:: void zfp_stream_set_reversible(zfp_stream* stream)
+
+  Enable :ref:`reversible <mode-reversible>` (lossless) compression.
+
+----
+
+.. c:function:: double zfp_stream_rate(const zfp_stream* stream, uint dims)
+
+  Return rate in compressed bits per value if *stream* is in
+  :ref:`fixed-rate mode <mode-fixed-rate>` (see :c:func:`zfp_stream_set_rate`),
+  else zero.  *dims* is the dimensionality of the compressed data.
+
+----
+
+.. c:function:: double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, uint dims, zfp_bool align)
+
+  Set *rate* for :ref:`fixed-rate mode <mode-fixed-rate>` in compressed bits
+  per value.  The target scalar *type* and array *dimensionality* are needed
+  to correctly translate the rate to the number of bits per block.  The
+  Boolean *align* should be :code:`zfp_true` if
+  :ref:`word alignment <q-portability>` is needed, e.g., to support random
+  access writes of blocks for |zfp|'s :ref:`compressed arrays <arrays>`.
+  Such alignment may further constrain the rate.  The closest supported rate
+  is returned, which may differ from the requested rate.
+
+----
+
+.. c:function:: uint zfp_stream_precision(const zfp_stream* stream)
+
+  Return precision in uncompressed bits per value if *stream* is in
+  :ref:`fixed-precision mode <mode-fixed-precision>` (see
+  :c:func:`zfp_stream_set_precision`), else zero.
+
+----
+
+.. c:function:: uint zfp_stream_set_precision(zfp_stream* stream, uint precision)
+
+  Set *precision* for :ref:`fixed-precision mode <mode-fixed-precision>`.
+  The precision specifies how many uncompressed bits per value to store,
+  and indirectly governs the relative error.  The actual precision is
+  returned, e.g., in case the desired precision is out of range.  To
+  preserve a certain floating-point mantissa or integer precision in the
+  decompressed data, see :ref:`FAQ #21 <q-lossless>`.
+
+----
+
+.. c:function:: double zfp_stream_accuracy(const zfp_stream* stream)
+
+  Return accuracy as an absolute error tolerance if *stream* is in
+  :ref:`fixed-accuracy mode <mode-fixed-accuracy>` (see
+  :c:func:`zfp_stream_set_accuracy`), else zero.
+
+----
+
+.. c:function:: double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance)
+
+  Set absolute error *tolerance* for
+  :ref:`fixed-accuracy mode <mode-fixed-accuracy>`.  The tolerance ensures
+  that values in the decompressed array differ from the input array by no
+  more than this tolerance (in all but exceptional circumstances; see
+  :ref:`FAQ #17 <q-tolerance>`).  This compression mode should be used only
+  with floating-point (not integer) data.
+
+----
 
 .. c:function:: uint64 zfp_stream_mode(const zfp_stream* stream)
 
@@ -326,72 +586,7 @@ Compressed Stream
   are to vary spatially over small regions.  Such spatially adaptive coding
   would have to be implemented via the low-level API.
 
-.. c:function:: void zfp_stream_params(const zfp_stream* stream, uint* minbits, uint* maxbits, uint* maxprec, int* minexp)
-
-  Query :ref:`compression parameters <mode-expert>`.  For any parameter not
-  needed, pass :c:macro:`NULL` for the corresponding pointer.
-
-.. c:function:: size_t zfp_stream_compressed_size(const zfp_stream* stream)
-
-  Number of bytes of compressed storage.  This function returns the
-  current byte offset within the bit stream from the beginning of the
-  bit stream memory buffer.  To ensure all buffered compressed data has
-  been output call :c:func:`zfp_stream_flush` first.
-
-.. c:function:: size_t zfp_stream_maximum_size(const zfp_stream* stream, const zfp_field* field)
-
-  Conservative estimate of the compressed byte size for the compression
-  parameters stored in *stream* and the array whose scalar type and dimensions
-  are given by *field*.  This function may be used to determine how large a
-  memory buffer to allocate to safely hold the entire compressed array.
-
-.. c:function:: void zfp_stream_set_bit_stream(zfp_stream* stream, bitstream* bs)
-
-  Associate bit stream with compressed stream.
-
-.. c:function:: void zfp_stream_rewind(zfp_stream* stream)
-
-  Rewind bit stream to beginning for compression or decompression.
-
-
-.. _hl-func-stream:
-
-Compression Parameters
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. c:function:: void zfp_stream_set_reversible(zfp_stream* stream)
-
-  Enable :ref:`reversible <mode-reversible>` (lossless) compression.
-
-.. c:function:: double zfp_stream_set_rate(zfp_stream* stream, double rate, zfp_type type, uint dims, int wra)
-
-  Set *rate* for :ref:`fixed-rate mode <mode-fixed-rate>` in compressed bits
-  per value.  The target scalar *type* and array *dimensionality* are needed
-  to correctly translate the rate to the number of bits per block.  The
-  parameter *wra* should be nonzero if random access writes of blocks into
-  the compressed bit stream is needed, for example for implementing |zfp|'s
-  :ref:`compressed arrays <arrays>`.  This requires blocks to be aligned on
-  :ref:`bit stream word <q-portability>` boundaries, and therefore constrains
-  the rate.  The closest supported rate is returned, which may differ from
-  the desired rate.
-
-.. c:function:: uint zfp_stream_set_precision(zfp_stream* stream, uint precision)
-
-  Set *precision* for :ref:`fixed-precision mode <mode-fixed-precision>`.
-  The precision specifies how many uncompressed bits per value to store,
-  and indirectly governs the relative error.  The actual precision is
-  returned, e.g., in case the desired precision is out of range.  To
-  preserve a certain floating-point mantissa or integer precision in the
-  decompressed data, see :ref:`FAQ #21 <q-lossless>`.
-
-.. c:function:: double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance)
-
-  Set absolute error *tolerance* for
-  :ref:`fixed-accuracy mode <mode-fixed-accuracy>`.  The tolerance ensures
-  that values in the decompressed array differ from the input array by no
-  more than this tolerance (in all but exceptional circumstances; see
-  :ref:`FAQ #17 <q-tolerance>`).  This compression mode should be used only
-  with floating-point (not integer) data.
+----
 
 .. c:function:: zfp_mode zfp_stream_set_mode(zfp_stream* stream, uint64 mode)
 
@@ -401,13 +596,23 @@ Compression Parameters
   decoded compression parameters are invalid, they are not set and the
   function returns :code:`zfp_mode_null`.
 
-.. c:function:: int zfp_stream_set_params(zfp_stream* stream, uint minbits, uint maxbits, uint maxprec, int minexp)
+----
+
+.. c:function:: void zfp_stream_params(const zfp_stream* stream, uint* minbits, uint* maxbits, uint* maxprec, int* minexp)
+
+  Query :ref:`compression parameters <mode-expert>`.  For any parameter not
+  needed, pass :c:macro:`NULL` for the corresponding pointer.
+
+----
+
+.. c:function:: zfp_bool zfp_stream_set_params(zfp_stream* stream, uint minbits, uint maxbits, uint maxprec, int minexp)
 
   Set all compression parameters directly.  See the section on
   :ref:`expert mode <mode-expert>` for a discussion of the parameters.
-  The return value is nonzero upon success.
+  The return value is :code:`zfp_true` upon success.
 
-.. _hl-func-field:
+
+.. _hl-func-exec:
 
 Execution Policy
 ^^^^^^^^^^^^^^^^
@@ -416,35 +621,98 @@ Execution Policy
 
   Return current execution policy.
 
+----
+
 .. c:function:: uint zfp_stream_omp_threads(const zfp_stream* stream)
 
   Return number of OpenMP threads to request for compression.
   See :c:func:`zfp_stream_set_omp_threads`.
+
+----
 
 .. c:function:: uint zfp_stream_omp_chunk_size(const zfp_stream* stream)
 
   Return number of blocks to compress together per OpenMP thread.
   See :c:func:`zfp_stream_set_omp_chunk_size`.
 
-.. c:function:: int zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)
+----
+
+.. c:function:: zfp_bool zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)
 
   Set execution policy.  If different from the previous policy, initialize
-  the execution parameters to their default values.  Nonzero is returned if
-  the execution policy is supported.
+  the execution parameters to their default values.  :code:`zfp_true` is
+  returned if the execution policy is supported.
 
-.. c:function:: int zfp_stream_set_omp_threads(zfp_stream* stream, uint threads)
+----
+
+.. c:function:: zfp_bool zfp_stream_set_omp_threads(zfp_stream* stream, uint threads)
 
   Set the number of OpenMP threads to use during compression.  If *threads*
   is zero, then the number of threads is given by the value of the OpenMP
   *nthreads-var* internal control variable when :c:func:`zfp_compress` is
   called (usually the maximum number available).  This function also sets
-  the execution policy to OpenMP.  Upon success, nonzero is returned.
+  the execution policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
 
-.. c:function:: int zfp_stream_set_omp_chunk_size(zfp_stream* stream, uint chunk_size)
+----
+
+.. c:function:: zfp_bool zfp_stream_set_omp_chunk_size(zfp_stream* stream, uint chunk_size)
 
   Set the number of consecutive blocks to compress together per OpenMP thread.
   If zero, use one chunk per thread.  This function also sets the execution
-  policy to OpenMP.  Upon success, nonzero is returned.
+  policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
+
+
+.. _hl-func-config:
+
+Compression Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These functions encode a desired compression mode and associated parameters
+(if any) in a single struct, e.g., for configuring |zfp|'s
+:ref:`read-only array classes <carray_classes>`.
+
+.. c:function:: zfp_config zfp_config_none()
+
+  Unspecified configuration.
+
+----
+
+.. c:function:: zfp_config zfp_config_rate(double rate, zfp_bool align)
+
+  :ref:`Fixed-rate mode <mode-fixed-rate>` using *rate* compressed bits per
+  value.  When *align* is true, word alignment is enforced to further
+  constrain the rate (see :c:func:`zfp_stream_set_rate`).
+
+----
+
+.. c:function:: zfp_config zfp_config_precision(uint precision)
+
+  :ref:`Fixed-precision mode <mode-fixed-precision>` using *precision*
+  uncompressed bits per value (see also :c:func:`zfp_stream_set_precision`).
+
+----
+
+.. c:function:: zfp_config zfp_config_accuracy(double tolerance)
+
+  :ref:`Fixed-accuracy mode <mode-fixed-accuracy>` with absolute error no
+  larger than *tolerance* (see also :c:func:`zfp_stream_set_accuracy`).
+
+----
+
+.. c:function:: zfp_config zfp_config_reversible()
+
+  :ref:`Reversible (lossless) mode <mode-reversible>` (see also
+  :c:func:`zfp_stream_set_reversible`).
+
+----
+
+.. c:function:: zfp_config zfp_config_expert(uint minbits, uint maxbits, uint maxprec, int minexp)
+
+  :ref:`Expert mode <mode-expert>` with given parameters (see also
+  :c:func:`zfp_stream_set_params`).
+
+
+.. _hl-func-field:
 
 Array Metadata
 ^^^^^^^^^^^^^^
@@ -454,71 +722,127 @@ Array Metadata
   Allocates and returns a default initialized :c:type:`zfp_field` struct.
   The caller must free this struct using :c:func:`zfp_field_free`.
 
-.. c:function:: zfp_field* zfp_field_1d(void* pointer, zfp_type type, uint nx)
+----
+
+.. c:function:: zfp_field* zfp_field_1d(void* pointer, zfp_type type, size_t nx)
 
   Allocate and return a field struct that describes an existing 1D array,
   :code:`a[nx]`, of *nx* uncompressed scalars of given *type* stored at
   *pointer*, which may be :c:macro:`NULL` and specified later.
 
-.. c:function:: zfp_field* zfp_field_2d(void* pointer, zfp_type type, uint nx, uint ny)
+----
+
+.. c:function:: zfp_field* zfp_field_2d(void* pointer, zfp_type type, size_t nx, size_t ny)
 
   Allocate and return a field struct that describes an existing 2D array,
   :code:`a[ny][nx]`, of *nx* |times| *ny* uncompressed scalars of given
   *type* stored at *pointer*, which may be :c:macro:`NULL` and specified
   later.
 
-.. c:function:: zfp_field* zfp_field_3d(void* pointer, zfp_type type, uint nx, uint ny, uint nz)
+----
+
+.. c:function:: zfp_field* zfp_field_3d(void* pointer, zfp_type type, size_t nx, size_t ny, size_t nz)
 
   Allocate and return a field struct that describes an existing 3D array,
   :code:`a[nz][ny][nx]`, of *nx* |times| *ny* |times| *nz* uncompressed
   scalars of given *type* stored at *pointer*, which may be :c:macro:`NULL`
   and specified later.
 
-.. c:function:: zfp_field* zfp_field_4d(void* pointer, zfp_type type, uint nx, uint ny, uint nz, uint nw)
+----
+
+.. c:function:: zfp_field* zfp_field_4d(void* pointer, zfp_type type, size_t nx, size_t ny, size_t nz, size_t nw)
 
   Allocate and return a field struct that describes an existing 4D array,
   :code:`a[nw][nz][ny][nx]`, of *nx* |times| *ny* |times| *nz* |times| *nw*
   uncompressed scalars of given *type* stored at *pointer*, which may be
   :c:macro:`NULL` and specified later.
 
+----
+
 .. c:function:: void zfp_field_free(zfp_field* field)
 
   Free :c:type:`zfp_field` struct previously allocated by one of the functions
   above.
 
+----
+
 .. c:function:: void* zfp_field_pointer(const zfp_field* field)
 
-  Return pointer to the first scalar in the array.
+  Return pointer to the first scalar in the field with index
+  *x* = *y* = *z* = *w* = 0.
+
+----
+
+.. c:function:: void* zfp_field_begin(const zfp_field* field)
+
+  Return pointer to the lowest memory address occupied by the field.
+  Equals :c:func:`zfp_field_pointer` if all strides are positive.
+  Available since |zfp| |fieldrelease|.
+
+----
 
 .. c:function:: zfp_type zfp_field_type(const zfp_field* field)
 
   Return array scalar type.
+
+----
 
 .. c:function:: uint zfp_field_precision(const zfp_field* field)
 
   Return scalar precision in number of bits, e.g., 32 for
   :code:`zfp_type_float`.
 
+----
+
 .. c:function:: uint zfp_field_dimensionality(const zfp_field* field)
 
   Return array dimensionality (1, 2, 3, or 4).
 
-.. c:function:: size_t zfp_field_size(const zfp_field* field, uint* size)
+----
+
+.. c:function:: size_t zfp_field_size(const zfp_field* field, size_t* size)
 
   Return total number of scalars stored in the array, e.g.,
   *nx* |times| *ny* |times| *nz* for a 3D array.  If *size* is not
   :c:macro:`NULL`, then store the number of scalars for each dimension,
   e.g., :code:`size[0] = nx; size[1] = ny; size[2] = nz` for a 3D array.
 
-.. c:function:: int zfp_field_stride(const zfp_field* field, int* stride)
+----
 
-  Return zero if the array is stored contiguously as :code:`a[nx]`,
-  :code:`a[ny][nx]`, :code:`a[nz][ny][nx]`, or :code:`a[nw][nz][ny][nx]`
-  depending on dimensionality.  Return nonzero if the array is strided
-  and laid out differently in memory.
+.. c:function:: size_t zfp_field_size_bytes(const zfp_field* field)
+
+  Return number of bytes spanned by the field payload data.  This includes
+  gaps in memory in case the field layout, as given by the strides, is not
+  contiguous (see :c:func:`zfp_field_is_contiguous`).  Available since
+  |zfp| |fieldrelease|.
+
+----
+
+.. c:function:: zfp_bool zfp_field_stride(const zfp_field* field, ptrdiff_t* stride)
+
+  Return :code:`zfp_false` if the array is stored contiguously as
+  :code:`a[nx]`, :code:`a[ny][nx]`, :code:`a[nz][ny][nx]`, or
+  :code:`a[nw][nz][ny][nx]` depending on dimensionality.  Return
+  :code:`zfp_true` if the array is strided and laid out differently in memory.
   If *stride* is not :c:macro:`NULL`, then store the stride for each
-  dimension, e.g., :code:`stride[0] = sx; stride[1] = sy; stride[2] = sz`
+  dimension, e.g., :code:`stride[0] = sx; stride[1] = sy; stride[2] = sz;`
   for a 3D array.  See :c:type:`zfp_field` for more information on strides.
+  Return false if the array is stored contiguously (the default) as
+  :code:`a[nx]`, :code:`a[ny][nx]`, :code:`a[nz][ny][nx]`, or
+  :code:`a[nw][nz][ny][nx]` depending on dimensionality.  Return true if
+  nonzero strides have been specified.
+
+----
+
+.. c:function:: zfp_bool zfp_field_is_contiguous(const zfp_field* field)
+
+  Return true if the field occupies a contiguous portion of memory.  Note
+  that the field layout may be contiguous even if a raster order traversal
+  does not visit memory in a monotonically increasing or decreasing order,
+  e.g., if the layout is simply a permutation of the default layout.
+  Available since |zfp| |fieldrelease|.
+
+----
 
 .. c:function:: uint64 zfp_field_metadata(const zfp_field* field)
 
@@ -527,47 +851,67 @@ Array Metadata
   array dimensions are :ref:`too large <limitations>` to be encoded in 52
   bits.
 
+----
+
 .. _zfp_field_set:
 
 .. c:function:: void zfp_field_set_pointer(zfp_field* field, void* pointer)
 
   Set pointer to first scalar in the array.
 
+----
+
 .. c:function:: zfp_type zfp_field_set_type(zfp_field* field, zfp_type type)
 
   Set array scalar type.
 
-.. c:function:: void zfp_field_set_size_1d(zfp_field* field, uint nx)
+----
+
+.. c:function:: void zfp_field_set_size_1d(zfp_field* field, size_t nx)
 
   Specify dimensions of 1D array :code:`a[nx]`.
 
-.. c:function:: void zfp_field_set_size_2d(zfp_field* field, uint nx, uint ny)
+----
+
+.. c:function:: void zfp_field_set_size_2d(zfp_field* field, size_t nx, size_t ny)
 
   Specify dimensions of 2D array :code:`a[ny][nx]`.
 
-.. c:function:: void zfp_field_set_size_3d(zfp_field* field, uint nx, uint ny, uint nz)
+----
+
+.. c:function:: void zfp_field_set_size_3d(zfp_field* field, size_t nx, size_t ny, size_t nz)
 
   Specify dimensions of 3D array :code:`a[nz][ny][nx]`.
 
-.. c:function:: void zfp_field_set_size_4d(zfp_field* field, uint nx, uint ny, uint nz, uint nw)
+----
+
+.. c:function:: void zfp_field_set_size_4d(zfp_field* field, size_t nx, size_t ny, size_t nz, size_t nw)
 
   Specify dimensions of 4D array :code:`a[nw][nz][ny][nx]`.
 
-.. c:function:: void zfp_field_set_stride_1d(zfp_field* field, int sx)
+----
+
+.. c:function:: void zfp_field_set_stride_1d(zfp_field* field, ptrdiff_t sx)
 
   Specify stride for 1D array: :code:`sx = &a[1] - &a[0]`.
 
-.. c:function:: void zfp_field_set_stride_2d(zfp_field* field, int sx, int sy)
+----
+
+.. c:function:: void zfp_field_set_stride_2d(zfp_field* field, ptrdiff_t sx, ptrdiff_t sy)
 
   Specify strides for 2D array:
   :code:`sx = &a[0][1] - &a[0][0]; sy = &a[1][0] - &a[0][0]`.
 
-.. c:function:: void zfp_field_set_stride_3d(zfp_field* field, int sx, int sy, int sz)
+----
+
+.. c:function:: void zfp_field_set_stride_3d(zfp_field* field, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
 
   Specify strides for 3D array:
   :code:`sx = &a[0][0][1] - &a[0][0][0]; sy = &a[0][1][0] - &a[0][0][0]; sz = &a[1][0][0] - &a[0][0][0]`.
 
-.. c:function:: void zfp_field_set_stride_4d(zfp_field* field, int sx, int sy, int sz, int sw)
+----
+
+.. c:function:: void zfp_field_set_stride_4d(zfp_field* field, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
 
   Specify strides for 4D array:
   :code:`sx = &a[0][0][0][1] - &a[0][0][0][0];
@@ -575,11 +919,14 @@ Array Metadata
   sz = &a[0][1][0][0] - &a[0][0][0][0];
   sw = &a[1][0][0][0] - &a[0][0][0][0]`.
 
-.. c:function:: int zfp_field_set_metadata(zfp_field* field, uint64 meta)
+----
+
+.. c:function:: zfp_bool zfp_field_set_metadata(zfp_field* field, uint64 meta)
 
   Specify array scalar type and dimensions from compact 52-bit representation.
-  Return nonzero upon success.  See :c:func:`zfp_field_metadata` for how to
-  encode *meta*.
+  Return :code:`zfp_true` upon success.  See :c:func:`zfp_field_metadata` for
+  how to encode *meta*.
+
 
 .. _hl-func-codec:
 
@@ -589,11 +936,13 @@ Compression and Decompression
 .. c:function:: size_t zfp_compress(zfp_stream* stream, const zfp_field* field)
 
   Compress the whole array described by *field* using parameters given by
-  *stream* and then flush the stream to emit any buffered bits and align the
-  stream on a word boundary.  The number of bytes of compressed storage
-  is returned, if the stream were rewound before compression, and otherwise the
-  current byte offset within the bit stream.  Zero is returned if compression
-  failed.
+  *stream*.  Then flush the stream to emit any buffered bits and align the
+  stream on a word boundary.  The resulting byte offset within the bit stream
+  is returned, which equals the total number of bytes of compressed storage
+  if the stream was rewound before the :c:func:`zfp_compress` call.  Zero is
+  returned if compression failed.
+
+----
 
 .. c:function:: size_t zfp_decompress(zfp_stream* stream, zfp_field* field)
 
@@ -603,20 +952,26 @@ Compression and Decompression
   i.e., the current byte offset or the number of compressed bytes consumed.
   Zero is returned if decompression failed.
 
+----
+
 .. _zfp-header:
 .. c:function:: size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, uint mask)
 
   Write an optional variable-length header to the stream that encodes
   compression parameters, array metadata, etc.  The header information written
   is determined by the bit *mask* (see :c:macro:`macros <ZFP_HEADER_MAGIC>`).
-  The return value is the number of bits written, or zero upon failure.
   Unlike in :c:func:`zfp_compress`, no word alignment is enforced.  See the
   :ref:`limitations <limitations>` section for limits on the maximum array
-  size supported by the header.
+  size supported by the header.  The return value is the number of bits
+  written, or zero upon failure.
+
+----
 
 .. c:function:: size_t zfp_read_header(zfp_stream* stream, zfp_field* field, uint mask)
 
   Read header if one was previously written using :c:func:`zfp_write_header`.
-  The return value is the number of bits read, or zero upon failure.  The
-  caller must ensure that the bit *mask* agrees between header read and
-  write calls.
+  The *stream* and *field* data structures are populated with the information
+  stored in the header, as specified by the bit *mask* (see
+  :c:macro:`macros <ZFP_HEADER_MAGIC>`).  The caller must ensure that *mask*
+  agrees between header read and write calls.  The return value is the number
+  of bits read, or zero upon failure.

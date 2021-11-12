@@ -1,3 +1,5 @@
+set(CMAKE_CXX_STANDARD 11)
+
 # CMAKE_SH-NOTFOUND needed for mingw builds
 if(MINGW)
   list(APPEND CMOCKA_ARGS "-DCMAKE_SH=CMAKE_SH-NOTFOUND")
@@ -15,8 +17,10 @@ ExternalProject_Add(
   SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
   BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
   CMAKE_ARGS        ${CMOCKA_ARGS}
-  BUILD_COMMAND     ${CMAKE_COMMAND} --build . WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
+  BUILD_COMMAND     ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
   INSTALL_COMMAND   ""
+  STEP_TARGETS build
+  EXCLUDE_FROM_ALL TRUE
 )
 ExternalProject_Get_Property(cmocka_cloned source_dir binary_dir)
 
@@ -25,7 +29,7 @@ add_library(cmocka STATIC IMPORTED GLOBAL)
 
 # choose proper library path & extension
 if(MSVC)
-  set(IMPORTED_LOCATION_PATH "${binary_dir}/src/Debug/cmocka.lib")
+  set(IMPORTED_LOCATION_PATH "${binary_dir}/src/${CMAKE_BUILD_TYPE}/cmocka.lib")
 else()
   set(IMPORTED_LOCATION_PATH "${binary_dir}/src/libcmocka.a")
 endif()
@@ -50,6 +54,10 @@ endif()
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
   add_compile_options(-Wno-gnu-zero-variadic-macro-arguments)
 endif()
+# suppress googletest warning "conversion from 'float' to 'testing::internal::BiggestInt', possible loss of data"
+if(MSVC)
+  add_compile_options(/wd4244)
+endif()
 
 
 add_subdirectory(utils)
@@ -69,20 +77,22 @@ if(MSVC)
 endif()
 
 # TODO: spend time getting googletest to compile on MinGW
-if((NOT MINGW) AND (NOT DEFINED ZFP_OMP_TESTS_ONLY))
+# checksums are generated through C tests, no need to compile C++ tests
+if((NOT MINGW) AND (NOT DEFINED ZFP_OMP_TESTS_ONLY) AND (NOT PRINT_CHECKSUMS))
   # clone googletest into build/
-  configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+  configure_file(CMakeLists.txt.in ${ZFP_BINARY_DIR}/tests/googletest-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${GTEST_ARGS} .
     RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests/googletest-download
+    WORKING_DIRECTORY ${ZFP_BINARY_DIR}/tests/googletest-download
   )
+
   if(result)
     message(FATAL_ERROR "CMake step for googletest failed: ${result}")
   endif()
   # build gtest
   execute_process(COMMAND ${CMAKE_COMMAND} --build .
     RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests/googletest-download
+    WORKING_DIRECTORY ${ZFP_BINARY_DIR}/tests/googletest-download
   )
   if(result)
     message(FATAL_ERROR "Build step for googletest failed: ${result}")
@@ -90,8 +100,8 @@ if((NOT MINGW) AND (NOT DEFINED ZFP_OMP_TESTS_ONLY))
 
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-  add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
-    ${CMAKE_BINARY_DIR}/googletest-build
+  add_subdirectory(${ZFP_BINARY_DIR}/tests/googletest-src
+    ${ZFP_BINARY_DIR}/tests/googletest-build
   )
 
   if(CMAKE_VERSION VERSION_LESS 2.8.11)
@@ -107,6 +117,7 @@ if((NOT MINGW) AND (NOT DEFINED ZFP_OMP_TESTS_ONLY))
 endif()
 
 
+# testzfp
 add_executable(testzfp testzfp.cpp)
 target_link_libraries(testzfp zfp)
 target_compile_definitions(testzfp PRIVATE ${zfp_compressed_array_defs})
@@ -128,6 +139,12 @@ if(ZFP_BUILD_TESTING_LARGE)
     endforeach()
   endforeach()
 endif()
+
+# testviews
+add_executable(testviews testviews.cpp)
+target_link_libraries(testviews zfp)
+target_compile_definitions(testviews PRIVATE ${zfp_compressed_array_defs})
+add_test(NAME testviews COMMAND testviews)
 
 if(BUILD_ZFPY)
   add_subdirectory(python)

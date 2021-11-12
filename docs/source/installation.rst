@@ -13,7 +13,7 @@ should conform to both the ISO C89 and C99 standards.  The C++ array classes
 are implemented entirely in header files and can be included as is, but since
 they call the compression library, applications must link with |libzfp|.
 
-|zfp| is preferably built using `CMake <https://cmake.org>`_, although the
+|zfp| is preferably built using `CMake <https://cmake.org>`__, although the
 core library can also be built using GNU make on Linux, macOS, and MinGW.
 |zfp| has successfully been built and tested using these compilers:
 
@@ -34,7 +34,7 @@ C++11, and C++14.
 CMake Builds
 ------------
 
-To build |zfp| using `CMake <https://cmake.org>`_ on Linux or macOS, start
+To build |zfp| using `CMake <https://cmake.org>`__ on Linux or macOS, start
 a Unix shell and type::
 
     cd zfp-0.5.5
@@ -48,7 +48,7 @@ To also build the examples, replace the cmake line with::
     cmake -DBUILD_EXAMPLES=ON ..
 
 By default, CMake builds will attempt to locate and use
-`OpenMP <http://www.openmp.org>`_.  To disable OpenMP, type::
+`OpenMP <http://www.openmp.org>`__.  To disable OpenMP, type::
 
     cmake -DZFP_WITH_OPENMP=OFF ..
 
@@ -71,8 +71,8 @@ change the cmake line to also build the example programs.
 GNU Builds 
 ----------
 
-To build |zfp| using `gcc <https://gcc.gnu.org>`_ without
-`OpenMP <http://www.openmp.org>`_, type::
+To build |zfp| using `gcc <https://gcc.gnu.org>`__ without
+`OpenMP <http://www.openmp.org>`__, type::
 
     cd zfp-0.5.5
     gmake
@@ -128,16 +128,19 @@ or using GNU make
 
 Regardless of the settings below, |libzfp| will always be built.
 
+
 .. c:macro:: BUILD_ALL
 
   Build all subdirectories; enable all options (except
   :c:macro:`BUILD_SHARED_LIBS`).
   Default: off.
 
+
 .. c:macro:: BUILD_CFP
 
   Build |libcfp| for C bindings to compressed arrays.
   Default: off.
+
 
 .. c:macro:: BUILD_ZFPY
 
@@ -154,6 +157,7 @@ Regardless of the settings below, |libzfp| will always be built.
   CMake default: off.
   GNU make default: off and ignored.
 
+
 .. c:macro:: BUILD_ZFORP
 
   Build |libzforp| for Fortran bindings to the C API.  Requires Fortran
@@ -165,21 +169,25 @@ Regardless of the settings below, |libzfp| will always be built.
 
   Default: off.
 
+
 .. c:macro:: BUILD_UTILITIES
 
   Build |zfpcmd| command-line utility for compressing binary files.
   Default: on.
+
 
 .. c:macro:: BUILD_EXAMPLES
 
   Build code examples.
   Default: off.
 
+
 .. c:macro:: BUILD_TESTING
 
   Build |testzfp| and (when on the GitHub
-  `develop branch <https://github.com/LLNL/zfp/tree/develop>`_) unit tests.
+  `develop branch <https://github.com/LLNL/zfp/tree/develop>`__) unit tests.
   Default: on.
+
 
 .. c:macro:: BUILD_SHARED_LIBS
 
@@ -194,6 +202,7 @@ Regardless of the settings below, |libzfp| will always be built.
    single: Configuration
 .. _config:
 
+
 Configuration
 -------------
 
@@ -202,6 +211,7 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 ::
 
     cmake -DZFP_WITH_OPENMP=OFF ..
+
 
 .. c:macro:: ZFP_INT64
 .. c:macro:: ZFP_INT64_SUFFIX
@@ -216,6 +226,7 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   Defaults: :code:`long int`, :code:`l`, :code:`unsigned long int`, and
   :code:`ul`, respectively.
 
+
 .. c:macro:: ZFP_WITH_OPENMP
 
   CMake and GNU make macro for enabling or disabling OpenMP support.  CMake
@@ -227,18 +238,72 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   CMake default: on.
   GNU make default: off.
 
+
 .. c:macro:: ZFP_WITH_CUDA
 
   CMake macro for enabling or disabling CUDA support for
   GPU compression and decompression.  When enabled, CUDA and a compatible
   host compiler must be installed.  For a full list of compatible compilers,
   please consult the
-  `NVIDIA documentation <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/>`_.
+  `NVIDIA documentation <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/>`__.
   If a CUDA installation is in the user's path, it will be
   automatically found by CMake.  Alternatively, the CUDA binary directory 
   can be specified using the :envvar:`CUDA_BIN_DIR` environment variable.
   CMake default: off.
   GNU make default: off and ignored.
+
+.. _rounding:
+.. c:macro:: ZFP_ROUNDING_MODE
+
+  **Experimental feature**.  By default, |zfp| coefficients are truncated,
+  not rounded, which can result in biased errors (see
+  :ref:`FAQ #30 <q-err-dist>`).  To counter this, two rounding modes are
+  available: :code:`ZFP_ROUND_FIRST` (round during compression; analogous
+  to mid-tread quantization) and :code:`ZFP_ROUND_LAST` (round during
+  decompression; analogous to mid-riser quantization).  With
+  :code:`ZFP_ROUND_LAST`, the values returned on decompression are slightly
+  modified (and usually closer to the original values) without impacting the
+  compressed data itself.  This rounding mode works with all
+  :ref:`compression modes <modes>`.
+  With :code:`ZFP_ROUND_FIRST`, the values are modified before compression,
+  thus impacting the compressed stream.  This rounding mode tends to be more
+  effective at reducing bias, but is invoked only with
+  :ref:`fixed-precision <mode-fixed-precision>` and
+  :ref:`fixed-accuracy <mode-fixed-accuracy>` compression modes.
+  Both of these rounding modes break the regression tests since they alter
+  the compressed or decompressed representation, but they may be used with
+  libraries built with the default rounding mode, :code:`ZFP_ROUND_NEVER`,
+  and versions of |zfp| that do not support a rounding mode with no adverse
+  effects.
+  Default: :code:`ZFP_ROUND_NEVER`.
+
+.. c:macro:: ZFP_WITH_TIGHT_ERROR
+
+  **Experimental feature**.  When enabled, this feature takes advantage of the
+  error reduction associated with proper rounding; see
+  :c:macro:`ZFP_ROUNDING_MODE`.  The reduced error due to rounding
+  allows the tolerance in :ref:`fixed-accuracy mode <mode-fixed-accuracy>`
+  to be satisfied using fewer bits of compressed data.  As a result, when
+  enabled, the observed maximum absolute error is closer to the tolerance and
+  the compression ratio is increased.  This feature requires the rounding mode
+  to be :code:`ZFP_ROUND_FIRST` or :code:`ZFP_ROUND_LAST`.
+  Default: undefined/off.
+
+.. c:macro:: ZFP_WITH_DAZ
+
+  When enabled, blocks consisting solely of subnormal floating-point numbers
+  (tiny numbers close to zero) are treated as blocks of all zeros
+  (DAZ = denormals-are-zero).  The main purpose of this option is to avoid the
+  potential for floating-point overflow in the |zfp| implementation that may
+  occur in step 2 of the
+  :ref:`lossy compression algorithm <algorithm-lossy>` when converting to
+  |zfp|'s block-floating-point representation (see
+  `Issue #119 <https://github.com/LLNL/zfp/issues/119>`__).
+  Such overflow tends to be benign but loses all precision and usually
+  results in "random" subnormals upon decompression.  When enabled, compressed
+  streams may differ slightly but are decompressed correctly by libraries
+  built without this option.  This option may break some regression tests.
+  Default: undefined/off.
 
 .. c:macro:: ZFP_WITH_ALIGNED_ALLOC
 
@@ -246,11 +311,13 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   on hardware cache lines.
   Default: undefined/off.
 
+
 .. c:macro:: ZFP_WITH_CACHE_TWOWAY
 
   Use a two-way skew-associative rather than direct-mapped cache.  This
   incurs some overhead that may be offset by better cache utilization.
   Default: undefined/off.
+
 
 .. c:macro:: ZFP_WITH_CACHE_FAST_HASH
 
@@ -258,11 +325,13 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   lead to more collisions.
   Default: undefined/off.
 
+
 .. c:macro:: ZFP_WITH_CACHE_PROFILE
 
   Enable cache profiling to gather and print statistics on cache hit and miss
   rates.
   Default: undefined/off.
+
 
 .. c:macro:: BIT_STREAM_WORD_TYPE
 
@@ -272,11 +341,13 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   :c:macro:`BIT_STREAM_WORD_TYPE` should be set to :c:type:`uint8`.
   Default: :c:type:`uint64`.
 
+
 .. c:macro:: ZFP_BIT_STREAM_WORD_SIZE
 
   CMake macro for indirectly setting :c:macro:`BIT_STREAM_WORD_TYPE`.  Valid
   values are 8, 16, 32, 64.
   Default: 64.
+
 
 .. c:macro:: BIT_STREAM_STRIDED
 
@@ -284,11 +355,13 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   layouts, e.g., to enable progressive access.
   Default: undefined/off.
 
+
 .. c:macro:: CFP_NAMESPACE
 
   Macro for renaming the outermost |cfp| namespace, e.g., to avoid name
   clashes.
   Default: :code:`cfp`.
+
 
 .. c:macro:: PYTHON_LIBRARY
 
@@ -296,11 +369,13 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   CMake default: undefined/off.
   GNU make default: off and ignored.
 
+
 .. c:macro:: PYTHON_INCLUDE_DIR
 
   Path to the Python include directory, e.g., :file:`/usr/include/python2.7`.
   CMake default: undefined/off.
   GNU make default: off and ignored.
+
 
 
 Dependencies
@@ -313,14 +388,28 @@ in the sections below.
 CMake
 ^^^^^
 
-CMake builds require version 3.1 or later on Linux and macOS and version
-3.4 or later on Windows.  CMake is available `here <https://cmake.org>`_.
+CMake builds require version 3.9 or later.  CMake is available
+`here <https://cmake.org>`__.
+
+OpenMP
+^^^^^^
+
+OpenMP support requires OpenMP 2.0 or later.
 
 CUDA
 ^^^^
 
-CUDA support requires CMake and a compatible host compiler (see
-:c:macro:`ZFP_WITH_CUDA`).
+CUDA support requires CUDA 7.0 or later, CMake, and a compatible host
+compiler (see :c:macro:`ZFP_WITH_CUDA`).
+
+C/C++
+^^^^^
+
+The |zfp| C library and |cfp| C wrappers around the compressed-array
+classes conform to the C90 standard
+(`ISO/IEC 9899:1990 <https://www.iso.org/standard/17782.html>`__).
+The C++ classes conform to the C++98 standard
+(`ISO/IEC 14882:1998 <https://www.iso.org/standard/25845.html>`__).
 
 Python
 ^^^^^^
