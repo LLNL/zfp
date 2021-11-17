@@ -7,7 +7,9 @@
 #define CFP_REF_TYPE cfp_ref_array1d
 #define CFP_PTR_TYPE cfp_ptr_array1d
 #define CFP_ITER_TYPE cfp_iter_array1d
+#define CFP_VIEW_TYPE cfp_view1d
 #define SUB_NAMESPACE array1d
+#define VIEW_NAMESPACE SUB_NAMESPACE.view
 #define SCALAR double
 #define SCALAR_TYPE zfp_type_double
 #define DIMENSIONALITY 1

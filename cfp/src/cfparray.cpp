@@ -30,6 +30,7 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array1f_compressed_size,
     cfp_array1f_compressed_data,
     cfp_array1f_size,
+    cfp_array1f_size_x,
     cfp_array1f_resize,
 
     cfp_array1f_get_array,
@@ -262,6 +263,7 @@ const cfp_api CFP_NAMESPACE = {
     cfp_array1d_compressed_size,
     cfp_array1d_compressed_data,
     cfp_array1d_size,
+    cfp_array1d_size_x,
     cfp_array1d_resize,
 
     cfp_array1d_get_array,

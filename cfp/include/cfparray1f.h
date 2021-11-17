@@ -266,6 +266,7 @@ typedef struct {
   size_t (*compressed_size)(const cfp_array1f self);
   void* (*compressed_data)(const cfp_array1f self);
   size_t (*size)(const cfp_array1f self);
+  size_t (*size_x)(const cfp_array1f self);
   void (*resize)(cfp_array1f self, size_t n, zfp_bool clear);
 
   void (*get_array)(const cfp_array1f self, float* p);
