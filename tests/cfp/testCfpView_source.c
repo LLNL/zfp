@@ -42,5 +42,5 @@ _catFunc3(given_, CFP_VIEW_TYPE, _when_size_expect_sizeMatches)(void **state)
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.size(cfpArr), CFP_NAMESPACE.VIEW_NAMESPACE.size(cfpView));
 }
 
-//  cfp_iter_view1f (*begin)(cfp_view1f self);
-//  cfp_iter_view1f (*end)(cfp_view1f self);
+// TODO: begin/end
+// TODO: accessor tests

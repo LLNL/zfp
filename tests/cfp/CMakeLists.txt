@@ -24,6 +24,13 @@ cfp_add_test(View 2 d 64)
 cfp_add_test(View 3 d 64)
 cfp_add_test(View 4 d 64)
 
+cfp_add_test(FlatView 2 f 32)
+cfp_add_test(FlatView 3 f 32)
+cfp_add_test(FlatView 4 f 32)
+cfp_add_test(FlatView 2 d 64)
+cfp_add_test(FlatView 3 d 64)
+cfp_add_test(FlatView 4 d 64)
+
 cfp_add_test(PrivateView 1 f 32)
 cfp_add_test(PrivateView 2 f 32)
 cfp_add_test(PrivateView 3 f 32)

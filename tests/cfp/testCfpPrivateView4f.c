@@ -28,13 +28,13 @@ int main()
 {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(given_cfp_private_view4f_when_ctor_expect_returnsNonNullPtr),
+    cmocka_unit_test(given_cfp_private_view4f_when_partitionWithLimitOnCount_then_setsUniqueBlockBoundsAlongLongestDimension),
 
     cmocka_unit_test_setup_teardown(given_cfp_private_view4f_when_ctor_subset_expect_returnsNonNullPtr, setupCfpArrSmall, teardownCfpArr),
 
     cmocka_unit_test_setup_teardown(given_cfp_private_view4f_when_size_expect_sizeMatches, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_private_view4f_when_sizex_expect_sizeMatches, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_private_view4f_when_getRate_expect_rateMatches, setupCfpViewSmall, teardownCfpView),
-    //cmocka_unit_test_setup_teardown(given_cfp_private_view4f_when_get_expect_valueCorrect, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_private_view4f_withDirtyCache_when_flushCache_thenValuePersistedToArray, setupCfpViewSmall, teardownCfpView),
 
     cmocka_unit_test_setup_teardown(given_cfp_private_view4f_when_globalx_expect_offsetMatches, setupCfpSubsetViewSmall, teardownCfpView),
