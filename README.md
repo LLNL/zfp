@@ -66,19 +66,11 @@ Full HTML [documentation](http://zfp.readthedocs.io/) is available online.
 A [PDF](http://readthedocs.org/projects/zfp/downloads/pdf/latest/) version
 is also available.
 
+Further information on the zfp software is included in these files:
 
-Contributing
-------------
-
-The zfp project uses the
-[Gitflow](https://nvie.com/posts/a-successful-git-branching-model/)
-development model.  Contributions should be made as pull requests on the
-`develop` branch.  Although this branch is under continuous development,
-it should be robust enough to pass all regression tests.
-The `master` branch is updated with each release and reflects the most
-recent official release of zfp.  See the
-[Releases Page](https://github.com/LLNL/zfp/releases) for a history
-of releases.
+- Change log: see [CHANGELOG.md](./CHANGELOG.md).
+- Support and additional resources: see [SUPPORT.md](./SUPPORT.md).
+- Code contributions: see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 
 Authors
@@ -98,25 +90,21 @@ If you use zfp for scholarly research, please cite this paper:
   IEEE Transactions on Visualization and Computer Graphics, 20(12):2674-2683, December 2014.
   [doi:10.1109/TVCG.2014.2346458](http://doi.org/10.1109/TVCG.2014.2346458).
 
+The algorithm implemented in the current version of zfp is described in the
+[documentation](https://zfp.readthedocs.io/en/latest/algorithm.html) and in
+the following paper:
 
-Additional Resources
---------------------
-
-For more information on zfp, please see the
-[zfp website](https://computing.llnl.gov/casc/zfp/).
-For bug reports and feature requests, please consult the
-[GitHub issue tracker](https://github.com/LLNL/zfp/issues/).
-For questions and comments not answered here or in the
-[documentation](http://zfp.readthedocs.io),
-please send e-mail to [zfp@llnl.gov](mailto:zfp@llnl.gov).
+* James Diffenderfer, Alyson Fox, Jeffrey Hittinger, Geoffrey Sanders, Peter Lindstrom.
+  [Error Analysis of ZFP Compression for Floating-Point Data](https://www.researchgate.net/publication/324908266_Error_Analysis_of_ZFP_Compression_for_Floating-Point_Data).
+  SIAM Journal on Scientific Computing, 41(3):A1867-A1898, June 2019.
+  [doi:10.1137/18M1168832](http://doi.org/10.1137/18M1168832).
 
 
 License
 -------
 
-zfp is distributed under the terms of the BSD 3-Clause license.  See the
-files [LICENSE](https://github.com/LLNL/zfp/blob/develop/LICENSE) and
-[NOTICE](https://github.com/LLNL/zfp/blob/develop/NOTICE) for details.
+zfp is distributed under the terms of the BSD 3-Clause license.  See
+[LICENSE](./LICENSE) and [NOTICE](./NOTICE) for details.
 
 SPDX-License-Identifier: BSD-3-Clause
 

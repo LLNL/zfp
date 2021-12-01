@@ -82,6 +82,9 @@ plugins, and formats, such as
 * `Compression functions <https://software.intel.com/en-us/ipp-dev-reference-zfp-compression-functions>`__
   for Intel\ |reg| `Integrated Performance Primitives <https://software.intel.com/en-us/intel-ipp>`__.
 
+* `Compressed MPI messages <https://mvapich.cse.ohio-state.edu/static/media/mvapich/MV2GDR_CHANGELOG-2.3.6.txt>`__
+  in `MVAPICH2-GDR <https://mvapich.cse.ohio-state.edu/userguide/gdr/>`__.
+
 * `Compression CODEC <https://community.opengroup.org/osdu/platform/domain-data-mgmt-services/seismic/open-zgy/-/raw/master/doc/compress.html>`__
   underlying the
   `OpenZGY <https://community.opengroup.org/osdu/platform/domain-data-mgmt-services/seismic/open-zgy>`__

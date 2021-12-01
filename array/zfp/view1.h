@@ -94,6 +94,9 @@ class view : public const_view<Container> {
 public:
   typedef Container container_type;
   typedef typename container_type::value_type value_type;
+  typedef typename zfp::internal::dim1::const_reference<view> const_reference;
+  typedef typename zfp::internal::dim1::const_pointer<view> const_pointer;
+  typedef typename zfp::internal::dim1::const_iterator<view> const_iterator;
   typedef typename zfp::internal::dim1::reference<view> reference;
   typedef typename zfp::internal::dim1::pointer<view> pointer;
   typedef typename zfp::internal::dim1::iterator<view> iterator;
@@ -102,11 +105,11 @@ public:
   view(container_type* array) : const_view<Container>(array) {}
   view(container_type* array, size_t x, size_t nx) : const_view<Container>(array, x, nx) {}
 
-  // [i] inspector from base class
-  using const_view<Container>::operator[];
+  // [i] inspector
+  const_reference operator[](size_t index) const { return const_reference(this, x + index); }
 
-  // (i) inspector from base class
-  using const_view<Container>::operator();
+  // (i) inspector
+  const_reference operator()(size_t i) const { return const_reference(this, x + i); }
 
   // [i] mutator
   reference operator[](size_t index) { return reference(this, x + index); }
@@ -115,6 +118,10 @@ public:
   reference operator()(size_t i) { return reference(this, x + i); }
 
   // random access iterators
+  const_iterator cbegin() const { return const_iterator(this, x); }
+  const_iterator cend() const { return const_iterator(this, x + nx); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
   iterator begin() { return iterator(this, x); }
   iterator end() { return iterator(this, x + nx); }
 
@@ -208,6 +215,9 @@ class private_view : public private_const_view<Container> {
 public:
   typedef Container container_type;
   typedef typename container_type::value_type value_type;
+  typedef typename zfp::internal::dim1::const_reference<private_view> const_reference;
+  typedef typename zfp::internal::dim1::const_pointer<private_view> const_pointer;
+  typedef typename zfp::internal::dim1::const_iterator<private_view> const_iterator;
   typedef typename zfp::internal::dim1::reference<private_view> reference;
   typedef typename zfp::internal::dim1::pointer<private_view> pointer;
   typedef typename zfp::internal::dim1::iterator<private_view> iterator;
@@ -225,13 +235,17 @@ public:
   // flush cache by compressing all modified cached blocks
   void flush_cache() const { cache.flush(); }
 
-  // (i) inspector from base class
-  using private_const_view<Container>::operator();
+  // (i) inspector
+  const_reference operator()(size_t i) const { return const_reference(this, x + i); }
 
   // (i) mutator
   reference operator()(size_t i) { return reference(this, x + i); }
 
   // random access iterators
+  const_iterator cbegin() const { return const_iterator(this, x); }
+  const_iterator cend() const { return const_iterator(this, x + nx); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
   iterator begin() { return iterator(this, x); }
   iterator end() { return iterator(this, x + nx); }
 

@@ -1,0 +1,12 @@
+.pascal_job:
+    tags:
+        - batch
+        - pascal
+
+.pascal_build_gpu:
+    extends: [.build_gpu, .pascal_job]
+
+.pascal_test_gpu:
+    variables:
+       ci_test_regex: "."
+    extends: [.test_gpu, .pascal_job]

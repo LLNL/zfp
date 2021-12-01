@@ -40,6 +40,9 @@ public:
   // constructor
   explicit reference(container_type* container, size_t x, size_t y, size_t z, size_t w) : const_reference<Container>(container, x, y, z, w) {}
 
+  // copy constructor (to satisfy rule of three)
+  reference(const reference& r) : const_reference<Container>(r.container, r.x, r.y, r.z, r.w) {}
+
   // assignment
   reference operator=(const reference& r) { set(r.get()); return *this; }
   reference operator=(value_type val) { set(val); return *this; }

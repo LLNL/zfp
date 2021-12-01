@@ -252,16 +252,18 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   CMake default: off.
   GNU make default: off and ignored.
 
+.. _rounding:
 .. c:macro:: ZFP_ROUNDING_MODE
 
   **Experimental feature**.  By default, |zfp| coefficients are truncated,
-  not rounded, which can result in biased errors.  To counter this, two
-  rounding modes are available: :code:`ZFP_ROUND_FIRST` (round during
-  compression; analogous to mid-tread quantization) and :code:`ZFP_ROUND_LAST`
-  (round during decompression; analogous to mid-riser quantization).
-  With :code:`ZFP_ROUND_LAST`, the values returned on decompression are
-  slightly modified (and usually closer to the original values) without
-  impacting the compressed data itself.  This rounding mode works with all
+  not rounded, which can result in biased errors (see
+  :ref:`FAQ #30 <q-err-dist>`).  To counter this, two rounding modes are
+  available: :code:`ZFP_ROUND_FIRST` (round during compression; analogous
+  to mid-tread quantization) and :code:`ZFP_ROUND_LAST` (round during
+  decompression; analogous to mid-riser quantization).  With
+  :code:`ZFP_ROUND_LAST`, the values returned on decompression are slightly
+  modified (and usually closer to the original values) without impacting the
+  compressed data itself.  This rounding mode works with all
   :ref:`compression modes <modes>`.
   With :code:`ZFP_ROUND_FIRST`, the values are modified before compression,
   thus impacting the compressed stream.  This rounding mode tends to be more
