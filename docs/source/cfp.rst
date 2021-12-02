@@ -75,6 +75,7 @@ and via flat, linear indexing, e.g., :code:`get_flat(array, i + nx * j)`.
 The following sections are available:
 
 * :ref:`cfp_arrays`
+* :ref:`cfp_views`
 * :ref:`cfp_serialization`
 * :ref:`cfp_references`
 * :ref:`cfp_pointers`
@@ -198,7 +199,7 @@ not actually part of the |cfp| API.
 ----
 
 .. _cfp_ctor_header:
-.. c:function:: cfp_array cfp.array.ctor_header(const cfp_header h, const void* buffer, size_t buffer_size_bytes);
+.. c:function:: cfp_array cfp.array.ctor_header(const cfp_header h, const void* buffer, size_t buffer_size_bytes)
 
   Constructor from metadata given by the :ref:`header <cfp_header>` *h*
   and optionally initialized with compressed data from *buffer* of
@@ -401,6 +402,384 @@ not actually part of the |cfp| API.
   see :cpp:func:`array::end()`.
 
 
+.. _cfp_views:
+
+Views
+------
+
+|zfp| |cfpviewsrelease| adds cfp array views. |cfp| views wrap the C++ 
+:ref:`view <views>` classes. As with their C++ counterparts, |cfp| views 
+provide indirect access into whole arrays. As in the case of 
+:ref:`cfp arrays <cfp_arrays>` these views share many functions that 
+have the same signature and so we define fictitious types and namespaces 
+in order to reduce redundancy. These types and namespaces are not actually 
+part of the |cfp| API.
+
+
+.. _cfp_view:
+
+Mutable Views
+^^^^^^^^^^^^^
+
+|cfp| wrappers for :ref:`mutable view <mutable_view>` classes.
+
+
+.. c:type:: cfp_view1f
+.. c:type:: cfp_view1d
+.. c:type:: cfp_view2f
+.. c:type:: cfp_view2d
+.. c:type:: cfp_view3f
+.. c:type:: cfp_view3d
+.. c:type:: cfp_view4f
+.. c:type:: cfp_view4d
+
+  Opaque types for mutable views into 1D, 2D, 3D, and 4D compressed arrays of floats and doubles.
+
+----
+
+.. c:type:: cfp_view1
+.. c:type:: cfp_view2
+.. c:type:: cfp_view3
+.. c:type:: cfp_view4
+
+  Fictitious types denoting 1D, 2D, 3D, and 4D mutable views of any scalar type.
+
+----
+
+.. c:type:: cfp_viewf
+.. c:type:: cfp_viewd
+
+  Fictitious types denoting any-dimensional mutable views of floats and doubles.
+
+----
+
+.. c:type:: cfp_view
+
+  Fictitious type denoting mutable view of any dimensionality and scalar type.
+
+----
+
+.. c:function:: cfp_view cfp.array.view.ctor(cfp_array arr)
+
+  Whole-array mutable view constructors.
+  See :ref:`corresponding C++ constructor <mutable_view_ctor>`.
+
+----
+
+.. c:function:: cfp_view1 cfp.array1.view.ctor_subset(cfp_array1 arr, size_t x, size_t nx)
+.. c:function:: cfp_view2 cfp.array2.view.ctor_subset(cfp_array2 arr, size_t x, size_t y, size_t nx, size_t ny)
+.. c:function:: cfp_view3 cfp.array3.view.ctor_subset(cfp_array3 arr, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. c:function:: cfp_view4 cfp.array4.view.ctor_subset(cfp_array4 arr, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
+
+  Sub-array mutable view constructors.
+  See :ref:`corresponding C++ constructor <mutable_view_ctor>`.
+
+----
+
+.. c:function:: void cfp.array1.view.dtor(cfp_view self)
+
+  Destructor. Frees memory for itself, invalidating
+  the *self* object upon return. Note that the user must explicitly
+  call the destructor to avoid memory leaks.
+
+----
+
+.. c:function:: size_t cfp.array1.view.global_x(cfp_view1 self, size_t i)
+.. c:function:: size_t cfp.array2.view.global_x(cfp_view2 self, size_t i)
+.. c:function:: size_t cfp.array3.view.global_x(cfp_view3 self, size_t i)
+.. c:function:: size_t cfp.array4.view.global_x(cfp_view4 self, size_t i)
+
+.. c:function:: size_t cfp.array2.view.global_y(cfp_view2 self, size_t i)
+.. c:function:: size_t cfp.array3.view.global_y(cfp_view3 self, size_t i)
+.. c:function:: size_t cfp.array4.view.global_y(cfp_view4 self, size_t i)
+
+.. c:function:: size_t cfp.array3.view.global_z(cfp_view3 self, size_t i)
+.. c:function:: size_t cfp.array4.view.global_z(cfp_view4 self, size_t i)
+
+.. c:function:: size_t cfp.array4.view.global_y(cfp_view4 self, size_t i)
+
+  Return :ref:`global array index <view_global>` associated with local view index.
+
+----
+
+.. c:function:: size_t cfp.array1.view.size_x(cfp_view1 self)
+.. c:function:: size_t cfp.array2.view.size_x(cfp_view2 self)
+.. c:function:: size_t cfp.array3.view.size_x(cfp_view3 self)
+.. c:function:: size_t cfp.array4.view.size_x(cfp_view4 self)
+
+.. c:function:: size_t cfp.array2.view.size_y(cfp_view2 self)
+.. c:function:: size_t cfp.array3.view.size_y(cfp_view3 self)
+.. c:function:: size_t cfp.array4.view.size_y(cfp_view4 self)
+
+.. c:function:: size_t cfp.array3.view.size_z(cfp_view3 self)
+.. c:function:: size_t cfp.array4.view.size_z(cfp_view4 self)
+
+.. c:function:: size_t cfp.array4.view.size_w(cfp_view4 self)
+
+  :ref:`View dimensions <view_dims>`.
+
+----
+
+.. c:function:: float cfp.array1f.view.get(cfp_view1f self, size_t i) 
+.. c:function:: float cfp.array2f.view.get(cfp_view2f self, size_t i, size_t j) 
+.. c:function:: float cfp.array3f.view.get(cfp_view3f self, size_t i, size_t j, size_t k) 
+.. c:function:: float cfp.array4f.view.get(cfp_view4f self, size_t i, size_t j, size_t k, size_t l) 
+
+.. c:function:: double cfp.array1d.view.get(cfp_view1d self, size_t i) 
+.. c:function:: double cfp.array2d.view.get(cfp_view2d self, size_t i, size_t j) 
+.. c:function:: double cfp.array3d.view.get(cfp_view3d self, size_t i, size_t j, size_t k) 
+.. c:function:: double cfp.array4d.view.get(cfp_view4d self, size_t i, size_t j, size_t k, size_t l) 
+
+  :ref:`View inspectors <view_accessor>` via multidimensional indexing.
+
+----
+
+.. c:function:: double cfp.array.view.rate(cfp_view self)
+
+  See :cpp:func:`arrayANY::const_view::rate()`.
+
+----
+
+.. c:function:: size_t cfp.array.view.size(cfp_view self)
+
+  See :cpp:func:`arrayANY::const_view::size()`.
+
+----
+
+.. c:function:: cfp_ref_view1 cfp.array1.view.ref(cfp_view1 self, size_t i)
+.. c:function:: cfp_ref_view2 cfp.array2.view.ref(cfp_view2 self, size_t i, size_t j)
+.. c:function:: cfp_ref_view3 cfp.array3.view.ref(cfp_view3 self, size_t i, size_t j, size_t k)
+.. c:function:: cfp_ref_view4 cfp.array4.view.ref(cfp_view4 self, size_t i, size_t j, size_t k, size_t l)
+
+  Reference :ref:`constructor <view_accessor>` via multidimensional indexing.
+
+----
+
+.. c:function:: cfp_iter_view cfp.array.view.begin(cfp_view self)
+
+  Return :ref:`iterator <view_begin>` to beginning of view.
+
+----
+
+.. c:function:: cfp_iter_view cfp.array.view.end(cfp_view self)
+
+  Return :ref:`iterator <view_end>` to end of view.
+
+
+.. _cfp_flat_view:
+
+Flat Views
+^^^^^^^^^^
+
+|cfp| wrappers for :ref:`flat view <flat_view>` classes.
+
+.. c:type:: cfp_flat_view1
+.. c:type:: cfp_flat_view2
+.. c:type:: cfp_flat_view3
+.. c:type:: cfp_flat_view4
+
+  Fictitious types denoting 1D, 2D, 3D, and 4D flat views of any scalar type.
+
+----
+
+.. c:type:: cfp_flat_viewf
+.. c:type:: cfp_flat_viewd
+
+  Fictitious types denoting any-dimensional flat views of floats and doubles.
+
+----
+
+.. c:type:: cfp_flat_view
+
+  Fictitious type denoting flat view of any dimensionality and scalar type.
+
+----
+
+.. c:type:: cfp_flat_view2f
+.. c:type:: cfp_flat_view2d
+.. c:type:: cfp_flat_view3f
+.. c:type:: cfp_flat_view3d
+.. c:type:: cfp_flat_view4f
+.. c:type:: cfp_flat_view4d
+
+  Opaque types for flat views into 2D, 3D, and 4D compressed arrays of floats and doubles.
+
+----
+
+.. c:function:: cfp_flat_view2 cfp.array2.flat_view.ctor(cfp_array2 arr)
+.. c:function:: cfp_flat_view3 cfp.array3.flat_view.ctor(cfp_array3 arr)
+.. c:function:: cfp_flat_view4 cfp.array4.flat_view.ctor(cfp_array4 arr)
+
+  Whole-array flat view constructors.
+  See :ref:`corresponding C++ constructor <flat_view_ctor>`.
+
+----
+
+.. c:function:: cfp_flat_view2 cfp.array2.flat_view.ctor_subset(cfp_array2 arr, size_t x, size_t y, size_t nx, size_t ny)
+.. c:function:: cfp_flat_view3 cfp.array3.flat_view.ctor_subset(cfp_array3 arr, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. c:function:: cfp_flat_view4 cfp.array4.flat_view.ctor_subset(cfp_array4 arr, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
+
+  Sub-array flat view constructors.
+  See :ref:`corresponding C++ constructor <flat_view_ctor>`.
+
+----
+
+.. c:function:: void cfp.array2.flat_view.dtor(cfp_view2 self)
+.. c:function:: void cfp.array3.flat_view.dtor(cfp_view3 self)
+.. c:function:: void cfp.array4.flat_view.dtor(cfp_view4 self)
+
+  Destructor. Frees memory for itself, invalidating
+  the *self* object upon return. Note that the user must explicitly
+  call the destructor to avoid memory leaks.
+
+----
+
+.. c:function:: size_t cfp.array2.flat_view.global_x(cfp_flat_view2 self, size_t i)
+.. c:function:: size_t cfp.array3.flat_view.global_x(cfp_flat_view3 self, size_t i)
+.. c:function:: size_t cfp.array4.flat_view.global_x(cfp_flat_view4 self, size_t i)
+
+.. c:function:: size_t cfp.array2.flat_view.global_y(cfp_flat_view2 self, size_t i)
+.. c:function:: size_t cfp.array3.flat_view.global_y(cfp_flat_view3 self, size_t i)
+.. c:function:: size_t cfp.array4.flat_view.global_y(cfp_flat_view4 self, size_t i)
+
+.. c:function:: size_t cfp.array3.flat_view.global_z(cfp_flat_view3 self, size_t i)
+.. c:function:: size_t cfp.array4.flat_view.global_z(cfp_flat_view4 self, size_t i)
+
+.. c:function:: size_t cfp.array4.flat_view.global_y(cfp_flat_view4 self, size_t i)
+
+  Return :ref:`global array index <view_global>` associated with local view index.
+
+----
+
+.. c:function:: size_t cfp.array2.flat_view.size_x(cfp_flat_view2 self)
+.. c:function:: size_t cfp.array3.flat_view.size_x(cfp_flat_view3 self)
+.. c:function:: size_t cfp.array4.flat_view.size_x(cfp_flat_view4 self)
+
+.. c:function:: size_t cfp.array2.flat_view.size_y(cfp_flat_view2 self)
+.. c:function:: size_t cfp.array3.flat_view.size_y(cfp_flat_view3 self)
+.. c:function:: size_t cfp.array4.flat_view.size_y(cfp_flat_view4 self)
+
+.. c:function:: size_t cfp.array3.flat_view.size_z(cfp_flat_view3 self)
+.. c:function:: size_t cfp.array4.flat_view.size_z(cfp_flat_view4 self)
+
+.. c:function:: size_t cfp.array4.flat_view.size_w(cfp_flat_view4 self)
+
+  :ref:`View dimensions <view_dims>`.
+
+----
+
+.. c:function:: float cfp.array2f.flat_view.get(cfp_flat_view2f self, size_t i, size_t j) 
+.. c:function:: float cfp.array3f.flat_view.get(cfp_flat_view3f self, size_t i, size_t j, size_t k) 
+.. c:function:: float cfp.array4f.flat_view.get(cfp_flat_view4f self, size_t i, size_t j, size_t k, size_t l) 
+
+.. c:function:: double cfp.array2d.flat_view.get(cfp_flat_view2d self, size_t i, size_t j) 
+.. c:function:: double cfp.array3d.flat_view.get(cfp_flat_view3d self, size_t i, size_t j, size_t k) 
+.. c:function:: double cfp.array4d.flat_view.get(cfp_flat_view4d self, size_t i, size_t j, size_t k, size_t l) 
+
+  :ref:`View inspectors <view_accessor>` via multidimensional indexing.
+
+----
+
+.. c:function:: double cfp.array2.flat_view.rate(cfp_flat_view2 self)
+.. c:function:: double cfp.array3.flat_view.rate(cfp_flat_view3 self)
+.. c:function:: double cfp.array4.flat_view.rate(cfp_flat_view4 self)
+
+  See :cpp:func:`arrayANY::const_view::rate()`.
+
+----
+
+.. c:function:: size_t cfp.array2.flat_view.size(cfp_flat_view2 self)
+.. c:function:: size_t cfp.array3.flat_view.size(cfp_flat_view3 self)
+.. c:function:: size_t cfp.array4.flat_view.size(cfp_flat_view4 self)
+
+  See :cpp:func:`arrayANY::const_view::size()`.
+
+----
+
+.. c:function:: cfp_ref_flat_view2 cfp.array2.flat_view.ref(cfp_flat_view2 self, size_t i, size_t j)
+.. c:function:: cfp_ref_flat_view3 cfp.array3.flat_view.ref(cfp_flat_view3 self, size_t i, size_t j, size_t k)
+.. c:function:: cfp_ref_flat_view4 cfp.array4.flat_view.ref(cfp_flat_view4 self, size_t i, size_t j, size_t k, size_t l)
+
+  Reference :ref:`constructor <view_accessor>` via multidimensional indexing.
+
+----
+
+.. c:function:: cfp_iter_flat_view2 cfp.array2.flat_view.begin(cfp_flat_view2 self)
+.. c:function:: cfp_iter_flat_view3 cfp.array3.flat_view.begin(cfp_flat_view3 self)
+.. c:function:: cfp_iter_flat_view4 cfp.array4.flat_view.begin(cfp_flat_view4 self)
+
+  Return :ref:`iterator <view_begin>` to beginning of flat_view.
+
+----
+
+.. c:function:: cfp_iter_flat_view2 cfp.array2.flat_view.end(cfp_flat_view2 self)
+.. c:function:: cfp_iter_flat_view3 cfp.array3.flat_view.end(cfp_flat_view3 self)
+.. c:function:: cfp_iter_flat_view4 cfp.array4.flat_view.end(cfp_flat_view4 self)
+
+  Return :ref:`iterator <view_end>` to end of flat_view.
+
+----
+
+.. c:function:: size_t cfp.array2.flat_view.index(cfp_flat_view2, size_t i, size_t j)
+.. c:function:: size_t cfp.array3.flat_view.index(cfp_flat_view2, size_t i, size_t j, size_t k)
+.. c:function:: size_t cfp.array4.flat_view.index(cfp_flat_view2, size_t i, size_t j, size_t k, size_t l)
+
+  index desc
+
+----
+
+.. c:function:: void cfp.array2.flat_view.ij(cfp_flat_view2 self, size_t* i, size_t* j, size_t index)
+.. c:function:: void cfp.array3.flat_view.ijk(cfp_flat_view3 self, size_t* i, size_t* j, size_t k, size_t index)
+.. c:function:: void cfp.array4.flat_view.ijkl(cfp_flat_view4 self, size_t* i, size_t* j, size_t k, size_t l, size_t index)
+
+  ijkl desc
+
+
+.. _cfp_private_view:
+
+Private Mutable Views
+^^^^^^^^^^^^^^^^^^^^^
+
+.. c:type:: cfp_private_view1f
+.. c:type:: cfp_private_view1d
+.. c:type:: cfp_private_view2f
+.. c:type:: cfp_private_view2d
+.. c:type:: cfp_private_view3f
+.. c:type:: cfp_private_view3d
+.. c:type:: cfp_private_view4f
+.. c:type:: cfp_private_view4d
+
+  Opaque types for private mutable views into 1D, 2D, 3D, and 4D compressed arrays of floats and doubles.
+
+----
+
+.. c:function:: cfp_private_view1f cfp.private_view1f.ctor(cfp_array1f arr)
+.. c:function:: cfp_private_view1d cfp.private_view1d.ctor(cfp_array1d arr)
+.. c:function:: cfp_private_view2f cfp.private_view2f.ctor(cfp_array2f arr)
+.. c:function:: cfp_private_view2d cfp.private_view2d.ctor(cfp_array2d arr)
+.. c:function:: cfp_private_view3f cfp.private_view3f.ctor(cfp_array3f arr)
+.. c:function:: cfp_private_view3d cfp.private_view3d.ctor(cfp_array3d arr)
+.. c:function:: cfp_private_view4f cfp.private_view4f.ctor(cfp_array4f arr)
+.. c:function:: cfp_private_view4d cfp.private_view4d.ctor(cfp_array4d arr)
+
+  Whole-array private mutable view constructors.
+  See :ref:`corresponding C++ constructor <private_view_ctor>`.
+
+----
+
+.. c:function:: cfp_private_view1f cfp.private_view1f.ctor_subset(cfp_array1f arr, size_t x, size_t nx)
+.. c:function:: cfp_private_view1d cfp.private_view1d.ctor_subset(cfp_array1d arr, size_t x, size_t nx)
+.. c:function:: cfp_private_view2f cfp.private_view2f.ctor_subset(cfp_array2f arr, size_t x, size_t y, size_t nx, size_t ny)
+.. c:function:: cfp_private_view2d cfp.private_view2d.ctor_subset(cfp_array2d arr, size_t x, size_t y, size_t nx, size_t ny)
+.. c:function:: cfp_private_view3f cfp.private_view3f.ctor_subset(cfp_array3f arr, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. c:function:: cfp_private_view3d cfp.private_view3d.ctor_subset(cfp_array3d arr, size_t x, size_t y, size_t z, size_t nx, size_t ny, size_t nz)
+.. c:function:: cfp_private_view4f cfp.private_view4f.ctor_subset(cfp_array4f arr, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
+.. c:function:: cfp_private_view4d cfp.private_view4d.ctor_subset(cfp_array4d arr, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw)
+
+  Sub-array private mutable view constructors.
+  See :ref:`corresponding C++ constructor <private_view_ctor>`.
+
+
 .. _cfp_serialization:
 
 Serialization
@@ -437,7 +816,7 @@ allocated and must be explicitly destructed via
 
 ----
 
-.. c:function:: cfp_header cfp.array.header.ctor(const cfp_array a);
+.. c:function:: cfp_header cfp.array.header.ctor(const cfp_array a)
 
   :ref:`Construct <header_ctor>` a header that describes the metadata of an
   existing array *a*.
@@ -451,7 +830,7 @@ allocated and must be explicitly destructed via
 
 ----
 
-.. c:function:: void cfp.array.header.dtor(cfp_header self);
+.. c:function:: void cfp.array.header.dtor(cfp_header self)
 
   Destructor.  Deallocates all data associated with the header.  The user
   must call the destructor to avoid memory leaks.
@@ -460,42 +839,42 @@ allocated and must be explicitly destructed via
 
 .. cpp:namespace:: zfp::array
 
-.. c:function:: zfp_type cfp.array.header.scalar_type(const cfp_header self);
+.. c:function:: zfp_type cfp.array.header.scalar_type(const cfp_header self)
 
   Scalar type associated with array.  See :cpp:func:`header::scalar_type`.
 
 ----
 
-.. c:function:: uint cfp.array.header.dimensionality(const cfp_header self);
+.. c:function:: uint cfp.array.header.dimensionality(const cfp_header self)
 
   Dimensionality associated with array.
   See :cpp:func:`header::dimensionality`.
 
 ----
 
-.. c:function:: size_t cfp.array.header.size_x(const cfp_header self);
-.. c:function:: size_t cfp.array.header.size_y(const cfp_header self);
-.. c:function:: size_t cfp.array.header.size_z(const cfp_header self);
-.. c:function:: size_t cfp.array.header.size_w(const cfp_header self);
+.. c:function:: size_t cfp.array.header.size_x(const cfp_header self)
+.. c:function:: size_t cfp.array.header.size_y(const cfp_header self)
+.. c:function:: size_t cfp.array.header.size_z(const cfp_header self)
+.. c:function:: size_t cfp.array.header.size_w(const cfp_header self)
 
   :ref:`Array dimensions <header_dims>`.  Unused dimensions have a size of zero.
 
 ----
 
-.. c:function:: double cfp.array.header.rate(const cfp_header self);
+.. c:function:: double cfp.array.header.rate(const cfp_header self)
 
   Rate in bits/value.  See :cpp:func:`header::rate`.
 
 ----
 
-.. c:function:: const void* cfp.array.header.data(const cfp_header self);
+.. c:function:: const void* cfp.array.header.data(const cfp_header self)
 
   Pointer to header data buffer needed for serializing the header.
   See :cpp:func:`header::data`.
 
 ----
 
-.. c:function:: size_t cfp.array.header.size_bytes(const cfp_header self, uint mask);
+.. c:function:: size_t cfp.array.header.size_bytes(const cfp_header self, uint mask)
 
   When *mask* = :c:macro:`ZFP_DATA_HEADER`, byte size of header data buffer needed
   for serializing the header.  See :cpp:func:`header::size_bytes`.

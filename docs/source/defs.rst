@@ -38,3 +38,4 @@
 .. |fieldrelease| replace:: 0.5.6
 .. |carrrelease| replace:: 0.5.6
 .. |cpprelease| replace:: 0.5.6
+.. |cfpviewsrelease| replace:: 0.5.7

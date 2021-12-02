@@ -132,6 +132,7 @@ the arrays that they reference.
 
 ----
 
+.. _view_global:
 .. cpp:function:: size_t array1::const_view::global_x(size_t i) const
 .. cpp:function:: size_t array2::const_view::global_x(size_t i) const
 .. cpp:function:: size_t array2::const_view::global_y(size_t j) const
@@ -149,6 +150,7 @@ the arrays that they reference.
 
 ----
 
+.. _view_dims:
 .. cpp:function:: size_t array1::const_view::size_x() const
 .. cpp:function:: size_t array2::const_view::size_x() const
 .. cpp:function:: size_t array2::const_view::size_y() const
@@ -183,6 +185,7 @@ the arrays that they reference.
 
 ----
 
+.. _view_begin:
 .. cpp:function:: array1::const_view::const_iterator array1::const_view::begin() const
 .. cpp:function:: array2::const_view::const_iterator array2::const_view::begin() const
 .. cpp:function:: array3::const_view::const_iterator array3::const_view::begin() const
@@ -196,6 +199,7 @@ the arrays that they reference.
 
 ----
 
+.. _view_end:
 .. cpp:function:: array1::const_view::const_iterator array1::const_view::end() const
 .. cpp:function:: array2::const_view::const_iterator array2::const_view::end() const
 .. cpp:function:: array3::const_view::const_iterator array3::const_view::end() const
@@ -254,6 +258,7 @@ for the :code:`const_view`.
 
 ----
 
+.. _mutable_view_ctor:
 .. cpp:function:: array1::view::view(array1* array)
 .. cpp:function:: array2::view::view(array2* array)
 .. cpp:function:: array3::view::view(array3* array)
@@ -318,6 +323,7 @@ either a flat or a nested view.
 
 ----
 
+.. _flat_view_ctor:
 .. cpp:function:: array2::flat_view::flat_view(array2* array)
 .. cpp:function:: array3::flat_view::flat_view(array3* array)
 .. cpp:function:: array4::flat_view::flat_view(array4* array)
@@ -810,6 +816,7 @@ The :code:`private_view` class inherits all public functions from
 
 ----
 
+.. _private_view_ctor:
 .. cpp:function:: array1::private_view::private_view(array1* array)
 .. cpp:function:: array2::private_view::private_view(array2* array)
 .. cpp:function:: array3::private_view::private_view(array3* array)

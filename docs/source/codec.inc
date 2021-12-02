@@ -158,7 +158,7 @@ Codecs reside in the :code:`zfp::codec` namespace, e.g.,
 
   Memory alignment in number of bytes required by codec.
 
-.. cpp:var:: static const zfp_type codec::type;
+.. cpp:var:: static const zfp_type codec::type
 
   :c:type:`Scalar type <zfp_type>` compressed by codec.
 
