@@ -21,6 +21,7 @@
 
 #include "testCfpView_source.c"
 #include "testCfpView4_source.c"
+#include "testCfpFlatView_source.c"
 #include "testCfpFlatView4_source.c"
 
 int main()
@@ -31,6 +32,7 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_flat_view4d_when_ctor_subset_expect_returnsNonNullPtr, setupCfpArrSmall, teardownCfpArr),
     cmocka_unit_test_setup_teardown(given_cfp_flat_view4d_when_ijkl_then_returnsUnflatIndices, setupCfpArrSmall, teardownCfpArr),
 
+    cmocka_unit_test_setup_teardown(given_cfp_flat_view4d_when_setFlat_expect_getFlatEntryMatches, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_flat_view4d_when_size_expect_sizeMatches, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_flat_view4d_when_sizex_expect_sizeMatches, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_flat_view4d_when_getRate_expect_rateMatches, setupCfpViewSmall, teardownCfpView),

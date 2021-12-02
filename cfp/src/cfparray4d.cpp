@@ -46,6 +46,7 @@
 #include "template/cfpcontainer4.cpp"
 #include "template/cfpview.cpp"
 #include "template/cfpview4.cpp"
+#include "template/cfpflatview.cpp"
 #include "template/cfpflatview4.cpp"
 #undef CFP_REF_TYPE
 #undef CFP_PTR_TYPE

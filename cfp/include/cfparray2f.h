@@ -287,6 +287,8 @@ typedef struct {
   size_t (*size_x)(cfp_flat_view2f self);
   size_t (*size_y)(cfp_flat_view2f self);
   float (*get)(const cfp_flat_view2f self, size_t i, size_t j);
+  float (*get_flat)(const cfp_flat_view2f self, size_t i);
+  void (*set_flat)(const cfp_flat_view2f self, size_t i, float val);
   double (*rate)(const cfp_flat_view2f self);
   size_t (*size)(cfp_flat_view2f self);
 
