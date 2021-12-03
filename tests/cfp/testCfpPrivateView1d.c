@@ -36,6 +36,7 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_private_view1d_when_sizex_expect_sizeMatches, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_private_view1d_when_getRate_expect_rateMatches, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_private_view1d_withDirtyCache_when_flushCache_thenValuePersistedToArray, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_private_view1d_when_set_expect_getValueMatches, setupCfpViewSmall, teardownCfpView),
 
     cmocka_unit_test_setup_teardown(given_cfp_private_view1d_when_globalx_expect_offsetMatches, setupCfpSubsetViewSmall, teardownCfpView),
   };

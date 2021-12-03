@@ -279,6 +279,7 @@ typedef struct {
   size_t (*size_z)(cfp_view4d self);
   size_t (*size_w)(cfp_view4d self);
   double (*get)(const cfp_view4d self, size_t i, size_t j, size_t k, size_t l);
+  void (*set)(const cfp_view4d self, size_t i, size_t j, size_t k, size_t l, double val);
   double (*rate)(const cfp_view4d self);
   size_t (*size)(cfp_view4d self);
 
@@ -302,6 +303,7 @@ typedef struct {
   size_t (*size_z)(cfp_flat_view4d self);
   size_t (*size_w)(cfp_flat_view4d self);
   double (*get)(const cfp_flat_view4d self, size_t i, size_t j, size_t k, size_t l);
+  void (*set)(const cfp_flat_view4d self, size_t i, size_t j, size_t k, size_t l, double val);
   double (*get_flat)(const cfp_flat_view4d self, size_t i);
   void (*set_flat)(const cfp_flat_view4d self, size_t i, double val);
   double (*rate)(const cfp_flat_view4d self);
@@ -330,6 +332,7 @@ typedef struct {
   size_t (*size_z)(cfp_private_view4d self);
   size_t (*size_w)(cfp_private_view4d self);
   double (*get)(const cfp_private_view4d self, size_t i, size_t j, size_t k, size_t l);
+  void (*set)(const cfp_private_view4d self, size_t i, size_t j, size_t k, size_t l, double val);
   double (*rate)(const cfp_private_view4d self);
   size_t (*size)(cfp_private_view4d self);
 

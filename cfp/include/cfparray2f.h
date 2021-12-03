@@ -268,6 +268,7 @@ typedef struct {
   size_t (*size_x)(cfp_view2f self);
   size_t (*size_y)(cfp_view2f self);
   float (*get)(const cfp_view2f self, size_t i, size_t j);
+  void (*set)(const cfp_view2f self, size_t i, size_t j, float val);
   double (*rate)(const cfp_view2f self);
   size_t (*size)(cfp_view2f self);
 
@@ -287,6 +288,7 @@ typedef struct {
   size_t (*size_x)(cfp_flat_view2f self);
   size_t (*size_y)(cfp_flat_view2f self);
   float (*get)(const cfp_flat_view2f self, size_t i, size_t j);
+  void (*set)(const cfp_flat_view2f self, size_t i, size_t j, float val);
   float (*get_flat)(const cfp_flat_view2f self, size_t i);
   void (*set_flat)(const cfp_flat_view2f self, size_t i, float val);
   double (*rate)(const cfp_flat_view2f self);
@@ -311,6 +313,7 @@ typedef struct {
   size_t (*size_x)(cfp_private_view2f self);
   size_t (*size_y)(cfp_private_view2f self);
   float (*get)(const cfp_private_view2f self, size_t i, size_t j);
+  void (*set)(const cfp_private_view2f self, size_t i, size_t j, float val);
   double (*rate)(const cfp_private_view2f self);
   size_t (*size)(cfp_private_view2f self);
 

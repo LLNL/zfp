@@ -36,7 +36,7 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_flat_view3d_when_size_expect_sizeMatches, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_flat_view3d_when_sizex_expect_sizeMatches, setupCfpViewSmall, teardownCfpView),
     cmocka_unit_test_setup_teardown(given_cfp_flat_view3d_when_getRate_expect_rateMatches, setupCfpViewSmall, teardownCfpView),
-    cmocka_unit_test_setup_teardown(given_cfp_flat_view3d_when_get_expect_valueCorrect, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_flat_view3d_when_set_expect_getValueMatches, setupCfpViewSmall, teardownCfpView),
 
     cmocka_unit_test_setup_teardown(given_cfp_flat_view3d_when_globalx_expect_offsetMatches, setupCfpSubsetViewSmall, teardownCfpView),
   };

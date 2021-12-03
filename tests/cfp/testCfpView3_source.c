@@ -77,10 +77,9 @@ _catFunc3(given_, CFP_VIEW_TYPE, _when_sizez_expect_sizeMatches)(void **state)
 }
 
 static void
-_catFunc3(given_, CFP_VIEW_TYPE, _when_get_expect_valueCorrect)(void **state)
+_catFunc3(given_, CFP_VIEW_TYPE, _when_set_expect_getValueMatches)(void **state)
 {
   struct setupVars *bundle = *state;
-  CFP_ARRAY_TYPE cfpArr = bundle->cfpArr;
   CFP_VIEW_TYPE cfpView = bundle->cfpView;
 
   SCALAR val = 3.5;
@@ -88,6 +87,6 @@ _catFunc3(given_, CFP_VIEW_TYPE, _when_get_expect_valueCorrect)(void **state)
   size_t j = 2;
   size_t k = 2;
 
-  CFP_NAMESPACE.SUB_NAMESPACE.set(cfpArr, i, j, k, val);
-  assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get(cfpArr, i, j, k) == CFP_NAMESPACE.VIEW_NAMESPACE.get(cfpView, i, j, k));
+  CFP_NAMESPACE.VIEW_NAMESPACE.set(cfpView, i, j, k, val);
+  assert_true(CFP_NAMESPACE.VIEW_NAMESPACE.get(cfpView, i, j, k) == val);
 }
