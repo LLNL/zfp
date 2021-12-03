@@ -273,6 +273,7 @@ for the :code:`const_view`.
 
 ----
 
+.. _mutable_view_accessor:
 .. cpp:function:: reference array1::view::operator()(size_t i)
 .. cpp:function:: reference array2::view::operator()(size_t i, size_t j)
 .. cpp:function:: reference array3::view::operator()(size_t i, size_t j, size_t k)
@@ -336,6 +337,7 @@ either a flat or a nested view.
 
 ----
 
+.. _flat_view_index:
 .. cpp:function:: size_t array2::flat_view::index(size_t i, size_t j) const
 .. cpp:function:: size_t array3::flat_view::index(size_t i, size_t j, size_t k) const
 .. cpp:function:: size_t array4::flat_view::index(size_t i, size_t j, size_t k, size_t l) const
@@ -344,11 +346,12 @@ either a flat or a nested view.
 
 ----
 
+.. _flat_view_ijkl:
 .. cpp:function:: void array2::flat_view::ij(size_t& i, size_t& j, size_t index) const
 .. cpp:function:: void array3::flat_view::ijk(size_t& i, size_t& j, size_t& k, size_t index) const
 .. cpp:function:: void array4::flat_view::ijkl(size_t& i, size_t& j, size_t& k, size_t& l, size_t index) const
 
-  Convert flat index to multidimensional index.
+  Return flat index associated with multidimensional index.
 
 ----
 
@@ -360,6 +363,7 @@ either a flat or a nested view.
 
 ----
 
+.. _flat_view_accessor:
 .. cpp:function:: reference array2::flat_view::operator[](size_t index)
 .. cpp:function:: reference array3::flat_view::operator[](size_t index)
 .. cpp:function:: reference array4::flat_view::operator[](size_t index)
@@ -831,6 +835,7 @@ The :code:`private_view` class inherits all public functions from
 
 ----
 
+.. _private_view_ref:
 .. cpp:function:: array1::private_view::view_reference array1::private_view::operator()(size_t i) const
 .. cpp:function:: array2::private_view::view_reference array2::private_view::operator()(size_t i, size_t j) const
 .. cpp:function:: array3::private_view::view_reference array3::private_view::operator()(size_t i, size_t j, size_t k) const
