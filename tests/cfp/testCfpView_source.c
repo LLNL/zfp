@@ -42,5 +42,58 @@ _catFunc3(given_, CFP_VIEW_TYPE, _when_size_expect_sizeMatches)(void **state)
   assert_int_equal(CFP_NAMESPACE.SUB_NAMESPACE.size(cfpArr), CFP_NAMESPACE.VIEW_NAMESPACE.size(cfpView));
 }
 
-// TODO: begin/end
-// TODO: accessor tests
+// ##############
+// cfp_iter tests
+// ##############
+
+static void
+_catFunc3(given_, CFP_VIEW_ITER_TYPE, _when_get_set_expect_correct)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_VIEW_TYPE cfpView = bundle->cfpView;
+
+  SCALAR val = 5;
+
+  CFP_VIEW_ITER_TYPE cfpViewIter = CFP_NAMESPACE.VIEW_NAMESPACE.begin(cfpView);
+  CFP_NAMESPACE.VIEW_ITER_NAMESPACE.set(cfpViewIter, val);
+
+  assert_int_equal(CFP_NAMESPACE.VIEW_ITER_NAMESPACE.get(cfpViewIter), val);
+}
+
+static void
+_catFunc3(given_, CFP_VIEW_ITER_TYPE, _when_get_at_set_at_expect_correct)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_VIEW_TYPE cfpView = bundle->cfpView;
+
+  size_t i = 3;
+  SCALAR val = 5;
+
+  CFP_VIEW_ITER_TYPE cfpViewIter = CFP_NAMESPACE.VIEW_NAMESPACE.begin(cfpView);
+  CFP_NAMESPACE.VIEW_ITER_NAMESPACE.set_at(cfpViewIter, i, val);
+
+  assert_int_equal(CFP_NAMESPACE.VIEW_ITER_NAMESPACE.get_at(cfpViewIter, i), val);
+}
+
+static void
+_catFunc3(given_, CFP_VIEW_ITER_TYPE, _when_eq_expect_equal)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_VIEW_TYPE cfpView = bundle->cfpView;
+
+  CFP_VIEW_ITER_TYPE cfpViewIter1 = CFP_NAMESPACE.VIEW_NAMESPACE.begin(cfpView);
+
+  assert_true(CFP_NAMESPACE.VIEW_ITER_NAMESPACE.eq(cfpViewIter1, cfpViewIter1));
+}
+
+static void
+_catFunc3(given_, CFP_VIEW_ITER_TYPE, _when_neq_expect_not_equal)(void **state)
+{
+  struct setupVars *bundle = *state;
+  CFP_VIEW_TYPE cfpView = bundle->cfpView;
+
+  CFP_VIEW_ITER_TYPE cfpViewIter1 = CFP_NAMESPACE.VIEW_NAMESPACE.begin(cfpView);
+  CFP_VIEW_ITER_TYPE cfpViewIter2 = CFP_NAMESPACE.VIEW_NAMESPACE.end(cfpView);
+
+  assert_true(CFP_NAMESPACE.VIEW_ITER_NAMESPACE.neq(cfpViewIter1, cfpViewIter2));
+}

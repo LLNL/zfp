@@ -284,6 +284,7 @@ typedef struct {
   size_t (*size)(cfp_view4f self);
 
   cfp_ref_view4f (*ref)(cfp_view4f self, size_t i, size_t j, size_t k, size_t l);
+  cfp_ptr_view4f (*ptr)(cfp_view4f self, size_t i, size_t j, size_t k, size_t l);
   cfp_iter_view4f (*begin)(cfp_view4f self);
   cfp_iter_view4f (*end)(cfp_view4f self);
 } cfp_view4f_api;
@@ -310,6 +311,7 @@ typedef struct {
   size_t (*size)(cfp_flat_view4f self);
 
   cfp_ref_flat_view4f (*ref)(cfp_flat_view4f self, size_t i, size_t j, size_t k, size_t l);
+  cfp_ptr_flat_view4f (*ptr)(cfp_flat_view4f self, size_t i, size_t j, size_t k, size_t l);
   cfp_iter_flat_view4f (*begin)(cfp_flat_view4f self);
   cfp_iter_flat_view4f (*end)(cfp_flat_view4f self);
 
@@ -337,6 +339,7 @@ typedef struct {
   size_t (*size)(cfp_private_view4f self);
 
   cfp_ref_private_view4f (*ref)(cfp_private_view4f self, size_t i, size_t j, size_t k, size_t l);
+  cfp_ptr_private_view4f (*ptr)(cfp_private_view4f self, size_t i, size_t j, size_t k, size_t l);
   cfp_iter_private_view4f (*begin)(cfp_private_view4f self);
   cfp_iter_private_view4f (*end)(cfp_private_view4f self);
 

@@ -623,6 +623,15 @@ Mutable Views
 
 ----
 
+.. c:function:: cfp_ptr_view1 cfp.array1.view.ptr(cfp_view1 self, size_t i)
+.. c:function:: cfp_ptr_view2 cfp.array2.view.ptr(cfp_view2 self, size_t i, size_t j)
+.. c:function:: cfp_ptr_view3 cfp.array3.view.ptr(cfp_view3 self, size_t i, size_t j, size_t k)
+.. c:function:: cfp_ptr_view4 cfp.array4.view.ptr(cfp_view4 self, size_t i, size_t j, size_t k, size_t l)
+
+  Pointer constructor via multidimensional indexing.
+
+----
+
 .. c:function:: cfp_iter_view cfp.array.view.begin(cfp_view self)
 
   Return :ref:`iterator <view_begin>` to beginning of view.
@@ -807,6 +816,14 @@ Flat Views
 .. c:function:: cfp_ref_flat_view4 cfp.array4.flat_view.ref(cfp_flat_view4 self, size_t i, size_t j, size_t k, size_t l)
 
   Reference :ref:`constructor <view_accessor>` via multidimensional indexing.
+
+----
+
+.. c:function:: cfp_ptr_flat_view2 cfp.array2.flat_view.ptr(cfp_flat_view2 self, size_t i, size_t j)
+.. c:function:: cfp_ptr_flat_view3 cfp.array3.flat_view.ptr(cfp_flat_view3 self, size_t i, size_t j, size_t k)
+.. c:function:: cfp_ptr_flat_view4 cfp.array4.flat_view.ptr(cfp_flat_view4 self, size_t i, size_t j, size_t k, size_t l)
+
+  Pointer constructor via multidimensional indexing.
 
 ----
 
@@ -1008,6 +1025,15 @@ Private Mutable Views
 .. c:function:: cfp_ref_private_view4 cfp.array4.private_view.ref(cfp_private_view4 self, size_t i, size_t j, size_t k, size_t l)
 
   Reference :ref:`constructor <private_view_ref>` via multidimensional indexing.
+
+----
+
+.. c:function:: cfp_ptr_private_view1 cfp.array1.private_view.ptr(cfp_private_view1 self, size_t i)
+.. c:function:: cfp_ptr_private_view2 cfp.array2.private_view.ptr(cfp_private_view2 self, size_t i, size_t j)
+.. c:function:: cfp_ptr_private_view3 cfp.array3.private_view.ptr(cfp_private_view3 self, size_t i, size_t j, size_t k)
+.. c:function:: cfp_ptr_private_view4 cfp.array4.private_view.ptr(cfp_private_view4 self, size_t i, size_t j, size_t k, size_t l)
+
+  Pointer constructor via multidimensional indexing.
 
 ----
 

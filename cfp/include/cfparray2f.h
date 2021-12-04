@@ -273,6 +273,7 @@ typedef struct {
   size_t (*size)(cfp_view2f self);
 
   cfp_ref_view2f (*ref)(cfp_view2f self, size_t i, size_t j);
+  cfp_ptr_view2f (*ptr)(cfp_view2f self, size_t i, size_t j);
   cfp_iter_view2f (*begin)(cfp_view2f self);
   cfp_iter_view2f (*end)(cfp_view2f self);
 } cfp_view2f_api;
@@ -295,6 +296,7 @@ typedef struct {
   size_t (*size)(cfp_flat_view2f self);
 
   cfp_ref_flat_view2f (*ref)(cfp_flat_view2f self, size_t i, size_t j);
+  cfp_ptr_flat_view2f (*ptr)(cfp_flat_view2f self, size_t i, size_t j);
   cfp_iter_flat_view2f (*begin)(cfp_flat_view2f self);
   cfp_iter_flat_view2f (*end)(cfp_flat_view2f self);
 
@@ -318,6 +320,7 @@ typedef struct {
   size_t (*size)(cfp_private_view2f self);
 
   cfp_ref_private_view2f (*ref)(cfp_private_view2f self, size_t i, size_t j);
+  cfp_ptr_private_view2f (*ptr)(cfp_private_view2f self, size_t i, size_t j);
   cfp_iter_private_view2f (*begin)(cfp_private_view2f self);
   cfp_iter_private_view2f (*end)(cfp_private_view2f self);
 

@@ -278,6 +278,7 @@ typedef struct {
   size_t (*size)(cfp_view3f self);
 
   cfp_ref_view3f (*ref)(cfp_view3f self, size_t i, size_t j, size_t k);
+  cfp_ptr_view3f (*ptr)(cfp_view3f self, size_t i, size_t j, size_t k);
   cfp_iter_view3f (*begin)(cfp_view3f self);
   cfp_iter_view3f (*end)(cfp_view3f self);
 } cfp_view3f_api;
@@ -302,6 +303,7 @@ typedef struct {
   size_t (*size)(cfp_flat_view3f self);
 
   cfp_ref_flat_view3f (*ref)(cfp_flat_view3f self, size_t i, size_t j, size_t k);
+  cfp_ptr_flat_view3f (*ptr)(cfp_flat_view3f self, size_t i, size_t j, size_t k);
   cfp_iter_flat_view3f (*begin)(cfp_flat_view3f self);
   cfp_iter_flat_view3f (*end)(cfp_flat_view3f self);
 
@@ -327,6 +329,7 @@ typedef struct {
   size_t (*size)(cfp_private_view3f self);
 
   cfp_ref_private_view3f (*ref)(cfp_private_view3f self, size_t i, size_t j, size_t k);
+  cfp_ptr_private_view3f (*ptr)(cfp_private_view3f self, size_t i, size_t j, size_t k);
   cfp_iter_private_view3f (*begin)(cfp_private_view3f self);
   cfp_iter_private_view3f (*end)(cfp_private_view3f self);
 

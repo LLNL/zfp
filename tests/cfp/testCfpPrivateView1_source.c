@@ -9,7 +9,7 @@ _catFunc3(given_, CFP_VIEW_TYPE, _withDirtyCache_when_flushCache_thenValuePersis
   size_t i = 1;
 
   CFP_VIEW_REF_TYPE cfpRef = CFP_NAMESPACE.VIEW_NAMESPACE.ref(cfpView, i);
-  CFP_NAMESPACE.REF_NAMESPACE.set(cfpRef, val);
+  CFP_NAMESPACE.VIEW_REF_NAMESPACE.set(cfpRef, val);
   CFP_NAMESPACE.VIEW_NAMESPACE.flush_cache(cfpView);
 
   assert_true(CFP_NAMESPACE.SUB_NAMESPACE.get(cfpArr, i) == CFP_NAMESPACE.VIEW_NAMESPACE.get(cfpView, i));

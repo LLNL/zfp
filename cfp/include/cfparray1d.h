@@ -207,6 +207,7 @@ typedef struct {
   size_t (*size)(cfp_view1d self);
 
   cfp_ref_view1d (*ref)(cfp_view1d self, size_t i);
+  cfp_ptr_view1d (*ptr)(cfp_view1d self, size_t i);
   cfp_iter_view1d (*begin)(cfp_view1d self);
   cfp_iter_view1d (*end)(cfp_view1d self);
 } cfp_view1d_api;
@@ -225,6 +226,7 @@ typedef struct {
   size_t (*size)(cfp_private_view1d self);
 
   cfp_ref_private_view1d (*ref)(cfp_private_view1d self, size_t i);
+  cfp_ptr_private_view1d (*ptr)(cfp_private_view1d self, size_t i);
   cfp_iter_private_view1d (*begin)(cfp_private_view1d self);
   cfp_iter_private_view1d (*end)(cfp_private_view1d self);
 

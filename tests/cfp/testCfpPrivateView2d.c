@@ -15,7 +15,9 @@
 
 #define SUB_NAMESPACE array2d
 #define VIEW_NAMESPACE array2d.private_view
-#define REF_NAMESPACE array2d.private_view_reference
+#define VIEW_REF_NAMESPACE array2d.private_view_reference
+#define VIEW_PTR_NAMESPACE array2d.private_view_pointer
+#define VIEW_ITER_NAMESPACE array2d.private_view_iterator
 #define SCALAR double
 #define SCALAR_TYPE zfp_type_double
 #define DIMENSIONALITY 2
@@ -40,6 +42,44 @@ int main()
     cmocka_unit_test_setup_teardown(given_cfp_private_view2d_when_set_expect_getValueMatches, setupCfpViewSmall, teardownCfpView),
 
     cmocka_unit_test_setup_teardown(given_cfp_private_view2d_when_globalx_expect_offsetMatches, setupCfpSubsetViewSmall, teardownCfpView),
+
+    cmocka_unit_test_setup_teardown(given_cfp_ref_private_view2d_when_get_expect_entryReturned, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ref_private_view2d_when_set_expect_viewUpdated, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ref_private_view2d_when_copy_expect_viewUpdated, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ref_private_view2d_when_ptr_expect_addressMatches, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_get_set_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_get_at_set_at_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_ref_expect_addressMatches, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_ref_at_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_lt_expect_less, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_gt_expect_greater, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_leq_expect_less_or_equal, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_geq_expect_greater_or_equal, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_eq_expect_equal, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_neq_expect_not_equal, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_distance_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_next_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_prev_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_inc_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_ptr_private_view2d_when_dec_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_ref_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_ref_at_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_ptr_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_ptr_at_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_inc_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_dec_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_next_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_prev_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_distance_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_lt_expect_less, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_gt_expect_greater, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_leq_expect_less_or_equal, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_geq_expect_greater_or_equal, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_get_index_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_get_set_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_get_at_set_at_expect_correct, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_eq_expect_equal, setupCfpViewSmall, teardownCfpView),
+    cmocka_unit_test_setup_teardown(given_cfp_iter_private_view2d_when_neq_expect_not_equal, setupCfpViewSmall, teardownCfpView),
   };
 
   return cmocka_run_group_tests(tests, prepCommonSetupVars, teardownCommonSetupVars);
