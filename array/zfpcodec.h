@@ -6,6 +6,7 @@
 #include <cstring>
 #include "zfp.h"
 #include "zfpcpp.h"
+#include "zfparray.h"
 #include "zfp/memory.h"
 #include "zfp/traits.h"
 
@@ -19,7 +20,8 @@ protected:
   // default constructor
   zfp_base() :
     stream(zfp_stream_open(0))
-  {}
+  {
+  }
 
   // destructor
   ~zfp_base()
@@ -29,6 +31,13 @@ protected:
   }
 
 public:
+  // copy constructor--performs deep copy
+  zfp_base(const zfp_base& codec) :
+    stream(0)
+  {
+    deep_copy(codec);
+  }
+
   // assignment operator--performs deep copy
   zfp_base& operator=(const zfp_base& codec)
   {
@@ -67,6 +76,9 @@ public:
     stream_close(zfp_stream_bit_stream(stream));
     zfp_stream_set_bit_stream(stream, 0);
   }
+
+  // pointer to beginning of bit stream
+  void* data() const { return stream->stream ? stream_data(stream->stream) : 0; }
 
   // compression mode
   zfp_mode mode() const { return zfp_stream_compression_mode(stream); }
@@ -118,10 +130,16 @@ public:
   #include "zfp/zfpheader.h"
 
 protected:
-  // deep copy
+  // deep copy (leaves bit stream closed)
   void deep_copy(const zfp_base& codec)
   {
-    stream = zfp_stream_open(0);
+    // close stream if already open
+    if (stream) {
+      if (stream->stream)
+        close();
+    }
+    else
+      stream = zfp_stream_open(0);
     *stream = *codec.stream;
     stream->stream = 0;
   }

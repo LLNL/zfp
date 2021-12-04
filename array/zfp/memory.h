@@ -191,6 +191,13 @@ round_up(size_t size, size_t unit)
   return size;
 }
 
+// return smallest number of units needed to equal or exceed size
+inline size_t
+count_up(size_t size, size_t unit)
+{
+  return (size + unit - 1) / unit;
+}
+
 }
 
 #undef unused_

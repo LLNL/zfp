@@ -1,85 +1,87 @@
-#ifndef ZFP_VARRAY3_H
-#define ZFP_VARRAY3_H
+#ifndef ZFP_VARRAY4_H
+#define ZFP_VARRAY4_H
 
 #include <cstddef>
 #include <cstring>
 #include <iterator>
 #include "zfpvarray.h"
 #include "zfpcodec.h"
-#include "zfp/cache3.h"
-#include "zfp/tilestore3.h"
-#include "zfp/handle3.h"
-#include "zfp/reference3.h"
-#include "zfp/pointer3.h"
-#include "zfp/iterator3.h"
-#include "zfp/view3.h"
+#include "zfp/cache4.h"
+#include "zfp/tilestore4.h"
+#include "zfp/handle4.h"
+#include "zfp/reference4.h"
+#include "zfp/pointer4.h"
+#include "zfp/iterator4.h"
+#include "zfp/view4.h"
 
 namespace zfp {
 
-// variable-rate compressed 3D array of scalars
+// variable-rate compressed 4D array of scalars
 template <
   typename Scalar,
-  class Codec = zfp::codec::zfp3<Scalar>
+  class Codec = zfp::codec::zfp4<Scalar>
 >
-class var_array3 : public var_array {
+class var_array4 : public var_array {
 public:
   // types utilized by nested classes
-  typedef var_array3 container_type;
+  typedef var_array4 container_type;
   typedef Scalar value_type;
   typedef Codec codec_type;
-  typedef zfp::internal::TileStore3<value_type, codec_type> store_type;
-  typedef BlockCache3<value_type, store_type, true> cache_type;
+  typedef zfp::internal::TileStore4<value_type, codec_type> store_type;
+  typedef BlockCache4<value_type, store_type, true> cache_type;
   typedef typename Codec::header header;
 
   // accessor classes
-  typedef zfp::internal::dim3::const_reference<var_array3> const_reference;
-  typedef zfp::internal::dim3::const_pointer<var_array3> const_pointer;
-  typedef zfp::internal::dim3::const_iterator<var_array3> const_iterator;
-  typedef zfp::internal::dim3::const_view<var_array3> const_view;
-  typedef zfp::internal::dim3::private_const_view<var_array3> private_const_view;
-  typedef zfp::internal::dim3::reference<var_array3> reference;
-  typedef zfp::internal::dim3::pointer<var_array3> pointer;
-  typedef zfp::internal::dim3::iterator<var_array3> iterator;
-  typedef zfp::internal::dim3::view<var_array3> view;
-  typedef zfp::internal::dim3::flat_view<var_array3> flat_view;
-  typedef zfp::internal::dim3::nested_view1<var_array3> nested_view1;
-  typedef zfp::internal::dim3::nested_view2<var_array3> nested_view2;
-  typedef zfp::internal::dim3::nested_view3<var_array3> nested_view3;
-  typedef zfp::internal::dim3::nested_view3<var_array3> nested_view;
-  typedef zfp::internal::dim3::private_view<var_array3> private_view;
+  typedef zfp::internal::dim4::const_reference<var_array4> const_reference;
+  typedef zfp::internal::dim4::const_pointer<var_array4> const_pointer;
+  typedef zfp::internal::dim4::const_iterator<var_array4> const_iterator;
+  typedef zfp::internal::dim4::const_view<var_array4> const_view;
+  typedef zfp::internal::dim4::private_const_view<var_array4> private_const_view;
+  typedef zfp::internal::dim4::reference<var_array4> reference;
+  typedef zfp::internal::dim4::pointer<var_array4> pointer;
+  typedef zfp::internal::dim4::iterator<var_array4> iterator;
+  typedef zfp::internal::dim4::view<var_array4> view;
+  typedef zfp::internal::dim4::flat_view<var_array4> flat_view;
+  typedef zfp::internal::dim4::nested_view1<var_array4> nested_view1;
+  typedef zfp::internal::dim4::nested_view2<var_array4> nested_view2;
+  typedef zfp::internal::dim4::nested_view3<var_array4> nested_view3;
+  typedef zfp::internal::dim4::nested_view4<var_array4> nested_view4;
+  typedef zfp::internal::dim4::nested_view4<var_array4> nested_view;
+  typedef zfp::internal::dim4::private_view<var_array4> private_view;
 
   // default constructor
-  var_array3() :
-    var_array(3, Codec::type),
+  var_array4() :
+    var_array(4, Codec::type),
     cache(store)
   {}
 
-  // constructor of nx * ny * nz array using given configuration, at least
+  // constructor of nx * ny * nz * nw array using given configuration, at least
   // cache_size bytes of cache, and optionally initialized from flat array p
-  var_array3(size_t nx, size_t ny, size_t nz, const zfp_config& config, const value_type* p = 0, size_t cache_size = 0) :
-    var_array(3, Codec::type),
-    store(nx, ny, nz, config),
+  var_array3(size_t nx, size_t ny, size_t nz, size_t nw, const zfp_config& config, const value_type* p = 0, size_t cache_size = 0) :
+    var_array(4, Codec::type),
+    store(nx, ny, nz, nw, config),
     cache(store, cache_size)
   {
     this->nx = nx;
     this->ny = ny;
     this->nz = nz;
+    this->nw = nw;
     if (p)
       set(p);
   }
 
   // copy constructor--performs a deep copy
-  var_array3(const var_array3& a) :
+  var_array4(const var_array4& a) :
     cache(store)
   {
     deep_copy(a);
   }
 
   // virtual destructor
-  virtual ~var_array3() {}
+  virtual ~var_array4() {}
 
   // assignment operator--performs a deep copy
-  var_array3& operator=(const var_array3& a)
+  var_array4& operator=(const var_array4& a)
   {
     if (this != &a)
       deep_copy(a);
@@ -219,24 +221,25 @@ public:
   iterator end() { return iterator(this, 0, 0, nz); }
 
 protected:
-  friend class zfp::internal::dim3::const_handle<var_array3>;
-  friend class zfp::internal::dim3::const_reference<var_array3>;
-  friend class zfp::internal::dim3::const_pointer<var_array3>;
-  friend class zfp::internal::dim3::const_iterator<var_array3>;
-  friend class zfp::internal::dim3::const_view<var_array3>;
-  friend class zfp::internal::dim3::private_const_view<var_array3>;
-  friend class zfp::internal::dim3::reference<var_array3>;
-  friend class zfp::internal::dim3::pointer<var_array3>;
-  friend class zfp::internal::dim3::iterator<var_array3>;
-  friend class zfp::internal::dim3::view<var_array3>;
-  friend class zfp::internal::dim3::flat_view<var_array3>;
-  friend class zfp::internal::dim3::nested_view1<var_array3>;
-  friend class zfp::internal::dim3::nested_view2<var_array3>;
-  friend class zfp::internal::dim3::nested_view3<var_array3>;
-  friend class zfp::internal::dim3::private_view<var_array3>;
+  friend class zfp::internal::dim4::const_handle<var_array4>;
+  friend class zfp::internal::dim4::const_reference<var_array4>;
+  friend class zfp::internal::dim4::const_pointer<var_array4>;
+  friend class zfp::internal::dim4::const_iterator<var_array4>;
+  friend class zfp::internal::dim4::const_view<var_array4>;
+  friend class zfp::internal::dim4::private_const_view<var_array4>;
+  friend class zfp::internal::dim4::reference<var_array4>;
+  friend class zfp::internal::dim4::pointer<var_array4>;
+  friend class zfp::internal::dim4::iterator<var_array4>;
+  friend class zfp::internal::dim4::view<var_array4>;
+  friend class zfp::internal::dim4::flat_view<var_array4>;
+  friend class zfp::internal::dim4::nested_view1<var_array4>;
+  friend class zfp::internal::dim4::nested_view2<var_array4>;
+  friend class zfp::internal::dim4::nested_view3<var_array4>;
+  friend class zfp::internal::dim4::nested_view4<var_array4>;
+  friend class zfp::internal::dim4::private_view<var_array4>;
 
   // perform a deep copy
-  void deep_copy(const var_array3& a)
+  void deep_copy(const var_array4& a)
   {
     // copy base class members
     var_array::deep_copy(a);
@@ -253,31 +256,34 @@ protected:
   size_t max_y() const { return ny; }
   size_t min_z() const { return 0; }
   size_t max_z() const { return nz; }
+  size_t min_w() const { return 0; }
+  size_t max_w() const { return nw; }
 
   // inspector
-  value_type get(size_t i, size_t j, size_t k) const { return cache.get(i, j, k); }
+  value_type get(size_t i, size_t j, size_t k, size_t l) const { return cache.get(i, j, k, l); }
 
   // mutators (called from proxy reference)
-  void set(size_t i, size_t j, size_t k, value_type val) { cache.set(i, j, k, val); }
-  void add(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) += val; }
-  void sub(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) -= val; }
-  void mul(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) *= val; }
-  void div(size_t i, size_t j, size_t k, value_type val) { cache.ref(i, j, k) /= val; }
+  void set(size_t i, size_t j, size_t k, size_t l, value_type val) { cache.set(i, j, k, l, val); }
+  void add(size_t i, size_t j, size_t k, size_t l, value_type val) { cache.ref(i, j, k, l) += val; }
+  void sub(size_t i, size_t j, size_t k, size_t l, value_type val) { cache.ref(i, j, k, l) -= val; }
+  void mul(size_t i, size_t j, size_t k, size_t l, value_type val) { cache.ref(i, j, k, l) *= val; }
+  void div(size_t i, size_t j, size_t k, size_t l, value_type val) { cache.ref(i, j, k, l) /= val; }
 
-  // convert flat index to (i, j, k)
-  void ijk(size_t& i, size_t& j, size_t& k, size_t index) const
+  // convert flat index to (i, j, k, l)
+  void ijkl(size_t& i, size_t& j, size_t& k, size_t& l, size_t index) const
   {
     i = index % nx; index /= nx;
     j = index % ny; index /= ny;
-    k = index;
+    k = index % nz; index /= nz;
+    l = index;
   }
 
   store_type store; // persistent storage of compressed blocks
   cache_type cache; // cache of decompressed blocks
 };
 
-typedef var_array3<float> var_array3f;
-typedef var_array3<double> var_array3d;
+typedef var_array4<float> var_array4f;
+typedef var_array4<double> var_array4d;
 
 }
 

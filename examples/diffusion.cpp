@@ -55,20 +55,19 @@ laplacian(const array2d& u, size_t x, size_t y, const Constants& c)
   return uxx + uyy;
 }
 
-template <class array2d>
+template <class state, class scratch>
 inline void
-time_step_parallel(array2d& u, const Constants& c);
+time_step_parallel(state& u, scratch& du, const Constants& c);
 
 // advance solution in parallel via thread-safe views
 #ifdef _OPENMP
 template <>
 inline void
-time_step_parallel(zfp::array2d& u, const Constants& c)
+time_step_parallel(state& u, scratch& du, const Constants& c)
 {
   // flush shared cache to ensure cache consistency across threads
   u.flush_cache();
   // compute du/dt in parallel
-  zfp::array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
   #pragma omp parallel
   {
     // create read-only private view of entire array u
@@ -82,15 +81,10 @@ time_step_parallel(zfp::array2d& u, const Constants& c)
       if (1 <= y && y <= c.ny - 2)
         for (size_t i = 0; i < mydu.size_x(); i++) {
           size_t x = mydu.global_x(i);
-          if (1 <= x && x <= c.nx - 2) {
-#if 0
-            double uxx = (myu(x - 1, y) - 2 * myu(x, y) + myu(x + 1, y)) / (c.dx * c.dx);
-            double uyy = (myu(x, y - 1) - 2 * myu(x, y) + myu(x, y + 1)) / (c.dy * c.dy);
-            mydu(i, j) = c.dt * c.k * (uxx + uyy);
-#else
+          if (1 <= x && x <= c.nx - 2)
             mydu(i, j) = c.dt * c.k * laplacian(myu, x, y, c);
-#endif
-          }
+          else
+            mydu(i, j) = 0;
         }
     }
     // compress all private cached blocks to shared storage
@@ -103,7 +97,7 @@ time_step_parallel(zfp::array2d& u, const Constants& c)
 #else
 template <>
 inline void
-time_step_parallel(zfp::array2d&, const Constants&)
+time_step_parallel(zfp::array2d&, zfp::array2d&, const Constants&)
 {
 }
 #endif
@@ -111,39 +105,48 @@ time_step_parallel(zfp::array2d&, const Constants&)
 // dummy template instantiation; never executed
 template <>
 inline void
-time_step_parallel(zfp::const_array2d&, const Constants&)
+time_step_parallel(zfp::var_array2d&, raw::array2d&, const Constants&)
 {
 }
 
 // dummy template instantiation; never executed
 template <>
 inline void
-time_step_parallel(raw::array2d&, const Constants&)
+time_step_parallel(zfp::const_array2d&, raw::array2d&, const Constants&)
+{
+}
+
+// dummy template instantiation; never executed
+template <>
+inline void
+time_step_parallel(raw::array2d&, raw::array2d&, const Constants&)
 {
 }
 
 // advance solution using integer array indices (generic implementation)
-template <class array2d>
+template <class state, class scratch>
 inline void
-time_step_indexed(array2d& u, const Constants& c)
+time_step_indexed(state& u, scratch& du, const Constants& c)
 {
   // compute du/dt
-  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
-  for (size_t y = 1; y < c.ny - 1; y++)
-    for (size_t x = 1; x < c.nx - 1; x++)
-      du(x, y) = c.dt * c.k * laplacian(u, x, y, c);
+  for (size_t y = 0; y < c.ny; y++)
+    for (size_t x = 0; x < c.nx; x++)
+      if (1 <= x && x <= c.nx - 2 &&
+          1 <= y && y <= c.ny - 2)
+        du(x, y) = c.dt * c.k * laplacian(u, x, y, c);
+      else
+        du(x, y) = 0;
   // take forward Euler step
-  for (uint i = 0; i < u.size(); i++)
+  for (size_t i = 0; i < u.size(); i++)
     u[i] += du[i];
 }
 
 // advance solution using integer array indices (read-only arrays)
 template <>
 inline void
-time_step_indexed(zfp::const_array2d& u, const Constants& c)
+time_step_indexed(zfp::const_array2d& u, raw::array2d& v, const Constants& c)
 {
   // initialize v as uncompressed copy of u
-  raw::array2d v(c.nx, c.ny);
   u.get(&v[0]);
   // take forward Euler step v += (du/dt) dt
   for (size_t y = 1; y < c.ny - 1; y++)
@@ -154,31 +157,32 @@ time_step_indexed(zfp::const_array2d& u, const Constants& c)
 }
 
 // advance solution using array iterators (generic implementation)
-template <class array2d>
+template <class state, class scratch>
 inline void
-time_step_iterated(array2d& u, const Constants& c)
+time_step_iterated(state& u, scratch& du, const Constants& c)
 {
   // compute du/dt
-  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
-  for (typename array2d::iterator p = du.begin(); p != du.end(); p++) {
+  for (typename scratch::iterator p = du.begin(); p != du.end(); p++) {
     size_t x = p.i();
     size_t y = p.j();
     if (1 <= x && x <= c.nx - 2 &&
         1 <= y && y <= c.ny - 2)
       *p = c.dt * c.k * laplacian(u, x, y, c);
+    else
+      *p = 0;
   }
   // take forward Euler step
-  for (typename array2d::iterator p = u.begin(), q = du.begin(); p != u.end(); p++, q++)
-    *p += *q;
+  typename scratch::iterator q = du.begin();
+  for (typename state::iterator p = u.begin(); p != u.end(); p++, q++)
+    *p += du(p.i(), p.j());
 }
 
-// dummy specialization; never called
+// advance solution using array iterators (const_array specialization)
 template <>
 inline void
-time_step_iterated(zfp::const_array2d& u, const Constants& c)
+time_step_iterated(zfp::const_array2d& u, raw::array2d& v, const Constants& c)
 {
   // initialize v as uncompressed copy of u
-  raw::array2d v(c.nx, c.ny);
   u.get(&v[0]);
   // take forward Euler step v += (du/dt) dt
   for (raw::array2d::iterator p = v.begin(); p != v.end(); p++) {
@@ -193,9 +197,9 @@ time_step_iterated(zfp::const_array2d& u, const Constants& c)
 }
 
 // set initial conditions with a point heat source (u is assumed zero-initialized)
-template <class array2d>
+template <class state>
 inline void
-initialize(array2d& u, const Constants& c)
+initialize(state& u, const Constants& c)
 {
   u(c.x0, c.y0) = 1;
 }
@@ -211,9 +215,9 @@ initialize(zfp::const_array2d& u, const Constants& c)
 }
 
 // solve heat equation
-template <class array2d>
+template <class state, class scratch>
 inline double
-solve(array2d& u, const Constants& c, bool iterator, bool parallel)
+solve(state& u, scratch& du, const Constants& c, bool iterator, bool parallel)
 {
   // initialize u with point heat source
   initialize(u, c);
@@ -223,8 +227,8 @@ solve(array2d& u, const Constants& c, bool iterator, bool parallel)
   for (t = 0; t < c.tfinal; t += c.dt) {
 #if 0
     // print block storage size
-    for (uint y = 0; y < u.size_y(); y += 4) {
-      for (uint x = 0; x < u.size_x(); x += 4) {
+    for (size_t y = 0; y < u.size_y(); y += 4) {
+      for (size_t x = 0; x < u.size_x(); x += 4) {
         uint s = u.element_storage(x, y);
         fprintf(stderr, "%c", '0' + s);
       }
@@ -238,11 +242,11 @@ solve(array2d& u, const Constants& c, bool iterator, bool parallel)
     std::cerr << "rate=" << std::setprecision(3) << std::fixed << rate << " (+" << rest << ")" << std::endl;
     // advance solution one time step
     if (parallel)
-      time_step_parallel(u, c);
+      time_step_parallel(u, du, c);
     else if (iterator)
-      time_step_iterated(u, c);
+      time_step_iterated(u, du, c);
     else
-      time_step_indexed(u, c);
+      time_step_indexed(u, du, c);
   }
 
   return t;
@@ -374,10 +378,6 @@ int main(int argc, char* argv[])
     fprintf(stderr, "multithreading does not support iterators\n");
     return EXIT_FAILURE;
   }
-  if (compression && writable && config.mode != zfp_mode_fixed_rate) {
-    fprintf(stderr, "compression mode requires read-only arrays (-c)\n");
-    return EXIT_FAILURE;
-  }
   if (!writable && !compression) {
     fprintf(stderr, "read-only arrays require compression parameters\n");
     return EXIT_FAILURE;
@@ -388,66 +388,33 @@ int main(int argc, char* argv[])
   double sum;
   double err;
 
-#if 0
-  // HEAD: varray branch
-  switch (mode) {
-    case zfp_mode_null:
-      {
-        // solve problem using uncompressed arrays
-        raw::array2d u(nx, ny);
-        double t = solve(u, c, iterator, parallel);
-        sum = total(u);
-        err = error(u, c, t);
-      }
-      break;
-    case zfp_mode_fixed_rate:
-      {
-        // solve problem using fixed-rate compressed arrays
-        zfp::array2d u(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
-        rate = u.rate();
-        double t = solve(u, c, iterator, parallel);
-        sum = total(u);
-        err = error(u, c, t);
-      }
-      break;
-    case zfp_mode_fixed_precision:
-      {
-        // solve problem using fixed-precision compressed arrays
-        zfp::varray2d u(nx, ny, precision, 0, cache * 4 * 4 * sizeof(double));
-        rate = u.rate();
-        double t = solve(u, c, iterator, parallel);
-        sum = total(u);
-        err = error(u, c, t);
-      }
-      break;
-    case zfp_mode_fixed_accuracy:
-      {
-        // solve problem using fixed-accuracy compressed arrays
-        zfp::varray2d u(nx, ny, tolerance, 0, cache * 4 * 4 * sizeof(double));
-        rate = u.rate();
-        double t = solve(u, c, iterator, parallel);
-        sum = total(u);
-        err = error(u, c, t);
-      }
-      break;
-    default:
-      return EXIT_FAILURE;
-  }
-#endif
-
   if (compression) {
     // solve problem using compressed arrays
     if (writable) {
-      // use read-write fixed-rate arrays
-      zfp::array2d u(nx, ny, rate, 0, cache_size);
-      double t = solve(u, c, iterator, parallel);
-      sum = total(u);
-      err = error(u, c, t);
+      // use read-write arrays
+      if (config.mode == zfp_mode_fixed_rate) {
+        // use read-write fixed-rate arrays
+        zfp::array2d u(nx, ny, rate, 0, cache_size);
+        zfp::array2d du(nx, ny, rate, 0, cache_size);
+        double t = solve(u, du, c, iterator, parallel);
+        sum = total(u);
+        err = error(u, c, t);
+      }
+      else {
+        // use read-write variable-rate arrays
+        zfp::var_array2d u(nx, ny, config, 0, cache_size);
+        raw::array2d du(nx, ny);
+        double t = solve(u, du, c, iterator, parallel);
+        sum = total(u);
+        err = error(u, c, t);
+      }
     }
     else {
       // use read-only variable-rate arrays
       zfp::const_array2d u(nx, ny, config, 0, cache_size);
-      double t = solve(u, c, iterator, parallel);
+      raw::array2d v(nx, ny);
+      // const_array implementation uses uncompressed scratch arrays
+      double t = solve(u, v, c, iterator, parallel);
       sum = total(u);
       err = error(u, c, t);
     }
@@ -455,7 +422,8 @@ int main(int argc, char* argv[])
   else {
     // solve problem using uncompressed arrays
     raw::array2d u(nx, ny);
-    double t = solve(u, c, iterator, parallel);
+    raw::array2d du(nx, ny);
+    double t = solve(u, du, c, iterator, parallel);
     sum = total(u);
     err = error(u, c, t);
   }

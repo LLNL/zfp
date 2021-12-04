@@ -5,7 +5,7 @@
 
 namespace zfp {
 
-template <typename Scalar, class Store>
+template <typename Scalar, class Store, bool force_write = false>
 class BlockCache3 {
 public:
   // constructor of cache of given size
@@ -41,7 +41,7 @@ public:
   void flush() const
   {
     for (typename zfp::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
-      if (p->tag.dirty()) {
+      if ((force_write && p->tag.index()) || p->tag.dirty()) {
         size_t block_index = p->tag.index() - 1;
         store.encode(block_index, p->line->data());
       }
@@ -175,7 +175,7 @@ protected:
     size_t stored_block_index = tag.index() - 1;
     if (stored_block_index != block_index) {
       // write back occupied cache line if it is dirty
-      if (tag.dirty())
+      if ((force_write && tag.index()) || tag.dirty())
         store.encode(stored_block_index, p->data());
       // fetch cache line
       store.decode(block_index, p->data());

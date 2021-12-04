@@ -2,13 +2,15 @@
 #define ZFP_TILE_H
 
 #include <algorithm>
-#include <cassert>
 #include <climits>
+#include "zfp/exception.h"
 #include "bitstream.h"
 
 namespace zfp {
+namespace internal {
 
-// tile comprising 2^12 = 4096 variable-length blocks
+// tile comprising 2^12 = 4096 variable-length 1D, 2D, 3D, or 4D blocks
+template <typename Scalar, class Codec>
 class Tile {
 public:
   // block storage
@@ -30,13 +32,11 @@ public:
   }
 
   // byte size of specified tile storage classes
-  size_t size(uint mask = ZFP_DATA_ALL) const
+  size_t size_bytes(uint mask = ZFP_DATA_ALL) const
   {
     size_t size = 0;
     if (mask & ZFP_DATA_UNUSED)
       size += capacity() - bytes;
-//    if (mask & ZFP_DATA_PADDING)
-//      size += ;
     if (mask & ZFP_DATA_META)
       size += sizeof(Tile) - sizeof(pos);
     if (mask & ZFP_DATA_PAYLOAD)
@@ -46,7 +46,25 @@ public:
     return size;
   }
 
-#ifdef DEBUG
+  // storage class for block with given id
+  storage block_storage(Codec& codec, size_t id, uchar shape = 0) const
+  {
+    static Scalar block[4 * 4 * 4 * 4];
+    offset p = pos[id];
+    if (p == null)
+      return storage_empty;
+    if (p == cached)
+      return storage_cached;
+    if (p & 1u)
+      return storage_xs;
+    Codec c = codec;
+    c.open(data, capacity());
+    size_t bits = c.decode(offset_bits(p), shape, block);
+    return storage(storage_xs + slot_size(word_size(bits)));
+  }
+
+
+#if DEBUG
   // print free lists
   void print_lists(FILE* file = stderr) const
   {
@@ -64,6 +82,8 @@ public:
 protected:
   typedef uint16 offset; // storage offset of block in number of quanta
 
+// TODO: define stream_word type in bitstream.h
+//   note: C++ compiled code must agree on word size with libzfp
 #ifdef BIT_STREAM_WORD_TYPE
   // may be 8-, 16-, 32-, or 64-bit unsigned integer type
   typedef BIT_STREAM_WORD_TYPE word;
@@ -72,32 +92,36 @@ protected:
   typedef uint64 word;
 #endif
 
-//#warning "quantum must be at least 16 bits to store offsets"
-  // construct tile with smallest block size 'minbits' rounded up to whole words
-  explicit Tile(uint minbits) :
-    quantum(stream_word_bits * ((minbits + stream_word_bits - 1) / stream_word_bits) / CHAR_BIT),
-    bytes(0),
+  // construct tile with smallest block size 'minbits' rounded up to whole
+  // words at least 16 bits wide
+  explicit Tile(size_t minbits) :
+    quantum(zfp::count_up(minbits, std::max(sizeof(word), sizeof(offset)) * CHAR_BIT)),
     end(-1),
+    bytes(0),
     data(0)
   {
     // initialize block offsets and free lists to null
     std::fill(pos, pos + blocks, +null);
-    std::fill(head, head + sizes, +null);
+    std::fill(head, head + slot_sizes, +null);
   }
 
-  // number of words in 'bits' bits (bits must be a multiple of word size)
-  static size_t word_size(size_t bits) { return bits / stream_word_bits; }
+  // number of words needed to store 'bits' bits
+  static size_t word_size(size_t bits) { return zfp::count_up(bits, sizeof(word) * CHAR_BIT); }
 
   // quantum size in bits, bytes, and words
   size_t quantum_bits() const { return quantum_bytes() * CHAR_BIT; }
-  size_t quantum_bytes() const { return quantum; }
-  size_t quantum_words() const { return quantum_bits() / stream_word_bits; }
-//#warning "measure quantum in words to avoid division?"
+  size_t quantum_bytes() const { return quantum_words() * sizeof(word); }
+  size_t quantum_words() const { return quantum; }
 
   // return bit offset associated with offset p measured in quanta
   size_t offset_bits(offset p) const { return p * quantum_bits(); }
   size_t offset_bytes(offset p) const { return p * quantum_bytes(); }
   size_t offset_words(offset p) const { return p * quantum_words(); }
+
+  // maximum compressed block size
+  size_t block_max_bits() const { return quantum_bits() << slot_max; }
+  size_t block_max_bytes() const { return quantum_bytes() << slot_max; }
+  size_t block_max_words() const { return quantum_words() << slot_max; }
 
   // amount of compressed data allocated in bytes
   size_t capacity() const { return end < 0 ? 0u : quantum_bytes() << end; }
@@ -108,14 +132,14 @@ protected:
   // parent slot to two buddy slots
   static offset parent_slot(uint p, uint q) { return p & q; }
 
-//#warning "what if word is a byte?"
   // return next free slot stored at offset p
   offset get_next_slot(offset p) const { return data[offset_words(p)]; }
 
   // set next free slot pointer at offset p
   void set_next_slot(offset p, offset next)
   {
-    assert(next != p);
+    if (next == p)
+      throw zfp::exception("zfp internal error: free list loop");
     data[offset_words(p)] = next;
   }
 
@@ -130,9 +154,16 @@ protected:
     return p;
   }
 
-  // insert slot at offset p of size s into free list s
+  // insert slot at offset p of size s into sorted free list s
   void put_slot(uint s, offset p, bool free)
   {
+#if DEBUG
+    // sanity check that slot is not already on free list
+    for (offset q = head[s]; q != null; q = get_next_slot(q))
+      if (q == p)
+        throw zfp::exception("slot is already free");
+    fprintf(stderr, "put %u @ %u\n", s, p);
+#endif
     // cached and null offsets are reserved
     if (p < cached) {
       offset b = buddy_slot(s, p);
@@ -175,6 +206,11 @@ protected:
   {
     uint s = 0;
     for (size_t q = quantum_words(); q < words; q *= 2, s++);
+    if (s > slot_max)
+{
+fprintf(stderr, "slot size = %zu words\n", words);
+      throw zfp::exception("zfp slot size request too large");
+}
     return s;
   }
 
@@ -189,7 +225,7 @@ protected:
       if (p != null)
         return p;
       // no free slot of the requested size; find larger slot to split
-      for (uint s = size, t = size + 1; t < sizes; t++) {
+      for (uint s = size, t = size + 1; t < slot_sizes; t++) {
         p = get_slot(t);
         if (p != null) {
           // partition slot into maximal pieces and put them on free lists
@@ -209,7 +245,8 @@ protected:
         p = 1u << end;
         s = end++;
       }
-      assert(end < (int)sizes);
+      if (end >= (int)slot_sizes)
+        throw zfp::exception("zfp internal error: tile storage overflow");
       // allocate more memory
       zfp::reallocate(data, capacity(), cap);
       put_slot(s, p, false);
@@ -238,22 +275,80 @@ protected:
     }
   }
 
+  // allocate space for and store buffered compressed block of given bit size
+  void store_block(size_t id, const word* restrict_ buffer, size_t bits)
+  {
+    offset p = null;
+    // if block is empty, no storage is needed; otherwise, find space for it
+    if (bits > 1u) {
+      // allocate memory for compressed block
+      size_t words = std::min(word_size(bits), block_max_words());
+      p = allocate(words);
+      assert(p != null);
+      assert(p != cached);
+      // copy compressed data to persistent storage
+      std::copy(buffer, buffer + words, data + offset_words(p));
+    }
+    pos[id] = p;
+#if DEBUG
+    print_lists();
+#endif
+  }
+
+#ifdef DEBUG
+  // display internal fragmentation of tile's memory pool
+  void fragmentation(const Codec& codec, FILE* file = stderr) const
+  {
+    uchar* slot = new uchar[0x10000];
+    std::fill(slot, slot + 0x10000, 0xff);
+    size_t usage = 0;
+    size_t zeros = 0;
+    // process compressed blocks
+    for (uint id = 0; id < blocks; id++) {
+      offset p = pos[id];
+      if (p == null)
+        zeros++;
+      else if (p != cached) {
+        // determine slot size s
+        uint s = block_storage(codec, id) - storage_xs;
+        usage += quantum_bytes() << s;
+        for (uint i = 0; i < (1u << s); i++)
+          slot[p + i] = s;
+      }
+    }
+    // process free slots
+    for (uint s = 0; s < slot_sizes; s++) {
+      for (offset p = head[s]; p != null; p = get_next_slot(p))
+        for (uint i = 0; i < (1u << s); i++)
+          slot[p + i] = 0x80 + s;
+    }
+    // print slot size information
+    for (uint i = 0; i < 0x10000; i++)
+      fprintf(file, "%02x ", slot[i]);
+    fprintf(file, "\n");
+    delete[] slot;
+    fprintf(file, "bytes=%zu vs %zu\n", bytes, usage);
+    fprintf(file, "zeros=%zu\n", zeros);
+  }
+#endif
+
+
   // constants
   static const uint blocks = 0x1000u;   // number of blocks per tile
-  static const uint sizes = 17;         // number of distinct slot sizes
+  static const uint slot_sizes = 17;    // number of distinct slot sizes
+  static const uint slot_max = 4;       // slot size of largest compressed block
   static const offset null = 0xffffu;   // null offset
   static const offset cached = 0xfffeu; // decompressed and cached block
-//  static const uint max_size = 4;       // largest compressed block size
 
-  const size_t quantum; // smallest slot size in bytes
-  size_t bits;          // amount of compressed data in bits
-  size_t bytes;         // amount of compressed data and padding in bytes
-  int end;              // largest slot size (index) supported (initially -1)
-  word* data;           // pointer to compressed data
-  offset head[sizes];   // free lists for slots of increasing size
-  offset pos[blocks];   // block positions in number of quanta
+  const size_t quantum;    // smallest slot size in words
+  int end;                 // largest slot size (index) supported (initially -1)
+  size_t bytes;            // amount of compressed data and padding in bytes
+  word* restrict_ data;    // pointer to compressed data
+  offset head[slot_sizes]; // free lists for slots of increasing size
+  offset pos[blocks];      // block positions in number of quanta
 };
 
-}
+} // internal
+} // zfp
 
 #endif

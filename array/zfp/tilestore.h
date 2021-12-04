@@ -1,15 +1,16 @@
-#ifndef ZFP_STORE_H
-#define ZFP_STORE_H
+#ifndef ZFP_TILE_STORE_H
+#define ZFP_TILE_STORE_H
 
 #include <climits>
-#include <cmath>
+#include "zfp/exception.h"
 #include "zfp/memory.h"
 
 namespace zfp {
+namespace internal {
 
-// base class for block store
-template <class Codec, class Index>
-class BlockStore {
+// base class for tile store
+template <class Codec>
+class TileStore {
 public:
   // compression mode
   zfp_mode mode() const { return codec.mode(); }
@@ -29,7 +30,6 @@ public:
   // enable reversible (lossless) mode
   void set_reversible()
   {
-    set_variable_rate();
     codec.set_reversible();
     clear();
   }
@@ -38,17 +38,15 @@ public:
   double set_rate(double rate, bool align)
   {
     rate = codec.set_rate(rate, align);
-    uint maxbits;
-    codec.params(0, &maxbits, 0, 0);
-    index.set_block_size(maxbits);
-    alloc(true);
+    clear();
     return rate;
   }
+
+  // TODO: limit variable-rate modes to not overflow maximum slot size
 
   // set precision in uncompressed bits per value
   uint set_precision(uint precision)
   {
-    set_variable_rate();
     precision = codec.set_precision(precision);
     clear();
     return precision;
@@ -57,7 +55,6 @@ public:
   // set accuracy as absolute error tolerance
   double set_accuracy(double tolerance)
   {
-    set_variable_rate();
     tolerance = codec.set_accuracy(tolerance);
     clear();
     return tolerance;
@@ -66,8 +63,6 @@ public:
   // set expert mode compression parameters
   bool set_params(uint minbits, uint maxbits, uint maxprec, int minexp)
   {
-    if (minbits != maxbits)
-      set_variable_rate();
     bool status = codec.set_params(minbits, maxbits, maxprec, minexp);
     clear();
     return status;
@@ -103,54 +98,49 @@ public:
   // clear store and reallocate memory for buffer
   void clear()
   {
-    index.clear();
-    alloc(true);
+    // TODO: clear each tile; pure virtual here?
+    alloc();
   }
 
   // flush any buffered block index data
-  void flush() { index.flush(); }
+  void flush() {}
 
   // shrink buffer to match size of compressed data
   void compact()
   {
-    size_t size = zfp::round_up(index.range(), codec.alignment() * CHAR_BIT) / CHAR_BIT;
-    if (bytes > size) {
-      codec.close();
-      zfp::reallocate_aligned(data, size, ZFP_MEMORY_ALIGNMENT, bytes);
-      bytes = size;
-      codec.open(data, bytes);
-    }
+    // TODO: compact each tile; pure virtual here?
+    abort();
   }
 
   // byte size of store data structure components indicated by mask
   virtual size_t size_bytes(uint mask = ZFP_DATA_ALL) const
   {
     size_t size = 0;
-    size += index.size_bytes(mask);
     size += codec.size_bytes(mask);
-    if (mask & ZFP_DATA_PAYLOAD)
-      size += bytes;
-    if (mask & ZFP_DATA_META)
+    if (mask & ZFP_DATA_META) {
       size += sizeof(*this);
+      if (buffer)
+        size += buffer_size();
+    }
     return size;
   }
 
+#if 0
   // number of bytes of compressed data
-  size_t compressed_size() const { return bytes; }
+  size_t compressed_size() const { return 0; }
 
   // pointer to compressed data for read or write access
-  void* compressed_data() const { return data; }
+  void* compressed_data() const { return 0; }
+#endif
 
 protected:
   // protected default constructor
-  BlockStore() :
-    data(0),
-    bytes(0),
-    index(0)
+  TileStore() :
+    buffer(0)
   {}
 
   // destructor
-  virtual ~BlockStore() { free(); }
+  virtual ~TileStore() { TileStore::free(); }
 
   // buffer size in bytes needed for current codec settings
   virtual size_t buffer_size() const = 0;
@@ -161,48 +151,42 @@ protected:
   // total number of blocks
   virtual size_t blocks() const = 0;
 
-  // ensure variable rate is supported
-  void set_variable_rate()
+  // total number of tiles
+  virtual size_t tiles() const = 0;
+
+  // allocate memory for single-block buffer
+  virtual void alloc()
   {
-    if (!index.has_variable_rate())
-      throw zfp::exception("zfp index does not support variable rate");
+    TileStore::free();
+    size_t bytes = buffer_size();
+    buffer = zfp::allocate_aligned(bytes, ZFP_MEMORY_ALIGNMENT);
+    codec.open(buffer, bytes);
+  }
+
+  // free single-block buffer
+  virtual void free()
+  {
+    if (buffer) {
+      zfp::deallocate_aligned(buffer);
+      buffer = 0;
+      codec.close();
+    }
   }
 
   // perform a deep copy
-  void deep_copy(const BlockStore& s)
+  void deep_copy(const TileStore& /*s*/)
   {
+    // TODO: copy each tile
+    abort();
+#if 0
     free();
     zfp::clone_aligned(data, s.data, s.bytes, ZFP_MEMORY_ALIGNMENT);
     bytes = s.bytes;
     index = s.index;
     codec = s.codec;
     codec.open(data, bytes);
+#endif
   }
-
-  // allocate memory for block store
-  void alloc(bool clear)
-  {
-    free();
-    bytes = buffer_size();
-    zfp::reallocate_aligned(data, bytes, ZFP_MEMORY_ALIGNMENT);
-    if (clear)
-      std::fill(static_cast<uchar*>(data), static_cast<uchar*>(data) + bytes, uchar(0));
-    codec.open(data, bytes);
-  }
-
-  // free block store
-  void free()
-  {
-    if (data) {
-      zfp::deallocate_aligned(data);
-      data = 0;
-      bytes = 0;
-      codec.close();
-    }
-  }
-
-  // bit offset to block store
-  size_t offset(size_t block_index) const { return index.block_offset(block_index); }
 
   // shape 0 <= m <= 3 of block containing index i, 0 <= i <= n - 1
   static uint shape_code(size_t i, size_t n)
@@ -215,12 +199,11 @@ protected:
     return static_cast<uint>(m);
   }
 
-  void* data;   // pointer to compressed blocks
-  size_t bytes; // compressed data size
-  Index index;  // block index (size and offset)
+  void* buffer; // buffer sufficient for a single compressed block
   Codec codec;  // compression codec
 };
 
-}
+} // internal
+} // zfp
 
 #endif
