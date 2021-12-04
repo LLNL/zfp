@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 
   if (!decompress) {
     /* initialize array to be compressed */
-    int i, j, k;
+    size_t i, j, k;
     for (k = 0; k < nz; k++)
       for (j = 0; j < ny; j++)
         for (i = 0; i < nx; i++) {
