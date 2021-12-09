@@ -534,7 +534,10 @@ int main(int argc, char* argv[])
     }
 
     /* compress data */
-    zfpsize = zfp_compress(zfp, field);
+    for (int i = 0; i < 5; i++) {
+		  zfpsize = zfp_compress(zfp, field);
+			zfp_stream_rewind(zfp);
+		}
     if (zfpsize == 0) {
       fprintf(stderr, "compression failed\n");
       return EXIT_FAILURE;
@@ -593,19 +596,22 @@ int main(int argc, char* argv[])
     zfp_field_set_pointer(field, fo);
 
     /* decompress data */
-    while (!zfp_decompress(zfp, field)) {
-      /* fall back on serial decompression if execution policy not supported */
-      if (inpath && zfp_stream_execution(zfp) != zfp_exec_serial) {
-        if (!zfp_stream_set_execution(zfp, zfp_exec_serial)) {
-          fprintf(stderr, "cannot change execution policy\n");
-          return EXIT_FAILURE;
-        }
-      }
-      else {
-        fprintf(stderr, "decompression failed\n");
-        return EXIT_FAILURE;
-      }
-    }
+		for (int i = 0; i < 5; i++) {
+			while (!zfp_decompress(zfp, field)) {
+				/* fall back on serial decompression if execution policy not supported */
+				if (inpath && zfp_stream_execution(zfp) != zfp_exec_serial) {
+					if (!zfp_stream_set_execution(zfp, zfp_exec_serial)) {
+						fprintf(stderr, "cannot change execution policy\n");
+						return EXIT_FAILURE;
+					}
+				}
+				else {
+					fprintf(stderr, "decompression failed\n");
+					return EXIT_FAILURE;
+				}
+			}
+			zfp_stream_rewind(zfp);
+		}
 
     /* optionally write reconstructed data */
     if (outpath) {

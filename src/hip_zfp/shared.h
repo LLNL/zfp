@@ -90,10 +90,19 @@ size_t calc_device_mem3d(const uint3 encoded_dims,
 
 dim3 get_max_grid_dims()
 {
-  hipDeviceProp_t prop; 
-  int device = 0;
-  hipGetDeviceProperties(&prop, device);
-  dim3 grid_dims;
+  //hipDeviceProp_t prop; 
+  //int device = 0;
+  //hipGetDeviceProperties(&prop, device);
+  static hipDeviceProp_t prop;
+	static bool firstTime = true;
+	if (firstTime) 
+	{
+		firstTime = false;
+		int device = 0;
+		hipGetDeviceProperties(&prop, device);
+	}
+
+	dim3 grid_dims;
   grid_dims.x = prop.maxGridSize[0];
   grid_dims.y = prop.maxGridSize[1];
   grid_dims.z = prop.maxGridSize[2];
