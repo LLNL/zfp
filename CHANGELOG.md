@@ -20,6 +20,8 @@ few of the API changes, other than to cfp, should impact existing code.
 - `zfp::array::size_bytes()` allows querying the size of different components
   of an array object (e.g., payload, cache, index, metadata, ...).
 - Templated C++ wrappers around the low-level C API.
+- A generic codec for storing blocks of uncompressed scalars in zfp's
+  C++ arrays.
 - Additional functions for querying `zfp_field` and `zfp_stream` structs.
 - `zfp_config`: struct that encapsulates compression mode and parameters.
 - Rounding modes for reducing bias in compression errors.

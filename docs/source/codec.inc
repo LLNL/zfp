@@ -24,6 +24,14 @@ codec does not support a certain compression mode, it should throw an
 Codecs reside in the :code:`zfp::codec` namespace, e.g.,
 :code:`zfp::codec::zfp3<Scalar>` is the default codec for 3D arrays.
 
+As of |zfp| |cpprelease|, there is in addition to the default |zfp| codec
+a "generic" codec that allows storing data in |zfp| arrays in "uncompressed"
+form using any scalar type (specified as a template parameter).  This
+"internal" scalar type may differ from the "external" scalar type exposed
+to the user through the :cpp:class:`zfp::array` API.  For instance, the
+internal type may be :code:`float` while the external type is :code:`double`,
+which provides for 2:1 fixed-rate "compression" using IEEE 754 floating point.
+
 .. cpp:namespace:: zfp::codec
 
 .. cpp:class:: codec
@@ -164,28 +172,51 @@ Codecs reside in the :code:`zfp::codec` namespace, e.g.,
 
 ----
 
-.. cpp:function:: size_t codec::encode_block(size_t offset, uint shape, const Scalar* block) const
+.. cpp:function:: size_t codec::encode_block(size_t offset, const Scalar* block) const
+
+  Encode contiguous *block* of |4powd| scalars and store at specified bit
+  *offset* within compressed-data buffer.  Return the number of bits of
+  compressed storage for the block, excluding any necessary padding.  This
+  method must flush any buffered compressed data without counting any padding
+  (e.g., for byte alignment) in the compressed size (unless the codec requires
+  alignment of the bit offsets).
+
+----
+
+.. cpp:function:: size_t codec::decode_block(size_t offset, Scalar* block) const
+
+  Decode contiguous *block* of |4powd| scalars from specified bit *offset*
+  within compressed-data buffer (see :cpp:func:`codec::encode_block`).
+  Return number of bits of compressed data decoded, excluding any padding
+  bits, i.e., the same value reported in encoding.
+
+----
+
+.. cpp:function:: size_t codec1::encode_block(size_t offset, uint shape, const Scalar* block) const
+.. cpp:function:: size_t codec2::encode_block(size_t offset, uint shape, const Scalar* block) const
+.. cpp:function:: size_t codec3::encode_block(size_t offset, uint shape, const Scalar* block) const
+.. cpp:function:: size_t codec4::encode_block(size_t offset, uint shape, const Scalar* block) const
 
   Encode contiguous *block* of data of given *shape* and store at specified
   bit *offset* within compressed-data buffer.  Return the number of bits of
-  compressed storage for the block.
+  compressed storage for the block (see also :cpp:func:`codec::encode_block`).
 
   The *shape* is a (2 |times| *d*)-bit encoding of the size of the
   *d*-dimensional block.  For each successive pair of bits *s* of *shape*,
   the block size in the corresponding dimension is *n* = 4 - *s*, where
   0 |leq| *s* |leq| 3.  Thus, *shape* = 0 implies a full block of |4powd|
   values.  The size of the fastest varying dimension is specified in the
-  least significant bits of *shape*.  These methods must flush any buffered
-  compressed data without counting any padding (e.g., for byte alignment)
-  in the compressed size (unless the codec requires alignment of the bit
-  offsets).
+  least significant bits of *shape*.
 
 ----
 
-.. cpp:function:: size_t codec::decode_block(size_t offset, uint shape, Scalar* block) const
+.. cpp:function:: size_t codec1::decode_block(size_t offset, uint shape, Scalar* block) const
+.. cpp:function:: size_t codec2::decode_block(size_t offset, uint shape, Scalar* block) const
+.. cpp:function:: size_t codec3::decode_block(size_t offset, uint shape, Scalar* block) const
+.. cpp:function:: size_t codec4::decode_block(size_t offset, uint shape, Scalar* block) const
 
   Decode contiguous *block* of data of given *shape* from specified bit
-  *offset* within compressed-data buffer (see
+  *offset* within compressed-data buffer (see also
   :cpp:func:`codec1::encode_block`).  Return number of bits of compressed
   data decoded, excluding any padding bits, i.e., the same value reported
   in encoding.
@@ -200,7 +231,7 @@ Codecs reside in the :code:`zfp::codec` namespace, e.g.,
   Encode block of data stored at *p* with strides *sx*, *sy*, *sz*,
   and *sw*.  See :c:type:`zfp_field` for information on strided storage.
   The *shape*, *offset*, and return value are as in
-  :cpp:func:`codec::encode_block`.
+  :cpp:func:`codec1::encode_block`.
 
 ----
 
@@ -210,6 +241,6 @@ Codecs reside in the :code:`zfp::codec` namespace, e.g.,
 .. cpp:function:: size_t codec4::decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
 
   Decode block to strided storage pointed to by *p* with strides *sx*, *sy*,
-  *sz*, and *sw.  See :c:type:`zfp_field` for information on strided storage.
+  *sz*, and *sw*.  See :c:type:`zfp_field` for information on strided storage.
   The *shape*, *offset*, and return value are as in 
-  :cpp:func:`codec::decode_block`.
+  :cpp:func:`codec1::decode_block`.
