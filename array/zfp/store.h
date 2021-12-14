@@ -115,8 +115,10 @@ public:
   {
     size_t size = zfp::round_up(index.range(), codec.alignment() * CHAR_BIT) / CHAR_BIT;
     if (bytes > size) {
+      codec.close();
       zfp::reallocate_aligned(data, size, ZFP_MEMORY_ALIGNMENT, bytes);
       bytes = size;
+      codec.open(data, bytes);
     }
   }
 
