@@ -155,7 +155,7 @@ public:
   size_t encode_block(size_t offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1)
-                 : zfp_base<1, Scalar>::encode_block(offset, block);
+                 : encode_block(offset, block);
   }
 
   // encode 1D block from strided storage
