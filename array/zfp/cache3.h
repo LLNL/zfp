@@ -4,6 +4,7 @@
 #include "cache.h"
 
 namespace zfp {
+namespace internal {
 
 template <typename Scalar, class Store>
 class BlockCache3 {
@@ -40,7 +41,7 @@ public:
   // flush cache by compressing all modified cached blocks
   void flush() const
   {
-    for (typename zfp::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
+    for (typename zfp::internal::Cache<CacheLine>::const_iterator p = cache.first(); p; p++) {
       if (p->tag.dirty()) {
         size_t block_index = p->tag.index() - 1;
         store.encode(block_index, p->line->data());
@@ -171,7 +172,7 @@ protected:
   {
     CacheLine* p = 0;
     size_t block_index = store.block_index(i, j, k);
-    typename zfp::Cache<CacheLine>::Tag tag = cache.access(p, (uint)block_index + 1, write);
+    typename zfp::internal::Cache<CacheLine>::Tag tag = cache.access(p, (uint)block_index + 1, write);
     size_t stored_block_index = tag.index() - 1;
     if (stored_block_index != block_index) {
       // write back occupied cache line if it is dirty
@@ -206,6 +207,7 @@ protected:
   Store& store;                   // store backed by cache
 };
 
-}
+} // internal
+} // zfp
 
 #endif

@@ -9,6 +9,7 @@
 #endif
 
 namespace zfp {
+namespace internal {
 
 // direct-mapped or two-way skew-associative write-back cache
 template <class Line>
@@ -274,6 +275,7 @@ protected:
 #endif
 };
 
-}
+} // internal
+} // zfp
 
 #endif

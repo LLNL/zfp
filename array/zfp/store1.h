@@ -4,6 +4,7 @@
 #include "zfp/store.h"
 
 namespace zfp {
+namespace internal {
 
 // compressed block store for 1D array
 template <typename Scalar, class Codec, class Index>
@@ -133,6 +134,7 @@ protected:
   size_t bx; // array dimensions in number of blocks
 };
 
-}
+} // internal
+} // zfp
 
 #endif

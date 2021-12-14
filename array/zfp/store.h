@@ -6,6 +6,7 @@
 #include "zfp/memory.h"
 
 namespace zfp {
+namespace internal {
 
 // base class for block store
 template <class Codec, class Index>
@@ -221,6 +222,7 @@ protected:
   Codec codec;  // compression codec
 };
 
-}
+} // internal
+} // zfp
 
 #endif

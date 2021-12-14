@@ -30,8 +30,8 @@ public:
   typedef Scalar value_type;
   typedef Codec codec_type;
   typedef Index index_type;
-  typedef BlockStore3<value_type, codec_type, index_type> store_type;
-  typedef BlockCache3<value_type, store_type> cache_type;
+  typedef zfp::internal::BlockStore3<value_type, codec_type, index_type> store_type;
+  typedef zfp::internal::BlockCache3<value_type, store_type> cache_type;
   typedef typename Codec::header header;
 
   // accessor classes
