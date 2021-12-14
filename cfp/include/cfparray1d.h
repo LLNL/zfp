@@ -110,6 +110,7 @@ typedef struct {
   void (*set_cache_size)(cfp_array1d self, size_t bytes);
   void (*clear_cache)(const cfp_array1d self);
   void (*flush_cache)(const cfp_array1d self);
+  size_t (*size_bytes)(const cfp_array1d self, uint mask);
   size_t (*compressed_size)(const cfp_array1d self);
   void* (*compressed_data)(const cfp_array1d self);
   size_t (*size)(const cfp_array1d self);

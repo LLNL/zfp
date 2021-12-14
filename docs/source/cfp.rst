@@ -346,6 +346,12 @@ not actually part of the |cfp| API.
 
 ----
 
+.. c:function:: size_t cfp.array.size_bytes(const cfp_array self, uint mask)
+
+  See :cpp:func:`array::size_bytes`.
+
+----
+
 .. c:function:: size_t cfp.array.compressed_size(const cfp_array self)
 
   See :cpp:func:`array::compressed_size`.

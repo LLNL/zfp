@@ -43,6 +43,12 @@ _t1(CFP_ARRAY_TYPE, set_rate)(CFP_ARRAY_TYPE self, double rate)
 }
 
 static size_t
+_t1(CFP_ARRAY_TYPE, size_bytes)(CFP_ARRAY_TYPE self, uint mask)
+{
+  return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->size_bytes(mask);
+}
+
+static size_t
 _t1(CFP_ARRAY_TYPE, compressed_size)(CFP_ARRAY_TYPE self)
 {
   return static_cast<const ZFP_ARRAY_TYPE*>(self.object)->compressed_size();
