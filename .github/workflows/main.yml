@@ -20,11 +20,11 @@ jobs:
             omp: ON
             target: all
             
-          - os: windows-latest
-            cxx_compiler: msbuild
-            c_compiler: msbuild
-            omp: ON
-            target: ALL_BUILD
+          #- os: windows-latest
+          #  cxx_compiler: msbuild
+          #  c_compiler: msbuild
+          #  omp: ON
+          #  target: ALL_BUILD
             
           #- os: windows-latest
           #  cxx_compiler: x86_64-w64-mingw32-g++
@@ -46,6 +46,17 @@ jobs:
             target: all
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+          architecture: x64
+      
+      - name: Install zfpy dependencies
+        run: |
+          python -m pip install cython
+          python -m pip install numpy
       
       - name: Setup MSBuild (Windows)
         id: msbuild
