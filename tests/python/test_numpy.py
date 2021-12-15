@@ -59,6 +59,46 @@ class TestNumpy(unittest.TestCase):
                 compress_param_num
             ),
         }
+        compressed_array = zfpy.compress_numpy(
+            random_array,
+            write_header=False,
+            **compression_kwargs
+        )
+
+        # Decompression using the "advanced" interface which enforces no header,
+        # and the user must provide all the metadata
+        decompressed_array = np.empty_like(random_array)
+        zfpy._decompress(
+            compressed_array,
+            ztype,
+            random_array.shape,
+            out=decompressed_array,
+            **compression_kwargs
+        )
+        decompressed_array_dims = decompressed_array.shape + tuple(0 for i in range(4 - decompressed_array.ndim))
+        decompressed_checksum = test_utils.getChecksumDecompArray(
+            decompressed_array_dims,
+            ztype,
+            mode,
+            compress_param_num
+        )
+        actual_checksum = test_utils.hashNumpyArray(
+            decompressed_array
+        )
+        self.assertEqual(decompressed_checksum, actual_checksum)
+
+    def test_memview_advanced_decompression_checksum(self):
+        ndims = 2
+        ztype = zfpy.type_float
+        random_array = test_utils.getRandNumpyArray(ndims, ztype)
+        mode = zfpy.mode_fixed_accuracy
+        compress_param_num = 1
+        compression_kwargs = {
+            "tolerance": test_utils.computeParameterValue(
+                mode,
+                compress_param_num
+            ),
+        }
         compressed_array_tmp = zfpy.compress_numpy(
             random_array,
             write_header=False,

@@ -68,7 +68,7 @@ jobs:
       
       - name: Run CMake
         id: cmake
-        run: cmake -B ${{github.workspace}}/build ${{matrix.generator}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=${{matrix.omp}}
+        run: cmake -B ${{github.workspace}}/build ${{matrix.generator}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=${{matrix.omp}} -DBUILD_ZFPY=ON
         
       - name: Build
         id: build
