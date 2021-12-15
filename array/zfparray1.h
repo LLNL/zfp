@@ -183,10 +183,19 @@ public:
   void set(const value_type* p)
   {
     const size_t bx = store.block_size_x();
-    const ptrdiff_t sx = 1;
     size_t block_index = 0;
-    for (size_t i = 0; i < bx; i++, p += 4)
-      cache.put_block(block_index++, p, sx);
+    if (p) {
+      // compress data stored at p
+      const ptrdiff_t sx = 1;
+      for (size_t i = 0; i < bx; i++, p += 4)
+        cache.put_block(block_index++, p, sx);
+    }
+    else {
+      // zero-initialize array
+      const value_type block[4] = {};
+      while (block_index < bx)
+        cache.put_block(block_index++, block, 1);
+    }
   }
 
   // accessors

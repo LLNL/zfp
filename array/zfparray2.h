@@ -195,12 +195,21 @@ public:
   {
     const size_t bx = store.block_size_x();
     const size_t by = store.block_size_y();
-    const ptrdiff_t sx = 1;
-    const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
     size_t block_index = 0;
-    for (size_t j = 0; j < by; j++, p += 4 * sx * ptrdiff_t(nx - bx))
-      for (size_t i = 0; i < bx; i++, p += 4)
-        cache.put_block(block_index++, p, sx, sy);
+    if (p) {
+      // compress data stored at p
+      const ptrdiff_t sx = 1;
+      const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
+      for (size_t j = 0; j < by; j++, p += 4 * sx * ptrdiff_t(nx - bx))
+        for (size_t i = 0; i < bx; i++, p += 4)
+          cache.put_block(block_index++, p, sx, sy);
+    }
+    else {
+      // zero-initialize array
+      const value_type block[4 * 4] = {};
+      while (block_index < bx * by)
+        cache.put_block(block_index++, block, 1, 4);
+    }
   }
 
   // (i, j) accessors

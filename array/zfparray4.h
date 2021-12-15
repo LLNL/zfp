@@ -213,16 +213,25 @@ public:
     const size_t by = store.block_size_y();
     const size_t bz = store.block_size_z();
     const size_t bw = store.block_size_w();
-    const ptrdiff_t sx = 1;
-    const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
-    const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
-    const ptrdiff_t sw = static_cast<ptrdiff_t>(nx * ny * nz);
     size_t block_index = 0;
-    for (size_t l = 0; l < bw; l++, p += 4 * sz * ptrdiff_t(nz - bz))
-      for (size_t k = 0; k < bz; k++, p += 4 * sy * ptrdiff_t(ny - by))
-        for (size_t j = 0; j < by; j++, p += 4 * sx * ptrdiff_t(nx - bx))
-          for (size_t i = 0; i < bx; i++, p += 4)
-            cache.put_block(block_index++, p, sx, sy, sz, sw);
+    if (p) {
+      // compress data stored at p
+      const ptrdiff_t sx = 1;
+      const ptrdiff_t sy = static_cast<ptrdiff_t>(nx);
+      const ptrdiff_t sz = static_cast<ptrdiff_t>(nx * ny);
+      const ptrdiff_t sw = static_cast<ptrdiff_t>(nx * ny * nz);
+      for (size_t l = 0; l < bw; l++, p += 4 * sz * ptrdiff_t(nz - bz))
+        for (size_t k = 0; k < bz; k++, p += 4 * sy * ptrdiff_t(ny - by))
+          for (size_t j = 0; j < by; j++, p += 4 * sx * ptrdiff_t(nx - bx))
+            for (size_t i = 0; i < bx; i++, p += 4)
+              cache.put_block(block_index++, p, sx, sy, sz, sw);
+    }
+    else {
+      // zero-initialize array
+      const value_type block[4 * 4 * 4 * 4] = {};
+      while (block_index < bx * by * bz * bw)
+        cache.put_block(block_index++, block, 1, 4, 16, 64);
+    }
   }
 
   // (i, j, k) accessors

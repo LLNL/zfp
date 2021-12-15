@@ -243,7 +243,7 @@ in the base class.
 
   Initialize array by copying and compressing data stored at *p*.  The
   uncompressed data is assumed to be stored as in the :cpp:func:`get`
-  method.
+  method.  If *p* = 0, then the array is zero-initialized.
 
 ----
 
