@@ -362,7 +362,7 @@ function(_test_weak_link_project
       file(APPEND "${test_project_src_dir}/main.c" "
         goto done;
         error:
-          fprintf(stderr, \"Error occured:\\n    %s\\n\", dlerror());
+          fprintf(stderr, \"Error occurred:\\n    %s\\n\", dlerror());
           result = 1;
 
         done:

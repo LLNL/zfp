@@ -104,9 +104,10 @@
 #                         [HEADER_OUTPUT_VAR <HeaderOutputVar>]
 #                         [INCLUDE_DIR_OUTPUT_VAR <IncludeDirOutputVar>])
 #
+# without the extension is used as the logical name.  If only ``<Name>`` is
+#
 # If only ``<Name>`` is provided, and it ends in the ".h" extension, then it
 # is assumed to be the ``<HeaderFilename>``.  The filename of the header file
-# without the extension is used as the logical name.  If only ``<Name>`` is
 # provided, and it does not end in the ".h" extension, then the
 # ``<HeaderFilename>`` is assumed to ``<Name>.h``.
 #
@@ -200,7 +201,7 @@
 #                            FORWARD_DECL_MODULES_VAR fdecl_module_list)
 #
 #    # module2 -- dynamically linked
-#    include_directories({Boost_INCLUDE_DIRS})
+#    include_directories(${Boost_INCLUDE_DIRS})
 #    add_library(module2 SHARED boost_module2.cxx)
 #    target_link_libraries(module2 ${Boost_LIBRARIES})
 #    python_extension_module(module2
@@ -209,7 +210,7 @@
 #
 #    # module3 -- loaded at runtime
 #    add_cython_target(module3a.pyx)
-#    add_library(module1 MODULE ${module3a} module3b.cxx)
+#    add_library(module3 MODULE ${module3a} module3b.cxx)
 #    target_link_libraries(module3 ${Boost_LIBRARIES})
 #    python_extension_module(module3
 #                            LINKED_MODULES_VAR linked_module_list
@@ -254,7 +255,6 @@ import os
 import os.path
 import site
 import sys
-import sysconfig
 
 result = None
 rel_result = None
@@ -282,13 +282,17 @@ for candidate in candidates:
         rel_result = rel_candidate
         break
 
+ext_suffix_var = 'SO'
+if sys.version_info[:2] >= (3, 5):
+    ext_suffix_var = 'EXT_SUFFIX'
+
 sys.stdout.write(\";\".join((
     os.sep,
     os.pathsep,
     sys.prefix,
     result,
     rel_result,
-    sysconfig.get_config_var('SO')
+    distutils.sysconfig.get_config_var(ext_suffix_var)
 )))
 ")
 
@@ -332,7 +336,7 @@ function(_set_python_extension_symbol_visibility _target)
     set_target_properties(${_target} PROPERTIES LINK_FLAGS
         "/EXPORT:${_modinit_prefix}${_target}"
     )
-  elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+  elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(_script_path
       ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${_target}-version-script.map
     )
@@ -340,7 +344,7 @@ function(_set_python_extension_symbol_visibility _target)
                "{global: ${_modinit_prefix}${_target}; local: *; };"
     )
     set_property(TARGET ${_target} APPEND_STRING PROPERTY LINK_FLAGS
-        " -Wl,--version-script=${_script_path}"
+        " -Wl,--version-script=\"${_script_path}\""
     )
   endif()
 endfunction()
@@ -423,7 +427,7 @@ function(python_extension_module _target)
     target_link_libraries_with_dynamic_lookup(${_target} ${PYTHON_LIBRARIES})
 
     if(_is_module_lib)
-      #_set_python_extension_symbol_visibility(${_altname})
+      _set_python_extension_symbol_visibility(${_target})
     endif()
   endif()
 endfunction()

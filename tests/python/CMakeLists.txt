@@ -1,5 +1,4 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/python/scikit-build-cmake)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/python/eyescale-cmake)
 
 find_package(PythonInterp REQUIRED)
 find_package(PythonLibs REQUIRED)
@@ -9,7 +8,7 @@ find_package(NumPy REQUIRED)
 
 include_directories(${ZFP_SOURCE_DIR}/include)
 include_directories(${ZFP_SOURCE_DIR}/python)
-include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
+include_directories(${NumPy_INCLUDE_DIR})
 
 include_directories(${ZFP_SOURCE_DIR}/tests/python)
 include_directories(${ZFP_SOURCE_DIR}/tests/utils)
