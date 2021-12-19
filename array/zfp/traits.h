@@ -12,6 +12,18 @@ struct trait;
 */
 
 template <>
+struct trait<int32> {
+  static const zfp_type type = zfp_type_int32;
+  static const size_t precision = CHAR_BIT * sizeof(int32);
+};
+
+template <>
+struct trait<int64> {
+  static const zfp_type type = zfp_type_int64;
+  static const size_t precision = CHAR_BIT * sizeof(int64);
+};
+
+template <>
 struct trait<float> {
   static const zfp_type type = zfp_type_float;
   static const size_t precision = CHAR_BIT * sizeof(float);
