@@ -30,6 +30,10 @@
 #endif
 
 #include "../inline/bitstream.c"
+
+bool field_prev_pinned = false;
+bool stream_prev_pinned = false;
+
 namespace internal
 {
 
@@ -213,15 +217,19 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
   if(stream_device)
   {
     return (Word*) stream->stream->begin;
+  } else {
+    unsigned int * flags;
+    stream_prev_pinned = hipHostGetFlags(flags, stream->stream->begin) == hipSuccess;
+    if (!stream_prev_pinned) {
+      hipHostRegister(stream->stream->begin, zfp_stream_maximum_size(stream, field), 
+											hipHostRegisterDefault);
+      ErrorCheck().chk("Register stream");
+    }
   }
 
   Word *d_stream = NULL;
   size_t max_size = zfp_stream_maximum_size(stream, field);
-//#if (HIPRT_VERSION >= 11020)
-//  hipMallocAsync(&d_stream, max_size, 0);
-//#else
   hipMalloc(&d_stream, max_size);
-//#endif
   return d_stream;
 }
 
@@ -233,16 +241,20 @@ Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
   if(stream_device)
   {
     return (Word*) stream->stream->begin;
+  } else {
+    unsigned int * flags;
+    stream_prev_pinned = hipHostGetFlags(flags, stream->stream->begin) == hipSuccess;
+    if (!stream_prev_pinned) {
+      hipHostRegister(stream->stream->begin, zfp_stream_maximum_size(stream, field), 
+                      hipHostRegisterDefault);
+      ErrorCheck().chk("Register stream");
+    }
   }
 
   Word *d_stream = NULL;
   //TODO: change maximum_size to compressed stream size
   size_t size = zfp_stream_maximum_size(stream, field);
-//#if (HIPRT_VERSION >= 11020)
-//  hipMallocAsync(&d_stream, size, 0);
-//#else
   hipMalloc(&d_stream, size);
-//#endif
 
   hipMemcpy(d_stream, stream->stream->begin, size, hipMemcpyHostToDevice);
   return d_stream;
@@ -301,19 +313,22 @@ void *setup_device_field_compress(const zfp_field *field, const int3 &stride, lo
   }
 
   bool contig = internal::is_contigous(dims, stride, offset);
-  void * host_ptr = offset_void(field->type, field->data, offset);;
+  void * host_ptr = offset_void(field->type, field->data, offset);
 
   void *d_data = NULL;
   if(contig)
   {
     size_t field_bytes = type_size * field_size;
-//#if (HIPRT_VERSION >= 11020)
-//    hipMallocAsync(&d_data, field_bytes, 0);
-//#else
+    if (!field_device) {
+      unsigned int * flags;
+      field_prev_pinned = hipHostGetFlags(flags, host_ptr) == hipSuccess;
+      if (!field_prev_pinned) {
+        hipHostRegister(host_ptr, field_bytes,          
+                      hipHostRegisterDefault);
+        ErrorCheck().chk("Register field");
+      }
+    }
     hipMalloc(&d_data, field_bytes);
-//#endif
-
-
     hipMemcpy(d_data, host_ptr, field_bytes, hipMemcpyHostToDevice);
   }
   return offset_void(field->type, d_data, -offset);
@@ -351,11 +366,16 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, 
   if(contig)
   {
     size_t field_bytes = type_size * field_size;
-//#if (HIPRT_VERSION >= 11020)
-//    hipMallocAsync(&d_data, field_bytes, 0);
-//#else
+    if (!field_device) {
+      unsigned int * flags;
+      field_prev_pinned = hipHostGetFlags(flags, field->data) == hipSuccess;
+      if (!field_prev_pinned) { 
+				hipHostRegister(field->data, field_bytes,
+                      hipHostRegisterDefault);
+        ErrorCheck().chk("Register field");
+      }
+    }
     hipMalloc(&d_data, field_bytes);
-//#endif
   }
   return offset_void(field->type, d_data, -offset);
 }
@@ -371,11 +391,7 @@ ushort *setup_device_nbits_compress(zfp_stream *stream, const zfp_field *field, 
 
   ushort *d_bitlengths = NULL;
   size_t size = zfp_field_num_blocks(field) * sizeof(ushort);
-//#if (HIPRT_VERSION >= 11020)
-//  hipMallocAsync(&d_bitlengths, size, 0);
-//#else
   hipMalloc(&d_bitlengths, size);
-//#endif
   return d_bitlengths;
 }
 
@@ -389,11 +405,7 @@ ushort *setup_device_nbits_decompress(zfp_stream *stream, const zfp_field *field
 
   ushort *d_bitlengths = NULL;
   size_t size = zfp_field_num_blocks(field) * sizeof(ushort);
-//#if (HIPRT_VERSION >= 11020)
-//  hipMallocAsync(&d_bitlengths, size, 0);
-//#else
   hipMalloc(&d_bitlengths, size);
-//#endif
   hipMemcpy(d_bitlengths, stream->stream->bitlengths, size, hipMemcpyHostToDevice);
   return d_bitlengths;
 }
@@ -410,12 +422,7 @@ void cleanup_device_nbits(zfp_stream *stream, const zfp_field *field,
   size_t size = zfp_field_num_blocks(field) * sizeof(ushort);
   if (copy)
     hipMemcpy(stream->stream->bitlengths, d_bitlengths, size, hipMemcpyDeviceToHost);
-
-//#if (HIPRT_VERSION >= 11020)
-//  hipFreeAsync(d_bitlengths, 0);
-//#else
   hipFree(d_bitlengths);
-//#endif
 }
 
 void setup_device_chunking(int *chunk_size, unsigned long long **d_offsets, size_t *lcubtemp,
@@ -429,21 +436,13 @@ void setup_device_chunking(int *chunk_size, unsigned long long **d_offsets, size
   // launching 1024 threads per SM should give a decent ochippancy
   *chunk_size = num_sm * 1024;
   size_t size = (*chunk_size + 1) * sizeof(unsigned long long);
-//#if (HIPRT_VERSION >= 11020)
-//  hipMallocAsync(d_offsets, size, 0);
-//#else
   hipMalloc(d_offsets, size);
   hipMemset(*d_offsets, 0, size);
-//#endif
-  // Using HIPB for the prefix sum. HIPB needs a bit of temp memory too
+  // Using HIP-CUB for the prefix sum. HIP-CUB needs a bit of temp memory too
   size_t tempsize;
   hipcub::DeviceScan::InclusiveSum(nullptr, tempsize, *d_offsets, *d_offsets, *chunk_size + 1);
   *lcubtemp = tempsize;
-//#if (HIPRT_VERSION >= 11020)
-//  hipMallocAsync(d_cubtemp, tempsize, 0);
-//#else
   hipMalloc(d_cubtemp, tempsize);
-//#endif
 }
 
 void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes, long long int offset, zfp_type type)
@@ -462,11 +461,7 @@ void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes, long long int
     hipMemcpy(h_offset_ptr, d_offset_ptr, bytes, hipMemcpyDeviceToHost);
   }
 
-//#if (HIPRT_VERSION >= 11020)
-//  hipFreeAsync(d_offset_ptr, 0);
-//#else
   hipFree(d_offset_ptr);
-//#endif
 
 }
 
@@ -475,13 +470,6 @@ void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes, long long int
 size_t
 hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
 {
-
-/*
-#if (HIPRT_VERSION < 9000)
-  if (variable_rate)
-    return 0; // Variable rate requires HIP >= 9
-#endif
-*/
 
   if (zfp_stream_compression_mode(stream) == zfp_mode_reversible)
   {
@@ -593,6 +581,16 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
 
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, stream_bytes, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, 0, offset, field->type);
+  ErrorCheck errors;
+  if (!stream_prev_pinned) {
+    hipHostUnregister(stream->stream->begin);
+    errors.chk("Unregister stream");
+  }
+  if (!field_prev_pinned) {
+    hipHostUnregister(field->data);
+    errors.chk("Unregister field");
+  }
+
   if (variable_rate)
   {
     if (stream->stream->bitlengths) // Saving the individual block lengths if a pointer exists
@@ -682,10 +680,40 @@ hip_decompress(zfp_stream *stream, zfp_field *field)
   size_t bytes = type_size * field_size;
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, 0, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, bytes, offset, field->type);
+  ErrorCheck errors;
+  if (!stream_prev_pinned) {
+    hipHostUnregister(stream->stream->begin);
+    errors.chk("Unregister stream");
+  }
+  if (!field_prev_pinned) {
+    hipHostUnregister(field->data);
+    errors.chk("Unregister field");
+  }
 
   // this is how zfp determins if this was a success
   size_t words_read = decoded_bytes / sizeof(Word);
   stream->stream->bits = wsize;
   // set stream pointer to end of stream
   stream->stream->ptr = stream->stream->begin + words_read;
+}
+
+__global__
+void warmup_kernel() {}
+
+void warmup_gpu() {
+  ErrorCheck errors;
+  warmup_kernel<<<1, 1>>>();
+  errors.chk("GPU Warmup - Kernel");
+  unsigned char * dummy_data_h;
+  unsigned char * dummy_data_d;
+  hipHostMalloc(&dummy_data_h, sizeof(unsigned char));
+  errors.chk("GPU Warmup - hipHostMalloc");
+  hipMalloc(&dummy_data_d, sizeof(unsigned char));
+  errors.chk("GPU Warmup - hipMalloc");
+  hipMemcpy(dummy_data_d, dummy_data_h, sizeof(unsigned char), hipMemcpyDefault);
+  errors.chk("GPU Warmup - hipMemcpy");
+  hipHostFree(dummy_data_h);
+  errors.chk("GPU Warmup - hipHostFree");
+  hipFree(dummy_data_d);
+  errors.chk("GPU Warmup - hipFree");
 }

@@ -26,7 +26,6 @@ set(ZFP_VERSION
   "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}")
 
 project(ZFP VERSION ${ZFP_VERSION})
-set(CMAKE_VERBOSE_MAKEFILE ON)
 #------------------------------------------------------------------------------#
 # Some boilerplate to setup nice output directories
 #------------------------------------------------------------------------------#
