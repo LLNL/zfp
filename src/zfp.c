@@ -875,6 +875,7 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
 #endif
 #ifdef ZFP_WITH_HIP
     case zfp_exec_hip:
+      warmup_gpu();
       break;
 #endif
     case zfp_exec_omp:
