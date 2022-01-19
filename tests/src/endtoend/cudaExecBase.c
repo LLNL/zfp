@@ -154,6 +154,14 @@ _catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedRate_expect_
   runCompressDecompressNoopTest(state, zfp_mode_fixed_rate);
 }
 
+#if DIMS == 4
+static void
+_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressDecompress_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+{
+  runCompressDecompressNoopTest(state, zfp_mode_fixed_rate);
+}
+#endif
+
 /* setup functions */
 
 static int

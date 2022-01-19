@@ -1,5 +1,6 @@
 // requires #include "utils/testMacros.h", do outside of main()
 
+#if DIMS < 4
 _cmocka_unit_test(when_seededRandomSmoothDataGenerated_expect_ChecksumMatches),
 
 /* strided */
@@ -17,3 +18,7 @@ _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_
 
 /* non fixed-rate modes unsupported */
 _cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero), setupDefaultStride, teardown),
+#else
+/* 4d compression unsupported */
+_cmocka_unit_test_setup_teardown(_catFunc3(given_Cuda_, DIM_INT_STR, Array_when_ZfpCompressDecompress_expect_BitstreamUntouchedAndReturnsZero), setupDefaultStride, teardown),
+#endif
