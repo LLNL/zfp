@@ -116,8 +116,6 @@ stages:
 ############
 
 include:
-    - local: tests/gitlab/surface-templates.yml
-    - local: tests/gitlab/surface-jobs.yml
     - local: tests/gitlab/pascal-templates.yml
     - local: tests/gitlab/pascal-jobs.yml
 #    - local: tests/gitlab/corona-templates.yml
