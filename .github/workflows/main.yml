@@ -1,4 +1,4 @@
-name: run tests
+name: build
 on: push
 env:
   BUILD_TYPE: Release
