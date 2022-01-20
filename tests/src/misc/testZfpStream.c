@@ -545,6 +545,343 @@ given_invalidCompressParamsModeVal_when_zfpStreamSetMode_expect_returnsNullMode_
   assertCompressParamsBehaviorThroughSetMode(state, zfp_mode_null);
 }
 
+static void
+testStreamAlignSizeMatches(void **state, int dim, zfp_type type)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  zfp_field* field;
+
+  size_t arrsize = 4 << 2*(dim-1);
+  size_t dimsize = 4;
+  size_t flushsize;
+  size_t alignsize;
+
+  if (type == zfp_type_float)
+  {
+    float* array;
+    float* block = (float*)calloc(arrsize, sizeof(float));
+
+    if (dim == 1)
+    {
+      array = (float*)calloc(dimsize, sizeof(float));
+      field = zfp_field_1d(array, type, dimsize);
+    }
+    else if (dim == 2)
+    {
+      array = (float*)calloc(dimsize*dimsize, sizeof(float));
+      field = zfp_field_2d(array, type, dimsize, dimsize);
+    }
+    else if (dim == 3)
+    {
+      array = (float*)calloc(dimsize*dimsize*dimsize, sizeof(float));
+      field = zfp_field_3d(array, type, dimsize, dimsize, dimsize);
+    }
+    else if (dim == 4)
+    {
+      array = (float*)calloc(dimsize*dimsize*dimsize*dimsize, sizeof(float));
+      field = zfp_field_4d(array, type, dimsize, dimsize, dimsize, dimsize);
+    }
+
+    size_t bufsize = zfp_stream_maximum_size(stream, field);
+    void* buffer = malloc(bufsize);
+    bitstream* s = stream_open(buffer, bufsize);
+    zfp_stream_set_bit_stream(stream, s);
+    zfp_stream_rewind(stream);
+
+    if (dim == 1)
+    {
+      zfp_encode_block_float_1(stream, block);
+      flushsize = zfp_stream_flush(stream);
+      zfp_stream_rewind(stream);
+      zfp_decode_block_float_1(stream, block);
+      alignsize = zfp_stream_align(stream);
+    }
+    else if (dim == 2)
+    {
+      zfp_encode_block_float_2(stream, block);
+      flushsize = zfp_stream_flush(stream);
+      zfp_stream_rewind(stream);
+      zfp_decode_block_float_2(stream, block);
+      alignsize = zfp_stream_align(stream);
+    }
+    else if (dim == 3)
+    {
+      zfp_encode_block_float_3(stream, block);
+      flushsize = zfp_stream_flush(stream);
+      zfp_stream_rewind(stream);
+      zfp_decode_block_float_3(stream, block);
+      alignsize = zfp_stream_align(stream);
+    }
+    else if (dim == 4)
+    {
+      zfp_encode_block_float_4(stream, block);
+      flushsize = zfp_stream_flush(stream);
+      zfp_stream_rewind(stream);
+      zfp_decode_block_float_4(stream, block);
+      alignsize = zfp_stream_align(stream);
+    }
+
+    free(array);
+    free(block);
+  }
+  else if (type == zfp_type_double)
+  {
+    double* array;
+    double* block = (double*)calloc(arrsize, sizeof(double));
+
+    if (dim == 1)
+    {
+      array = (double*)calloc(dimsize, sizeof(double));
+      field = zfp_field_1d(array, type, dimsize);
+    }
+    else if (dim == 2)
+    {
+      array = (double*)calloc(dimsize*dimsize, sizeof(double));
+      field = zfp_field_2d(array, type, dimsize, dimsize);
+    }
+    else if (dim == 3)
+    {
+      array = (double*)calloc(dimsize*dimsize*dimsize, sizeof(double));
+      field = zfp_field_3d(array, type, dimsize, dimsize, dimsize);
+    }
+    else if (dim == 4)
+    {
+      array = (double*)calloc(dimsize*dimsize*dimsize*dimsize, sizeof(double));
+      field = zfp_field_4d(array, type, dimsize, dimsize, dimsize, dimsize);
+    }
+
+    size_t bufsize = zfp_stream_maximum_size(stream, field);
+    void* buffer = malloc(bufsize);
+    bitstream* s = stream_open(buffer, bufsize);
+    zfp_stream_set_bit_stream(stream, s);
+    zfp_stream_rewind(stream);
+
+    if (dim == 1)
+    {
+      zfp_encode_block_double_1(stream, block);
+      flushsize = zfp_stream_flush(stream);
+      zfp_stream_rewind(stream);
+      zfp_decode_block_double_1(stream, block);
+      alignsize = zfp_stream_align(stream);
+    }
+    else if (dim == 2)
+    {
+      zfp_encode_block_double_2(stream, block);
+      flushsize = zfp_stream_flush(stream);
+      zfp_stream_rewind(stream);
+      zfp_decode_block_double_2(stream, block);
+      alignsize = zfp_stream_align(stream);
+    }
+    else if (dim == 3)
+    {
+      zfp_encode_block_double_3(stream, block);
+      flushsize = zfp_stream_flush(stream);
+      zfp_stream_rewind(stream);
+      zfp_decode_block_double_3(stream, block);
+      alignsize = zfp_stream_align(stream);
+    }
+    else if (dim == 4)
+    {
+      zfp_encode_block_double_4(stream, block);
+      flushsize = zfp_stream_flush(stream);
+      zfp_stream_rewind(stream);
+      zfp_decode_block_double_4(stream, block);
+      alignsize = zfp_stream_align(stream);
+    }
+
+    free(array);
+    free(block);
+  }
+
+  assert_true(flushsize > 0);
+  assert_true(flushsize == alignsize);
+}
+
+static void
+given_block1f_when_StreamFlush_expect_StreamAlignSizeMatches(void **state)
+{
+  testStreamAlignSizeMatches(state, 1, zfp_type_float);
+}
+
+static void
+given_block2f_when_StreamFlush_expect_StreamAlignSizeMatches(void **state)
+{
+  testStreamAlignSizeMatches(state, 2, zfp_type_float);
+}
+
+static void
+given_block3f_when_StreamFlush_expect_StreamAlignSizeMatches(void **state)
+{
+  testStreamAlignSizeMatches(state, 3, zfp_type_float);
+}
+
+static void
+given_block4f_when_StreamFlush_expect_StreamAlignSizeMatches(void **state)
+{
+  testStreamAlignSizeMatches(state, 4, zfp_type_float);
+}
+
+static void
+given_block1d_when_StreamFlush_expect_StreamAlignSizeMatches(void **state)
+{
+  testStreamAlignSizeMatches(state, 1, zfp_type_double);
+}
+
+static void
+given_block2d_when_StreamFlush_expect_StreamAlignSizeMatches(void **state)
+{
+  testStreamAlignSizeMatches(state, 2, zfp_type_double);
+}
+
+static void
+given_block3d_when_StreamFlush_expect_StreamAlignSizeMatches(void **state)
+{
+  testStreamAlignSizeMatches(state, 3, zfp_type_double);
+}
+
+static void
+given_block4d_when_StreamFlush_expect_StreamAlignSizeMatches(void **state)
+{
+  testStreamAlignSizeMatches(state, 4, zfp_type_double);
+}
+
+static void
+testStreamCompressedSizeIncreasedCorrectly(void **state, int dim, zfp_type type)
+{
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  zfp_field* field;
+
+  /* use fixed rate mode to simplify size calculation */
+  double rate = zfp_stream_set_rate(stream, 64, type, dim, 0);
+
+  size_t blocksize = 4 << 2*(dim-1);
+  size_t dimsize = 4;
+  size_t startsize;
+  size_t endsize;
+
+  if (type == zfp_type_float)
+  {
+    float* array = (float*)calloc(blocksize, sizeof(float));
+    float* block = (float*)calloc(blocksize, sizeof(float));
+
+    if (dim == 1)
+      field = zfp_field_1d(array, type, dimsize);
+    else if (dim == 2)
+      field = zfp_field_2d(array, type, dimsize, dimsize);
+    else if (dim == 3)
+      field = zfp_field_3d(array, type, dimsize, dimsize, dimsize);
+    else if (dim == 4)
+      field = zfp_field_4d(array, type, dimsize, dimsize, dimsize, dimsize);
+
+    size_t bufsize = zfp_stream_maximum_size(stream, field);
+    void* buffer = malloc(bufsize);
+    bitstream* s = stream_open(buffer, bufsize);
+    zfp_stream_set_bit_stream(stream, s);
+    zfp_stream_rewind(stream);
+    startsize = zfp_stream_compressed_size(stream);
+
+    if (dim == 1)
+      zfp_encode_block_float_1(stream, block);
+    else if (dim == 2)
+      zfp_encode_block_float_2(stream, block);
+    else if (dim == 3)
+      zfp_encode_block_float_3(stream, block);
+    else if (dim == 4)
+      zfp_encode_block_float_4(stream, block);
+
+    endsize = zfp_stream_compressed_size(stream);
+    free(array);
+    free(block);
+  }
+  else if (type == zfp_type_double)
+  {
+    double* array = (double*)calloc(blocksize, sizeof(double));
+    double* block = (double*)calloc(blocksize, sizeof(double));
+
+    if (dim == 1)
+      field = zfp_field_1d(array, type, dimsize);
+    else if (dim == 2)
+      field = zfp_field_2d(array, type, dimsize, dimsize);
+    else if (dim == 3)
+      field = zfp_field_3d(array, type, dimsize, dimsize, dimsize);
+    else if (dim == 4)
+      field = zfp_field_4d(array, type, dimsize, dimsize, dimsize, dimsize);
+
+    size_t bufsize = zfp_stream_maximum_size(stream, field);
+    void* buffer = malloc(bufsize);
+    bitstream* s = stream_open(buffer, bufsize);
+    zfp_stream_set_bit_stream(stream, s);
+    zfp_stream_rewind(stream);
+    startsize = zfp_stream_compressed_size(stream);
+
+    if (dim == 1)
+      zfp_encode_block_double_1(stream, block);
+    else if (dim == 2)
+      zfp_encode_block_double_2(stream, block);
+    else if (dim == 3)
+      zfp_encode_block_double_3(stream, block);
+    else if (dim == 4)
+      zfp_encode_block_double_4(stream, block);
+
+    endsize = zfp_stream_compressed_size(stream);
+    free(array);
+    free(block);
+  }
+
+  assert_true(endsize > 0);
+  assert_true(endsize == startsize + blocksize * (size_t)(rate/8));
+}
+
+static void
+given_block1f_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly(void **state)
+{
+  testStreamCompressedSizeIncreasedCorrectly(state, 1, zfp_type_float);
+}
+
+static void
+given_block2f_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly(void **state)
+{
+  testStreamCompressedSizeIncreasedCorrectly(state, 2, zfp_type_float);
+}
+
+static void
+given_block3f_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly(void **state)
+{
+  testStreamCompressedSizeIncreasedCorrectly(state, 3, zfp_type_float);
+}
+
+static void
+given_block4f_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly(void **state)
+{
+  testStreamCompressedSizeIncreasedCorrectly(state, 4, zfp_type_float);
+}
+
+static void
+given_block1d_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly(void **state)
+{
+  testStreamCompressedSizeIncreasedCorrectly(state, 1, zfp_type_double);
+}
+
+static void
+given_block2d_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly(void **state)
+{
+  testStreamCompressedSizeIncreasedCorrectly(state, 2, zfp_type_double);
+}
+
+static void
+given_block3d_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly(void **state)
+{
+  testStreamCompressedSizeIncreasedCorrectly(state, 3, zfp_type_double);
+}
+
+static void
+given_block4d_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly(void **state)
+{
+  testStreamCompressedSizeIncreasedCorrectly(state, 4, zfp_type_double);
+}
+
 int main()
 {
   const struct CMUnitTest tests[] = {
@@ -571,6 +908,26 @@ int main()
     cmocka_unit_test_setup_teardown(given_zfpStreamSetReversibleModeVal_when_zfpStreamSetMode_expect_returnsReversible_and_compressParamsConserved, setup, teardown),
     cmocka_unit_test_setup_teardown(given_customCompressParamsModeVal_when_zfpStreamSetMode_expect_returnsExpert_and_compressParamsConserved, setup, teardown),
     cmocka_unit_test_setup_teardown(given_invalidCompressParamsModeVal_when_zfpStreamSetMode_expect_returnsNullMode_and_paramsNotSet, setup, teardown),
+
+    /* test other zfp_stream_align() */
+    cmocka_unit_test_setup_teardown(given_block1f_when_StreamFlush_expect_StreamAlignSizeMatches, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block2f_when_StreamFlush_expect_StreamAlignSizeMatches, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block3f_when_StreamFlush_expect_StreamAlignSizeMatches, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block4f_when_StreamFlush_expect_StreamAlignSizeMatches, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block1d_when_StreamFlush_expect_StreamAlignSizeMatches, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block2d_when_StreamFlush_expect_StreamAlignSizeMatches, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block3d_when_StreamFlush_expect_StreamAlignSizeMatches, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block4d_when_StreamFlush_expect_StreamAlignSizeMatches, setup, teardown),
+
+    /* test zfp_stream_compressed_size() */
+    cmocka_unit_test_setup_teardown(given_block1f_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block2f_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block3f_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block4f_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block1d_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block2d_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block3d_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly, setup, teardown),
+    cmocka_unit_test_setup_teardown(given_block4d_when_WriteBlock_expect_StreamCompressedSizeIncreasedCorrectly, setup, teardown),
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);
