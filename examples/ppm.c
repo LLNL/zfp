@@ -56,7 +56,7 @@ clamp(int32* block, uint n)
 
 /* convert 2D block from RGB to YCoCg color space */
 static void
-rgb2ycocg(int32 ycocg[3][16], const int32 rgb[3][16])
+rgb2ycocg(int32 ycocg[3][16], /*const*/ int32 rgb[3][16])
 {
   uint i;
   for (i = 0; i < 16; i++) {
@@ -80,7 +80,7 @@ rgb2ycocg(int32 ycocg[3][16], const int32 rgb[3][16])
 
 /* convert 2D block from YCoCg to RGB color space */
 static void
-ycocg2rgb(int32 rgb[3][16], const int32 ycocg[3][16])
+ycocg2rgb(int32 rgb[3][16], /*const*/ int32 ycocg[3][16])
 {
   uint i;
   for (i = 0; i < 16; i++) {
