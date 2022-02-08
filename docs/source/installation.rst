@@ -275,6 +275,8 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   libraries built with the default rounding mode, :code:`ZFP_ROUND_NEVER`,
   and versions of |zfp| that do not support a rounding mode with no adverse
   effects.
+  Note: :c:macro:`ZFP_ROUNDING_MODE` is currently supported only by the
+  :code:`serial` and :code:`omp` :ref:`execution policies <execution>`.
   Default: :code:`ZFP_ROUND_NEVER`.
 
 .. c:macro:: ZFP_WITH_TIGHT_ERROR
@@ -286,7 +288,9 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   to be satisfied using fewer bits of compressed data.  As a result, when
   enabled, the observed maximum absolute error is closer to the tolerance and
   the compression ratio is increased.  This feature requires the rounding mode
-  to be :code:`ZFP_ROUND_FIRST` or :code:`ZFP_ROUND_LAST`.
+  to be :code:`ZFP_ROUND_FIRST` or :code:`ZFP_ROUND_LAST` and is supported
+  only by the :code:`serial` and :code:`omp`
+  :ref:`execution policies <execution>`.
   Default: undefined/off.
 
 .. c:macro:: ZFP_WITH_DAZ
@@ -303,6 +307,9 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   results in "random" subnormals upon decompression.  When enabled, compressed
   streams may differ slightly but are decompressed correctly by libraries
   built without this option.  This option may break some regression tests.
+  Note: :c:macro:`ZFP_WITH_DAZ` is currently ignored by all
+  :ref:`execution policies <execution>` other than :code:`serial` and
+  :code:`omp`.
   Default: undefined/off.
 
 .. c:macro:: ZFP_WITH_ALIGNED_ALLOC
