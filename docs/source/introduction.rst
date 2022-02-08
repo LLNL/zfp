@@ -55,7 +55,8 @@ source code is recommended for users who wish to configure the internals of
 bindings) to install.
 
 |zfp| is also available through several package managers, including
-`Conda <https://anaconda.org/conda-forge/zfpy>`__,
+Conda (both `C/C++ <https://anaconda.org/conda-forge/zfp>`__ and
+`Python <https://anaconda.org/conda-forge/zfpy>`__ packages are available),
 `PIP <https://pypi.org/project/zfpy>`__, and
 `Spack <https://spack.readthedocs.io/en/latest/package_list.html#zfp>`__.
 `RPM packages <https://repology.org/project/zfp/versions>`__ are available
@@ -98,6 +99,8 @@ plugins, and formats, such as
 
 * `Compression worklet <http://m.vtk.org/documentation/namespacevtkm_1_1worklet_1_1zfp.html>`__
   in `VTK-m <http://m.vtk.org>`__.
+
+* `Compression codec <https://numcodecs.readthedocs.io/en/stable/zfpy.html>`__ in `Zarr <https://github.com/zarr-developers/zarr-python>`__ via `numcodecs <https://github.com/zarr-developers/numcodecs>`__.
 
 See
 `this list <https://computing.llnl.gov/projects/floating-point-compression/related-projects>`__
