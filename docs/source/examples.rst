@@ -39,8 +39,11 @@ solution and solution time.  The usage is::
       -a <tolerance> : absolute error tolerance (requires -c)
       -b <blocks> : cache size in number of 4x4 blocks
       -c : use read-only arrays (needed for -a, -p, -R)
+      -d : use double-precision tiled arrays
+      -f : use single-precision tiled arrays
+      -h : use half-precision tiled arrays
       -i : traverse arrays using iterators instead of integer indices
-      -j : use OpenMP parallel execution
+      -j : use OpenMP parallel execution (requires -r)
       -n <nx> <ny> : grid dimensions
       -p <precision> : precision in uncompressed bits/value (requires -c)
       -r <rate> : rate in compressed bits/value
@@ -48,12 +51,11 @@ solution and solution time.  The usage is::
       -t <nt> : number of time steps
 
 Here *rate* specifies the exact number of compressed bits to store per
-double-precision floating-point value (default = 64); *nx* and *ny*
-specify the grid size (default = 100 |times| 100); *nt* specifies the number
-of time steps to take (the default is to run until time *t* = 1); and *blocks*
-is the number of uncompressed blocks to cache
-(default = (|sqrt| *n*) / 4, where *n* = *nx* |times| *ny*).
-The :code:`-i` option enables array traversal via iterators instead of indices.
+double-precision floating-point value; *nx* and *ny* specify the grid size
+(default = 128 |times| 128); *nt* specifies the number of time steps to take
+(the default is to run until time *t* = 1); and *blocks* is the number of
+uncompressed blocks to cache (default = *nx* / 2).  The :code:`-i` option
+enables array traversal via iterators instead of indices.
 
 The :code:`-j` option enables OpenMP parallel execution, which makes use
 of both mutable and immutable :ref:`private views <private_immutable_view>`
@@ -66,22 +68,33 @@ This example also illustrates how :ref:`read-only arrays <carray_classes>`
 fixed-precision (:code:`-p`), fixed-accuracy (:code:`-a`),
 or reversible (:code:`-R`) mode.
 
-Running diffusion with the following arguments::
+The output lists for each time step the current rate of the state array and
+in parentheses any additional storage, e.g., for the block
+:ref:`cache <caching>` and :ref:`index <index>` data structures, both in bits
+per array element.  Running diffusion with the following arguments::
 
     diffusion -r 8
     diffusion -r 12
-    diffusion -r 20
-    diffusion -r 64
+    diffusion -r 16
+    diffusion -r 24
+    diffusion
 
-should result in this output::
+should result in this final output::
 
-    sum=0.996442 error=4.813938e-07
-    sum=0.998338 error=1.967777e-07
-    sum=0.998326 error=1.967952e-07
-    sum=0.998326 error=1.967957e-07
+    sum=0.995170 error=4.044954e-07
+    sum=0.998151 error=1.237837e-07
+    sum=0.998345 error=1.212734e-07
+    sum=0.998346 error=1.212716e-07
+    sum=0.998346 error=1.212716e-07
 
 For speed and quality comparison, the solver solves the same problem using
-uncompressed double-precision arrays when compression parameters are omitted.
+uncompressed double-precision row-major arrays when compression parameters
+are omitted.  If one of :code:`-h`, :code:`-f`, :code:`-d` is specified,
+uncompressed tiled arrays are used.  These arrays are based on the |zfp|
+array classes but make use of the :ref:`generic codec <codec>`, which
+stores blocks as uncompressed scalars of the specified type (:code:`half`,
+:code:`float`, or :code:`double`) while utilizing a double-precision block
+cache (like |zfp|'s compressed arrays).
 
 The :program:`diffusionC` program is the same example written entirely
 in C using the |cfp| :ref:`wrappers <cfp>` around the C++ compressed array

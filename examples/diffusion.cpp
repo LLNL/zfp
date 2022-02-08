@@ -8,11 +8,38 @@
 #include <iostream>
 #include "zfparray2.h"
 #include "zfpcarray2.h"
+#include "gencodec.h"
 #include "array2d.h"
+
+// add half precision if compiler supports it
+#define __STDC_WANT_IEC_60559_TYPES_EXT__
+#include <cfloat>
+#ifdef FLT16_MAX
+  #define WITH_HALF 1
+#else
+  #undef WITH_HALF
+#endif
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+// uncompressed tiled arrays based on zfp generic codec
+namespace tiled {
+#if WITH_HALF
+  typedef zfp::array2< double, zfp::codec::generic2<double, _Float16> > array2h;
+#endif
+  typedef zfp::array2< double, zfp::codec::generic2<double, float> > array2f;
+  typedef zfp::array2< double, zfp::codec::generic2<double, double> > array2d;
+}
+
+// enumeration of uncompressed storage types
+enum storage_type {
+  type_none = 0,
+  type_half = 1,
+  type_float = 2,
+  type_double = 3
+};
 
 // constants used in the solution
 class Constants {
@@ -54,20 +81,22 @@ laplacian(const array2d& u, size_t x, size_t y, const Constants& c)
   return uxx + uyy;
 }
 
-template <class array2d>
+template <class state, class scratch>
 inline void
-time_step_parallel(array2d& u, const Constants& c);
+time_step_parallel(state& u, scratch& v, const Constants& c);
 
-// advance solution in parallel via thread-safe views
 #ifdef _OPENMP
+// advance solution in parallel via thread-safe views
 template <>
 inline void
-time_step_parallel(zfp::array2d& u, const Constants& c)
+time_step_parallel(zfp::array2d& u, zfp::array2d& du, const Constants& c)
 {
+#if 0
   // flush shared cache to ensure cache consistency across threads
   u.flush_cache();
+  // zero-initialize du
+  du.set(0);
   // compute du/dt in parallel
-  zfp::array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
   #pragma omp parallel
   {
     // create read-only private view of entire array u
@@ -75,21 +104,15 @@ time_step_parallel(zfp::array2d& u, const Constants& c)
     // create read-write private view into rectangular subset of du
     zfp::array2d::private_view mydu(&du);
     mydu.partition(omp_get_thread_num(), omp_get_num_threads());
+//fprintf(stderr, "thread=%d (%zu, %zu) (%zu, %zu)\n", omp_get_thread_num(), mydu.global_x(0), mydu.global_y(0), mydu.size_x(), mydu.size_y());
     // process rectangular region owned by this thread
     for (size_t j = 0; j < mydu.size_y(); j++) {
       size_t y = mydu.global_y(j);
       if (1 <= y && y <= c.ny - 2)
         for (size_t i = 0; i < mydu.size_x(); i++) {
           size_t x = mydu.global_x(i);
-          if (1 <= x && x <= c.nx - 2) {
-#if 0
-            double uxx = (myu(x - 1, y) - 2 * myu(x, y) + myu(x + 1, y)) / (c.dx * c.dx);
-            double uyy = (myu(x, y - 1) - 2 * myu(x, y) + myu(x, y + 1)) / (c.dy * c.dy);
-            mydu(i, j) = c.dt * c.k * (uxx + uyy);
-#else
+          if (1 <= x && x <= c.nx - 2)
             mydu(i, j) = c.dt * c.k * laplacian(myu, x, y, c);
-#endif
-          }
         }
     }
     // compress all private cached blocks to shared storage
@@ -98,36 +121,64 @@ time_step_parallel(zfp::array2d& u, const Constants& c)
   // take forward Euler step in serial
   for (size_t i = 0; i < u.size(); i++)
     u[i] += du[i];
+#else
+  // flush shared cache to ensure cache consistency across threads
+  u.flush_cache();
+  // zero-initialize du
+  du.set(0);
+  // compute du/dt in parallel
+  uint omp_num_threads = 8;
+  for (uint omp_thread_num = 0; omp_thread_num < omp_num_threads; omp_thread_num++)
+  {
+    // create read-only private view of entire array u
+    zfp::array2d::private_const_view myu(&u);
+    // create read-write private view into rectangular subset of du
+    zfp::array2d::private_view mydu(&du);
+    mydu.partition(omp_thread_num, omp_num_threads);
+    // process rectangular region owned by this thread
+    for (size_t j = 0; j < mydu.size_y(); j++) {
+      size_t y = mydu.global_y(j);
+      if (1 <= y && y <= c.ny - 2)
+        for (size_t i = 0; i < mydu.size_x(); i++) {
+          size_t x = mydu.global_x(i);
+          if (1 <= x && x <= c.nx - 2)
+            mydu(i, j) = c.dt * c.k * laplacian(myu, x, y, c);
+        }
+    }
+    // compress all private cached blocks to shared storage
+    mydu.flush_cache();
+  }
+  // take forward Euler step in serial
+  for (size_t i = 0; i < u.size(); i++)
+    u[i] += du[i];
+#endif
 }
 #else
+// dummy template instantiation when OpenMP support is not available
 template <>
-inline void
-time_step_parallel(zfp::array2d&, const Constants&)
-{
-}
+inline void time_step_parallel(zfp::array2d&, zfp::array2d&, const Constants&) {}
 #endif
 
-// dummy template instantiation; never executed
+// dummy template instantiations; never executed
 template <>
-inline void
-time_step_parallel(zfp::const_array2d&, const Constants&)
-{
-}
-
-// dummy template instantiation; never executed
+inline void time_step_parallel(zfp::const_array2d&, raw::array2d&, const Constants&) {}
 template <>
-inline void
-time_step_parallel(raw::array2d&, const Constants&)
-{
-}
+inline void time_step_parallel(raw::array2d&, raw::array2d&, const Constants&) {}
+template <>
+inline void time_step_parallel(tiled::array2d&, tiled::array2d&, const Constants&) {}
+template <>
+inline void time_step_parallel(tiled::array2f&, tiled::array2f&, const Constants&) {}
+#if WITH_HALF
+template <>
+inline void time_step_parallel(tiled::array2h&, tiled::array2h&, const Constants&) {}
+#endif
 
 // advance solution using integer array indices (generic implementation)
-template <class array2d>
+template <class state, class scratch>
 inline void
-time_step_indexed(array2d& u, const Constants& c)
+time_step_indexed(state& u, scratch& du, const Constants& c)
 {
   // compute du/dt
-  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
   for (size_t y = 1; y < c.ny - 1; y++)
     for (size_t x = 1; x < c.nx - 1; x++)
       du(x, y) = c.dt * c.k * laplacian(u, x, y, c);
@@ -139,10 +190,9 @@ time_step_indexed(array2d& u, const Constants& c)
 // advance solution using integer array indices (read-only arrays)
 template <>
 inline void
-time_step_indexed(zfp::const_array2d& u, const Constants& c)
+time_step_indexed(zfp::const_array2d& u, raw::array2d& v, const Constants& c)
 {
   // initialize v as uncompressed copy of u
-  raw::array2d v(c.nx, c.ny);
   u.get(&v[0]);
   // take forward Euler step v += (du/dt) dt
   for (size_t y = 1; y < c.ny - 1; y++)
@@ -153,48 +203,46 @@ time_step_indexed(zfp::const_array2d& u, const Constants& c)
 }
 
 // advance solution using array iterators (generic implementation)
-template <class array2d>
+template <class state, class scratch>
 inline void
-time_step_iterated(array2d& u, const Constants& c)
+time_step_iterated(state& u, scratch& du, const Constants& c)
 {
   // compute du/dt
-  array2d du(c.nx, c.ny, u.rate(), 0, u.cache_size());
-  for (typename array2d::iterator p = du.begin(); p != du.end(); p++) {
-    size_t x = p.i();
-    size_t y = p.j();
+  for (typename scratch::iterator q = du.begin(); q != du.end(); q++) {
+    size_t x = q.i();
+    size_t y = q.j();
     if (1 <= x && x <= c.nx - 2 &&
         1 <= y && y <= c.ny - 2)
-      *p = c.dt * c.k * laplacian(u, x, y, c);
+      *q = c.dt * c.k * laplacian(u, x, y, c);
   }
   // take forward Euler step
-  for (typename array2d::iterator p = u.begin(), q = du.begin(); p != u.end(); p++, q++)
-    *p += *q;
+  for (typename state::iterator p = u.begin(); p != u.end(); p++)
+    *p += du(p.i(), p.j());
 }
 
-// dummy specialization; never called
+// advance solution using array iterators (read-only arrays)
 template <>
 inline void
-time_step_iterated(zfp::const_array2d& u, const Constants& c)
+time_step_iterated(zfp::const_array2d& u, raw::array2d& v, const Constants& c)
 {
   // initialize v as uncompressed copy of u
-  raw::array2d v(c.nx, c.ny);
   u.get(&v[0]);
   // take forward Euler step v += (du/dt) dt
-  for (raw::array2d::iterator p = v.begin(); p != v.end(); p++) {
-    size_t x = p.i();
-    size_t y = p.j();
+  for (raw::array2d::iterator q = v.begin(); q != v.end(); q++) {
+    size_t x = q.i();
+    size_t y = q.j();
     if (1 <= x && x <= c.nx - 2 &&
         1 <= y && y <= c.ny - 2)
-      *p += c.dt * c.k * laplacian(u, x, y, c);
+      *q += c.dt * c.k * laplacian(u, x, y, c);
   }
   // update u with uncompressed copy v
   u.set(&v[0]);
 }
 
 // set initial conditions with a point heat source (u is assumed zero-initialized)
-template <class array2d>
+template <class state, class scratch>
 inline void
-initialize(array2d& u, const Constants& c)
+initialize(state& u, scratch&, const Constants& c)
 {
   u(c.x0, c.y0) = 1;
 }
@@ -202,20 +250,19 @@ initialize(array2d& u, const Constants& c)
 // set initial conditions for const_array; requires updating the whole array
 template <>
 inline void
-initialize(zfp::const_array2d& u, const Constants& c)
+initialize(zfp::const_array2d& u, raw::array2d& v, const Constants& c)
 {
-  std::vector<double> data(c.nx * c.ny, 0.0);
-  data[c.x0 + c.nx * c.y0] = 1;
-  u.set(&data[0]);
+  v(c.x0, c.y0) = 1;
+  u.set(&v[0]);
 }
 
 // solve heat equation
-template <class array2d>
+template <class state, class scratch>
 inline double
-solve(array2d& u, const Constants& c, bool iterator, bool parallel)
+solve(state& u, scratch& v, const Constants& c, bool iterator, bool parallel)
 {
   // initialize u with point heat source
-  initialize(u, c);
+  initialize(u, v, c);
 
   // iterate until final time
   double t;
@@ -227,20 +274,20 @@ solve(array2d& u, const Constants& c, bool iterator, bool parallel)
     std::cerr << "rate=" << std::setprecision(3) << std::fixed << rate << " (+" << rest << ")" << std::endl;
     // advance solution one time step
     if (parallel)
-      time_step_parallel(u, c);
+      time_step_parallel(u, v, c);
     else if (iterator)
-      time_step_iterated(u, c);
+      time_step_iterated(u, v, c);
     else
-      time_step_indexed(u, c);
+      time_step_indexed(u, v, c);
   }
 
   return t;
 }
 
 // compute sum of array values
-template <class array2d>
+template <class state>
 inline double
-total(const array2d& u)
+total(const state& u)
 {
   double s = 0;
   const size_t nx = u.size_x();
@@ -252,9 +299,9 @@ total(const array2d& u)
 }
 
 // compute root mean square error with respect to exact solution
-template <class array2d>
+template <class state>
 inline double
-error(const array2d& u, const Constants& c, double t)
+error(const state& u, const Constants& c, double t)
 {
   double e = 0;
   for (size_t y = 1; y < c.ny - 1; y++) {
@@ -269,6 +316,20 @@ error(const array2d& u, const Constants& c, double t)
   return std::sqrt(e / ((c.nx - 2) * (c.ny - 2)));
 }
 
+// execute solver and evaluate error
+template <class state, class scratch>
+inline void
+execute(state& u, scratch& v, size_t nt, bool iterator, bool parallel)
+{
+  Constants c(u.size_x(), u.size_y(), nt);
+  double t = solve(u, v, c, iterator, parallel);
+  double sum = total(u);
+  double err = error(u, c, t);
+  std::cerr.unsetf(std::ios::fixed);
+  std::cerr << "sum=" << std::setprecision(6) << std::fixed << sum << " error=" << std::setprecision(6) << std::scientific << err << std::endl;
+}
+
+// print usage information
 inline int
 usage()
 {
@@ -276,7 +337,12 @@ usage()
   std::cerr << "Options:" << std::endl;
   std::cerr << "-a <tolerance> : use compressed arrays with given absolute error tolerance" << std::endl;
   std::cerr << "-b <blocks> : use 'blocks' 4x4 blocks of cache" << std::endl;
-  std::cerr << "-c : use read-only arrays" << std::endl;
+  std::cerr << "-c : use read-only compressed arrays" << std::endl;
+  std::cerr << "-d : use double-precision tiled arrays" << std::endl;
+  std::cerr << "-f : use single-precision tiled arrays" << std::endl;
+#if WITH_HALF
+  std::cerr << "-h : use half-precision tiled arrays" << std::endl;
+#endif
   std::cerr << "-i : traverse arrays using iterators" << std::endl;
 #ifdef _OPENMP
   std::cerr << "-j : use multithreading (only with compressed arrays)" << std::endl;
@@ -291,15 +357,15 @@ usage()
 
 int main(int argc, char* argv[])
 {
-  size_t nx = 100;
-  size_t ny = 100;
+  size_t nx = 128;
+  size_t ny = 128;
   size_t nt = 0;
-  double rate = 64;
   size_t cache_size = 0;
   zfp_config config = zfp_config_none();
   bool iterator = false;
   bool parallel = false;
   bool writable = true;
+  storage_type type = type_none;
 
   // parse command-line options
   for (int i = 1; i < argc; i++)
@@ -316,6 +382,14 @@ int main(int argc, char* argv[])
     }
     else if (std::string(argv[i]) == "-c")
       writable = false;
+    else if (std::string(argv[i]) == "-d")
+      type = type_double;
+    else if (std::string(argv[i]) == "-f")
+      type = type_float;
+#if WITH_HALF
+    else if (std::string(argv[i]) == "-h")
+      type = type_half;
+#endif
     else if (std::string(argv[i]) == "-i")
       iterator = true;
 #ifdef _OPENMP
@@ -334,6 +408,7 @@ int main(int argc, char* argv[])
       config = zfp_config_precision(precision);
     }
     else if (std::string(argv[i]) == "-r") {
+      double rate;
       if (++i == argc || sscanf(argv[i], "%lf", &rate) != 1)
         return usage();
       config = zfp_config_rate(rate, false);
@@ -370,38 +445,66 @@ int main(int argc, char* argv[])
     fprintf(stderr, "read-only arrays require compression parameters\n");
     return EXIT_FAILURE;
   }
+  if (compression && type != type_none) {
+    fprintf(stderr, "tiled arrays do not support compression parameters\n");
+    return EXIT_FAILURE;
+  }
 
-  Constants c(nx, ny, nt);
+  // if unspecified, set cache size to two layers of blocks
+  if (!cache_size)
+    cache_size = 2 * 4 * nx * sizeof(double);
 
-  double sum;
-  double err;
+  // solve problem
   if (compression) {
-    // solve problem using compressed arrays
+    // use compressed arrays
     if (writable) {
       // use read-write fixed-rate arrays
-      zfp::array2d u(nx, ny, rate, 0, cache_size);
-      double t = solve(u, c, iterator, parallel);
-      sum = total(u);
-      err = error(u, c, t);
+      zfp::array2d u(nx, ny, config.arg.rate, 0, cache_size);
+      zfp::array2d v(nx, ny, config.arg.rate, 0, cache_size);
+      execute(u, v, nt, iterator, parallel);
     }
     else {
       // use read-only variable-rate arrays
       zfp::const_array2d u(nx, ny, config, 0, cache_size);
-      double t = solve(u, c, iterator, parallel);
-      sum = total(u);
-      err = error(u, c, t);
+      raw::array2d v(nx, ny);
+      execute(u, v, nt, iterator, parallel);
     }
   }
   else {
-    // solve problem using uncompressed arrays
-    raw::array2d u(nx, ny);
-    double t = solve(u, c, iterator, parallel);
-    sum = total(u);
-    err = error(u, c, t);
+    // use uncompressed arrays
+    switch (type) {
+#if WITH_HALF
+      case type_half: {
+          // use zfp generic codec with tiled half-precision storage
+          tiled::array2h u(nx, ny, sizeof(__fp16) * CHAR_BIT, 0, cache_size);
+          tiled::array2h v(nx, ny, sizeof(__fp16) * CHAR_BIT, 0, cache_size);
+          execute(u, v, nt, iterator, parallel);
+        }
+        break;
+#endif
+      case type_float: {
+          // use zfp generic codec with tiled single-precision storage
+          tiled::array2f u(nx, ny, sizeof(float) * CHAR_BIT, 0, cache_size);
+          tiled::array2f v(nx, ny, sizeof(float) * CHAR_BIT, 0, cache_size);
+          execute(u, v, nt, iterator, parallel);
+        }
+        break;
+      case type_double: {
+          // use zfp generic codec with tiled double-precision storage
+          tiled::array2d u(nx, ny, sizeof(double) * CHAR_BIT, 0, cache_size);
+          tiled::array2d v(nx, ny, sizeof(double) * CHAR_BIT, 0, cache_size);
+          execute(u, v, nt, iterator, parallel);
+        }
+        break;
+      default: {
+          // use uncompressed array with row-major double-precision storage
+          raw::array2d u(nx, ny, sizeof(double) * CHAR_BIT);
+          raw::array2d v(nx, ny, sizeof(double) * CHAR_BIT);
+          execute(u, v, nt, iterator, parallel);
+        }
+        break;
+    }
   }
-
-  std::cerr.unsetf(std::ios::fixed);
-  std::cerr << "sum=" << std::setprecision(6) << std::fixed << sum << " error=" << std::setprecision(6) << std::scientific << err << std::endl;
 
   return 0;
 }
