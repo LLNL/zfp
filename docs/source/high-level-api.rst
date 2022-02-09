@@ -619,7 +619,7 @@ Execution Policy
 
 .. c:function:: zfp_exec_policy zfp_stream_execution(const zfp_stream* stream)
 
-  Return current execution policy.
+  Return current :ref:`execution policy <execution>`.
 
 ----
 
@@ -639,9 +639,9 @@ Execution Policy
 
 .. c:function:: zfp_bool zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)
 
-  Set execution policy.  If different from the previous policy, initialize
-  the execution parameters to their default values.  :code:`zfp_true` is
-  returned if the execution policy is supported.
+  Set :ref:`execution policy <execution>`.  If different from the previous
+  policy, initialize the execution parameters to their default values.
+  :code:`zfp_true` is returned if the execution policy is supported.
 
 ----
 
