@@ -24,7 +24,7 @@ ExternalProject_Add(
   SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
   BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
   CMAKE_ARGS        ${CMOCKA_ARGS}
-  BUILD_COMMAND     ${CMAKE_COMMAND} --build . WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
+  BUILD_COMMAND     ${CMAKE_COMMAND} --build . --config ${CMAKE_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
   INSTALL_COMMAND   ""
   STEP_TARGETS build
   EXCLUDE_FROM_ALL TRUE
