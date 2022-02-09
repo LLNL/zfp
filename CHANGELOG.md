@@ -72,6 +72,7 @@ few of the API changes, other than to cfp, should impact existing code.
 - #125: OpenMP bit offsets are limited to 32 bits.
 - #126: `make install` does not install Fortran module.
 - #127: Reversible mode reports incorrect compressed block size.
+- #150: cmocka tests do not build on macOS.
 - `ZFP_MAX_BITS` is off by one.
 - `diffusionC`, `iteratorC` are not being built with `gmake`.
 
