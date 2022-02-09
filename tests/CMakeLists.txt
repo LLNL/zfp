@@ -9,7 +9,7 @@ endif()
 # clone cmocka 1.1.0 into /build
 list(APPEND CMOCKA_ARGS "-DWITH_STATIC_LIB=ON;-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER};-DUNIT_TESTING=OFF")
 
-# fix for zfp issue #150 where CMAKE_BUILD_TYPE is not propagated on macOS
+# WIP: fix for zfp issue #150 where CMAKE_BUILD_TYPE is not propagated on macOS
 if(MSVC)
   set(CMOCKA_BUILD_TYPE "--config ${CMAKE_BUILD_TYPE}")
 else()
@@ -24,7 +24,7 @@ ExternalProject_Add(
   SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
   BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
   CMAKE_ARGS        ${CMOCKA_ARGS}
-  BUILD_COMMAND     ${CMAKE_COMMAND} --build . ${CMOCKA_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
+  BUILD_COMMAND     ${CMAKE_COMMAND} --build . WORKING_DIRECTORY ${CMAKE_BINARY_DIR} cmocka_static
   INSTALL_COMMAND   ""
   STEP_TARGETS build
   EXCLUDE_FROM_ALL TRUE
