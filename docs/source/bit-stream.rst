@@ -66,7 +66,7 @@ section.
 Types
 -----
 
-.. c:type:: word
+.. c:type:: stream_word
 
   Bits are buffered and read/written in units of words.  By default, the
   bit stream word type is 64 bits, but may be set to 8, 16, or 32 bits
@@ -74,6 +74,11 @@ Types
   :c:type:`uint16`, or :c:type:`uint32`, respectively.  Larger words
   tend to give higher throughput, while 8-bit words are needed to ensure
   endian independence (see FAQ :ref:`#11 <q-portability>`).
+
+.. note::
+  To avoid potential name clashes, this type was renamed in
+  |zfp| |64bitrelease| from the shorter and more ambiguous type name
+  :code:`word`.
 
 ----
 
@@ -85,13 +90,13 @@ Types
   ::
 
     struct bitstream {
-      uint bits;       // number of buffered bits (0 <= bits < word size)
-      word buffer;     // buffer for incoming/outgoing bits (buffer < 2^bits)
-      word* ptr;       // pointer to next word to be read/written
-      word* begin;     // beginning of stream
-      word* end;       // end of stream (currently unused)
-      size_t mask;     // one less the block size in number of words (if BIT_STREAM_STRIDED)
-      ptrdiff_t delta; // number of words between consecutive blocks (if BIT_STREAM_STRIDED)
+      uint bits;          // number of buffered bits (0 <= bits < word size)
+      stream_word buffer; // buffer for incoming/outgoing bits (buffer < 2^bits)
+      stream_word* ptr;   // pointer to next word to be read/written
+      stream_word* begin; // beginning of stream
+      stream_word* end;   // end of stream (currently unused)
+      size_t mask;        // one less the block size in number of words (if BIT_STREAM_STRIDED)
+      ptrdiff_t delta;    // number of words between consecutive blocks (if BIT_STREAM_STRIDED)
     };
 
 .. _bs-data:

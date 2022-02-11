@@ -8,7 +8,7 @@
 
 #define STREAM_WORD_CAPACITY 3
 
-#define WORD_MASK ((word)(-1))
+#define WORD_MASK ((stream_word)(-1))
 #define WORD1 WORD_MASK
 #define WORD2 (0x5555555555555555 & WORD_MASK)
 
@@ -23,10 +23,10 @@ setup(void **state)
   struct setupVars *s = malloc(sizeof(struct setupVars));
   assert_non_null(s);
 
-  s->buffer = calloc(STREAM_WORD_CAPACITY, sizeof(word));
+  s->buffer = calloc(STREAM_WORD_CAPACITY, sizeof(stream_word));
   assert_non_null(s->buffer);
 
-  s->b = stream_open(s->buffer, STREAM_WORD_CAPACITY * sizeof(word));
+  s->b = stream_open(s->buffer, STREAM_WORD_CAPACITY * sizeof(stream_word));
   assert_non_null(s->b);
 
   *state = s;
@@ -53,11 +53,11 @@ when_StreamCopy_expect_BitsCopiedToDestBitstream(void **state)
   const uint COPY_BITS = wsize + 4;
 
   const uint NUM_WORD2_BITS_WRITTEN_TO_WORD = DST_OFFSET + (wsize - SRC_OFFSET);
-  const word EXPECTED_WRITTEN_WORD = ((WORD1 >> SRC_OFFSET) << DST_OFFSET)
-                                     + (WORD2 << NUM_WORD2_BITS_WRITTEN_TO_WORD);
+  const stream_word EXPECTED_WRITTEN_WORD = ((WORD1 >> SRC_OFFSET) << DST_OFFSET)
+                                            + (WORD2 << NUM_WORD2_BITS_WRITTEN_TO_WORD);
   const uint EXPECTED_BITS = (DST_OFFSET + COPY_BITS) % wsize;
-  const word EXPECTED_BUFFER = (WORD2 >> (NUM_WORD2_BITS_WRITTEN_TO_WORD))
-                               & ((1u << EXPECTED_BITS) - 1);
+  const stream_word EXPECTED_BUFFER = (WORD2 >> (NUM_WORD2_BITS_WRITTEN_TO_WORD))
+                                      & ((1u << EXPECTED_BITS) - 1);
 
   bitstream* src = ((struct setupVars *)*state)->b;
   stream_write_word(src, WORD1);
@@ -65,8 +65,8 @@ when_StreamCopy_expect_BitsCopiedToDestBitstream(void **state)
   stream_flush(src);
   stream_rseek(src, SRC_OFFSET);
 
-  void* buffer = calloc(STREAM_WORD_CAPACITY, sizeof(word));
-  bitstream* dst = stream_open(buffer, STREAM_WORD_CAPACITY * sizeof(word));
+  void* buffer = calloc(STREAM_WORD_CAPACITY, sizeof(stream_word));
+  bitstream* dst = stream_open(buffer, STREAM_WORD_CAPACITY * sizeof(stream_word));
   stream_wseek(dst, DST_OFFSET);
 
   stream_copy(dst, src, COPY_BITS);
@@ -91,7 +91,7 @@ when_Flush_expect_PaddedWordWrittenToStream(void **state)
 
   stream_rewind(s);
   stream_write_bits(s, WORD2, PREV_BUFFER_BIT_COUNT);
-  word *prevPtr = s->ptr;
+  stream_word *prevPtr = s->ptr;
 
   size_t padCount = stream_flush(s);
 
@@ -105,9 +105,9 @@ static void
 given_EmptyBuffer_when_Flush_expect_NOP(void **state)
 {
   bitstream* s = ((struct setupVars *)*state)->b;
-  word *prevPtr = s->ptr;
+  stream_word *prevPtr = s->ptr;
   uint prevBits = s->bits;
-  word prevBuffer = s->buffer;
+  stream_word prevBuffer = s->buffer;
 
   size_t padCount = stream_flush(s);
 
@@ -128,7 +128,7 @@ when_Align_expect_BufferEmptyBitsZero(void **state)
 
   stream_rewind(s);
   stream_read_bits(s, READ_BIT_COUNT);
-  word *prevPtr = s->ptr;
+  stream_word *prevPtr = s->ptr;
 
   stream_align(s);
 
@@ -144,7 +144,7 @@ when_SkipPastBufferEnd_expect_NewMaskedWordInBuffer(void **state)
   const uint SKIP_COUNT = wsize + 5;
   const uint TOTAL_OFFSET = READ_BIT_COUNT + SKIP_COUNT;
   const uint EXPECTED_BITS = wsize - (TOTAL_OFFSET % wsize);
-  const word EXPECTED_BUFFER = WORD2 >> (TOTAL_OFFSET % wsize);
+  const stream_word EXPECTED_BUFFER = WORD2 >> (TOTAL_OFFSET % wsize);
 
   bitstream* s = ((struct setupVars *)*state)->b;
   stream_write_bits(s, WORD1, wsize);
@@ -167,14 +167,14 @@ when_SkipWithinBuffer_expect_MaskedBuffer(void **state)
   const uint SKIP_COUNT = 5;
   const uint TOTAL_OFFSET = READ_BIT_COUNT + SKIP_COUNT;
   const uint EXPECTED_BITS = wsize - (TOTAL_OFFSET % wsize);
-  const word EXPECTED_BUFFER = WORD1 >> (TOTAL_OFFSET % wsize);
+  const stream_word EXPECTED_BUFFER = WORD1 >> (TOTAL_OFFSET % wsize);
 
   bitstream* s = ((struct setupVars *)*state)->b;
   stream_write_bits(s, WORD1, wsize);
 
   stream_rewind(s);
   stream_read_bits(s, READ_BIT_COUNT);
-  word *prevPtr = s->ptr;
+  stream_word *prevPtr = s->ptr;
 
   stream_skip(s, SKIP_COUNT);
 
@@ -193,9 +193,9 @@ when_SkipZeroBits_expect_NOP(void **state)
   stream_rewind(s);
   stream_read_bits(s, 2);
 
-  word* prevPtr = s->ptr;
-  word prevBits = s->bits;
-  word prevBuffer = s->buffer;
+  stream_word* prevPtr = s->ptr;
+  stream_word prevBits = s->bits;
+  stream_word prevBuffer = s->buffer;
 
   stream_skip(s, 0);
 
@@ -209,7 +209,7 @@ when_RseekToNonMultipleOfWsize_expect_MaskedWordLoadedToBuffer(void **state)
 {
   const uint BIT_OFFSET = wsize + 5;
   const uint EXPECTED_BITS = wsize - (BIT_OFFSET % wsize);
-  const word EXPECTED_BUFFER = WORD2 >> (BIT_OFFSET % wsize);
+  const stream_word EXPECTED_BUFFER = WORD2 >> (BIT_OFFSET % wsize);
 
   bitstream* s = ((struct setupVars *)*state)->b;
   stream_write_bits(s, WORD1, wsize);
@@ -240,7 +240,7 @@ static void
 when_WseekToNonMultipleOfWsize_expect_MaskedWordLoadedToBuffer(void **state)
 {
   const uint BIT_OFFSET = wsize + 5;
-  const word MASK = 0x1f;
+  const stream_word MASK = 0x1f;
 
   bitstream* s = ((struct setupVars *)*state)->b;
   stream_write_bits(s, WORD1, wsize);
@@ -305,8 +305,8 @@ when_ReadBitsSpreadsAcrossTwoWords_expect_BitsCombinedFromBothWords(void **state
   const uint NUM_OVERFLOWED_BITS = READ_BIT_COUNT - PARTIAL_WORD_BIT_COUNT;
   const uint EXPECTED_BUFFER_BIT_COUNT = wsize - NUM_OVERFLOWED_BITS;
 
-  const word PARTIAL_WORD1 = WORD1 & 0xffff;
-  const word PARTIAL_WORD2 = WORD2 & 0x1fffffffffff << PARTIAL_WORD_BIT_COUNT;
+  const stream_word PARTIAL_WORD1 = WORD1 & 0xffff;
+  const stream_word PARTIAL_WORD2 = WORD2 & 0x1fffffffffff << PARTIAL_WORD_BIT_COUNT;
 
   bitstream* s = ((struct setupVars *)*state)->b;
   stream_write_bits(s, PARTIAL_WORD1, wsize);
@@ -347,7 +347,7 @@ static void
 when_ReadBits_expect_BitsReadInOrderLSB(void **state)
 {
   const uint BITS_TO_READ = 2;
-  const word MASK = 0x3;
+  const stream_word MASK = 0x3;
 
   bitstream* s = ((struct setupVars *)*state)->b;
   s->buffer = WORD2;
@@ -383,9 +383,9 @@ when_WriteBitsOverflowsBuffer_expect_OverflowWrittenToNewBuffer(void **state)
   const uint NUM_BITS_TO_WRITE = wsize - 1;
   const uint OVERFLOW_BIT_COUNT = NUM_BITS_TO_WRITE - (wsize - EXISTING_BIT_COUNT);
   // 0x1101 0101 0101 ... 0101 allows stream_write_bit() to return non-zero
-  const word WORD_TO_WRITE = WORD2 + 0x8000000000000000;
-  const word OVERFLOWED_BITS = WORD_TO_WRITE >> (wsize - EXISTING_BIT_COUNT);
-  const word EXPECTED_BUFFER_RESULT = OVERFLOWED_BITS & 0xf;
+  const stream_word WORD_TO_WRITE = WORD2 + 0x8000000000000000;
+  const stream_word OVERFLOWED_BITS = WORD_TO_WRITE >> (wsize - EXISTING_BIT_COUNT);
+  const stream_word EXPECTED_BUFFER_RESULT = OVERFLOWED_BITS & 0xf;
 
   bitstream* s = ((struct setupVars *)*state)->b;
   stream_write_bits(s, WORD1, EXISTING_BIT_COUNT);
@@ -402,14 +402,14 @@ when_WriteBitsFillsBufferExactly_expect_WordWrittenToStream(void **state)
 {
   const uint EXISTING_BIT_COUNT = 5;
   const uint NUM_BITS_TO_WRITE = wsize - EXISTING_BIT_COUNT;
-  const word COMPLETING_WORD = WORD2 & 0x07ffffffffffffff;
+  const stream_word COMPLETING_WORD = WORD2 & 0x07ffffffffffffff;
 
   bitstream* s = ((struct setupVars *)*state)->b;
   stream_write_bits(s, WORD1, EXISTING_BIT_COUNT);
   uint64 remainingBits = stream_write_bits(s, COMPLETING_WORD, NUM_BITS_TO_WRITE);
 
   stream_rewind(s);
-  word readWord = stream_read_word(s);
+  stream_word readWord = stream_read_word(s);
 
   assert_int_equal(readWord, 0x1f + 0xaaaaaaaaaaaaaaa0);
   assert_int_equal(remainingBits, 0);
@@ -465,7 +465,7 @@ given_BitstreamWithBitInBuffer_when_ReadBit_expect_OneBitReadFromLSB(void **stat
   stream_write_bit(s, 1);
 
   uint prevBits = s->bits;
-  word prevBuffer = s->buffer;
+  stream_word prevBuffer = s->buffer;
 
   assert_int_equal(stream_read_bit(s), 1);
   assert_int_equal(s->bits, prevBits - 1);
@@ -482,8 +482,8 @@ given_BitstreamBufferOneBitFromFull_when_WriteBit_expect_BitWrittenToBufferWritt
 
   stream_write_bit(s, 1);
 
-  assert_int_equal(stream_size(s), sizeof(word));
-  assert_int_equal(*s->begin, (word)1 << PLACE);
+  assert_int_equal(stream_size(s), sizeof(stream_word));
+  assert_int_equal(*s->begin, (stream_word)1 << PLACE);
   assert_int_equal(s->buffer, 0);
 }
 
@@ -498,7 +498,7 @@ when_WriteBit_expect_BitWrittenToBufferFromLSB(void **state)
   stream_write_bit(s, 1);
 
   assert_int_equal(s->bits, PLACE + 1);
-  assert_int_equal(s->buffer, (word)1 << PLACE);
+  assert_int_equal(s->buffer, (stream_word)1 << PLACE);
 }
 
 static void
@@ -506,7 +506,7 @@ given_StartedBuffer_when_StreamPadOverflowsBuffer_expect_ProperWordsWritten(void
 {
   const uint NUM_WORDS = 2;
   const uint EXISTING_BIT_COUNT = 12;
-  const word EXISTING_BUFFER = 0xfff;
+  const stream_word EXISTING_BUFFER = 0xfff;
   const uint PAD_AMOUNT = NUM_WORDS * wsize - EXISTING_BIT_COUNT;
 
   bitstream* s = ((struct setupVars *)*state)->b;
@@ -520,7 +520,7 @@ given_StartedBuffer_when_StreamPadOverflowsBuffer_expect_ProperWordsWritten(void
 
   stream_pad(s, PAD_AMOUNT);
 
-  assert_int_equal(stream_size(s), prevStreamSize + NUM_WORDS * sizeof(word));
+  assert_int_equal(stream_size(s), prevStreamSize + NUM_WORDS * sizeof(stream_word));
   stream_rewind(s);
   assert_int_equal(stream_read_word(s), EXISTING_BUFFER);
   assert_int_equal(stream_read_word(s), 0);
@@ -530,7 +530,7 @@ static void
 given_StartedBuffer_when_StreamPad_expect_PaddedWordWritten(void **state)
 {
   const uint EXISTING_BIT_COUNT = 12;
-  const word EXISTING_BUFFER = 0xfff;
+  const stream_word EXISTING_BUFFER = 0xfff;
 
   bitstream* s = ((struct setupVars *)*state)->b;
   s->buffer = EXISTING_BUFFER;
@@ -539,7 +539,7 @@ given_StartedBuffer_when_StreamPad_expect_PaddedWordWritten(void **state)
 
   stream_pad(s, wsize - EXISTING_BIT_COUNT);
 
-  assert_int_equal(stream_size(s), prevStreamSize + sizeof(word));
+  assert_int_equal(stream_size(s), prevStreamSize + sizeof(stream_word));
   stream_rewind(s);
   assert_int_equal(stream_read_word(s), EXISTING_BUFFER);
 }
@@ -586,7 +586,7 @@ when_WriteTwoWords_expect_WordsWrittenToStreamConsecutively(void **state)
   stream_write_word(s, WORD1);
   stream_write_word(s, WORD2);
 
-  assert_int_equal(stream_size(s), sizeof(word) * 2);
+  assert_int_equal(stream_size(s), sizeof(stream_word) * 2);
   assert_int_equal(*s->begin, WORD1);
   assert_int_equal(*(s->begin + 1), WORD2);
 }
@@ -599,7 +599,7 @@ given_RewoundBitstream_when_WriteWord_expect_WordWrittenAtStreamBegin(void **sta
 
   stream_write_word(s, WORD1);
 
-  assert_int_equal(stream_size(s), prevStreamSize + sizeof(word));
+  assert_int_equal(stream_size(s), prevStreamSize + sizeof(stream_word));
   assert_int_equal(*s->begin, WORD1);
 }
 
@@ -608,12 +608,12 @@ when_BitstreamOpened_expect_ProperLengthAndBoundaries(void **state)
 {
   const int NUM_WORDS = 4;
 
-  size_t bufferLenBytes = sizeof(word) * NUM_WORDS;
+  size_t bufferLenBytes = sizeof(stream_word) * NUM_WORDS;
   void* buffer = malloc(bufferLenBytes);
   bitstream* s = stream_open(buffer, bufferLenBytes);
 
   void* streamBegin = stream_data(s);
-  void* computedStreamEnd = (word*)streamBegin + NUM_WORDS;
+  void* computedStreamEnd = (stream_word*)streamBegin + NUM_WORDS;
 
   assert_ptr_equal(streamBegin, buffer);
   assert_ptr_equal(s->end, computedStreamEnd);
