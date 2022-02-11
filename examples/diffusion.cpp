@@ -91,7 +91,6 @@ template <>
 inline void
 time_step_parallel(zfp::array2d& u, zfp::array2d& du, const Constants& c)
 {
-#if 0
   // flush shared cache to ensure cache consistency across threads
   u.flush_cache();
   // zero-initialize du
@@ -104,7 +103,6 @@ time_step_parallel(zfp::array2d& u, zfp::array2d& du, const Constants& c)
     // create read-write private view into rectangular subset of du
     zfp::array2d::private_view mydu(&du);
     mydu.partition(omp_get_thread_num(), omp_get_num_threads());
-//fprintf(stderr, "thread=%d (%zu, %zu) (%zu, %zu)\n", omp_get_thread_num(), mydu.global_x(0), mydu.global_y(0), mydu.size_x(), mydu.size_y());
     // process rectangular region owned by this thread
     for (size_t j = 0; j < mydu.size_y(); j++) {
       size_t y = mydu.global_y(j);
@@ -121,37 +119,6 @@ time_step_parallel(zfp::array2d& u, zfp::array2d& du, const Constants& c)
   // take forward Euler step in serial
   for (size_t i = 0; i < u.size(); i++)
     u[i] += du[i];
-#else
-  // flush shared cache to ensure cache consistency across threads
-  u.flush_cache();
-  // zero-initialize du
-  du.set(0);
-  // compute du/dt in parallel
-  uint omp_num_threads = 8;
-  for (uint omp_thread_num = 0; omp_thread_num < omp_num_threads; omp_thread_num++)
-  {
-    // create read-only private view of entire array u
-    zfp::array2d::private_const_view myu(&u);
-    // create read-write private view into rectangular subset of du
-    zfp::array2d::private_view mydu(&du);
-    mydu.partition(omp_thread_num, omp_num_threads);
-    // process rectangular region owned by this thread
-    for (size_t j = 0; j < mydu.size_y(); j++) {
-      size_t y = mydu.global_y(j);
-      if (1 <= y && y <= c.ny - 2)
-        for (size_t i = 0; i < mydu.size_x(); i++) {
-          size_t x = mydu.global_x(i);
-          if (1 <= x && x <= c.nx - 2)
-            mydu(i, j) = c.dt * c.k * laplacian(myu, x, y, c);
-        }
-    }
-    // compress all private cached blocks to shared storage
-    mydu.flush_cache();
-  }
-  // take forward Euler step in serial
-  for (size_t i = 0; i < u.size(); i++)
-    u[i] += du[i];
-#endif
 }
 #else
 // dummy template instantiation when OpenMP support is not available
