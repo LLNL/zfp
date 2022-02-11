@@ -24,9 +24,9 @@ given_int8_when_promoteToInt32_expect_demoteToInt8Matches(void **state)
   assert_non_null(oblock8);
   assert_non_null(block32);
 
-  int8 i;
+  uint i;
   for (i = 0; i < sz; i++)
-    iblock8[i] = i;
+    iblock8[i] = (int8)i;
 
   zfp_promote_int8_to_int32(block32, iblock8, dims);
   zfp_demote_int32_to_int8(oblock8, block32, dims);
@@ -48,9 +48,9 @@ given_uint8_when_promoteToInt32_expect_demoteToUInt8Matches(void **state)
   assert_non_null(oblock8);
   assert_non_null(block32);
 
-  uint8 i;
+  uint i;
   for (i = 0; i < sz; i++)
-    iblock8[i] = i;
+    iblock8[i] = (uint8)i;
 
   zfp_promote_uint8_to_int32(block32, iblock8, dims);
   zfp_demote_int32_to_uint8(oblock8, block32, dims);
@@ -72,9 +72,9 @@ given_int16_when_promoteToInt32_expect_demoteToInt16Matches(void **state)
   assert_non_null(oblock16);
   assert_non_null(block32);
 
-  int16 i;
+  uint i;
   for (i = 0; i < sz; i++)
-    iblock16[i] = i;
+    iblock16[i] = (int16)i;
 
   zfp_promote_int16_to_int32(block32, iblock16, dims);
   zfp_demote_int32_to_int16(oblock16, block32, dims);
@@ -96,9 +96,9 @@ given_uint16_when_promoteToInt32_expect_demoteToUInt16Matches(void **state)
   assert_non_null(oblock16);
   assert_non_null(block32);
 
-  uint16 i;
+  uint i;
   for (i = 0; i < sz; i++)
-    iblock16[i] = i;
+    iblock16[i] = (uint16)i;
 
   zfp_promote_uint16_to_int32(block32, iblock16, dims);
   zfp_demote_int32_to_uint16(oblock16, block32, dims);
