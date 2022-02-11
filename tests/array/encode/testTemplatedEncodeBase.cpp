@@ -192,7 +192,7 @@ bool streamsEqual(zfp_stream** stream1, zfp_stream** stream2)
     char* data2 = (char*)stream_data(s2);
     zfp_stream_flush(*stream2);
 
-    for (int i = 0; i < sz1; i++)
+    for (size_t i = 0; i < sz1; i++)
         if (data1[i] != data2[i])
             return false;
     return true;
