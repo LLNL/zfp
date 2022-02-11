@@ -5,6 +5,18 @@
 #define _zfp_str_(x) # x
 #define _zfp_str(x) _zfp_str_(x)
 
+/* macro for generating an integer version identifier */
+#define ZFP_MAKE_VERSION(major, minor, patch) \
+  (((major) << 8) + \
+   ((minor) << 4) + \
+   ((patch) << 0))
+
+/* macro for generating a version string */
+#define ZFP_MAKE_VERSION_STRING(major, minor, patch) \
+  _zfp_str(major) "." \
+  _zfp_str(minor) "." \
+  _zfp_str(patch)
+
 /* library version information */
 #define ZFP_VERSION_MAJOR 0 /* library major version number */
 #define ZFP_VERSION_MINOR 5 /* library minor version number */
@@ -16,14 +28,10 @@
 
 /* library version number (see also zfp_library_version) */
 #define ZFP_VERSION \
-  ((ZFP_VERSION_MAJOR << 8) + \
-   (ZFP_VERSION_MINOR << 4) + \
-   (ZFP_VERSION_PATCH << 0))
+  ZFP_MAKE_VERSION(ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH)
 
 /* library version string (see also zfp_version_string) */
 #define ZFP_VERSION_STRING \
-  _zfp_str(ZFP_VERSION_MAJOR) "." \
-  _zfp_str(ZFP_VERSION_MINOR) "." \
-  _zfp_str(ZFP_VERSION_PATCH)
+  ZFP_MAKE_VERSION_STRING(ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH)
 
 #endif

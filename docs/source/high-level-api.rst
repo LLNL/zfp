@@ -41,9 +41,21 @@ Macros
 .. c:macro:: ZFP_VERSION_STRING
 
   Macros identifying the |zfp| library version.  :c:macro:`ZFP_VERSION` is
-  a single integer constructed from the previous three macros.
-  :c:macro:`ZFP_VERSION_STRING` is a string literal.  See also
+  a single integer constructed from the previous three macros
+  (see :c:macro:`ZFP_MAKE_VERSION`).  :c:macro:`ZFP_VERSION_STRING` is a
+  string literal (see :c:macro:`ZFP_MAKE_VERSION_STRING`).  See also
   :c:data:`zfp_library_version` and :c:data:`zfp_version_string`.
+
+----
+
+.. c:macro:: ZFP_MAKE_VERSION(major, minor, patch)
+.. c:macro:: ZFP_MAKE_VERSION_STRING(major, minor, patch)
+
+  Utility macros for constructing :c:macro:`ZFP_VERSION` and
+  :c:macro:`ZFP_VERSION_STRING`, respectively.  Available as of
+  |zfp| |64bitrelease|, these macros may be used by applications to test
+  for a certain |zfp| version number, e.g.,
+  :code:`#if ZFP_VERSION >= ZFP_MAKE_VERSION(0, 5, 6)`.
 
 ----
 
@@ -426,9 +438,8 @@ Constants
 .. c:var:: const char* const zfp_version_string
 
   A constant string representing the |zfp| library version and release date.
-  One can search for this string in executables and libraries that use |zfp|
-  to determine which version of the library the application was compiled
-  against.
+  One can search for this string in executables and libraries that link to
+  |libzfp| when built as a static library.
 
 .. _hl-functions:
 
