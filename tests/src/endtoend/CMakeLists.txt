@@ -20,12 +20,11 @@ function(zfp_add_test dims type bits)
   if(ZFP_WITH_OPENMP)
     set(omp_test_name testZfpOmp${dims}d${type})
     add_executable(${omp_test_name} ${omp_test_name}.c)
-    target_compile_options(${omp_test_name} PRIVATE ${OpenMP_C_FLAGS})
     target_compile_definitions(${omp_test_name} PRIVATE ${zfp_private_defs})
     target_link_libraries(${omp_test_name}
       cmocka zfp zfpHashLib genSmoothRandNumsLib stridedOperationsLib
       zfpChecksumsLib zfpTimerLib zfpCompressionParamsLib
-      ${OpenMP_C_LIBRARIES})
+      OpenMP::OpenMP_C)
     if(HAVE_LIBM_MATH)
       target_link_libraries(${omp_test_name} m)
     endif()
