@@ -2,8 +2,12 @@
 #define HIP_ZFP_VARIABLE_HIPH
 
 #include "shared.h"
+#include "hip/hip_version.h"
 
+#if (HIP_VERSION_MAJOR <= 4) && (HIP_VERSION_MINOR <= 3)
 #include "funnelshift.hpp"
+#endif
+
 #include <hipcub/hipcub.hpp>
 
 #include <hip/hip_cooperative_groups.h> // Requires HIP >= 9
