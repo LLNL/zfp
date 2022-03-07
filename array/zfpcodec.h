@@ -52,7 +52,7 @@ public:
     size_t bz = (std::max(field->nz, size_t(1)) + 3) / 4;
     size_t bw = (std::max(field->nw, size_t(1)) + 3) / 4;
     size_t blocks = bx * by * bz * bw;
-    return zfp::round_up(blocks * stream->maxbits, stream_alignment()) / CHAR_BIT;
+    return zfp::internal::round_up(blocks * stream->maxbits, stream_alignment()) / CHAR_BIT;
   }
 
   // open bit stream
