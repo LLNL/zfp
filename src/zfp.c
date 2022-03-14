@@ -14,6 +14,7 @@ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (May 
 
 /* private functions ------------------------------------------------------- */
 
+/* number of bits of precision associated with scalar type */
 static uint
 type_precision(zfp_type type)
 {
@@ -31,10 +32,151 @@ type_precision(zfp_type type)
   }
 }
 
+/* is compression mode reversible? */
 static zfp_bool
 is_reversible(const zfp_stream* zfp)
 {
   return zfp->minexp < ZFP_MIN_EXP;
+}
+
+/* number of blocks spanned by field */
+static size_t
+field_blocks(const zfp_field* field)
+{
+  size_t mx = (MAX(field->nx, 1u) + 3) / 4;
+  size_t my = (MAX(field->ny, 1u) + 3) / 4;
+  size_t mz = (MAX(field->nz, 1u) + 3) / 4;
+  size_t mw = (MAX(field->nw, 1u) + 3) / 4;
+  return mx * my * mz * mw;
+}
+
+/* convert from length table to offset index with header */
+static zfp_bool
+encode_index_offset(zfp_stream* zfp)
+{
+  const uint16* length_table = zfp->index->data;
+  const size_t blocks = zfp->index->size / sizeof(uint16);
+  const uint granularity = zfp->index->granularity;
+  const size_t chunks = (blocks + granularity - 1) / granularity;
+
+  size_t index_size = (chunks + 1) * sizeof(uint64);
+  void* index_data = malloc(index_size);
+  uint64* index64 = index_data;
+  uint32* index32 = index_data;
+  uint64 offset = 0;
+  size_t i;
+
+  /* encode type offsets in the header */
+  if (!index_data)
+    return zfp_false;
+  index32[0] = zfp_index_offset;
+  index32[1] = granularity;
+  index64++;
+
+  /* compute and store offsets */
+  for (i = 0; i < blocks; i++) {
+    if (i % granularity == 0)
+      *index64++ = offset;
+    offset += *length_table++;
+  }
+
+  /* set the encoded index size and data in the stream */
+  zfp_index_set_data(zfp->index, index_data, index_size);
+
+  return zfp_true;
+}
+
+/* convert from length table to offset index with header */
+static zfp_bool
+encode_index_length(zfp_stream* zfp)
+{
+  const uint16* length_table = zfp->index->data;
+  const size_t blocks = zfp->index->size / sizeof(uint16);
+
+  size_t index_size = sizeof(uint64) + blocks * sizeof(uint16);
+  void* index_data = malloc(index_size);
+  uint32* index32 = index_data;
+  uint16* index16 = index_data;
+  size_t i;
+
+  /* encode type lengths in the header */
+  if (!index_data)
+    return zfp_false;
+  index32[0] = zfp_index_length;
+  index32[1] = 1;
+  index16 += 4;
+
+  /* copy lengths */
+  for (i = 0; i < blocks; i++)
+    *index16++ = *length_table++;
+
+  /* set the encoded index size and data in the stream */
+  zfp_index_set_data(zfp->index, index_data, index_size);
+
+  return zfp_true;
+}
+
+/* convert from length table to hybrid index with header */
+static zfp_bool
+encode_index_hybrid(zfp_stream* zfp)
+{
+  const uint16* length_table = zfp->index->data;
+  const size_t blocks = zfp->index->size / sizeof(uint16);
+  const uint granularity = zfp->index->granularity;
+  const size_t chunks = (blocks + granularity - 1) / granularity;
+  const size_t partitions = (chunks + ZFP_PARTITION_SIZE - 1) / ZFP_PARTITION_SIZE;
+
+  size_t index_size = sizeof(uint64) + partitions * (sizeof(uint64) + ZFP_PARTITION_SIZE * sizeof(uint16));
+  void* index_data = malloc(index_size);
+  uint64* index64 = index_data;
+  uint32* index32 = index_data;
+  uint16* index16 = index_data;
+  uint64 offset = 0;
+  size_t i, j, k, chunk;
+
+  /* encode type hybrid in the header */
+  if (!index_data)
+    return zfp_false;
+  index32[0] = zfp_index_hybrid;
+  index32[1] = granularity;
+  index64++;
+  index16 += 4;
+
+  for (i = 0, j = 0; i < partitions; i++) {
+    index64[i * (ZFP_PARTITION_SIZE / (sizeof(uint64) / sizeof(uint16)) + 1)] = offset;
+    for (chunk = 0; chunk < ZFP_PARTITION_SIZE; chunk++) {
+      uint16 partialsum = 0;
+      for (k = 0; k < granularity && j < blocks; k++, j++)
+        partialsum += *length_table++;
+      index16[i * (ZFP_PARTITION_SIZE + (sizeof(uint64) / sizeof(uint16))) + (sizeof(uint64) / sizeof(uint16)) + chunk] = partialsum;
+      offset += partialsum;
+    }
+  }
+
+  /* finish the last partial partition with zeros */
+  for (; chunk < ZFP_PARTITION_SIZE; chunk++)
+    index16[i * 36 + 4 + chunk] = 0;
+
+  /* set the encoded index size and data in the stream */
+  zfp_index_set_data(zfp->index, index_data, index_size);
+
+  return zfp_true;
+}
+
+static zfp_bool
+encode_index(zfp_stream* zfp)
+{
+  switch (zfp->index->type) {
+    case zfp_index_offset:
+      return encode_index_offset(zfp);
+    case zfp_index_length:
+      return encode_index_length(zfp);
+    case zfp_index_hybrid:
+      return encode_index_hybrid(zfp);
+    default:
+      /* unrecognized type, return no index data */
+      return zfp_false;
+  }
 }
 
 /* shared code across template instances ------------------------------------*/
@@ -738,45 +880,6 @@ zfp_stream_set_params(zfp_stream* zfp, uint minbits, uint maxbits, uint maxprec,
   return zfp_true;
 }
 
-void
-zfp_stream_set_index(zfp_stream* zfp, zfp_index* index)
-{
-  zfp->index = index;
-}
-
-zfp_index*
-zfp_index_create()
-{
-  zfp_index* index = (zfp_index*)malloc(sizeof(zfp_index));
-  if (index) {
-    index->type = zfp_index_none;
-    index->data = NULL;
-    index->size = 0;
-    index->granularity = 1;
-  }
-  return index;
-}
-
-void
-zfp_index_set_type(zfp_index* index, zfp_index_type type, uint granularity)
-{
-  index->type = type;
-  index->granularity = granularity;
-}
-
-void
-zfp_index_set_data(zfp_index* index, void* data, size_t size)
-{
-  index->data = data;
-  index->size = size;
-}
-
-void
-zfp_index_free(zfp_index* index)
-{
-  free(index);
-}
-
 size_t
 zfp_stream_flush(zfp_stream* zfp)
 {
@@ -858,6 +961,47 @@ zfp_stream_set_omp_chunk_size(zfp_stream* zfp, uint chunk_size)
     return zfp_false;
   zfp->exec.params.omp.chunk_size = chunk_size;
   return zfp_true;
+}
+
+/* public functions: block index ------------------------------------------- */
+
+void
+zfp_stream_set_index(zfp_stream* zfp, zfp_index* index)
+{
+  zfp->index = index;
+}
+
+zfp_index*
+zfp_index_create()
+{
+  zfp_index* index = malloc(sizeof(zfp_index));
+  if (index) {
+    index->type = zfp_index_none;
+    index->data = NULL;
+    index->size = 0;
+    index->granularity = 1;
+  }
+  return index;
+}
+
+void
+zfp_index_set_type(zfp_index* index, zfp_index_type type, uint granularity)
+{
+  index->type = type;
+  index->granularity = granularity;
+}
+
+void
+zfp_index_set_data(zfp_index* index, void* data, size_t size)
+{
+  index->data = data;
+  index->size = size;
+}
+
+void
+zfp_index_free(zfp_index* index)
+{
+  free(index);
 }
 
 /* public functions: utility functions --------------------------------------*/
@@ -983,13 +1127,8 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
   uint strided = zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
+  void* length_table;
   void (*compress)(zfp_stream*, const zfp_field*);
-  int i;
-
-  /* index variables */
-  void* length_table = NULL;
-  zfp_index_type idx_type;
-  size_t blocks;
 
   switch (type) {
     case zfp_type_int32:
@@ -1001,115 +1140,33 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
       return 0;
   }
 
-  /* allocate buffer for length table */
-  if (zfp->index != NULL) {
-    idx_type = zfp->index->type;
-    uint mx = (MAX(field->nx, 1u) + 3) / 4;
-    uint my = (MAX(field->ny, 1u) + 3) / 4;
-    uint mz = (MAX(field->nz, 1u) + 3) / 4;
-    uint mw = (MAX(field->nw, 1u) + 3) / 4;
-    blocks = (size_t)mx * (size_t)my * (size_t)mz * (size_t)mw;
-    size_t length_table_size = blocks * sizeof(uint16);
-    length_table = malloc(length_table_size);
-    zfp_index_set_data(zfp->index, length_table, length_table_size);
-  }
-
   /* return 0 if compression mode is not supported */
   compress = ftable[exec][strided][dims - 1][type - zfp_type_int32];
-  if (!compress) {
+  if (!compress)
     return 0;
+
+  /* allocate buffer for length table */
+  if (zfp->index) {
+    size_t blocks = field_blocks(field);
+    size_t length_table_size = blocks * sizeof(uint16);
+    length_table = malloc(length_table_size);
+    if (!length_table)
+      return 0;
+    zfp_index_set_data(zfp->index, length_table, length_table_size);
   }
 
   /* compress field and align bit stream on word boundary */
   compress(zfp, field);
   stream_flush(zfp->stream);
 
-  /* encode index - calling a separate encoding function might be better */
-  if (zfp->index != NULL) {
-    uint index_granularity = zfp->index->granularity;
-    uint chunks = (blocks + index_granularity - 1) / index_granularity;
-    uint partitions = 0;
-    size_t index_size = 0;
-    uint64 sum = 0;
-    int j = 0;
-
-    void* index_data = NULL;
-    uint16* index16 = NULL;
-    uint* index32 = NULL;
-    uint64* index64 = NULL;
-    uint16* length16 = (uint16*) length_table;
-
-    switch (idx_type) {
-      /* default option is offset table, fallthrough to offset */
-      case zfp_index_none:
-      /* convert from length table to offset index with header */
-      case zfp_index_offset:
-        index_size = (1 + chunks) * sizeof(uint64);
-        index_data = malloc(index_size);
-        index64 = (uint64*)index_data;
-        index32 = (uint*)index_data;
-        index32[0] = 1; // encode type offsets in the header
-        index32[1] = index_granularity;
-        j = 1;
-        for (i = 0; i < blocks; i++) {
-          if (i % index_granularity == 0)
-            index64[j++] = sum;
-          sum += (uint64)length16[i];
-        }
-        break;
-      case zfp_index_length:
-        /* TODO: Decide if we should support granularity for lengths. Risk is overflow of 16 bit datatype */
-        index_size = sizeof(uint64) + blocks * sizeof(uint16);
-        index_data = malloc(index_size);
-        index32 = (uint*)index_data;
-        index16 = (uint16*)index_data;
-        index32[0] = 2; // encode type lengths in the header
-        index32[1] = 1; // variable index granularity not supported yet
-        index16 += 4; //skip the header
-        for (i=0; i < blocks; i++) {
-          index16[i] = length16[i]; // copy data from length table to index data
-        }
-        break;
-      /* TODO: variable partition size */
-      /* TODO: decide on the datatypes for offsets and lengths */
-      case zfp_index_hybrid:
-        partitions = (chunks + PARTITION_SIZE - 1) / PARTITION_SIZE;
-        /* TODO: decide if we want to keep the extra uint16 (32 instead of 31) to keep partitions aligned on 64 bits */
-        index_size = sizeof(uint64) + partitions * (sizeof(uint64) + 32 * sizeof(uint16));
-        index_data = malloc(index_size);
-        index64 = (uint64*)index_data;
-        index32 = (uint*)index_data;
-        index16 = (uint16*)index_data;
-        index32[0] = 3; // encode type hybrid in the header
-        index32[1] = index_granularity;
-        index64 += 1; //skip the header
-        index16 += 4; //skip the header
-        uint chunk = 0;
-        uint16 partialsum = 0;
-        uint k = 0;
-        for (i = 0, j = 0; i < partitions; i++) {
-          index64[i * 9] = sum;
-          for (chunk = 0; chunk < PARTITION_SIZE; chunk++) {
-            partialsum = 0;
-            for (k = 0; k < index_granularity && j < blocks; k++, j++)
-              partialsum += length16[j];
-            index16[i * 36 + 4 + chunk] = partialsum;
-            sum += partialsum;
-          }
-        }
-        /* Finish the last partial partition with zeros */
-        for (; chunk < PARTITION_SIZE; chunk++) {
-          index16[i * 36 + 4 + chunk] = 0;
-        }
-        break;
-      /* unrecognized type, return no index data */
-      default:
-        break;
-    }
-    /* set the encoded index size and data in the stream */
-    zfp_index_set_data(zfp->index, index_data, index_size);
+  /* encode index and free length table */
+  if (zfp->index) {
+    zfp_bool success = encode_index(zfp);
     free(length_table);
+    if (!success)
+      return 0;
   }
+
   return stream_size(zfp->stream);
 }
 
@@ -1162,8 +1219,9 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
   uint type = field->type;
   void (*decompress)(zfp_stream*, zfp_field*);
   zfp_mode mode = zfp_stream_compression_mode(zfp);
-  uint* index32 = NULL;
-  uint index_type = 0;
+  zfp_bool require_index = (exec != zfp_exec_serial) && (mode != zfp_mode_fixed_rate);
+  const uint32* index32 = NULL;
+  zfp_index_type index_type = 0;
   uint index_granularity = 1;
 
   switch (type) {
@@ -1176,55 +1234,45 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
       return 0;
   }
 
-  /* check if index for parallel decompression is required */
-  if ((exec == zfp_exec_omp || exec == zfp_exec_cuda) && (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision)) {
-    /* check if index is present */
-    if (zfp->index != NULL){
-      if (zfp->index->data != NULL) {
-        /* TODO: find a better method to store and read the header information, preferably based on zfp_index_type instead of plain uint */
-        index32 = (uint*)zfp->index->data;
-        index_type = index32[0];
-        index_granularity = index32[1];
-        /* Shift the index data pointer to skip the first 8 bytes of the header since they are decoded */
-        index32 += 2;
-        switch (index_type) {
-          /* offsets */
-          case 1:
-            zfp->index->data = (void*)index32;
-            zfp->index->type = zfp_index_offset;
-            zfp->index->granularity = index_granularity;
-            break;
-          /* hybrid */
-          case 3:
-            zfp->index->data = (void*)index32;
-            zfp->index->type = zfp_index_hybrid;
-            zfp->index->granularity = index_granularity;
-            break;
-          default:
-            return 0;
-        }
-      }
-      else
-        return 0;
-    }
-    else
-      return 0;
-  }
-
   /* return 0 if decompression mode is not supported */
   decompress = ftable[exec][strided][dims - 1][type - zfp_type_int32];
   if (!decompress)
     return 0;
 
+  /* check if index for parallel variable-rate decompression is required */
+  if (require_index) {
+    /* ensure index is present */
+    if (zfp->index && zfp->index->data) {
+      index32 = (const uint32*)zfp->index->data;
+      index_type = index32[0];
+      index_granularity = index32[1];
+      /* shift the index data pointer to skip the first 8 bytes of the header since they are decoded */
+      index32 += 2;
+      switch (index_type) {
+        case zfp_index_offset:
+        case zfp_index_hybrid:
+          zfp->index->data = (void*)index32;
+          zfp->index->type = index_type;
+          zfp->index->granularity = index_granularity;
+          break;
+        default:
+          /* unsupported index type for parallel decompression */
+          return 0;
+      }
+    }
+    else
+      return 0;
+  }
+
   /* decompress field and align bit stream on word boundary */
   decompress(zfp, field);
   stream_align(zfp->stream);
+
   /* restore the index header */
-    if (zfp->index != NULL)
-      if (zfp->index->data != NULL) {
-        index32 -= 2;
-        zfp->index->data = (void*)index32;
-      }
+  if (require_index) {
+    index32 -= 2;
+    zfp->index->data = (void*)index32;
+  }
 
   return stream_size(zfp->stream);
 }

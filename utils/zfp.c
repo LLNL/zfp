@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include "zfp.h"
 #include "zfp/macros.h"
 
@@ -116,8 +115,8 @@ usage()
   fprintf(stderr, "  -x omp[=threads[,chunk_size]] : OpenMP parallel compression\n");
   fprintf(stderr, "  -x cuda : CUDA fixed rate parallel compression/decompression\n");
   fprintf(stderr, "Index for parallel decompression:\n");
-  fprintf(stderr, "  -m <path>: create index during compression, use index for parallel decompression\n");
-  fprintf(stderr, "  -n <type>=<granularity>: optionally set type (offset or hybrid) and granularity when creating an index\n");
+  fprintf(stderr, "  -m <path> : block index (output of compression, input to variable-rate parallel decompression)\n");
+  fprintf(stderr, "  -n <type>=<granularity>: optional type (offset or hybrid) and granularity of block index\n");
   fprintf(stderr, "Examples:\n");
   fprintf(stderr, "  -i file : read uncompressed file and compress to memory\n");
   fprintf(stderr, "  -z file : read compressed file and decompress to memory\n");
@@ -161,12 +160,11 @@ int main(int argc, char* argv[])
   char* inpath = 0;
   char* zfppath = 0;
   char* outpath = 0;
-  char* indexpath = 0;
+  char* idxpath = 0;
   char mode = 0;
   zfp_exec_policy exec = zfp_exec_serial;
   uint threads = 0;
   uint chunk_size = 0;
-  bool use_index = 0;
 
   /* local variables */
   int i;
@@ -309,12 +307,9 @@ int main(int argc, char* argv[])
           usage();
         break;
       case 'm':
-        use_index = 1;
-        if (++i == argc) {
-          printf("No index file path specified\n");
+        if (++i == argc)
           usage();
-        }
-        indexpath = argv[i];
+        idxpath = argv[i];
         break;
       case 'n':
         if (++i == argc)
@@ -560,19 +555,20 @@ int main(int argc, char* argv[])
 
     /* optionally set the index type */
     if ((index_type != zfp_index_none) && index_granularity) {
-      /* TODO: decide what to do with this check */
       if (index_type == zfp_index_hybrid) {
-        uint max_granularity = 10 - 2 * dims;
-        if (index_granularity >> max_granularity)
-          fprintf(stderr, "Warning: Granularity is too large for lengths in 16 bit datatype. This may lead to an incorrect index and errors in decompression\n");
+        /* compute minimum number of block size terms that may overflow */
+        uint max_granularity = 1u << (9 - 2 * dims);
+        if (index_granularity > max_granularity) {
+          fprintf(stderr, "granularity for given dimensionality cannot exceed %u\n", max_granularity);
+          return EXIT_FAILURE;
+        }
       }
       zfp_index_set_type(index, index_type, index_granularity);
     }
 
     /* optionally set the index */
-    if (use_index) {
+    if (idxpath)
       zfp_stream_set_index(zfp, index);
-    }
 
     /* compress data */
     zfpsize = zfp_compress(zfp, field);
@@ -596,8 +592,8 @@ int main(int argc, char* argv[])
     }
 
     /* optionally write index */
-    if (use_index && zfppath) {
-      FILE* file = !strcmp(indexpath, "-") ? stdout : fopen(indexpath, "wb");
+    if (zfppath && idxpath) {
+      FILE* file = !strcmp(idxpath, "-") ? stdout : fopen(idxpath, "wb");
       if (!file) {
         fprintf(stderr, "cannot create index file\n");
         return EXIT_FAILURE;
@@ -605,7 +601,7 @@ int main(int argc, char* argv[])
       index_data = zfp->index->data;
       idxsize = zfp->index->size;
       if (fwrite(index_data, 1, idxsize, file) != idxsize) {
-        fprintf(stderr, "cannot write index to file\n");
+        fprintf(stderr, "cannot write index file\n");
         return EXIT_FAILURE;
       }
       fclose(file);
@@ -622,16 +618,10 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
       }
       type = field->type;
-      switch (type) {
-        case zfp_type_float:
-          typesize = sizeof(float);
-          break;
-        case zfp_type_double:
-          typesize = sizeof(double);
-          break;
-        default:
-          fprintf(stderr, "unsupported type\n");
-          return EXIT_FAILURE;
+      typesize = zfp_type_size(type);
+      if (!typesize) {
+        fprintf(stderr, "unsupported type\n");
+        return EXIT_FAILURE;
       }
       nx = MAX(field->nx, 1u);
       ny = MAX(field->ny, 1u);
@@ -648,9 +638,10 @@ int main(int argc, char* argv[])
       return EXIT_FAILURE;
     }
     zfp_field_set_pointer(field, fo);
+
     /* read index in increasingly large chunks */
-    if (use_index && (zfp->index == NULL)) {
-      FILE* file = !strcmp(indexpath, "-") ? stdin : fopen(indexpath, "rb");
+    if (idxpath && !zfp->index) {
+      FILE* file = !strcmp(idxpath, "-") ? stdin : fopen(idxpath, "rb");
       if (!file) {
         fprintf(stderr, "cannot open index file\n");
        return EXIT_FAILURE;
@@ -721,10 +712,10 @@ int main(int argc, char* argv[])
   free(buffer);
   free(fi);
   free(fo);
-  if(idxbuffer)
-    free(idxbuffer);
-  if(index)
+  if (index)
     zfp_index_free(index);
+  if (idxbuffer)
+    free(idxbuffer);
 
   return EXIT_SUCCESS;
 }

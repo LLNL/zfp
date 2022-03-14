@@ -99,63 +99,61 @@ compress_finish_par(zfp_stream* stream, bitstream** src, uint chunks)
 
 /* initialize per-thread bit streams for parallel decompression */
 static bitstream**
-decompress_init_par(zfp_stream* stream, const zfp_field* field, const uint chunks, const uint blocks)
-// UPDATE!!!
+decompress_init_par(zfp_stream* stream, uint chunks, uint blocks)
 {
-  int i;
-  void * buffer = stream_data(zfp_stream_bit_stream(stream));
-  zfp_mode mode = zfp_stream_compression_mode(stream);
-  bitstream** bs = (bitstream**)malloc(chunks * sizeof(bitstream*));
-  if (!bs) {
-    /* memory for per-thread bit streams not properly allocated */
-    return NULL;
-  }
+  void* buffer = stream_data(stream->stream);
   const size_t size = stream_size(stream->stream);
+  zfp_mode mode = zfp_stream_compression_mode(stream);
+  bitstream** bs;
+  uint i;
+
+  /* set up buffer for each thread to decompress from */
+  bs = malloc(chunks * sizeof(bitstream*));
+  if (!bs)
+    return NULL;
+
   if (mode == zfp_mode_fixed_rate) {
-    const uint maxbits = stream->maxbits;
-    for (i = 0; i < (int)chunks; i++) {
-      /* chunk offsets are computed by block size in bits * index of first block in chunk */
+    const size_t maxbits = stream->maxbits;
+    for (i = 0; i < chunks; i++) {
+      size_t offset = chunk_offset(blocks, chunks, i) * maxbits;
       bs[i] = stream_open(buffer, size);
       if (!bs[i]) {
-        /* memory for bitstream not properly allocated */
+        free(bs);
         return NULL;
       }
-      size_t block = (size_t)chunk_offset(blocks, chunks, i);
-      stream_rseek(bs[i], ((size_t)maxbits * block));
+      /* point bit stream to the beginning of the chunk */
+      stream_rseek(bs[i], offset);
     }
   }
-  else if (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision) {
+  else {
     const zfp_index_type type = stream->index->type;
     if (type == zfp_index_offset) {
-      uint64* offset_table = (uint64*)stream->index->data;
-      for (i = 0; i < (int)chunks; i++) {
-        /* read the chunk offset and set the bitstream to the start of the chunk */
+      const uint64* offset_table = stream->index->data;
+      for (i = 0; i < chunks; i++) {
         bs[i] = stream_open(buffer, size);
         if (!bs[i]) {
-          /* memory for bitstream not properly allocated */
+          free(bs);
           return NULL;
         }
+        /* point bit stream to the beginning of the chunk */
         stream_rseek(bs[i], (size_t)offset_table[i]);
       }
     }
     else {
-    /* unsupported index type */
+      /* unsupported index type */
+      free(bs);
       return NULL;
     }
-  }
-  else {
-    /* expert mode not available */
-    return NULL;
   }
   return bs;
 }
 
-/* close all the bitstreams */
+/* close all bit streams */
 static void
 decompress_finish_par(bitstream** bs, uint chunks)
 {
-  int i;
-  for (i = 0; i < (int)chunks; i++)
+  uint i;
+  for (i = 0; i < chunks; i++)
     stream_close(bs[i]);
   free(bs);
 }
