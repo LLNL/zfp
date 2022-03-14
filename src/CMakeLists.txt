@@ -28,8 +28,7 @@ add_library(zfp ${zfp_source}
 add_library(zfp::zfp ALIAS zfp)
 
 if(ZFP_WITH_OPENMP)
-  target_compile_options(zfp PRIVATE ${OpenMP_C_FLAGS})
-  target_link_libraries(zfp PRIVATE ${OpenMP_C_LIBRARIES})
+  target_link_libraries(zfp PRIVATE OpenMP::OpenMP_C)
 endif()
 
 if(HAVE_LIBM_MATH)

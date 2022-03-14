@@ -2,16 +2,13 @@ add_executable(testOmp testOmp.c)
 target_link_libraries(testOmp cmocka zfp)
 add_test(NAME testOmp COMMAND testOmp)
 if(ZFP_WITH_OPENMP)
-  target_compile_options(testOmp PRIVATE ${OpenMP_C_FLAGS})
-  target_link_libraries(testOmp ${OpenMP_C_LIBRARIES})
+  target_link_libraries(testOmp OpenMP::OpenMP_C)
   set_property(TEST testOmp PROPERTY RUN_SERIAL TRUE)
 endif()
 
 if(ZFP_WITH_OPENMP)
   add_executable(testOmpInternal testOmpInternal.c)
-  target_compile_options(testOmpInternal PRIVATE ${OpenMP_C_FLAGS})
-  target_link_libraries(testOmpInternal
-    cmocka zfp ${OpenMP_C_FLAGS} ${OpenMP_C_LIBRARIES})
+  target_link_libraries(testOmpInternal cmocka zfp OpenMP::OpenMP_C)
   add_test(NAME testOmpInternal COMMAND testOmpInternal)
 endif()
 
