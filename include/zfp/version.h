@@ -32,17 +32,6 @@
   _zfp_str(minor) "." \
   _zfp_str(patch)
 
-#define ZFP_MAKE_VERSION_STRING(major, minor, patch) \
-  _zfp_str(major) "." \
-  _zfp_str(minor) "." \
-  _zfp_str(patch)
-
-#define ZFP_MAKE_FULLVERSION_STRING(major, minor, patch, tweak) \
-  _zfp_str(major) "." \
-  _zfp_str(minor) "." \
-  _zfp_str(patch) "." \
-  _zfp_str(tweak)
-
 #define ZFP_MAKE_FULLVERSION_STRING(major, minor, patch, tweak) \
   _zfp_str(major) "." \
   _zfp_str(minor) "." \
@@ -50,21 +39,16 @@
   _zfp_str(tweak)
 
 /* library version number (see also zfp_library_version) */
-#if ZFP_VERSION_TWEAK == 0
-    #define ZFP_VERSION \
-        ZFP_MAKE_VERSION(ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH)
-#else
-    #define ZFP_VERSION \
-        ZFP_MAKE_FULLVERSION(ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH, ZFP_VERSION_TWEAK)
-#endif
+#define ZFP_VERSION \
+  ZFP_MAKE_VERSION(ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH, ZFP_VERSION_TWEAK)
 
 /* library version string (see also zfp_version_string) */
 #if ZFP_VERSION_TWEAK == 0
-    #define ZFP_VERSION_STRING \
-        ZFP_MAKE_VERSION_STRING(ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH)
+  #define ZFP_VERSION_STRING \
+    ZFP_MAKE_VERSION_STRING(ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH)
 #else
-    #define ZFP_VERSION_STRING \
-        ZFP_MAKE_FULLVERSION_STRING(ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH, ZFP_VERSION_TWEAK)
+  #define ZFP_VERSION_STRING \
+    ZFP_MAKE_FULLVERSION_STRING(ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH, ZFP_VERSION_TWEAK)
 #endif
 
 #endif
