@@ -7,7 +7,7 @@
 #define ZFP_VERSION_PATCH 5 /* library patch version number */
 #define ZFP_VERSION_TWEAK 0 /* library tweak version number */
 
-#define ZFP_VERSION_RELEASE ZFP_VERSION_MAJOR
+#define ZFP_VERSION_RELEASE ZFP_VERSION_PATCH
 
 /* codec version number (see also zfp_codec_version) */
 #define ZFP_CODEC 5
