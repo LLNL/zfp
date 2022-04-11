@@ -12,6 +12,7 @@ endif()
 if(ZFP_WITH_HIP)
   add_definitions(-DZFP_WITH_HIP)
   set(HIPZFP_SOURCE hip_zfp/hipZFP.cpp)
+  set_source_files_properties(${HIPZFP_SOURCE} PROPERTIES LANGUAGE HIP)
 endif()
 
 set(zfp_source
@@ -28,17 +29,8 @@ set(zfp_source
   decode4f.c decode4d.c decode4i.c decode4l.c
   ${HIPZFP_SOURCE})
 
-if(ZFP_WITH_CUDA)
-  add_library(zfp ${zfp_source}
+add_library(zfp ${zfp_source}
                   ${zfp_cuda_backend_obj})
-elseif(ZFP_WITH_HIP)
-  set_source_files_properties(${zfp_source} 
-	  PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
-  hip_add_library(zfp SHARED ${zfp_source})
-  target_link_libraries(zfp PRIVATE hip::hipcub)
-else()
-  add_library(zfp ${zfp_source})
-endif()
 add_library(zfp::zfp ALIAS zfp)
 
 if(ZFP_WITH_OPENMP)
@@ -58,14 +50,6 @@ endif()
 
 if(ZFP_WITH_CUDA)
   target_link_libraries(zfp PRIVATE ${CUDA_CUDART_LIBRARY} stdc++)
-endif()
-
-if(ZFP_WITH_HIP)
-  set(HIP_HIPRT_LIBRARY "${HIP_PATH}/../lib/libamdhip64.so")	
-  target_link_libraries(zfp PRIVATE  ${HIP_HIPRT_LIBRARY} stdc++)
-  # For debugging: if use HIP on NVIDIA systems
-  #find_package(CUDA)
-  #target_link_libraries(zfp PRIVATE ${CUDA_CUDART_LIBRARY} stdc++)
 endif()
 
 target_compile_definitions(zfp

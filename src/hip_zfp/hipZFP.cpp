@@ -29,6 +29,8 @@
 #define inline_ inline
 #endif
 
+#define HIP_HOST_REGISTER 1
+
 #include "../inline/bitstream.c"
 
 bool field_prev_pinned = false;
@@ -218,6 +220,7 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
   {
     return (Word*) stream->stream->begin;
   } else {
+#if HIP_HOST_REGISTER
     unsigned int * flags;
     stream_prev_pinned = hipHostGetFlags(flags, stream->stream->begin) == hipSuccess;
     if (!stream_prev_pinned) {
@@ -225,6 +228,7 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
 											hipHostRegisterDefault);
       ErrorCheck().chk("Register stream");
     }
+#endif
   }
 
   Word *d_stream = NULL;
@@ -242,6 +246,7 @@ Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
   {
     return (Word*) stream->stream->begin;
   } else {
+#if HIP_HOST_REGISTER
     unsigned int * flags;
     stream_prev_pinned = hipHostGetFlags(flags, stream->stream->begin) == hipSuccess;
     if (!stream_prev_pinned) {
@@ -249,6 +254,7 @@ Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
                       hipHostRegisterDefault);
       ErrorCheck().chk("Register stream");
     }
+#endif
   }
 
   Word *d_stream = NULL;
@@ -320,6 +326,7 @@ void *setup_device_field_compress(const zfp_field *field, const int3 &stride, lo
   {
     size_t field_bytes = type_size * field_size;
     if (!field_device) {
+#if HIP_HOST_REGISTER
       unsigned int * flags;
       field_prev_pinned = hipHostGetFlags(flags, host_ptr) == hipSuccess;
       if (!field_prev_pinned) {
@@ -327,6 +334,7 @@ void *setup_device_field_compress(const zfp_field *field, const int3 &stride, lo
                       hipHostRegisterDefault);
         ErrorCheck().chk("Register field");
       }
+#endif
     }
     hipMalloc(&d_data, field_bytes);
     hipMemcpy(d_data, host_ptr, field_bytes, hipMemcpyHostToDevice);
@@ -367,6 +375,7 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, 
   {
     size_t field_bytes = type_size * field_size;
     if (!field_device) {
+#if HIP_HOST_REGISTER
       unsigned int * flags;
       field_prev_pinned = hipHostGetFlags(flags, field->data) == hipSuccess;
       if (!field_prev_pinned) { 
@@ -374,6 +383,7 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, 
                       hipHostRegisterDefault);
         ErrorCheck().chk("Register field");
       }
+#endif
     }
     hipMalloc(&d_data, field_bytes);
   }
@@ -581,6 +591,8 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
 
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, stream_bytes, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, 0, offset, field->type);
+
+#if HIP_HOST_REGISTER
   ErrorCheck errors;
   if (!stream_prev_pinned) {
     hipHostUnregister(stream->stream->begin);
@@ -590,6 +602,7 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
     hipHostUnregister(field->data);
     errors.chk("Unregister field");
   }
+#endif
 
   if (variable_rate)
   {
@@ -680,6 +693,8 @@ hip_decompress(zfp_stream *stream, zfp_field *field)
   size_t bytes = type_size * field_size;
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, 0, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, bytes, offset, field->type);
+
+#if HIP_HOST_REGISTER
   ErrorCheck errors;
   if (!stream_prev_pinned) {
     hipHostUnregister(stream->stream->begin);
@@ -689,6 +704,7 @@ hip_decompress(zfp_stream *stream, zfp_field *field)
     hipHostUnregister(field->data);
     errors.chk("Unregister field");
   }
+#endif
 
   // this is how zfp determins if this was a success
   size_t words_read = decoded_bytes / sizeof(Word);
@@ -717,3 +733,5 @@ void warmup_gpu() {
   hipFree(dummy_data_d);
   errors.chk("GPU Warmup - hipFree");
 }
+
+#undef HIP_HOST_REGISTER
