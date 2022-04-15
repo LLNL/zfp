@@ -3,6 +3,9 @@ if(WIN32)
 else()
   cmake_minimum_required(VERSION 3.1)
 endif()
+if (ZFP_WITH_HIP)
+	cmake_minimum_required(VERSION 3.21)
+endif()
 
 
 # Fail immediately if not using an out-of-source build
@@ -71,6 +74,9 @@ message(STATUS "Compiling with C standard: ${CMAKE_C_STANDARD}")
 # Suggest C++98
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 98)
+endif()
+if(ZFP_WITH_HIP)
+  set(CMAKE_CXX_STANDARD 14)
 endif()
 message(STATUS "Compiling with C++ standard: ${CMAKE_CXX_STANDARD}")
 
@@ -191,7 +197,6 @@ endif()
 
 if(ZFP_WITH_HIP)
   enable_language(HIP)
-  set(CMAKE_CXX_STANDARD 14)
 endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
