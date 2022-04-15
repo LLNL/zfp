@@ -29,7 +29,8 @@
 #define inline_ inline
 #endif
 
-#define HIP_HOST_REGISTER 1
+//#define ZFP_HIP_HOST_REGISTER
+//#define ZFP_HIP_STREAM_MEMSET
 
 #include "../inline/bitstream.c"
 
@@ -220,13 +221,20 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
   {
     return (Word*) stream->stream->begin;
   } else {
-#if HIP_HOST_REGISTER
+#ifdef ZFP_HIP_HOST_REGISTER
     unsigned int * flags;
     stream_prev_pinned = hipHostGetFlags(flags, stream->stream->begin) == hipSuccess;
     if (!stream_prev_pinned) {
       hipHostRegister(stream->stream->begin, zfp_stream_maximum_size(stream, field), 
 											hipHostRegisterDefault);
       ErrorCheck().chk("Register stream");
+    }
+#endif
+#ifdef ZFP_HIP_STREAM_MEMSET
+		bitstream * s = stream->stream;
+    for (size_t i = 0; i < ::stream_capacity(s); i++)
+    {
+      ((uint8_t*)::stream_data(s))[i] = 0;
     }
 #endif
   }
@@ -246,7 +254,7 @@ Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
   {
     return (Word*) stream->stream->begin;
   } else {
-#if HIP_HOST_REGISTER
+#ifdef ZFP_HIP_HOST_REGISTER
     unsigned int * flags;
     stream_prev_pinned = hipHostGetFlags(flags, stream->stream->begin) == hipSuccess;
     if (!stream_prev_pinned) {
@@ -261,7 +269,6 @@ Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
   //TODO: change maximum_size to compressed stream size
   size_t size = zfp_stream_maximum_size(stream, field);
   hipMalloc(&d_stream, size);
-
   hipMemcpy(d_stream, stream->stream->begin, size, hipMemcpyHostToDevice);
   return d_stream;
 }
@@ -326,7 +333,7 @@ void *setup_device_field_compress(const zfp_field *field, const int3 &stride, lo
   {
     size_t field_bytes = type_size * field_size;
     if (!field_device) {
-#if HIP_HOST_REGISTER
+#ifdef ZFP_HIP_HOST_REGISTER
       unsigned int * flags;
       field_prev_pinned = hipHostGetFlags(flags, host_ptr) == hipSuccess;
       if (!field_prev_pinned) {
@@ -375,7 +382,7 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, 
   {
     size_t field_bytes = type_size * field_size;
     if (!field_device) {
-#if HIP_HOST_REGISTER
+#ifdef ZFP_HIP_HOST_REGISTER
       unsigned int * flags;
       field_prev_pinned = hipHostGetFlags(flags, field->data) == hipSuccess;
       if (!field_prev_pinned) { 
@@ -402,7 +409,7 @@ ushort *setup_device_nbits_compress(zfp_stream *stream, const zfp_field *field, 
   ushort *d_bitlengths = NULL;
   size_t size = zfp_field_num_blocks(field) * sizeof(ushort);
   hipMalloc(&d_bitlengths, size);
-  return d_bitlengths;
+	return d_bitlengths;
 }
 
 ushort *setup_device_nbits_decompress(zfp_stream *stream, const zfp_field *field, int variable_rate)
@@ -592,7 +599,7 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, stream_bytes, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, 0, offset, field->type);
 
-#if HIP_HOST_REGISTER
+#ifdef ZFP_HIP_HOST_REGISTER
   ErrorCheck errors;
   if (!stream_prev_pinned) {
     hipHostUnregister(stream->stream->begin);
@@ -694,7 +701,7 @@ hip_decompress(zfp_stream *stream, zfp_field *field)
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, 0, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, bytes, offset, field->type);
 
-#if HIP_HOST_REGISTER
+#ifdef ZFP_HIP_HOST_REGISTER
   ErrorCheck errors;
   if (!stream_prev_pinned) {
     hipHostUnregister(stream->stream->begin);
@@ -734,4 +741,3 @@ void warmup_gpu() {
   errors.chk("GPU Warmup - hipFree");
 }
 
-#undef HIP_HOST_REGISTER
