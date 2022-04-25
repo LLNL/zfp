@@ -4,6 +4,7 @@
 
 cuda-10.1.168_build:
     variables:
+        ci_cmake: "cmake/3.9.2"
         ci_cmp_mod: "cuda/10.1.168"
     extends: [.cuda, .pascal_build_gpu]
     needs: []
@@ -20,6 +21,7 @@ cuda-10.1.168_test:
 
 cpp_gnu-7.3.0_build:
     variables:
+        ci_cmake: "cmake/3.9.2"
         ci_cxx_cmp: "g++"
         ci_c_cmp: "gcc"
         ci_cmp_mod: "gcc/7.3.0"
@@ -33,6 +35,7 @@ cpp_gnu-7.3.0_test:
 
 cpp_clang-10.0.0_build:
     variables:
+        ci_cmake: "cmake/3.9.2"
         ci_cxx_cmp: "clang++"
         ci_c_cmp: "clang"
         ci_cmp_mod: "clang/10.0.0"
@@ -46,6 +49,7 @@ cpp_clang-10.0.0_test:
 
 cpp_intel-19.0.4_build:
     variables:
+        ci_cmake: "cmake/3.9.2"
         ci_cxx_cmp: "icpc"
         ci_c_cmp: "icc"
         ci_cmp_mod: "intel/19.0.4"
@@ -59,6 +63,7 @@ cpp_intel-19.0.4_test:
 
 cpp_pgi-21.1_build:
     variables:
+        ci_cmake: "cmake/3.9.2"
         ci_cxx_cmp: "pgc++"
         ci_c_cmp: "pgcc"
         ci_cmp_mod: "pgi/21.1"
@@ -76,6 +81,7 @@ cpp_pgi-21.1_test:
 
 c_gnu-7.3.0_build:
     variables:
+        ci_cmake: "cmake/3.9.2"
         ci_c_cmp: "gcc"
         ci_cmp_mod: "gcc/7.3.0"
     extends: [.c, .pascal_build_cpu]
