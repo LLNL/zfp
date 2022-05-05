@@ -448,8 +448,8 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
       index_size = (size_t)chunks * sizeof(uint64);
     else if (index_type == zfp_index_hybrid) {
       /* TODO: check if we want to support variable partition size (recommended to not do so for GPU) */
-      size_t partitions = (chunks + PARTITION_SIZE - 1) / PARTITION_SIZE;
-      index_size = partitions * (sizeof(uint64) + PARTITION_SIZE * sizeof(uint16));
+      size_t partitions = (chunks + ZFP_PARTITION_SIZE - 1) / ZFP_PARTITION_SIZE;
+      index_size = partitions * (sizeof(uint64) + ZFP_PARTITION_SIZE * sizeof(uint16));
     }
     else {
       std::cerr<<"Non-supported index type for GPU. Use hybrid or offset \n";
