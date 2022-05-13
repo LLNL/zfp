@@ -1,20 +1,18 @@
 #ifndef CUZFP_POINTERS_CUH
 #define CUZFP_POINTERS_CUH
 
-#include "ErrorCheck.h"
 #include <iostream>
+#include "ErrorCheck.h"
 
+namespace cuZFP {
 
-namespace cuZFP
-{
 // https://gitlab.kitware.com/third-party/nvpipe/blob/master/encode.c
 bool is_gpu_ptr(const void *ptr)
 {
   cudaPointerAttributes atts;
   const cudaError_t perr = cudaPointerGetAttributes(&atts, ptr);
 
-  // clear last error so other error checking does
-  // not pick it up
+  // clear last error so other error checking does not pick it up
   cudaError_t error = cudaGetLastError();
 #if CUDART_VERSION >= 10000
   return perr == cudaSuccess &&

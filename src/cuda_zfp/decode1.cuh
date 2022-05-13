@@ -7,47 +7,44 @@
 
 namespace cuZFP {
 
-template<typename Scalar>
+template <typename Scalar>
 __device__ __host__ inline
 void scatter_partial1(const Scalar* q, Scalar* p, int nx, int sx)
 {
-  uint x;
-  for (x = 0; x < 4; x++)
-    if (x < nx) p[x * sx] = q[x];
+  for (uint x = 0; x < 4; x++)
+    if (x < nx)
+      p[x * sx] = q[x];
 }
 
-template<typename Scalar>
+template <typename Scalar>
 __device__ __host__ inline
 void scatter1(const Scalar* q, Scalar* p, int sx)
 {
-  uint x;
-  for (x = 0; x < 4; x++, p += sx)
+  for (uint x = 0; x < 4; x++, p += sx)
     *p = *q++;
 }
 
-template<class Scalar>
+template <class Scalar, int BlockSize>
 __global__
 void
-cudaDecode1(Word *blocks,
-            Word *index,
-            Scalar *out,
-            const uint dim,
-            const int stride,
-            const uint padded_dim,
-            const uint total_blocks,
-            const int decode_parameter,
-            const uint granularity,
-            const zfp_mode mode,
-            const zfp_index_type index_type)
+cudaDecode1(
+  Word* blocks,
+  Word* index,
+  Scalar* out,
+  const uint dim,
+  const int stride,
+  const uint padded_dim,
+  const uint total_blocks,
+  const int decode_parameter,
+  const uint granularity,
+  const zfp_mode mode,
+  const zfp_index_type index_type
+)
 {
   typedef unsigned long long int ull;
   typedef long long int ll;
-  typedef typename zfp_traits<Scalar>::UInt UInt;
-  typedef typename zfp_traits<Scalar>::Int Int;
 
-  const uint blockId = blockIdx.x +
-                      blockIdx.y * gridDim.x +
-                      gridDim.x * gridDim.y * blockIdx.z;
+  const uint blockId = blockIdx.x + gridDim.x * (blockIdx.y + gridDim.y * blockIdx.z);
   const uint chunk_idx = blockId * blockDim.x + threadIdx.x;
   const int warp_idx = blockId * blockDim.x / 32;
   const int thread_idx = threadIdx.x;
@@ -55,13 +52,12 @@ cudaDecode1(Word *blocks,
   ll bit_offset;
   if (mode == zfp_mode_fixed_rate)
     bit_offset = decode_parameter * chunk_idx;
-  else if (index_type == zfp_index_offset) {
+  else if (index_type == zfp_index_offset)
     bit_offset = index[chunk_idx];
-  }
   else if (index_type == zfp_index_hybrid) {
     __shared__ uint64 offsets[32];
-    uint64* data64 = (uint64 *)index;
-    uint16* data16 = (uint16 *)index;
+    uint64* data64 = (uint64*)index;
+    uint16* data16 = (uint16*)index;
     data16 += warp_idx * 36 + 3;
     offsets[thread_idx] = (uint64)data16[thread_idx];
     offsets[0] = data64[warp_idx * 9];
@@ -69,21 +65,20 @@ cudaDecode1(Word *blocks,
 
     for (int i = 0; i < 5; i++) {
       j = (1 << i);
-      if (thread_idx + j < 32) {
+      if (thread_idx + j < 32)
         offsets[thread_idx + j] += offsets[thread_idx];
-      }
       __syncthreads();
     }
     bit_offset = offsets[thread_idx];
   }
 
+  BlockReader<BlockSize> reader(blocks, bit_offset);
   uint block_idx = chunk_idx * granularity;
   const uint lim = MIN(block_idx + granularity, total_blocks);
-  BlockReader<4> reader(blocks, bit_offset);
 
   for (; block_idx < lim; block_idx++) {
-    Scalar result[4] = {0};
-    zfp_decode<Scalar,4>(reader, result, decode_parameter, mode, 1);
+    Scalar result[BlockSize] = {0};
+    zfp_decode<Scalar, BlockSize>(reader, result, decode_parameter, mode, 1);
 
     uint block = block_idx * 4;
     const ll offset = (ll)block * stride;
@@ -96,16 +91,18 @@ cudaDecode1(Word *blocks,
   }
 }
 
-template<class Scalar>
-size_t decode1launch(uint dim,
-                     int stride,
-                     Word *stream,
-                     Word *index,
-                     Scalar *d_data,
-                     int decode_parameter,
-                     uint granularity,
-                     zfp_mode mode,
-                     zfp_index_type index_type)
+template <class Scalar>
+size_t decode1launch(
+  uint dim,
+  int stride,
+  Word* stream,
+  Word* index,
+  Scalar* d_data,
+  int decode_parameter,
+  uint granularity,
+  zfp_mode mode,
+  zfp_index_type index_type
+)
 {
   uint zfp_pad = (dim % 4 == 0 ? dim : dim += 4 - dim % 4);
   uint zfp_blocks = zfp_pad / 4;
@@ -121,14 +118,11 @@ size_t decode1launch(uint dim,
   dim3 grid_size = calculate_grid_size(chunks, cuda_block_size);
 
 #ifdef CUDA_ZFP_RATE_PRINT
-  // setup some timing code
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  cudaEventRecord(start);
+  Timer timer;
+  timer.start();
 #endif
 
-  cudaDecode1<Scalar> << < grid_size, block_size >> >
+  cudaDecode1<Scalar, 4> << < grid_size, block_size >> >
     (stream,
      index,
      d_data,
@@ -142,35 +136,27 @@ size_t decode1launch(uint dim,
      index_type);
 
 #ifdef CUDA_ZFP_RATE_PRINT
-  cudaEventRecord(stop);
-  cudaEventSynchronize(stop);
-  cudaStreamSynchronize(0);
-
-  float miliseconds = 0;
-  cudaEventElapsedTime(&miliseconds, start, stop);
-  float seconds = miliseconds / 1000.f;
-  float rate = (float(dim) * sizeof(Scalar) ) / seconds;
-  rate /= 1024.f;
-  rate /= 1024.f;
-  rate /= 1024.f;
-  printf("Decode elapsed time: %.5f (s)\n", seconds);
-  printf("# decode1 rate: %.2f (GB / sec)\n", rate);
+  timer.stop();
+  timer.print_throughput<Scalar>("Decode", "decode1", dim3(dim));
 #endif
+
   return stream_bytes;
 }
 
-template<class Scalar>
-size_t decode1(int dim,
-               int stride,
-               Word *stream,
-               Word *index,
-               Scalar *d_data,
-               int decode_parameter,
-               uint granularity,
-               zfp_mode mode,
-               zfp_index_type index_type)
+template <class Scalar>
+size_t decode1(
+  int dim,
+  int stride,
+  Word* stream,
+  Word* index,
+  Scalar* d_data,
+  int decode_parameter,
+  uint granularity,
+  zfp_mode mode,
+  zfp_index_type index_type
+)
 {
-	return decode1launch<Scalar>(dim, stride, stream, index, d_data, decode_parameter, granularity, mode, index_type);
+  return decode1launch<Scalar>(dim, stride, stream, index, d_data, decode_parameter, granularity, mode, index_type);
 }
 
 } // namespace cuZFP

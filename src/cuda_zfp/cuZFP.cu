@@ -14,8 +14,6 @@
 
 #include "pointers.cuh"
 #include "type_info.cuh"
-#include <iostream>
-#include <assert.h>
 
 // we need to know about bitstream, but we don't 
 // want duplicate symbols.
@@ -25,9 +23,10 @@
 
 #include "../inline/bitstream.c"
 namespace internal 
-{ 
-  
-bool is_contigous3d(const uint dims[3], const int3 &stride, long long int &offset)
+{
+
+// TODO: replace with zfp_field_is_contiguous
+bool is_contiguous3d(const uint dims[3], const int3 &stride, long long int &offset)
 {
   typedef long long int int64;
   int64 idims[3];
@@ -48,7 +47,7 @@ bool is_contigous3d(const uint dims[3], const int3 &stride, long long int &offse
   return (imax - imin + 1 == ns);
 }
 
-bool is_contigous2d(const uint dims[3], const int3 &stride, long long int &offset)
+bool is_contiguous2d(const uint dims[3], const int3 &stride, long long int &offset)
 {
   typedef long long int int64;
   int64 idims[2];
@@ -65,14 +64,14 @@ bool is_contigous2d(const uint dims[3], const int3 &stride, long long int &offse
   return (imax - imin + 1) == (idims[0] * idims[1]);
 }
 
-bool is_contigous1d(uint dim, const int &stride, long long int &offset)
+bool is_contiguous1d(uint dim, const int &stride, long long int &offset)
 {
   offset = 0;
   if (stride < 0) offset = stride * (int(dim) - 1);
   return std::abs(stride) == 1;
 }
 
-bool is_contigous(const uint dims[3], const int3 &stride, long long int &offset)
+bool is_contiguous(const uint dims[3], const int3 &stride, long long int &offset)
 {
   int d = 0;
 
@@ -90,10 +89,11 @@ bool is_contigous(const uint dims[3], const int3 &stride, long long int &offset)
     return is_contigous1d(dims[0], stride.x, offset);
   } 
 }
+
 //
 // encode expects device pointers
 //
-template<typename T>
+template <typename T>
 size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_stream)
 {
   int d = 0;
@@ -109,8 +109,8 @@ size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_
   size_t stream_size = 0;
   if (d == 1) {
     int dim = dims[0];
-    int sx = stride.x;
-    stream_size = cuZFP::encode1<T>(dim, sx, d_data, d_stream, bits_per_block); 
+    int s = stride.x;
+    stream_size = cuZFP::encode1<T>(dim, s, d_data, d_stream, bits_per_block); 
   }
   else if (d == 2) {
     uint2 ndims = make_uint2(dims[0], dims[1]);
@@ -120,12 +120,12 @@ size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_
     stream_size = cuZFP::encode2<T>(ndims, s, d_data, d_stream, bits_per_block); 
   }
   else if (d == 3) {
+    uint3 ndims = make_uint3(dims[0], dims[1], dims[2]);
     int3 s;
     s.x = stride.x; 
     s.y = stride.y; 
     s.z = stride.z; 
-    uint3 ndims = make_uint3(dims[0], dims[1], dims[2]);
-    stream_size = cuZFP::encode<T>(ndims, s, d_data, d_stream, bits_per_block); 
+    stream_size = cuZFP::encode3<T>(ndims, s, d_data, d_stream, bits_per_block); 
   }
 
   errors.chk("Encode");
@@ -133,7 +133,7 @@ size_t encode(uint dims[3], int3 stride, int bits_per_block, T *d_data, Word *d_
   return stream_size; 
 }
 
-template<typename T>
+template <typename T>
 size_t decode(uint ndims[3], int3 stride, Word *stream, Word *index, T *out, int decode_parameter, uint granularity, zfp_mode mode, zfp_index_type index_type)
 {
   int d = 0;
@@ -508,5 +508,4 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   stream->stream->bits = wsize;
   // set stream pointer to end of stream
   stream->stream->ptr = stream->stream->begin + words_read;
-
 }

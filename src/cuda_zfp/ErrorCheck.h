@@ -1,23 +1,22 @@
 #ifndef ERRORCHECK_H
 #define ERRORCHECK_H
+
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
 
 using std::stringstream;
-class ErrorCheck
-{
+
+class ErrorCheck {
 public:
   ErrorCheck()
   {
-
   }
 
   void chk(std::string msg)
   {
     error = cudaGetLastError();
-    if (error != cudaSuccess)
-    {
+    if (error != cudaSuccess) {
       std::cout << msg << " : " << error;
       std::cout << " " << cudaGetErrorString(error) << std::endl;
     }
@@ -28,6 +27,7 @@ public:
     chk(str.str());
     str.str("");
   }
+
   cudaError error;
   stringstream str;
 };
