@@ -142,7 +142,7 @@ size_t encode3launch(
   timer.start();
 #endif
   
-  cudaEncode<Scalar> <<<grid_size, block_size>>>
+  cudaEncode3<Scalar> <<<grid_size, block_size>>>
     (maxbits,
      d_data,
      stream,

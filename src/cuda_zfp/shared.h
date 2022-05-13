@@ -21,6 +21,7 @@ namespace cuZFP {
 #ifdef CUDA_ZFP_RATE_PRINT
 // timer for measuring encode/decode throughput
 class Timer {
+public:
   Timer()
   {
     cudaEventCreate(&e_start);
@@ -43,7 +44,7 @@ class Timer {
 
   // print throughput in GB/s
   template <typename Scalar>
-  void print_throughput(const char* task, const char* subtask, dims3 dims, FILE* file = stdout) const
+  void print_throughput(const char* task, const char* subtask, dim3 dims, FILE* file = stdout) const
   {
     float ms = 0;
     cudaEventElapsedTime(&ms, e_start, e_stop);

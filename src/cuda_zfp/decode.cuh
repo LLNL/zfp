@@ -132,7 +132,7 @@ template <typename Scalar, int Size, typename UInt, typename Int>
 inline __device__
 void decode_ints_rate(BlockReader<Size> &reader, const int max_bits, Int *iblock)
 {
-  const int intprec = get_precision<Scalar>();
+  const int intprec = get_precision<Int>();
   const uint kmin = 0; //= intprec > maxprec ? intprec - maxprec : 0;
   UInt ublock[Size] = {0};
   int bits = max_bits;
@@ -142,11 +142,11 @@ void decode_ints_rate(BlockReader<Size> &reader, const int max_bits, Int *iblock
     uint m = MIN(n, bits);
     bits -= m;
     uint64 x = reader.read_bits(m);
-    for (; n < Size && bits && (bits--, reader.read_bit()); x += (Word) 1 << n++)
-      for (; n < (Size - 1) && bits && (bits--, !reader.read_bit()); n++)
+    for (; n < Size && bits && (bits--, reader.read_bit()); x += (uint64)1 << n++)
+      for (; n < Size - 1 && bits && (bits--, !reader.read_bit()); n++)
         ;
 
-    /* deposit bit plane, use fixed bound to prevent warp divergence */
+    // deposit bit plane, use fixed bound to prevent warp divergence
 #if (CUDART_VERSION < 8000)
     #pragma unroll
 #else
@@ -170,14 +170,14 @@ template <typename Scalar, int Size, typename UInt, typename Int>
 inline __device__
 void decode_ints_planes(BlockReader<Size> &reader, const int maxprec, Int *iblock)
 {
-  const int intprec = get_precision<Scalar>();
+  const int intprec = get_precision<Int>();
   const uint kmin = (uint)(intprec > maxprec ? intprec - maxprec : 0);
   UInt ublock[Size] = {0};
 
   for (uint k = intprec, n = 0; k-- > kmin;) {
     uint64 x = reader.read_bits(n);
-    for (; n < Size && reader.read_bit(); x += (Word) 1 << n++)
-      for (; n < (Size - 1) && !reader.read_bit(); n++)
+    for (; n < Size && reader.read_bit(); x += (uint64)1 << n++)
+      for (; n < Size - 1 && !reader.read_bit(); n++)
         ;
 
     // deposit bit plane, use fixed bound to prevent warp divergence
@@ -307,14 +307,14 @@ void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, const int decode
         maxbits = decode_parameter - (int)ebits;
         decode_ints_rate<Scalar, BlockSize, UInt, Int>(reader, maxbits, iblock);
         break;
+      case zfp_mode_fixed_precision:
+        // decode_parameter contains maxprec
+        decode_ints_planes<Scalar, BlockSize, UInt, Int>(reader, decode_parameter, iblock);
+        break;
       case zfp_mode_fixed_accuracy:
         // decode_parameter contains minexp
         maxprec = MAX(emax - decode_parameter + 2 * (dims + 1), 0);
         decode_ints_planes<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
-        break;
-      case zfp_mode_fixed_precision:
-        // decode_parameter contains maxprec
-        decode_ints_planes<Scalar, BlockSize, UInt, Int>(reader, decode_parameter, iblock);
         break;
     }
 

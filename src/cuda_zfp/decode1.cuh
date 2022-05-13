@@ -111,6 +111,7 @@ size_t decode1launch(
   size_t cuda_block_size = 32;
   /* TODO: remove nonzero stream_bytes requirement */
   size_t stream_bytes = 1;
+  // ERROR: stream_bytes = 1 is returned here--need actual byte count
   size_t chunks = (zfp_blocks + (size_t)granularity - 1) / granularity;
   if (chunks % cuda_block_size != 0)
     chunks += (cuda_block_size - chunks % cuda_block_size);
