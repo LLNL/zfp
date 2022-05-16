@@ -66,9 +66,11 @@ encode_index_offset(zfp_stream* zfp)
   uint64 offset = 0;
   size_t i;
 
-  /* encode type offsets in the header */
+  /* make sure allocation succeeded */
   if (!index_data)
     return zfp_false;
+
+  /* encode type offsets in the header */
   index32[0] = zfp_index_offset;
   index32[1] = granularity;
   index64++;
@@ -86,7 +88,7 @@ encode_index_offset(zfp_stream* zfp)
   return zfp_true;
 }
 
-/* convert from length table to offset index with header */
+/* convert from length table to length index with header */
 static zfp_bool
 encode_index_length(zfp_stream* zfp)
 {
@@ -99,9 +101,11 @@ encode_index_length(zfp_stream* zfp)
   uint16* index16 = index_data;
   size_t i;
 
-  /* encode type lengths in the header */
+  /* make sure allocation succeeded */
   if (!index_data)
     return zfp_false;
+
+  /* encode type lengths in the header */
   index32[0] = zfp_index_length;
   index32[1] = 1;
   index16 += 4;
@@ -134,9 +138,11 @@ encode_index_hybrid(zfp_stream* zfp)
   uint64 offset = 0;
   size_t i, j, k, chunk;
 
-  /* encode type hybrid in the header */
+  /* make sure allocation succeeded */
   if (!index_data)
     return zfp_false;
+
+  /* encode type hybrid in the header */
   index32[0] = zfp_index_hybrid;
   index32[1] = granularity;
   index64++;
