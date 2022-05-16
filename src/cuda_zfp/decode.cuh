@@ -148,28 +148,21 @@ private:
   {}
 
 public:
-  typedef unsigned long long int stream_offset;
+  typedef unsigned long long int Offset;
 
-  __device__ BlockReader(Word* data, stream_offset offset) :
+  __device__ BlockReader(Word* data, Offset offset = 0) :
     begin(data)
   {
     rseek(offset);
   }
 
-  // print buffered bits (for debugging)
-  inline __device__
-  void print() const
-  {
-    print_bits(buffer);
-  }
-
   // return bit offset to next bit to be read
   inline __device__
-  stream_offset rtell() const { return wsize * (stream_offset)(ptr - begin) - bits; }
+  Offset rtell() const { return wsize * (Offset)(ptr - begin) - bits; }
 
   // position stream for reading at given bit offset
   inline __device__
-  void rseek(stream_offset offset)
+  void rseek(Offset offset)
   {
     uint n = (uint)(offset % wsize);
     ptr = begin + (size_t)(offset / wsize);
@@ -231,6 +224,20 @@ public:
       value &= ((uint64)1 << n) - 1;
     }
     return value;
+  }
+
+  // skip over the next n bits (n >= 0)
+  inline __device__
+  void skip(Offset n) { rseek(rtell() + n); }
+
+  // align stream on next word boundary
+  inline __device__
+  uint align()
+  {
+    uint count = bits;
+    if (count)
+      skip(count);
+    return count;
   }
 }; // BlockReader
 #endif
