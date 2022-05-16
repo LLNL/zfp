@@ -84,7 +84,7 @@ cudaDecode2(
   block_dims.x = padded_dims.x >> 2;
   block_dims.y = padded_dims.y >> 2;
 
-  BlockReader<BlockSize> reader(blocks, bit_offset);
+  BlockReader reader(blocks, bit_offset);
   uint block_idx = chunk_idx * granularity;
   const uint lim = MIN(block_idx + granularity, total_blocks);
 

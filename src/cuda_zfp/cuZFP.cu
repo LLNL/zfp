@@ -305,15 +305,13 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, 
   size_t type_size = zfp_type_size(field->type);
 
   size_t field_size = 1;
-  for (int i = 0; i < 3; ++i) {
-    if (dims[i] != 0) {
+  for (int i = 0; i < 3; ++i)
+    if (dims[i] != 0)
       field_size *= dims[i];
-    }
-  }
 
   bool contig = internal::is_contiguous(dims, stride, offset);
 
-  void * host_ptr = offset_void(field->type, field->data, offset);;
+  void * host_ptr = offset_void(field->type, field->data, offset);
 
   void *d_data = NULL;
   if (contig) {
@@ -321,6 +319,7 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, 
     if (cudaMalloc(&d_data, field_bytes) != cudaSuccess)
       std::cerr<<"failed to allocate device memory for field\n";
   }
+
   return offset_void(field->type, d_data, -offset);
 }
 
@@ -401,11 +400,13 @@ cuda_compress(zfp_stream *stream, const zfp_field *field)
 void
 cuda_decompress(zfp_stream *stream, zfp_field *field)
 {
+  // determine field dimensions
   uint dims[3];
   dims[0] = field->nx;
   dims[1] = field->ny;
   dims[2] = field->nz;
 
+  // determine field strides
   int3 stride;  
   stride.x = field->sx ? field->sx : 1;
   stride.y = field->sy ? field->sy : field->nx;
@@ -421,96 +422,94 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
 
   Word *d_stream = internal::setup_device_stream_decompress(stream, field);
   Word *d_index = NULL;
-  zfp_mode mode = zfp_stream_compression_mode(stream);
 
-  /* decode_parametereter differs per execution policy */
-  /* TODO: Decide if we want to pass maxbits, minexp and maxprec for all cases or not */
-  /* TODO: decide if casting the uints maxbits & maxprec to int is acceptable or not */
+  // keep track of bit stream offset
+  size_t pos = stream_rtell(stream->stream);
+  size_t bits_read = 0;
+
+  // determine number of blocks to decompress
+  uint blocks = 1;
+  for (int i = 0; i < 3; i++)
+    if (dims[i])
+      blocks *= (dims[i] + 3) / 4;
+
+  // decode_parameter differs per execution policy
+  // TODO: Decide if we want to pass maxbits, minexp and maxprec for all cases or not
+  // TODO: decide if casting the uints maxbits & maxprec to int is acceptable or not
   size_t index_size;
-  uint blocks, chunks, granularity;
+  uint granularity;
   int decode_parameter;
   zfp_index_type index_type = zfp_index_none;
+  zfp_mode mode = zfp_stream_compression_mode(stream);
+
   if (mode == zfp_mode_fixed_rate) {
     decode_parameter = (int)stream->maxbits;
     granularity = 1;
+    bits_read = (size_t)blocks * stream->maxbits;
   }
-  else if (mode == zfp_mode_fixed_accuracy || mode == zfp_mode_fixed_precision) {
-    blocks = 1;
-    if (dims[0]) blocks *= ((dims[0] + 3)/4);
-    if (dims[1]) blocks *= ((dims[1] + 3)/4);
-    if (dims[2]) blocks *= ((dims[2] + 3)/4);
+  else if (mode == zfp_mode_fixed_precision || mode == zfp_mode_fixed_accuracy) {
+    decode_parameter = (mode == zfp_mode_fixed_precision ? (int)stream->maxprec : (int)stream->minexp);
     granularity = stream->index->granularity;
+    // TODO: fetch bits_read from index
+    bits_read = 0;
     index_type = stream->index->type;
-    chunks = (blocks + granularity - 1) / granularity;
+    uint chunks = (blocks + granularity - 1) / granularity;
     if (index_type == zfp_index_offset)
       index_size = (size_t)chunks * sizeof(uint64);
     else if (index_type == zfp_index_hybrid) {
-      /* TODO: check if we want to support variable partition size (recommended to not do so for GPU) */
+      // TODO: check if we want to support variable partition size (recommended to not do so for GPU)
       size_t partitions = (chunks + ZFP_PARTITION_SIZE - 1) / ZFP_PARTITION_SIZE;
       index_size = partitions * (sizeof(uint64) + ZFP_PARTITION_SIZE * sizeof(uint16));
     }
     else {
-      std::cerr<<"Non-supported index type for GPU. Use hybrid or offset \n";
+      std::cerr << "zfp unsupported index type for GPU" << std::endl;
       return;
     }
     d_index = internal::setup_device_index(stream, index_size);
-    decode_parameter = (mode == zfp_mode_fixed_accuracy ? (int)stream->minexp : (int)stream->maxprec);
   }
   else {
-    std::cerr<<"Custom mode not supported on GPU\n";
+    std::cerr << "zfp expert mode not supported on GPU" << std::endl;
     return;
   }
 
-  size_t bytes;
+  // decode compressed data
+  size_t success = 0;
   if (field->type == zfp_type_float) {
     float *data = (float*)d_data;
-    bytes = internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
+    success = internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
     d_data = (void*)data;
   }
   else if (field->type == zfp_type_double) {
     double *data = (double*)d_data;
-    bytes = internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
+    success = internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
     d_data = (void*)data;
   }
   else if (field->type == zfp_type_int32) {
     int *data = (int*)d_data;
-    bytes = internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
+    success = internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
     d_data = (void*)data;
   }
   else if (field->type == zfp_type_int64) {
     long long int *data = (long long int*)d_data;
-    bytes = internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
+    success = internal::decode(dims, stride, d_stream, d_index, data, decode_parameter, granularity, mode, index_type);
     d_data = (void*)data;
   }
   else {
     // TODO: suppress error messages
-    std::cerr << "Cannot decompress: type unknown\n";
+    std::cerr << "zfp cuda_decompress: unknown scalar type" << std::endl;
   }
 
-  size_t type_size = zfp_type_size(field->type);
-
-  size_t field_size = 1;
-  for (int i = 0; i < 3; ++i) {
-    if (dims[i] != 0) {
-      field_size *= dims[i];
-    }
-  }
-
-//  fprintf(stderr, "bytes before=%zu\n", bytes);
-//  size_t bytes = type_size * field_size;
-  bytes = type_size * field_size;
-// fprintf(stderr, "bytes after=%zu\n", bytes);
-
+  // clean up
+  size_t bytes_written = zfp_type_size(field->type);
+  for (int i = 0; i < 3; ++i)
+    if (dims[i] != 0)
+      bytes_written *= dims[i];
   internal::cleanup_device_ptr(stream->stream, d_stream, 0, 0, field->type);
-  internal::cleanup_device_ptr(field->data, d_data, bytes, offset, field->type);
-
-  // ERROR: this quick hack is wrong; need actual number of words processed
-  size_t words_read = zfp_stream_maximum_size(stream, field) / sizeof(Word);
+  internal::cleanup_device_ptr(field->data, d_data, bytes_written, offset, field->type);
   if (d_index)
     cudaFree(d_index);
-  // TODO: check this
-  stream->stream->bits = wsize;
-  // set stream pointer to end of stream
-  // ERROR: incorrect stream pointer causes tests to fail
-  stream->stream->ptr = stream->stream->begin + words_read;
+
+  // update bit stream to point just past consumed data
+  if (success)
+    stream_rseek(stream->stream, pos + bits_read);
 }

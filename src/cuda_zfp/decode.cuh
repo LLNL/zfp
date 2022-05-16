@@ -50,11 +50,11 @@ long long int dequantize<long long int, long long int>(const long long int &x, c
   return 1;
 }
 
+// TODO: clean up
+#if 0
 /* Removed the unused arguments from the class as they can not be set easily in
 fixed accuracy or precision mode. If needed their functionality can be restored */
-template <int block_size>
-class BlockReader
-{
+class BlockReader {
 private:
   int m_current_bit;
   Word *m_words;
@@ -79,6 +79,11 @@ public:
   void print()
   {
     print_bits(m_buffer);
+  }
+
+  inline __device__
+  long long int rtell() const
+  {
   }
 
   inline __device__ 
@@ -127,10 +132,112 @@ public:
     return bits;
   }
 }; // block reader
+#else
+class BlockReader {
+private:
+  // number of bits in a buffered word
+  static constexpr size_t wsize = sizeof(Word) * CHAR_BIT;
+
+  uint bits;               // number of buffered bits (0 <= bits < wsize)
+  Word buffer;             // buffer for incoming bits (buffer < 2^bits)
+  const Word* ptr;         // pointer to next word to be read
+  const Word* const begin; // beginning of stream
+
+  __device__ BlockReader() :
+    begin(0)
+  {}
+
+public:
+  typedef unsigned long long int stream_offset;
+
+  __device__ BlockReader(Word* data, stream_offset offset) :
+    begin(data)
+  {
+    rseek(offset);
+  }
+
+  // print buffered bits (for debugging)
+  inline __device__
+  void print() const
+  {
+    print_bits(buffer);
+  }
+
+  // return bit offset to next bit to be read
+  inline __device__
+  stream_offset rtell() const { return wsize * (stream_offset)(ptr - begin) - bits; }
+
+  // position stream for reading at given bit offset
+  inline __device__
+  void rseek(stream_offset offset)
+  {
+    uint n = (uint)(offset % wsize);
+    ptr = begin + (size_t)(offset / wsize);
+    if (n) {
+      buffer = *ptr++ >> n;
+      bits = wsize - n;
+    }
+    else {
+      buffer = 0;
+      bits = 0;
+    }
+  }
+
+  // read single bit (0 or 1)
+  inline __device__ 
+  uint read_bit()
+  {
+    uint bit;
+    if (!bits) {
+      buffer = *ptr++;
+      bits = wsize;
+    }
+    bits--;
+    bit = (uint)buffer & 1u;
+    buffer >>= 1;
+    return bit;
+  }
+
+  // read 0 <= n <= 64 bits
+  inline __device__ 
+  uint64 read_bits(uint n)
+  {
+    uint64 value = buffer;
+    if (bits < n) {
+      // keep fetching wsize bits until enough bits are buffered
+      do {
+        // assert: 0 <= bits < n <= 64
+        buffer = *ptr++;
+        value += (uint64)buffer << bits;
+        bits += wsize;
+      } while (sizeof(buffer) < sizeof(value) && bits < n);
+      // assert: 1 <= n <= bits < n + wsize
+      bits -= n;
+      if (!bits) {
+        // value holds exactly n bits; no need for masking
+        buffer = 0;
+      }
+      else {
+        // assert: 1 <= bits < wsize
+        buffer >>= wsize - bits;
+        // assert: 1 <= n <= 64
+        value &= ((uint64)2 << (n - 1)) - 1;
+      }
+    }
+    else {
+      // assert: 0 <= n <= bits < wsize <= 64 */
+      bits -= n;
+      buffer >>= n;
+      value &= ((uint64)1 << n) - 1;
+    }
+    return value;
+  }
+}; // BlockReader
+#endif
 
 template <typename Scalar, int Size, typename UInt, typename Int>
 inline __device__
-void decode_ints_rate(BlockReader<Size> &reader, const int max_bits, Int *iblock)
+void decode_ints_rate(BlockReader &reader, const int max_bits, Int *iblock)
 {
   const int intprec = get_precision<Int>();
   const uint kmin = 0; //= intprec > maxprec ? intprec - maxprec : 0;
@@ -168,7 +275,7 @@ void decode_ints_rate(BlockReader<Size> &reader, const int max_bits, Int *iblock
 
 template <typename Scalar, int Size, typename UInt, typename Int>
 inline __device__
-void decode_ints_planes(BlockReader<Size> &reader, const int maxprec, Int *iblock)
+void decode_ints_planes(BlockReader &reader, const int maxprec, Int *iblock)
 {
   const int intprec = get_precision<Int>();
   const uint kmin = (uint)(intprec > maxprec ? intprec - maxprec : 0);
@@ -279,7 +386,7 @@ struct inv_transform<4> {
 
 template <typename Scalar, int BlockSize>
 __device__
-void zfp_decode(BlockReader<BlockSize> &reader, Scalar *fblock, const int decode_parameter, const zfp_mode mode, const int dims)
+void zfp_decode(BlockReader &reader, Scalar *fblock, const int decode_parameter, const zfp_mode mode, const int dims)
 {
   typedef typename zfp_traits<Scalar>::UInt UInt;
   typedef typename zfp_traits<Scalar>::Int Int;

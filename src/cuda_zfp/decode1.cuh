@@ -72,7 +72,7 @@ cudaDecode1(
     bit_offset = offsets[thread_idx];
   }
 
-  BlockReader<BlockSize> reader(blocks, bit_offset);
+  BlockReader reader(blocks, bit_offset);
   uint block_idx = chunk_idx * granularity;
   const uint lim = MIN(block_idx + granularity, total_blocks);
 
