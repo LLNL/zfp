@@ -143,9 +143,9 @@ private:
   const Word* ptr;         // pointer to next word to be read
   const Word* const begin; // beginning of stream
 
-  __device__ BlockReader() :
-    begin(0)
-  {}
+  // read a single word from memory
+  inline __device__
+  Word read_word() { return *ptr++; }
 
 public:
   typedef unsigned long long int Offset;
@@ -167,7 +167,7 @@ public:
     uint n = (uint)(offset % wsize);
     ptr = begin + (size_t)(offset / wsize);
     if (n) {
-      buffer = *ptr++ >> n;
+      buffer = read_word() >> n;
       bits = wsize - n;
     }
     else {
@@ -182,7 +182,7 @@ public:
   {
     uint bit;
     if (!bits) {
-      buffer = *ptr++;
+      buffer = read_word();
       bits = wsize;
     }
     bits--;
@@ -200,7 +200,7 @@ public:
       // keep fetching wsize bits until enough bits are buffered
       do {
         // assert: 0 <= bits < n <= 64
-        buffer = *ptr++;
+        buffer = read_word();
         value += (uint64)buffer << bits;
         bits += wsize;
       } while (sizeof(buffer) < sizeof(value) && bits < n);
