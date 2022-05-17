@@ -1,5 +1,5 @@
-#ifndef cuZFP_TYPE_INFO
-#define cuZFP_TYPE_INFO
+#ifndef CUZFP_TYPE_INFO
+#define CUZFP_TYPE_INFO
 
 namespace cuZFP {
 
@@ -26,12 +26,6 @@ template <> inline __host__ __device__ int get_min_exp<double>() { return -1074;
 template <> inline __host__ __device__ int get_min_exp<float>() { return -1074; }
 template <> inline __host__ __device__ int get_min_exp<long long int>() { return 0; }
 template <> inline __host__ __device__ int get_min_exp<int>() { return 0; }
-
-template <typename T> inline __host__ __device__ int scalar_sizeof();
-template <> inline __host__ __device__ int scalar_sizeof<double>() { return 8; }
-template <> inline __host__ __device__ int scalar_sizeof<long long int>() { return 8; }
-template <> inline __host__ __device__ int scalar_sizeof<float>() { return 4; }
-template <> inline __host__ __device__ int scalar_sizeof<int>() { return 4; }
 
 template <typename T> inline __host__ __device__ bool is_int() { return false; }
 template <> inline __host__ __device__ bool is_int<int>() { return true; }
@@ -62,19 +56,6 @@ template <>
 struct zfp_traits<int> {
   typedef unsigned int UInt;
   typedef int Int;
-};
-
-template <int T>
-struct block_traits;
-
-template <>
-struct block_traits<1> {
-  typedef unsigned char PlaneType;
-};
-
-template <>
-struct block_traits<2> {
-  typedef unsigned short PlaneType;
 };
 
 } // namespace cuZFP

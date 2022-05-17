@@ -1,5 +1,5 @@
-#ifndef cuZFP_h
-#define cuZFP_h
+#ifndef CUZFP_H
+#define CUZFP_H
 
 #include "zfp.h"
 

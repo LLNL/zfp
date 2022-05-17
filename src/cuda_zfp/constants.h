@@ -1,5 +1,5 @@
-#ifndef cuZFP_CONSTANTS_H
-#define cuZFP_CONSTANTS_H
+#ifndef CUZFP_CONSTANTS_H
+#define CUZFP_CONSTANTS_H
 
 namespace cuZFP {
 
