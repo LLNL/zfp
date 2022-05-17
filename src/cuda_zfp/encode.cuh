@@ -51,12 +51,33 @@ void pad_block(Scalar *p, uint n, uint s)
 
 template <class Scalar>
 inline __device__
+int get_exponent(Scalar x);
+
+template <>
+inline __device__
+int get_exponent(float x)
+{
+  int e;
+  frexpf(x, &e);
+  return e;
+}
+
+template <>
+inline __device__
+int get_exponent(double x)
+{
+  int e;
+  frexp(x, &e);
+  return e;
+}
+
+template <class Scalar>
+inline __device__
 int exponent(Scalar x)
 {
   if (x > 0) {
-    int e;
-    frexp(x, &e);
-    // clamp exponent in case x is denormalized
+    int e = get_exponent(x);
+    // clamp exponent in case x is subnormal
     return max(e, 1 - get_ebias<Scalar>());
   }
   return -get_ebias<Scalar>();

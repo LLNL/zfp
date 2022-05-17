@@ -26,14 +26,14 @@ template <>
 inline __device__
 double dequantize<long long int, double>(const long long int &x, const int &e)
 {
-  return LDEXP((double)x, e - (CHAR_BIT * scalar_sizeof<double>() - 2));
+  return ldexp((double)x, e - (sizeof(x) * CHAR_BIT - 2));
 }
 
 template <>
 inline __device__
 float dequantize<int, float>(const int &x, const int &e)
 {
-  return LDEXP((float)x, e - (CHAR_BIT * scalar_sizeof<float>() - 2));
+  return ldexpf((float)x, e - (sizeof(x) * CHAR_BIT - 2));
 }
 
 template <>
