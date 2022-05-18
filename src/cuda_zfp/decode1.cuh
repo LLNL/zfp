@@ -31,6 +31,7 @@ cudaDecode1(
   Word* blocks,
   Word* index,
   Scalar* out,
+  unsigned long long int* max_offset,
   const uint dim,
   const int stride,
   const uint padded_dim,
@@ -49,9 +50,9 @@ cudaDecode1(
   const int warp_idx = blockId * blockDim.x / 32;
   const int thread_idx = threadIdx.x;
 
-  ll bit_offset;
+  ull bit_offset;
   if (mode == zfp_mode_fixed_rate)
-    bit_offset = decode_parameter * chunk_idx;
+    bit_offset = chunk_idx * decode_parameter;
   else if (index_type == zfp_index_offset)
     bit_offset = index[chunk_idx];
   else if (index_type == zfp_index_hybrid) {
@@ -61,10 +62,8 @@ cudaDecode1(
     data16 += warp_idx * 36 + 3;
     offsets[thread_idx] = (uint64)data16[thread_idx];
     offsets[0] = data64[warp_idx * 9];
-    int j;
-
     for (int i = 0; i < 5; i++) {
-      j = (1 << i);
+      int j = 1 << i;
       if (thread_idx + j < 32)
         offsets[thread_idx + j] += offsets[thread_idx];
       __syncthreads();
@@ -74,11 +73,11 @@ cudaDecode1(
 
   BlockReader reader(blocks, bit_offset);
   uint block_idx = chunk_idx * granularity;
-  const uint lim = MIN(block_idx + granularity, total_blocks);
+  const uint lim = min(block_idx + granularity, total_blocks);
 
   for (; block_idx < lim; block_idx++) {
     Scalar result[BlockSize] = {0};
-    zfp_decode<Scalar, BlockSize>(reader, result, decode_parameter, mode, 1);
+    decode_block<Scalar, BlockSize>(reader, result, decode_parameter, mode);
 
     uint block = block_idx * 4;
     const ll offset = (ll)block * stride;
@@ -88,6 +87,12 @@ cudaDecode1(
     }
     else
       scatter1(result, out + offset, stride);
+  }
+
+  // record maximum bit offset reached by any thread
+  if (chunk_idx * granularity < lim) {
+    bit_offset = reader.rtell();
+    atomicMax(max_offset, bit_offset);
   }
 }
 
@@ -109,24 +114,28 @@ size_t decode1launch(
 
   /* Block size fixed to 32 in this version, needed for hybrid functionality */
   size_t cuda_block_size = 32;
-  /* TODO: remove nonzero stream_bytes requirement */
-  size_t stream_bytes = 1;
-  // ERROR: stream_bytes = 1 is returned here--need actual byte count
   size_t chunks = (zfp_blocks + (size_t)granularity - 1) / granularity;
   if (chunks % cuda_block_size != 0)
-    chunks += (cuda_block_size - chunks % cuda_block_size);
+    chunks += cuda_block_size - chunks % cuda_block_size;
   dim3 block_size = dim3(cuda_block_size, 1, 1);
   dim3 grid_size = calculate_grid_size(chunks, cuda_block_size);
+
+  // storage for maximum bit offset; needed to position stream
+  unsigned long long int* d_offset;
+  if (cudaMalloc(&d_offset, sizeof(*d_offset)) != cudaSuccess)
+    return 0;
+  cudaMemset(d_offset, 0, sizeof(*d_offset));
 
 #ifdef CUDA_ZFP_RATE_PRINT
   Timer timer;
   timer.start();
 #endif
 
-  cudaDecode1<Scalar, 4> << < grid_size, block_size >> >
+  cudaDecode1<Scalar, 4> <<<grid_size, block_size>>>
     (stream,
      index,
      d_data,
+     d_offset,
      dim,
      stride,
      zfp_pad,
@@ -141,7 +150,11 @@ size_t decode1launch(
   timer.print_throughput<Scalar>("Decode", "decode1", dim3(dim));
 #endif
 
-  return stream_bytes;
+  unsigned long long int offset;
+  cudaMemcpy(&offset, d_offset, sizeof(offset), cudaMemcpyDeviceToHost);
+  cudaFree(d_offset);
+
+  return offset;
 }
 
 template <class Scalar>

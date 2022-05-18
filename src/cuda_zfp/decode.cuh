@@ -67,7 +67,7 @@ private:
 public:
   __device__ BlockReader(Word *b, long long int bit_offset)
   {
-    /* TODO: possibly move the functionality of the constructor to a seek function */
+    // TODO: possibly move the functionality of the constructor to a seek function
     int word_index = bit_offset / (sizeof(Word) * 8);
     m_words = b + word_index;
     m_buffer = *m_words;
@@ -244,23 +244,23 @@ public:
 
 template <typename Scalar, int Size, typename UInt, typename Int>
 inline __device__
-void decode_ints_rate(BlockReader &reader, const int max_bits, Int *iblock)
+uint decode_ints(BlockReader &reader, const uint maxbits, Int *iblock)
 {
-  const int intprec = get_precision<Int>();
-  const uint kmin = 0; //= intprec > maxprec ? intprec - maxprec : 0;
+  const uint intprec = get_precision<Int>();
+  const uint kmin = 0;
   UInt ublock[Size] = {0};
-  int bits = max_bits;
+  uint bits = maxbits;
 
   for (uint k = intprec, n = 0; bits && k-- > kmin;) {
     // read bit plane
-    uint m = MIN(n, bits);
+    uint m = min(n, bits);
     bits -= m;
     uint64 x = reader.read_bits(m);
     for (; n < Size && bits && (bits--, reader.read_bit()); x += (uint64)1 << n++)
       for (; n < Size - 1 && bits && (bits--, !reader.read_bit()); n++)
         ;
 
-    // deposit bit plane, use fixed bound to prevent warp divergence
+    // deposit bit plane; use fixed bound to prevent warp divergence
 #if (CUDART_VERSION < 8000)
     #pragma unroll
 #else
@@ -278,19 +278,22 @@ void decode_ints_rate(BlockReader &reader, const int max_bits, Int *iblock)
 #endif
   for (int i = 0; i < Size; ++i)
     iblock[perm[i]] = uint2int(ublock[i]);
+
+  return maxbits - bits;
 }
 
 template <typename Scalar, int Size, typename UInt, typename Int>
 inline __device__
-void decode_ints_planes(BlockReader &reader, const int maxprec, Int *iblock)
+uint decode_ints_prec(BlockReader &reader, const uint maxprec, Int *iblock)
 {
-  const int intprec = get_precision<Int>();
-  const uint kmin = (uint)(intprec > maxprec ? intprec - maxprec : 0);
+  const BlockReader::Offset offset = reader.rtell();
+  const uint intprec = get_precision<Int>();
+  const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   UInt ublock[Size] = {0};
 
   for (uint k = intprec, n = 0; k-- > kmin;) {
     uint64 x = reader.read_bits(n);
-    for (; n < Size && reader.read_bit(); x += (uint64)1 << n++)
+    for (; n < Size && reader.read_bit(); x += (uint64)1 << n, n++)
       for (; n < Size - 1 && !reader.read_bit(); n++)
         ;
 
@@ -312,6 +315,8 @@ void decode_ints_planes(BlockReader &reader, const int maxprec, Int *iblock)
 #endif
   for (int i = 0; i < Size; ++i)
     iblock[perm[i]] = uint2int(ublock[i]);
+
+  return (uint)(reader.rtell() - offset);
 }
 
 // inverse lifting transform of 4-vector
@@ -346,6 +351,31 @@ template <int BlockSize>
 struct inv_transform;
 
 template <>
+struct inv_transform<4> {
+  template <typename Int>
+  __device__
+  void inv_xform(Int *p)
+  {
+    inv_lift<Int, 1>(p);
+  }
+};
+
+template <>
+struct inv_transform<16> {
+  template <typename Int>
+  __device__
+  void inv_xform(Int *p)
+  {
+    // transform along y
+    for (uint x = 0; x < 4; ++x)
+      inv_lift<Int, 4>(p + 1 * x);
+    // transform along x
+    for (uint y = 0; y < 4; ++y)
+      inv_lift<Int, 1>(p + 4 * y);
+  }
+};
+
+template <>
 struct inv_transform<64> {
   template <typename Int>
   __device__
@@ -366,84 +396,63 @@ struct inv_transform<64> {
   }
 };
 
-template <>
-struct inv_transform<16> {
-  template <typename Int>
-  __device__
-  void inv_xform(Int *p)
-  {
-    // transform along y
-    for (uint x = 0; x < 4; ++x)
-      inv_lift<Int, 4>(p + 1 * x);
-    // transform along x
-    for (uint y = 0; y < 4; ++y)
-      inv_lift<Int, 1>(p + 4 * y);
-  }
-};
-
-template <>
-struct inv_transform<4> {
-  template <typename Int>
-  __device__
-  void inv_xform(Int *p)
-  {
-    inv_lift<Int, 1>(p);
-  }
-};
-
 template <typename Scalar, int BlockSize>
 __device__
-void zfp_decode(BlockReader &reader, Scalar *fblock, const int decode_parameter, const zfp_mode mode, const int dims)
+void decode_block(BlockReader &reader, Scalar *fblock, const int decode_parameter, const zfp_mode mode)
 {
   typedef typename zfp_traits<Scalar>::UInt UInt;
   typedef typename zfp_traits<Scalar>::Int Int;
 
-  uint s_cont = 1;
-  //
-  // there is no skip path for integers so just continue
-  //
-  if (!is_int<Scalar>())
-    s_cont = reader.read_bit();
-
-  if (s_cont) {
-    uint ebits = get_ebits<Scalar>() + 1;
-    int emax;
-    if (!is_int<Scalar>())
-      emax = (int)reader.read_bits(ebits - 1) - (int)get_ebias<Scalar>();
-    else
-      ebits = 0;
+  uint bits = 0;
+  if (is_int<Scalar>() || (bits++, reader.read_bit())) {
+    int emax = 0;
+    if (!is_int<Scalar>()) {
+      bits += get_ebits<Scalar>();
+      emax = (int)reader.read_bits(bits - 1) - (int)get_ebias<Scalar>();
+    }
 
     Int* iblock = (Int*)fblock;
-    int maxbits, maxprec;
+    int maxbits, maxprec, minexp;
     switch (mode) {
       case zfp_mode_fixed_rate:
         // decode_parameter contains maxbits
-        maxbits = decode_parameter - (int)ebits;
-        decode_ints_rate<Scalar, BlockSize, UInt, Int>(reader, maxbits, iblock);
+        maxbits = decode_parameter;
+        bits += decode_ints<Scalar, BlockSize, UInt, Int>(reader, maxbits - bits, iblock);
         break;
       case zfp_mode_fixed_precision:
         // decode_parameter contains maxprec
-        decode_ints_planes<Scalar, BlockSize, UInt, Int>(reader, decode_parameter, iblock);
+        maxprec = decode_parameter;
+        bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
         break;
       case zfp_mode_fixed_accuracy:
         // decode_parameter contains minexp
-        maxprec = MAX(emax - decode_parameter + 2 * (dims + 1), 0);
-        decode_ints_planes<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
+        minexp = decode_parameter;
+        maxprec = precision<BlockSize>(emax, get_precision<Scalar>(), minexp);
+        bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
         break;
     }
 
     inv_transform<BlockSize> trans;
     trans.inv_xform(iblock);
 
-    Scalar inv_w = dequantize<Int, Scalar>(1, emax);
-
+    if (!is_int<Scalar>()) {
+      // cast to floating type
+      Scalar scale = dequantize<Int, Scalar>(1, emax);
 #if (CUDART_VERSION < 8000)
-    #pragma unroll 
+      #pragma unroll 
 #else
-    #pragma unroll BlockSize
+      #pragma unroll BlockSize
 #endif
-    for (int i = 0; i < BlockSize; ++i)
-      fblock[i] = inv_w * (Scalar)iblock[i];
+      for (uint i = 0; i < BlockSize; ++i)
+        fblock[i] = scale * (Scalar)iblock[i];
+    }
+  }
+
+  if (mode == zfp_mode_fixed_rate) {
+    // skip ahead in stream to ensure maxbits bits are read
+    uint maxbits = decode_parameter;
+    if (bits < maxbits)
+      reader.skip(maxbits - bits);
   }
 }
 

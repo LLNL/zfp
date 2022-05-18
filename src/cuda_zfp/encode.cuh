@@ -18,14 +18,6 @@ unsigned int int2uint(const int x)
   return ((unsigned int)x + 0xaaaaaaaau) ^ 0xaaaaaaaau;
 }
 
-// maximum number of bit planes to encode
-inline __device__ 
-int precision(int maxexp, int maxprec, int minexp)
-{
-  // ERROR: should be MAX(0, maxexp - minexp + 2 * dims + 2)
-  return MIN(maxprec, MAX(0, maxexp - minexp + 8));
-}
-
 template <typename Scalar>
 inline __device__
 void pad_block(Scalar *p, uint n, uint s)
@@ -130,14 +122,14 @@ template <>
 inline __device__
 float quantize_factor<float>(const int &exponent, float)
 {
-  return LDEXP(1.0, get_precision<float>() - 2 - exponent);
+  return ldexpf(1.0f, get_precision<float>() - 2 - exponent);
 }
 
 template <>
 inline __device__
 double quantize_factor<double>(const int &exponent, double)
 {
-  return LDEXP(1.0, get_precision<double>() - 2 - exponent);
+  return ldexp(1.0, get_precision<double>() - 2 - exponent);
 }
 
 template <typename Scalar, typename Int, int BlockSize>
@@ -151,6 +143,33 @@ void fwd_cast(Int *iblock, const Scalar *fblock, int emax)
 
 template <int BlockSize>
 struct transform;
+
+template <>
+struct transform<4>
+{
+  template <typename Int>
+  __device__
+  void fwd_xform(Int *p)
+  {
+    fwd_lift<Int, 1>(p);
+  }
+};
+
+template <>
+struct transform<16>
+{
+  template <typename Int>
+  __device__
+  void fwd_xform(Int *p)
+  {
+    // transform along x
+    for (uint y = 0; y < 4; y++)
+     fwd_lift<Int, 1>(p + 4 * y);
+    // transform along y
+    for (uint x = 0; x < 4; x++)
+      fwd_lift<Int, 4>(p + 1 * x);
+  }
+};
 
 template <>
 struct transform<64>
@@ -172,33 +191,6 @@ struct transform<64>
       for (uint x = 0; x < 4; x++)
         fwd_lift<Int, 16>(p + 1 * x + 4 * y);
    }
-};
-
-template <>
-struct transform<16>
-{
-  template <typename Int>
-  __device__
-  void fwd_xform(Int *p)
-  {
-    // transform along x
-    for (uint y = 0; y < 4; y++)
-     fwd_lift<Int, 1>(p + 4 * y);
-    // transform along y
-    for (uint x = 0; x < 4; x++)
-      fwd_lift<Int, 4>(p + 1 * x);
-  }
-};
-
-template <>
-struct transform<4>
-{
-  template <typename Int>
-  __device__
-  void fwd_xform(Int *p)
-  {
-    fwd_lift<Int, 1>(p);
-  }
 };
 
 template <typename Int, typename UInt, int BlockSize>
@@ -412,13 +404,13 @@ public:
 
 template <typename Int, int BlockSize> 
 inline __device__
-void encode_block(BlockWriter &stream, int maxbits, int maxprec, Int *iblock)
+uint encode_block(BlockWriter &stream, uint maxbits, uint maxprec, Int *iblock)
 {
   transform<BlockSize> tform;
   tform.fwd_xform(iblock);
 
   typedef typename zfp_traits<Int>::UInt UInt;
-  UInt ublock[BlockSize]; 
+  UInt ublock[BlockSize];
   fwd_order<Int, UInt, BlockSize>(ublock, iblock);
 
   const uint intprec = CHAR_BIT * (uint)sizeof(UInt);
@@ -439,86 +431,98 @@ void encode_block(BlockWriter &stream, int maxbits, int maxprec, Int *iblock)
       for (; n < BlockSize - 1 && bits && (bits--, !stream.write_bit(x & 1u)); x >>= 1, n++)
         ;
   }
+
+  return maxbits - bits;
 }
 
-// TODO: remove zfp_ prefix from non-API functions
 template <typename Scalar, int BlockSize>
 inline __device__
-void zfp_encode_block(Scalar *fblock, const int maxbits, const uint block_idx, Word *stream)
+void encode_block(Scalar *fblock, const int maxbits, const uint block_idx, Word *stream)
 {
-  BlockWriter block_writer(stream, (unsigned long long int)block_idx * maxbits);
+  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
+  BlockWriter writer(stream, offset);
   int emax = max_exponent<Scalar, BlockSize>(fblock);
-  int maxprec = precision(emax, get_precision<Scalar>(), get_min_exp<Scalar>());
+  uint maxprec = precision<BlockSize>(emax, get_precision<Scalar>(), get_min_exp<Scalar>());
+  uint bits = 0;
   uint e = maxprec ? emax + get_ebias<Scalar>() : 0;
   if (e) {
-    const uint ebits = get_ebits<Scalar>()+1;
-    block_writer.write_bits(2 * e + 1, ebits);
+    bits = get_ebits<Scalar>() + 1;
+    writer.write_bits(2 * e + 1, bits);
     typedef typename zfp_traits<Scalar>::Int Int;
     Int iblock[BlockSize];
     fwd_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);
-    encode_block<Int, BlockSize>(block_writer, maxbits - ebits, maxprec, iblock);
+    bits += encode_block<Int, BlockSize>(writer, maxbits - bits, maxprec, iblock);
+    // no padding needed when bits < maxbits since stream is already zeroed
+    writer.flush();
   }
-  block_writer.flush();
 }
 
 template <>
 inline __device__
-void zfp_encode_block<int, 64>(int *fblock, const int maxbits, const uint block_idx, Word *stream)
+void encode_block<int, 4>(int *fblock, const int maxbits, const uint block_idx, Word *stream)
 {
-  BlockWriter block_writer(stream, (unsigned long long int)block_idx * maxbits);
-  const int intprec = get_precision<int>();
-  encode_block<int, 64>(block_writer, maxbits, intprec, fblock);
-  block_writer.flush();
+  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
+  BlockWriter writer(stream, offset);
+  const uint intprec = get_precision<int>();
+  encode_block<int, 4>(writer, maxbits, intprec, fblock);
+  writer.flush();
 }
 
 template <>
 inline __device__
-void zfp_encode_block<long long int, 64>(long long int *fblock, const int maxbits, const uint block_idx, Word *stream)
+void encode_block<long long int, 4>(long long int *fblock, const int maxbits, const uint block_idx, Word *stream)
 {
-  BlockWriter block_writer(stream, (unsigned long long int)block_idx * maxbits);
-  const int intprec = get_precision<long long int>();
-  encode_block<long long int, 64>(block_writer, maxbits, intprec, fblock);
-  block_writer.flush();
+  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
+  BlockWriter writer(stream, offset);
+  const uint intprec = get_precision<long long int>();
+  encode_block<long long int, 4>(writer, maxbits, intprec, fblock);
+  writer.flush();
 }
 
 template <>
 inline __device__
-void zfp_encode_block<int, 16>(int *fblock, const int maxbits, const uint block_idx, Word *stream)
+void encode_block<int, 16>(int *fblock, const int maxbits, const uint block_idx, Word *stream)
 {
-  BlockWriter block_writer(stream, (unsigned long long int)block_idx * maxbits);
-  const int intprec = get_precision<int>();
-  encode_block<int, 16>(block_writer, maxbits, intprec, fblock);
-  block_writer.flush();
+  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
+  BlockWriter writer(stream, offset);
+  const uint intprec = get_precision<int>();
+  encode_block<int, 16>(writer, maxbits, intprec, fblock);
+  writer.flush();
 }
 
 template <>
 inline __device__
-void zfp_encode_block<long long int, 16>(long long int *fblock, const int maxbits, const uint block_idx, Word *stream)
+void encode_block<long long int, 16>(long long int *fblock, const int maxbits, const uint block_idx, Word *stream)
 {
-  BlockWriter block_writer(stream, (unsigned long long int)block_idx * maxbits);
-  const int intprec = get_precision<long long int>();
-  encode_block<long long int, 16>(block_writer, maxbits, intprec, fblock);
-  block_writer.flush();
+  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
+  BlockWriter writer(stream, offset);
+  const uint intprec = get_precision<long long int>();
+  encode_block<long long int, 16>(writer, maxbits, intprec, fblock);
+  writer.flush();
 }
 
 template <>
 inline __device__
-void zfp_encode_block<int, 4>(int *fblock, const int maxbits, const uint block_idx, Word *stream)
+void encode_block<int, 64>(int *fblock, const int maxbits, const uint block_idx, Word *stream)
 {
-  BlockWriter block_writer(stream, (unsigned long long int)block_idx * maxbits);
-  const int intprec = get_precision<int>();
-  encode_block<int, 4>(block_writer, maxbits, intprec, fblock);
-  block_writer.flush();
+  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
+  BlockWriter writer(stream, offset);
+  const uint intprec = get_precision<int>();
+  uint bits = encode_block<int, 64>(writer, maxbits, intprec, fblock);
+  if (bits < maxbits)
+    writer.pad(maxbits - bits);
+  writer.flush();
 }
 
 template <>
 inline __device__
-void zfp_encode_block<long long int, 4>(long long int *fblock, const int maxbits, const uint block_idx, Word *stream)
+void encode_block<long long int, 64>(long long int *fblock, const int maxbits, const uint block_idx, Word *stream)
 {
-  BlockWriter block_writer(stream, (unsigned long long int)block_idx * maxbits);
-  const int intprec = get_precision<long long int>();
-  encode_block<long long int, 4>(block_writer, maxbits, intprec, fblock);
-  block_writer.flush();
+  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
+  BlockWriter writer(stream, offset);
+  const uint intprec = get_precision<long long int>();
+  encode_block<long long int, 64>(writer, maxbits, intprec, fblock);
+  writer.flush();
 }
 
 } // namespace cuZFP

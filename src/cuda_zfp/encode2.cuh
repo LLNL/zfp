@@ -88,7 +88,7 @@ cudaEncode2(
   else
     gather2(fblock, scalars + offset, stride.x, stride.y);
 
-  zfp_encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
+  encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
 }
 
 //
@@ -143,7 +143,9 @@ size_t encode2launch(
   timer.print_throughput<Scalar>("Encode", "encode2", dim3(dims.x, dims.y));
 #endif
 
-  return stream_bytes;
+  size_t bits_written = zfp_blocks * maxbits;
+
+  return bits_written;
 }
 
 template <class Scalar>
