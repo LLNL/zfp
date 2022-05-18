@@ -3,18 +3,14 @@
 
 //#define CUDA_ZFP_RATE_PRINT 1
 
+// bit stream word/buffer type; granularity of stream I/O operations
 typedef unsigned long long Word;
-#define Wsize ((uint)(CHAR_BIT * sizeof(Word)))
+#define Wsize ((uint)(sizeof(Word) * CHAR_BIT))
 
 #include <stdio.h>
 #include "type_info.cuh"
 #include "zfp.h"
 #include "constants.h"
-
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
-
-#define LDEXP(x, e) ldexp(x, e)
 
 namespace cuZFP {
 
@@ -76,48 +72,33 @@ void print_bits(const T &bits)
   printf("\n");
 }
 
-size_t calc_device_mem1d(const int dim, const int maxbits)
+size_t calc_device_mem(size_t total_blocks, size_t bits_per_block)
 {
-  const size_t vals_per_block = 4;
-  size_t total_blocks = dim / vals_per_block; 
-  if (dim % vals_per_block != 0) 
-    total_blocks++;
-  const size_t bits_per_block = maxbits;
-  const size_t bits_per_word = sizeof(Word) * 8;
-  const size_t total_bits = bits_per_block * total_blocks;
-  size_t alloc_size = total_bits / bits_per_word;
-  if (total_bits % bits_per_word != 0)
-    alloc_size++;
-  // ensure we have zeros
-  return alloc_size * sizeof(Word);
+  const size_t bits_per_word = sizeof(Word) * CHAR_BIT;
+  const size_t total_bits = total_blocks * bits_per_block;
+  const size_t total_words = (total_bits + bits_per_word - 1) / bits_per_word;
+  return total_words * sizeof(Word);
+}
+
+size_t calc_device_mem1d(const uint dim, const int maxbits)
+{
+  const size_t total_blocks = ((size_t)dim + 3) / 4;
+  return calc_device_mem(total_blocks, maxbits);
 }
 
 size_t calc_device_mem2d(const uint2 dims, const int maxbits)
 {
-  const size_t vals_per_block = 16;
-  size_t total_blocks = (dims.x * dims.y) / vals_per_block; 
-  // ERROR: need to round up dims.x and dims.y
-  if ((dims.x * dims.y) % vals_per_block != 0)
-    total_blocks++;
-  const size_t bits_per_block = maxbits;
-  const size_t bits_per_word = sizeof(Word) * 8;
-  const size_t total_bits = bits_per_block * total_blocks;
-  size_t alloc_size = total_bits / bits_per_word;
-  if (total_bits % bits_per_word != 0)
-    alloc_size++;
-  return alloc_size * sizeof(Word);
+  const size_t total_blocks = (((size_t)dims.x + 3) / 4) *
+                              (((size_t)dims.y + 3) / 4);
+  return calc_device_mem(total_blocks, maxbits);
 }
 
-size_t calc_device_mem3d(const uint3 encoded_dims, const int maxbits)
+size_t calc_device_mem3d(const uint3 dims, const int maxbits)
 {
-  const size_t vals_per_block = 64;
-  const size_t size = encoded_dims.x * encoded_dims.y * encoded_dims.z; 
-  size_t total_blocks = size / vals_per_block; 
-  const size_t bits_per_block = maxbits;
-  const size_t bits_per_word = sizeof(Word) * 8;
-  const size_t total_bits = bits_per_block * total_blocks;
-  const size_t alloc_size = total_bits / bits_per_word;
-  return alloc_size * sizeof(Word);
+  const size_t total_blocks = (((size_t)dims.x + 3) / 4) *
+                              (((size_t)dims.y + 3) / 4) *
+                              (((size_t)dims.z + 3) / 4);
+  return calc_device_mem(total_blocks, maxbits);
 }
 
 dim3 get_max_grid_dims()
@@ -137,7 +118,7 @@ dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
 {
   size_t grids = size / cuda_block_size; // because of pad this will be exact
   dim3 max_grid_dims = get_max_grid_dims();
-  int dims  = 1;
+  int dims = 1;
   // check to see if we need to add more grids
   if (grids > max_grid_dims.x)
     dims = 2; 
@@ -186,15 +167,16 @@ dim3 calculate_grid_size(size_t size, size_t cuda_block_size)
   return grid_size;
 }
 
+// coefficient permutations
 template <int BlockSize>
 inline __device__
 const unsigned char* get_perm();
 
 template <>
 inline __device__
-const unsigned char* get_perm<64>()
+const unsigned char* get_perm<4>()
 {
-  return perm_3d;
+  return perm_1;
 }
 
 template <>
@@ -206,9 +188,41 @@ const unsigned char* get_perm<16>()
 
 template <>
 inline __device__
-const unsigned char* get_perm<4>()
+const unsigned char* get_perm<64>()
 {
-  return perm_1;
+  return perm_3;
+}
+
+// maximum number of bit planes to encode/decode
+inline __device__
+uint precision(int maxexp, uint maxprec, int minexp, int dims)
+{ 
+  return max(maxprec, max(0, maxexp - minexp + 2 * dims + 2));
+}
+
+template <int BlockSize>
+inline __device__
+uint precision(int maxexp, uint maxprec, int minexp);
+
+template <>
+inline __device__
+uint precision<4>(int maxexp, uint maxprec, int minexp)
+{ 
+  return precision(maxexp, maxprec, minexp, 1);
+}
+
+template <>
+inline __device__
+uint precision<16>(int maxexp, uint maxprec, int minexp)
+{
+  return precision(maxexp, maxprec, minexp, 2);
+}
+
+template <>
+inline __device__
+uint precision<64>(int maxexp, uint maxprec, int minexp)
+{
+  return precision(maxexp, maxprec, minexp, 3);
 }
 
 } // namespace cuZFP

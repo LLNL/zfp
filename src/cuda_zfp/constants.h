@@ -43,7 +43,7 @@ __device__ static const unsigned char perm_2[16] = {
 #define index(x, y, z) ((x) + 4 * ((y) + 4 * (z)))
 
 __device__ static const unsigned char
-perm_3d[64] = {
+perm_3[64] = {
   index(0, 0, 0), //  0 : 0
 
   index(1, 0, 0), //  1 : 1
