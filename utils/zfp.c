@@ -114,6 +114,7 @@ usage()
   fprintf(stderr, "  -x serial : serial compression (default)\n");
   fprintf(stderr, "  -x omp[=threads[,chunk_size]] : OpenMP parallel compression\n");
   fprintf(stderr, "  -x cuda : CUDA fixed rate parallel compression/decompression\n");
+  fprintf(stderr, "  -x hip : HIP fixed rate parallel compression/decompression\n");
   fprintf(stderr, "Index for parallel decompression:\n");
   fprintf(stderr, "  -m <path> : block index (output of compression, input to variable-rate parallel decompression)\n");
   fprintf(stderr, "  -n <type>=<granularity>: optional type (offset or hybrid) and granularity of block index\n");
@@ -303,6 +304,8 @@ int main(int argc, char* argv[])
         }
         else if (!strcmp(argv[i], "cuda"))
           exec = zfp_exec_cuda;
+        else if (!strcmp(argv[i], "hip"))
+          exec = zfp_exec_hip;
         else
           usage();
         break;
@@ -505,6 +508,12 @@ int main(int argc, char* argv[])
     case zfp_exec_cuda:
       if (!zfp_stream_set_execution(zfp, exec)) {
         fprintf(stderr, "cuda execution not available\n");
+        return EXIT_FAILURE;
+      }
+      break;
+    case zfp_exec_hip:
+      if (!zfp_stream_set_execution(zfp, exec)) {
+        fprintf(stderr, "hip execution not available\n");
         return EXIT_FAILURE;
       }
       break;
