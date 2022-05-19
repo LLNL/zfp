@@ -430,6 +430,9 @@ void decode_block(BlockReader &reader, Scalar *fblock, const int decode_paramete
         maxprec = precision<BlockSize>(emax, get_precision<Scalar>(), minexp);
         bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
         break;
+      default:
+        // mode not supported
+        return;
     }
 
     inv_transform<BlockSize> trans;
