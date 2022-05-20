@@ -150,7 +150,7 @@ private:
 public:
   typedef unsigned long long int Offset;
 
-  __device__ BlockReader(Word* data, Offset offset = 0) :
+  __device__ BlockReader(const Word* data, Offset offset = 0) :
     begin(data)
   {
     rseek(offset);

@@ -1293,6 +1293,7 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
       index_type = index32[0];
       index_granularity = index32[1];
       /* shift the index data pointer to skip the first 8 bytes of the header since they are decoded */
+      /* TODO: this is rather ugly; make index consumer skip header if necessary */
       index32 += 2;
       switch (index_type) {
         case zfp_index_offset:

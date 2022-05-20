@@ -1,7 +1,7 @@
 #ifndef HIPZFP_SHARED_H
 #define HIPZFP_SHARED_H
 
-//#define HIP_ZFP_RATE_PRINT 1
+#define HIP_ZFP_RATE_PRINT 1
 
 // bit stream word/buffer type; granularity of stream I/O operations
 typedef unsigned long long Word;
@@ -198,7 +198,7 @@ const unsigned char* get_perm<64>()
 inline __device__
 uint precision(int maxexp, uint maxprec, int minexp, int dims)
 { 
-  return max(maxprec, max(0, maxexp - minexp + 2 * dims + 2));
+  return min(maxprec, max(0, maxexp - minexp + 2 * (dims + 1)));
 }
 
 template <int BlockSize>

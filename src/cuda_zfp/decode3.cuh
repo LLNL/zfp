@@ -40,8 +40,8 @@ template <class Scalar, int BlockSize>
 __global__
 void
 cudaDecode3(
-  Word* blocks,
-  Word* index,
+  const Word* stream,
+  const Word* index,
   Scalar* out,
   unsigned long long int* max_offset,
   const uint3 dims,
@@ -58,22 +58,30 @@ cudaDecode3(
   typedef long long int ll;
 
   const uint blockId = blockIdx.x + gridDim.x * (blockIdx.y + gridDim.y * blockIdx.z);
-  const uint chunk_idx = blockId * blockDim.x + threadIdx.x;
-  const int warp_idx = blockId * blockDim.x / 32;
-  const int thread_idx = threadIdx.x;
+  const uint chunk_idx = threadIdx.x + blockDim.x * blockId;
+  uint block_idx = chunk_idx * granularity;
+  const uint block_end = min(block_idx + granularity, total_blocks);
 
+  // return if thread has no blocks assigned
+  if (block_idx >= total_blocks)
+    return;
+
+  // compute bit offset to compressed block
   ull bit_offset;
   if (mode == zfp_mode_fixed_rate)
     bit_offset = chunk_idx * decode_parameter;
   else if (index_type == zfp_index_offset)
     bit_offset = index[chunk_idx];
   else if (index_type == zfp_index_hybrid) {
+    const int warp_idx = blockDim.x * blockId / 32;
+    const int thread_idx = threadIdx.x;
     __shared__ uint64 offsets[32];
     uint64* data64 = (uint64*)index;
     uint16* data16 = (uint16*)index;
     data16 += warp_idx * 36 + 3;
     offsets[thread_idx] = (uint64)data16[thread_idx];
     offsets[0] = data64[warp_idx * 9];
+    // compute prefix sum in parallel
     for (int i = 0; i < 5; i++) {
       int j = 1 << i;
       if (thread_idx + j < 32)
@@ -83,25 +91,23 @@ cudaDecode3(
     bit_offset = offsets[thread_idx];
   }
 
+  BlockReader reader(stream, bit_offset);
+
   // logical block dims
   uint3 block_dims;
   block_dims.x = padded_dims.x >> 2;
   block_dims.y = padded_dims.y >> 2;
   block_dims.z = padded_dims.z >> 2;
 
-  BlockReader reader(blocks, bit_offset);
-  uint block_idx = chunk_idx * granularity;
-  const uint lim = min(block_idx + granularity, total_blocks);
-
-  for (; block_idx < lim; block_idx++) {
+  for (; block_idx < block_end; block_idx++) {
     Scalar result[BlockSize] = {0};
     decode_block<Scalar, BlockSize>(reader, result, decode_parameter, mode);
 
     // logical pos in 3d array
     uint3 block;
     block.x = (block_idx % block_dims.x) * 4;
-    block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4;
-    block.z = (block_idx/ (block_dims.x * block_dims.y)) * 4;
+    block.y = ((block_idx / block_dims.x) % block_dims.y) * 4;
+    block.z = (block_idx / (block_dims.x * block_dims.y)) * 4;
 
     const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y + (ll)block.z * stride.z;
 
@@ -116,18 +122,16 @@ cudaDecode3(
   }
 
   // record maximum bit offset reached by any thread
-  if (chunk_idx * granularity < lim) {
-    bit_offset = reader.rtell();
-    atomicMax(max_offset, bit_offset);
-  }
+  bit_offset = reader.rtell();
+  atomicMax(max_offset, bit_offset);
 }
 
 template <class Scalar>
 size_t decode3launch(
   uint3 dims,
   int3 stride,
-  Word* stream,
-  Word* index,
+  const Word* stream,
+  const Word* index,
   Scalar* d_data,
   int decode_parameter,
   uint granularity,
@@ -178,7 +182,7 @@ size_t decode3launch(
 
 #ifdef CUDA_ZFP_RATE_PRINT
   timer.stop();
-  timer.print_throughput<Scalar>("Decode", "decode3", dim3(dims));
+  timer.print_throughput<Scalar>("Decode", "decode3", dim3(dims.x, dims.y, dims.z));
 #endif
 
   unsigned long long int offset;
@@ -192,8 +196,8 @@ template <class Scalar>
 size_t decode3(
   uint3 dims,
   int3 stride,
-  Word* stream,
-  Word* index,
+  const Word* stream,
+  const Word* index,
   Scalar* d_data,
   int decode_parameter,
   uint granularity,

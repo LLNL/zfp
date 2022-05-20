@@ -164,57 +164,56 @@ size_t decode(uint dims[3], int3 stride, Word *stream, Word *index, T *out, int 
   return bits_read;
 }
 
-Word *setup_device_stream_compress(zfp_stream *stream, const zfp_field *field)
+Word* setup_device_stream_compress(zfp_stream *stream, const zfp_field *field)
 {
-  bool stream_device = cuZFP::is_gpu_ptr(stream->stream->begin);
   // TODO: remove all assertions
-  assert(sizeof(word) == sizeof(Word)); // CUDA version currently only supports 64bit words
+  assert(sizeof(word) == sizeof(Word)); // GPU version currently only supports 64-bit words
 
-  if (stream_device)
-    return (Word*)stream->stream->begin;
+  Word* d_stream = (Word*)stream->stream->begin;
+  if (!cuZFP::is_gpu_ptr(d_stream)) {
+    // allocate device memory for compressed data
+    size_t size = zfp_stream_maximum_size(stream, field);
+    if (cudaMalloc(&d_stream, size) != cudaSuccess)
+      std::cerr << "failed to allocate device memory for stream" << std::endl;
+  }
 
-  Word *d_stream = NULL;
-  size_t max_size = zfp_stream_maximum_size(stream, field);
-  if (cudaMalloc(&d_stream, max_size) != cudaSuccess)
-    std::cerr << "failed to allocate device memory for stream" << std::endl;
   return d_stream;
 }
 
-Word *setup_device_stream_decompress(zfp_stream *stream, const zfp_field *field)
+Word* setup_device_stream_decompress(zfp_stream* stream)
 {
-  bool stream_device = cuZFP::is_gpu_ptr(stream->stream->begin);
-  assert(sizeof(word) == sizeof(Word)); // CUDA version currently only supports 64bit words;
+  assert(sizeof(word) == sizeof(Word)); // GPU version currently only supports 64-bit words
 
-  if (stream_device)
-    return (Word*)stream->stream->begin;
+  Word* d_stream = (Word*)stream->stream->begin;
+  if (!cuZFP::is_gpu_ptr(d_stream)) {
+    // copy compressed data to device memory
+    size_t size = stream_capacity(stream->stream);
+    if (cudaMalloc(&d_stream, size) != cudaSuccess)
+      std::cerr << "failed to allocate device memory for stream" << std::endl;
+    if (cudaMemcpy(d_stream, stream->stream->begin, size, cudaMemcpyHostToDevice) != cudaSuccess)
+      std::cerr << "failed to copy stream from host to device" << std::endl;
+  }
 
-  Word *d_stream = NULL;
-  // TODO: change maximum_size to compressed stream size
-  size_t size = zfp_stream_maximum_size(stream, field);
-  if (cudaMalloc(&d_stream, size) != cudaSuccess)
-    std::cerr << "failed to allocate device memory for stream" << std::endl;
-  if (cudaMemcpy(d_stream, stream->stream->begin, size, cudaMemcpyHostToDevice) != cudaSuccess)
-    std::cerr << "failed to copy stream from host to device" << std::endl;
   return d_stream;
 }
 
-Word *setup_device_index(zfp_stream *stream, const size_t size)
+Word* setup_device_index(zfp_stream* stream)
 {
-  bool stream_device = cuZFP::is_gpu_ptr(stream->index->data);
-  assert(sizeof(uint64) == sizeof(Word)); // CUDA version currently only supports 64bit words;
+  assert(sizeof(uint64) == sizeof(Word)); // GPU version currently only supports 64-bit words
 
-  if (stream_device)
-    return (Word*)stream->index->data;
+  Word* d_index = (Word*)stream->index->data;
+  if (!cuZFP::is_gpu_ptr(d_index)) {
+    size_t size = stream->index->size;
+    if (cudaMalloc(&d_index, size) != cudaSuccess)
+      std::cerr << "failed to allocate device memory for index" << std::endl;
+    if (cudaMemcpy(d_index, stream->index->data, size, cudaMemcpyHostToDevice) != cudaSuccess)
+      std::cerr << "failed to copy stream from host to device" << std::endl;
+  }
 
-  Word *d_index = NULL;
-  if (cudaMalloc(&d_index, size) != cudaSuccess)
-    std::cerr << "failed to allocate device memory for index" << std::endl;
-  if (cudaMemcpy(d_index, stream->index->data, size, cudaMemcpyHostToDevice) != cudaSuccess)
-    std::cerr << "failed to copy stream from host to device" << std::endl;
   return d_index;
 }
 
-void* offset_void(zfp_type type, void *ptr, long long int offset)
+void* offset_void(zfp_type type, void* ptr, long long int offset)
 {
   void* offset_ptr = NULL;
   if (type == zfp_type_float) {
@@ -236,92 +235,71 @@ void* offset_void(zfp_type type, void *ptr, long long int offset)
   return offset_ptr;
 }
 
-void *setup_device_field_compress(const zfp_field *field, const int3 &stride, long long int &offset)
+void* setup_device_field_compress(const zfp_field* field, const int3& stride, long long int& offset)
 {
-  bool field_device = cuZFP::is_gpu_ptr(field->data);
-
-  if (field_device) {
+  if (cuZFP::is_gpu_ptr(field->data)) {
+    // field already resides on device
     offset = 0;
     return field->data;
   }
-
-  uint dims[3];
-  dims[0] = field->nx;
-  dims[1] = field->ny;
-  dims[2] = field->nz;
-
-  size_t type_size = zfp_type_size(field->type);
-
-  size_t field_size = 1;
-  for (int i = 0; i < 3; i++)
-    if (dims[i] != 0)
-      field_size *= dims[i];
-
-  bool contig = internal::is_contiguous(dims, stride, offset);
-
-  void* host_ptr = offset_void(field->type, field->data, offset);;
-
-  void *d_data = NULL;
-  if (contig) {
-    size_t field_bytes = type_size * field_size;
-    if (cudaMalloc(&d_data, field_bytes) != cudaSuccess)
-      std::cerr << "failed to allocate device memory for field" << std::endl;
-    if (cudaMemcpy(d_data, host_ptr, field_bytes, cudaMemcpyHostToDevice) != cudaSuccess)
-      std::cerr << "failed to copy field from host to device" << std::endl;
+  else {
+    uint dims[3];
+    dims[0] = field->nx;
+    dims[1] = field->ny;
+    dims[2] = field->nz;
+    // GPU implementation currently requires contiguous field
+    if (internal::is_contiguous(dims, stride, offset)) {
+      // copy field from host to device
+      void* d_data = NULL;
+      void* h_data = offset_void(field->type, field->data, offset);
+      size_t size = zfp_field_size(field, NULL) * zfp_type_size(field->type);
+      if (cudaMalloc(&d_data, size) != cudaSuccess)
+        std::cerr << "failed to allocate device memory for field" << std::endl;
+      if (cudaMemcpy(d_data, h_data, size, cudaMemcpyHostToDevice) != cudaSuccess)
+        std::cerr << "failed to copy field from host to device" << std::endl;
+      return offset_void(field->type, d_data, -offset);
+    }
+    else
+      return NULL;
   }
-  return offset_void(field->type, d_data, -offset);
 }
 
-void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, long long int &offset)
+void* setup_device_field_decompress(const zfp_field* field, const int3& stride, long long int& offset)
 {
-  bool field_device = cuZFP::is_gpu_ptr(field->data);
-
-  if (field_device) {
+  if (cuZFP::is_gpu_ptr(field->data)) {
+    // field has already been allocated on device
     offset = 0;
     return field->data;
   }
-
-  uint dims[3];
-  dims[0] = field->nx;
-  dims[1] = field->ny;
-  dims[2] = field->nz;
-
-  size_t type_size = zfp_type_size(field->type);
-
-  size_t field_size = 1;
-  for (int i = 0; i < 3; i++)
-    if (dims[i] != 0)
-      field_size *= dims[i];
-
-  bool contig = internal::is_contiguous(dims, stride, offset);
-
-  void* host_ptr = offset_void(field->type, field->data, offset);
-
-  void *d_data = NULL;
-  if (contig) {
-    size_t field_bytes = type_size * field_size;
-    if (cudaMalloc(&d_data, field_bytes) != cudaSuccess)
-      std::cerr << "failed to allocate device memory for field" << std::endl;
+  else {
+    uint dims[3];
+    dims[0] = field->nx;
+    dims[1] = field->ny;
+    dims[2] = field->nz;
+    // GPU implementation currently requires contiguous field
+    if (internal::is_contiguous(dims, stride, offset)) {
+      // allocate device memory for decompressed field
+      void *d_data = NULL;
+      size_t size = zfp_field_size(field, NULL) * zfp_type_size(field->type);
+      if (cudaMalloc(&d_data, size) != cudaSuccess)
+        std::cerr << "failed to allocate device memory for field" << std::endl;
+      return offset_void(field->type, d_data, -offset);
+    }
+    else
+      return NULL;
   }
-
-  return offset_void(field->type, d_data, -offset);
 }
 
-
-void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes, long long int offset, zfp_type type)
+void cleanup_device_ptr(void* ptr, void* d_ptr, size_t bytes, long long int offset, zfp_type type)
 {
-  bool device = cuZFP::is_gpu_ptr(orig_ptr);
-  if (device)
-    return;
-
-  // from whence it came
-  void *d_offset_ptr = offset_void(type, d_ptr, offset);
-  void *h_offset_ptr = offset_void(type, orig_ptr, offset);
-
-  if (bytes > 0)
-    cudaMemcpy(h_offset_ptr, d_offset_ptr, bytes, cudaMemcpyDeviceToHost);
-
-  cudaFree(d_offset_ptr);
+  if (!cuZFP::is_gpu_ptr(ptr)) {
+    // copy data from device to host and free device memory
+    void *d_offset_ptr = offset_void(type, d_ptr, offset);
+    void *h_offset_ptr = offset_void(type, ptr, offset);
+    if (bytes > 0)
+      cudaMemcpy(h_offset_ptr, d_offset_ptr, bytes, cudaMemcpyDeviceToHost);
+    cudaFree(d_offset_ptr);
+  }
 }
 
 } // namespace internal
@@ -405,18 +383,11 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
     return 0;
   }
 
-  Word *d_stream = internal::setup_device_stream_decompress(stream, field);
+  Word *d_stream = internal::setup_device_stream_decompress(stream);
   Word *d_index = NULL;
-
-  // determine number of blocks to decompress
-  uint blocks = 1;
-  for (int i = 0; i < 3; i++)
-    if (dims[i])
-      blocks *= (dims[i] + 3) / 4;
 
   // decode_parameter differs per execution policy
   // TODO: Decide if we want to pass maxbits, minexp and maxprec for all cases or not
-  size_t index_size;
   uint granularity;
   int decode_parameter;
   zfp_index_type index_type = zfp_index_none;
@@ -430,22 +401,14 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
     decode_parameter = (mode == zfp_mode_fixed_precision ? (int)stream->maxprec : (int)stream->minexp);
     granularity = stream->index->granularity;
     index_type = stream->index->type;
-    uint chunks = (blocks + granularity - 1) / granularity;
-    if (index_type == zfp_index_offset)
-      index_size = (size_t)chunks * sizeof(uint64);
-    else if (index_type == zfp_index_hybrid) {
-      // TODO: check if we want to support variable partition size (recommended to not do so for GPU)
-      size_t partitions = (chunks + ZFP_PARTITION_SIZE - 1) / ZFP_PARTITION_SIZE;
-      index_size = partitions * (sizeof(uint64) + ZFP_PARTITION_SIZE * sizeof(uint16));
-    }
-    else {
-      std::cerr << "zfp unsupported index type for GPU" << std::endl;
+    if (index_type != zfp_index_offset && index_type != zfp_index_hybrid) {
+      std::cerr << "zfp index type not supported on GPU" << std::endl;
       return 0;
     }
-    d_index = internal::setup_device_index(stream, index_size);
+    d_index = internal::setup_device_index(stream);
   }
   else {
-    std::cerr << "zfp expert mode not supported on GPU" << std::endl;
+    std::cerr << "zfp compression mode not supported on GPU" << std::endl;
     return 0;
   }
 
@@ -474,10 +437,7 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   }
 
   // clean up
-  size_t bytes_written = zfp_type_size(field->type);
-  for (int i = 0; i < 3; ++i)
-    if (dims[i] != 0)
-      bytes_written *= dims[i];
+  size_t bytes_written = zfp_field_size(field, NULL) * zfp_type_size(field->type);
   internal::cleanup_device_ptr(stream->stream, d_stream, 0, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, bytes_written, offset, field->type);
   if (d_index)

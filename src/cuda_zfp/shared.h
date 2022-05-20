@@ -198,7 +198,7 @@ const unsigned char* get_perm<64>()
 inline __device__
 uint precision(int maxexp, uint maxprec, int minexp, int dims)
 { 
-  return max(maxprec, max(0, maxexp - minexp + 2 * dims + 2));
+  return min(maxprec, max(0, maxexp - minexp + 2 * (dims + 1)));
 }
 
 template <int BlockSize>

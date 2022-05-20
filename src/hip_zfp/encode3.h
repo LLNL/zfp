@@ -153,7 +153,7 @@ size_t encode3launch(
 
 #ifdef HIP_ZFP_RATE_PRINT
   timer.stop();
-  timer.print_throughput<Scalar>("Encode", "encode3", dim3(dims));
+  timer.print_throughput<Scalar>("Encode", "encode3", dim3(dims.x, dims.y, dims.z));
 #endif
 
   size_t bits_written = zfp_blocks * maxbits;
