@@ -50,89 +50,6 @@ long long int dequantize<long long int, long long int>(const long long int &x, c
   return 1;
 }
 
-// TODO: clean up
-#if 0
-/* Removed the unused arguments from the class as they can not be set easily in
-fixed accuracy or precision mode. If needed their functionality can be restored */
-class BlockReader {
-private:
-  int m_current_bit;
-  Word *m_words;
-  Word m_buffer;
-
-  __device__ BlockReader()
-  {
-  }
-
-public:
-  __device__ BlockReader(Word *b, long long int bit_offset)
-  {
-    // TODO: possibly move the functionality of the constructor to a seek function
-    int word_index = bit_offset / (sizeof(Word) * 8);
-    m_words = b + word_index;
-    m_buffer = *m_words;
-    m_current_bit = bit_offset % (sizeof(Word) * 8);
-    m_buffer >>= m_current_bit;
-  }
-
-  inline __device__
-  void print()
-  {
-    print_bits(m_buffer);
-  }
-
-  inline __device__
-  long long int rtell() const
-  {
-  }
-
-  inline __device__ 
-  uint read_bit()
-  {
-    uint bit = m_buffer & 1;
-    ++m_current_bit;
-    m_buffer >>= 1;
-    // handle moving into next word
-    if (m_current_bit >= sizeof(Word) * 8) {
-      m_current_bit = 0;
-      ++m_words;
-      m_buffer = *m_words;
-    }
-    return bit; 
-  }
-
-  // note this assumes that n_bits is <= 64
-  inline __device__ 
-  uint64 read_bits(const uint &n_bits)
-  {
-    uint64 bits; 
-    // rem bits will always be positive
-    int rem_bits = sizeof(Word) * 8 - m_current_bit;
-     
-    int first_read = min(rem_bits, n_bits);
-    // first mask 
-    Word mask = ((Word)1<<((first_read)))-1;
-    bits = m_buffer & mask;
-    m_buffer >>= n_bits;
-    m_current_bit += first_read;
-    int next_read = 0;
-    if (n_bits >= rem_bits) {
-      ++m_words;
-      m_buffer = *m_words;
-      m_current_bit = 0;
-      next_read = n_bits - first_read; 
-    }
-    // this is basically a no-op when first read constrained 
-    // all the bits. TODO: if we have aligned reads, this could 
-    // be a conditional without divergence
-    mask = ((Word)1<<((next_read)))-1;
-    bits += (m_buffer & mask) << first_read;
-    m_buffer >>= next_read;
-    m_current_bit += next_read; 
-    return bits;
-  }
-}; // block reader
-#else
 class BlockReader {
 private:
   // number of bits in a buffered word
@@ -240,7 +157,6 @@ public:
     return count;
   }
 }; // BlockReader
-#endif
 
 template <typename Scalar, int Size, typename UInt, typename Int>
 inline __device__
@@ -398,7 +314,7 @@ struct inv_transform<64> {
 
 template <typename Scalar, int BlockSize>
 __device__
-void decode_block(BlockReader &reader, Scalar *fblock, const int decode_parameter, const zfp_mode mode)
+void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp_mode mode)
 {
   typedef typename zfp_traits<Scalar>::UInt UInt;
   typedef typename zfp_traits<Scalar>::Int Int;

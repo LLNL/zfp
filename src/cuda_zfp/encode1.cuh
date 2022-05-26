@@ -6,13 +6,19 @@
 #include "encode.cuh"
 #include "type_info.cuh"
 
-#define ZFP_1D_BLOCK_SIZE 4
-
 namespace cuZFP {
 
-template <typename Scalar> 
-__device__ __host__ inline 
-void gather_partial1(Scalar* q, const Scalar* p, int nx, int sx)
+template <typename Scalar>
+inline __device__ __host__
+void gather1(Scalar* q, const Scalar* p, ptrdiff_t sx)
+{
+  for (uint x = 0; x < 4; x++, p += sx)
+    *q++ = *p;
+}
+
+template <typename Scalar>
+inline __device__ __host__
+void gather_partial1(Scalar* q, const Scalar* p, uint nx, ptrdiff_t sx)
 {
   for (uint x = 0; x < 4; x++)
     if (x < nx)
@@ -20,129 +26,106 @@ void gather_partial1(Scalar* q, const Scalar* p, int nx, int sx)
   pad_block(q, nx, 1);
 }
 
-template <typename Scalar> 
-__device__ __host__ inline 
-void gather1(Scalar* q, const Scalar* p, int sx)
-{
-  for (uint x = 0; x < 4; x++, p += sx)
-    *q++ = *p;
-}
-
+// encode kernel
 template <class Scalar>
 __global__
-void 
-cudaEncode1(
-  const uint maxbits,
-  const Scalar* scalars,
-  Word* stream,
-  const uint dim,
-  const int sx,
-  const uint padded_dim,
-  const uint tot_blocks
+void
+cuda_encode1(
+  const Scalar* d_data, // field data device pointer
+  size_t size,          // field dimensions
+  ptrdiff_t stride,     // field stride
+  Word* d_stream,       // compressed bit stream device pointer
+  uint maxbits          // compressed #bits/block
 )
 {
-  typedef unsigned long long int ull;
-  typedef long long int ll;
-  const ull blockId = blockIdx.x + gridDim.x * (blockIdx.y + gridDim.y * blockIdx.z);
+  const size_t blockId = blockIdx.x + (size_t)gridDim.x * (blockIdx.y + (size_t)gridDim.y * blockIdx.z);
 
-  // each thread gets a block so the block index is 
-  // the global thread index
-  const uint block_idx = blockId * blockDim.x + threadIdx.x;
+  // each thread gets a block; block index = global thread index
+  const size_t block_idx = blockId * blockDim.x + threadIdx.x;
 
-  if (block_idx >= tot_blocks) {
-    // we can't launch the exact number of blocks
-    // so just exit if this isn't real
+  // number of zfp blocks
+  const size_t blocks = (size + 3) / 4;
+
+  // return if thread has no blocks assigned
+  if (block_idx >= blocks)
     return;
-  }
 
-  uint block_dim = padded_dim >> 2; 
+  // logical position in 1d array
+  const size_t pos = block_idx;
+  const ptrdiff_t x = pos * 4;
 
-  // logical pos in 3d array
-  uint block = (block_idx % block_dim) * 4; 
+  // offset into field
+  const ptrdiff_t offset = (ptrdiff_t)x * stride;
 
-  const ll offset = (ll)block * sx; 
-
-  Scalar fblock[ZFP_1D_BLOCK_SIZE]; 
-
-  bool partial = false;
-  if (block + 4 > dim) partial = true;
- 
-  if (partial) {
-    const uint nx = 4 - (padded_dim - dim);
-    gather_partial1(fblock, scalars + offset, nx, sx);
-  }
+  // gather data into a contiguous block
+  Scalar fblock[ZFP_1D_BLOCK_SIZE];
+  const uint nx = (uint)min(size - x, (size_t)4);
+  if (nx < ZFP_1D_BLOCK_SIZE)
+    gather_partial1(fblock, d_data + offset, nx, stride);
   else
-    gather1(fblock, scalars + offset, sx);
+    gather1(fblock, d_data + offset, stride);
 
-  encode_block<Scalar, ZFP_1D_BLOCK_SIZE>(fblock, maxbits, block_idx, stream);  
+  encode_block<Scalar, ZFP_1D_BLOCK_SIZE>(fblock, maxbits, block_idx, d_stream);
 }
 
-//
-// Launch the encode kernel
-//
+// launch encode kernel
 template <class Scalar>
 size_t encode1launch(
-  uint dim, 
-  int sx,
   const Scalar* d_data,
-  Word* stream,
-  const int maxbits
+  const size_t size[],
+  const ptrdiff_t stride[],
+  Word* d_stream,
+  uint maxbits
 )
 {
   const int cuda_block_size = 128;
-  dim3 block_size = dim3(cuda_block_size, 1, 1);
+  const dim3 block_size = dim3(cuda_block_size, 1, 1);
 
-  uint zfp_pad(dim); 
-  if (zfp_pad % 4 != 0) zfp_pad += 4 - dim % 4;
+  // number of zfp blocks to encode
+  const size_t blocks = (size[0] + 3) / 4;
 
-  const uint zfp_blocks = zfp_pad / 4; 
+  // determine grid of thread blocks
+  const dim3 grid_size = calculate_grid_size(blocks, cuda_block_size);
 
-  // ensure that we launch a multiple of the cuda block size
-  int block_pad = 0; 
-  if (zfp_blocks % cuda_block_size != 0)
-    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
-
-  size_t total_blocks = block_pad + zfp_blocks;
-  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
-  size_t stream_bytes = calc_device_mem1d(zfp_pad, maxbits);
-
-  // ensure we have zeros (for automics)
-  cudaMemset(stream, 0, stream_bytes);
+  // zero-initialize bit stream (for atomics)
+  const size_t stream_bytes = calc_device_mem(blocks, maxbits);
+  cudaMemset(d_stream, 0, stream_bytes);
 
 #ifdef CUDA_ZFP_RATE_PRINT
   Timer timer;
   timer.start();
 #endif
-  
-  cudaEncode1<Scalar> <<<grid_size, block_size>>>
-    (maxbits,
-     d_data,
-     stream,
-     dim,
-     sx,
-     zfp_pad,
-     zfp_blocks);
+
+  // launch GPU kernel
+  cuda_encode1<Scalar><<<grid_size, block_size>>>(
+    d_data,
+    size[0],
+    stride[0],
+    d_stream,
+    maxbits
+  );
 
 #ifdef CUDA_ZFP_RATE_PRINT
   timer.stop();
-  timer.print_throughput<Scalar>("Encode", "encode1", dim3(dim));
+  timer.print_throughput<Scalar>("Encode", "encode1", dim3(size[0]));
 #endif
 
-  size_t bits_written = zfp_blocks * maxbits;
+  const size_t bits_written = blocks * maxbits;
 
   return bits_written;
 }
 
+// TODO: remove wrapper
 template <class Scalar>
 size_t encode1(
-  int dim,
-  int sx,
-  Scalar* d_data,
-  Word* stream,
-  const int maxbits
+  const Scalar* d_data,
+  const size_t size[],
+  const ptrdiff_t stride[],
+  Word* d_stream,
+  uint maxbits
 )
 {
-  return encode1launch<Scalar>(dim, sx, d_data, stream, maxbits);
+  return encode1launch<Scalar>(d_data, size, stride, d_stream, maxbits);
 }
 
 } // namespace cuZFP

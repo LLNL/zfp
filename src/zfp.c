@@ -14,6 +14,29 @@ const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (May 
 
 /* private functions ------------------------------------------------------- */
 
+static size_t
+field_index_span(const zfp_field* field, ptrdiff_t* min, ptrdiff_t* max)
+{
+  /* compute strides */
+  ptrdiff_t sx = field->sx ? field->sx : 1;
+  ptrdiff_t sy = field->sy ? field->sy : (ptrdiff_t)field->nx;
+  ptrdiff_t sz = field->sz ? field->sz : (ptrdiff_t)(field->nx * field->ny);
+  ptrdiff_t sw = field->sw ? field->sw : (ptrdiff_t)(field->nx * field->ny * field->nz);
+  /* compute largest offsets from base pointer */
+  ptrdiff_t dx = field->nx ? sx * (ptrdiff_t)(field->nx - 1) : 0;
+  ptrdiff_t dy = field->ny ? sy * (ptrdiff_t)(field->ny - 1) : 0;
+  ptrdiff_t dz = field->nz ? sz * (ptrdiff_t)(field->nz - 1) : 0;
+  ptrdiff_t dw = field->nw ? sw * (ptrdiff_t)(field->nw - 1) : 0;
+  /* compute lowest and highest offset */
+  ptrdiff_t imin = MIN(dx, 0) + MIN(dy, 0) + MIN(dz, 0) + MIN(dw, 0);
+  ptrdiff_t imax = MAX(dx, 0) + MAX(dy, 0) + MAX(dz, 0) + MAX(dw, 0);
+  if (min)
+    *min = imin;
+  if (max)
+    *max = imax;
+  return imax - imin + 1;
+}
+
 /* number of bits of precision associated with scalar type */
 static uint
 type_precision(zfp_type type)
@@ -336,6 +359,18 @@ zfp_field_pointer(const zfp_field* field)
   return field->data;
 }
 
+void*
+zfp_field_begin(const zfp_field* field)
+{
+  if (field->data) {
+    ptrdiff_t min;
+    field_index_span(field, &min, NULL);
+    return (void*)((uchar*)field->data + min * (ptrdiff_t)zfp_type_size(field->type));
+  }
+  else
+    return NULL;
+}
+
 zfp_type
 zfp_field_type(const zfp_field* field)
 {
@@ -394,6 +429,12 @@ zfp_field_stride(const zfp_field* field, int* stride)
         break;
     }
   return field->sx || field->sy || field->sz || field->sw;
+}
+
+zfp_bool
+zfp_field_is_contiguous(const zfp_field* field)
+{
+  return field_index_span(field, NULL, NULL) == zfp_field_size(field, NULL);
 }
 
 uint64
@@ -938,23 +979,24 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
   switch (policy) {
     case zfp_exec_serial:
       break;
+#ifdef ZFP_WITH_OPENMP
+    case zfp_exec_omp:
+      if (zfp->exec.policy != policy) {
+        /* reset parameters to their default values */
+        zfp->exec.params.omp.threads = 0;
+        zfp->exec.params.omp.chunk_size = 0;
+      }
+      break;
+#endif
 #ifdef ZFP_WITH_CUDA
     case zfp_exec_cuda:
+      if (!cuda_init(zfp))
+        return zfp_false;
       break;
 #endif
 #ifdef ZFP_WITH_HIP
     case zfp_exec_hip:
       break;
-#endif
-    case zfp_exec_omp:
-#ifdef _OPENMP
-      if (zfp->exec.policy != policy) {
-        zfp->exec.params.omp.threads = 0;
-        zfp->exec.params.omp.chunk_size = 0;
-      }
-      break;
-#else
-      return zfp_false;
 #endif
     default:
       return zfp_false;

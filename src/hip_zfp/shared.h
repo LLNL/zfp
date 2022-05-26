@@ -1,19 +1,33 @@
 #ifndef HIPZFP_SHARED_H
 #define HIPZFP_SHARED_H
 
-#define HIP_ZFP_RATE_PRINT 1
+#include <math.h>
+#include <stdio.h>
+#include "zfp.h"
+#include "type_info.h"
+#include "constants.h"
+
+//#define HIP_ZFP_RATE_PRINT 1
 
 // bit stream word/buffer type; granularity of stream I/O operations
 typedef unsigned long long Word;
 #define Wsize ((uint)(sizeof(Word) * CHAR_BIT))
 
-#include <math.h>
-#include <stdio.h>
-#include "type_info.h"
-#include "zfp.h"
-#include "constants.h"
+#define ZFP_1D_BLOCK_SIZE 4
+#define ZFP_2D_BLOCK_SIZE 16
+#define ZFP_3D_BLOCK_SIZE 64
 
 namespace hipZFP {
+
+typedef ulonglong2 size2;
+typedef ulonglong3 size3;
+typedef longlong2 ptrdiff2;
+typedef longlong3 ptrdiff3;
+
+#define make_size2(x, y) make_ulonglong2(x, y)
+#define make_ptrdiff2(x, y) make_longlong2(x, y)
+#define make_size3(x, y, z) make_ulonglong3(x, y, z)
+#define make_ptrdiff3(x, y, z) make_longlong3(x, y, z)
 
 #ifdef HIP_ZFP_RATE_PRINT
 // timer for measuring encode/decode throughput
@@ -73,33 +87,20 @@ void print_bits(const T &bits)
   printf("\n");
 }
 
-size_t calc_device_mem(size_t total_blocks, size_t bits_per_block)
+inline __host__ __device__
+size_t round_up(size_t size, size_t unit)
+{
+  size += unit - 1;
+  size -= size % unit;
+  return size;
+}
+
+size_t calc_device_mem(size_t blocks, size_t bits_per_block)
 {
   const size_t bits_per_word = sizeof(Word) * CHAR_BIT;
-  const size_t total_bits = total_blocks * bits_per_block;
-  const size_t total_words = (total_bits + bits_per_word - 1) / bits_per_word;
-  return total_words * sizeof(Word);
-}
-
-size_t calc_device_mem1d(const uint dim, const int maxbits)
-{
-  const size_t total_blocks = ((size_t)dim + 3) / 4;
-  return calc_device_mem(total_blocks, maxbits);
-}
-
-size_t calc_device_mem2d(const uint2 dims, const int maxbits)
-{
-  const size_t total_blocks = (((size_t)dims.x + 3) / 4) *
-                              (((size_t)dims.y + 3) / 4);
-  return calc_device_mem(total_blocks, maxbits);
-}
-
-size_t calc_device_mem3d(const uint3 dims, const int maxbits)
-{
-  const size_t total_blocks = (((size_t)dims.x + 3) / 4) *
-                              (((size_t)dims.y + 3) / 4) *
-                              (((size_t)dims.z + 3) / 4);
-  return calc_device_mem(total_blocks, maxbits);
+  const size_t bits = blocks * bits_per_block;
+  const size_t words = (bits + bits_per_word - 1) / bits_per_word;
+  return words * sizeof(Word);
 }
 
 dim3 get_max_grid_dims()
@@ -114,10 +115,11 @@ dim3 get_max_grid_dims()
   return grid_dims;
 }
 
-// size is assumed to have a pad to the nearest hip block size
-dim3 calculate_grid_size(size_t size, size_t hip_block_size)
+dim3 calculate_grid_size(size_t threads, size_t hip_block_size)
 {
-  size_t grids = size / hip_block_size; // because of pad this will be exact
+  // round up to next multiple of hip_block_size
+  threads = round_up(threads, hip_block_size);
+  size_t grids = threads / hip_block_size;
   dim3 max_grid_dims = get_max_grid_dims();
   int dims = 1;
   // check to see if we need to add more grids
@@ -142,7 +144,7 @@ dim3 calculate_grid_size(size_t size, size_t hip_block_size)
     grid_size.x = base; 
     grid_size.y = base; 
     // figure out how many y to add
-    uint rem = (size - base * base);
+    uint rem = threads - base * base;
     uint y_rows = rem / base;
     if (rem % base != 0)
       y_rows++;
@@ -158,7 +160,7 @@ dim3 calculate_grid_size(size_t size, size_t hip_block_size)
     grid_size.y = base; 
     grid_size.z = base; 
     // figure out how many z to add
-    uint rem = (size - base * base * base);
+    uint rem = threads - base * base * base;
     uint z_rows = rem / (base * base);
     if (rem % (base * base) != 0)
       z_rows++;

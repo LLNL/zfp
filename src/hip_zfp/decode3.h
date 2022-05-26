@@ -9,8 +9,18 @@
 namespace hipZFP {
 
 template <typename Scalar>
-__device__ __host__ inline
-void scatter_partial3(const Scalar* q, Scalar* p, int nx, int ny, int nz, int sx, int sy, int sz)
+inline __device__ __host__
+void scatter3(const Scalar* q, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+{
+  for (uint z = 0; z < 4; z++, p += sz - 4 * sy)
+    for (uint y = 0; y < 4; y++, p += sy - 4 * sx)
+      for (uint x = 0; x < 4; x++, p += sx)
+        *p = *q++;
+}
+
+template <typename Scalar>
+inline __device__ __host__
+void scatter_partial3(const Scalar* q, Scalar* p, uint nx, uint ny, uint nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
 {
   for (uint z = 0; z < 4; z++)
     if (z < nz) {
@@ -18,7 +28,7 @@ void scatter_partial3(const Scalar* q, Scalar* p, int nx, int ny, int nz, int sx
         if (y < ny) {
           for (uint x = 0; x < 4; x++)
             if (x < nx) {
-              *p = q[16 * z + 4 * y + x];
+              *p = q[x + 4 * y + 16 * z];
               p += sx;
             }
           p += sy - nx * sx;
@@ -27,99 +37,87 @@ void scatter_partial3(const Scalar* q, Scalar* p, int nx, int ny, int nz, int sx
     }
 }
 
-template <typename Scalar>
-__device__ __host__ inline
-void scatter3(const Scalar* q, Scalar* p, int sx, int sy, int sz)
-{
-  for (uint z = 0; z < 4; z++, p += sz - 4 * sy)
-    for (uint y = 0; y < 4; y++, p += sy - 4 * sx)
-      for (uint x = 0; x < 4; x++, p += sx)
-        *p = *q++;
-}
-
-template <class Scalar, int BlockSize>
+template <class Scalar>
 __global__
 void
-hipDecode3(
-  const Word* stream,
-  const Word* index,
-  Scalar* out,
+hip_decode3(
+  Scalar* d_data,
+  size3 size,
+  ptrdiff3 stride,
+  const Word* d_stream,
+  zfp_mode mode,
+  int decode_parameter,
   unsigned long long int* max_offset,
-  const uint3 dims,
-  const int3 stride,
-  const uint3 padded_dims,
-  const uint total_blocks,
-  const int decode_parameter,
-  const uint granularity,
-  const zfp_mode mode,
-  const zfp_index_type index_type
+  const Word* d_index,
+  zfp_index_type index_type,
+  uint granularity
 )
 {
-  typedef unsigned long long int ull;
-  typedef long long int ll;
+  const size_t blockId = blockIdx.x + (size_t)gridDim.x * (blockIdx.y + (size_t)gridDim.y * blockIdx.z);
+  const size_t chunk_idx = threadIdx.x + blockDim.x * blockId;
 
-  const uint blockId = blockIdx.x + gridDim.x * (blockIdx.y + gridDim.y * blockIdx.z);
-  const uint chunk_idx = threadIdx.x + blockDim.x * blockId;
-  uint block_idx = chunk_idx * granularity;
-  const uint block_end = min(block_idx + granularity, total_blocks);
+  // number of zfp blocks
+  const size_t bx = (size.x + 3) / 4;
+  const size_t by = (size.y + 3) / 4;
+  const size_t bz = (size.z + 3) / 4;
+  const size_t blocks = bx * by * bz;
+
+  // first and last zfp block assigned to thread
+  size_t block_idx = chunk_idx * granularity;
+  const size_t block_end = min(block_idx + granularity, blocks);
 
   // return if thread has no blocks assigned
-  if (block_idx >= total_blocks)
+  if (block_idx >= blocks)
     return;
 
   // compute bit offset to compressed block
-  ull bit_offset;
+  unsigned long long bit_offset;
   if (mode == zfp_mode_fixed_rate)
     bit_offset = chunk_idx * decode_parameter;
   else if (index_type == zfp_index_offset)
-    bit_offset = index[chunk_idx];
+    bit_offset = d_index[chunk_idx];
   else if (index_type == zfp_index_hybrid) {
-    const int warp_idx = blockDim.x * blockId / 32;
-    const int thread_idx = threadIdx.x;
+    const uint thread_idx = threadIdx.x;
+    const size_t warp_idx = (chunk_idx - thread_idx) / 32;
     __shared__ uint64 offsets[32];
-    uint64* data64 = (uint64*)index;
-    uint16* data16 = (uint16*)index;
+    uint64* data64 = (uint64*)d_index;
+    uint16* data16 = (uint16*)d_index;
     data16 += warp_idx * 36 + 3;
     offsets[thread_idx] = (uint64)data16[thread_idx];
     offsets[0] = data64[warp_idx * 9];
     // compute prefix sum in parallel
-    for (int i = 0; i < 5; i++) {
-      int j = 1 << i;
-      if (thread_idx + j < 32)
+    for (uint i = 0; i < 5; i++) {
+      uint j = 1u << i;
+      if (thread_idx + j < 32u)
         offsets[thread_idx + j] += offsets[thread_idx];
       __syncthreads();
     }
     bit_offset = offsets[thread_idx];
   }
 
-  BlockReader reader(stream, bit_offset);
-
-  // logical block dims
-  uint3 block_dims;
-  block_dims.x = padded_dims.x >> 2;
-  block_dims.y = padded_dims.y >> 2;
-  block_dims.z = padded_dims.z >> 2;
+  BlockReader reader(d_stream, bit_offset);
 
   for (; block_idx < block_end; block_idx++) {
-    Scalar result[BlockSize] = {0};
-    decode_block<Scalar, BlockSize>(reader, result, decode_parameter, mode);
+    Scalar fblock[ZFP_3D_BLOCK_SIZE] = { 0 };
+    decode_block<Scalar, ZFP_3D_BLOCK_SIZE>(reader, fblock, decode_parameter, mode);
 
-    // logical pos in 3d array
-    uint3 block;
-    block.x = (block_idx % block_dims.x) * 4;
-    block.y = ((block_idx / block_dims.x) % block_dims.y) * 4;
-    block.z = (block_idx / (block_dims.x * block_dims.y)) * 4;
+    // logical position in 3d array
+    size_t pos = block_idx;
+    ptrdiff_t x = (pos % bx) * 4; pos /= bx;
+    ptrdiff_t y = (pos % by) * 4; pos /= by;
+    ptrdiff_t z = (pos % bz) * 4; pos /= bz;
 
-    const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y + (ll)block.z * stride.z;
+    // offset into field
+    const ptrdiff_t offset = x * stride.x + y * stride.y + z * stride.z;
 
-    if (block.x + 4 > dims.x || block.y + 4 > dims.y || block.z + 4 > dims.z) {
-      const uint nx = block.x + 4u > dims.x ? dims.x - block.x : 4;
-      const uint ny = block.y + 4u > dims.y ? dims.y - block.y : 4;
-      const uint nz = block.z + 4u > dims.z ? dims.z - block.z : 4;
-      scatter_partial3(result, out + offset, nx, ny, nz, stride.x, stride.y, stride.z);
-    }
+    // scatter data from contiguous block
+    const uint nx = (uint)min(size.x - x, 4ull);
+    const uint ny = (uint)min(size.y - y, 4ull);
+    const uint nz = (uint)min(size.z - z, 4ull);
+    if (nx * ny * nz < ZFP_3D_BLOCK_SIZE)
+      scatter_partial3(fblock, d_data + offset, nx, ny, nz, stride.x, stride.y, stride.z);
     else
-      scatter3(result, out + offset, stride.x, stride.y, stride.z);
+      scatter3(fblock, d_data + offset, stride.x, stride.y, stride.z);
   }
 
   // record maximum bit offset reached by any thread
@@ -129,32 +127,31 @@ hipDecode3(
 
 template <class Scalar>
 size_t decode3launch(
-  uint3 dims,
-  int3 stride,
-  const Word* stream,
-  const Word* index,
   Scalar* d_data,
-  int decode_parameter,
-  uint granularity,
+  const size_t size[],
+  const ptrdiff_t stride[],
+  const Word* d_stream,
   zfp_mode mode,
-  zfp_index_type index_type
+  int decode_parameter,
+  const Word* d_index,
+  zfp_index_type index_type,
+  uint granularity
 )
 {
-  uint3 zfp_pad(dims);
-  // ensure that we have block sizes
-  // that are a multiple of 4
-  if (zfp_pad.x % 4 != 0) zfp_pad.x += 4 - dims.x % 4;
-  if (zfp_pad.y % 4 != 0) zfp_pad.y += 4 - dims.y % 4;
-  if (zfp_pad.z % 4 != 0) zfp_pad.z += 4 - dims.z % 4;
-  const uint zfp_blocks = (zfp_pad.x / 4) * (zfp_pad.y / 4) * (zfp_pad.z / 4);
+  // block size is fixed to 32 in this version for hybrid index
+  const int hip_block_size = 32;
+  const dim3 block_size = dim3(hip_block_size, 1, 1);
 
-  /* Block size fixed to 32 in this version, needed for hybrid functionality */
-  size_t hip_block_size = 32;
-  size_t chunks = (zfp_blocks + (size_t)granularity - 1) / granularity;
-  if (chunks % hip_block_size != 0)
-    chunks += hip_block_size - chunks % hip_block_size;
-  dim3 block_size = dim3(hip_block_size, 1, 1);
-  dim3 grid_size = calculate_grid_size(chunks, hip_block_size);
+  // number of zfp blocks to decode
+  const size_t blocks = ((size[0] + 3) / 4) *
+                        ((size[1] + 3) / 4) *
+                        ((size[2] + 3) / 4);
+
+  // number of chunks of blocks
+  const size_t chunks = (blocks + granularity - 1) / granularity;
+
+  // determine grid of thread blocks
+  const dim3 grid_size = calculate_grid_size(chunks, hip_block_size);
 
   // storage for maximum bit offset; needed to position stream
   unsigned long long int* d_offset;
@@ -167,22 +164,23 @@ size_t decode3launch(
   timer.start();
 #endif
 
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(hipDecode3<Scalar, 64>), grid_size, block_size, 0, 0, stream,
-     index,
-     d_data,
-     d_offset,
-     dims,
-     stride,
-     zfp_pad,
-     zfp_blocks,
-     decode_parameter,
-     granularity,
-     mode,
-     index_type);
+  // launch GPU kernel
+  hipLaunchKernelGGL(HIP_KERNEL_NAME(hip_decode3<Scalar>), grid_size, block_size, 0, 0, 
+    d_data,
+    make_size3(size[0], size[1], size[2]),
+    make_ptrdiff3(stride[0], stride[1], stride[2]),
+    d_stream,
+    mode,
+    decode_parameter,
+    d_offset,
+    d_index,
+    index_type,
+    granularity
+  );
 
 #ifdef HIP_ZFP_RATE_PRINT
   timer.stop();
-  timer.print_throughput<Scalar>("Decode", "decode3", dim3(dims.x, dims.y, dims.z));
+  timer.print_throughput<Scalar>("Decode", "decode3", dim3(size[0], size[1], size[2]));
 #endif
 
   unsigned long long int offset;
@@ -194,18 +192,18 @@ size_t decode3launch(
 
 template <class Scalar>
 size_t decode3(
-  uint3 dims,
-  int3 stride,
-  const Word* stream,
-  const Word* index,
   Scalar* d_data,
-  int decode_parameter,
-  uint granularity,
+  const size_t size[],
+  const ptrdiff_t stride[],
+  const Word* d_stream,
   zfp_mode mode,
-  zfp_index_type index_type
+  int decode_parameter,
+  const Word* d_index,
+  zfp_index_type index_type,
+  uint granularity
 )
 {
-  return decode3launch<Scalar>(dims, stride, stream, index, d_data, decode_parameter, granularity, mode, index_type);
+  return decode3launch<Scalar>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
 }
 
 } // namespace hipZFP
