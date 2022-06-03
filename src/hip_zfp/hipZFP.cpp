@@ -575,21 +575,21 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
     size_t blocks = zfp_field_num_blocks(field);
     for (size_t i = 0; i < blocks; i += chunk_size)
     {
-      int hipr_blocks = chunk_size;
+      int cur_blocks = chunk_size;
       bool last_chunk = false;
       if (i + chunk_size > blocks)
       {
-        hipr_blocks = (int)(blocks - i);
+        cur_blocks = (int)(blocks - i);
         last_chunk = true;
       }
       // Copy the 16-bit lengths in the offset array
-      hipZFP::copy_length_launch(d_bitlengths, d_offsets, i, hipr_blocks);
+      hipZFP::copy_length_launch(d_bitlengths, d_offsets, i, cur_blocks);
 
       // Prefix sum to turn length into offsets
-      hipcub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, hipr_blocks + 1);
+      hipcub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, cur_blocks + 1);
 
       // Compact the stream array in-place
-      hipZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, hipr_blocks, last_chunk, buffer_maxbits, num_sm);
+      hipZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, last_chunk, buffer_maxbits, num_sm);
     }
     // The total length in bits is now in the base of the prefix sum.
     hipMemcpy (&stream_bytes, d_offsets, sizeof (unsigned long long), hipMemcpyDeviceToHost);
