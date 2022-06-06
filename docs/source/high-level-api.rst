@@ -7,7 +7,7 @@ High-Level C API
 
 The C API is broken down into a :ref:`high-level API <hl-api>`,
 which handles compression of entire arrays, and a
-:ref:`low-level-api <ll-api>` for processing individual blocks
+:ref:`low-level API <ll-api>` for processing individual blocks
 and managing the underlying bit stream.
 
 The high-level API should be the API of choice for applications that
@@ -192,6 +192,7 @@ Types
 
 ----
 
+.. _index-type:
 .. c:type:: zfp_index_type
 
   Block index implementation used to encode block offsets.
@@ -748,20 +749,21 @@ Block Index
 ^^^^^^^^^^^
 
 When the rate is not fixed, |zfp| blocks are compressed to a variable number of
-bits.  In this case, direct random access (i.e., in time *O*(1)) to any given
-block is not possible without encoding additional information about the location
-(bit offset) where the block is stored within the compressed stream.  Examples
-use cases include |zfp|'s variable-rate compressed array classes and parallel
-decompression.  Although storing a full 64-bit offset to each block would be
-possible, the overhead of doing so would be substantial when the rate and/or
-dimensionality is low, and may even exceed the payload data in size.
+bits.  In this case, direct random access (i.e., in time *O*\(1)) to any given
+block is not possible without encoding additional information about the
+location (bit offset) where the block is stored within the compressed stream.
+Example use cases where such random access is needed include |zfp|'s
+variable-rate compressed-array classes and parallel decompression.  Although
+storing a full 64-bit offset to each block would be possible, the relative
+overhead of doing so would be substantial when the rate and/or dimensionality
+is low, and may even exceed the payload compressed data in size.
 
-To assist with this, |zfp| |vrdecrlease| and later versions support the
-encoding of a *block index*, which uses concise data structures for efficient
-encoding of block offsets.  Multiple implementation exists that provide
-different trade-offs in storage size, speed of encoding/decoding, and range of
-offsets that can be encoded.  Currently, the following index representations
-are available:
+To assist with this, |zfp| |vrdecrelease| and later versions support
+constructing a *block index*, which uses concise data structures to efficiently
+encode block offsets.  Multiple implementations exist that provide different
+trade-offs in storage size, speed of encoding/decoding, and range of block
+offsets and sizes supported.  Currently, the following
+:ref:`index representations <index-type>` are available:
 
 * :code:`zfp_index_offset`: Store raw 64-bit offsets.
 * :code:`zfp_index_length`: Store only 16-bit block lengths.  To compute an
@@ -780,9 +782,15 @@ index be built during compression, store this sideband information separately,
 and upon decompression reconstruct the index via deserialization.  Toward
 this end, the functions below are available.
 
+.. note::
+  This API currently does not provide a mechanism for querying block offsets
+  from the index, which would be valuable for applications that process
+  individual blocks through the :ref:`low-level API <ll-api>`.
+  TODO: The API will expand to adddress this limitation.
+
 .. c:function:: void zfp_stream_set_index(zfp_stream* stream, zfp_index* index)
 
-  Associate an already constructed block index with the compressed stream.
+  Associate an already constructed block index with a compressed stream.
 
 ----
 
@@ -805,6 +813,13 @@ this end, the functions below are available.
   Deserialize a previously constructed index from the data buffer of given
   byte size.  Note that no copy is made of the buffer; it must remain
   allocated throughout the life time of the index.
+
+.. note::
+
+  The user is also responsible for calling :c:func:`zfp_index_set_type`
+  to set the index type and granularity.  While part of the serialized data,
+  this information currently is not exposed to the user.
+  TODO: This will be addressed before the next release.
   
 ----
 
@@ -813,11 +828,11 @@ this end, the functions below are available.
   Free the index data structure.  Note: This does not free the buffer pointed
   at by :code:`index->data`.
 
-.. warning::
+.. note::
   During compression, the implementation allocates this buffer; for
   decompression, the user must allocate it.  It is currently unclear
   how the user ought to deallocate data allocated by the implementation.
-  This API is likely to change to address this shortcoming.
+  TODO: The API will change to address this shortcoming.
 
 
 .. _hl-func-codec:
