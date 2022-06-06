@@ -1156,7 +1156,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
       { compress_strided_int32_4, compress_strided_int64_4, compress_strided_float_4, compress_strided_double_4 }}},
 
     /* OpenMP */
-#ifdef _OPENMP
+#ifdef ZFP_WITH_OPENMP
     {{{ compress_omp_int32_1,         compress_omp_int64_1,         compress_omp_float_1,         compress_omp_double_1 },
       { compress_strided_omp_int32_2, compress_strided_omp_int64_2, compress_strided_omp_float_2, compress_strided_omp_double_2 },
       { compress_strided_omp_int32_3, compress_strided_omp_int64_3, compress_strided_omp_float_3, compress_strided_omp_double_3 },
@@ -1260,7 +1260,7 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
       { decompress_strided_int32_4, decompress_strided_int64_4, decompress_strided_float_4, decompress_strided_double_4 }}},
 
     /* OpenMP */
-#ifdef _OPENMP
+#ifdef ZFP_WITH_OPENMP
     {{{ decompress_omp_int32_1,         decompress_omp_int64_1,         decompress_omp_float_1,         decompress_omp_double_1 },
       { decompress_strided_omp_int32_2, decompress_strided_omp_int64_2, decompress_strided_omp_float_2, decompress_strided_omp_double_2 },
       { decompress_strided_omp_int32_3, decompress_strided_omp_int64_3, decompress_strided_omp_float_3, decompress_strided_omp_double_3 },
