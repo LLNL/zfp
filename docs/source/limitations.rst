@@ -61,11 +61,9 @@ that will address some of these limitations.
   opportunities for compression, e.g., if the complex magnitude is constant
   and only the phase varies.
 
-- Version |omprelease| adds support for OpenMP compression.  However,
-  OpenMP decompression is not yet supported.
-
 - Version |cudarelease| adds support for CUDA compression and decompression.
-  However, only the fixed-rate compression mode is so far supported.
+  However, all compression modes are not yet supported (see the
+  :ref:`execution` section).
 
 - As of version |4drelease|, |zfp| supports compression and decompression
   of 4D arrays.  However, |zfp| does not yet implement a 4D compressed
