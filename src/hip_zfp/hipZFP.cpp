@@ -29,6 +29,9 @@
 #define inline_ inline
 #endif
 
+//#define ZFP_HIP_HOST_REGISTER
+//#define ZFP_HIP_STREAM_MEMSET
+
 #include "../inline/bitstream.c"
 
 bool field_prev_pinned = false;
@@ -218,6 +221,7 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
   {
     return (Word*) stream->stream->begin;
   } else {
+#ifdef ZFP_HIP_HOST_REGISTER
     unsigned int * flags;
     stream_prev_pinned = hipHostGetFlags(flags, stream->stream->begin) == hipSuccess;
     if (!stream_prev_pinned) {
@@ -225,6 +229,14 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
 											hipHostRegisterDefault);
       ErrorCheck().chk("Register stream");
     }
+#endif
+#ifdef ZFP_HIP_STREAM_MEMSET
+		bitstream * s = stream->stream;
+    for (size_t i = 0; i < ::stream_capacity(s); i++)
+    {
+      ((uint8_t*)::stream_data(s))[i] = 0;
+    }
+#endif
   }
 
   Word *d_stream = NULL;
@@ -242,6 +254,7 @@ Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
   {
     return (Word*) stream->stream->begin;
   } else {
+#ifdef ZFP_HIP_HOST_REGISTER
     unsigned int * flags;
     stream_prev_pinned = hipHostGetFlags(flags, stream->stream->begin) == hipSuccess;
     if (!stream_prev_pinned) {
@@ -249,13 +262,13 @@ Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
                       hipHostRegisterDefault);
       ErrorCheck().chk("Register stream");
     }
+#endif
   }
 
   Word *d_stream = NULL;
   //TODO: change maximum_size to compressed stream size
   size_t size = zfp_stream_maximum_size(stream, field);
   hipMalloc(&d_stream, size);
-
   hipMemcpy(d_stream, stream->stream->begin, size, hipMemcpyHostToDevice);
   return d_stream;
 }
@@ -320,6 +333,7 @@ void *setup_device_field_compress(const zfp_field *field, const int3 &stride, lo
   {
     size_t field_bytes = type_size * field_size;
     if (!field_device) {
+#ifdef ZFP_HIP_HOST_REGISTER
       unsigned int * flags;
       field_prev_pinned = hipHostGetFlags(flags, host_ptr) == hipSuccess;
       if (!field_prev_pinned) {
@@ -327,6 +341,7 @@ void *setup_device_field_compress(const zfp_field *field, const int3 &stride, lo
                       hipHostRegisterDefault);
         ErrorCheck().chk("Register field");
       }
+#endif
     }
     hipMalloc(&d_data, field_bytes);
     hipMemcpy(d_data, host_ptr, field_bytes, hipMemcpyHostToDevice);
@@ -367,6 +382,7 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, 
   {
     size_t field_bytes = type_size * field_size;
     if (!field_device) {
+#ifdef ZFP_HIP_HOST_REGISTER
       unsigned int * flags;
       field_prev_pinned = hipHostGetFlags(flags, field->data) == hipSuccess;
       if (!field_prev_pinned) { 
@@ -374,6 +390,7 @@ void *setup_device_field_decompress(const zfp_field *field, const int3 &stride, 
                       hipHostRegisterDefault);
         ErrorCheck().chk("Register field");
       }
+#endif
     }
     hipMalloc(&d_data, field_bytes);
   }
@@ -392,7 +409,7 @@ ushort *setup_device_nbits_compress(zfp_stream *stream, const zfp_field *field, 
   ushort *d_bitlengths = NULL;
   size_t size = zfp_field_num_blocks(field) * sizeof(ushort);
   hipMalloc(&d_bitlengths, size);
-  return d_bitlengths;
+	return d_bitlengths;
 }
 
 ushort *setup_device_nbits_decompress(zfp_stream *stream, const zfp_field *field, int variable_rate)
@@ -558,21 +575,21 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
     size_t blocks = zfp_field_num_blocks(field);
     for (size_t i = 0; i < blocks; i += chunk_size)
     {
-      int hipr_blocks = chunk_size;
+      int cur_blocks = chunk_size;
       bool last_chunk = false;
       if (i + chunk_size > blocks)
       {
-        hipr_blocks = (int)(blocks - i);
+        cur_blocks = (int)(blocks - i);
         last_chunk = true;
       }
       // Copy the 16-bit lengths in the offset array
-      hipZFP::copy_length_launch(d_bitlengths, d_offsets, i, hipr_blocks);
+      hipZFP::copy_length_launch(d_bitlengths, d_offsets, i, cur_blocks);
 
       // Prefix sum to turn length into offsets
-      hipcub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, hipr_blocks + 1);
+      hipcub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, cur_blocks + 1);
 
       // Compact the stream array in-place
-      hipZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, hipr_blocks, last_chunk, buffer_maxbits, num_sm);
+      hipZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, last_chunk, buffer_maxbits, num_sm);
     }
     // The total length in bits is now in the base of the prefix sum.
     hipMemcpy (&stream_bytes, d_offsets, sizeof (unsigned long long), hipMemcpyDeviceToHost);
@@ -581,6 +598,8 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
 
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, stream_bytes, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, 0, offset, field->type);
+
+#ifdef ZFP_HIP_HOST_REGISTER
   ErrorCheck errors;
   if (!stream_prev_pinned) {
     hipHostUnregister(stream->stream->begin);
@@ -590,6 +609,7 @@ hip_compress(zfp_stream *stream, const zfp_field *field, int variable_rate)
     hipHostUnregister(field->data);
     errors.chk("Unregister field");
   }
+#endif
 
   if (variable_rate)
   {
@@ -680,6 +700,8 @@ hip_decompress(zfp_stream *stream, zfp_field *field)
   size_t bytes = type_size * field_size;
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, 0, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, bytes, offset, field->type);
+
+#ifdef ZFP_HIP_HOST_REGISTER
   ErrorCheck errors;
   if (!stream_prev_pinned) {
     hipHostUnregister(stream->stream->begin);
@@ -689,6 +711,7 @@ hip_decompress(zfp_stream *stream, zfp_field *field)
     hipHostUnregister(field->data);
     errors.chk("Unregister field");
   }
+#endif
 
   // this is how zfp determins if this was a success
   size_t words_read = decoded_bytes / sizeof(Word);
@@ -717,3 +740,4 @@ void warmup_gpu() {
   hipFree(dummy_data_d);
   errors.chk("GPU Warmup - hipFree");
 }
+
