@@ -32,6 +32,43 @@ _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressDecompressFixedRate_
   runCompressDecompressTests(state, zfp_mode_fixed_rate, 1);
 }
 
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != AS_IS) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressDecompressTests(state, zfp_mode_fixed_precision, 1);
+}
+
+#ifdef FL_PT_DATA
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedAccuracy_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != AS_IS) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressDecompressTests(state, zfp_mode_fixed_accuracy, 3);
+}
+#endif
+
+/*
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressReversible_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != AS_IS) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressDecompressReversible(state, 1);
+}
+*/
+
 // returns 0 on success, 1 on test failure
 static int
 runZfpCompressDecompressIsNoop(void **state)
@@ -157,12 +194,17 @@ _catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedRate_expect_
 /* setup functions */
 
 static int
-setupCudaConfig(void **state, stride_config stride)
+setupCudaConfig(void **state, stride_config stride, zfp_index_type index_type, uint granularity)
 {
-  int result = initZfpStreamAndField(state, stride);
+  int result;
+
+  if (index_type == zfp_index_none) {
+    result = initZfpStreamAndField(state, stride);
+  } else {
+    result = initZfpStreamAndFieldIndexed(state, stride, index_type, granularity);
+  }
 
   struct setupVars *bundle = *state;
-  assert_int_equal(zfp_stream_set_execution(bundle->stream, zfp_exec_cuda), 1);
 
   return result;
 }
@@ -170,25 +212,36 @@ setupCudaConfig(void **state, stride_config stride)
 static int
 setupPermuted(void **state)
 {
-  return setupCudaConfig(state, PERMUTED);
+  setupExecPolicy(state, zfp_exec_cuda, zfp_exec_cuda);
+  return setupCudaConfig(state, PERMUTED, zfp_index_none, 1);
 }
 
 static int
 setupInterleaved(void **state)
 {
-  return setupCudaConfig(state, INTERLEAVED);
+  setupExecPolicy(state, zfp_exec_cuda, zfp_exec_cuda);
+  return setupCudaConfig(state, INTERLEAVED, zfp_index_none, 1);
 }
 
 static int
 setupReversed(void **state)
 {
-  return setupCudaConfig(state, REVERSED);
+  setupExecPolicy(state, zfp_exec_cuda, zfp_exec_cuda);
+  return setupCudaConfig(state, REVERSED, zfp_index_none, 1);
 }
 
 static int
 setupDefaultStride(void **state)
 {
-  return setupCudaConfig(state, AS_IS);
+  setupExecPolicy(state, zfp_exec_cuda, zfp_exec_cuda);
+  return setupCudaConfig(state, AS_IS, zfp_index_none, 1);
+}
+
+static int
+setupDefaultIndexed(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_cuda);
+  return setupCudaConfig(state, AS_IS, zfp_index_offset, 1);
 }
 
 #endif

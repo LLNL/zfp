@@ -30,6 +30,10 @@ struct setupVars {
   size_t totalRandomGenArrLen;
   Scalar* randomGenArr;
 
+  // compression and decompression execution policies
+  zfp_exec_policy compressPolicy;
+  zfp_exec_policy decompressPolicy;
+
   // these arrays/dims may include stride-space
   Scalar* compressedArr;
   Scalar* decompressedArr;
@@ -42,6 +46,7 @@ struct setupVars {
   zfp_field* decompressField;
   zfp_stream* stream;
   zfp_mode mode;
+  zfp_index* index;
 
   // compressParamNum is 0, 1, or 2
   //   used to compute fixed mode param
@@ -110,6 +115,14 @@ teardownRandomData(void** state)
   free(bundle);
 
   return 0;
+}
+
+static void
+setupExecPolicy(void **state, zfp_exec_policy compress, zfp_exec_policy decompress)
+{
+  struct setupVars *bundle = *state;
+  bundle->compressPolicy = compress;
+  bundle->decompressPolicy = decompress;
 }
 
 static void
@@ -259,6 +272,31 @@ setupZfpStream(struct setupVars* bundle)
   bundle->buffer = buffer;
 }
 
+static void
+setupZfpIndexedStream(struct setupVars* bundle, zfp_index_type index_type, uint index_granularity)
+{
+  // setup zfp_stream (compression settings)
+  zfp_stream* stream = zfp_stream_open(NULL);
+  assert_non_null(stream);
+
+  bundle->index = zfp_index_create();
+  zfp_index_set_type(bundle->index, index_type, index_granularity);
+  zfp_stream_set_index(stream, bundle->index);
+
+  bundle->bufsizeBytes = zfp_stream_maximum_size(stream, bundle->field);
+  char* buffer = calloc(bundle->bufsizeBytes, sizeof(char));
+  assert_non_null(buffer);
+
+  bitstream* s = stream_open(buffer, bundle->bufsizeBytes);
+  assert_non_null(s);
+
+  zfp_stream_set_bit_stream(stream, s);
+  zfp_stream_rewind(stream);
+
+  bundle->stream = stream;
+  bundle->buffer = buffer;
+}
+
 // returns 1 on failure, 0 on success
 static int
 setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParamNum)
@@ -326,6 +364,21 @@ initZfpStreamAndField(void **state, stride_config stride)
   return 0;
 }
 
+static int
+initZfpStreamAndFieldIndexed(void **state, stride_config stride, zfp_index_type index_type, uint granularity)
+{
+  struct setupVars *bundle = *state;
+
+  initStridedFields(bundle, stride);
+  setupZfpIndexedStream(bundle, index_type, granularity);
+
+  bundle->timer = zfp_timer_alloc();
+
+  *state = bundle;
+
+  return 0;
+}
+
 // randomGenArr and the struct itself are freed in teardownRandomData()
 static int
 teardown(void **state)
@@ -362,8 +415,16 @@ when_seededRandomSmoothDataGenerated_expect_ChecksumMatches(void **state)
 
 // returns 1 on failure, 0 on success
 static int
-runZfpCompress(zfp_stream* stream, const zfp_field* field, zfp_timer* timer, size_t* compressedBytes)
+runZfpCompress(void **state, size_t* compressedBytes)
 {
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  zfp_field* field = bundle->field;
+  zfp_timer* timer = bundle->timer;
+
+  // set policy for compression
+  zfp_stream_set_execution(stream, bundle->compressPolicy);
+
   // perform compression and time it
   if (zfp_timer_start(timer)) {
     printf("ERROR: Unknown platform (none of linux, win, osx) when starting timer\n");
@@ -373,6 +434,8 @@ runZfpCompress(zfp_stream* stream, const zfp_field* field, zfp_timer* timer, siz
   *compressedBytes = zfp_compress(stream, field);
   double time = zfp_timer_stop(timer);
   printf("\t\t\t\t\tCompress time (s): %lf\n", time);
+
+        printf("compressed size: %ld\n", *compressedBytes);
 
   if (compressedBytes == 0) {
     printf("ERROR: Compression failed, nothing was written to bitstream\n");
@@ -400,8 +463,16 @@ isCompressedBitstreamChecksumsMatch(zfp_stream* stream, bitstream* bs, uint dimL
 
 // returns 1 on failure, 0 on success
 static int
-runZfpDecompress(zfp_stream* stream, zfp_field* decompressField, zfp_timer* timer, size_t compressedBytes)
+runZfpDecompress(void **state, size_t compressedBytes)
 {
+  struct setupVars *bundle = *state;
+  zfp_stream* stream = bundle->stream;
+  zfp_field* decompressField = bundle->decompressField;
+  zfp_timer* timer = bundle->timer;
+
+  // set policy for decompression
+  zfp_stream_set_execution(stream, bundle->decompressPolicy);
+
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location
   if (zfp_timer_start(timer)) {
@@ -412,6 +483,8 @@ runZfpDecompress(zfp_stream* stream, zfp_field* decompressField, zfp_timer* time
   size_t result = zfp_decompress(stream, decompressField);
   double time = zfp_timer_stop(timer);
   printf("\t\t\t\t\tDecompress time (s): %lf\n", time);
+
+        printf("decompressed size: %ld\n", result);
 
   if (compressedBytes != result) {
     printf("ERROR: Decompression advanced the bitstream to a different position than after compression: %zu != %zu\n", result, compressedBytes);
@@ -474,7 +547,7 @@ isZfpCompressDecompressChecksumsMatch(void **state, int doDecompress)
   zfp_timer* timer = bundle->timer;
 
   size_t compressedBytes;
-  if (runZfpCompress(stream, field, timer, &compressedBytes) == 1) {
+  if (runZfpCompress(state, &compressedBytes) == 1) {
     return 1;
   }
 
@@ -489,7 +562,7 @@ isZfpCompressDecompressChecksumsMatch(void **state, int doDecompress)
 
   // rewind stream for decompression
   zfp_stream_rewind(stream);
-  if (runZfpDecompress(stream, bundle->decompressField, timer, compressedBytes) == 1) {
+  if (runZfpDecompress(state, compressedBytes) == 1) {
     return 1;
   }
 
@@ -503,14 +576,16 @@ isZfpCompressDecompressChecksumsMatch(void **state, int doDecompress)
 // this test is run by itself as its own test case, so it can use fail_msg() instead of accumulating error counts
 // will skip decompression if compression fails
 static void
-runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
+runCompressDecompressReversible(void **state, int doDecompress)
 {
+  struct setupVars* bundle = *state;
+
   zfp_stream* stream = bundle->stream;
   zfp_field* field = bundle->field;
   zfp_timer* timer = bundle->timer;
 
   size_t compressedBytes;
-  if (runZfpCompress(stream, field, timer, &compressedBytes) == 1) {
+  if (runZfpCompress(state, &compressedBytes) == 1) {
     fail_msg("Reversible test failed.");
   }
 
@@ -525,7 +600,7 @@ runCompressDecompressReversible(struct setupVars* bundle, int doDecompress)
 
   // rewind stream for decompression
   zfp_stream_rewind(stream);
-  if (runZfpDecompress(stream, bundle->decompressField, timer, compressedBytes) == 1) {
+  if (runZfpDecompress(state, compressedBytes) == 1) {
     fail_msg("Reversible test failed.");
   }
 

@@ -200,7 +200,6 @@ setupOmpConfig(void **state, stride_config stride)
   int result = initZfpStreamAndField(state, stride);
 
   struct setupVars *bundle = *state;
-  assert_int_equal(zfp_stream_set_execution(bundle->stream, zfp_exec_omp), 1);
 
   return result;
 }
@@ -210,24 +209,28 @@ setupOmpConfig(void **state, stride_config stride)
 static int
 setupPermuted(void **state)
 {
+  setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
   return setupOmpConfig(state, PERMUTED);
 }
 
 static int
 setupInterleaved(void **state)
 {
+  setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
   return setupOmpConfig(state, INTERLEAVED);
 }
 
 static int
 setupReversed(void **state)
 {
+  setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
   return setupOmpConfig(state, REVERSED);
 }
 
 static int
 setupDefaultStride(void **state)
 {
+  setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
   return setupOmpConfig(state, AS_IS);
 }
 
