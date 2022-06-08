@@ -10,6 +10,19 @@
 #include "zfpEndtoendBase.c"
 
 // cuda entry functions
+
+// fixed-rate checksum
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedRate_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != AS_IS) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressDecompressTests(state, zfp_mode_fixed_rate, 3);
+}
+
 static void
 _catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressDecompressFixedRate_expect_BitstreamAndArrayChecksumsMatch)(void **state)
 {
@@ -18,7 +31,7 @@ _catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressDecompressFixedRate_
     fail_msg("Invalid stride during test");
   }
 
-  runCompressDecompressTests(state, zfp_mode_fixed_rate, 1);
+  runCompressDecompressTests(state, zfp_mode_fixed_rate, 3);
 }
 
 static void
@@ -29,9 +42,10 @@ _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressDecompressFixedRate_
     fail_msg("Invalid stride during test");
   }
 
-  runCompressDecompressTests(state, zfp_mode_fixed_rate, 1);
+  runCompressDecompressTests(state, zfp_mode_fixed_rate, 3);
 }
 
+// fixed precision checksum
 static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch)(void **state)
 {
@@ -40,9 +54,32 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedPrecision_exp
     fail_msg("Invalid stride during test");
   }
 
-  runCompressDecompressTests(state, zfp_mode_fixed_precision, 1);
+  runCompressDecompressTests(state, zfp_mode_fixed_precision, 3);
 }
 
+static void
+_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != REVERSED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressDecompressTests(state, zfp_mode_fixed_precision, 3);
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != PERMUTED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressDecompressTests(state, zfp_mode_fixed_precision, 3);
+}
+
+// fixed-accuracy checksum
 #ifdef FL_PT_DATA
 static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedAccuracy_expect_BitstreamAndArrayChecksumsMatch)(void **state)
@@ -54,20 +91,29 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedAccuracy_expe
 
   runCompressDecompressTests(state, zfp_mode_fixed_accuracy, 3);
 }
-#endif
 
-/*
 static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressReversible_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+_catFunc3(given_, DESCRIPTOR, ReversedArray_when_ZfpCompressDecompressFixedAccuracy_expect_BitstreamAndArrayChecksumsMatch)(void **state)
 {
   struct setupVars *bundle = *state;
-  if (bundle->stride != AS_IS) {
+  if (bundle->stride != REVERSED) {
     fail_msg("Invalid stride during test");
   }
 
-  runCompressDecompressReversible(state, 1);
+  runCompressDecompressTests(state, zfp_mode_fixed_accuracy, 3);
 }
-*/
+
+static void
+_catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressDecompressFixedAccuracy_expect_BitstreamAndArrayChecksumsMatch)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != PERMUTED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressDecompressTests(state, zfp_mode_fixed_accuracy, 3);
+}
+#endif
 
 // returns 0 on success, 1 on test failure
 static int
@@ -142,54 +188,145 @@ _catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressDecompressFixedRa
 }
 
 static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedRate_expect_BitstreamAndArrayChecksumsMatch)(void **state)
-{
-  runCompressDecompressTests(state, zfp_mode_fixed_rate, 3);
-}
-
-// cover all non=fixed-rate modes (except expert)
-static void
-_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressNonFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
-{
-  struct setupVars *bundle = *state;
-
-  // loop over fixed prec, fixed acc, reversible
-  zfp_mode mode;
-  int failures = 0;
-  for (mode = zfp_mode_fixed_precision; mode <= zfp_mode_reversible; mode++) {
-    zfp_type type = zfp_field_type(bundle->field);
-    if ((mode == zfp_mode_fixed_accuracy) && (type == zfp_type_int32 || type == zfp_type_int64)) {
-      // skip fixed accuracy when unsupported
-      continue;
-    }
-
-    if (setupCompressParam(bundle, mode, 1) == 1) {
-      failures++;
-      continue;
-    }
-
-    if (runZfpCompressDecompressIsNoop(state) == 1) {
-      failures++;
-    }
-  }
-
-  if (failures > 0) {
-    fail_msg("Compression/Decompression no-op test failed\n");
-  }
-}
-
-static void
-_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamUntouchedAndReturnsZero)(void **state)
 {
   struct setupVars *bundle = *state;
   if (bundle->stride != INTERLEAVED) {
     fail_msg("Invalid stride during test");
-  } else if (zfp_stream_compression_mode(bundle->stream) != zfp_mode_fixed_rate) {
-    fail_msg("Invalid zfp mode during test");
   }
 
-  runCompressDecompressNoopTest(state, zfp_mode_fixed_rate);
+  runCompressDecompressNoopTest(state, zfp_mode_fixed_precision);
 }
+
+#ifdef FL_PT_DATA
+static void
+_catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressDecompressFixedAccuracy_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+{
+  struct setupVars *bundle = *state;
+  if (bundle->stride != INTERLEAVED) {
+    fail_msg("Invalid stride during test");
+  }
+
+  runCompressDecompressNoopTest(state, zfp_mode_fixed_accuracy);
+}
+
+// returns 0 on all tests pass, 1 on test failure
+static int
+isCompressedValuesWithinAccuracy(void **state)
+{
+  struct setupVars* bundle = *state;
+  zfp_field* field = bundle->field;
+  zfp_stream* stream = bundle->stream;
+
+  // set policy for compression
+  zfp_stream_set_execution(stream, bundle->compressPolicy);
+
+  size_t compressedBytes = zfp_compress(stream, field);
+  if (compressedBytes == 0) {
+    printf("Compression failed\n");
+    return 1;
+  }
+
+  // set policy for decompression
+  zfp_stream_set_execution(stream, bundle->decompressPolicy);
+
+  // zfp_decompress() will write to bundle->decompressedArr
+  // assert bitstream ends in same location
+  zfp_stream_rewind(stream);
+  size_t result = zfp_decompress(stream, bundle->decompressField);
+  if (result != compressedBytes) {
+    printf("Decompression advanced the bitstream to a different position than after compression: %zu != %zu\n", result, compressedBytes);
+    return 1;
+  }
+
+  int strides[4];
+  zfp_field_stride(field, strides);
+
+  // apply strides
+  ptrdiff_t offset = 0;
+  size_t* n = bundle->randomGenArrSideLen;
+  float maxDiffF = 0;
+  double maxDiffD = 0;
+
+  size_t i, j, k, l;
+  for (l = (n[3] ? n[3] : 1); l--; offset += strides[3] - n[2]*strides[2]) {
+    for (k = (n[2] ? n[2] : 1); k--; offset += strides[2] - n[1]*strides[1]) {
+      for (j = (n[1] ? n[1] : 1); j--; offset += strides[1] - n[0]*strides[0]) {
+        for (i = (n[0] ? n[0] : 1); i--; offset += strides[0]) {
+          float absDiffF;
+          double absDiffD;
+
+          switch(ZFP_TYPE) {
+            case zfp_type_float:
+              absDiffF = fabsf((float)bundle->decompressedArr[offset] - (float)bundle->compressedArr[offset]);
+
+              if(absDiffF > bundle->accParam) {
+                printf("Compressed error %f was greater than supplied tolerance %lf\n", absDiffF, bundle->accParam);
+                return 1;
+              }
+
+              if (absDiffF > maxDiffF) {
+                maxDiffF = absDiffF;
+              }
+
+              break;
+
+            case zfp_type_double:
+              absDiffD = fabs(bundle->decompressedArr[offset] - bundle->compressedArr[offset]);
+
+              if(absDiffD > bundle->accParam) {
+                printf("Compressed error %lf was greater than supplied tolerance %lf\n", absDiffD, bundle->accParam);
+                return 1;
+              }
+
+              if (absDiffD > maxDiffD) {
+                maxDiffD = absDiffD;
+              }
+
+              break;
+
+            default:
+              printf("Test requires zfp_type float or double\n");
+              return 1;
+          }
+        }
+      }
+    }
+  }
+
+  if (ZFP_TYPE == zfp_type_float) {
+    printf("\t\t\t\tMax abs error: %f\n", maxDiffF);
+  } else {
+    printf("\t\t\t\tMax abs error: %lf\n", maxDiffD);
+  }
+
+  return 0;
+}
+
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_CompressedValuesWithinAccuracy)(void **state)
+{
+  struct setupVars *bundle = *state;
+
+  int failures = 0;
+  int compressParam;
+  for (compressParam = 0; compressParam < 3; compressParam++) {
+    if (setupCompressParam(bundle, zfp_mode_fixed_accuracy, compressParam) == 1) {
+      failures++;
+      continue;
+    }
+
+    failures += isCompressedValuesWithinAccuracy(state);
+
+    zfp_stream_rewind(bundle->stream);
+    memset(bundle->buffer, 0, bundle->bufsizeBytes);
+  }
+
+  if (failures > 0) {
+    fail_msg("Compressed value accuracy test failure\n");
+  }
+}
+#endif
 
 /* setup functions */
 
@@ -242,6 +379,27 @@ setupDefaultIndexed(void **state)
 {
   setupExecPolicy(state, zfp_exec_serial, zfp_exec_cuda);
   return setupCudaConfig(state, AS_IS, zfp_index_offset, 1);
+}
+
+static int
+setupReversedIndexed(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_cuda);
+  return setupCudaConfig(state, REVERSED, zfp_index_offset, 1);
+}
+
+static int
+setupPermutedIndexed(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_cuda);
+  return setupCudaConfig(state, PERMUTED, zfp_index_offset, 1);
+}
+
+static int
+setupInterleavedIndexed(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_cuda);
+  return setupCudaConfig(state, INTERLEAVED, zfp_index_offset, 1);
 }
 
 #endif

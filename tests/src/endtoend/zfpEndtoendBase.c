@@ -435,8 +435,6 @@ runZfpCompress(void **state, size_t* compressedBytes)
   double time = zfp_timer_stop(timer);
   printf("\t\t\t\t\tCompress time (s): %lf\n", time);
 
-        printf("compressed size: %ld\n", *compressedBytes);
-
   if (compressedBytes == 0) {
     printf("ERROR: Compression failed, nothing was written to bitstream\n");
     return 1;
@@ -483,8 +481,6 @@ runZfpDecompress(void **state, size_t compressedBytes)
   size_t result = zfp_decompress(stream, decompressField);
   double time = zfp_timer_stop(timer);
   printf("\t\t\t\t\tDecompress time (s): %lf\n", time);
-
-        printf("decompressed size: %ld\n", result);
 
   if (compressedBytes != result) {
     printf("ERROR: Decompression advanced the bitstream to a different position than after compression: %zu != %zu\n", result, compressedBytes);
