@@ -186,12 +186,13 @@ namespace cuZFP
         for (int i = 0; i < nstreams_chunk; i += grid_stride)
         {
             bool valid_stream = my_stream + i < nstreams_chunk;
-            unsigned long long offset0 = offsets[first_bitstream_block + i];
+            unsigned long long offset0 = 0;
             unsigned long long offset = 0;
             uint length_bits = 0;
             uint add_padding = 0;
             if (valid_stream)
             {
+                offset0 = offsets[first_bitstream_block + i];
                 offset = offsets[my_stream + i];
                 unsigned long long offset_bits = (first_stream_chunk + my_stream + i) * maxbits;
                 unsigned long long next_offset_bits = offsets[my_stream + i + 1];
