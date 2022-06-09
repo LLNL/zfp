@@ -149,13 +149,19 @@ decompress_init_par(zfp_stream* stream, uint chunks, uint blocks)
 }
 
 /* close all bit streams */
-static void
+static size_t
 decompress_finish_par(bitstream** bs, uint chunks)
 {
+  size_t max_offset = 0;
   uint i;
-  for (i = 0; i < chunks; i++)
+  for (i = 0; i < chunks; i++) {
+    size_t offset = stream_rtell(bs[i]);
+    if (max_offset < offset)
+      max_offset = offset;
     stream_close(bs[i]);
+  }
   free(bs);
+  return max_offset;
 }
 
 #endif

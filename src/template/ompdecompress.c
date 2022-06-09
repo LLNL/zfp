@@ -10,7 +10,7 @@ _t2(decompress_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
   const uint threads = thread_count_omp(stream);
   const uint blocks = (nx + 3) / 4;
   const zfp_mode mode = zfp_stream_compression_mode(stream);
-  size_t max_offset = 0;
+  size_t max_offset;
   uint granularity;
   uint chunks;
   int chunk;
@@ -34,7 +34,7 @@ _t2(decompress_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
     return;
 
   /* decompress chunks of blocks in parallel */
-  #pragma omp parallel for num_threads(threads) reduction(max:max_offset)
+  #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     const uint bmin = chunk * granularity;
@@ -56,16 +56,11 @@ _t2(decompress_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
       else
         _t2(zfp_decode_block, Scalar, 1)(&s, p);
     }
-
-    /* determine maximum bit offset */
-    offset = stream_rtell(bs[chunk]);
-    if (max_offset < offset)
-      max_offset = offset;
   }
 
-  /* position stream at maximum offset and deallocate bit streams */
+  /* deallocate bit streams and position stream at maximum offset */
+  max_offset = decompress_finish_par(bs, chunks);
   stream_rseek(stream->stream, max_offset);
-  decompress_finish_par(bs, chunks);
 }
 
 /* decompress 1d strided array in parallel */
@@ -79,7 +74,7 @@ _t2(decompress_strided_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
   const uint threads = thread_count_omp(stream);
   const uint blocks = (nx + 3) / 4;
   const zfp_mode mode = zfp_stream_compression_mode(stream);
-  size_t max_offset = 0;
+  size_t max_offset;
   uint granularity;
   uint chunks;
   int chunk;
@@ -103,7 +98,7 @@ _t2(decompress_strided_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
     return;
 
   /* decompress chunks of blocks in parallel */
-  #pragma omp parallel for num_threads(threads) reduction(max:max_offset)
+  #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     const uint bmin = chunk * granularity;
@@ -125,16 +120,11 @@ _t2(decompress_strided_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
       else
         _t2(zfp_decode_block_strided, Scalar, 1)(&s, p, sx);
     }
-
-    /* determine maximum bit offset */
-    offset = stream_rtell(bs[chunk]);
-    if (max_offset < offset)
-      max_offset = offset;
   }
 
-  /* position stream at maximum offset and deallocate bit streams */
+  /* deallocate bit streams and position stream at maximum offset */
+  max_offset = decompress_finish_par(bs, chunks);
   stream_rseek(stream->stream, max_offset);
-  decompress_finish_par(bs, chunks);
 }
 
 /* decompress 2d strided array in parallel */
@@ -152,7 +142,7 @@ _t2(decompress_strided_omp, Scalar, 2)(zfp_stream* stream, zfp_field* field)
   const uint by = (ny + 3) / 4;
   const uint blocks = bx * by;
   const zfp_mode mode = zfp_stream_compression_mode(stream);
-  size_t max_offset = 0;
+  size_t max_offset;
   uint granularity;
   uint chunks;
   int chunk;
@@ -176,7 +166,7 @@ _t2(decompress_strided_omp, Scalar, 2)(zfp_stream* stream, zfp_field* field)
     return;
 
   /* decompress chunks of blocks in parallel */
-  #pragma omp parallel for num_threads(threads) reduction(max:max_offset)
+  #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     const uint bmin = chunk * granularity;
@@ -201,16 +191,11 @@ _t2(decompress_strided_omp, Scalar, 2)(zfp_stream* stream, zfp_field* field)
       else
         _t2(zfp_decode_block_strided, Scalar, 2)(&s, p, sx, sy);
     }
-
-    /* determine maximum bit offset */
-    offset = stream_rtell(bs[chunk]);
-    if (max_offset < offset)
-      max_offset = offset;
   }
 
-  /* position stream at maximum offset and deallocate bit streams */
+  /* deallocate bit streams and position stream at maximum offset */
+  max_offset = decompress_finish_par(bs, chunks);
   stream_rseek(stream->stream, max_offset);
-  decompress_finish_par(bs, chunks);
 }
 
 /* decompress 3d strided array in parallel */
@@ -231,7 +216,7 @@ _t2(decompress_strided_omp, Scalar, 3)(zfp_stream* stream, zfp_field* field)
   const uint bz = (nz + 3) / 4;
   const uint blocks = bx * by * bz;
   const zfp_mode mode = zfp_stream_compression_mode(stream);
-  size_t max_offset = 0;
+  size_t max_offset;
   uint granularity;
   uint chunks;
   int chunk;
@@ -255,7 +240,7 @@ _t2(decompress_strided_omp, Scalar, 3)(zfp_stream* stream, zfp_field* field)
     return;
 
   /* decompress chunks of blocks in parallel */
-  #pragma omp parallel for num_threads(threads) reduction(max:max_offset)
+  #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     const uint bmin = chunk * granularity;
@@ -281,16 +266,11 @@ _t2(decompress_strided_omp, Scalar, 3)(zfp_stream* stream, zfp_field* field)
       else
         _t2(zfp_decode_block_strided, Scalar, 3)(&s, p, sx, sy, sz);
     }
-
-    /* determine maximum bit offset */
-    offset = stream_rtell(bs[chunk]);
-    if (max_offset < offset)
-      max_offset = offset;
   }
 
-  /* position stream at maximum offset and deallocate bit streams */
+  /* deallocate bit streams and position stream at maximum offset */
+  max_offset = decompress_finish_par(bs, chunks);
   stream_rseek(stream->stream, max_offset);
-  decompress_finish_par(bs, chunks);
 }
 
 /* decompress 4d strided array in parallel */
@@ -314,7 +294,7 @@ _t2(decompress_strided_omp, Scalar, 4)(zfp_stream* stream, zfp_field* field)
   const uint bw = (nw + 3) / 4;
   const uint blocks = bx * by * bz * bw;
   const zfp_mode mode = zfp_stream_compression_mode(stream);
-  size_t max_offset = 0;
+  size_t max_offset;
   uint granularity;
   uint chunks;
   int chunk;
@@ -338,7 +318,7 @@ _t2(decompress_strided_omp, Scalar, 4)(zfp_stream* stream, zfp_field* field)
     return;
 
   /* decompress chunks of blocks in parallel */
-  #pragma omp parallel for num_threads(threads) reduction(max:max_offset)
+  #pragma omp parallel for num_threads(threads)
   for (chunk = 0; chunk < (int)chunks; chunk++) {
     /* determine range of block indices assigned to this thread */
     const uint bmin = chunk * granularity;
@@ -365,16 +345,11 @@ _t2(decompress_strided_omp, Scalar, 4)(zfp_stream* stream, zfp_field* field)
       else
         _t2(zfp_decode_block_strided, Scalar, 4)(&s, p, sx, sy, sz, sw);
     }
-
-    /* determine maximum bit offset */
-    offset = stream_rtell(bs[chunk]);
-    if (max_offset < offset)
-      max_offset = offset;
   }
 
-  /* position stream at maximum offset and deallocate bit streams */
+  /* deallocate bit streams and position stream at maximum offset */
+  max_offset = decompress_finish_par(bs, chunks);
   stream_rseek(stream->stream, max_offset);
-  decompress_finish_par(bs, chunks);
 }
 
 #endif
