@@ -130,6 +130,9 @@ runZfpCompressDecompressIsNoop(void **state)
   word* ptr = s->ptr;
   size_t streamSize = stream_size(s);
 
+  // set policy for compression
+  zfp_stream_set_execution(stream, bundle->compressPolicy);
+
   // perform compression, expect bitstream not to advance
   if (zfp_compress(stream, field) != streamSize) {
     printf("Compression advanced the bitstream when expected to be a no-op\n");
@@ -144,6 +147,9 @@ runZfpCompressDecompressIsNoop(void **state)
     printf("Compression modified the bitstream when expected to be a no-op\n");
     return 1;
   }
+  
+  // set policy for decompression
+  zfp_stream_set_execution(stream, bundle->decompressPolicy);
 
   // perform decompression, expect bitstream not to advance
   if (zfp_decompress(stream, field) != streamSize) {
