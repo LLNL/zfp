@@ -24,13 +24,12 @@ class ArrayFloatTestEnv : public ::testing::Environment {
 public:
   virtual int getDims() = 0;
 
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
     generateSmoothRandFloats(MIN_TOTAL_ELEMENTS, getDims(), &inputDataArr, &inputDataSideLen, &inputDataTotalLen);
 
-    size_t i;
-    for (i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++)
       dimLens[i] = (i < getDims()) ? inputDataSideLen : 0;
-    }
 
     size_t num_64bit_entries = DIV_ROUND_UP(ZFP_HEADER_SIZE_BITS, CHAR_BIT * sizeof(uint64));
     buffer = new uint64[num_64bit_entries];
@@ -40,7 +39,8 @@ public:
     field = zfp_field_alloc();
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     free(inputDataArr);
 
     zfp_field_free(field);

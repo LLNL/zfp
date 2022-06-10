@@ -40,7 +40,6 @@ _t2(decompress_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
     const uint bmin = chunk * granularity;
     const uint bmax = MIN(bmin + granularity, blocks);
     uint block;
-    size_t offset;
     /* set up thread-local bit stream */
     zfp_stream s = *stream;
     zfp_stream_set_bit_stream(&s, bs[chunk]);
@@ -104,7 +103,6 @@ _t2(decompress_strided_omp, Scalar, 1)(zfp_stream* stream, zfp_field* field)
     const uint bmin = chunk * granularity;
     const uint bmax = MIN(bmin + granularity, blocks);
     uint block;
-    size_t offset;
     /* set up thread-local bit stream */
     zfp_stream s = *stream;
     zfp_stream_set_bit_stream(&s, bs[chunk]);
@@ -172,7 +170,6 @@ _t2(decompress_strided_omp, Scalar, 2)(zfp_stream* stream, zfp_field* field)
     const uint bmin = chunk * granularity;
     const uint bmax = MIN(bmin + granularity, blocks);
     uint block;
-    size_t offset;
     /* set up thread-local bit stream */
     zfp_stream s = *stream;
     zfp_stream_set_bit_stream(&s, bs[chunk]);
@@ -246,7 +243,6 @@ _t2(decompress_strided_omp, Scalar, 3)(zfp_stream* stream, zfp_field* field)
     const uint bmin = chunk * granularity;
     const uint bmax = MIN(bmin + granularity, blocks);
     uint block;
-    size_t offset;
     /* set up thread-local bit stream */
     zfp_stream s = *stream;
     zfp_stream_set_bit_stream(&s, bs[chunk]);
@@ -324,7 +320,6 @@ _t2(decompress_strided_omp, Scalar, 4)(zfp_stream* stream, zfp_field* field)
     const uint bmin = chunk * granularity;
     const uint bmax = MIN(bmin + granularity, blocks);
     uint block;
-    size_t offset;
     /* set up thread-local bit stream */
     zfp_stream s = *stream;
     zfp_stream_set_bit_stream(&s, bs[chunk]);
