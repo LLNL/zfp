@@ -203,7 +203,7 @@ protected:
   }
 
   // bit offset to block store
-  size_t offset(size_t block_index) const { return index.block_offset(block_index); }
+  bitstream_offset offset(size_t block_index) const { return index.block_offset(block_index); }
 
   // shape 0 <= m <= 3 of block containing index i, 0 <= i <= n - 1
   static uint shape_code(size_t i, size_t n)

@@ -106,7 +106,7 @@ given_EmptyBuffer_when_Flush_expect_NOP(void **state)
 {
   bitstream* s = ((struct setupVars *)*state)->b;
   bitstream_word *prevPtr = s->ptr;
-  uint prevBits = s->bits;
+  bitstream_count prevBits = s->bits;
   bitstream_word prevBuffer = s->buffer;
 
   size_t padCount = stream_flush(s);
@@ -464,7 +464,7 @@ given_BitstreamWithBitInBuffer_when_ReadBit_expect_OneBitReadFromLSB(void **stat
   bitstream* s = ((struct setupVars *)*state)->b;
   stream_write_bit(s, 1);
 
-  uint prevBits = s->bits;
+  bitstream_count prevBits = s->bits;
   bitstream_word prevBuffer = s->buffer;
 
   assert_int_equal(stream_read_bit(s), 1);
