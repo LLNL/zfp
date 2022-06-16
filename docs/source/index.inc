@@ -95,7 +95,7 @@ interface with the |zfp| compressed-array classes.
 
 ----
 
-.. cpp:function:: size_t index::range() const
+.. cpp:function:: bitstream_size index::range() const
 
   Range of bit offsets spanned by index.  This equals the total number of
   bits of compressed-array data.
@@ -108,7 +108,7 @@ interface with the |zfp| compressed-array classes.
 
 ----
 
-.. cpp:function:: size_t index::block_offset(size_t block_index) const
+.. cpp:function:: bitstream_offset index::block_offset(size_t block_index) const
 
   Bit offset to compressed block data.
 

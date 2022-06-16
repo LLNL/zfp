@@ -198,7 +198,7 @@ size_t decode(uint ndims[3], int3 stride, int bits_per_block, Word *stream, T *o
 Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
 {
   bool stream_device = cuZFP::is_gpu_ptr(stream->stream->begin);
-  assert(sizeof(word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
+  assert(sizeof(bitstream_word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
 
   if(stream_device)
   {
@@ -214,7 +214,7 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
 Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
 {
   bool stream_device = cuZFP::is_gpu_ptr(stream->stream->begin);
-  assert(sizeof(word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
+  assert(sizeof(bitstream_word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
 
   if(stream_device)
   {

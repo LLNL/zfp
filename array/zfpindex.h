@@ -29,13 +29,13 @@ public:
   }
 
   // range of offsets spanned by indexed data in bits
-  size_t range() const { return block_offset(blocks); }
+  bitstream_size range() const { return block_offset(blocks); }
 
   // bit size of given block
   size_t block_size(size_t /*block_index*/) const { return bits_per_block; }
 
   // bit offset of given block
-  size_t block_offset(size_t block_index) const { return bits_per_block * block_index; }
+  bitstream_offset block_offset(size_t block_index) const { return block_index * bits_per_block; }
 
   // reset index
   void clear() {}
@@ -93,13 +93,13 @@ public:
   }
 
   // range of offsets spanned by indexed data in bits
-  size_t range() const { return block_offset(blocks); }
+  bitstream_size range() const { return block_offset(blocks); }
 
   // bit size of given block
-  size_t block_size(size_t block_index) const { return block_offset(block_index + 1) - block_offset(block_index); }
+  size_t block_size(size_t block_index) const { return static_cast<size_t>(block_offset(block_index + 1) - block_offset(block_index)); }
 
   // bit offset of given block
-  size_t block_offset(size_t block_index) const { return static_cast<size_t>(data[block_index]); }
+  bitstream_offset block_offset(size_t block_index) const { return static_cast<bitstream_offset>(data[block_index]); }
 
   // reset index
   void clear() { block = 0; }
@@ -189,7 +189,7 @@ public:
   }
 
   // range of offsets spanned by indexed data in bits
-  size_t range() const { return end; }
+  bitstream_size range() const { return end; }
 
   // bit size of given block
   size_t block_size(size_t block_index) const
@@ -197,12 +197,12 @@ public:
     size_t chunk = block_index / 4;
     size_t which = block_index % 4;
     return which == 3u
-             ? block_offset(block_index + 1) - block_offset(block_index)
-             : data[chunk].lo[which + 1] - data[chunk].lo[which];
+             ? static_cast<size_t>(block_offset(block_index + 1) - block_offset(block_index))
+             : static_cast<size_t>(data[chunk].lo[which + 1] - data[chunk].lo[which]);
   }
 
   // bit offset of given block
-  size_t block_offset(size_t block_index) const
+  bitstream_offset block_offset(size_t block_index) const
   {
     // if index is being built, point offset to end
     if (block_index == block)
@@ -210,7 +210,7 @@ public:
     // index has already been built; decode offset
     size_t chunk = block_index / 4;
     size_t which = block_index % 4;
-    return (size_t(data[chunk].hi) << shift) + data[chunk].lo[which];
+    return (bitstream_offset(data[chunk].hi) << shift) + data[chunk].lo[which];
   }
 
   // reset index
@@ -264,12 +264,12 @@ public:
     size_t which = block % 4;
     buffer[which] = size;
     if (which == 3u) {
-      // chunk is complete; encode it (double shift in case ptr is 32 bits)
-      if (((ptr >> 16) >> 16) >> shift)
+      // chunk is complete; encode it
+      if (ptr >> (32 + shift))
         throw zfp::exception("zfp block offset is too large for hybrid4 index");
       // store high bits
       data[chunk].hi = static_cast<uint32>(ptr >> shift);
-      size_t base = size_t(data[chunk].hi) << shift;
+      bitstream_offset base = bitstream_offset(data[chunk].hi) << shift;
       // store low bits
       for (uint k = 0; k < 4; k++) {
         data[chunk].lo[k] = static_cast<uint16>(ptr - base);
@@ -305,12 +305,12 @@ protected:
 
   static const uint shift = 12; // number of bits to shift hi bits
 
-  record* data;     // block offset array
-  size_t blocks;    // number of blocks
-  size_t block;     // current block index
-  size_t end;       // offset to last block
-  size_t ptr;       // offset to current chunk of blocks
-  size_t buffer[4]; // buffer of 4 blocks to be stored together
+  record* data;         // block offset array
+  size_t blocks;        // number of blocks
+  size_t block;         // current block index
+  bitstream_offset end; // offset to last block
+  bitstream_offset ptr; // offset to current chunk of blocks
+  size_t buffer[4];     // bit sizes 4 blocks to be stored together
 };
 
 // hybrid block index (8 blocks/chunk; 16 bits/block; 86-14dims bit offsets) --
@@ -347,7 +347,7 @@ public:
   }
 
   // range of offsets spanned by indexed data in bits
-  size_t range() const { return end; }
+  bitstream_size range() const { return end; }
 
   // bit size of given block
   size_t block_size(size_t block_index) const
@@ -355,12 +355,12 @@ public:
     size_t chunk = block_index / 8;
     size_t which = block_index % 8;
     return which == 7u
-             ? block_offset(block_index + 1) - block_offset(block_index)
-             : static_cast<size_t>(size(data[2 * chunk + 0], data[2 * chunk + 1], static_cast<uint>(which)));
+             ? static_cast<size_t>(block_offset(block_index + 1) - block_offset(block_index))
+             : size(data[2 * chunk + 0], data[2 * chunk + 1], static_cast<uint>(which));
   }
 
   // bit offset of given block
-  size_t block_offset(size_t block_index) const
+  bitstream_offset block_offset(size_t block_index) const
   {
     // if index is being built, point offset to end
     if (block_index == block)
@@ -368,7 +368,7 @@ public:
     // index has already been built; decode offset
     size_t chunk = block_index / 8;
     size_t which = block_index % 8;
-    return static_cast<size_t>(offset(data[2 * chunk + 0], data[2 * chunk + 1], static_cast<uint>(which)));
+    return offset(data[2 * chunk + 0], data[2 * chunk + 1], static_cast<uint>(which));
   }
 
   // reset index
@@ -466,17 +466,17 @@ protected:
   }
 
   // kth size in chunk, 0 <= k <= 6
-  static uint64 size(uint64 h, uint64 l, uint k)
+  static size_t size(uint64 h, uint64 l, uint k)
   {
     // extract high and low bits
     h >>= (6 - k) * hbits; h &= (UINT64C(1) << hbits) - 1;
     l >>= (6 - k) * lbits; l &= (UINT64C(1) << lbits) - 1;
     // combine base offset with high and low bits
-    return (h << lbits) + l;
+    return static_cast<size_t>((h << lbits) + l);
   }
 
   // kth offset in chunk, 0 <= k <= 7
-  static uint64 offset(uint64 h, uint64 l, uint k)
+  static bitstream_offset offset(uint64 h, uint64 l, uint k)
   {
     // extract all but lowest (8 * hbits) bits
     uint64 base = h >> (8 * hbits);
@@ -485,7 +485,7 @@ protected:
     h = hsum(h >> ((7 - k) * hbits));
     l = lsum(l >> ((7 - k) * lbits));
     // combine base offset with high and low bits
-    return (((base << hbits) + h) << lbits) + l;
+    return static_cast<bitstream_offset>((((base << hbits) + h) << lbits) + l);
   }
 
   // sum of (up to) eight packed 8-bit numbers (efficient version of sum8)
@@ -522,12 +522,12 @@ protected:
   static const uint lbits = 8;              // 64 bits partitioned into 8
   static const uint hbits = 2 * (dims - 1); // log2(4^d * maxprec / 2^lbits)
 
-  uint64* data;     // block offset array
-  size_t blocks;    // number of blocks
-  size_t block;     // current block index
-  size_t end;       // offset to last block
-  size_t ptr;       // offset to current set of blocks
-  size_t buffer[8]; // buffer of 8 blocks to be stored together
+  uint64* data;         // block offset array
+  size_t blocks;        // number of blocks
+  size_t block;         // current block index
+  bitstream_offset end; // offset to last block
+  bitstream_offset ptr; // offset to current set of blocks
+  size_t buffer[8];     // sizes of 8 blocks to be stored together
 };
 
 } // index

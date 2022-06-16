@@ -32,6 +32,9 @@ few of the API changes, other than to cfp, should impact existing code.
 - `size_t` and `ptrdiff_t` replace `uint` and `int` for array sizes and
   strides in the array classes and C API.
 - `zfp_bool` replaces `int` as Boolean type in the C API.
+- `bitstream_offset` and `bitstream_size` replace `size_t` to ensure support
+  for 64-bit offsets into and lengths of bit streams.  Consequently, the
+  `bitstream` API has changed accordingly.
 - All array and view iterators are now random-access iterators.
 - Array inspectors now return `const_reference` rather than a scalar
   type like `float` to allow obtaining a `const_pointer` to an element

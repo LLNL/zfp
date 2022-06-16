@@ -172,7 +172,7 @@ which provides for 2:1 fixed-rate "compression" using IEEE 754 floating point.
 
 ----
 
-.. cpp:function:: size_t codec::encode_block(size_t offset, const Scalar* block) const
+.. cpp:function:: size_t codec::encode_block(bitstream_offset offset, const Scalar* block) const
 
   Encode contiguous *block* of |4powd| scalars and store at specified bit
   *offset* within compressed-data buffer.  Return the number of bits of
@@ -183,7 +183,7 @@ which provides for 2:1 fixed-rate "compression" using IEEE 754 floating point.
 
 ----
 
-.. cpp:function:: size_t codec::decode_block(size_t offset, Scalar* block) const
+.. cpp:function:: size_t codec::decode_block(bitstream_offset offset, Scalar* block) const
 
   Decode contiguous *block* of |4powd| scalars from specified bit *offset*
   within compressed-data buffer (see :cpp:func:`codec::encode_block`).
@@ -192,10 +192,10 @@ which provides for 2:1 fixed-rate "compression" using IEEE 754 floating point.
 
 ----
 
-.. cpp:function:: size_t codec1::encode_block(size_t offset, uint shape, const Scalar* block) const
-.. cpp:function:: size_t codec2::encode_block(size_t offset, uint shape, const Scalar* block) const
-.. cpp:function:: size_t codec3::encode_block(size_t offset, uint shape, const Scalar* block) const
-.. cpp:function:: size_t codec4::encode_block(size_t offset, uint shape, const Scalar* block) const
+.. cpp:function:: size_t codec1::encode_block(bitstream_offset offset, uint shape, const Scalar* block) const
+.. cpp:function:: size_t codec2::encode_block(bitstream_offset offset, uint shape, const Scalar* block) const
+.. cpp:function:: size_t codec3::encode_block(bitstream_offset offset, uint shape, const Scalar* block) const
+.. cpp:function:: size_t codec4::encode_block(bitstream_offset offset, uint shape, const Scalar* block) const
 
   Encode contiguous *block* of data of given *shape* and store at specified
   bit *offset* within compressed-data buffer.  Return the number of bits of
@@ -210,10 +210,10 @@ which provides for 2:1 fixed-rate "compression" using IEEE 754 floating point.
 
 ----
 
-.. cpp:function:: size_t codec1::decode_block(size_t offset, uint shape, Scalar* block) const
-.. cpp:function:: size_t codec2::decode_block(size_t offset, uint shape, Scalar* block) const
-.. cpp:function:: size_t codec3::decode_block(size_t offset, uint shape, Scalar* block) const
-.. cpp:function:: size_t codec4::decode_block(size_t offset, uint shape, Scalar* block) const
+.. cpp:function:: size_t codec1::decode_block(bitstream_offset offset, uint shape, Scalar* block) const
+.. cpp:function:: size_t codec2::decode_block(bistream_offset offset, uint shape, Scalar* block) const
+.. cpp:function:: size_t codec3::decode_block(bitstream_offset offset, uint shape, Scalar* block) const
+.. cpp:function:: size_t codec4::decode_block(bitstream_offset offset, uint shape, Scalar* block) const
 
   Decode contiguous *block* of data of given *shape* from specified bit
   *offset* within compressed-data buffer (see also
@@ -223,10 +223,10 @@ which provides for 2:1 fixed-rate "compression" using IEEE 754 floating point.
 
 ----
 
-.. cpp:function:: size_t codec1::encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx) const
-.. cpp:function:: size_t codec2::encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
-.. cpp:function:: size_t codec3::encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
-.. cpp:function:: size_t codec4::encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
+.. cpp:function:: size_t codec1::encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx) const
+.. cpp:function:: size_t codec2::encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
+.. cpp:function:: size_t codec3::encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
+.. cpp:function:: size_t codec4::encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
 
   Encode block of data stored at *p* with strides *sx*, *sy*, *sz*,
   and *sw*.  See :c:type:`zfp_field` for information on strided storage.
@@ -235,10 +235,10 @@ which provides for 2:1 fixed-rate "compression" using IEEE 754 floating point.
 
 ----
 
-.. cpp:function:: size_t codec1::decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx) const
-.. cpp:function:: size_t codec2::decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
-.. cpp:function:: size_t codec3::decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
-.. cpp:function:: size_t codec4::decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
+.. cpp:function:: size_t codec1::decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx) const
+.. cpp:function:: size_t codec2::decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
+.. cpp:function:: size_t codec3::decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
+.. cpp:function:: size_t codec4::decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
 
   Decode block to strided storage pointed to by *p* with strides *sx*, *sy*,
   *sz*, and *sw*.  See :c:type:`zfp_field` for information on strided storage.
