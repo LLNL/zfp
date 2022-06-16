@@ -42,9 +42,9 @@ runZfpCompressDecompressIsNoop(void **state)
   bitstream* s = zfp_stream_bit_stream(stream);
 
   // grab bitstream member vars
-  uint bits = s->bits;
-  word buffer = s->buffer;
-  word* ptr = s->ptr;
+  bitstream_count bits = s->bits;
+  bitstream_word buffer = s->buffer;
+  bitstream_word* ptr = s->ptr;
   size_t streamSize = stream_size(s);
 
   // perform compression, expect bitstream not to advance
