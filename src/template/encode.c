@@ -181,7 +181,7 @@ _t1(encode_few_ints_prec, UInt)(bitstream* restrict_ stream, uint maxprec, const
 {
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
-  size_t offset = stream_wtell(&s);
+  bitstream_offset offset = stream_wtell(&s);
   uint intprec = (uint)(CHAR_BIT * sizeof(UInt));
   uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint i, k, n;
@@ -210,7 +210,7 @@ _t1(encode_many_ints_prec, UInt)(bitstream* restrict_ stream, uint maxprec, cons
 {
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
-  size_t offset = stream_wtell(&s);
+  bitstream_offset offset = stream_wtell(&s);
   uint intprec = (uint)(CHAR_BIT * sizeof(UInt));
   uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint i, k, n, c;

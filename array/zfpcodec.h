@@ -127,7 +127,7 @@ protected:
   }
 
   // encode full contiguous block
-  size_t encode_block(size_t offset, const Scalar* block) const
+  size_t encode_block(bitstream_offset offset, const Scalar* block) const
   {
     stream_wseek(stream->stream, offset);
     size_t size = zfp::encode_block<Scalar, dims>(stream, block);
@@ -136,7 +136,7 @@ protected:
   }
 
   // decode full contiguous block
-  size_t decode_block(size_t offset, Scalar* block) const
+  size_t decode_block(bitstream_offset offset, Scalar* block) const
   {
     stream_rseek(stream->stream, offset);
     size_t size = zfp::decode_block<Scalar, dims>(stream, block);
@@ -152,14 +152,14 @@ template <typename Scalar>
 class zfp1 : public zfp_base<1, Scalar> {
 public:
   // encode contiguous 1D block
-  size_t encode_block(size_t offset, uint shape, const Scalar* block) const
+  size_t encode_block(bitstream_offset offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1)
                  : encode_block(offset, block);
   }
 
   // encode 1D block from strided storage
-  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx) const
+  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx) const
   {
     size_t size;
     stream_wseek(stream->stream, offset);
@@ -174,14 +174,14 @@ public:
   }
 
   // decode contiguous 1D block
-  size_t decode_block(size_t offset, uint shape, Scalar* block) const
+  size_t decode_block(bitstream_offset offset, uint shape, Scalar* block) const
   {
     return shape ? decode_block_strided(offset, shape, block, 1)
                  : decode_block(offset, block);
   }
 
   // decode 1D block to strided storage
-  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx) const
+  size_t decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx) const
   {
     size_t size;
     stream_rseek(stream->stream, offset);
@@ -206,14 +206,14 @@ template <typename Scalar>
 class zfp2 : public zfp_base<2, Scalar> {
 public:
   // encode contiguous 2D block
-  size_t encode_block(size_t offset, uint shape, const Scalar* block) const
+  size_t encode_block(bitstream_offset offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1, 4)
                  : encode_block(offset, block);
   }
 
   // encode 2D block from strided storage
-  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
+  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
   {
     size_t size;
     stream_wseek(stream->stream, offset);
@@ -229,14 +229,14 @@ public:
   }
 
   // decode contiguous 2D block
-  size_t decode_block(size_t offset, uint shape, Scalar* block) const
+  size_t decode_block(bitstream_offset offset, uint shape, Scalar* block) const
   {
     return shape ? decode_block_strided(offset, shape, block, 1, 4)
                  : decode_block(offset, block);
   }
 
   // decode 2D block to strided storage
-  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
+  size_t decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
   {
     size_t size;
     stream_rseek(stream->stream, offset);
@@ -262,14 +262,14 @@ template <typename Scalar>
 class zfp3 : public zfp_base<3, Scalar> {
 public:
   // encode contiguous 3D block
-  size_t encode_block(size_t offset, uint shape, const Scalar* block) const
+  size_t encode_block(bitstream_offset offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1, 4, 16)
                  : encode_block(offset, block);
   }
 
   // encode 3D block from strided storage
-  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
+  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
     size_t size;
     stream_wseek(stream->stream, offset);
@@ -286,14 +286,14 @@ public:
   }
 
   // decode contiguous 3D block
-  size_t decode_block(size_t offset, uint shape, Scalar* block) const
+  size_t decode_block(bitstream_offset offset, uint shape, Scalar* block) const
   {
     return shape ? decode_block_strided(offset, shape, block, 1, 4, 16)
                  : decode_block(offset, block);
   }
 
   // decode 3D block to strided storage
-  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
+  size_t decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
     size_t size;
     stream_rseek(stream->stream, offset);
@@ -320,14 +320,14 @@ template <typename Scalar>
 class zfp4 : public zfp_base<4, Scalar> {
 public:
   // encode contiguous 4D block
-  size_t encode_block(size_t offset, uint shape, const Scalar* block) const
+  size_t encode_block(bitstream_offset offset, uint shape, const Scalar* block) const
   {
     return shape ? encode_block_strided(offset, shape, block, 1, 4, 16, 64)
                  : encode_block(offset, block);
   }
 
   // encode 4D block from strided storage
-  size_t encode_block_strided(size_t offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
+  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
   {
     size_t size;
     stream_wseek(stream->stream, offset);
@@ -345,14 +345,14 @@ public:
   }
 
   // decode contiguous 4D block
-  size_t decode_block(size_t offset, uint shape, Scalar* block) const
+  size_t decode_block(bitstream_offset offset, uint shape, Scalar* block) const
   {
     return shape ? decode_block_strided(offset, shape, block, 1, 4, 16, 64)
                  : decode_block(offset, block);
   }
 
   // decode 4D block to strided storage
-  size_t decode_block_strided(size_t offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
+  size_t decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
   {
     size_t size;
     stream_rseek(stream->stream, offset);

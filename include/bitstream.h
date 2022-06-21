@@ -8,6 +8,15 @@
 /* forward declaration of opaque type */
 typedef struct bitstream bitstream;
 
+/* bit offset into stream where bits are read/written */
+typedef uint64 bitstream_offset;
+
+/* type for counting number of bits in a stream */
+typedef bitstream_offset bitstream_size;
+
+/* type for counting a small number of bits in a stream */
+typedef size_t bitstream_count;
+
 extern_ const size_t stream_word_bits; /* bit stream granularity */
 
 #ifndef inline_
@@ -25,7 +34,7 @@ void stream_close(bitstream* stream);
 bitstream* stream_clone(const bitstream* stream);
 
 /* word size in bits (equal to stream_word_bits) */
-size_t stream_alignment();
+bitstream_count stream_alignment();
 
 /* pointer to beginning of stream */
 void* stream_data(const bitstream* stream);
@@ -49,40 +58,40 @@ uint stream_read_bit(bitstream* stream);
 uint stream_write_bit(bitstream* stream, uint bit);
 
 /* read 0 <= n <= 64 bits */
-uint64 stream_read_bits(bitstream* stream, uint n);
+uint64 stream_read_bits(bitstream* stream, bitstream_count n);
 
 /* write 0 <= n <= 64 low bits of value and return remaining bits */
-uint64 stream_write_bits(bitstream* stream, uint64 value, uint n);
+uint64 stream_write_bits(bitstream* stream, uint64 value, bitstream_count n);
 
 /* return bit offset to next bit to be read */
-size_t stream_rtell(const bitstream* stream);
+bitstream_offset stream_rtell(const bitstream* stream);
 
 /* return bit offset to next bit to be written */
-size_t stream_wtell(const bitstream* stream);
+bitstream_offset stream_wtell(const bitstream* stream);
 
 /* rewind stream to beginning */
 void stream_rewind(bitstream* stream);
 
 /* position stream for reading at given bit offset */
-void stream_rseek(bitstream* stream, size_t offset);
+void stream_rseek(bitstream* stream, bitstream_offset offset);
 
 /* position stream for writing at given bit offset */
-void stream_wseek(bitstream* stream, size_t offset);
+void stream_wseek(bitstream* stream, bitstream_offset offset);
 
 /* skip over the next n bits */
-void stream_skip(bitstream* stream, uint n);
+void stream_skip(bitstream* stream, bitstream_size n);
 
 /* append n zero-bits to stream */
-void stream_pad(bitstream* stream, uint n);
+void stream_pad(bitstream* stream, bitstream_size n);
 
 /* align stream on next word boundary */
-size_t stream_align(bitstream* stream);
+bitstream_count stream_align(bitstream* stream);
 
 /* flush out any remaining buffered bits */
-size_t stream_flush(bitstream* stream);
+bitstream_count stream_flush(bitstream* stream);
 
 /* copy n bits from one bit stream to another */
-void stream_copy(bitstream* dst, bitstream* src, size_t n);
+void stream_copy(bitstream* dst, bitstream* src, bitstream_size n);
 
 #ifdef BIT_STREAM_STRIDED
 /* set block size in number of words and spacing in number of blocks */

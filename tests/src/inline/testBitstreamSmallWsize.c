@@ -21,10 +21,10 @@ setup(void **state)
   struct setupVars *s = malloc(sizeof(struct setupVars));
   assert_non_null(s);
 
-  s->buffer = calloc(STREAM_WORD_CAPACITY, sizeof(word));
+  s->buffer = calloc(STREAM_WORD_CAPACITY, sizeof(bitstream_word));
   assert_non_null(s->buffer);
 
-  s->b = stream_open(s->buffer, STREAM_WORD_CAPACITY * sizeof(word));
+  s->b = stream_open(s->buffer, STREAM_WORD_CAPACITY * sizeof(bitstream_word));
   assert_non_null(s->b);
 
   *state = s;
@@ -72,7 +72,7 @@ when_ReadBitsSpreadsAcrossMultipleWords_expect_BitsCombinedFromMultipleWords(voi
     + (WRITE_BITS2 << PARTIAL_WORD_BIT_COUNT)
     + (WRITE_BITS3 << (wsize + PARTIAL_WORD_BIT_COUNT))
     + ((WRITE_BITS4 & 0xff) << (2*wsize + PARTIAL_WORD_BIT_COUNT)));
-  assert_int_equal(s->buffer, (word) (WRITE_BITS4 >> (NUM_OVERFLOWED_BITS % wsize)));
+  assert_int_equal(s->buffer, (bitstream_word) (WRITE_BITS4 >> (NUM_OVERFLOWED_BITS % wsize)));
 }
 
 // overflow refers to what will land in the buffer

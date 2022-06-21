@@ -66,7 +66,7 @@ section.
 Types
 -----
 
-.. c:type:: word
+.. c:type:: bitstream_word
 
   Bits are buffered and read/written in units of words.  By default, the
   bit stream word type is 64 bits, but may be set to 8, 16, or 32 bits
@@ -74,6 +74,36 @@ Types
   :c:type:`uint16`, or :c:type:`uint32`, respectively.  Larger words
   tend to give higher throughput, while 8-bit words are needed to ensure
   endian independence (see FAQ :ref:`#11 <q-portability>`).
+
+.. note::
+  To avoid potential name clashes, this type was renamed in
+  |zfp| |64bitrelease| from the shorter and more ambiguous type name
+  :code:`word`.
+
+----
+
+.. c:type:: bitstream_offset
+
+  Type holding the offset, measured in number of bits, into the bit stream
+  where the next bit will be read or written.  This type allows referencing
+  bits in streams at least 2\ :sup:`64` bits long.  Note that it is possible
+  that :code:`sizeof(bitstream_offset) > sizeof(size_t)` since a stream may
+  be as long as `sizeof(size_t) * CHAR_BIT` bits.
+
+----
+
+.. c:type:: bitstream_size
+
+  Alias for :c:type:`bitstream_offset` that signifies the bit length of a
+  stream or substream rather than an offset into it.
+
+----
+
+.. c:type:: bitstream_count
+
+  Type sufficient to count the number of bits read or written in functions
+  like :c:func:`stream_read_bits` and :c:func:`stream_write_bits`.
+  :code:`sizeof(bitstream_count) <= sizeof(bitstream_size)`.
 
 ----
 
@@ -85,13 +115,13 @@ Types
   ::
 
     struct bitstream {
-      uint bits;       // number of buffered bits (0 <= bits < word size)
-      word buffer;     // buffer for incoming/outgoing bits (buffer < 2^bits)
-      word* ptr;       // pointer to next word to be read/written
-      word* begin;     // beginning of stream
-      word* end;       // end of stream (currently unused)
-      size_t mask;     // one less the block size in number of words (if BIT_STREAM_STRIDED)
-      ptrdiff_t delta; // number of words between consecutive blocks (if BIT_STREAM_STRIDED)
+      bitstream_count bits;  // number of buffered bits (0 <= bits < word size)
+      bitstream_word buffer; // incoming/outgoing bits (buffer < 2^bits)
+      bitstream_word* ptr;   // pointer to next word to be read/written
+      bitstream_word* begin; // beginning of stream
+      bitstream_word* end;   // end of stream (not enforced)
+      size_t mask;           // one less the block size in number of words (if BIT_STREAM_STRIDED)
+      ptrdiff_t delta;       // number of words between consecutive blocks (if BIT_STREAM_STRIDED)
     };
 
 .. _bs-data:
@@ -129,7 +159,7 @@ Functions
 
 ----
 
-.. c:function:: size_t stream_alignment()
+.. c:function:: bitstream_count stream_alignment()
 
   Word size in bits.  This is a functional form of the constant
   :c:var:`stream_word_bits` and returns the same value.
@@ -169,26 +199,26 @@ Functions
 
 ----
 
-.. c:function:: uint64 stream_read_bits(bitstream* stream, uint n)
+.. c:function:: uint64 stream_read_bits(bitstream* stream, bitstream_count n)
 
   Read and return 0 |leq| *n* |leq| 64 bits from *stream*.
 
 ----
 
-.. c:function:: uint64 stream_write_bits(bitstream* stream, uint64 value, uint n)
+.. c:function:: uint64 stream_write_bits(bitstream* stream, uint64 value, bitstream_count n)
 
   Write 0 |leq| *n* |leq| 64 low bits of *value* to *stream*.  Return any
   remaining bits from *value*, i.e., *value* >> *n*.
 
 ----
 
-.. c:function:: size_t stream_rtell(const bitstream* stream)
+.. c:function:: bitstream_offset stream_rtell(const bitstream* stream)
 
   Return bit offset to next bit to be read.
 
 ----
 
-.. c:function:: size_t stream_wtell(const bitstream* stream)
+.. c:function:: bitstream_offset stream_wtell(const bitstream* stream)
 
   Return bit offset to next bit to be written.
 
@@ -201,33 +231,33 @@ Functions
 
 ----
 
-.. c:function:: void stream_rseek(bitstream* stream, size_t offset)
+.. c:function:: void stream_rseek(bitstream* stream, bitstream_offset offset)
 
   Position stream for reading at given bit offset.  This places the
   stream in read mode.
 
 ----
 
-.. c:function:: void stream_wseek(bitstream* stream, size_t offset)
+.. c:function:: void stream_wseek(bitstream* stream, bitstream_offset offset)
 
   Position stream for writing at given bit offset.  This places the
   stream in write mode.
 
 ----
 
-.. c:function:: void stream_skip(bitstream* stream, uint n)
+.. c:function:: void stream_skip(bitstream* stream, bitstream_count n)
 
   Skip over the next *n* bits, i.e., without reading them.
 
 ----
 
-.. c:function:: void stream_pad(bitstream* stream, uint n)
+.. c:function:: void stream_pad(bitstream* stream, bitstream_count n)
 
   Append *n* zero-bits to *stream*.
 
 ----
 
-.. c:function:: size_t stream_align(bitstream* stream)
+.. c:function:: bitstream_count stream_align(bitstream* stream)
 
   Align stream on next word boundary by skipping bits.  No skipping is
   done if the stream is already word aligned.  Return the number of
@@ -235,7 +265,7 @@ Functions
 
 ----
 
-.. c:function:: size_t stream_flush(bitstream* stream)
+.. c:function:: bitstream_count stream_flush(bitstream* stream)
 
   Write out any remaining buffered bits.  When one or more bits are
   buffered, append zero-bits to the stream to align it on a word boundary.
@@ -243,7 +273,7 @@ Functions
 
 ----
 
-.. c:function:: void stream_copy(bitstream* dst, bitstream* src, size_t n)
+.. c:function:: void stream_copy(bitstream* dst, bitstream* src, bitstream_size n)
 
   Copy *n* bits from *src* to *dst*, advancing both bit streams.
 
@@ -267,4 +297,5 @@ Functions
 .. c:function:: int stream_set_stride(bitstream* stream, size_t block, ptrdiff_t delta)
 
   Set block size, *block*, in number of words and spacing, *delta*, in number
-  of blocks for strided access.  Requires :c:macro:`BIT_STREAM_STRIDED`.
+  of blocks for strided access.  Return nonzero upon success.  Requires
+  :c:macro:`BIT_STREAM_STRIDED`.
