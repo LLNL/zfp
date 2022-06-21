@@ -26,6 +26,7 @@ extern "C" {
 #define unused_(x) ((void)(x))
 
 namespace zfp {
+namespace internal {
 
 // allocate size bytes
 inline void*
@@ -108,8 +109,8 @@ reallocate(T*& ptr, size_t size, bool preserve = false)
   if (preserve)
     ptr = static_cast<T*>(std::realloc(ptr, size));
   else {
-    zfp::deallocate(ptr);
-    ptr = static_cast<T*>(zfp::allocate(size));
+    zfp::internal::deallocate(ptr);
+    ptr = static_cast<T*>(zfp::internal::allocate(size));
   }
 }
 
@@ -130,15 +131,15 @@ reallocate_aligned(void*& ptr, size_t new_size, size_t alignment, size_t old_siz
 {
   if (old_size) {
     // reallocate while preserving contents
-    void* dst = zfp::allocate_aligned(new_size, alignment);
+    void* dst = zfp::internal::allocate_aligned(new_size, alignment);
     std::memcpy(dst, ptr, std::min(old_size, new_size));
-    zfp::deallocate_aligned(ptr);
+    zfp::internal::deallocate_aligned(ptr);
     ptr = dst;
   }
   else {
     // reallocate without preserving contents
-    zfp::deallocate_aligned(ptr);
-    ptr = zfp::allocate_aligned(new_size, alignment);
+    zfp::internal::deallocate_aligned(ptr);
+    ptr = zfp::internal::allocate_aligned(new_size, alignment);
   }
 }
 
@@ -147,9 +148,9 @@ template <typename T>
 inline void
 clone(T*& dst, const T* src, size_t count)
 {
-  zfp::deallocate(dst);
+  zfp::internal::deallocate(dst);
   if (src) {
-    dst = static_cast<T*>(zfp::allocate(count * sizeof(T)));
+    dst = static_cast<T*>(zfp::internal::allocate(count * sizeof(T)));
     std::copy(src, src + count, dst);
   }
   else
@@ -173,9 +174,9 @@ template <>
 inline void
 clone_aligned(void*& dst, const void* src, size_t size, size_t alignment)
 {
-  zfp::deallocate_aligned(dst);
+  zfp::internal::deallocate_aligned(dst);
   if (src) {
-    dst = zfp::allocate_aligned(size, alignment);
+    dst = zfp::internal::allocate_aligned(size, alignment);
     std::memcpy(dst, src, size);
   }
   else
@@ -191,6 +192,7 @@ round_up(size_t size, size_t unit)
   return size;
 }
 
+}
 }
 
 #undef unused_

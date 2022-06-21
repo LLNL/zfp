@@ -108,7 +108,7 @@ public:
   void resize(size_t blocks)
   {
     this->blocks = blocks;
-    zfp::reallocate(data, capacity() * sizeof(*data));
+    zfp::internal::reallocate(data, capacity() * sizeof(*data));
     *data = 0;
     clear();
   }
@@ -146,7 +146,7 @@ protected:
   // make a deep copy of index
   void deep_copy(const verbatim& index)
   {
-    zfp::clone(data, index.data, index.capacity());
+    zfp::internal::clone(data, index.data, index.capacity());
     blocks = index.blocks;
     block = index.block;
   }
@@ -224,7 +224,7 @@ public:
   void resize(size_t blocks)
   {
     this->blocks = blocks;
-    zfp::reallocate(data, capacity() * sizeof(*data));
+    zfp::internal::reallocate(data, capacity() * sizeof(*data));
     clear();
   }
 
@@ -295,7 +295,7 @@ protected:
   // make a deep copy of index
   void deep_copy(const hybrid4& index)
   {
-    zfp::clone(data, index.data, index.capacity());
+    zfp::internal::clone(data, index.data, index.capacity());
     blocks = index.blocks;
     block = index.block;
     ptr = index.ptr;
@@ -382,7 +382,7 @@ public:
   void resize(size_t blocks)
   {
     this->blocks = blocks;
-    zfp::reallocate(data, capacity() * sizeof(*data));
+    zfp::internal::reallocate(data, capacity() * sizeof(*data));
     clear();
   }
 
@@ -457,7 +457,7 @@ protected:
   // make a deep copy of index
   void deep_copy(const hybrid8& index)
   {
-    zfp::clone(data, index.data, index.capacity());
+    zfp::internal::clone(data, index.data, index.capacity());
     blocks = index.blocks;
     block = index.block;
     ptr = index.ptr;

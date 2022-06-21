@@ -107,8 +107,8 @@ public:
   // destructor
   ~Cache()
   {
-    zfp::deallocate_aligned(tag);
-    zfp::deallocate_aligned(line);
+    zfp::internal::deallocate_aligned(tag);
+    zfp::internal::deallocate_aligned(line);
 #ifdef ZFP_WITH_CACHE_PROFILE
     std::cerr << "cache R1=" << hit[0][0] << " R2=" << hit[1][0] << " RM=" << miss[0] << " RB=" << back[0]
               <<      " W1=" << hit[0][1] << " W2=" << hit[1][1] << " WM=" << miss[1] << " WB=" << back[1] << std::endl;
@@ -142,8 +142,8 @@ public:
   {
     // compute smallest value of mask such that mask + 1 = 2^k >= minsize
     for (mask = minsize ? minsize - 1 : 1; mask & (mask + 1); mask |= mask + 1);
-    zfp::reallocate_aligned(tag, size() * sizeof(Tag), ZFP_MEMORY_ALIGNMENT);
-    zfp::reallocate_aligned(line, size() * sizeof(Line), ZFP_MEMORY_ALIGNMENT);
+    zfp::internal::reallocate_aligned(tag, size() * sizeof(Tag), ZFP_MEMORY_ALIGNMENT);
+    zfp::internal::reallocate_aligned(line, size() * sizeof(Line), ZFP_MEMORY_ALIGNMENT);
     clear();
   }
 
@@ -230,8 +230,8 @@ protected:
   void deep_copy(const Cache& c)
   {
     mask = c.mask;
-    zfp::clone_aligned(tag, c.tag, size(), ZFP_MEMORY_ALIGNMENT);
-    zfp::clone_aligned(line, c.line, size(), ZFP_MEMORY_ALIGNMENT);
+    zfp::internal::clone_aligned(tag, c.tag, size(), ZFP_MEMORY_ALIGNMENT);
+    zfp::internal::clone_aligned(line, c.line, size(), ZFP_MEMORY_ALIGNMENT);
 #ifdef ZFP_WITH_CACHE_PROFILE
     hit[0][0] = c.hit[0][0];
     hit[0][1] = c.hit[0][1];

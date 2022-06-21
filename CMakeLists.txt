@@ -20,8 +20,16 @@ string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MINOR[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_MINOR ${_zfp_h_contents})
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_PATCH[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_PATCH ${_zfp_h_contents})
-set(ZFP_VERSION
-  "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}")
+string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_TWEAK[ \t]+([0-9]+).*"
+    "\\1" ZFP_VERSION_TWEAK ${_zfp_h_contents})
+
+if(${ZFP_VERSION_TWEAK} EQUAL 0)
+  set(ZFP_VERSION
+    "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}")
+else()
+  set(ZFP_VERSION
+    "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}.${ZFP_VERSION_TWEAK}")
+endif()
 
 project(ZFP VERSION ${ZFP_VERSION})
 

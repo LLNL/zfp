@@ -114,10 +114,10 @@ public:
   // shrink buffer to match size of compressed data
   void compact()
   {
-    size_t size = zfp::round_up(index.range(), codec.alignment() * CHAR_BIT) / CHAR_BIT;
+    size_t size = zfp::internal::round_up(index.range(), codec.alignment() * CHAR_BIT) / CHAR_BIT;
     if (bytes > size) {
       codec.close();
-      zfp::reallocate_aligned(data, size, ZFP_MEMORY_ALIGNMENT, bytes);
+      zfp::internal::reallocate_aligned(data, size, ZFP_MEMORY_ALIGNMENT, bytes);
       bytes = size;
       codec.open(data, bytes);
     }
@@ -173,7 +173,7 @@ protected:
   void deep_copy(const BlockStore& s)
   {
     free();
-    zfp::clone_aligned(data, s.data, s.bytes, ZFP_MEMORY_ALIGNMENT);
+    zfp::internal::clone_aligned(data, s.data, s.bytes, ZFP_MEMORY_ALIGNMENT);
     bytes = s.bytes;
     index = s.index;
     codec = s.codec;
@@ -185,7 +185,7 @@ protected:
   {
     free();
     bytes = buffer_size();
-    zfp::reallocate_aligned(data, bytes, ZFP_MEMORY_ALIGNMENT);
+    zfp::internal::reallocate_aligned(data, bytes, ZFP_MEMORY_ALIGNMENT);
     if (clear)
       std::fill(static_cast<uchar*>(data), static_cast<uchar*>(data) + bytes, uchar(0));
     codec.open(data, bytes);
@@ -195,7 +195,7 @@ protected:
   void free()
   {
     if (data) {
-      zfp::deallocate_aligned(data);
+      zfp::internal::deallocate_aligned(data);
       data = 0;
       bytes = 0;
       codec.close();
