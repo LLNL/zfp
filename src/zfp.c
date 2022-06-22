@@ -528,6 +528,7 @@ zfp_stream_open(bitstream* stream)
     zfp->maxprec = ZFP_MAX_PREC;
     zfp->minexp = ZFP_MIN_EXP;
     zfp->exec.policy = zfp_exec_serial;
+    zfp->exec.params = NULL;
   }
   return zfp;
 }
@@ -535,6 +536,8 @@ zfp_stream_open(bitstream* stream)
 void
 zfp_stream_close(zfp_stream* zfp)
 {
+  if (zfp->exec.params != NULL)
+    free(zfp->exec.params);
   free(zfp);
 }
 
@@ -886,13 +889,13 @@ zfp_stream_execution(const zfp_stream* zfp)
 uint
 zfp_stream_omp_threads(const zfp_stream* zfp)
 {
-  return zfp->exec.params.omp.threads;
+  return ((zfp_exec_params_omp*)zfp->exec.params)->threads;
 }
 
 uint
 zfp_stream_omp_chunk_size(const zfp_stream* zfp)
 {
-  return zfp->exec.params.omp.chunk_size;
+  return ((zfp_exec_params_omp*)zfp->exec.params)->chunk_size;
 }
 
 zfp_bool
@@ -900,16 +903,30 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
 {
   switch (policy) {
     case zfp_exec_serial:
+      if (zfp->exec.policy != policy && zfp->exec.params != NULL) {
+        free(zfp->exec.params);
+        zfp->exec.params = NULL;
+      }
       break;
 #ifdef ZFP_WITH_CUDA
     case zfp_exec_cuda:
+      if (zfp->exec.policy != policy && zfp->exec.params != NULL) {
+        free(zfp->exec.params);
+        zfp->exec.params = NULL;
+      }
       break;
 #endif
     case zfp_exec_omp:
 #ifdef _OPENMP
       if (zfp->exec.policy != policy) {
-        zfp->exec.params.omp.threads = 0;
-        zfp->exec.params.omp.chunk_size = 0;
+        if (zfp->exec.params != NULL) {
+          free(zfp->exec.params);
+          zfp->exec.params = NULL;
+        }
+        zfp_exec_params_omp* params = malloc(sizeof(zfp_exec_params_omp));
+        params->threads = 0;
+        params->chunk_size = 0;
+        zfp->exec.params = (void*)params;
       }
       break;
 #else
@@ -927,7 +944,7 @@ zfp_stream_set_omp_threads(zfp_stream* zfp, uint threads)
 {
   if (!zfp_stream_set_execution(zfp, zfp_exec_omp))
     return zfp_false;
-  zfp->exec.params.omp.threads = threads;
+  ((zfp_exec_params_omp*)zfp->exec.params)->threads = threads;
   return zfp_true;
 }
 
@@ -936,7 +953,7 @@ zfp_stream_set_omp_chunk_size(zfp_stream* zfp, uint chunk_size)
 {
   if (!zfp_stream_set_execution(zfp, zfp_exec_omp))
     return zfp_false;
-  zfp->exec.params.omp.chunk_size = chunk_size;
+  ((zfp_exec_params_omp*)zfp->exec.params)->chunk_size = chunk_size;
   return zfp_true;
 }
 

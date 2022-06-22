@@ -77,14 +77,9 @@ typedef struct {
   uint chunk_size; /* number of blocks per chunk (1D only) */
 } zfp_exec_params_omp;
 
-/* execution parameters */
-typedef union {
-  zfp_exec_params_omp omp; /* OpenMP parameters */
-} zfp_exec_params;
-
 typedef struct {
   zfp_exec_policy policy; /* execution policy (serial, omp, ...) */
-  zfp_exec_params params; /* execution parameters */
+  void* params;           /* execution parameters */
 } zfp_execution;
 
 /* compressed stream; use accessors to get/set members */
