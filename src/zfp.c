@@ -889,13 +889,17 @@ zfp_stream_execution(const zfp_stream* zfp)
 uint
 zfp_stream_omp_threads(const zfp_stream* zfp)
 {
-  return ((zfp_exec_params_omp*)zfp->exec.params)->threads;
+  if (zfp->exec.policy == zfp_exec_omp) 
+    return ((zfp_exec_params_omp*)zfp->exec.params)->threads;
+  return 0u;
 }
 
 uint
 zfp_stream_omp_chunk_size(const zfp_stream* zfp)
 {
-  return ((zfp_exec_params_omp*)zfp->exec.params)->chunk_size;
+  if (zfp->exec.policy == zfp_exec_omp) 
+    return ((zfp_exec_params_omp*)zfp->exec.params)->chunk_size;
+  return 0u;
 }
 
 zfp_bool
@@ -921,7 +925,6 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
       if (zfp->exec.policy != policy) {
         if (zfp->exec.params != NULL) {
           free(zfp->exec.params);
-          zfp->exec.params = NULL;
         }
         zfp_exec_params_omp* params = malloc(sizeof(zfp_exec_params_omp));
         params->threads = 0;
