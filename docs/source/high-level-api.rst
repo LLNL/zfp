@@ -46,7 +46,7 @@ Macros
   (see :c:macro:`ZFP_MAKE_VERSION`).  :c:macro:`ZFP_VERSION_STRING` is a
   string literal (see :c:macro:`ZFP_MAKE_VERSION_STRING`).  See also
   :c:data:`zfp_library_version` and :c:data:`zfp_version_string`.  
-  :c:macro:`ZFP_VERSION_TWEAK` is new as of |zfp| |versionrelease| and used 
+  :c:macro:`ZFP_VERSION_TWEAK` is new as of |zfp| |verrelease| and used 
   to mark intermediate develop versions.
 
 ----
@@ -68,7 +68,7 @@ Macros
   Utility macros for constructing :c:macro:`ZFP_VERSION` and
   :c:macro:`ZFP_VERSION_STRING`, respectively.  Includes tweak version 
   used by intermediate develop versions. Available as of
-  |zfp| |versionrelease|, these macros may be used by applications to test
+  |zfp| |verrelease|, these macros may be used by applications to test
   for a certain |zfp| version number, e.g.,
   :code:`#if ZFP_VERSION >= ZFP_MAKE_FULLVERSION(0, 5, 6, 1)`.
 
@@ -85,7 +85,7 @@ Macros
 
   Macro identifying that the current version is an intermediate develop 
   version as opposed to an official release. Available as of |zfp| 
-  |versionrelease|.
+  |verrelease|.
 
 ----
 

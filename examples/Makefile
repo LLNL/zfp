@@ -1,7 +1,8 @@
 include ../Config
 
 BINDIR = ../bin
-TARGETS = $(BINDIR)/diffusion\
+TARGETS = $(BINDIR)/array\
+	  $(BINDIR)/diffusion\
 	  $(BINDIR)/inplace\
 	  $(BINDIR)/iterator\
 	  $(BINDIR)/pgm\
@@ -20,6 +21,9 @@ endif
 
 
 all: $(TARGETS)
+
+$(BINDIR)/array: array.cpp ../lib/$(LIBZFP)
+	$(CXX) $(CXXFLAGS) $(INCS) -I../array array.cpp $(CXXLIBS) -o $@
 
 $(BINDIR)/diffusion: diffusion.cpp ../lib/$(LIBZFP)
 	$(CXX) $(CXXFLAGS) $(INCS) -I../array diffusion.cpp $(CXXLIBS) -o $@

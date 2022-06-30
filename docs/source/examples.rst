@@ -15,14 +15,27 @@ The :program:`simple` program is a minimal example that shows how to call
 the compressor and decompressor on a double-precision 3D array.  Without
 the :code:`-d` option, it will compress the array and write the compressed
 stream to standard output.  With the :code:`-d` option, it will instead
-read the compressed stream from standard input and decompress the
-array::
+read the compressed stream from standard input and decompress the array::
 
     simple > compressed.zfp
     simple -d < compressed.zfp
 
 For a more elaborate use of the compressor, see the
 :ref:`zfp utility <zfpcmd>`.
+
+.. _ex-array:
+
+Compressed-Array C++ Classes
+----------------------------
+
+The :program:`array` program shows how to declare, write to, and read from
+|zfp|'s compressed-array C++ objects (in this case, 2D double-precision
+arrays), which is essentially as straightforward as working with STL vectors.
+This example initializes a 2D array with a linear ramp of 12 |times| 8 = 96
+values using only four bits of storage per value, which using uncompressed
+storage would not be enough to distinguish more than 16 different values.
+For more advanced compressed-array features, see the
+:ref:`tutorial <tut-arrays>`.
 
 .. _ex-diffusion:
 
