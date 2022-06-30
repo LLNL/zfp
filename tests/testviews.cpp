@@ -1,7 +1,7 @@
-#include <cassert>
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
+#include <iostream>
+#include <sstream>
 #include "zfparray2.h"
 #include "zfparray3.h"
 
@@ -19,9 +19,16 @@ static void
 verify(double f, double g)
 {
   if (std::fabs(f - g) > EPSILON) {
-    fprintf(stderr, "error: %g != %g\n", f, g);
+    std::cerr << "error: " << f << " != " << g << std::endl;
     exit(EXIT_FAILURE);
   }
+}
+
+static int
+usage()
+{
+  std::cerr << "Usage: testviews [nx ny nz [x0 y0 z0 mx my mz]]" << std::endl;
+  return EXIT_FAILURE;
 }
 
 int main(int argc, char* argv[])
@@ -29,37 +36,51 @@ int main(int argc, char* argv[])
   size_t nx = 16;
   size_t ny = 16;
   size_t nz = 16;
-  size_t x0 = rand(0, nx);
-  size_t y0 = rand(0, ny);
-  size_t z0 = rand(0, nz);
-  size_t mx = rand(1, nx - x0);
-  size_t my = rand(1, ny - y0);
-  size_t mz = rand(1, nz - z0);
+  size_t x0, y0, z0;
+  size_t mx, my, mz;
   double rate = 16;
 
-  // Usage: test [nx ny nz [x0 y0 z0 mx my mz]]
+  // parse command-line arguments
   switch (argc) {
     case 10:
-      if (sscanf(argv[4], "%zu", &x0) != 1 ||
-          sscanf(argv[5], "%zu", &y0) != 1 ||
-          sscanf(argv[6], "%zu", &z0) != 1 ||
-          sscanf(argv[7], "%zu", &mx) != 1 ||
-          sscanf(argv[8], "%zu", &my) != 1 ||
-          sscanf(argv[9], "%zu", &mz) != 1)
-        return EXIT_FAILURE;
+      if ((std::istringstream(argv[4]) >> x0).fail() ||
+          (std::istringstream(argv[5]) >> y0).fail() ||
+          (std::istringstream(argv[6]) >> z0).fail() ||
+          (std::istringstream(argv[7]) >> mx).fail() || !mx ||
+          (std::istringstream(argv[8]) >> my).fail() || !my ||
+          (std::istringstream(argv[9]) >> mz).fail() || !mz)
+        return usage();
       // FALLTHROUGH
     case 4:
-      if (sscanf(argv[1], "%zu", &nx) != 1 ||
-          sscanf(argv[2], "%zu", &ny) != 1 ||
-          sscanf(argv[3], "%zu", &nz) != 1)
-        return EXIT_FAILURE;
+      if ((std::istringstream(argv[1]) >> nx).fail() || !nx ||
+          (std::istringstream(argv[2]) >> ny).fail() || !ny ||
+          (std::istringstream(argv[3]) >> nz).fail() || !nz)
+        return usage();
       // FALLTHROUGH
     case 1:
       break;
+    default:
+      return usage();
   }
 
-  printf("a(%zu, %zu, %zu)\n", nx, ny, nz);
-  printf("v(%zu, %zu, %zu) + (%zu, %zu, %zu)\n", mx, my, mz, x0, y0, z0);
+  if (argc < 10) {
+    // generate random view
+    x0 = rand(0, nx);
+    y0 = rand(0, ny);
+    z0 = rand(0, nz);
+    mx = rand(0, nx - x0);
+    my = rand(0, ny - y0);
+    mz = rand(0, nz - z0);
+  }
+
+  // validate arguments
+  if (x0 + mx > nx || y0 + my > ny || z0 + mz > nz) {
+    std::cerr << "invalid view parameters" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  std::cout << "a(" << nx << ", " << ny << ", " << nz << ")" << std::endl;
+  std::cout << "v(" << mx << ", " << my << ", " << mz << ") + (" << x0 << ", " << y0 << ", " << z0 << ")" << std::endl;
 
   // initialize 3D array to linear function
   zfp::array3<double> a(nx, ny, nz, rate);
@@ -69,37 +90,37 @@ int main(int argc, char* argv[])
         a(x, y, z) = static_cast<double>(x + nx * (y + ny * z));
 
   // rectangular view into a
-  printf("\n3D view\n");
+  std::cout << std::endl << "3D view" << std::endl;
   zfp::array3<double>::view v(&a, x0, y0, z0, mx, my, mz);
   for (size_t z = 0; z < v.size_z(); z++)
     for (size_t y = 0; y < v.size_y(); y++)
       for (size_t x = 0; x < v.size_x(); x++) {
-        printf("%zu %zu %zu: %g %g\n", x, y, z, (double)a(x0 + x, y0 + y, z0 + z), (double)v(x, y, z));
+        std::cout << x << " " << y << " " << z << ": " << a(x0 + x, y0 + y, z0 + z) << " " << v(x, y, z) << std::endl;
         verify(a(x0 + x, y0 + y, z0 + z), v(x, y, z));
       }
 
   // flat view of all of a
-  printf("\n3D flat view\n");
+  std::cout << std::endl << "3D flat view" << std::endl;
   zfp::array3<double>::flat_view fv(&a);
   for (size_t z = 0; z < fv.size_z(); z++)
     for (size_t y = 0; y < fv.size_y(); y++)
       for (size_t x = 0; x < fv.size_x(); x++) {
-        printf("%zu %zu %zu: %g %g\n", x, y, z, (double)a(x, y, z), (double)fv[fv.index(x, y, z)]);
+        std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << fv[fv.index(x, y, z)] << std::endl;
         verify(a(x, y, z), fv[fv.index(x, y, z)]);
       }
 
   // nested view of all of a
-  printf("\n3D nested view\n");
+  std::cout << std::endl << "3D nested view" << std::endl;
   zfp::array3<double>::nested_view nv(&a);
   for (size_t z = 0; z < v.size_z(); z++)
     for (size_t y = 0; y < v.size_y(); y++)
       for (size_t x = 0; x < v.size_x(); x++) {
-        printf("%zu %zu %zu: %g %g\n", x, y, z, (double)a(x, y, z), (double)nv[z][y][x]);
+        std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << nv[z][y][x] << std::endl;
         verify(a(x, y, z), nv[z][y][x]);
       }
 
   // pointers and iterators into a via view v
-  printf("\n3D view pointers and iterators\n");
+  std::cout << std::endl << "3D view pointers and iterators" << std::endl;
   zfp::array3<double>::view::const_reference vr = v(0, 0, 0);
   zfp::array3<double>::view::const_pointer p = &vr;
   p = &v(0, 0, 0);
@@ -111,7 +132,7 @@ int main(int argc, char* argv[])
   }
 
   // pointers and iterators into a via flat view fv
-  printf("\n3D flat view pointers and iterators\n");
+  std::cout << std::endl << "3D flat view pointers and iterators" << std::endl;
   zfp::array3<double>::flat_view::const_reference fvr = fv[0];
   zfp::array3<double>::flat_view::const_pointer fp = &fvr;
   fp = &fv(0, 0, 0);
@@ -123,52 +144,52 @@ int main(int argc, char* argv[])
   }
 
   // 2D slice of a
-  printf("\n2D slice\n");
+  std::cout << std::endl << "2D slice" << std::endl;
   size_t z = rand(0, nv.size_z());
   zfp::array3<double>::nested_view2 slice2(nv[z]);
   for (size_t y = 0; y < slice2.size_y(); y++)
     for (size_t x = 0; x < slice2.size_x(); x++) {
-      printf("%zu %zu %zu: %g %g\n", x, y, z, (double)a(x, y, z), (double)slice2[y][x]);
+      std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << slice2[y][x] << std::endl;
       verify(a(x, y, z), slice2[y][x]);
     }
 
   // 2D array constructed from 2D slice (exercises deep copy via iterator)
-  printf("\n2D array from 2D slice\n");
+  std::cout << std::endl << "2D array from 2D slice" << std::endl;
   zfp::array2<double> b(slice2);
   for (size_t y = 0; y < b.size_y(); y++)
     for (size_t x = 0; x < b.size_x(); x++) {
-      printf("%zu %zu: %g %g\n", x, y, (double)b(x, y), (double)slice2[y][x]);
+      std::cout << x << " " << y << ": " << b(x, y) << " " << slice2[y][x] << std::endl;
       verify(b(x, y), slice2[y][x]);
     }
 
   // 1D slice of a
-  printf("\n1D slice\n");
+  std::cout << std::endl << "1D slice" << std::endl;
   size_t y = rand(0, slice2.size_y());
   zfp::array3<double>::nested_view1 slice1 = slice2[y];
   for (size_t x = 0; x < slice1.size_x(); x++) {
-    printf("%zu %zu %zu: %g %g\n", x, y, z, (double)a(x, y, z), (double)slice1[x]);
+    std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << slice1[x] << std::endl;
     verify(a(x, y, z), slice1[x]);
   }
 
   // 2D array constructed from 2D slice of 3D array (exercises deep copy via iterator)
-  printf("\n2D array from 2D slice of 3D array\n");
+  std::cout << std::endl << "2D array from 2D slice of 3D array" << std::endl;
   zfp::array2<double> c(slice2);
   for (size_t y = 0; y < c.size_y(); y++)
     for (size_t x = 0; x < c.size_x(); x++) {
-      printf("%zu %zu: %g %g\n", x, y, (double)c(x, y), (double)slice2[y][x]);
+      std::cout << x << " " << y << ": " << c(x, y) << " " << slice2[y][x] << std::endl;
       verify(c(x, y), slice2[y][x]);
     }
 
   // 2D thread-safe view of c
-  printf("\n2D private view\n");
+  std::cout << std::endl << "2D private view" << std::endl;
   zfp::array2<double>::private_const_view d(&c);
   for (size_t y = 0; y < c.size_y(); y++)
     for (size_t x = 0; x < c.size_x(); x++) {
-      printf("%zu %zu: %g %g\n", x, y, (double)c(x, y), (double)d(x, y));
+      std::cout << x << " " << y << ": " << c(x, y) << " " << d(x, y) << std::endl;
       verify(c(x, y), d(x, y));
     }
 
-  printf("\nall tests passed\n");
+  std::cout << std::endl << "all tests passed" << std::endl;
 
   return 0;
 }
