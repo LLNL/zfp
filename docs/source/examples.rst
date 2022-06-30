@@ -3,7 +3,7 @@
 Code Examples
 =============
 
-The :file:`examples` directory includes five programs that make use of the
+The :file:`examples` directory includes seven programs that make use of the
 compressor.
 
 .. _ex-simple:

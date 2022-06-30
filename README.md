@@ -57,7 +57,7 @@ e.g., CUDA support.
 
 For further configuration and build instructions, please consult the
 [documentation](https://zfp.readthedocs.io/en/latest/installation.html).
-For examples of how to call the |zfp| library and use its C++ array classes,
+For examples of how to call the C library and use the C++ array classes,
 see the [examples](https://zfp.readthedocs.io/en/latest/examples.html)
 section.
 
