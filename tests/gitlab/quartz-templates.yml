@@ -1,0 +1,12 @@
+.quartz_job:
+    tags:
+        - batch
+        - quartz
+
+.quartz_build_cpu:
+    extends: [.build_cpu, .quartz_job]
+
+.quartz_test_cpu:
+    variables:
+       ci_test_regex: "."
+    extends: [.test_cpu, .quartz_job]
