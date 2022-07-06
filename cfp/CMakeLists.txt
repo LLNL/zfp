@@ -1,4 +1,4 @@
-add_library(cfp cfparray.cpp)
+add_library(cfp cfp.cpp)
 
 if(DEFINED CFP_NAMESPACE)
   list(APPEND cfp_public_defs "CFP_NAMESPACE=${CFP_NAMESPACE}")
@@ -19,11 +19,8 @@ target_compile_definitions(cfp
 target_include_directories(cfp
   PUBLIC
     $<BUILD_INTERFACE:${ZFP_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${ZFP_SOURCE_DIR}/cfp/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   PRIVATE
-    ${ZFP_SOURCE_DIR}/array
     ${ZFP_SOURCE_DIR}/src
 )
 
