@@ -1,5 +1,5 @@
-#ifndef ZFP_REFERENCE4_H
-#define ZFP_REFERENCE4_H
+#ifndef ZFP_REFERENCE4_HPP
+#define ZFP_REFERENCE4_HPP
 
 namespace zfp {
 namespace internal {

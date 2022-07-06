@@ -1,5 +1,5 @@
-#ifndef ZFP_VIEW4_H
-#define ZFP_VIEW4_H
+#ifndef ZFP_VIEW4_HPP
+#define ZFP_VIEW4_HPP
 
 // 4D array views
 

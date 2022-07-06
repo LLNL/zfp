@@ -1,5 +1,5 @@
-#ifndef ZFP_ITERATOR4_H
-#define ZFP_ITERATOR4_H
+#ifndef ZFP_ITERATOR4_HPP
+#define ZFP_ITERATOR4_HPP
 
 namespace zfp {
 namespace internal {

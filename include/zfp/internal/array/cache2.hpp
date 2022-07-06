@@ -1,7 +1,7 @@
-#ifndef ZFP_CACHE2_H
-#define ZFP_CACHE2_H
+#ifndef ZFP_CACHE2_HPP
+#define ZFP_CACHE2_HPP
 
-#include "cache.h"
+#include "zfp/internal/array/cache.hpp"
 
 namespace zfp {
 namespace internal {

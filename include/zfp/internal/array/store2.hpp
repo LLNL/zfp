@@ -1,7 +1,7 @@
-#ifndef ZFP_STORE2_H
-#define ZFP_STORE2_H
+#ifndef ZFP_STORE2_HPP
+#define ZFP_STORE2_HPP
 
-#include "zfp/store.h"
+#include "zfp/internal/array/store.h"
 
 namespace zfp {
 namespace internal {

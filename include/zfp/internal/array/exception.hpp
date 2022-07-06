@@ -1,5 +1,5 @@
-#ifndef ZFP_EXCEPTION_H
-#define ZFP_EXCEPTION_H
+#ifndef ZFP_EXCEPTION_HPP
+#define ZFP_EXCEPTION_HPP
 
 #include <stdexcept>
 #include <string>

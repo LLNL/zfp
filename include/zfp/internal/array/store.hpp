@@ -1,9 +1,9 @@
-#ifndef ZFP_STORE_H
-#define ZFP_STORE_H
+#ifndef ZFP_STORE_HPP
+#define ZFP_STORE_HPP
 
 #include <climits>
 #include <cmath>
-#include "zfp/memory.h"
+#include "zfp/internal/array/memory.h"
 
 namespace zfp {
 namespace internal {

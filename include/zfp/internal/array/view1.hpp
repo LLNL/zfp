@@ -1,5 +1,5 @@
-#ifndef ZFP_VIEW1_H
-#define ZFP_VIEW1_H
+#ifndef ZFP_VIEW1_HPP
+#define ZFP_VIEW1_HPP
 
 // 1D array views
 

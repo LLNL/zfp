@@ -1,5 +1,5 @@
-#ifndef ZFP_VIEW3_H
-#define ZFP_VIEW3_H
+#ifndef ZFP_VIEW3_HPP
+#define ZFP_VIEW3_HPP
 
 // 3D array views
 

@@ -1,7 +1,7 @@
-#ifndef ZFP_CACHE_H
-#define ZFP_CACHE_H
+#ifndef ZFP_CACHE_HPP
+#define ZFP_CACHE_HPP
 
-#include "memory.h"
+#include "zfp/internal/array/memory.hpp"
 
 #ifdef ZFP_WITH_CACHE_PROFILE
   // maintain stats on hit and miss rates

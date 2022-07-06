@@ -1,5 +1,5 @@
-#ifndef ZFP_MEMORY_H
-#define ZFP_MEMORY_H
+#ifndef ZFP_MEMORY_HPP
+#define ZFP_MEMORY_HPP
 
 // Memory management for POD types only.  Templated functions are provided only
 // to avoid the need for casts to/from void* in pass-by-reference calls.

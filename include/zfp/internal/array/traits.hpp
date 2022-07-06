@@ -1,5 +1,5 @@
-#ifndef ZFP_TRAITS_H
-#define ZFP_TRAITS_H
+#ifndef ZFP_TRAITS_HPP
+#define ZFP_TRAITS_HPP
 
 namespace zfp {
 

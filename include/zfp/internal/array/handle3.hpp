@@ -1,5 +1,5 @@
-#ifndef ZFP_HANDLE3_H
-#define ZFP_HANDLE3_H
+#ifndef ZFP_HANDLE3_HPP
+#define ZFP_HANDLE3_HPP
 
 namespace zfp {
 namespace internal {

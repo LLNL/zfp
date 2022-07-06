@@ -1,5 +1,5 @@
-#ifndef ZFP_POINTER3_H
-#define ZFP_POINTER3_H
+#ifndef ZFP_POINTER3_HPP
+#define ZFP_POINTER3_HPP
 
 namespace zfp {
 namespace internal {
