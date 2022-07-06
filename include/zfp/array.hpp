@@ -1,5 +1,5 @@
-#ifndef ZFP_ARRAY_H
-#define ZFP_ARRAY_H
+#ifndef ZFP_ARRAY_HPP
+#define ZFP_ARRAY_HPP
 
 #include <algorithm>
 #include <climits>

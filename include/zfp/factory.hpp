@@ -1,8 +1,8 @@
-#ifndef ZFP_FACTORY_H
-#define ZFP_FACTORY_H
+#ifndef ZFP_FACTORY_HPP
+#define ZFP_FACTORY_HPP
 
 // ensure zfp/array.h has already been included
-#ifndef ZFP_ARRAY_H
+#ifndef ZFP_ARRAY_HPP
   #error "zfp/array.hpp must be included before zfp/factory.hpp"
 #endif
 

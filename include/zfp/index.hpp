@@ -1,5 +1,5 @@
-#ifndef ZFP_INDEX_H
-#define ZFP_INDEX_H
+#ifndef ZFP_INDEX_HPP
+#define ZFP_INDEX_HPP
 
 #include <algorithm>
 

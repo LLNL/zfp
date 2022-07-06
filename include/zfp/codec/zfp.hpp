@@ -1,5 +1,5 @@
-#ifndef ZFP_ZFP_CODEC_H
-#define ZFP_ZFP_CODEC_H
+#ifndef ZFP_ZFP_CODEC_HPP
+#define ZFP_ZFP_CODEC_HPP
 
 #include <algorithm>
 #include <climits>

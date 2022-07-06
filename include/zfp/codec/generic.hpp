@@ -1,5 +1,5 @@
-#ifndef ZFP_GENERIC_CODEC_H
-#define ZFP_GENERIC_CODEC_H
+#ifndef ZFP_GENERIC_CODEC_HPP
+#define ZFP_GENERIC_CODEC_HPP
 
 // This CODEC allows interfacing with the zfp::array classes via a user-facing
 // scalar type, ExternalType (e.g., double), while storing data in memory using

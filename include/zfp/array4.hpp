@@ -1,5 +1,5 @@
-#ifndef ZFP_ARRAY4_H
-#define ZFP_ARRAY4_H
+#ifndef ZFP_ARRAY4_HPP
+#define ZFP_ARRAY4_HPP
 
 #include <cstddef>
 #include <cstring>
