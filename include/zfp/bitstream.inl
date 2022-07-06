@@ -112,7 +112,7 @@ The following assumptions and restrictions apply:
   #define inline_
 #endif
 
-#include "bitstream.h"
+#include "zfp/bitstream.h"
 
 /* satisfy compiler when args unused */
 #define unused_(x) ((void)(x))

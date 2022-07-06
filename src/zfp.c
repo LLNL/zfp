@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "zfp.h"
-#include "zfp/macros.h"
+#include "zfp/internal/zfp/macros.h"
 #include "zfp/version.h"
 #include "template/template.h"
 
