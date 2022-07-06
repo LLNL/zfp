@@ -7,10 +7,10 @@
 #ifndef ZFP_H
 #define ZFP_H
 
-#include "zfp/types.h"
-#include "zfp/system.h"
+#include "zfp/bitstream.h"
 #include "zfp/version.h"
-#include "bitstream.h"
+#include "zfp/internal/zfp/system.h"
+#include "zfp/internal/zfp/types.h"
 
 /* macros ------------------------------------------------------------------ */
 

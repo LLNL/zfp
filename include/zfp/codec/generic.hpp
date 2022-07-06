@@ -16,9 +16,9 @@
 #include <climits>
 #include <cstring>
 #include "zfp.h"
-#include "zfparray.h"
-#include "zfp/memory.h"
-#include "zfp/traits.h"
+#include "zfp/array.hpp"
+#include "zfp/internal/array/memory.h"
+#include "zfp/internal/array/traits.h"
 
 namespace zfp {
 namespace codec {

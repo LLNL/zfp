@@ -2,8 +2,8 @@
 #define ZFP_BITSTREAM_H
 
 #include <stddef.h>
-#include "zfp/types.h"
-#include "zfp/system.h"
+#include "zfp/internal/zfp/types.h"
+#include "zfp/internal/zfp/system.h"
 
 /* forward declaration of opaque type */
 typedef struct bitstream bitstream;

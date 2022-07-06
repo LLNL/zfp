@@ -1,9 +1,9 @@
 #ifndef ZFP_FACTORY_H
 #define ZFP_FACTORY_H
 
-// ensure zfparray.h has already been included
+// ensure zfp/array.h has already been included
 #ifndef ZFP_ARRAY_H
-  #error "zfparray.h must be included before zfpfactory.h"
+  #error "zfp/array.hpp must be included before zfp/factory.hpp"
 #endif
 
 zfp::array* zfp::array::construct(const zfp::array::header& header, const void* buffer, size_t buffer_size_bytes)
@@ -36,7 +36,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
           break;
       }
 #else
-      error = "zfparray4 not supported; include zfparray4.h before zfpfactory.h";
+      error = "array4 not supported; include zfp/array4.hpp before zfp/factory.hpp";
 #endif
       break;
 
@@ -55,7 +55,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
           break;
       }
 #else
-      error = "zfparray3 not supported; include zfparray3.h before zfpfactory.h";
+      error = "array3 not supported; include zfp/array3.hpp before zfp/factory.hpp";
 #endif
       break;
 
@@ -74,7 +74,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
           break;
       }
 #else
-      error = "zfparray2 not supported; include zfparray2.h before zfpfactory.h";
+      error = "array2 not supported; include zfp/array2.hpp before zfp/factory.hpp";
 #endif
       break;
 
@@ -93,7 +93,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
           break;
       }
 #else
-      error = "zfparray1 not supported; include zfparray1.h before zfpfactory.h";
+      error = "array1 not supported; include zfp/array1.hpp before zfp/factory.hpp";
 #endif
       break;
 

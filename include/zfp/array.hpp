@@ -5,14 +5,14 @@
 #include <climits>
 #include <string>
 #include "zfp.h"
-#include "zfp/exception.h"
+#include "zfp/internal/array/exception.hpp"
 
 namespace zfp {
 
 // abstract base class for compressed array of scalars
 class array {
 public:
-  #include "zfp/header.h"
+  #include "zfp/internal/array/header.hpp"
 
   // factory function (see zfpfactory.h)
   static zfp::array* construct(const zfp::array::header& header, const void* buffer = 0, size_t buffer_size_bytes = 0);

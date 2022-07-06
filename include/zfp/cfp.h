@@ -2,15 +2,15 @@
 #define CFP_ARRAY
 
 #include <stddef.h>
-#include "cfpheader.h"
-#include "cfparray1f.h"
-#include "cfparray1d.h"
-#include "cfparray2f.h"
-#include "cfparray2d.h"
-#include "cfparray3f.h"
-#include "cfparray3d.h"
-#include "cfparray4f.h"
-#include "cfparray4d.h"
+#include "zfp/internal/cfp/header.h"
+#include "zfp/internal/cfp/array1f.h"
+#include "zfp/internal/cfp/array1d.h"
+#include "zfp/internal/cfp/array2f.h"
+#include "zfp/internal/cfp/array2d.h"
+#include "zfp/internal/cfp/array3f.h"
+#include "zfp/internal/cfp/array3d.h"
+#include "zfp/internal/cfp/array4f.h"
+#include "zfp/internal/cfp/array4d.h"
 
 typedef struct {
   cfp_array1f_api array1f;

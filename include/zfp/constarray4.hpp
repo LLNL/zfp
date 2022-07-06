@@ -4,16 +4,16 @@
 #include <cstddef>
 #include <cstring>
 #include <iterator>
-#include "zfparray.h"
-#include "zfpcodec.h"
-#include "zfpindex.h"
-#include "zfp/cache4.h"
-#include "zfp/store4.h"
-#include "zfp/handle4.h"
-#include "zfp/reference4.h"
-#include "zfp/pointer4.h"
-#include "zfp/iterator4.h"
-#include "zfp/view4.h"
+#include "zfp/array.hpp"
+#include "zfp/index.hpp"
+#include "zfp/codec/zfp.hpp"
+#include "zfp/internal/array/cache4.hpp"
+#include "zfp/internal/array/handle4.hpp"
+#include "zfp/internal/array/iterator4.hpp"
+#include "zfp/internal/array/pointer4.hpp"
+#include "zfp/internal/array/reference4.hpp"
+#include "zfp/internal/array/store4.hpp"
+#include "zfp/internal/array/view4.hpp"
 
 namespace zfp {
 

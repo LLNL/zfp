@@ -5,9 +5,9 @@
 #include <climits>
 #include <cstring>
 #include "zfp.h"
-#include "zfpcpp.h"
-#include "zfp/memory.h"
-#include "zfp/traits.h"
+#include "zfp.hpp"
+#include "zfp/internal/array/memory.h"
+#include "zfp/internal/array/traits.h"
 
 namespace zfp {
 namespace codec {
