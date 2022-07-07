@@ -1,5 +1,5 @@
-#include "cfparray2f.h"
-#include "zfparray2.h"
+#include "zfp/internal/cfp/array2f.h"
+#include "zfp/array2.hpp"
 
 #include "template/template.h"
 

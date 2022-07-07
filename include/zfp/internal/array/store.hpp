@@ -3,7 +3,7 @@
 
 #include <climits>
 #include <cmath>
-#include "zfp/internal/array/memory.h"
+#include "zfp/internal/array/memory.hpp"
 
 namespace zfp {
 namespace internal {

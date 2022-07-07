@@ -6,8 +6,8 @@
 #include <cstring>
 #include "zfp.h"
 #include "zfp.hpp"
-#include "zfp/internal/array/memory.h"
-#include "zfp/internal/array/traits.h"
+#include "zfp/internal/array/memory.hpp"
+#include "zfp/internal/array/traits.hpp"
 
 namespace zfp {
 namespace codec {
@@ -115,7 +115,7 @@ public:
   static const zfp_type type = zfp::trait<Scalar>::type; // scalar type
 
   // zfp::codec::zfp_base::header class for array (de)serialization
-  #include "zfp/zfpheader.h"
+  #include "zfp/internal/array/zfpheader.hpp"
 
 protected:
   // deep copy

@@ -326,11 +326,11 @@ endif()
 #------------------------------------------------------------------------------#
 # Header install
 #------------------------------------------------------------------------------#
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
 if(BUILD_CFP)
-  install(DIRECTORY cfp/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+else()
+  install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+          PATTERN "cfp" EXCLUDE)
 endif()
 #------------------------------------------------------------------------------#
 # Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel

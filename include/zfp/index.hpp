@@ -2,6 +2,7 @@
 #define ZFP_INDEX_HPP
 
 #include <algorithm>
+#include "zfp/internal/array/memory.hpp"
 
 namespace zfp {
 namespace index {

@@ -6,7 +6,7 @@
 #include <iterator>
 #include "zfp/array.hpp"
 #include "zfp/index.hpp"
-#include "zfp/codec/zfp.hpp"
+#include "zfp/codec/zfpcodec.hpp"
 #include "zfp/internal/array/cache1.hpp"
 #include "zfp/internal/array/handle1.hpp"
 #include "zfp/internal/array/iterator1.hpp"

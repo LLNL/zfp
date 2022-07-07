@@ -1,5 +1,5 @@
-#include "cfparray4d.h"
-#include "zfparray4.h"
+#include "zfp/internal/cfp/array4d.h"
+#include "zfp/array4.hpp"
 
 #include "template/template.h"
 
