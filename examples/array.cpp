@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <vector>
-#include "zfparray2.h"
+#include "zfp/array2.hpp"
 
 int main()
 {

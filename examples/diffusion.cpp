@@ -6,9 +6,9 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include "zfparray2.h"
-#include "zfpcarray2.h"
-#include "gencodec.h"
+#include "zfp/array2.hpp"
+#include "zfp/constarray2.hpp"
+#include "zfp/codec/generic.hpp"
 #include "array2d.h"
 
 // add half precision if compiler supports it

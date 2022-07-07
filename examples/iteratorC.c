@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "cfparray.h"
+#include "zfp/cfp.h"
 
 void print1(cfp_ptr1d p, size_t n)
 {

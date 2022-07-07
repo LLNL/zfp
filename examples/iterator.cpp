@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
-#include "zfparray1.h"
-#include "zfparray2.h"
-#include "zfparray3.h"
+#include "zfp/array1.hpp"
+#include "zfp/array2.hpp"
+#include "zfp/array3.hpp"
 
 void print1(zfp::array1<double>::pointer p, size_t n)
 {

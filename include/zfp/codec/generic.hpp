@@ -17,8 +17,8 @@
 #include <cstring>
 #include "zfp.h"
 #include "zfp/array.hpp"
-#include "zfp/internal/array/memory.h"
-#include "zfp/internal/array/traits.h"
+#include "zfp/internal/array/memory.hpp"
+#include "zfp/internal/array/traits.hpp"
 
 namespace zfp {
 namespace codec {
@@ -144,7 +144,7 @@ public:
   static const zfp_type type = zfp::trait<ExternalType>::type; // scalar type
 
   // zfp::codec::generic_base::header class for array (de)serialization
-  #include "zfp/genheader.h"
+  #include "zfp/internal/array/genheader.hpp"
 
 protected:
   // pointer to beginning of block
