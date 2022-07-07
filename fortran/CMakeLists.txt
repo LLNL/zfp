@@ -22,7 +22,7 @@ set_property(TARGET zFORp PROPERTY OUTPUT_NAME ${ZFP_LIBRARY_PREFIX}zFORp)
 
 # install location for module file
 install(FILES ${CMAKE_Fortran_MODULE_DIRECTORY}/zforp.mod
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zfp)
 
 # install location for library
 install(TARGETS zFORp EXPORT cFORp-targets
