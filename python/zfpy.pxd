@@ -1,7 +1,7 @@
 import cython
 cimport libc.stdint as stdint
 
-cdef extern from "bitstream.h":
+cdef extern from "zfp/bitstream.h":
     cdef struct bitstream:
         pass
     bitstream* stream_open(void* data, size_t)
