@@ -5,8 +5,8 @@
 
 #define BIT_STREAM_STRIDED
 
-#include "include/bitstream.h"
-#include "src/inline/bitstream.c"
+#include "include/zfp/bitstream.h"
+#include "include/zfp/bitstream.inl"
 
 // 4 words per block
 #define BLOCK_SIZE 4

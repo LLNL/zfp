@@ -2,8 +2,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
-#include "zfparray2.h"
-#include "zfparray3.h"
+#include "zfp/array2.hpp"
+#include "zfp/array3.hpp"
 
 #define EPSILON 1e-3
 

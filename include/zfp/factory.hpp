@@ -22,7 +22,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
   std::string error;
   switch (dims) {
     case 4:
-#ifdef ZFP_ARRAY4_H
+#ifdef ZFP_ARRAY4_HPP
       switch (type) {
         case zfp_type_float:
           arr = new zfp::array4f(nx, ny, nz, nw, rate);
@@ -41,7 +41,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
       break;
 
     case 3:
-#ifdef ZFP_ARRAY3_H
+#ifdef ZFP_ARRAY3_HPP
       switch (type) {
         case zfp_type_float:
           arr = new zfp::array3f(nx, ny, nz, rate);
@@ -60,7 +60,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
       break;
 
     case 2:
-#ifdef ZFP_ARRAY2_H
+#ifdef ZFP_ARRAY2_HPP
       switch (type) {
         case zfp_type_float:
           arr = new zfp::array2f(nx, ny, rate);
@@ -79,7 +79,7 @@ zfp::array* zfp::array::construct(const zfp::array::header& header, const void* 
       break;
 
     case 1:
-#ifdef ZFP_ARRAY1_H
+#ifdef ZFP_ARRAY1_HPP
       switch (type) {
         case zfp_type_float:
           arr = new zfp::array1f(nx, rate);

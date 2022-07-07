@@ -1,4 +1,4 @@
-#include "zfp/types.h"
+#include "zfp/internal/zfp/types.h"
 #include "zfpChecksums.h"
 
 #define NUM_INT_CHECKSUMS 19

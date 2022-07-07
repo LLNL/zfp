@@ -11,10 +11,10 @@
 #include <sstream>
 #include <string>
 #include "zfp.h"
-#include "zfparray1.h"
-#include "zfparray2.h"
-#include "zfparray3.h"
-#include "zfparray4.h"
+#include "zfp/array1.hpp"
+#include "zfp/array2.hpp"
+#include "zfp/array3.hpp"
+#include "zfp/array4.hpp"
 
 enum ArraySize {
   Small  = 0, // 2^12 = 4096 scalars (2^12 = (2^6)^2 = (2^4)^3 = (2^3)^4)

@@ -5,8 +5,8 @@
 
 #define BIT_STREAM_WORD_TYPE uint16
 
-#include "include/bitstream.h"
-#include "src/inline/bitstream.c"
+#include "include/zfp/bitstream.h"
+#include "include/zfp/bitstream.inl"
 
 #define STREAM_WORD_CAPACITY 4
 

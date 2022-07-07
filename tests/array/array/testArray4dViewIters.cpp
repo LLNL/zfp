@@ -1,4 +1,4 @@
-#include "array/zfparray4.h"
+#include "zfp/array4.hpp"
 using namespace zfp;
 
 extern "C" {

@@ -1,4 +1,4 @@
-#include "array/zfparray2.h"
+#include "zfp/array2.hpp"
 using namespace zfp;
 
 #define ARRAY_DIMS_SCALAR_TEST Array2dTest

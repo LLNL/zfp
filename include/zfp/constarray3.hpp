@@ -7,13 +7,13 @@
 #include "zfp/array.hpp"
 #include "zfp/index.hpp"
 #include "zfp/codec/zfpcodec.hpp"
-#include "zfp/cache3.hpp"
-#include "zfp/handle3.hpp"
-#include "zfp/iterator3.hpp"
-#include "zfp/pointer3.hpp"
-#include "zfp/reference3.hpp"
-#include "zfp/store3.hpp"
-#include "zfp/view3.hpp"
+#include "zfp/internal/array/cache3.hpp"
+#include "zfp/internal/array/handle3.hpp"
+#include "zfp/internal/array/iterator3.hpp"
+#include "zfp/internal/array/pointer3.hpp"
+#include "zfp/internal/array/reference3.hpp"
+#include "zfp/internal/array/store3.hpp"
+#include "zfp/internal/array/view3.hpp"
 
 namespace zfp {
 

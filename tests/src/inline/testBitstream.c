@@ -3,8 +3,8 @@
 #include <setjmp.h>
 #include <cmocka.h>
 
-#include "include/bitstream.h"
-#include "src/inline/bitstream.c"
+#include "include/zfp/bitstream.h"
+#include "include/zfp/bitstream.inl"
 
 #define STREAM_WORD_CAPACITY 3
 

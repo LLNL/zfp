@@ -3,7 +3,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 
-#include "cfparray.h"
+#include "zfp/cfp.h"
 
 /* only run this test when compiling with CFP_NAMESPACE=cfp2 */
 

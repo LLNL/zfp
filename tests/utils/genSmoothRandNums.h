@@ -1,7 +1,7 @@
 #ifndef GEN_SMOOTH_RAND_INTS_H
 #define GEN_SMOOTH_RAND_INTS_H
 
-#include "include/zfp/types.h"
+#include "zfp/internal/zfp/types.h"
 
 // used to compute (square) array sizes
 size_t
