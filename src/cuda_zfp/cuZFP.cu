@@ -23,7 +23,7 @@
   #define inline_ inline
 #endif
 
-#include "../inline/bitstream.c"
+#include "zfp/bitstream.inl"
 namespace internal 
 { 
   
