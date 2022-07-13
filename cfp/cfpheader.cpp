@@ -2,7 +2,7 @@
 #include "zfp/array2.hpp"
 #include "zfp/array3.hpp"
 #include "zfp/array4.hpp"
-#include "zfp/internal/array/zfpheader.hpp"
+#include "zfp/internal/codec/zfpheader.hpp"
 #include "zfp/internal/cfp/header.h"
 #include "zfp/internal/cfp/array1f.h"
 #include "zfp/internal/cfp/array1d.h"

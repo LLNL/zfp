@@ -115,7 +115,7 @@ public:
   static const zfp_type type = zfp::trait<Scalar>::type; // scalar type
 
   // zfp::codec::zfp_base::header class for array (de)serialization
-  #include "zfp/internal/array/zfpheader.hpp"
+  #include "zfp/internal/codec/zfpheader.hpp"
 
 protected:
   // deep copy

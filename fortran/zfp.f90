@@ -1,4 +1,4 @@
-module zFORp
+module zfp
 
   use, intrinsic :: iso_c_binding, only: c_int, c_int64_t, c_size_t, c_ptrdiff_t, c_double, c_ptr, c_null_ptr, c_loc
   implicit none
@@ -1113,4 +1113,4 @@ contains
     num_bits_read = zfp_read_header(stream%object, field%object, int(mask, c_int))
   end function zFORp_read_header
 
-end module zFORp
+end module zfp
