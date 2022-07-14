@@ -716,7 +716,7 @@ Additional methods are documented below.
   Whereas the :ref:`read-write fixed-rate arrays <array_classes>`
   (:cpp:class:`zfp::array`) require that block storage is word aligned, the
   read-only arrays (:cpp:class:`zfp::const_array`) are not subject to such
-  restrictions and thefore support finer rate granularity.  For a
+  restrictions and therefore support finer rate granularity.  For a
   *d*-dimensional :cpp:class:`const_array`, the rate granularity is
   4\ :sup:`-d` bits/value, e.g., a quarter bit/value for 1D arrays.
 
