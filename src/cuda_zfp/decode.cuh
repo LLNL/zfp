@@ -112,7 +112,7 @@ public:
       next_read = n_bits - first_read; 
     }
    
-    // this is basically a no-op when first read constained 
+    // this is basically a no-op when first read contained 
     // all the bits. TODO: if we have aligned reads, this could 
     // be a conditional without divergence
     mask = ((Word)1<<((next_read)))-1;

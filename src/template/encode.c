@@ -240,7 +240,7 @@ _t1(encode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, 
 {
   /* use fastest available encoder implementation */
   if (with_maxbits(maxbits, maxprec, size)) {
-    /* rate contrained path: encode partial bit planes */
+    /* rate constrained path: encode partial bit planes */
     if (size <= 64)
       return _t1(encode_few_ints, UInt)(stream, maxbits, maxprec, data, size); /* 1D, 2D, 3D blocks */
     else

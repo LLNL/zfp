@@ -145,9 +145,9 @@ size_t encode1launch(uint dim,
   cudaEventSynchronize(stop);
   cudaStreamSynchronize(0);
 
-  float miliseconds = 0.f;
-  cudaEventElapsedTime(&miliseconds, start, stop);
-  float seconds = miliseconds / 1000.f;
+  float milliseconds = 0.f;
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  float seconds = milliseconds / 1000.f;
   float gb = (float(dim) * float(sizeof(Scalar))) / (1024.f * 1024.f * 1024.f);
   float rate = gb / seconds;
   printf("Encode elapsed time: %.5f (s)\n", seconds);
