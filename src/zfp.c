@@ -240,6 +240,16 @@ zfp_field_size_bytes(const zfp_field* field)
   return field_index_span(field, NULL, NULL) * zfp_type_size(field->type);
 }
 
+size_t
+zfp_field_blocks(const zfp_field* field)
+{
+  size_t bx = (MAX(field->nx, 1u) + 3) / 4;
+  size_t by = (MAX(field->ny, 1u) + 3) / 4;
+  size_t bz = (MAX(field->nz, 1u) + 3) / 4;
+  size_t bw = (MAX(field->nw, 1u) + 3) / 4;
+  return bx * by * bz * bw;
+}
+
 zfp_bool
 zfp_field_stride(const zfp_field* field, ptrdiff_t* stride)
 {
@@ -697,11 +707,7 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
 {
   zfp_bool reversible = is_reversible(zfp);
   uint dims = zfp_field_dimensionality(field);
-  size_t mx = (MAX(field->nx, 1u) + 3) / 4;
-  size_t my = (MAX(field->ny, 1u) + 3) / 4;
-  size_t mz = (MAX(field->nz, 1u) + 3) / 4;
-  size_t mw = (MAX(field->nw, 1u) + 3) / 4;
-  size_t blocks = mx * my * mz * mw;
+  size_t blocks = zfp_field_blocks(field);
   uint values = 1u << (2 * dims);
   uint maxbits = 0;
 

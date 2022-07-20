@@ -852,6 +852,14 @@ Array Metadata
 
 ----
 
+.. c:function:: size_t zfp_field_blocks(const zfp_field* field)
+
+  Return total number of *d*-dimensional blocks (whether partial or whole)
+  spanning the array.  Each whole block consists of |4powd| scalars.
+  Available since |zfp| |fieldrelease|.
+
+----
+
 .. c:function:: zfp_bool zfp_field_stride(const zfp_field* field, ptrdiff_t* stride)
 
   Return :code:`zfp_false` if the array is stored contiguously as
