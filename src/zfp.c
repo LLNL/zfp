@@ -243,11 +243,17 @@ zfp_field_size_bytes(const zfp_field* field)
 size_t
 zfp_field_blocks(const zfp_field* field)
 {
-  size_t bx = (MAX(field->nx, 1u) + 3) / 4;
-  size_t by = (MAX(field->ny, 1u) + 3) / 4;
-  size_t bz = (MAX(field->nz, 1u) + 3) / 4;
-  size_t bw = (MAX(field->nw, 1u) + 3) / 4;
-  return bx * by * bz * bw;
+  size_t bx = (field->nx + 3) / 4;
+  size_t by = (field->ny + 3) / 4;
+  size_t bz = (field->nz + 3) / 4;
+  size_t bw = (field->nw + 3) / 4;
+  switch (zfp_field_dimensionality(field)) {
+    case 1: return bx;
+    case 2: return bx * by;
+    case 3: return bx * by * bz;
+    case 4: return bx * by * bz * bw;
+    default: return 0;
+  }
 }
 
 zfp_bool
