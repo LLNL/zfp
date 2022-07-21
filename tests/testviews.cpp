@@ -2,16 +2,19 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include "zfparray2.h"
 #include "zfparray3.h"
 
 #define EPSILON 1e-3
 
-// random integer in {begin, ..., end - 1}
+// random integer in {begin, ..., end}
 static size_t
 rand(size_t begin, size_t end)
 {
-  return begin + size_t(rand()) % (end - begin);
+  return begin + size_t(rand()) % (end - begin + 1);
 }
 
 // ensure f and g are sufficiently close
@@ -19,6 +22,9 @@ static void
 verify(double f, double g)
 {
   if (std::fabs(f - g) > EPSILON) {
+#ifdef _OPENMP
+    #pragma omp critical
+#endif
     std::cerr << "error: " << f << " != " << g << std::endl;
     exit(EXIT_FAILURE);
   }
@@ -33,9 +39,9 @@ usage()
 
 int main(int argc, char* argv[])
 {
-  size_t nx = 16;
-  size_t ny = 16;
-  size_t nz = 16;
+  size_t nx = 8;
+  size_t ny = 48;
+  size_t nz = 32;
   size_t x0, y0, z0;
   size_t mx, my, mz;
   double rate = 16;
@@ -65,12 +71,12 @@ int main(int argc, char* argv[])
 
   if (argc < 10) {
     // generate random view
-    x0 = rand(0, nx);
-    y0 = rand(0, ny);
-    z0 = rand(0, nz);
-    mx = rand(0, nx - x0);
-    my = rand(0, ny - y0);
-    mz = rand(0, nz - z0);
+    x0 = rand(0, nx - 1);
+    y0 = rand(0, ny - 1);
+    z0 = rand(0, nz - 1);
+    mx = rand(1, nx - x0);
+    my = rand(1, ny - y0);
+    mz = rand(1, nz - z0);
   }
 
   // validate arguments
@@ -112,9 +118,9 @@ int main(int argc, char* argv[])
   // nested view of all of a
   std::cout << std::endl << "3D nested view" << std::endl;
   zfp::array3<double>::nested_view nv(&a);
-  for (size_t z = 0; z < v.size_z(); z++)
-    for (size_t y = 0; y < v.size_y(); y++)
-      for (size_t x = 0; x < v.size_x(); x++) {
+  for (size_t z = 0; z < nv.size_z(); z++)
+    for (size_t y = 0; y < nv.size_y(); y++)
+      for (size_t x = 0; x < nv.size_x(); x++) {
         std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << nv[z][y][x] << std::endl;
         verify(a(x, y, z), nv[z][y][x]);
       }
@@ -128,6 +134,8 @@ int main(int argc, char* argv[])
     size_t x = it.i();
     size_t y = it.j();
     size_t z = it.k();
+std::cout << x << " " << y << " " << z << std::endl;
+std::cout << mx << " " << my << " " << std::endl;
     verify(*it, p[x + mx * (y + my * z)]);
   }
 
@@ -145,7 +153,7 @@ int main(int argc, char* argv[])
 
   // 2D slice of a
   std::cout << std::endl << "2D slice" << std::endl;
-  size_t z = rand(0, nv.size_z());
+  size_t z = rand(0, nv.size_z() - 1);
   zfp::array3<double>::nested_view2 slice2(nv[z]);
   for (size_t y = 0; y < slice2.size_y(); y++)
     for (size_t x = 0; x < slice2.size_x(); x++) {
@@ -164,7 +172,7 @@ int main(int argc, char* argv[])
 
   // 1D slice of a
   std::cout << std::endl << "1D slice" << std::endl;
-  size_t y = rand(0, slice2.size_y());
+  size_t y = rand(0, slice2.size_y() - 1);
   zfp::array3<double>::nested_view1 slice1 = slice2[y];
   for (size_t x = 0; x < slice1.size_x(); x++) {
     std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << slice1[x] << std::endl;
@@ -180,14 +188,52 @@ int main(int argc, char* argv[])
       verify(c(x, y), slice2[y][x]);
     }
 
-  // 2D thread-safe view of c
-  std::cout << std::endl << "2D private view" << std::endl;
+  // 2D thread-safe read-only view of c
+  std::cout << std::endl << "2D private read-only view" << std::endl;
   zfp::array2<double>::private_const_view d(&c);
   for (size_t y = 0; y < c.size_y(); y++)
     for (size_t x = 0; x < c.size_x(); x++) {
       std::cout << x << " " << y << ": " << c(x, y) << " " << d(x, y) << std::endl;
       verify(c(x, y), d(x, y));
     }
+
+#ifdef _OPENMP
+  std::cout << std::endl << "multithreaded 2D private read-only views" << std::endl;
+  // copy c for verification; direct accesses to c are not thread-safe
+  double* data = new double[c.size()];
+  c.get(data);
+  #pragma omp parallel
+  {
+    // make a thread-local view into c
+    zfp::array2<double>::private_const_view d(&c);
+    for (size_t y = 0; y < d.size_y(); y++)
+      for (size_t x = 0; x < d.size_x(); x++) {
+        double val = data[x + nx * y];
+        if (omp_get_thread_num() == 0)
+          std::cout << x << " " << y << ": " << val << " " << d(x, y) << std::endl;
+        verify(val, d(x, y));
+      }
+  }
+
+  std::cout << std::endl << "multithreaded 2D private read-write views" << std::endl;
+  #pragma omp parallel
+  {
+    // partition c into disjoint views
+    zfp::array2<double>::private_view d(&c);
+    d.partition(omp_get_thread_num(), omp_get_num_threads());
+    for (size_t j = 0; j < d.size_y(); j++)
+      for (size_t i = 0; i < d.size_x(); i++) {
+        d(i, j) += 1;
+        size_t x = d.global_x(i);
+        size_t y = d.global_y(j);
+        double val = data[x + nx * y] + 1;
+        if (omp_get_thread_num() == 0)
+          std::cout << x << " " << y << ": " << val << " " << d(i, j) << std::endl;
+        verify(val, d(i, j));
+      }
+  }
+  delete[] data;
+#endif
 
   std::cout << std::endl << "all tests passed" << std::endl;
 

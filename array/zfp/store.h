@@ -123,6 +123,30 @@ public:
     }
   }
 
+  // increment private view reference count (for thread safety)
+  void reference()
+  {
+#ifdef _OPENMP
+    #pragma omp critical(references)
+    {
+      references++;
+      codec.set_thread_safety(references > 1);
+    }
+#endif
+  }
+
+  // decrement private view reference count (for thread safety)
+  void unreference()
+  {
+#ifdef _OPENMP
+    #pragma omp critical(references)
+    {
+      references--;
+      codec.set_thread_safety(references > 1);
+    }
+#endif
+  }
+
   // byte size of store data structure components indicated by mask
   virtual size_t size_bytes(uint mask = ZFP_DATA_ALL) const
   {
@@ -147,6 +171,7 @@ protected:
   BlockStore() :
     data(0),
     bytes(0),
+    references(0),
     index(0)
   {}
 
@@ -175,6 +200,7 @@ protected:
     free();
     zfp::internal::clone_aligned(data, s.data, s.bytes, ZFP_MEMORY_ALIGNMENT);
     bytes = s.bytes;
+    references = s.references;
     index = s.index;
     codec = s.codec;
     codec.open(data, bytes);
@@ -216,10 +242,11 @@ protected:
     return static_cast<uint>(m);
   }
 
-  void* data;   // pointer to compressed blocks
-  size_t bytes; // compressed data size
-  Index index;  // block index (size and offset)
-  Codec codec;  // compression codec
+  void* data;        // pointer to compressed blocks
+  size_t bytes;      // compressed data size
+  size_t references; // private view references to array (for thread safety)
+  Index index;       // block index (size and offset)
+  Codec codec;       // compression codec
 };
 
 } // internal
