@@ -16,6 +16,7 @@ FC = gfortran
 
 OPTFLAGS = -O3
 FLAGS = $(OPTFLAGS) -fPIC -pedantic -Wall -Wextra
+LDFLAGS =
 SOFLAGS =
 
 # OpenMP compiler options -----------------------------------------------------

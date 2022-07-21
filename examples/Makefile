@@ -11,8 +11,8 @@ TARGETS = $(BINDIR)/array\
 	  $(BINDIR)/speed
 INCS = -I../include
 LIBS = -L../lib -lzfp
-CLIBS = $(LIBS) -lm
-CXXLIBS = $(LIBS)
+CLIBS = $(LIBS) $(LDFLAGS) -lm
+CXXLIBS = $(LIBS) $(LDFLAGS)
 
 # add cfp examples when BUILD_CFP is enabled
 ifneq ($(BUILD_CFP),0)
