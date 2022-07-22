@@ -41,16 +41,7 @@ public:
   // conservative buffer size for current codec settings
   size_t buffer_size(const zfp_field* field) const
   {
-    // empty field case
-    if (!field->nx && !field->ny && !field->nz && !field->nw)
-      return 0;
-    // count number of blocks spanned by field
-    size_t bx = (std::max(field->nx, size_t(1)) + 3) / 4;
-    size_t by = (std::max(field->ny, size_t(1)) + 3) / 4;
-    size_t bz = (std::max(field->nz, size_t(1)) + 3) / 4;
-    size_t bw = (std::max(field->nw, size_t(1)) + 3) / 4;
-    size_t blocks = bx * by * bz * bw;
-    return blocks * block_size * sizeof(InternalType);
+    return zfp_field_blocks(field) * block_size * sizeof(InternalType);
   }
 
   // open 
