@@ -2,18 +2,16 @@
 #define ZFP_VERSION_H
 
 /* library version information */
-#define ZFP_VERSION_MAJOR 0 /* library major version number */
-#define ZFP_VERSION_MINOR 5 /* library minor version number */
-#define ZFP_VERSION_PATCH 5 /* library patch version number */
-#define ZFP_VERSION_TWEAK 0 /* library tweak version number */
+#define ZFP_VERSION_MAJOR 0   /* library major version number */
+#define ZFP_VERSION_MINOR 5   /* library minor version number */
+#define ZFP_VERSION_PATCH 5   /* library patch version number */
+#define ZFP_VERSION_TWEAK 0   /* library tweak version number */
 
-#define ZFP_VERSION_RELEASE ZFP_VERSION_PATCH
+/* defined for work in progress (indicates unofficial release) */
+#define ZFP_VERSION_DEVELOP 1
 
 /* codec version number (see also zfp_codec_version) */
 #define ZFP_CODEC 5
-
-/* whether this is a full release or intermediate version */
-#define ZFP_DEVELOP 1
 
 /* stringification */
 #define _zfp_str_(x) # x

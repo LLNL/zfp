@@ -58,6 +58,7 @@ few of the API changes, other than to cfp, should impact existing code.
 
 - `zfp::array::get_header()` has been replaced with a `zfp::array::header`
   constructor that accepts an array object.
+- `ZFP_VERSION_RELEASE` is no longer defined (use `ZFP_VERSION_PATCH`).
 
 ### Fixed
 
