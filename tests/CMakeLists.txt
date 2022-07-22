@@ -141,7 +141,11 @@ endif()
 
 # testviews
 add_executable(testviews testviews.cpp)
-target_link_libraries(testviews zfp)
+if(ZFP_WITH_OPENMP)
+  target_link_libraries(testviews zfp OpenMP::OpenMP_C)
+else()
+  target_link_libraries(testviews zfp)
+endif()
 target_compile_definitions(testviews PRIVATE ${zfp_compressed_array_defs})
 add_test(NAME testviews COMMAND testviews)
 

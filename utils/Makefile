@@ -2,7 +2,7 @@ include ../Config
 
 TARGET = ../bin/zfp
 INCS = -I../include
-LIBS = -L../lib -lzfp -lm
+LIBS = -L../lib -lzfp $(LDFLAGS) -lm
 
 all: $(TARGET)
 

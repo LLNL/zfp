@@ -503,11 +503,21 @@ public:
   private_const_view(container_type* array, size_t cache_size = 0) :
     preview<Container>(array),
     cache(array->store, cache_size ? cache_size : array->cache.size())
-  {}
+  {
+    array->store.reference();
+  }
   private_const_view(container_type* array, size_t x, size_t y, size_t z, size_t w, size_t nx, size_t ny, size_t nz, size_t nw, size_t cache_size = 0) :
     preview<Container>(array, x, y, z, w, nx, ny, nz, nw),
     cache(array->store, cache_size ? cache_size : array->cache.size())
-  {}
+  {
+    array->store.reference();
+  }
+
+  // destructor
+  ~private_const_view()
+  {
+    array->store.unreference();
+  }
 
   // dimensions of (sub)array
   size_t size_x() const { return nx; }

@@ -192,8 +192,6 @@ Regardless of the settings below, |libzfp| will always be built.
 .. c:macro:: BUILD_SHARED_LIBS
 
   Build shared objects (:file:`.so`, :file:`.dylib`, or :file:`.dll` files).
-  On macOS, the :code:`SOFLAGS` line in the :file:`Config` file may have
-  to be uncommented when building with GNU make.
   CMake default: on.
   GNU make default: off.
 

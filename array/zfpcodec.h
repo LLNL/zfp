@@ -18,7 +18,8 @@ class zfp_base {
 protected:
   // default constructor
   zfp_base() :
-    stream(zfp_stream_open(0))
+    stream(zfp_stream_open(0)),
+    thread_safety(false)
   {}
 
   // destructor
@@ -94,6 +95,9 @@ public:
   // set expert mode parameters
   bool set_params(uint minbits, uint maxbits, uint maxprec, int maxexp) { return zfp_stream_set_params(stream, minbits, maxbits, maxprec, maxexp) == zfp_true; }
 
+  // set thread safety mode
+  void set_thread_safety(bool safety) { thread_safety = safety; }
+
   // byte size of codec data structure components indicated by mask
   size_t size_bytes(uint mask = ZFP_DATA_ALL) const
   {
@@ -120,27 +124,65 @@ protected:
     stream = zfp_stream_open(0);
     *stream = *codec.stream;
     stream->stream = 0;
+    thread_safety = codec.thread_safety;
+  }
+
+  // make a thread-local copy of zfp stream and bit stream
+  zfp_stream clone_stream() const
+  {
+    zfp_stream zfp = *stream;
+    zfp.stream = stream_clone(zfp.stream);
+    return zfp;
   }
 
   // encode full contiguous block
   size_t encode_block(bitstream_offset offset, const Scalar* block) const
   {
-    stream_wseek(stream->stream, offset);
-    size_t size = zfp::encode_block<Scalar, dims>(stream, block);
-    zfp_stream_flush(stream);
-    return size;
+    if (thread_safety) {
+      // make a thread-local copy of zfp stream and bit stream
+      zfp_stream zfp = clone_stream();
+      size_t size = encode_block(&zfp, offset, block);
+      stream_close(zfp.stream);
+      return size;
+    }
+    else
+      return encode_block(stream, offset, block);
   }
 
   // decode full contiguous block
   size_t decode_block(bitstream_offset offset, Scalar* block) const
   {
-    stream_rseek(stream->stream, offset);
-    size_t size = zfp::decode_block<Scalar, dims>(stream, block);
-    zfp_stream_align(stream);
+    if (thread_safety) {
+      // make a thread-local copy of zfp stream and bit stream
+      zfp_stream zfp = clone_stream();
+      size_t size = decode_block(&zfp, offset, block);
+      stream_close(zfp.stream);
+      return size;
+    }
+    else
+      return decode_block(stream, offset, block);
+  }
+
+  // encode full contiguous block
+  static size_t encode_block(zfp_stream* zfp, bitstream_offset offset, const Scalar* block)
+  {
+    stream_wseek(zfp->stream, offset);
+    size_t size = zfp::encode_block<Scalar, dims>(zfp, block);
+    stream_flush(zfp->stream);
+    return size;
+  }
+
+  // decode full contiguous block
+  static size_t decode_block(zfp_stream* zfp, bitstream_offset offset, Scalar* block)
+  {
+    stream_rseek(zfp->stream, offset);
+    size_t size = zfp::decode_block<Scalar, dims>(zfp, block);
+    stream_align(zfp->stream);
     return size;
   }
 
   zfp_stream* stream; // compressed zfp stream
+  bool thread_safety; // thread safety state
 };
 
 // 1D codec
@@ -154,21 +196,6 @@ public:
                  : encode_block(offset, block);
   }
 
-  // encode 1D block from strided storage
-  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx) const
-  {
-    size_t size;
-    stream_wseek(stream->stream, offset);
-    if (shape) {
-      uint nx = 4 - (shape & 3u); shape >>= 2;
-      size = zfp::encode_partial_block_strided<Scalar>(stream, p, nx, sx);
-    }
-    else
-      size = zfp::encode_block_strided<Scalar>(stream, p, sx);
-    zfp_stream_flush(stream);
-    return size;
-  }
-
   // decode contiguous 1D block
   size_t decode_block(bitstream_offset offset, uint shape, Scalar* block) const
   {
@@ -176,25 +203,70 @@ public:
                  : decode_block(offset, block);
   }
 
+  // encode 1D block from strided storage
+  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx) const
+  {
+    if (thread_safety) {
+      // thread-safe implementation
+      zfp_stream zfp = clone_stream();
+      size_t size = encode_block_strided(&zfp, offset, shape, p, sx);
+      stream_close(zfp.stream);
+      return size;
+    }
+    else
+      return encode_block_strided(stream, offset, shape, p, sx);
+  }
+
   // decode 1D block to strided storage
   size_t decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx) const
   {
-    size_t size;
-    stream_rseek(stream->stream, offset);
-    if (shape) {
-      uint nx = 4 - (shape & 3u); shape >>= 2;
-      size = zfp::decode_partial_block_strided<Scalar>(stream, p, nx, sx);
+    if (thread_safety) {
+      // thread-safe implementation
+      zfp_stream zfp = clone_stream();
+      size_t size = decode_block_strided(&zfp, offset, shape, p, sx);
+      stream_close(zfp.stream);
+      return size;
     }
     else
-      size = zfp::decode_block_strided<Scalar>(stream, p, sx);
-    zfp_stream_align(stream);
-    return size;
+      return decode_block_strided(stream, offset, shape, p, sx);
   }
 
 protected:
+  using zfp_base<1, Scalar>::clone_stream;
   using zfp_base<1, Scalar>::encode_block;
   using zfp_base<1, Scalar>::decode_block;
   using zfp_base<1, Scalar>::stream;
+  using zfp_base<1, Scalar>::thread_safety;
+
+  // encode 1D block from strided storage
+  static size_t encode_block_strided(zfp_stream* zfp, bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx)
+  {
+    size_t size;
+    stream_wseek(zfp->stream, offset);
+    if (shape) {
+      uint nx = 4 - (shape & 3u); shape >>= 2;
+      size = zfp::encode_partial_block_strided<Scalar>(zfp, p, nx, sx);
+    }
+    else
+      size = zfp::encode_block_strided<Scalar>(zfp, p, sx);
+    stream_flush(zfp->stream);
+    return size;
+  }
+
+  // decode 1D block to strided storage
+  static size_t decode_block_strided(zfp_stream* zfp, bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx)
+  {
+    size_t size;
+    stream_rseek(zfp->stream, offset);
+    if (shape) {
+      uint nx = 4 - (shape & 3u); shape >>= 2;
+      size = zfp::decode_partial_block_strided<Scalar>(zfp, p, nx, sx);
+    }
+    else
+      size = zfp::decode_block_strided<Scalar>(zfp, p, sx);
+    stream_align(zfp->stream);
+    return size;
+  }
 };
 
 // 2D codec
@@ -208,22 +280,6 @@ public:
                  : encode_block(offset, block);
   }
 
-  // encode 2D block from strided storage
-  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
-  {
-    size_t size;
-    stream_wseek(stream->stream, offset);
-    if (shape) {
-      uint nx = 4 - (shape & 3u); shape >>= 2;
-      uint ny = 4 - (shape & 3u); shape >>= 2;
-      size = zfp::encode_partial_block_strided<Scalar>(stream, p, nx, ny, sx, sy);
-    }
-    else
-      size = zfp::encode_block_strided<Scalar>(stream, p, sx, sy);
-    zfp_stream_flush(stream);
-    return size;
-  }
-
   // decode contiguous 2D block
   size_t decode_block(bitstream_offset offset, uint shape, Scalar* block) const
   {
@@ -231,26 +287,72 @@ public:
                  : decode_block(offset, block);
   }
 
+  // encode 2D block from strided storage
+  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
+  {
+    if (thread_safety) {
+      // thread-safe implementation
+      zfp_stream zfp = clone_stream();
+      size_t size = encode_block_strided(&zfp, offset, shape, p, sx, sy);
+      stream_close(zfp.stream);
+      return size;
+    }
+    else
+      return encode_block_strided(stream, offset, shape, p, sx, sy);
+  }
+
   // decode 2D block to strided storage
   size_t decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy) const
   {
-    size_t size;
-    stream_rseek(stream->stream, offset);
-    if (shape) {
-      uint nx = 4 - (shape & 3u); shape >>= 2;
-      uint ny = 4 - (shape & 3u); shape >>= 2;
-      size = zfp::decode_partial_block_strided<Scalar>(stream, p, nx, ny, sx, sy);
+    if (thread_safety) {
+      // thread-safe implementation
+      zfp_stream zfp = clone_stream();
+      size_t size = decode_block_strided(&zfp, offset, shape, p, sx, sy);
+      stream_close(zfp.stream);
+      return size;
     }
     else
-      size = zfp::decode_block_strided<Scalar>(stream, p, sx, sy);
-    zfp_stream_align(stream);
-    return size;
+      return decode_block_strided(stream, offset, shape, p, sx, sy);
   }
 
 protected:
+  using zfp_base<2, Scalar>::clone_stream;
   using zfp_base<2, Scalar>::encode_block;
   using zfp_base<2, Scalar>::decode_block;
   using zfp_base<2, Scalar>::stream;
+  using zfp_base<2, Scalar>::thread_safety;
+
+  // encode 2D block from strided storage
+  static size_t encode_block_strided(zfp_stream* zfp, bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
+  {
+    size_t size;
+    stream_wseek(zfp->stream, offset);
+    if (shape) {
+      uint nx = 4 - (shape & 3u); shape >>= 2;
+      uint ny = 4 - (shape & 3u); shape >>= 2;
+      size = zfp::encode_partial_block_strided<Scalar>(zfp, p, nx, ny, sx, sy);
+    }
+    else
+      size = zfp::encode_block_strided<Scalar>(zfp, p, sx, sy);
+    stream_flush(zfp->stream);
+    return size;
+  }
+
+  // decode 2D block to strided storage
+  static size_t decode_block_strided(zfp_stream* zfp, bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
+  {
+    size_t size;
+    stream_rseek(zfp->stream, offset);
+    if (shape) {
+      uint nx = 4 - (shape & 3u); shape >>= 2;
+      uint ny = 4 - (shape & 3u); shape >>= 2;
+      size = zfp::decode_partial_block_strided<Scalar>(zfp, p, nx, ny, sx, sy);
+    }
+    else
+      size = zfp::decode_block_strided<Scalar>(zfp, p, sx, sy);
+    stream_align(zfp->stream);
+    return size;
+  }
 };
 
 // 3D codec
@@ -264,23 +366,6 @@ public:
                  : encode_block(offset, block);
   }
 
-  // encode 3D block from strided storage
-  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
-  {
-    size_t size;
-    stream_wseek(stream->stream, offset);
-    if (shape) {
-      uint nx = 4 - (shape & 3u); shape >>= 2;
-      uint ny = 4 - (shape & 3u); shape >>= 2;
-      uint nz = 4 - (shape & 3u); shape >>= 2;
-      size = zfp::encode_partial_block_strided<Scalar>(stream, p, nx, ny, nz, sx, sy, sz);
-    }
-    else
-      size = zfp::encode_block_strided<Scalar>(stream, p, sx, sy, sz);
-    zfp_stream_flush(stream);
-    return size;
-  }
-
   // decode contiguous 3D block
   size_t decode_block(bitstream_offset offset, uint shape, Scalar* block) const
   {
@@ -288,27 +373,74 @@ public:
                  : decode_block(offset, block);
   }
 
+  // encode 3D block from strided storage
+  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
+  {
+    if (thread_safety) {
+      // thread-safe implementation
+      zfp_stream zfp = clone_stream();
+      size_t size = encode_block_strided(&zfp, offset, shape, p, sx, sy, sz);
+      stream_close(zfp.stream);
+      return size;
+    }
+    else
+      return encode_block_strided(stream, offset, shape, p, sx, sy, sz);
+  }
+
   // decode 3D block to strided storage
   size_t decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
+    if (thread_safety) {
+      // thread-safe implementation
+      zfp_stream zfp = clone_stream();
+      size_t size = decode_block_strided(&zfp, offset, shape, p, sx, sy, sz);
+      stream_close(zfp.stream);
+      return size;
+    }
+    else
+      return decode_block_strided(stream, offset, shape, p, sx, sy, sz);
+  }
+
+protected:
+  using zfp_base<3, Scalar>::clone_stream;
+  using zfp_base<3, Scalar>::encode_block;
+  using zfp_base<3, Scalar>::decode_block;
+  using zfp_base<3, Scalar>::stream;
+  using zfp_base<3, Scalar>::thread_safety;
+
+  // encode 3D block from strided storage
+  static size_t encode_block_strided(zfp_stream* zfp, bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+  {
     size_t size;
-    stream_rseek(stream->stream, offset);
+    stream_wseek(zfp->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
       uint ny = 4 - (shape & 3u); shape >>= 2;
       uint nz = 4 - (shape & 3u); shape >>= 2;
-      size = zfp::decode_partial_block_strided<Scalar>(stream, p, nx, ny, nz, sx, sy, sz);
+      size = zfp::encode_partial_block_strided<Scalar>(zfp, p, nx, ny, nz, sx, sy, sz);
     }
     else
-      size = zfp::decode_block_strided<Scalar>(stream, p, sx, sy, sz);
-    zfp_stream_align(stream);
+      size = zfp::encode_block_strided<Scalar>(zfp, p, sx, sy, sz);
+    stream_flush(zfp->stream);
     return size;
   }
 
-protected:
-  using zfp_base<3, Scalar>::encode_block;
-  using zfp_base<3, Scalar>::decode_block;
-  using zfp_base<3, Scalar>::stream;
+  // decode 3D block to strided storage
+  static size_t decode_block_strided(zfp_stream* zfp, bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
+  {
+    size_t size;
+    stream_rseek(zfp->stream, offset);
+    if (shape) {
+      uint nx = 4 - (shape & 3u); shape >>= 2;
+      uint ny = 4 - (shape & 3u); shape >>= 2;
+      uint nz = 4 - (shape & 3u); shape >>= 2;
+      size = zfp::decode_partial_block_strided<Scalar>(zfp, p, nx, ny, nz, sx, sy, sz);
+    }
+    else
+      size = zfp::decode_block_strided<Scalar>(zfp, p, sx, sy, sz);
+    stream_align(zfp->stream);
+    return size;
+  }
 };
 
 // 4D codec
@@ -322,24 +454,6 @@ public:
                  : encode_block(offset, block);
   }
 
-  // encode 4D block from strided storage
-  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
-  {
-    size_t size;
-    stream_wseek(stream->stream, offset);
-    if (shape) {
-      uint nx = 4 - (shape & 3u); shape >>= 2;
-      uint ny = 4 - (shape & 3u); shape >>= 2;
-      uint nz = 4 - (shape & 3u); shape >>= 2;
-      uint nw = 4 - (shape & 3u); shape >>= 2;
-      size = zfp::encode_partial_block_strided<Scalar>(stream, p, nx, ny, nz, nw, sx, sy, sz, sw);
-    }
-    else
-      size = zfp::encode_block_strided<Scalar>(stream, p, sx, sy, sz, sw);
-    zfp_stream_flush(stream);
-    return size;
-  }
-
   // decode contiguous 4D block
   size_t decode_block(bitstream_offset offset, uint shape, Scalar* block) const
   {
@@ -347,28 +461,76 @@ public:
                  : decode_block(offset, block);
   }
 
+  // encode 4D block from strided storage
+  size_t encode_block_strided(bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
+  {
+    if (thread_safety) {
+      // thread-safe implementation
+      zfp_stream zfp = clone_stream();
+      size_t size = encode_block_strided(&zfp, offset, shape, p, sx, sy, sz, sw);
+      stream_close(zfp.stream);
+      return size;
+    }
+    else
+      return encode_block_strided(stream, offset, shape, p, sx, sy, sz, sw);
+  }
+
   // decode 4D block to strided storage
   size_t decode_block_strided(bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
   {
+    if (thread_safety) {
+      // thread-safe implementation
+      zfp_stream zfp = clone_stream();
+      size_t size = decode_block_strided(&zfp, offset, shape, p, sx, sy, sz, sw);
+      stream_close(zfp.stream);
+      return size;
+    }
+    else
+      return decode_block_strided(stream, offset, shape, p, sx, sy, sz, sw);
+  }
+
+protected:
+  using zfp_base<4, Scalar>::clone_stream;
+  using zfp_base<4, Scalar>::encode_block;
+  using zfp_base<4, Scalar>::decode_block;
+  using zfp_base<4, Scalar>::stream;
+  using zfp_base<4, Scalar>::thread_safety;
+
+  // encode 4D block from strided storage
+  static size_t encode_block_strided(zfp_stream* zfp, bitstream_offset offset, uint shape, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
+  {
     size_t size;
-    stream_rseek(stream->stream, offset);
+    stream_wseek(zfp->stream, offset);
     if (shape) {
       uint nx = 4 - (shape & 3u); shape >>= 2;
       uint ny = 4 - (shape & 3u); shape >>= 2;
       uint nz = 4 - (shape & 3u); shape >>= 2;
       uint nw = 4 - (shape & 3u); shape >>= 2;
-      size = zfp::decode_partial_block_strided<Scalar>(stream, p, nx, ny, nz, nw, sx, sy, sz, sw);
+      size = zfp::encode_partial_block_strided<Scalar>(zfp, p, nx, ny, nz, nw, sx, sy, sz, sw);
     }
     else
-      size = zfp::decode_block_strided<Scalar>(stream, p, sx, sy, sz, sw);
-    zfp_stream_align(stream);
+      size = zfp::encode_block_strided<Scalar>(zfp, p, sx, sy, sz, sw);
+    stream_flush(zfp->stream);
     return size;
   }
 
-protected:
-  using zfp_base<4, Scalar>::encode_block;
-  using zfp_base<4, Scalar>::decode_block;
-  using zfp_base<4, Scalar>::stream;
+  // decode 4D block to strided storage
+  static size_t decode_block_strided(zfp_stream* zfp, bitstream_offset offset, uint shape, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw)
+  {
+    size_t size;
+    stream_rseek(zfp->stream, offset);
+    if (shape) {
+      uint nx = 4 - (shape & 3u); shape >>= 2;
+      uint ny = 4 - (shape & 3u); shape >>= 2;
+      uint nz = 4 - (shape & 3u); shape >>= 2;
+      uint nw = 4 - (shape & 3u); shape >>= 2;
+      size = zfp::decode_partial_block_strided<Scalar>(zfp, p, nx, ny, nz, nw, sx, sy, sz, sw);
+    }
+    else
+      size = zfp::decode_block_strided<Scalar>(zfp, p, sx, sy, sz, sw);
+    stream_align(zfp->stream);
+    return size;
+  }
 };
 
 } // codec
