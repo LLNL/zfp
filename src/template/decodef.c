@@ -10,13 +10,14 @@ _t2(decode_block, Scalar, DIMS)(zfp_stream* zfp, Scalar* fblock)
   /* test if block has nonzero values */
   if (stream_read_bit(zfp->stream)) {
     cache_align_(Int iblock[BLOCK_SIZE]);
-    int emax, maxprec;
+    uint maxprec;
+    int emax;
     /* decode common exponent */
     bits += EBITS;
     emax = (int)stream_read_bits(zfp->stream, EBITS) - EBIAS;
     maxprec = precision(emax, zfp->maxprec, zfp->minexp, DIMS);
     /* decode integer block */
-    bits += _t2(decode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, maxprec, iblock);
+    bits += _t2(decode_block, Int, DIMS)(zfp->stream, zfp->minbits - MIN(bits, zfp->minbits), zfp->maxbits - bits, maxprec, iblock);
     /* perform inverse block-floating-point transform */
     _t1(inv_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
   }

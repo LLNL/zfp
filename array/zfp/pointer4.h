@@ -52,10 +52,10 @@ protected:
   ptrdiff_t offset(ptrdiff_t d = 0) const { return static_cast<ptrdiff_t>(x - container->min_x() + container->size_x() * (y - container->min_y() + container->size_y() * (z - container->min_z() + container->size_z() * (w - container->min_w())))) + d; }
   void index(size_t& x, size_t& y, size_t& z, size_t & w, ptrdiff_t p) const
   {
-    x = container->min_x() + p % container->size_x(); p /= container->size_x();
-    y = container->min_y() + p % container->size_y(); p /= container->size_y();
-    z = container->min_z() + p % container->size_z(); p /= container->size_z();
-    w = container->min_w() + p;
+    x = container->min_x() + size_t(p % ptrdiff_t(container->size_x())); p /= container->size_x();
+    y = container->min_y() + size_t(p % ptrdiff_t(container->size_y())); p /= container->size_y();
+    z = container->min_z() + size_t(p % ptrdiff_t(container->size_z())); p /= container->size_z();
+    w = container->min_w() + size_t(p);
   }
   void advance(ptrdiff_t d) { index(x, y, z, w, offset(d)); }
   void increment()

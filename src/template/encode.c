@@ -257,9 +257,9 @@ _t1(encode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, 
 
 /* encode block of integers */
 static uint
-_t2(encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock)
+_t2(encode_block, Int, DIMS)(bitstream* stream, uint minbits, uint maxbits, uint maxprec, Int* iblock)
 {
-  int bits;
+  uint bits;
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* perform decorrelating transform */
   _t2(fwd_xform, Int, DIMS)(iblock);

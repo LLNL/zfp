@@ -46,7 +46,7 @@ process(double* buffer, uint blocks, double tolerance)
   ptr = buffer;
   for (i = 0; i < blocks; i++) {
     offset[i] = stream_wtell(stream);
-    bits = zfp_encode_block_double_2(zfp, ptr);
+    bits = (uint)zfp_encode_block_double_2(zfp, ptr);
     if (!bits) {
       fprintf(stderr, "compression failed\n");
       return 0;
