@@ -1,9 +1,9 @@
-include ../../Config
+include ../Config
 
-LIBDIR = ../../lib
+LIBDIR = ../lib
 TARGETS = $(LIBDIR)/libcfp.a $(LIBDIR)/libcfp.so
-OBJECTS = cfparray.o
-INCS = -I../include -I../../include -I../../array -I../../src
+OBJECTS = cfp.o
+INCS = -I../include -I../src
 
 static: $(LIBDIR)/libcfp.a
 

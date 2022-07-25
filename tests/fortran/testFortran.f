@@ -1,5 +1,5 @@
 program main
-  use zFORp
+  use zfp
   use iso_c_binding
 
   ! loop counters

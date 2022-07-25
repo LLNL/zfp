@@ -141,10 +141,10 @@ public:
   // unit of allocated data in bytes
   static size_t alignment() { return sizeof(InternalType); }
 
-  static const zfp_type type = zfp::trait<ExternalType>::type; // scalar type
+  static const zfp_type type = zfp::internal::trait<ExternalType>::type; // scalar type
 
   // zfp::codec::generic_base::header class for array (de)serialization
-  #include "zfp/internal/array/genheader.hpp"
+  #include "zfp/internal/codec/genheader.hpp"
 
 protected:
   // pointer to beginning of block

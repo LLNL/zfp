@@ -1,5 +1,5 @@
-#ifndef ZFP_CARRAY1_HPP
-#define ZFP_CARRAY1_HPP
+#ifndef ZFP_CONSTARRAY1_HPP
+#define ZFP_CONSTARRAY1_HPP
 
 #include <cstddef>
 #include <cstring>

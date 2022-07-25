@@ -2,6 +2,7 @@
 #define ZFP_TRAITS_HPP
 
 namespace zfp {
+namespace internal {
 
 // useful type traits
 template <typename Scalar>
@@ -23,6 +24,7 @@ struct trait<double> {
   static const size_t precision = CHAR_BIT * sizeof(double);
 };
 
+}
 }
 
 #endif

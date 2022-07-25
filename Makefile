@@ -9,7 +9,7 @@ all:
 	@echo $(LIBRARY)
 	@cd src; $(MAKE) clean $(LIBRARY)
 ifneq ($(BUILD_CFP),0)
-	@cd cfp/src; $(MAKE) clean $(LIBRARY)
+	@cd cfp; $(MAKE) clean $(LIBRARY)
 endif
 ifneq ($(BUILD_ZFORP),0)
 	@cd fortran; $(MAKE) clean $(LIBRARY)
@@ -33,7 +33,7 @@ test:
 # clean all
 clean:
 	@cd src; $(MAKE) clean
-	@cd cfp/src; $(MAKE) clean
+	@cd src; $(MAKE) clean
 	@cd fortran; $(MAKE) clean
 	@cd utils; $(MAKE) clean
 	@cd tests; $(MAKE) clean
