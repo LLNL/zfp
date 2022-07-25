@@ -27,8 +27,11 @@ responsible for compressing a *chunk* of several contiguous blocks.
 
 This section describes the |zfp| parallel compression algorithm and explains
 how to configure |libzfp| and enable parallel compression at run time via
-its :ref:`high-level C API <hl-api>`.  Parallel compression is not supported
-via the :ref:`low-level API <ll-api>`.
+its :ref:`high-level C API <hl-api>`.
+
+.. note::
+  Parallel compression is not supported via the :ref:`low-level API <ll-api>`,
+  which ignores all execution policy settings and always executes in serial.
 
 
 Execution Policies
