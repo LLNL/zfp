@@ -4,7 +4,7 @@
 
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
-    LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -A asccasc"
+    LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -A asccasc -t 00:15:00"
 
 stages:
     - build
