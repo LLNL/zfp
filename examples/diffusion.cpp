@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include "zfp/array2.hpp"
 #include "zfp/constarray2.hpp"
 #include "zfp/codec/generic.hpp"
@@ -343,7 +344,7 @@ int main(int argc, char* argv[])
       config = zfp_config_accuracy(tolerance);
     }
     else if (std::string(argv[i]) == "-b") {
-      if (++i == argc || sscanf(argv[i], "%zu", &cache_size) != 1)
+      if (++i == argc || (std::istringstream(argv[i]) >> cache_size).fail())
         return usage();
       cache_size *= 4 * 4 * sizeof(double);
     }
@@ -364,8 +365,8 @@ int main(int argc, char* argv[])
       parallel = true;
 #endif
     else if (std::string(argv[i]) == "-n") {
-      if (++i == argc || sscanf(argv[i], "%zu", &nx) != 1 ||
-          ++i == argc || sscanf(argv[i], "%zu", &ny) != 1)
+      if (++i == argc || (std::istringstream(argv[i]) >> nx).fail() ||
+          ++i == argc || (std::istringstream(argv[i]) >> ny).fail())
         return usage();
     }
     else if (std::string(argv[i]) == "-p") {
@@ -383,7 +384,7 @@ int main(int argc, char* argv[])
     else if (std::string(argv[i]) == "-R")
       config = zfp_config_reversible();
     else if (std::string(argv[i]) == "-t") {
-      if (++i == argc || sscanf(argv[i], "%zu", &nt) != 1)
+      if (++i == argc || (std::istringstream(argv[i]) >> nt).fail())
         return usage();
     }
     else

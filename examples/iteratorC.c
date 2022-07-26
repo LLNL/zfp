@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "zfp/cfp.h"
+#include "zfp/array.h"
 
 void print1(cfp_ptr1d p, size_t n)
 {
