@@ -44,8 +44,8 @@ $(BINDIR)/iterator: iterator.cpp ../lib/$(LIBZFP)
 $(BINDIR)/iteratorC: iteratorC.o ../lib/$(LIBZFP) ../lib/$(LIBCFP)
 	$(CXX) $(CXXFLAGS) iteratorC.o -lcfp $(CLIBS) -o $@
 
-itertorC.o: iteratorC.c
-	$(CC) $(CFLAGS) $(INCS) -c itertorC.c
+iteratorC.o: iteratorC.c
+	$(CC) $(CFLAGS) $(INCS) -c iteratorC.c
 
 $(BINDIR)/pgm: pgm.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) $(INCS) pgm.c $(CLIBS) -o $@

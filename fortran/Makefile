@@ -4,9 +4,9 @@ include ../Config
 
 LIBDIR = ../lib
 MODDIR = ../modules
-TARGETS = $(LIBDIR)/libzFORp.a $(LIBDIR)/libzFORp.so $(MODDIR)/zforp.mod
+TARGETS = $(LIBDIR)/libzFORp.a $(LIBDIR)/libzFORp.so $(MODDIR)/zfp.mod
 OBJECTS = zfp.o
-MODULES = zforp.mod
+MODULES = zfp.mod
 
 static: $(LIBDIR)/libzFORp.a $(MODDIR)/zforp.mod
 
@@ -26,7 +26,7 @@ $(LIBDIR)/libzFORp.so: $(OBJECTS)
 
 $(MODDIR)/zforp.mod: $(OBJECTS)
 	mkdir -p $(MODDIR)
-	mv zforp.mod $(MODDIR)
+	mv $(MODULES) $(MODDIR)
 
 .f90.o:
 	$(FC) $(FFLAGS) -c $<
