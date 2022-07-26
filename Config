@@ -10,7 +10,7 @@ FC = gfortran
   CSTD = -std=c99
   CXXSTD = -std=c++98
 # CXXSTD = -std=c++11
-  FSTD = -std=f2003 -ffree-form -Wno-c-binding-type
+  FSTD = -std=f2018 -ffree-form -Wno-c-binding-type
 
 # common compiler options -----------------------------------------------------
 
@@ -23,6 +23,9 @@ SOFLAGS =
 
 # do not comment out; use "make ZFP_WITH_OPENMP=0" to disable OpenMP
 OMPFLAGS = -fopenmp
+
+# Apple clang OpenMP options
+# OMPFLAGS = -Xclang -fopenmp
 
 # optional compiler macros ----------------------------------------------------
 

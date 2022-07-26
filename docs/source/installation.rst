@@ -434,4 +434,4 @@ The necessary dependencies can be installed using ``pip`` and the |zfp|
 Fortran
 ^^^^^^^
 
-The optional Fortran bindings require a Fortran 2003 compiler.
+The optional Fortran bindings require a Fortran 2018 compiler.
