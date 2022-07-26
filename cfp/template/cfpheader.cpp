@@ -2,6 +2,8 @@ static CFP_HEADER_TYPE
 _t1(CFP_HEADER_TYPE, ctor_buffer)(const void* data, size_t bytes)
 {
   CFP_HEADER_TYPE h;
+  h.object = 0;
+
   try {
     // construct generic header and query array type
     header hdr(data, bytes);
@@ -35,9 +37,7 @@ _t1(CFP_HEADER_TYPE, ctor_buffer)(const void* data, size_t bytes)
         break;
     }
   }
-  catch (...) {
-    h.object = 0;
-  }
+  catch (...) {}
   return h;
 }
 

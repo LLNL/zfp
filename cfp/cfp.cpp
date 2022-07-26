@@ -1,5 +1,5 @@
 #include "cfpheader.cpp"
-#include "zfp/cfp.h"
+#include "zfp/array.h"
 
 #include "cfparray1f.cpp"
 #include "cfparray1d.cpp"

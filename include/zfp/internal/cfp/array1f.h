@@ -1,5 +1,5 @@
-#ifndef CFP_ARRAY_1F
-#define CFP_ARRAY_1F
+#ifndef CFP_ARRAY_1F_H
+#define CFP_ARRAY_1F_H
 
 #include <stddef.h>
 #include "zfp.h"
