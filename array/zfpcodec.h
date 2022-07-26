@@ -18,8 +18,10 @@ class zfp_base {
 protected:
   // default constructor
   zfp_base() :
-    stream(zfp_stream_open(0)),
-    thread_safety(false)
+    stream(zfp_stream_open(0))
+#ifdef _OPENMP
+    , thread_safety(false)
+#endif
   {}
 
   // destructor
@@ -96,7 +98,11 @@ public:
   bool set_params(uint minbits, uint maxbits, uint maxprec, int maxexp) { return zfp_stream_set_params(stream, minbits, maxbits, maxprec, maxexp) == zfp_true; }
 
   // set thread safety mode
+#ifdef _OPENMP
   void set_thread_safety(bool safety) { thread_safety = safety; }
+#else
+  void set_thread_safety(bool) {}
+#endif
 
   // byte size of codec data structure components indicated by mask
   size_t size_bytes(uint mask = ZFP_DATA_ALL) const
@@ -124,7 +130,9 @@ protected:
     stream = zfp_stream_open(0);
     *stream = *codec.stream;
     stream->stream = 0;
+#ifdef _OPENMP
     thread_safety = codec.thread_safety;
+#endif
   }
 
   // make a thread-local copy of zfp stream and bit stream
@@ -182,7 +190,11 @@ protected:
   }
 
   zfp_stream* stream; // compressed zfp stream
+#ifdef _OPENMP
   bool thread_safety; // thread safety state
+#else
+  static const bool thread_safety = false; // not needed without OpenMP
+#endif
 };
 
 // 1D codec
