@@ -84,6 +84,7 @@ public:
 
   // copy constructor--performs a deep copy
   array2(const array2& a) :
+    array(),
     cache(store)
   {
     deep_copy(a);
