@@ -35,7 +35,7 @@ field_index_span(const zfp_field* field, ptrdiff_t* min, ptrdiff_t* max)
     *min = imin;
   if (max)
     *max = imax;
-  return imax - imin + 1;
+  return (size_t)(imax - imin + 1);
 }
 
 static zfp_bool
@@ -238,6 +238,22 @@ size_t
 zfp_field_size_bytes(const zfp_field* field)
 {
   return field_index_span(field, NULL, NULL) * zfp_type_size(field->type);
+}
+
+size_t
+zfp_field_blocks(const zfp_field* field)
+{
+  size_t bx = (field->nx + 3) / 4;
+  size_t by = (field->ny + 3) / 4;
+  size_t bz = (field->nz + 3) / 4;
+  size_t bw = (field->nw + 3) / 4;
+  switch (zfp_field_dimensionality(field)) {
+    case 1: return bx;
+    case 2: return bx * by;
+    case 3: return bx * by * bz;
+    case 4: return bx * by * bz * bw;
+    default: return 0;
+  }
 }
 
 zfp_bool
@@ -647,7 +663,7 @@ zfp_stream_mode(const zfp_stream* zfp)
         /* minexp is [ZFP_MIN_EXP=-1074, 843] */
         /* returns [2177, ZFP_MODE_SHORT_MAX=4094] */
         /* +1 because skipped 2176 */
-        return (zfp->minexp - ZFP_MIN_EXP) + (2048 + 128 + 1);
+        return (uint64)(zfp->minexp - ZFP_MIN_EXP) + (2048 + 128 + 1);
       else
         break;
 
@@ -663,7 +679,7 @@ zfp_stream_mode(const zfp_stream* zfp)
   minbits = MAX(1, MIN(zfp->minbits, 0x8000u)) - 1;
   maxbits = MAX(1, MIN(zfp->maxbits, 0x8000u)) - 1;
   maxprec = MAX(1, MIN(zfp->maxprec, 0x0080u)) - 1;
-  minexp = MAX(0, MIN(zfp->minexp + 16495, 0x7fff));
+  minexp = (uint)MAX(0, MIN(zfp->minexp + 16495, 0x7fff));
   mode <<= 15; mode += minexp;
   mode <<=  7; mode += maxprec;
   mode <<= 15; mode += maxbits;
@@ -697,11 +713,7 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
 {
   zfp_bool reversible = is_reversible(zfp);
   uint dims = zfp_field_dimensionality(field);
-  size_t mx = (MAX(field->nx, 1u) + 3) / 4;
-  size_t my = (MAX(field->ny, 1u) + 3) / 4;
-  size_t mz = (MAX(field->nz, 1u) + 3) / 4;
-  size_t mw = (MAX(field->nw, 1u) + 3) / 4;
-  size_t blocks = mx * my * mz * mw;
+  size_t blocks = zfp_field_blocks(field);
   uint values = 1u << (2 * dims);
   uint maxbits = 0;
 
@@ -1080,7 +1092,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
 #endif
   };
   uint exec = zfp->exec.policy;
-  uint strided = zfp_field_stride(field, NULL);
+  uint strided = (uint)zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
   void (*compress)(zfp_stream*, const zfp_field*);
@@ -1140,7 +1152,7 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
 #endif
   };
   uint exec = zfp->exec.policy;
-  uint strided = zfp_field_stride(field, NULL);
+  uint strided = (uint)zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
   void (*decompress)(zfp_stream*, zfp_field*);

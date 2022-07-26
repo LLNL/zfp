@@ -163,9 +163,9 @@ size_t decode3launch(uint3 dims,
   cudaEventSynchronize(stop);
 	cudaStreamSynchronize(0);
 
-  float miliseconds = 0;
-  cudaEventElapsedTime(&miliseconds, start, stop);
-  float seconds = miliseconds / 1000.f;
+  float milliseconds = 0;
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  float seconds = milliseconds / 1000.f;
   float rate = (float(dims.x * dims.y * dims.z) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;

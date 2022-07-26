@@ -58,6 +58,7 @@ few of the API changes, other than to cfp, should impact existing code.
 
 - `zfp::array::get_header()` has been replaced with a `zfp::array::header`
   constructor that accepts an array object.
+- `ZFP_VERSION_RELEASE` is no longer defined (use `ZFP_VERSION_PATCH`).
 
 ### Fixed
 
@@ -76,6 +77,7 @@ few of the API changes, other than to cfp, should impact existing code.
 - #126: `make install` does not install Fortran module.
 - #127: Reversible mode reports incorrect compressed block size.
 - #150: cmocka tests do not build on macOS.
+- #154: Thread safety is broken in `private_view` and `private_const_view`.
 - `ZFP_MAX_BITS` is off by one.
 - `diffusionC`, `iteratorC` are not being built with `gmake`.
 

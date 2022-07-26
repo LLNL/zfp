@@ -94,7 +94,7 @@ isCompressedBitrateComparableToChosenRate(struct setupVars* bundle)
   zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
 
-  // integer arithemetic allows exact comparison
+  // integer arithmetic allows exact comparison
   size_t compressedBytes = zfp_compress(stream, field);
   if (compressedBytes == 0) {
     printf("Compression failed\n");

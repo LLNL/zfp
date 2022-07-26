@@ -24,7 +24,7 @@ protected:
   // protected constructor
   explicit const_handle(const container_type* container, size_t x, size_t y, size_t z) : container(const_cast<container_type*>(container)), x(x), y(y), z(z) {}
 
-  // derefence handle
+  // dereference handle
   value_type get() const { return container->get(x, y, z); }
 
   container_type* container; // container

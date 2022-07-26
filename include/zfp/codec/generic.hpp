@@ -41,16 +41,7 @@ public:
   // conservative buffer size for current codec settings
   size_t buffer_size(const zfp_field* field) const
   {
-    // empty field case
-    if (!field->nx && !field->ny && !field->nz && !field->nw)
-      return 0;
-    // count number of blocks spanned by field
-    size_t bx = (std::max(field->nx, size_t(1)) + 3) / 4;
-    size_t by = (std::max(field->ny, size_t(1)) + 3) / 4;
-    size_t bz = (std::max(field->nz, size_t(1)) + 3) / 4;
-    size_t bw = (std::max(field->nw, size_t(1)) + 3) / 4;
-    size_t blocks = bx * by * bz * bw;
-    return blocks * block_size * sizeof(InternalType);
+    return zfp_field_blocks(field) * block_size * sizeof(InternalType);
   }
 
   // open 
@@ -129,6 +120,9 @@ public:
     return false;
   }
 
+  // set thread safety mode (not required by this codec)
+  void set_thread_safety(bool) {}
+
   // byte size of codec data structure components indicated by mask
   size_t size_bytes(uint mask = ZFP_DATA_ALL) const
   {
@@ -193,6 +187,13 @@ public:
                  : encode_block(offset, block);
   }
 
+  // decode contiguous 1D block
+  size_t decode_block(bitstream_offset offset, uint shape, ExternalType* block) const
+  {
+    return shape ? decode_block_strided(offset, shape, block, 1)
+                 : decode_block(offset, block);
+  }
+
   // encode 1D block from strided storage
   size_t encode_block_strided(bitstream_offset offset, uint shape, const ExternalType* p, ptrdiff_t sx) const
   {
@@ -204,13 +205,6 @@ public:
     for (size_t x = 0; x < nx; x++, p += sx, q++)
       *q = static_cast<InternalType>(*p);
     return block_size_bits;
-  }
-
-  // decode contiguous 1D block
-  size_t decode_block(bitstream_offset offset, uint shape, ExternalType* block) const
-  {
-    return shape ? decode_block_strided(offset, shape, block, 1)
-                 : decode_block(offset, block);
   }
 
   // decode 1D block to strided storage
@@ -244,6 +238,13 @@ public:
                  : encode_block(offset, block);
   }
 
+  // decode contiguous 2D block
+  size_t decode_block(bitstream_offset offset, uint shape, ExternalType* block) const
+  {
+    return shape ? decode_block_strided(offset, shape, block, 1, 4)
+                 : decode_block(offset, block);
+  }
+
   // encode 2D block from strided storage
   size_t encode_block_strided(bitstream_offset offset, uint shape, const ExternalType* p, ptrdiff_t sx, ptrdiff_t sy) const
   {
@@ -258,13 +259,6 @@ public:
       for (size_t x = 0; x < nx; x++, p += sx, q++)
         *q = static_cast<InternalType>(*p);
     return block_size_bits;
-  }
-
-  // decode contiguous 2D block
-  size_t decode_block(bitstream_offset offset, uint shape, ExternalType* block) const
-  {
-    return shape ? decode_block_strided(offset, shape, block, 1, 4)
-                 : decode_block(offset, block);
   }
 
   // decode 2D block to strided storage
@@ -301,6 +295,13 @@ public:
                  : encode_block(offset, block);
   }
 
+  // decode contiguous 3D block
+  size_t decode_block(bitstream_offset offset, uint shape, ExternalType* block) const
+  {
+    return shape ? decode_block_strided(offset, shape, block, 1, 4, 16)
+                 : decode_block(offset, block);
+  }
+
   // encode 3D block from strided storage
   size_t encode_block_strided(bitstream_offset offset, uint shape, const ExternalType* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz) const
   {
@@ -318,13 +319,6 @@ public:
         for (size_t x = 0; x < nx; x++, p += sx, q++)
           *q = static_cast<InternalType>(*p);
     return block_size_bits;
-  }
-
-  // decode contiguous 3D block
-  size_t decode_block(bitstream_offset offset, uint shape, ExternalType* block) const
-  {
-    return shape ? decode_block_strided(offset, shape, block, 1, 4, 16)
-                 : decode_block(offset, block);
   }
 
   // decode 3D block to strided storage
@@ -364,6 +358,13 @@ public:
                  : encode_block(offset, block);
   }
 
+  // decode contiguous 4D block
+  size_t decode_block(bitstream_offset offset, uint shape, ExternalType* block) const
+  {
+    return shape ? decode_block_strided(offset, shape, block, 1, 4, 16, 64)
+                 : decode_block(offset, block);
+  }
+
   // encode 4D block from strided storage
   size_t encode_block_strided(bitstream_offset offset, uint shape, const ExternalType* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw) const
   {
@@ -384,13 +385,6 @@ public:
           for (size_t x = 0; x < nx; x++, p += sx, q++)
             *q = static_cast<InternalType>(*p);
     return block_size_bits;
-  }
-
-  // decode contiguous 4D block
-  size_t decode_block(bitstream_offset offset, uint shape, ExternalType* block) const
-  {
-    return shape ? decode_block_strided(offset, shape, block, 1, 4, 16, 64)
-                 : decode_block(offset, block);
   }
 
   // decode 4D block to strided storage

@@ -51,10 +51,10 @@ _t1(rev_precision, UInt)(const UInt* block, uint n)
 
 /* encode block of integers using reversible algorithm */
 static uint
-_t2(rev_encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock)
+_t2(rev_encode_block, Int, DIMS)(bitstream* stream, uint minbits, uint maxbits, uint maxprec, Int* iblock)
 {
-  int bits = PBITS;
-  int prec;
+  uint bits = PBITS;
+  uint prec;
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* perform decorrelating transform */
   _t2(rev_fwd_xform, Int, DIMS)(iblock);

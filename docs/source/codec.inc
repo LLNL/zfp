@@ -154,6 +154,18 @@ which provides for 2:1 fixed-rate "compression" using IEEE 754 floating point.
 
 ----
 
+.. cpp:function:: bool codec::set_thread_safety(bool safety)
+
+  Enable or disable thread safety.  This function is called whenever |zfp|
+  is built with OpenMP support and when the number of mutable or immutable
+  :ref:`private views <private_immutable_view>` of an array changes.  When
+  two or more private views of an array are accessed by separate threads,
+  multiple blocks may be compressed or decompressed simultaneously.  The
+  codec then has to take care that there are no race conditions on the data
+  structures (e.g., :c:type:`bitstream`) used for (de)compression.
+
+----
+
 .. cpp:function:: size_t codec::size_bytes(uint mask = ZFP_DATA_ALL) const
 
   Return storage size of components of codec data structure indicated by

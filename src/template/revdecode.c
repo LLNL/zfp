@@ -31,11 +31,11 @@ _t1(rev_inv_lift, Int)(Int* p, uint s)
 
 /* decode block of integers using reversible algorithm */
 static uint
-_t2(rev_decode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, Int* iblock)
+_t2(rev_decode_block, Int, DIMS)(bitstream* stream, uint minbits, uint maxbits, Int* iblock)
 {
   /* decode number of significant bits */
-  int bits = PBITS;
-  int prec = (int)stream_read_bits(stream, PBITS) + 1;
+  uint bits = PBITS;
+  uint prec = (uint)stream_read_bits(stream, PBITS) + 1;
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* decode integer coefficients */
   bits += _t1(decode_ints, UInt)(stream, maxbits - bits, prec, ublock, BLOCK_SIZE);

@@ -50,7 +50,7 @@ public:
 
 protected:
   ptrdiff_t offset(ptrdiff_t d = 0) const { return static_cast<ptrdiff_t>(x - container->min_x()) + d; }
-  void index(size_t& x, ptrdiff_t p) const { x = container->min_x() + p; }
+  void index(size_t& x, ptrdiff_t p) const { x = container->min_x() + size_t(p); }
   void advance(ptrdiff_t d) { index(x, offset(d)); }
   void increment() { ++x; }
   void decrement() { --x; }

@@ -58,10 +58,10 @@ public:
 
 protected:
   // sequential offset associated with index x plus delta d
-  difference_type offset(difference_type d = 0) const { return static_cast<difference_type>(x - container->min_x() + d); }
+  difference_type offset(difference_type d = 0) const { return static_cast<difference_type>(x - container->min_x() + size_t(d)); }
 
   // index x associated with sequential offset p
-  void index(size_t& x, difference_type p) const { x = container->min_x() + p; }
+  void index(size_t& x, difference_type p) const { x = container->min_x() + size_t(p); }
 
   // advance iterator by d
   void advance(difference_type d) { index(x, offset(d)); }

@@ -1,14 +1,16 @@
 include ../Config
 
+.SUFFIXES: .f90
+
 LIBDIR = ../lib
 MODDIR = ../modules
-TARGETS = $(LIBDIR)/libzFORp.a $(LIBDIR)/libzFORp.so $(MODDIR)/zfp.mod
-OBJECTS = ../src/zfp.o
-MODULES = zfp.mod
+TARGETS = $(LIBDIR)/libzFORp.a $(LIBDIR)/libzFORp.so $(MODDIR)/zforp.mod
+OBJECTS = zfp.o
+MODULES = zforp.mod
 
-static: $(LIBDIR)/libzFORp.a $(MODDIR)/zfp.mod
+static: $(LIBDIR)/libzFORp.a $(MODDIR)/zforp.mod
 
-shared: $(LIBDIR)/libzFORp.so $(MODDIR)/zfp.mod
+shared: $(LIBDIR)/libzFORp.so $(MODDIR)/zforp.mod
 
 clean:
 	rm -f $(TARGETS) $(OBJECTS)
@@ -22,9 +24,9 @@ $(LIBDIR)/libzFORp.so: $(OBJECTS)
 	mkdir -p $(LIBDIR)
 	$(FC) $(FFLAGS) -shared $^ -o $@
 
-$(MODDIR)/zfp.mod: $(OBJECTS)
+$(MODDIR)/zforp.mod: $(OBJECTS)
 	mkdir -p $(MODDIR)
-	mv zfp.mod $(MODDIR)
+	mv zforp.mod $(MODDIR)
 
-.f.o:
+.f90.o:
 	$(FC) $(FFLAGS) -c $<

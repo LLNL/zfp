@@ -268,9 +268,9 @@ _t1(decode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, 
 
 /* decode block of integers */
 static uint
-_t2(decode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock)
+_t2(decode_block, Int, DIMS)(bitstream* stream, uint minbits, uint maxbits, uint maxprec, Int* iblock)
 {
-  int bits;
+  uint bits;
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* decode integer coefficients */
   bits = _t1(decode_ints, UInt)(stream, maxbits, maxprec, ublock, BLOCK_SIZE);

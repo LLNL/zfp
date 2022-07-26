@@ -1,4 +1,4 @@
-static uint _t2(rev_encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock);
+static uint _t2(rev_encode_block, Int, DIMS)(bitstream* stream, uint minbits, uint maxbits, uint maxprec, Int* iblock);
 
 /* public functions -------------------------------------------------------- */
 

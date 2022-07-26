@@ -95,10 +95,10 @@ protected:
     }
     else {
       size_t m = ~size_t(3);
-      size_t by = std::max((ymin + p / nx) & m, ymin); size_t sy = std::min((by + 4) & m, ymax) - by; p -= (by - ymin) * nx;
-      size_t bx = std::max((xmin + p / sy) & m, xmin); size_t sx = std::min((bx + 4) & m, xmax) - bx; p -= (bx - xmin) * sy;
-      y = by + p / sx; p -= (y - by) * sx;
-      x = bx + p;      p -= (x - bx);
+      size_t by = std::max((ymin + size_t(p / ptrdiff_t(nx))) & m, ymin); size_t sy = std::min((by + 4) & m, ymax) - by; p -= (by - ymin) * nx;
+      size_t bx = std::max((xmin + size_t(p / ptrdiff_t(sy))) & m, xmin); size_t sx = std::min((bx + 4) & m, xmax) - bx; p -= (bx - xmin) * sy;
+      y = by + size_t(p / ptrdiff_t(sx)); p -= (y - by) * sx;
+      x = bx + size_t(p);                 p -= (x - bx);
     }
   }
 
