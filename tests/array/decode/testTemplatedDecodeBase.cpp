@@ -466,9 +466,15 @@ TEST(TemplatedDecodeTests, given_TemplatedDecodeBlockStrided_resultsMatchNonTemp
 TEST(TemplatedDecodeTests, given_TemplatedDecodePartialBlockStrided_resultsMatchNonTemplated)
 {
     size_t countX = 4 * SX;
+#if DIMS > 1
     size_t countY = SY / SX;
+#endif
+#if DIMS > 2
     size_t countZ = SZ / SY;
+#endif
+#if DIMS == 4
     size_t countW = SW / SZ;
+#endif
 
     SCALAR* dataArr;
     populateStridedArray(&dataArr, DUMMY_VAL);
