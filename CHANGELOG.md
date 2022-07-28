@@ -48,9 +48,10 @@ few of the API changes, other than to cfp, should impact existing code.
 - The compressed-array C++ implementation has been completely refactored to
   make it more modular, extensible, and reusable across array types.
 - Array block shapes are now computed on the fly rather than stored.
-- The cfp API now wraps array objects in structs.
-- The zfpy decompression API now supports the more general `memoryview` over
-  `bytes` objects.
+- The cfp C API now wraps array objects in structs.
+- The zfpy Python API now supports the more general `memoryview` over
+  `bytes` objects for decompression.
+- The zFORp Fortran module name is now `zfp` instead of `zforp_module`.
 - Some command-line options for the `diffusion` example have changed.
 - CMake 3.9 or later is now required for CMake builds.
 

@@ -31,8 +31,8 @@ for how the Fortran API is used to compress and decompress data.
 .. note::
 
   |zfp| |fieldrelease| simplifies the |zforp| module name from
-  :code:`zforp_module` to :code:`zforp`.  This will likely require
-  changing associated use statements within existing code when updating
+  ``zforp_module`` to ``zfp``.  This will likely require changing
+  associated use statements within existing code when updating
   from prior versions of zFORp.
 
   Furthermore, as outlined above, the |zfp| |fieldrelease| API requires
