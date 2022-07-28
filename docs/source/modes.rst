@@ -99,6 +99,17 @@ terminates as soon as a single constraint is violated (except
 :c:member:`zfp_stream.minbits`, which is satisfied at the end of encoding by
 padding zeros).
 
+.. warning::
+
+  For floating-point data, the :c:member:`zfp_stream.maxbits` parameter must
+  be large enough to allow the common block exponent and any control bits to
+  be encoded.  This implies *maxbits* |geq| 9 for single-precision data and
+  *maxbits* |geq| 12 for double-precision data.  Choosing a smaller value is
+  of no use as it would prevent any fraction (value) bits from being encoded,
+  resulting in an all-zero decompressed block.  More importantly, such a
+  constraint will not be respected by |zfp| for performance reasons, which
+  if not accounted for could potentially lead to buffer overruns.
+
 As mentioned above, other combinations of constraints can be used.
 For example, to ensure that the compressed stream is not larger than
 the uncompressed one, or that it fits within the amount of memory
