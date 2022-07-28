@@ -51,9 +51,9 @@ module zfp
   ! constants are hardcoded
   ! const_xyz holds value, but xyz is the public constant
 
-  integer, parameter :: const_zFORp_version_major = 0
-  integer, parameter :: const_zFORp_version_minor = 5
-  integer, parameter :: const_zFORp_version_patch = 5
+  integer, parameter :: const_zFORp_version_major = 1
+  integer, parameter :: const_zFORp_version_minor = 0
+  integer, parameter :: const_zFORp_version_patch = 0
   integer, protected, bind(c, name="zFORp_version_major") :: zFORp_version_major
   integer, protected, bind(c, name="zFORp_version_minor") :: zFORp_version_minor
   integer, protected, bind(c, name="zFORp_version_patch") :: zFORp_version_patch
@@ -69,7 +69,7 @@ module zfp
   integer, protected, bind(c, name="zFORp_library_version") :: zFORp_library_version
   data zFORp_library_version/const_zFORp_library_version/
 
-  character(len = 36), parameter :: zFORp_version_string = 'zfp version 0.5.5 (May 5, 2019)'
+  character(len = 36), parameter :: zFORp_version_string = 'zfp version 1.0.0 (July XX, 2022)'
 
   integer, parameter :: const_zFORp_min_bits = 1
   integer, parameter :: const_zFORp_max_bits = 16658

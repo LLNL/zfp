@@ -3,11 +3,12 @@ Change Log
 
 ---
 
-## Unreleased
+## 1.0.0 (2022-07-XX)
 
-This future release is not ABI compatible with prior releases due to numerous
-changes to function signatures and data structures like `zfp_field`.  However,
-few of the API changes, other than to cfp, should impact existing code.
+This release is not ABI compatible with prior releases due to numerous changes
+to function signatures and data structures like `zfp_field`.  However, few of
+the API changes, other than to the cfp C API for compressed arrays, should
+impact existing code.
 
 ### Added
 

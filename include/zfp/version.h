@@ -2,9 +2,9 @@
 #define ZFP_VERSION_H
 
 /* library version information */
-#define ZFP_VERSION_MAJOR 0   /* library major version number */
-#define ZFP_VERSION_MINOR 5   /* library minor version number */
-#define ZFP_VERSION_PATCH 5   /* library patch version number */
+#define ZFP_VERSION_MAJOR 1   /* library major version number */
+#define ZFP_VERSION_MINOR 0   /* library minor version number */
+#define ZFP_VERSION_PATCH 0   /* library patch version number */
 #define ZFP_VERSION_TWEAK 0   /* library tweak version number */
 
 /* defined for work in progress (indicates unofficial release) */
