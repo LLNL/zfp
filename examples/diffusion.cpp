@@ -10,7 +10,7 @@
 #include "zfp/array2.hpp"
 #include "zfp/constarray2.hpp"
 #include "zfp/codec/generic.hpp"
-#include "array2d.h"
+#include "array2d.hpp"
 
 // add half precision if compiler supports it
 #define __STDC_WANT_IEC_60559_TYPES_EXT__
