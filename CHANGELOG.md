@@ -25,12 +25,20 @@ few of the API changes, other than to cfp, should impact existing code.
 - Additional functions for querying `zfp_field` and `zfp_stream` structs.
 - `zfp_config`: struct that encapsulates compression mode and parameters.
 - Rounding modes for reducing bias in compression errors.
-- New examples: `ppm` and `iteratorC`.
+- New examples: `array`, `iteratorC`, and `ppm`.
 
 ### Changed
 
+- Headers from `array/`, `cfp/include`, and `include/` have been renamed
+  and reorganized into a common `include/` directory.
+  - The libzfp API is now confined to `zfp.h`, `zfp.hpp`, and `zfp.mod`
+    for C, C++, and Fortran bindings, respectively.  These all appear in
+    the top-level `include/` directory upon installation.
+  - C++ headers now use a `.hpp` suffix; C headers use a `.h` suffix.
+  - C++ headers like `array/zfparray.h` have been renamed `zfp/array.hpp`.
+  - C headers like `cfp/include/cfparrays.h` have been renamed `zfp/array.h`.
 - `size_t` and `ptrdiff_t` replace `uint` and `int` for array sizes and
-  strides in the array classes and C API.
+  strides in the array classes and C/Fortran APIs.
 - `zfp_bool` replaces `int` as Boolean type in the C API.
 - `bitstream_offset` and `bitstream_size` replace `size_t` to ensure support
   for 64-bit offsets into and lengths of bit streams.  Consequently, the
