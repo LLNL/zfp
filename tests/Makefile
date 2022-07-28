@@ -2,7 +2,7 @@ include ../Config
 
 BINDIR = ../bin
 TARGETS = $(BINDIR)/testzfp $(BINDIR)/testviews
-INCS = -I../include -I../array
+INCS = -I../include
 LIBS = -L../lib -lzfp $(LDFLAGS)
 
 all: $(TARGETS)
