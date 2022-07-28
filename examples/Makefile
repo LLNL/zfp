@@ -16,8 +16,7 @@ CXXLIBS = $(LIBS) $(LDFLAGS)
 
 # add cfp examples when BUILD_CFP is enabled
 ifneq ($(BUILD_CFP),0)
-  TARGETS += $(BINDIR)/diffusionC\
-			 $(BINDIR)/iteratorC
+  TARGETS += $(BINDIR)/diffusionC $(BINDIR)/iteratorC
 endif
 
 
@@ -60,4 +59,4 @@ $(BINDIR)/speed: speed.c ../lib/$(LIBZFP)
 	$(CC) $(CFLAGS) $(INCS) speed.c $(CLIBS) -o $@
 
 clean:
-	rm -f $(TARGETS) diffusionC.o iteratorC.o
+	rm -f $(TARGETS) $(BINDIR)/diffusionC $(BINDIR)/iteratorC diffusionC.o iteratorC.o
