@@ -58,7 +58,7 @@ Macros
   :c:macro:`ZFP_VERSION_STRING`, respectively.  Available as of
   |zfp| |64bitrelease|, these macros may be used by applications to test
   for a certain |zfp| version number, e.g.,
-  :code:`#if ZFP_VERSION >= ZFP_MAKE_VERSION(0, 5, 6)`.
+  :code:`#if ZFP_VERSION >= ZFP_MAKE_VERSION(1, 0, 0)`.
 
 ----
 
@@ -70,7 +70,7 @@ Macros
   used by intermediate develop versions. Available as of
   |zfp| |verrelease|, these macros may be used by applications to test
   for a certain |zfp| version number, e.g.,
-  :code:`#if ZFP_VERSION >= ZFP_MAKE_FULLVERSION(0, 5, 6, 1)`.
+  :code:`#if ZFP_VERSION >= ZFP_MAKE_FULLVERSION(1, 0, 0, 1)`.
 
 ----
 
@@ -236,13 +236,19 @@ Types
   The :c:type:`zfp_stream` also stores information about how to execute
   compression, e.g., sequentially or in parallel.  The execution is determined
   by the policy and any policy-specific parameters such as number of
-  threads.
+  threads. 
   ::
 
     typedef struct {
       zfp_exec_policy policy; // execution policy (serial, omp, ...)
-      zfp_exec_params params; // execution parameters
+      void* params;           // execution parameters
     } zfp_execution;
+
+.. warning::
+    As of |zfp| |verrelease| `zfp_execution` replaces `zfp_exec_params` with  a 
+    ``void *`` to the associated `zfp_exec_params` type (e.g. 
+    `zfp_exec_params_omp`) to limit ABI-breaking changes due to future 
+    extensions to |zfp| execution policies.
 
 ----
 
@@ -257,18 +263,6 @@ Types
       zfp_exec_omp    = 1, // OpenMP multi-threaded execution
       zfp_exec_cuda   = 2  // CUDA parallel execution
     } zfp_exec_policy;
-
-----
-
-.. c:type:: zfp_exec_params
-
-  Execution parameters are shared among policies in a union.  Currently
-  the only parameters available are for OpenMP.
-  ::
-
-    typedef union {
-      zfp_exec_params_omp omp; // OpenMP parameters
-    } zfp_exec_params;
 
 ----
 

@@ -3,6 +3,107 @@
 Release Notes
 =============
 
+zfp 1.0.0, July XX, 2022
+
+This release is not ABI compatible with prior releases due to numerous changes
+to function signatures and data structures like zfp_fieldu.  However, few of
+the API changes, other than to the cfp C API for compressed arrays, should
+impact existing code.
+
+
+- Added read-only variable-rate array that supports fixed-precision, 
+  fixed-accuracy, and reversible modes.
+
+- Added compressed-array classes for 4D data.
+
+- Added const versions of array references, pointers, and iterators.
+
+- Added a more complete API for pointers and iterators.
+
+- Added support for pointers and iterators into array views.
+
+- zfp::array::size_bytes() allows querying the size of different components
+  of an array object (e.g., payload, cache, index, metadata, ...).
+
+- Added templated C++ wrappers around the low-level C API.
+
+- Added a generic codec for storing blocks of uncompressed scalars in zfp's
+  C++ arrays.
+
+- Added additional functions for querying zfp_field and zfp_stream structs.
+
+- Added zfp_config struct that encapsulates compression mode and parameters.
+
+- Added rounding modes for reducing bias in compression errors.
+
+- Added new examples: array, iteratorC, and ppm.
+
+  - Changes:
+
+    - Headers from array/, cfp/include, and include/ have been renamed
+      and reorganized into a common include/ directory.
+
+      - The libzfp API is now confined to zfp.h, zfp.hpp, and zfp.mod
+        for C, C++, and Fortran bindings, respectively.  These all appear in
+        the top-level include/ directory upon installation.
+      - C++ headers now use a .hpp suffix; C headers use a .h suffix.
+      - C++ headers like array/zfparray.h have been renamed zfp/array.hpp.
+      - C headers like cfp/include/cfparrays.h have been renamed zfp/array.h.
+
+    - size_t and ptrdiff_t replace uint and int for array sizes and
+      strides in the array classes and C/Fortran APIs.
+    - zfp_bool replaces int as Boolean type in the C API.
+    - bitstream_offset and bitstream_size replace size_t to ensure support
+      for 64-bit offsets into and lengths of bit streams.  Consequently, the
+      bitstream API has changed accordingly.
+    - All array and view iterators are now random-access iterators.
+    - Array inspectors now return const_reference rather than a scalar
+      type like float to allow obtaining a const_pointer to an element
+      of an immutable array.
+    - zfp::array::compressed_data() now returns void* instead of uchar*.
+    - The array (de)serialization API has been revised, resulting in new
+      zfp::array::header and zfp::exception classes with new exception
+      messages.
+    - The array codec class is now responsible for all details regarding
+      compression.
+    - The compressed-array C++ implementation has been completely refactored to
+      make it more modular, extensible, and reusable across array types.
+    - Array block shapes are now computed on the fly rather than stored.
+    - The cfp C API now wraps array objects in structs.
+    - The zfpy Python API now supports the more general memoryview over
+      bytes objects for decompression.
+    - The zFORp Fortran module name is now zfp instead of zforp_module.
+    - Some command-line options for the diffusion example have changed.
+    - CMake 3.9 or later is now required for CMake builds.
+
+  - Removed:
+
+    - zfp::array::get_header() has been replaced with a zfp::array::header
+      constructor that accepts an array object.
+    - ZFP_VERSION_RELEASE is no longer defined (use ZFP_VERSION_PATCH).
+
+  - Bug fixes:
+
+    - make install overwrites googletest.
+    - Incorrect order of parameters in CUDA memset().
+    - C++ compiler warns when __STDC_VERSION__ is undefined.
+    - CXXFLAGS is misspelled in cfp/src/Makefile.
+    - zfp_stream_maximum_size() underestimates size in reversible mode.
+    - Incorrect private_view reads due to missing writeback.
+    - Unused CPython array is incompatible with PyPy.
+    - PGI compiler bug causes issues with memory alignment.
+    - All-subnormal blocks may cause floating-point overflow.
+    - CUDA bit offsets are limited to 32 bits.
+    - make install does not install zfp command-line utility.
+    - OpenMP bit offsets are limited to 32 bits.
+    - make install does not install Fortran module.
+    - Reversible mode reports incorrect compressed block size.
+    - cmocka tests do not build on macOS.
+    - Thread safety is broken in private_view and private_const_view.
+    - ZFP_MAX_BITS is off by one.
+    - diffusionC, iteratorC are not being built with gmake.
+
+
 zfp 0.5.5, May 5, 2019
 
   - Added support for reversible (lossless) compression of floating-point and
