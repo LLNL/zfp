@@ -1,4 +1,4 @@
-version: 0.5.5-{build}
+version: 1.0.0-{build}
 
 environment:
   # zfpy only build for Release builds (otherwise need debug python libs python27_d.lib)
