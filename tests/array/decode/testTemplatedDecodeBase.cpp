@@ -514,7 +514,6 @@ TEST(TemplatedDecodeTests, given_TemplatedDecodePartialBlockStrided_resultsMatch
 
     size_t d_sz = ZFP_DECODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, data1, PX, SX);
     size_t d_tsz = decode_partial_block_strided<SCALAR>(tstream, data2, PX, SX);
-    size_t count = countX;
 #elif DIMS == 2
     SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY);
     ASSERT_TRUE(data1 != nullptr);
@@ -524,7 +523,6 @@ TEST(TemplatedDecodeTests, given_TemplatedDecodePartialBlockStrided_resultsMatch
 
     size_t d_sz = ZFP_DECODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, data1, PX, PY, SX, SY);
     size_t d_tsz = decode_partial_block_strided<SCALAR>(tstream, data2, PX, PY, SX, SY);
-    size_t count = countX * countY;
 #elif DIMS == 3
     SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ);
     ASSERT_TRUE(data1 != nullptr);
@@ -534,7 +532,6 @@ TEST(TemplatedDecodeTests, given_TemplatedDecodePartialBlockStrided_resultsMatch
 
     size_t d_sz = ZFP_DECODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, data1, PX, PY, PZ, SX, SY, SZ);
     size_t d_tsz = decode_partial_block_strided<SCALAR>(tstream, data2, PX, PY, PZ, SX, SY, SZ);
-    size_t count = countX * countY * countZ;
 #elif DIMS == 4
     SCALAR *data1 = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ * countW);
     ASSERT_TRUE(data1 != nullptr);
@@ -544,7 +541,6 @@ TEST(TemplatedDecodeTests, given_TemplatedDecodePartialBlockStrided_resultsMatch
 
     size_t d_sz = ZFP_DECODE_PARTIAL_BLOCK_STRIDED_FUNC(stream, data1, PX, PY, PZ, PW, SX, SY, SZ, SW);
     size_t d_tsz = decode_partial_block_strided<SCALAR>(tstream, data2, PX, PY, PZ, PW, SX, SY, SZ, SW);
-    size_t count = countX * countY * countZ * countW;
 #endif
 
     ASSERT_TRUE(d_sz == d_tsz);
