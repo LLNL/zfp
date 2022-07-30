@@ -111,6 +111,9 @@ public:
   // accuracy as absolute error tolerance (fixed-accuracy mode only)
   double accuracy() const { return store.accuracy(); }
 
+  // compression parameters (all compression modes)
+  void params(uint* minbits, uint* maxbits, uint* maxprec, int* minexp) const { return store.params(minbits, maxbits, maxprec, minexp); }
+
   // set rate in compressed bits per value
   double set_rate(double rate)
   {
@@ -137,6 +140,13 @@ public:
   {
     cache.clear();
     store.set_reversible();
+  }
+
+  // set expert mode compression parameters
+  bool set_params(uint minbits, uint maxbits, uint maxprec, int minexp)
+  { 
+    cache.clear();
+    return store.set_params(minbits, maxbits, maxprec, minexp);
   }
 
   // set compression mode and parameters
