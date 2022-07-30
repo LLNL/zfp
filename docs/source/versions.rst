@@ -19,6 +19,8 @@ moved relative to prior versions.
 - Compressed-array classes for 4D data.
 - ``const`` versions of array references, pointers, and iterators.
 - A more complete API for pointers and iterators.
+- |cfp| support for proxy references and pointers, iterators, and 
+  (de)serialization.
 - Support for pointers and iterators into array views.
 - ``zfp::array::size_bytes()`` allows querying the size of different components
   of an array object (e.g., payload, cache, index, metadata, ...).
