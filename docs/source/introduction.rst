@@ -72,8 +72,11 @@ Application Support
 |zfp| has been incorporated into several independently developed applications,
 plugins, and formats, such as
 
-* `Compressed file I/O <https://adios2.readthedocs.io/en/latest/api_high/api_high.html?highlight=zfp#_CPPv4I0EN6adios27fstream5writeEvRKNSt6stringEPK1TRKN6adios24DimsERKN6adios24DimsERKN6adios24DimsERKN6adios27vParamsEKb>`__
+* `Compressed file I/O <https://adios2.readthedocs.io/en/latest/operators/CompressorZFP.html>`__
   in `ADIOS <https://www.olcf.ornl.gov/center-projects/adios/>`__.
+
+* `Compression codec <https://www.blosc.org/posts/support-lossy-zfp/>`__
+  in the `BLOSC <https://www.blosc.org>`__ meta compressor.
 
 * `H5Z-ZFP <https://github.com/LLNL/H5Z-ZFP>`__ plugin for
   `HDF5 <https://www.hdfgroup.org/solutions/hdf5/>`__\ |reg|.  |zfp| is also one of the
@@ -83,10 +86,13 @@ plugins, and formats, such as
 * `Compression functions <https://software.intel.com/en-us/ipp-dev-reference-zfp-compression-functions>`__
   for Intel\ |reg| `Integrated Performance Primitives <https://software.intel.com/en-us/intel-ipp>`__.
 
-* `Compressed MPI messages <https://mvapich.cse.ohio-state.edu/static/media/mvapich/MV2GDR_CHANGELOG-2.3.6.txt>`__
+* `Compressed MPI messages <https://doi.org/10.1109/IPDPS49936.2021.00053>`__
   in `MVAPICH2-GDR <https://mvapich.cse.ohio-state.edu/userguide/gdr/>`__.
 
-* `Compression CODEC <https://community.opengroup.org/osdu/platform/domain-data-mgmt-services/seismic/open-zgy/-/raw/master/doc/compress.html>`__
+* `Compressed file I/O <https://www.openinventor.com/en/features/oil-gas-geoscience/zfp-compression/>`__
+  in `OpenInventor <https://www.openinventor.com>`__\ |tm|.
+
+* `Compression codec <https://community.opengroup.org/osdu/platform/domain-data-mgmt-services/seismic/open-zgy/-/raw/master/doc/compress.html>`__
   underlying the
   `OpenZGY <https://community.opengroup.org/osdu/platform/domain-data-mgmt-services/seismic/open-zgy>`__
   format.

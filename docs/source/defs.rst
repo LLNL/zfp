@@ -6,6 +6,7 @@
 .. |sqrt| unicode:: 0x221a
 .. |check| unicode:: 0x2713
 .. |reg| unicode:: 0x00ae
+.. |tm| unicode:: 0x2122
 .. |zfp| replace:: zfp
 .. |cfp| replace:: cfp
 .. |zforp| replace:: zFORp
