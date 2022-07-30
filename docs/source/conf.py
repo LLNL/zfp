@@ -47,7 +47,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'zfp'
 copyright = u'2014-2022, LLNL-CODE-663824'
-author = u'Peter Lindstrom'
+author = u'Peter Lindstrom, Garrett Morrison'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -149,7 +149,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'zfp.tex', u'zfp Documentation',
-     u'\shortstack[l]{Peter Lindstrom\\\\Markus Salasoo\\\\Matt Larsen\\\\Stephen Herbein}', 'manual'),
+     u'\shortstack[l]{Peter Lindstrom\\\\Garrett Morrison}', 'manual'),
 ]
 
 
