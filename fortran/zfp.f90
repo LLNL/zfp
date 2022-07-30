@@ -399,6 +399,12 @@ module zfp
       integer(c_size_t) :: byte_size
     end function
 
+    function zfp_field_blocks(field) result(blocks) bind(c, name="zfp_field_blocks")
+      import
+      type(c_ptr), value :: field
+      integer(c_size_t) :: blocks
+    end function
+
     function zfp_field_stride(field, stride_arr) result(is_strided) bind(c, name="zfp_field_stride")
       import
       type(c_ptr), value :: field, stride_arr
@@ -629,6 +635,7 @@ module zfp
             zFORp_field_dimensionality, &
             zFORp_field_size, &
             zFORp_field_size_bytes, &
+            zFORp_field_blocks, &
             zFORp_field_stride, &
             zFORp_field_is_contiguous, &
             zFORp_field_metadata, &
@@ -983,6 +990,13 @@ contains
     integer (kind=8) :: byte_size
     byte_size = zfp_field_size_bytes(field%object)
   end function zFORp_field_size_bytes
+
+  function zFORp_field_blocks(field) result(blocks) bind(c, name="zforp_field_blocks")
+    implicit none
+    type(zFORp_field), intent(in) :: field
+    integer (kind=8) :: blocks
+    blocks = zfp_field_blocks(field%object)
+  end function zFORp_field_blocks
 
   function zFORp_field_stride(field, stride_arr) result(is_strided) bind(c, name="zforp_field_stride")
     implicit none

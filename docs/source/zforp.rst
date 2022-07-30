@@ -674,6 +674,16 @@ Array Metadata
 
 ----
 
+.. f:function:: zFORp_field_blocks(field)
+
+  Wrapper for :c:func:`zfp_field_blocks`
+
+  :p zFORp_field field [in]: Field metadata
+  :r blocks: Total number of blocks spanned by field
+  :rtype blocks: integer (kind=8)
+
+----
+
 .. f:function:: zFORp_field_stride(field, stride_arr)
 
   Wrapper for :c:func:`zfp_field_stride`
