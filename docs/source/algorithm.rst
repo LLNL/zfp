@@ -102,6 +102,12 @@ purposes):
      |4powd| |minus| *n* bits of the bit plane are run-length encoded as
      described above, which potentially results in *n* being increased.
 
+     As an example, *x* = 000001001101000 with *m* = 10 is encoded as
+     **0**\ 100\ **1**\ 1\ **1**\ 10\ **1**\ 1000\ **1**, where the bits in
+     boldface indicate "group tests" that determine if the remainder of *x*
+     (to the left) contains any one-bits.  Again, this variable-length code
+     is generated and parsed from right to left.
+
   8. The embedded coder emits one bit at a time, with each successive bit
      potentially improving the accuracy of the approximation.  The early
      bits are most important and have the greatest impact on accuracy,
