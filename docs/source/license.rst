@@ -5,12 +5,12 @@ License
 
 | Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 | Produced at the Lawrence Livermore National Laboratory.
-| Written by Peter Lindstrom, Markus Salasoo, Matt Larsen, and Stephen Herbein.
+| Written by Peter Lindstrom, Garrett Morrison, Markus Salasoo, Matt Larsen, and Stephen Herbein.
 | LLNL-CODE-663824.
 | All rights reserved.
 
 This file is part of the zfp library.
-For details, see http://computing.llnl.gov/casc/zfp/.
+For details, see http://zfp.llnl.gov.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
