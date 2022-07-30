@@ -8,7 +8,8 @@ Change Log
 This release is not ABI compatible with prior releases due to numerous changes
 to function signatures and data structures like `zfp_field`.  However, few of
 the API changes, other than to the cfp C API for compressed arrays, should
-impact existing code.
+impact existing code.  Note that numerous header files have been renamed or
+moved relative to prior versions.
 
 ### Added
 
@@ -30,7 +31,7 @@ impact existing code.
 
 ### Changed
 
-- Headers from `array/`, `cfp/include`, and `include/` have been renamed
+- Headers from `array/`, `cfp/include/`, and `include/` have been renamed
   and reorganized into a common `include/` directory.
   - The libzfp API is now confined to `zfp.h`, `zfp.hpp`, and `zfp.mod`
     for C, C++, and Fortran bindings, respectively.  These all appear in
@@ -134,7 +135,7 @@ impact existing code.
 
 - Execution policy now applies to both compression and decompression.
 - Compressed array accessors now return Scalar type instead of
-  const Scalar& to avoid stale references to evicted cache lines.
+  `const Scalar&` to avoid stale references to evicted cache lines.
 
 ### Fixed
 
@@ -320,7 +321,7 @@ not backward compatible with previous versions of zfp.
 ### Fixed
 
 - Rare bug caused by exponent underflow in blocks with no normal and some
-  denormal numbers.
+  subnormal numbers.
 
 ---
 
