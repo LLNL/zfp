@@ -131,7 +131,7 @@ Regardless of the settings below, |libzfp| will always be built.
 
 .. c:macro:: BUILD_CFP
 
-  Build |libcfp| for C bindings to compressed arrays.
+  Build |libcfp| for C bindings to the compressed-array classes.
   Default: off.
 
 
@@ -225,7 +225,9 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   0 or OFF to disable OpenMP support.  For GNU builds, OpenMP is disabled by
   default.  Set this macro to 1 or ON to enable OpenMP support.  See also
   OMPFLAGS in :file:`Config` in case the compiler does not recognize
-  :code:`-fopenmp`.  NOTE: clang currently does not support OpenMP on macOS.
+  ``-fopenmp``.  For example, Apple clang requires
+  ``OMPFLAGS=-Xclang -fopenmp``, ``LDFLAGS=-lomp``, and an installation of
+  ``libomp``.
   CMake default: on.
   GNU make default: off.
 
@@ -334,8 +336,9 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 .. c:macro:: BIT_STREAM_WORD_TYPE
 
   Unsigned integer type used for buffering bits.  Wider types tend to give
-  higher performance at the expense of lower bit rate granularity.  For
-  portability of compressed files between little and big endian platforms,
+  higher performance at the expense of lower
+  :ref:`bit rate granularity <q-granularity>`.  For portability of compressed
+  files between little and big endian platforms,
   :c:macro:`BIT_STREAM_WORD_TYPE` should be set to :c:type:`uint8`.
   Default: :c:type:`uint64`.
 
