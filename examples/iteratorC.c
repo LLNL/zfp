@@ -8,7 +8,7 @@ void print1(cfp_ptr1d p, size_t n)
   const cfp_array1d_api _ = cfp.array1d;
 
   for (i = 0; i < n; i++)
-    printf("%e\n", _.reference.get(_.pointer.ref_at(p, i)));
+    printf("%g\n", _.reference.get(_.pointer.ref_at(p, i)));
 }
 
 void print2(cfp_ptr2d p, size_t n)
@@ -16,7 +16,7 @@ void print2(cfp_ptr2d p, size_t n)
   const cfp_array2d_api _ = cfp.array2d;
 
   while (n--) {
-    printf("%e\n", _.reference.get(_.pointer.ref(p)));
+    printf("%g\n", _.reference.get(_.pointer.ref(p)));
     p = _.pointer.inc(p);
   }
 }
@@ -27,7 +27,7 @@ void print3(cfp_iter1d begin, cfp_iter1d end)
   cfp_iter1d p;
 
   for (p = begin; !_.iterator.eq(p, end); p = _.iterator.inc(p))
-    printf("%e\n", _.reference.get(_.iterator.ref(p)));
+    printf("%g\n", _.reference.get(_.iterator.ref(p)));
 }
 
 int main()
@@ -75,7 +75,7 @@ int main()
   /* pointer arithmetic */
   pb2 = _2d.reference.ptr(_2d.iterator.ref(_2d.begin(a)));
   pe2 = _2d.reference.ptr(_2d.iterator.ref(_2d.end(a)));
-  printf("%lu * %lu = %ld\n", (unsigned long)_2d.size_x(a), (unsigned long)_2d.size_y(a), (long)_2d.pointer.distance(pe2, pb2));
+  printf("%lu * %lu = %ld\n", (unsigned long)_2d.size_x(a), (unsigned long)_2d.size_y(a), (long)_2d.pointer.distance(pb2, pe2));
 
   /* some fun with 3D arrays */
   b = _3d.ctor(7, 2, 5, 64.0, 0, 0);
@@ -91,7 +91,7 @@ int main()
   /* pointer arithmetic */
   pb3 = _3d.reference.ptr(_3d.iterator.ref(_3d.begin(b)));
   pe3 = _3d.reference.ptr(_3d.iterator.ref(_3d.end(b)));
-  printf("%lu * %lu * %lu = %ld\n", (unsigned long)_3d.size_x(b), (unsigned long)_3d.size_y(b), (unsigned long)_3d.size_z(b), (long)_3d.pointer.distance(pe3, pb3));
+  printf("%lu * %lu * %lu = %ld\n", (unsigned long)_3d.size_x(b), (unsigned long)_3d.size_y(b), (unsigned long)_3d.size_z(b), (long)_3d.pointer.distance(pb3, pe3));
 
   return 0;
 }
