@@ -6,8 +6,8 @@ forward Euler finite difference solution to the heat equation on a 2D grid
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 #include "zfp/array.h"
+
 #define _ (CFP_NAMESPACE.array2d)
 
 #define MAX(x, y) (((nx) > (ny)) ? (nx) : (ny))
@@ -103,9 +103,9 @@ time_step_indexed(double* u, const constants* c)
   size_t i, x, y;
   for (y = 1; y < c->ny - 1; y++)
     for (x = 1; x < c->nx - 1; x++) {
-      double uxx = (u[y*c->nx + (x - 1)] - 2 * u[y*c->nx + x] + u[y*c->nx + (x + 1)]) / (c->dx * c->dx);
-      double uyy = (u[(y - 1)*c->nx + x] - 2 * u[y*c->nx + x] + u[(y + 1)*c->nx + x]) / (c->dy * c->dy);
-      du[y*c->nx + x] = c->dt * c->k * (uxx + uyy);
+      double uxx = (u[(x - 1) + c->nx * y] - 2 * u[x + c->nx * y] + u[(x + 1) + c->nx * y]) / (c->dx * c->dx);
+      double uyy = (u[x + c->nx * (y - 1)] - 2 * u[x + c->nx * y] + u[x + c->nx * (y + 1)]) / (c->dy * c->dy);
+      du[x + c->nx * y] = c->dt * c->k * (uxx + uyy);
     }
   /* take forward Euler step */
   for (i = 0; i < c->nx * c->ny; i++)
@@ -142,7 +142,7 @@ solve(double* u, const constants* c)
   double t;
 
   /* initialize u with point heat source (u is assumed to be zero initialized) */
-  u[c->y0*c->nx + c->x0] = 1;
+  u[c->x0 + c->nx * c->y0] = 1;
 
   /* iterate until final time */
   for (t = 0; t < c->tfinal; t += c->dt) {
@@ -175,7 +175,7 @@ total(const double* u, size_t nx, size_t ny)
   size_t x, y;
   for (y = 1; y < ny - 1; y++)
     for (x = 1; x < nx - 1; x++)
-      s += u[y*nx + x];
+      s += u[x + nx * y];
   return s;
 }
 
@@ -186,9 +186,9 @@ error_compressed(const cfp_array2d u, const constants* c, double t)
   double e = 0;
   size_t x, y;
   for (y = 1; y < c->ny - 1; y++) {
-    double py = c->dy * (y - c->y0);
+    double py = c->dy * ((int)y - (int)c->y0);
     for (x = 1; x < c->nx - 1; x++) {
-      double px = c->dx * (x - c->x0);
+      double px = c->dx * ((int)x - (int)c->x0);
       double f = _.get(u, x, y);
       double g = c->dx * c->dy * exp(-(px * px + py * py) / (4 * c->k * t)) / (4 * c->pi * c->k * t);
       e += (f - g) * (f - g);
@@ -204,10 +204,10 @@ error(const double* u, const constants* c, double t)
   double e = 0;
   size_t x, y;
   for (y = 1; y < c->ny - 1; y++) {
-    double py = c->dy * (y - c->y0);
+    double py = c->dy * ((int)y - (int)c->y0);
     for (x = 1; x < c->nx - 1; x++) {
-      double px = c->dx * (x - c->x0);
-      double f = u[y*c->nx + x];
+      double px = c->dx * ((int)x - (int)c->x0);
+      double f = u[x + c->nx * y];
       double g = c->dx * c->dy * exp(-(px * px + py * py) / (4 * c->k * t)) / (4 * c->pi * c->k * t);
       e += (f - g) * (f - g);
     }
@@ -220,22 +220,23 @@ usage()
 {
   fprintf(stderr, "Usage: diffusionC [options]\n");
   fprintf(stderr, "Options:\n");
+  fprintf(stderr, "-b <blocks> : use 'blocks' 4x4 blocks of cache\n");
+  fprintf(stderr, "-i : traverse arrays using iterators\n");
   fprintf(stderr, "-n <nx> <ny> : number of grid points\n");
+  fprintf(stderr, "-r <rate> : use compressed arrays with given compressed bits/value\n");
   fprintf(stderr, "-t <nt> : number of time steps\n");
-  fprintf(stderr, "-r <rate> : use compressed arrays with 'rate' bits/value\n");
-  fprintf(stderr, "-c <blocks> : use 'blocks' 4x4 blocks of cache\n");
   return EXIT_FAILURE;
 }
 
 int main(int argc, char* argv[])
 {
-  int nx = 100;
-  int ny = 100;
+  int nx = 128;
+  int ny = 128;
   int nt = 0;
+  int cache_size = 0;
   double rate = 64;
-  int iterator = 0;
-  int compression = 0;
-  int cache = 0;
+  zfp_bool iterator = zfp_false;
+  zfp_bool compression = zfp_false;
   constants* c = 0;
   double sum;
   double err;
@@ -246,26 +247,30 @@ int main(int argc, char* argv[])
     if (argv[i][0] != '-' || argv[i][2])
       return usage();
     switch(argv[i][1]) {
+      case 'b':
+        if (++i == argc || sscanf(argv[i], "%d", &cache_size) != 1)
+          return usage();
+        cache_size *= (int)(4 * 4 * sizeof(double));
+        break;
       case 'i':
-        iterator = 1;
+        iterator = zfp_true;
         break;
       case 'n':
         if (++i == argc || sscanf(argv[i], "%d", &nx) != 1 ||
             ++i == argc || sscanf(argv[i], "%d", &ny) != 1)
           return usage();
         break;
+      case 'r':
+        if (++i == argc || sscanf(argv[i], "%lf", &rate) != 1)
+          return usage();
+        compression = zfp_true;
+        break;
       case 't':
         if (++i == argc || sscanf(argv[i], "%d", &nt) != 1)
           return usage();
         break;
-      case 'r':
-        if (++i == argc || sscanf(argv[i], "%lf", &rate) != 1)
-          return usage();
-        compression = 1;
-        break;
-      case 'c':
-        if (++i == argc || sscanf(argv[i], "%d", &cache) != 1)
-          return usage();
+      default:
+        return usage();
     }
   }
 
@@ -274,7 +279,7 @@ int main(int argc, char* argv[])
 
   if (compression) {
     /* solve problem using compressed arrays */
-    cfp_array2d u = _.ctor(nx, ny, rate, 0, cache * 4 * 4 * sizeof(double));
+    cfp_array2d u = _.ctor(nx, ny, rate, 0, cache_size);
     double t = solve_compressed(u, c, iterator);
     sum = total_compressed(u);
     err = error_compressed(u, c, t);
