@@ -33,7 +33,7 @@ test:
 # clean all
 clean:
 	@cd src; $(MAKE) clean
-	@cd src; $(MAKE) clean
+	@cd cfp; $(MAKE) clean
 	@cd fortran; $(MAKE) clean
 	@cd utils; $(MAKE) clean
 	@cd tests; $(MAKE) clean
