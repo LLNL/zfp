@@ -4,7 +4,7 @@ Regression Tests
 ================
 
 The :program:`testzfp` program performs basic regression testing by exercising
-a small but important subset of :file:`libzfp` and the compressed array
+a small but important subset of |libzfp| and the compressed-array
 classes.  It serves as a sanity check that |zfp| has been built properly.
 These tests assume the default compiler settings, i.e., with none of the
 settings in :file:`Config` or :file:`CMakeLists.txt` modified.  By default,

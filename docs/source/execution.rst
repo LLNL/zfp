@@ -33,6 +33,7 @@ its :ref:`high-level C API <hl-api>`.
   Parallel compression is not supported via the :ref:`low-level API <ll-api>`,
   which ignores all execution policy settings and always executes in serial.
 
+.. _exec-policies:
 
 Execution Policies
 ------------------

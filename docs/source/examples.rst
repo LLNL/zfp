@@ -3,7 +3,7 @@
 Code Examples
 =============
 
-The :file:`examples` directory includes seven programs that make use of the
+The :file:`examples` directory includes ten programs that make use of the
 compressor.
 
 .. _ex-simple:
@@ -185,7 +185,7 @@ stream.  The program takes one optional argument::
     inplace [tolerance]
 
 which specifies the fixed-accuracy absolute tolerance to use during
-compression.  Please see :ref:`FAQ #19 <q-inplace>` for more on the
+compression.  Please see FAQ :ref:`#19 <q-inplace>` for more on the
 limitations of in-place compression.
 
 .. _ex-iterators:

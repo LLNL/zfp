@@ -163,7 +163,7 @@ in the base class.
 .. cpp:function:: double array::set_rate(double rate)
 
   Set desired compression rate in bits per value.  Return the closest rate
-  supported.  See :ref:`FAQ #12 <q-granularity>` and :ref:`FAQ #18 <q-rate>`
+  supported.  See FAQ :ref:`#12 <q-granularity>` and FAQ :ref:`#18 <q-rate>`
   for discussions of the rate granularity.  This method destroys the previous
   contents of the array.
 
@@ -271,28 +271,28 @@ in the base class.
 
 .. cpp:function:: iterator array::begin()
 
-  Return mutable iterator to beginning of array.
+  Return random-access mutable iterator to beginning of array.
 
 ----
 
 .. cpp:function:: iterator array::end()
 
-  Return mutable iterator to end of array.  As with STL iterators, the end
-  points to a virtual element just past the last valid array element.
+  Return random-access mutable iterator to end of array.  As with STL iterators,
+  the end points to a virtual element just past the last valid array element.
 
 ----
 
 .. cpp:function:: const_iterator array::begin() const
 .. cpp:function:: const_iterator array::cbegin() const
 
-  Return const iterator to beginning of array.
+  Return random-access const iterator to beginning of array.
 
 ----
 
 .. cpp:function:: const_iterator array::end() const
 .. cpp:function:: const_iterator array::cend() const
 
-  Return const iterator to end of array.
+  Return random-access const iterator to end of array.
 
 .. note::
   Const :ref:`references <references>`, :ref:`pointers <pointers>`, and
@@ -515,10 +515,10 @@ with only a few differences:
 
 - Read-only arrays are templated on a block index class that encodes the
   bit offset to each block of data.  Multiple index classes are available
-  that trade compactness and speed of access.  The default index represents
-  64-bit offsets using only 16 bits of amortized storage per block.  An
-  "implicit" index is available for fixed-rate read-only arrays, which
-  computes rather than stores offsets to equal-sized blocks.
+  that trade compactness and speed of access.  The default :cpp:class:`hybrid4`
+  index represents 64-bit offsets using only 24 bits of amortized storage per
+  block.  An "implicit" index is available for fixed-rate read-only arrays,
+  which computes rather than stores offsets to equal-sized blocks.
 
 .. note::
   Whereas variable-rate compression almost always improves accuracy per bit
@@ -738,10 +738,11 @@ Additional methods are documented below.
 
 ----
 
-.. cpp:function:: double const_array::set_params(uint minbits, uint maxbits, uint maxprec, int minexp)
+.. cpp:function:: bool const_array::set_params(uint minbits, uint maxbits, uint maxprec, int minexp)
 
   Set :ref:`expert mode <mode-expert>` parameters.  This method destroys the
-  previous contents of the array.
+  previous contents of the array.  Return whether the codec supports the
+  combination of parameters.
 
 ----
 

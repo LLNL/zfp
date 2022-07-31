@@ -250,7 +250,7 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 
   **Experimental feature**.  By default, |zfp| coefficients are truncated,
   not rounded, which can result in biased errors (see
-  :ref:`FAQ #30 <q-err-dist>`).  To counter this, two rounding modes are
+  FAQ :ref:`#30 <q-err-dist>`).  To counter this, two rounding modes are
   available: :code:`ZFP_ROUND_FIRST` (round during compression; analogous
   to mid-tread quantization) and :code:`ZFP_ROUND_LAST` (round during
   decompression; analogous to mid-riser quantization).  With

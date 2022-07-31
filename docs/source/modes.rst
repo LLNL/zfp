@@ -92,7 +92,7 @@ the block.  The four constraints are as follows:
   Note that to achieve a certain accuracy in the decompressed values, the
   :c:member:`zfp_stream.minexp` value has to be conservatively lowered since
   |zfp|'s inverse transform may magnify the error (see also
-  :ref:`FAQs #20-22 <q-relerr>`).
+  FAQs :ref:`#20-22 <q-relerr>`).
 
 Care must be taken to allow all constraints to be met, as encoding
 terminates as soon as a single constraint is violated (except

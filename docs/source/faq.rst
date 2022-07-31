@@ -141,7 +141,7 @@ of dimensions *nx* |times| *ny*.  Can I use a 3D |zfp| array to store this as::
   array3d velocity(2, nx, ny, rate);
 
 A: Although this could be done, zfp assumes that consecutive values are
-related.  The two velocity components (*vx*, *vy*) are almost suredly
+related.  The two velocity components (*vx*, *vy*) are almost assuredly
 independent and would not be correlated.  This will severely hurt the
 compression rate or quality.  Instead, consider storing *vx* and *vy* as
 two separate 2D scalar arrays::
@@ -501,7 +501,7 @@ Q15: *Must I use the same parameters during compression and decompression?*
 A: Not necessarily.  When decompressing one block at a time, it is possible
 to use more tightly constrained :c:type:`zfp_stream` parameters during
 decompression than were used during compression.  For instance, one may use a
-larger :c:member:`zfp_stream.minbits`, smaller :c:member:`zfp_stream.maxbits`,
+smaller :c:member:`zfp_stream.maxbits`,
 smaller :c:member:`zfp_stream.maxprec`, or larger :c:member:`zfp_stream.minexp`
 during decompression to process fewer compressed bits than are stored, and to
 decompress the array more quickly at a lower precision.  This may be useful
@@ -718,8 +718,8 @@ compression, but with several caveats and restrictions:
      This is usually easily accomplished in fixed-rate mode, although the
      expert interface also allows guarding against this in all modes using the
      :c:member:`zfp_stream.maxbits` parameter.  This parameter should be set to
-     :code:`maxbits = 4^d * 8 * sizeof(type)`, where *d* is the array
-     dimensionality (1, 2, or 3) and where *type* is the scalar type of the
+     :code:`maxbits = 4^d * sizeof(type) * 8`, where *d* is the array
+     dimensionality (1, 2, 3, or 4) and where *type* is the scalar type of the
      uncompressed data.
 
   4. No header information may be stored in the compressed stream.
@@ -1005,7 +1005,7 @@ We recommend experimenting with tolerances and evaluating what error levels
 are appropriate for each application, e.g., by starting with a low,
 conservative tolerance and successively doubling it.  The distribution of
 errors produced by |zfp| is approximately Gaussian (see
-:ref:`FAQ #30 <q-err-dist>`), so even if the maximum error may seem large at
+:ref:`Q30 <q-err-dist>`), so even if the maximum error may seem large at
 an individual grid point, most errors tend to be much smaller and tightly
 clustered around zero.
 
@@ -1121,7 +1121,7 @@ switching from uncompressed to compressed arrays.
 
 Q27: *Do compressed arrays use reference counting?*
 
-A: It is possible to reference compressed  array elements via proxy
+A: It is possible to reference compressed-array elements via proxy
 :ref:`references <references>` and :ref:`pointers <pointers>`, through
 :ref:`iterators <iterators>`, and through :ref:`views <views>`.  Such
 indirect references are valid only during the lifetime of the underlying
@@ -1142,10 +1142,11 @@ and not known a priori.  The function :c:func:`zfp_stream_maximum_size`
 returns a buffer size that is guaranteed to be large enough.  This function,
 which should be called *after* setting the desired compression mode and
 parameters, computes the largest possible compressed data size based on the
-current settings and array size.  Note that by the pigeonhole principle, any
-(lossless) compressor must expand at least one input, so this buffer size may
-be larger than the size of the uncompressed input data.  :c:func:`zfp_compress`
-returns the actual number of bytes of compressed storage.
+current compression settings and array size.  Note that by the pigeonhole
+principle, any (lossless) compressor must expand at least one input, so this
+buffer size may be larger than the size of the uncompressed input data.
+:c:func:`zfp_compress` returns the actual number of bytes of compressed
+storage.
 
 When compressing individual blocks using the :ref:`low-level API <ll-api>`,
 it is useful to know the maximum number of bits that a compressed block
@@ -1182,7 +1183,7 @@ Q29: *How can I print array values?*
 Consider the following seemingly reasonable piece of code::
 
   #include <cstdio>
-  #include "zfparray1.h"
+  #include "zfp/array1.hpp"
 
   int main()
   {
@@ -1248,7 +1249,7 @@ error distribution is normal and because the worst-case error is often much
 larger than errors observed in practice, it is common that measured errors
 are far smaller than the absolute error tolerance specified in
 :ref:`fixed-accuracy mode <mode-fixed-accuracy>`
-(see :ref:`FAQ #22 <q-abserr>`).
+(see :ref:`Q22 <q-abserr>`).
 
 It is known that |zfp| errors can be slightly biased and correlated (see
 :numref:`zfp-rounding` and the third paper above).  Recent work has been

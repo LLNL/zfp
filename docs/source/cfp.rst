@@ -795,7 +795,7 @@ and are themselves not modified by these functions.
 Iterators
 ---------
 
-|cfp| iterators wrap the C++ :ref:`iterator <iterators>` classes.
+|cfp| random-access iterators wrap the C++ :ref:`iterator <iterators>` classes.
 All iterators are :ref:`passed by value <cfp_rpi_value_semantics>` and
 are themselves not modified by these functions. Iterators are constructed 
 similar to C++ iterators via :c:func:`cfp.array.begin` and 

@@ -5,15 +5,14 @@
 High-Level C API
 ================
 
-The C API is broken down into a :ref:`high-level API <hl-api>`,
-which handles compression of entire arrays, and a
-:ref:`low-level-api <ll-api>` for processing individual blocks
-and managing the underlying bit stream.
-
-The high-level API should be the API of choice for applications that
-compress and decompress entire arrays.  A :ref:`low-level API <ll-api>`
-exists for processing individual, possibly partial blocks as well as
-reduced-precision integer data less than 32 bits wide.
+The |libzfp| C API provides functionality for sequentially compressing and
+decompressing whole integer and floating-point arrays or single blocks.  It
+is broken down into a :ref:`high-level API <hl-api>` and a
+:ref:`low-level API <ll-api>`.  The high-level API handles compression of
+entire arrays and supports a variety of back-ends (e.g., serial, OpenMP).
+The low-level API exists for processing individual, possibly partial blocks
+as well as reduced-precision integer data less than 32 bits wide.
+Both C APIs are declared in :file:`zfp.h`.
 
 The following sections are available:
 
@@ -43,11 +42,20 @@ Macros
 
   Macros identifying the |zfp| library version.  :c:macro:`ZFP_VERSION` is
   a single integer constructed from the previous four macros
-  (see :c:macro:`ZFP_MAKE_VERSION`).  :c:macro:`ZFP_VERSION_STRING` is a
-  string literal (see :c:macro:`ZFP_MAKE_VERSION_STRING`).  See also
+  (see :c:macro:`ZFP_MAKE_VERSION` and :c:macro:`ZFP_MAKE_FULLVERSION`).
+  :c:macro:`ZFP_VERSION_STRING` is a string literal (see
+  :c:macro:`ZFP_MAKE_VERSION_STRING`).  See also
   :c:data:`zfp_library_version` and :c:data:`zfp_version_string`.  
   :c:macro:`ZFP_VERSION_TWEAK` is new as of |zfp| |verrelease| and used 
   to mark intermediate develop versions.
+
+----
+
+.. c:macro:: ZFP_VERSION_DEVELOP
+
+  Macro identifying that the current version is an intermediate develop
+  version as opposed to an official release.  This macro is undefined for
+  official releases.  Available as of |zfp| |verrelease|.
 
 ----
 
@@ -67,7 +75,7 @@ Macros
 
   Utility macros for constructing :c:macro:`ZFP_VERSION` and
   :c:macro:`ZFP_VERSION_STRING`, respectively.  Includes tweak version 
-  used by intermediate develop versions. Available as of
+  used by intermediate develop versions.  Available as of
   |zfp| |verrelease|, these macros may be used by applications to test
   for a certain |zfp| version number, e.g.,
   :code:`#if ZFP_VERSION >= ZFP_MAKE_FULLVERSION(1, 0, 0, 1)`.
@@ -78,14 +86,6 @@ Macros
 
   Macro identifying the version of the compression CODEC.  See also
   :c:data:`zfp_codec_version`.
-
-----
-
-.. c:macro:: ZFP_DEVELOP
-
-  Macro identifying that the current version is an intermediate develop 
-  version as opposed to an official release. Available as of |zfp| 
-  |verrelease|.
 
 ----
 
@@ -138,6 +138,20 @@ for how to read and write header information.
 
   Full header information (bitwise OR of all :code:`ZFP_HEADER` constants).
 
+----
+
+.. c:macro:: ZFP_MAGIC_BITS
+.. c:macro:: ZFP_META_BITS
+.. c:macro:: ZFP_MODE_SHORT_BITS
+.. c:macro:: ZFP_MODE_LONG_BITS
+.. c:macro:: ZFP_HEADER_MAX_BITS
+.. c:macro:: ZFP_MODE_SHORT_MAX
+
+  Number of bits used by each portion of the header.  These macros are
+  primarily informational and should not be accessed by the user through
+  the high-level API.  For most common compression parameter settings,
+  only :c:macro:`ZFP_MODE_SHORT_BITS` bits of header information are stored
+  to encode the mode (see :c:func:`zfp_stream_mode`).
 
 ----
 
@@ -185,22 +199,9 @@ bitwise ORed together.  Use :c:macro:`ZFP_DATA_ALL` to count all storage used.
 
 ----
 
-.. c:macro:: ZFP_MAGIC_BITS
-.. c:macro:: ZFP_META_BITS
-.. c:macro:: ZFP_MODE_SHORT_BITS
-.. c:macro:: ZFP_MODE_LONG_BITS
-.. c:macro:: ZFP_HEADER_MAX_BITS
-.. c:macro:: ZFP_MODE_SHORT_MAX
-
-  Number of bits used by each portion of the header.  These macros are
-  primarily informational and should not be accessed by the user through
-  the high-level API.  For most common compression parameter settings,
-  only :c:macro:`ZFP_MODE_SHORT_BITS` bits of header information are stored
-  to encode the mode (see :c:func:`zfp_stream_mode`).
-
-.. c:macro: ZFP_ROUND_FIRST
-.. c:macro: ZFP_ROUND_NEVER
-.. c:macro: ZFP_ROUND_LAST
+.. c:macro:: ZFP_ROUND_FIRST
+.. c:macro:: ZFP_ROUND_NEVER
+.. c:macro:: ZFP_ROUND_LAST
 
   Available rounding modes for :c:macro:`ZFP_ROUNDING_MODE`, which
   specifies at build time how |zfp| performs rounding in lossy compression
@@ -240,15 +241,16 @@ Types
   ::
 
     typedef struct {
-      zfp_exec_policy policy; // execution policy (serial, omp, ...)
+      zfp_exec_policy policy; // execution policy (serial, omp, cuda, ...)
       void* params;           // execution parameters
     } zfp_execution;
 
 .. warning::
-    As of |zfp| |verrelease| `zfp_execution` replaces `zfp_exec_params` with  a 
-    ``void *`` to the associated `zfp_exec_params` type (e.g. 
-    `zfp_exec_params_omp`) to limit ABI-breaking changes due to future 
-    extensions to |zfp| execution policies.
+    As of |zfp| |verrelease| :c:type:`zfp_execution` replaces the former
+    :code:`zfp_exec_params` with a :code:`void*` to the associated
+    :code:`zfp_exec_params` type (e.g., :c:type:`zfp_exec_params_omp`) to
+    limit ABI-breaking changes due to future extensions to |zfp| execution
+    policies.
 
 ----
 
@@ -270,13 +272,13 @@ Types
 
   Execution parameters for OpenMP parallel compression.  These are
   initialized to default values.  When nonzero, they indicate the number
-  of threads to request for parallel compression and the number of 1D
-  blocks to assign to each thread when compressing 1D arrays.
+  of threads to request for parallel compression and the number of
+  consecutive blocks to assign to each thread.
   ::
 
     typedef struct {
       uint threads;    // number of requested threads
-      uint chunk_size; // number of blocks per chunk (1D only)
+      uint chunk_size; // number of blocks per chunk
     } zfp_exec_params_omp;
 
 ----
@@ -323,10 +325,10 @@ Types
 
 .. c:type:: zfp_type
 
-  Enumerates the scalar types supported by the compressor, and is used to
-  describe the uncompressed array.  The compressor and decompressor must use
-  the same :c:type:`zfp_type`, e.g., one cannot compress doubles and decompress
-  to floats or integers.
+  Enumerates the scalar types supported by the compressor and describes the
+  uncompressed array.  The compressor and decompressor must use the same
+  :c:type:`zfp_type`, e.g., one cannot compress doubles and decompress to
+  floats or integers.
   ::
 
     typedef enum {
@@ -579,7 +581,7 @@ Compression Parameters
   and indirectly governs the relative error.  The actual precision is
   returned, e.g., in case the desired precision is out of range.  To
   preserve a certain floating-point mantissa or integer precision in the
-  decompressed data, see :ref:`FAQ #21 <q-lossless>`.
+  decompressed data, see FAQ :ref:`#21 <q-lossless>`.
 
 ----
 
@@ -597,7 +599,7 @@ Compression Parameters
   :ref:`fixed-accuracy mode <mode-fixed-accuracy>`.  The tolerance ensures
   that values in the decompressed array differ from the input array by no
   more than this tolerance (in all but exceptional circumstances; see
-  :ref:`FAQ #17 <q-tolerance>`).  This compression mode should be used only
+  FAQ :ref:`#17 <q-tolerance>`).  This compression mode should be used only
   with floating-point (not integer) data.
 
 ----
@@ -612,7 +614,7 @@ Compression Parameters
   variable-length encoding can be used to economically encode and decode
   the compression parameters, which is especially important if the parameters
   are to vary spatially over small regions.  Such spatially adaptive coding
-  would have to be implemented via the low-level API.
+  would have to be implemented via the :ref:`low-level API <ll-api>`.
 
 ----
 

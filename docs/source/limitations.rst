@@ -5,8 +5,8 @@
 Limitations
 ===========
 
-|zfp| has evolved from a research prototype to a library that is approaching
-production readiness.  However, the API and even the compression codec are
+|zfp| has evolved over the years from a research prototype to a production
+quality library.  However, the API and even the compression codec are
 still undergoing changes as new important features are added.
 
 Below is a list of known limitations of the current version of |zfp|.
@@ -47,10 +47,8 @@ that will address some of these limitations.
   are implemented).  These proxy references and pointers can, however, safely
   be passed to functions and used where regular references and pointers can.
 
-- Although the current version of |zfp| supports :ref:`iterators <iterators>`,
-  :ref:`pointers <pointers>`, and :ref:`references <references>` to array
-  elements, 'const' versions of these accessors are not yet available for
-  read-only access.
+- The :ref:`read-only array classes <carray_classes>` do not yet support
+  (de)serialization.
 
 - |zfp| can potentially provide higher precision than conventional float
   and double arrays, but the interface currently does not expose this.
@@ -63,6 +61,8 @@ that will address some of these limitations.
   instance, compressed 64-bit-per-value storage of 128-bit quad-precision
   numbers could greatly improve the accuracy of double-precision
   floating-point computations using the same amount of storage.
+  The |zfp| compressed-array classes do not yet support integer scalar
+  types.
 
 - Complex-valued arrays are not directly supported.  Real and imaginary
   components must be stored as separate arrays, which may result in lost
@@ -77,15 +77,11 @@ that will address some of these limitations.
   The CUDA implementation is further subject to
   :ref:`additional limitations <cuda-limitations>`.
 
-- As of version |4drelease|, |zfp| supports compression and decompression
-  of 4D arrays.  However, |zfp| does not yet implement a 4D compressed
-  array C++ class.  This will be added in the near future.
-
-- The :ref:`C wrappers <cfp>` for |zfp|'s compressed arrays support only
-  a subset of the C++ API.  |zfp| |4darrrelease| adds support for proxy
+- The |cfp| :ref:`C wrappers <cfp>` for |zfp|'s compressed arrays support
+  only a subset of the C++ API.  |zfp| |4darrrelease| adds support for proxy
   references, pointers, and iterators, but views and read-only arrays are
-  not yet supported,
+  not yet supported.  Furthermore, |cfp| works only with the |zfp| codec.
 
-- The Python and Fortran bindings do not yet support compressed arrays.
-  Moreover, only a select subset of the :ref:`high-level API <hl-api>`
-  is available via Python.
+- The Python and Fortran bindings do not yet support |zfp|'s compressed-array
+  classes.  Moreover, only a select subset of the
+  :ref:`high-level API <hl-api>` is available via Python.

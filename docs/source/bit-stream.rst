@@ -183,7 +183,8 @@ Functions
 
 .. c:function:: size_t stream_capacity(const bitstream* stream)
 
-  Return byte size of memory buffer associated with *stream*.
+  Return byte size of memory buffer associated with *stream* specified
+  in :c:func:`stream_open`.
 
 ----
 
@@ -196,6 +197,7 @@ Functions
 .. c:function:: uint stream_write_bit(bitstream* stream, uint bit)
 
   Write single *bit* to *stream*.  *bit* must be one of 0 or 1.
+  The value of *bit* is returned.
 
 ----
 
@@ -259,9 +261,9 @@ Functions
 
 .. c:function:: bitstream_count stream_align(bitstream* stream)
 
-  Align stream on next word boundary by skipping bits.  No skipping is
-  done if the stream is already word aligned.  Return the number of
-  skipped bits, if any.
+  Align stream on next word boundary by skipping bits, i.e., without reading
+  them.  No skipping is done if the stream is already word aligned.  Return
+  the number of skipped bits, if any.
 
 ----
 
@@ -297,5 +299,5 @@ Functions
 .. c:function:: int stream_set_stride(bitstream* stream, size_t block, ptrdiff_t delta)
 
   Set block size, *block*, in number of words and spacing, *delta*, in number
-  of blocks for strided access.  Return nonzero upon success.  Requires
-  :c:macro:`BIT_STREAM_STRIDED`.
+  of blocks for :ref:`strided access <bs-strides>`.  Return nonzero upon
+  success.  Requires :c:macro:`BIT_STREAM_STRIDED`.
