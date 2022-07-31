@@ -65,7 +65,7 @@ module zfp
   integer, protected, bind(c, name="zFORp_codec_version") :: zFORp_codec_version
   data zFORp_codec_version/const_zFORp_codec_version/
 
-  integer, parameter :: const_zFORp_library_version = 85 ! 0x55
+  integer, parameter :: const_zFORp_library_version = 4096 ! 0x1000
   integer, protected, bind(c, name="zFORp_library_version") :: zFORp_library_version
   data zFORp_library_version/const_zFORp_library_version/
 
