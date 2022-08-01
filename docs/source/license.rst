@@ -3,14 +3,8 @@
 License
 =======
 
-| Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
-| Produced at the Lawrence Livermore National Laboratory.
-| Written by Peter Lindstrom, Garrett Morrison, Markus Salasoo, Matt Larsen, and Stephen Herbein.
-| LLNL-CODE-663824.
+| Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC
 | All rights reserved.
-
-This file is part of the zfp library.
-For details, see http://zfp.llnl.gov.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -39,24 +33,27 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Additional BSD Notice
+Notice
+------
 
-1. This notice is required to be provided under our contract with the U.S.
-Department of Energy (DOE).  This work was produced at Lawrence Livermore
-National Laboratory under Contract No. DE-AC52-07NA27344 with the DOE.
+This work was produced under the auspices of the U.S. Department of
+Energy by Lawrence Livermore National Laboratory under Contract
+DE-AC52-07NA27344.
 
-2. Neither the United States Government nor Lawrence Livermore National
-Security, LLC nor any of their employees, makes any warranty, express or
-implied, or assumes any liability or responsibility for the accuracy,
-completeness, or usefulness of any information, apparatus, product, or
-process disclosed, or represents that its use would not infringe
-privately-owned rights.
+This work was prepared as an account of work sponsored by an agency of
+the United States Government. Neither the United States Government nor
+Lawrence Livermore National Security, LLC, nor any of their employees
+makes any warranty, expressed or implied, or assumes any legal liability
+or responsibility for the accuracy, completeness, or usefulness of any
+information, apparatus, product, or process disclosed, or represents that
+its use would not infringe privately owned rights.
 
-3. Also, reference herein to any specific commercial products, process, or
-services by trade name, trademark, manufacturer or otherwise does not
-necessarily constitute or imply its endorsement, recommendation, or
-favoring by the United States Government or Lawrence Livermore National
-Security, LLC.  The views and opinions of authors expressed herein do not
-necessarily state or reflect those of the United States Government or
-Lawrence Livermore National Security, LLC, and shall not be used for
-advertising or product endorsement purposes.
+Reference herein to any specific commercial product, process, or service
+by trade name, trademark, manufacturer, or otherwise does not necessarily
+constitute or imply its endorsement, recommendation, or favoring by the
+United States Government or Lawrence Livermore National Security, LLC.
+
+The views and opinions of authors expressed herein do not necessarily
+state or reflect those of the United States Government or Lawrence
+Livermore National Security, LLC, and shall not be used for advertising
+or product endorsement purposes.
