@@ -1,6 +1,10 @@
 #ifndef ZFP_HPP
 #define ZFP_HPP
 
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC and
+// other zfp project contributors. See the top-level LICENSE file for details.
+// SPDX-License-Identifier: BSD-3-Clause
+
 #include "zfp.h"
 
 // templated C++ wrappers around libzfp low-level C functions

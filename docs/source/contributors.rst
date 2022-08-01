@@ -4,19 +4,21 @@
 Contributors
 ============
 
-* LLNL |zfp| team
+* |zfp| development team
 
   - Peter Lindstrom
   - Garrett Morrison
-  - Markus Salasoo
-  - Matt Larsen
+
+* Major contributors
+
+  - Chuck Atkins
   - Stephen Herbein
+  - Mark Kim
+  - Matt Larsen
   - Mark Miller
+  - Markus Salasoo
+  - David Wade
+  - Haiying Xu
 
-* External contributors
-
-  - Chuck Atkins, Kitware (CMake support)
-  - Stephen Hamilton, Johns Hopkins University (VTK plugin)
-  - Mark Kim, ORNL (original CUDA port)
-  - Amik St-Cyr, Shell (OpenMP compressor)
-  - Eric Suchyta, ORNL (ADIOS plugin)
+For a full list of contributors, see the
+`GitHub Contributors <https://github.com/LLNL/zfp/graphs/contributors>`__ page.

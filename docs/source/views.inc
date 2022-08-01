@@ -54,6 +54,11 @@ iterators.
   traversed using pointers and iterators.  We have
   :code:`view(10, 7) == (&view(0, 0))[87] == view.begin()[97] == view.end()[-2]`.
 
+With the |zfp| |carrrelease| release of
+:ref:`read-only arrays <carray_classes>`, such arrays also support the two
+kinds of immutable views (:code:`const_view` and :code:`private_const_view`).
+The documentation below applies to views into read-only arrays as well.
+
 .. note::
   Like iterators and proxy references and pointers, a view is valid only
   during the lifetime of the array that it references.  **No reference
@@ -192,7 +197,7 @@ the arrays that they reference.
 .. cpp:function:: array3::const_view::const_iterator array3::const_view::cbegin() const
 .. cpp:function:: array4::const_view::const_iterator array4::const_view::cbegin() const
 
-  Const iterator to first element of view.
+  Random-access const iterator to first element of view.
 
 ----
 
@@ -205,7 +210,7 @@ the arrays that they reference.
 .. cpp:function:: array3::const_view::const_iterator array3::const_view::cend() const
 .. cpp:function:: array4::const_view::const_iterator array4::const_view::cend() const
 
-  Const iterator to end of view.
+  Random-access const iterator to end of view.
 
 There are a number of common methods inherited from a base class,
 :code:`preview`, further up the class hierarchy.
@@ -579,7 +584,7 @@ nested view to in effect provide nested array indexing::
 .. cpp:function:: reference array4::nested_view3::operator()(size_t i, size_t j, size_t k)
 .. cpp:function:: reference array4::nested_view4::operator()(size_t i, size_t j, size_t k, size_t l)
 
-  Return reference to a scalar element of a 2D or 3D array.
+  Return reference to a scalar element of a 2D, 3D, or 4D array.
 
 
 .. _slicing:

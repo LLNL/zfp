@@ -16,13 +16,13 @@ best choice varies from one application to another, we suggest allocating
 at least two "layers" of blocks, e.g., 2 |times| (*nx* / 4) |times| (*ny* / 4)
 blocks for 3D arrays, for applications that stream through the array and
 perform stencil computations such as gathering data from neighboring elements.
-This allows limiting the cache misses to compulsory ones.  If the *csize*
+This allows limiting the cache misses to compulsory ones.  If the *cache_size*
 parameter provided to the constructor is set to zero bytes, then a default
 cache size of at least |sqrt|\ *n* blocks is used, where *n* is the total
 number of blocks contained in the array.
 
-The cache size can be set during construction, or can be set at a later
-time via :cpp:func:`array::set_cache_size`.  Note that if *csize* = 0, then
+The cache size can be set during construction, or can be set at a later time
+via :cpp:func:`array::set_cache_size`.  Note that if *cache_size* = 0, then
 the array dimensions must have already been specified for the default size
 to be computed correctly.  When the cache is resized, it is first flushed
 if not already empty.  The cache can also be flushed explicitly if desired

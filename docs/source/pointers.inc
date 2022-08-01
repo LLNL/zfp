@@ -60,6 +60,7 @@ and manipulated there, for instance, by passing the pointer by reference via
 
 As of |zfp| |crpirelease|, const qualified pointers :code:`const_pointer`
 are available, and conceptually are equivalent to :code:`const Scalar*`.
+Pointers are available for :ref:`read-only arrays <carray_classes>` also.
 
 The following operators are defined for proxy pointers.  Below *p* refers
 to the pointer being acted upon.

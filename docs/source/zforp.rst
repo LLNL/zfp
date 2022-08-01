@@ -115,6 +115,12 @@ Non-Enum Constants
 
 ----
 
+.. f:variable:: integer zFORp_version_tweak
+
+  Wraps :c:macro:`ZFP_VERSION_TWEAK`
+
+----
+
 .. f:variable:: integer zFORp_codec_version
 
   Wraps :c:data:`zfp_codec_version`
@@ -671,6 +677,16 @@ Array Metadata
   :p zFORp_field field [in]: Field metadata
   :r byte_size: Number of bytes spanned by field data including gaps (if any)
   :rtype byte_size: integer (kind=8)
+
+----
+
+.. f:function:: zFORp_field_blocks(field)
+
+  Wrapper for :c:func:`zfp_field_blocks`
+
+  :p zFORp_field field [in]: Field metadata
+  :r blocks: Total number of blocks spanned by field
+  :rtype blocks: integer (kind=8)
 
 ----
 

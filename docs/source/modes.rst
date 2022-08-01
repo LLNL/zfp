@@ -58,7 +58,7 @@ the block.  The four constraints are as follows:
 .. c:member:: uint zfp_stream.maxbits
 
   The maximum number of bits used to represent a block.  This parameter
-  sets a hard upper bound on compressed block size, and governs the rate
+  sets a hard upper bound on compressed block size and governs the rate
   in :ref:`fixed-rate mode <mode-fixed-rate>`.  It may also be used as an
   upper storage limit to guard against buffer overruns in combination with
   the accuracy constraints given by :c:member:`zfp_stream.maxprec` and
@@ -92,7 +92,7 @@ the block.  The four constraints are as follows:
   Note that to achieve a certain accuracy in the decompressed values, the
   :c:member:`zfp_stream.minexp` value has to be conservatively lowered since
   |zfp|'s inverse transform may magnify the error (see also
-  :ref:`FAQs #20-22 <q-relerr>`).
+  FAQs :ref:`#20-22 <q-relerr>`).
 
 Care must be taken to allow all constraints to be met, as encoding
 terminates as soon as a single constraint is violated (except
@@ -164,7 +164,7 @@ modes.
 
 .. note::
   Use fixed-rate mode only if you have to bound the compressed size
-  or need random access to blocks.
+  or need read and write random access to blocks.
 
 .. _mode-fixed-precision:
 .. index::

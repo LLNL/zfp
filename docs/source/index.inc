@@ -13,9 +13,9 @@ is constant, and the bit offset to each block can be quickly computed.  For
 variable-rate arrays, the compressed block size is data dependent, and
 additional information must be stored to index the blocks.  Toward this end,
 |zfp| arrays make use of an index class that reports the offset and
-size (in number of bits) of each block.  The |zfp| :cpp:class:`zfp::array`
-and :cpp:class:`zfp::const_array` take such an index class as a template
-parameter.  This index class is new as of |zfp| |carrrelease|, which
+size (in number of bits) of each block.  The :cpp:class:`zfp::array`
+and :cpp:class:`zfp::const_array` classes take such an index class as a
+template parameter.  This index class is new as of |zfp| |carrrelease|, which
 introduced variable-rate arrays.
 
 Because |zfp| is designed primarily for very large arrays, the bit offset

@@ -72,7 +72,7 @@ public:
   }
 
   // destructor
-  ~verbatim() { delete[] data; }
+  ~verbatim() { zfp::internal::deallocate(data); }
 
   // assignment operator--performs a deep copy
   verbatim& operator=(const verbatim& index)
@@ -168,7 +168,7 @@ public:
   }
 
   // destructor
-  ~hybrid4() { delete[] data; }
+  ~hybrid4() { zfp::internal::deallocate(data); }
 
   // assignment operator--performs a deep copy
   hybrid4& operator=(const hybrid4& index)
@@ -326,7 +326,7 @@ public:
   }
 
   // destructor
-  ~hybrid8() { delete[] data; }
+  ~hybrid8() { zfp::internal::deallocate(data); }
 
   // assignment operator--performs a deep copy
   hybrid8& operator=(const hybrid8& index)

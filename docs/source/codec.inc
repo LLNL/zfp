@@ -223,7 +223,7 @@ which provides for 2:1 fixed-rate "compression" using IEEE 754 floating point.
 ----
 
 .. cpp:function:: size_t codec1::decode_block(bitstream_offset offset, uint shape, Scalar* block) const
-.. cpp:function:: size_t codec2::decode_block(bistream_offset offset, uint shape, Scalar* block) const
+.. cpp:function:: size_t codec2::decode_block(bitstream_offset offset, uint shape, Scalar* block) const
 .. cpp:function:: size_t codec3::decode_block(bitstream_offset offset, uint shape, Scalar* block) const
 .. cpp:function:: size_t codec4::decode_block(bitstream_offset offset, uint shape, Scalar* block) const
 

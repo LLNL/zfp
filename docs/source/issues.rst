@@ -74,7 +74,7 @@ as two scalar fields::
 
   vfield[2][ny][nx]
 
-or by using strides (see also :ref:`FAQ #1 <q-vfields>`).  Note that in all
+or by using strides (see also FAQ :ref:`#1 <q-vfields>`).  Note that in all
 these cases |zfp| will still compress the data, but if the dimensionality is
 not correct then the compression ratio will suffer.
 

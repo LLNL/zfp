@@ -39,7 +39,7 @@ void populateStridedArray(SCALAR** dataArr, SCALAR dummyVal)
     switch(DIMS) {
         case 1:
             countX = BLOCK_SIDE_LEN * SX;
-            *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX);
+            *dataArr = new SCALAR[countX];
             ASSERT_TRUE(*dataArr != nullptr);
 
             for (i = 0; i < countX; i++) {
@@ -58,7 +58,7 @@ void populateStridedArray(SCALAR** dataArr, SCALAR dummyVal)
         case 2:
             countX = BLOCK_SIDE_LEN * SX;
             countY = SY / SX;
-            *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY);
+            *dataArr = new SCALAR[countX * countY];
             ASSERT_TRUE(*dataArr != nullptr);
 
             for (j = 0; j < countY; j++) {
@@ -82,7 +82,7 @@ void populateStridedArray(SCALAR** dataArr, SCALAR dummyVal)
             countX = BLOCK_SIDE_LEN * SX;
             countY = SY / SX;
             countZ = SZ / SY;
-            *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ);
+            *dataArr = new SCALAR[countX * countY * countZ];
             ASSERT_TRUE(*dataArr != nullptr);
 
             for (k = 0; k < countZ; k++) {
@@ -110,7 +110,7 @@ void populateStridedArray(SCALAR** dataArr, SCALAR dummyVal)
             countY = SY / SX;
             countZ = SZ / SY;
             countW = SW / SZ;
-            *dataArr = (SCALAR*)malloc(sizeof(SCALAR) * countX * countY * countZ * countW);
+            *dataArr = new SCALAR[countX * countY * countZ * countW];
             ASSERT_TRUE(*dataArr != nullptr);
 
             for (l = 0; l < countW; l++) {

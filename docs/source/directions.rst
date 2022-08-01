@@ -17,7 +17,7 @@ important features, including:
   values as missing or indeterminate.  Current solutions often rely on tagging
   missing values as NaNs or special, often very large sentinel values outside
   the normal range, which can lead to poor compression and complete loss of
-  accuracy in nearby valid values.  See :ref:`FAQ #7 <q-missing>`.
+  accuracy in nearby valid values.  See FAQ :ref:`#7 <q-missing>`.
 
 - **Support for NaNs and infinities**.  Similar to missing values, some
   applications store special IEEE floating-point values that are supported
@@ -44,7 +44,7 @@ important features, including:
   at reduced precision over the entire domain, with quality increasing
   progressively as more data arrives.  The low-level bit stream interface
   already supports progressive access by interleaving bits across blocks
-  (see :ref:`FAQ #13 <q-progressive>`), but |zfp| lacks a high-level API
+  (see FAQ :ref:`#13 <q-progressive>`), but |zfp| lacks a high-level API
   for generating and accessing progressive streams.
 
 - **Parallel compression**.  |zfp|'s data partitioning into blocks invites
@@ -56,14 +56,15 @@ important features, including:
   decompression on the GPU via CUDA.  However, only fixed-rate mode is
   so far supported.
 
-- **Variable-rate arrays**.  |zfp| currently supports only fixed-rate
-  compressed arrays, which wastes bits in smooth regions with little
-  information content while too few bits may be allocated to accurately
-  preserve sharp features such as shocks and material interfaces, which
-  tend to drive the physics in numerical simulations.  Two candidate
-  solutions have been identified for read-only and read-write access
-  to variable-rate arrays with very modest storage overhead.  These
-  arrays will support both fixed precision and accuracy.
+- **Variable-rate arrays**.  |zfp| currently offers only fixed-rate
+  compressed arrays with random-access write support; |zfp| |carrrelease|
+  further provides read-only variable-rate arrays.  Fixed-rate arrays waste
+  bits in smooth regions with little information content while too few bits
+  may be allocated to accurately preserve sharp features such as shocks and
+  material interfaces, which tend to drive the physics in numerical
+  simulations.  A candidate solution has been developed for variable-rate
+  arrays that support read-write random access with modest storage overhead.
+  We expect to release this capability in the near future.
 
 - **Array operations**.  |zfp|'s compressed arrays currently support basic
   indexing and initialization, but lack array-wise operations such as

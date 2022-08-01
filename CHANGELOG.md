@@ -3,11 +3,13 @@ Change Log
 
 ---
 
-## Unreleased
+## 1.0.0 (2022-08-01)
 
-This future release is not ABI compatible with prior releases due to numerous
-changes to function signatures and data structures like `zfp_field`.  However,
-few of the API changes, other than to cfp, should impact existing code.
+This release is not ABI compatible with prior releases due to numerous changes
+to function signatures and data structures like `zfp_field`.  However, few of
+the API changes, other than to the cfp C API for compressed arrays, should
+impact existing code.  Note that numerous header files have been renamed or
+moved relative to prior versions.
 
 ### Added
 
@@ -16,6 +18,8 @@ few of the API changes, other than to cfp, should impact existing code.
 - Compressed-array classes for 4D data.
 - `const` versions of array references, pointers, and iterators.
 - A more complete API for pointers and iterators.
+- cfp support for proxy references and pointers, iterators, and
+  (de)serialization.
 - Support for pointers and iterators into array views.
 - `zfp::array::size_bytes()` allows querying the size of different components
   of an array object (e.g., payload, cache, index, metadata, ...).
@@ -29,7 +33,7 @@ few of the API changes, other than to cfp, should impact existing code.
 
 ### Changed
 
-- Headers from `array/`, `cfp/include`, and `include/` have been renamed
+- Headers from `array/`, `cfp/include/`, and `include/` have been renamed
   and reorganized into a common `include/` directory.
   - The libzfp API is now confined to `zfp.h`, `zfp.hpp`, and `zfp.mod`
     for C, C++, and Fortran bindings, respectively.  These all appear in
@@ -133,7 +137,7 @@ few of the API changes, other than to cfp, should impact existing code.
 
 - Execution policy now applies to both compression and decompression.
 - Compressed array accessors now return Scalar type instead of
-  const Scalar& to avoid stale references to evicted cache lines.
+  `const Scalar&` to avoid stale references to evicted cache lines.
 
 ### Fixed
 
@@ -319,7 +323,7 @@ not backward compatible with previous versions of zfp.
 ### Fixed
 
 - Rare bug caused by exponent underflow in blocks with no normal and some
-  denormal numbers.
+  subnormal numbers.
 
 ---
 
