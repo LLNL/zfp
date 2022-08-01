@@ -16,7 +16,6 @@
 #include <climits>
 #include <cstring>
 #include "zfp.h"
-#include "zfp/array.hpp"
 #include "zfp/internal/array/memory.hpp"
 #include "zfp/internal/array/traits.hpp"
 

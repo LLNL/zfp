@@ -9,7 +9,7 @@
 #include <sstream>
 #include "zfp/array2.hpp"
 #include "zfp/constarray2.hpp"
-#include "zfp/codec/generic.hpp"
+#include "zfp/codec/gencodec.hpp"
 #include "array2d.hpp"
 
 // add half precision if compiler supports it
