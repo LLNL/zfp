@@ -1,9 +1,8 @@
 ZFP
 ===
-[![Github Actions Build Status](https://github.com/LLNL/zfp/actions/workflows/main.yml/badge.svg?branch=develop)](https://github.com/LLNL/zfp/actions/workflows/main.yml)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/qb3ld7j11segy52k/branch/develop?svg=true)](https://ci.appveyor.com/project/lindstro/zfp)
-[![Documentation Status](https://readthedocs.org/projects/zfp/badge/?version=release1.0.0)](https://zfp.readthedocs.io/en/release1.0.0/?badge=release1.0.0)
-[![Code Coverage](https://codecov.io/gh/LLNL/zfp/branch/develop/graph/badge.svg)](https://codecov.io/gh/LLNL/zfp)
+[![Github Actions Build Status](https://github.com/LLNL/zfp/actions/workflows/main.yml/badge.svg?branch=release1.0.0)](https://github.com/LLNL/zfp/actions/workflows/main.yml)
+[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/qb3ld7j11segy52k/branch/release1.0.0?svg=true)](https://ci.appveyor.com/project/lindstro/zfp)
+[![Documentation Status](https://readthedocs.org/projects/zfp/badge/?version=release1.0.0)](https://zfp.readthedocs.io/en/release1.0.0/)
 
 zfp is a compressed format for representing multidimensional floating-point
 and integer arrays.  zfp provides compressed-array classes that support high
@@ -56,18 +55,19 @@ Note: GNU builds are less flexible and do not support all available features,
 e.g., CUDA support.
 
 For further configuration and build instructions, please consult the
-[documentation](https://zfp.readthedocs.io/en/latest/installation.html).
+[documentation](https://zfp.readthedocs.io/en/release1.0.0/installation.html).
 For examples of how to call the C library and use the C++ array classes,
-see the [examples](https://zfp.readthedocs.io/en/latest/examples.html)
+see the [examples](https://zfp.readthedocs.io/en/release1.0.0/examples.html)
 section.
 
 
 Documentation
 -------------
 
-Full HTML [documentation](http://zfp.readthedocs.io/) is available online.
-A [PDF](http://readthedocs.org/projects/zfp/downloads/pdf/latest/) version
-is also available.
+Full HTML [documentation](http://zfp.readthedocs.io/en/release1.0.0) is
+available online.
+A [PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release1.0.0/)
+version is also available.
 
 Further information on the zfp software is included in these files:
 
