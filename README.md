@@ -1,142 +1,114 @@
 ZFP
 ===
-[![Travis CI Build Status](https://travis-ci.org/LLNL/zfp.svg?branch=develop)](https://travis-ci.org/LLNL/zfp)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/LLNL/zfp?branch=develop&svg=true)](https://ci.appveyor.com/project/salasoom/zfp)
-[![Documentation Status](https://readthedocs.org/projects/zfp/badge/?version=release0.5.5)](https://zfp.readthedocs.io/en/release0.5.5/?badge=release0.5.5)
-[![Codecov](https://codecov.io/gh/LLNL/zfp/branch/develop/graph/badge.svg)](https://codecov.io/gh/LLNL/zfp)
+[![Github Actions Build Status](https://github.com/LLNL/zfp/actions/workflows/main.yml/badge.svg?branch=release1.0.0)](https://github.com/LLNL/zfp/actions/workflows/main.yml)
+[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/qb3ld7j11segy52k/branch/release1.0.0?svg=true)](https://ci.appveyor.com/project/lindstro/zfp)
+[![Documentation Status](https://readthedocs.org/projects/zfp/badge/?version=release1.0.0)](https://zfp.readthedocs.io/en/release1.0.0/)
 
-INTRODUCTION
-------------
+zfp is a compressed format for representing multidimensional floating-point
+and integer arrays.  zfp provides compressed-array classes that support high
+throughput read and write random access to individual array elements.  zfp
+also supports serial and parallel (OpenMP and CUDA) compression of whole
+arrays, e.g., for applications that read and write large data sets to and
+from disk.
 
-zfp is an open source C/C++ library for compressed numerical arrays that
-support high throughput read and write random access.  zfp also supports
-streaming compression of integer and floating-point data, e.g., for
-applications that read and write large data sets to and from disk.
-zfp is primarily written in C and C++ but also includes Python and
-Fortran bindings.
+zfp uses lossy but optionally error-bounded compression to achieve high
+compression ratios.  Bit-for-bit lossless compression is also possible
+through one of zfp's compression modes.  zfp works best for 2D, 3D, and 4D
+arrays that exhibit spatial correlation, such as continuous fields from
+physics simulations, natural images, regularly sampled terrain surfaces, etc.
+zfp compression of 1D arrays is possible but generally discouraged.
 
-zfp was developed at Lawrence Livermore National Laboratory and is loosely
-based on the algorithm described in the following paper:
-
-    Peter Lindstrom
-    "Fixed-Rate Compressed Floating-Point Arrays"
-    IEEE Transactions on Visualization and Computer Graphics
-    20(12):2674-2683, December 2014
-    doi:10.1109/TVCG.2014.2346458
-
-zfp was originally designed for floating-point arrays only, but has been
-extended to also support integer data and could for instance be used to
-compress images and quantized volumetric data.  To achieve high compression
-ratios, zfp generally uses lossy but optionally error-bounded compression.
-Bit-for-bit lossless compression is also possible through one of zfp's
-compression modes.
-
-zfp works best for 2D and 3D arrays that exhibit spatial correlation, such as
-continuous fields from physics simulations, images, regularly sampled terrain
-surfaces, etc.  Although zfp also provides a 1D array class that can be used
-for 1D signals such as audio, or even unstructured floating-point streams,
-the compression scheme has not been well optimized for this use case, and
-rate and quality may not be competitive with floating-point compressors
-designed specifically for 1D streams.  zfp also supports compression of
-4D arrays.
-
-zfp is freely available as open source under a BSD license, as outlined in
-the file 'LICENSE'.  For more information on zfp and comparisons with other
-compressors, please see the
-[zfp website](https://computation.llnl.gov/projects/floating-point-compression).
-For bug reports, please consult the
-[GitHub issue tracker](https://github.com/LLNL/zfp/issues).
-For questions, comments, and requests, please contact
-[Peter Lindstrom](mailto:pl@llnl.gov).
+zfp is freely available as open source and is distributed under a BSD license.
+zfp is primarily written in C and C++ but also includes Python and Fortran
+bindings.  zfp conforms to various language standards, including C89, C99,
+C11, C++98, C++11, and C++14, and is supported on Linux, macOS, and Windows.
 
 
-DOCUMENTATION
--------------
+Quick Start
+-----------
 
-Full
-[documentation](http://zfp.readthedocs.io/en/release0.5.5/)
-is available online via Read the Docs.  A
-[PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release0.5.5/)
-version is also available.
+To download zfp, type:
 
+    git clone https://github.com/LLNL/zfp.git
 
-INSTALLATION
-------------
+zfp may be built using either [CMake](https://cmake.org/) or
+[GNU make](https://www.gnu.org/software/make/).  To use CMake, type:
 
-zfp consists of three distinct parts: a compression library written in C;
-a set of C++ header files with C wrappers that implement compressed arrays;
-and a set of C and C++ examples.  The main compression codec is written in
-C and should conform to both the ISO C89 and C99 standards.  The C++ array
-classes are implemented entirely in header files and can be included as is,
-but since they call the compression library, applications must link with
-libzfp.
-
-On Linux, macOS, and MinGW, zfp is easiest compiled using gcc and gmake.
-CMake support is also available, e.g., for Windows builds.  See below for
-instructions on GNU and CMake builds.
-
-zfp has successfully been built and tested using these compilers:
-
-    gcc versions 4.4.7, 4.9.4, 5.5.0, 6.1.0, 6.4.0, 7.1.0, 7.3.0, 8.1.0
-    icc versions 15.0.6, 16.0.4, 17.0.2, 18.0.2, 19.0.0
-    clang versions 3.9.1, 4.0.0, 5.0.0, 6.0.0 
-    MinGW version 5.3.0
-    Visual Studio versions 14 (2015), 15 (2017)
-
-zfp conforms to various language standards, including C89, C99, C11,
-C++98, C++11, and C++14.
-
-NOTE: zfp requires 64-bit compiler and operating system support.
-
-## GNU builds 
-
-To build zfp using gcc, type
-
-    make
-
-from this directory.  This builds libzfp as a static library as well as
-utilities and example programs.  See documentation for complete build
-instructions.
-
-## CMake builds
-
-To build zfp using CMake on Linux or macOS, start a Unix shell and type
-
-    mkdir build
-    cd build
-    cmake ..
-    make
-
-To also build the examples, replace the cmake line with
-
-    cmake -DBUILD_EXAMPLES=ON ..
-
-To build zfp using Visual Studio on Windows, start a DOS shell, cd to the
-top-level zfp directory, and type
-
+    cd zfp
     mkdir build
     cd build
     cmake ..
     cmake --build . --config Release
-
-This builds zfp in release mode.  Replace 'Release' with 'Debug' to build
-zfp in debug mode.  See the instructions for Linux on how to change the
-cmake line to also build the example programs.
-
-## Testing
-
-To test that zfp is working properly, type
-
-    make test
-
-or using CMake
-
     ctest
 
-If the compilation or regression tests fail, it is possible that some of the
-macros in the file 'Config' have to be adjusted.  Also, the tests may fail
-due to minute differences in the computed floating-point fields being
-compressed, which will be indicated by checksum errors.  If most tests
-succeed and the failures result in byte sizes and error values reasonably
-close to the expected values, then it is likely that the compressor is
-working correctly.
+This builds the zfp library in the `build/lib` directory and the zfp
+command-line executable in the `build/bin` directory.  It then runs
+the regression tests.
+
+zfp may also be built using GNU make:
+
+    cd zfp
+    make
+    make test
+
+Note: GNU builds are less flexible and do not support all available features,
+e.g., CUDA support.
+
+For further configuration and build instructions, please consult the
+[documentation](https://zfp.readthedocs.io/en/release1.0.0/installation.html).
+For examples of how to call the C library and use the C++ array classes,
+see the [examples](https://zfp.readthedocs.io/en/release1.0.0/examples.html)
+section.
+
+
+Documentation
+-------------
+
+Full HTML [documentation](http://zfp.readthedocs.io/en/release1.0.0) is
+available online.
+A [PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release1.0.0/)
+version is also available.
+
+Further information on the zfp software is included in these files:
+
+- Change log: see [CHANGELOG.md](./CHANGELOG.md).
+- Support and additional resources: see [SUPPORT.md](./SUPPORT.md).
+- Code contributions: see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+
+Authors
+-------
+
+zfp was originally developed by [Peter Lindstrom](https://people.llnl.gov/pl)
+at [Lawrence Livermore National Laboratory](https://www.llnl.gov/).  Please
+see the [Contributors Page](https://github.com/LLNL/zfp/graphs/contributors)
+for a full list of contributors.
+
+### Citing zfp
+
+If you use zfp for scholarly research, please cite this paper:
+
+* Peter Lindstrom.
+  [Fixed-Rate Compressed Floating-Point Arrays](https://www.researchgate.net/publication/264417607_Fixed-Rate_Compressed_Floating-Point_Arrays).
+  IEEE Transactions on Visualization and Computer Graphics, 20(12):2674-2683, December 2014.
+  [doi:10.1109/TVCG.2014.2346458](http://doi.org/10.1109/TVCG.2014.2346458).
+
+The algorithm implemented in the current version of zfp is described in the
+[documentation](https://zfp.readthedocs.io/en/latest/algorithm.html) and in
+the following paper:
+
+* James Diffenderfer, Alyson Fox, Jeffrey Hittinger, Geoffrey Sanders, Peter Lindstrom.
+  [Error Analysis of ZFP Compression for Floating-Point Data](https://www.researchgate.net/publication/324908266_Error_Analysis_of_ZFP_Compression_for_Floating-Point_Data).
+  SIAM Journal on Scientific Computing, 41(3):A1867-A1898, June 2019.
+  [doi:10.1137/18M1168832](http://doi.org/10.1137/18M1168832).
+
+
+License
+-------
+
+zfp is distributed under the terms of the BSD 3-Clause license.  See
+[LICENSE](./LICENSE) and [NOTICE](./NOTICE) for details.
+
+SPDX-License-Identifier: BSD-3-Clause
+
+LLNL-CODE-663824

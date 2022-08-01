@@ -6,37 +6,53 @@ FC = gfortran
 
 # language standard -----------------------------------------------------------
 
-# CSTD = -std=c89 -Wno-unused-function
+# CSTD = -std=c89
   CSTD = -std=c99
   CXXSTD = -std=c++98
 # CXXSTD = -std=c++11
-  FSTD = -std=f2003 -ffree-form -Wno-c-binding-type
+  FSTD = -std=f2018 -ffree-form -Wno-c-binding-type
 
 # common compiler options -----------------------------------------------------
 
-FLAGS = -O3 -fPIC -Wall -Wextra -pedantic -I../include
+OPTFLAGS = -O3
+FLAGS = $(OPTFLAGS) -fPIC -pedantic -Wall -Wextra
+LDFLAGS =
 SOFLAGS =
-
-# macOS compiler options (uncomment on macOS) ---------------------------------
-
-# SOFLAGS += -undefined dynamic_lookup
 
 # OpenMP compiler options -----------------------------------------------------
 
-# do not uncomment; use "make ZFP_WITH_OPENMP=0" to disable OpenMP
+# do not comment out; use "make ZFP_WITH_OPENMP=0" to disable OpenMP
 OMPFLAGS = -fopenmp
 
+# Apple clang OpenMP options
+# OMPFLAGS = -Xclang -fopenmp
+
 # optional compiler macros ----------------------------------------------------
+
+# use smaller bit stream word type for finer rate granularity;
+# can bet set on command line, e.g., "make BIT_STREAM_WORD_TYPE=uint8"
+# DEFS += -DBIT_STREAM_WORD_TYPE=uint8
+# DEFS += -DBIT_STREAM_WORD_TYPE=uint16
+# DEFS += -DBIT_STREAM_WORD_TYPE=uint32
+# DEFS += -DBIT_STREAM_WORD_TYPE=uint64
+
+# reduce bias and slack in errors; can be set on command line, e.g.,
+# "make ZFP_ROUNDING_MODE=ZFP_ROUND_FIRST"
+# DEFS += -DZFP_ROUNDING_MODE=ZFP_ROUND_NEVER
+# DEFS += -DZFP_ROUNDING_MODE=ZFP_ROUND_FIRST
+# DEFS += -DZFP_ROUNDING_MODE=ZFP_ROUND_LAST
+# DEFS += -DZFP_WITH_TIGHT_ERROR
+
+# treat subnormals as zero to avoid overflow; can be set on command line, e.g.,
+# "make ZFP_WITH_DAZ=1"
+# DEFS += -DZFP_WITH_DAZ
 
 # use long long for 64-bit types
 # DEFS += -DZFP_INT64='long long' -DZFP_INT64_SUFFIX='ll'
 # DEFS += -DZFP_UINT64='unsigned long long' -DZFP_UINT64_SUFFIX='ull'
 
-# use smaller bit stream word type for finer rate granularity
-# DEFS += -DBIT_STREAM_WORD_TYPE=uint8
-# DEFS += -DBIT_STREAM_WORD_TYPE=uint16
-# DEFS += -DBIT_STREAM_WORD_TYPE=uint32
-# DEFS += -DBIT_STREAM_WORD_TYPE=uint64
+# cache alignment
+# DEFS += -DZFP_CACHE_LINE_SIZE=256
 
 # enable strided access for progressive zfp streams
 # DEFS += -DBIT_STREAM_STRIDED
@@ -85,7 +101,24 @@ else
   LIBCFP = libcfp.a
 endif
 
-# conditionals ----------------------------------------------------------------
+# operating system and compiler dependent flags -------------------------------
+
+# macOS configuration; compile with "make OS=mac"
+ifeq ($(OS),mac)
+  SOFLAGS += -undefined dynamic_lookup
+endif
+
+# suppress unused function warnings when compiling C89
+ifeq ($(CSTD),-std=c89)
+  FLAGS += -Wno-unused-function
+endif
+
+# process macros set on the command line --------------------------------------
+
+# bit stream word type
+ifdef BIT_STREAM_WORD_TYPE
+  DEFS += -DBIT_STREAM_WORD_TYPE=$(BIT_STREAM_WORD_TYPE)
+endif
 
 # enable OpenMP?
 ifdef ZFP_WITH_OPENMP
@@ -94,6 +127,31 @@ ifdef ZFP_WITH_OPENMP
       FLAGS += $(OMPFLAGS)
     endif
   endif
+endif
+
+# treat subnormals as zero to avoid overflow
+ifdef ZFP_WITH_DAZ
+  ifneq ($(ZFP_WITH_DAZ),0)
+    FLAGS += -DZFP_WITH_DAZ
+  endif
+endif
+
+# rounding mode and slack in error
+ifdef ZFP_ROUNDING_MODE
+  FLAGS += -DZFP_ROUNDING_MODE=$(ZFP_ROUNDING_MODE)
+  ifneq ($(ZFP_ROUNDING_MODE),0)
+    # tight error bound requires round-first or round-last mode
+    ifdef ZFP_WITH_TIGHT_ERROR
+      ifneq ($(ZFP_WITH_TIGHT_ERROR),0)
+        FLAGS += -DZFP_WITH_TIGHT_ERROR
+      endif
+    endif
+  endif
+endif
+
+# chroma mode for ppm example
+ifdef PPM_CHROMA
+  PPM_FLAGS += -DPPM_CHROMA=$(PPM_CHROMA)
 endif
 
 # compiler options ------------------------------------------------------------

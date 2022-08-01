@@ -12,9 +12,15 @@ __device__ __host__ inline
 void scatter_partial2(const Scalar* q, Scalar* p, int nx, int ny, int sx, int sy)
 {
   uint x, y;
-  for (y = 0; y < ny; y++, p += sy - nx * sx, q += 4 - nx)
-    for (x = 0; x < nx; x++, p += sx, q++)
-      *p = *q;
+  for (y = 0; y < 4; y++)
+    if (y < ny) {
+      for (x = 0; x < 4; x++)
+        if (x < nx) {
+          *p = q[4 * y + x];
+          p += sx;
+        }
+      p += sy - nx * sx;
+    }
 }
 
 template<typename Scalar> 
@@ -144,9 +150,9 @@ size_t decode2launch(uint2 dims,
   cudaEventSynchronize(stop);
 	cudaStreamSynchronize(0);
 
-  float miliseconds = 0;
-  cudaEventElapsedTime(&miliseconds, start, stop);
-  float seconds = miliseconds / 1000.f;
+  float milliseconds = 0;
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  float seconds = milliseconds / 1000.f;
   float rate = (float(dims.x * dims.y) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;

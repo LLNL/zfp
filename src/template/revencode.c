@@ -40,7 +40,7 @@ _t1(rev_precision, UInt)(const UInt* block, uint n)
   while (n--)
     m |= *block++;
   /* count trailing zeros via binary search */
-  for (s = CHAR_BIT * (uint)sizeof(UInt); m; s /= 2)
+  for (s = (uint)(CHAR_BIT * sizeof(UInt)); m; s /= 2)
     if ((UInt)(m << (s - 1))) {
       m <<= s - 1;
       m <<= 1;
@@ -51,10 +51,10 @@ _t1(rev_precision, UInt)(const UInt* block, uint n)
 
 /* encode block of integers using reversible algorithm */
 static uint
-_t2(rev_encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock)
+_t2(rev_encode_block, Int, DIMS)(bitstream* stream, uint minbits, uint maxbits, uint maxprec, Int* iblock)
 {
-  int bits = PBITS;
-  int prec;
+  uint bits = PBITS;
+  uint prec;
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* perform decorrelating transform */
   _t2(rev_fwd_xform, Int, DIMS)(iblock);
@@ -66,10 +66,7 @@ _t2(rev_encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, in
   prec = MAX(prec, 1);
   stream_write_bits(stream, prec - 1, PBITS);
   /* encode integer coefficients */
-  if (BLOCK_SIZE <= 64)
-    bits += _t1(encode_ints, UInt)(stream, maxbits - bits, prec, ublock, BLOCK_SIZE);
-  else
-    bits += _t1(encode_many_ints, UInt)(stream, maxbits - bits, prec, ublock, BLOCK_SIZE);
+  bits += _t1(encode_ints, UInt)(stream, maxbits - bits, prec, ublock, BLOCK_SIZE);
   /* write at least minbits bits by padding with zeros */
   if (bits < minbits) {
     stream_pad(stream, minbits - bits);

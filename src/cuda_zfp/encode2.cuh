@@ -17,11 +17,16 @@ __device__ __host__ inline
 void gather_partial2(Scalar* q, const Scalar* p, int nx, int ny, int sx, int sy)
 {
   uint x, y;
-  for (y = 0; y < ny; y++, p += sy - nx * sx) {
-    for (x = 0; x < nx; x++, p += sx)
-      q[4 * y + x] = *p;
+  for (y = 0; y < 4; y++)
+    if (y < ny) {
+      for (x = 0; x < 4; x++)
+        if (x < nx) {
+          q[4 * y + x] = *p;//[x * sx];
+          p += sx;
+        }
       pad_block(q + 4 * y, nx, 1);
-  }
+      p += sy - nx * sx;
+    }
   for (x = 0; x < 4; x++)
     pad_block(q + x, ny, 4);
 }
@@ -143,7 +148,7 @@ size_t encode2launch(uint2 dims,
   cudaEventRecord(start);
 #endif
 
-	cudaEncode2<Scalar> << <grid_size, block_size>> >
+  cudaEncode2<Scalar> <<<grid_size, block_size>>>
     (maxbits,
      d_data,
      stream,
@@ -158,9 +163,9 @@ size_t encode2launch(uint2 dims,
   cudaEventSynchronize(stop);
   cudaStreamSynchronize(0);
 
-  float miliseconds = 0.f;
-  cudaEventElapsedTime(&miliseconds, start, stop);
-  float seconds = miliseconds / 1000.f;
+  float milliseconds = 0.f;
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  float seconds = milliseconds / 1000.f;
   float mb = (float(dims.x * dims.y) * sizeof(Scalar)) / (1024.f * 1024.f *1024.f);
   float rate = mb / seconds;
   printf("Encode elapsed time: %.5f (s)\n", seconds);

@@ -1,6 +1,8 @@
 #ifndef cuZFP_TYPE_INFO
 #define cuZFP_TYPE_INFO
 
+#include <cfloat>
+
 namespace cuZFP {
 
 template<typename T> inline __host__ __device__ int get_ebias();
@@ -27,12 +29,21 @@ template<> inline __host__ __device__ int get_min_exp<float>() { return -1074; }
 template<> inline __host__ __device__ int get_min_exp<long long int>() { return 0; }
 template<> inline __host__ __device__ int get_min_exp<int>() { return 0; }
 
-template<typename T> inline __host__ __device__ int scalar_sizeof();
+template<typename T> inline __host__ __device__ T get_scalar_min();
+template<> inline __host__ __device__ float get_scalar_min<float>() { return FLT_MIN; }
+template<> inline __host__ __device__ double get_scalar_min<double>() { return DBL_MIN; }
+template<> inline __host__ __device__ long long int get_scalar_min<long long int>() { return 0; }
+template<> inline __host__ __device__ int get_scalar_min<int>() { return 0; }
 
+template<typename T> inline __host__ __device__ int scalar_sizeof();
 template<> inline __host__ __device__ int scalar_sizeof<double>() { return 8; }
 template<> inline __host__ __device__ int scalar_sizeof<long long int>() { return 8; }
 template<> inline __host__ __device__ int scalar_sizeof<float>() { return 4; }
 template<> inline __host__ __device__ int scalar_sizeof<int>() { return 4; }
+
+template<typename T> inline __host__ __device__ T get_nbmask();
+template<> inline __host__ __device__ unsigned int get_nbmask<unsigned int>() { return 0xaaaaaaaau; }
+template<> inline __host__ __device__ unsigned long long int get_nbmask<unsigned long long int>() { return 0xaaaaaaaaaaaaaaaaull; }
 
 template<typename T> struct zfp_traits;
 
@@ -75,6 +86,7 @@ template<> inline __host__ __device__ bool is_int<long long int>()
   return true;
 }
 
+#if 0
 template<int T> struct block_traits;
 
 template<> struct block_traits<1>
@@ -86,7 +98,8 @@ template<> struct block_traits<2>
 {
   typedef unsigned short PlaneType;
 };
-
+#endif
 
 } // namespace cuZFP
+
 #endif

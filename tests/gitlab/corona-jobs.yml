@@ -1,0 +1,17 @@
+###########
+# HIP GPU #
+###########
+
+rocm-3.10.0_build:
+    variables:
+        ci_cmake: "cmake/3.21.1"
+        ci_cmp_mod: "rocm/3.10.0"
+        ci_cmp_path: "/opt/rocm-3.10.0/hip"
+    extends: [.hip, .corona_build_gpu]
+    needs: []
+
+rocm-3.10.0_test:
+    variables:
+       ci_test_regex: "Hip"
+    extends: [.corona_test_gpu]
+    needs: [rocm-3.10.0_build]

@@ -3,9 +3,9 @@ static void
 _t2(decompress, Scalar, 1)(zfp_stream* stream, zfp_field* field)
 {
   Scalar* data = (Scalar*)field->data;
-  uint nx = field->nx;
-  uint mx = nx & ~3u;
-  uint x;
+  size_t nx = field->nx;
+  size_t mx = nx & ~3u;
+  size_t x;
 
   /* decompress array one block of 4 values at a time */
   for (x = 0; x < mx; x += 4, data += 4)
@@ -19,9 +19,9 @@ static void
 _t2(decompress_strided, Scalar, 1)(zfp_stream* stream, zfp_field* field)
 {
   Scalar* data = field->data;
-  uint nx = field->nx;
-  int sx = field->sx ? field->sx : 1;
-  uint x;
+  size_t nx = field->nx;
+  ptrdiff_t sx = field->sx ? field->sx : 1;
+  size_t x;
 
   /* decompress array one block of 4 values at a time */
   for (x = 0; x < nx; x += 4) {
@@ -38,11 +38,11 @@ static void
 _t2(decompress_strided, Scalar, 2)(zfp_stream* stream, zfp_field* field)
 {
   Scalar* data = (Scalar*)field->data;
-  uint nx = field->nx;
-  uint ny = field->ny;
-  int sx = field->sx ? field->sx : 1;
-  int sy = field->sy ? field->sy : (int)nx;
-  uint x, y;
+  size_t nx = field->nx;
+  size_t ny = field->ny;
+  ptrdiff_t sx = field->sx ? field->sx : 1;
+  ptrdiff_t sy = field->sy ? field->sy : (ptrdiff_t)nx;
+  size_t x, y;
 
   /* decompress array one block of 4x4 values at a time */
   for (y = 0; y < ny; y += 4)
@@ -60,13 +60,13 @@ static void
 _t2(decompress_strided, Scalar, 3)(zfp_stream* stream, zfp_field* field)
 {
   Scalar* data = (Scalar*)field->data;
-  uint nx = field->nx;
-  uint ny = field->ny;
-  uint nz = field->nz;
-  int sx = field->sx ? field->sx : 1;
-  int sy = field->sy ? field->sy : (int)nx;
-  int sz = field->sz ? field->sz : (int)(nx * ny);
-  uint x, y, z;
+  size_t nx = field->nx;
+  size_t ny = field->ny;
+  size_t nz = field->nz;
+  ptrdiff_t sx = field->sx ? field->sx : 1;
+  ptrdiff_t sy = field->sy ? field->sy : (ptrdiff_t)nx;
+  ptrdiff_t sz = field->sz ? field->sz : (ptrdiff_t)(nx * ny);
+  size_t x, y, z;
 
   /* decompress array one block of 4x4x4 values at a time */
   for (z = 0; z < nz; z += 4)
@@ -85,15 +85,15 @@ static void
 _t2(decompress_strided, Scalar, 4)(zfp_stream* stream, zfp_field* field)
 {
   Scalar* data = field->data;
-  uint nx = field->nx;
-  uint ny = field->ny;
-  uint nz = field->nz;
-  uint nw = field->nw;
-  int sx = field->sx ? field->sx : 1;
-  int sy = field->sy ? field->sy : (int)nx;
-  int sz = field->sz ? field->sz : (int)(nx * ny);
-  int sw = field->sw ? field->sw : (int)(nx * ny * nz);
-  uint x, y, z, w;
+  size_t nx = field->nx;
+  size_t ny = field->ny;
+  size_t nz = field->nz;
+  size_t nw = field->nw;
+  ptrdiff_t sx = field->sx ? field->sx : 1;
+  ptrdiff_t sy = field->sy ? field->sy : (ptrdiff_t)nx;
+  ptrdiff_t sz = field->sz ? field->sz : (ptrdiff_t)(nx * ny);
+  ptrdiff_t sw = field->sw ? field->sw : (ptrdiff_t)(nx * ny * nz);
+  size_t x, y, z, w;
 
   /* decompress array one block of 4x4x4x4 values at a time */
   for (w = 0; w < nw; w += 4)

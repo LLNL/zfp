@@ -11,7 +11,7 @@ __device__
 static int
 precision(int maxexp, int maxprec, int minexp)
 {
-  return MIN(maxprec, MAX(0, maxexp - minexp + 8));
+  return min(maxprec, max(0, maxexp - minexp + 8));
 }
 
 template<typename Scalar>
@@ -42,13 +42,19 @@ __device__
 static int
 exponent(Scalar x)
 {
-  if (x > 0) {
-    int e;
+  int e = -get_ebias<Scalar>();
+#ifdef ZFP_WITH_DAZ
+  // treat subnormals as zero; resolves issue #119 by avoiding overflow
+  if (x >= get_scalar_min<Scalar>())
     frexp(x, &e);
-    // clamp exponent in case x is denormalized
-    return max(e, 1 - get_ebias<Scalar>());
+#else
+  if (x > 0) {
+    frexp(x, &e);
+    // clamp exponent in case x is subnormal; may still result in overflow
+    e = max(e, 1 - get_ebias<Scalar>());
   }
-  return -get_ebias<Scalar>();
+#endif
+  return e;
 }
 
 template<class Scalar, int BlockSize>
@@ -57,10 +63,9 @@ static int
 max_exponent(const Scalar* p)
 {
   Scalar max_val = 0;
-  for(int i = 0; i < BlockSize; ++i)
-  {
+  for (int i = 0; i < BlockSize; ++i) {
     Scalar f = fabs(p[i]);
-    max_val = max(max_val,f);
+    max_val = max(max_val, f);
   }
   return exponent<Scalar>(max_val);
 }
@@ -93,6 +98,25 @@ fwd_lift(Int* p)
   p -= s; *p = x;
 }
 
+#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
+// bias values such that truncation is equivalent to round to nearest
+template <typename Int, uint BlockSize>
+__device__
+static void
+fwd_round(Int* iblock, uint maxprec)
+{
+  // add or subtract 1/6 ulp to unbias errors
+  if (maxprec < (uint)(CHAR_BIT * sizeof(Int))) {
+    Int bias = (static_cast<typename zfp_traits<Int>::UInt>(NBMASK) >> 2) >> maxprec;
+    uint n = BlockSize;
+    if (maxprec & 1u)
+      do *iblock++ += bias; while (--n);
+    else
+      do *iblock++ -= bias; while (--n);
+  }
+}
+#endif
+
 template<typename Scalar>
 Scalar
 inline __device__
@@ -103,7 +127,7 @@ float
 inline __device__
 quantize_factor<float>(const int &exponent, float)
 {
-	return  LDEXP(1.0, get_precision<float>() - 2 - exponent);
+  return LDEXP(1.0, get_precision<float>() - 2 - exponent);
 }
 
 template<>
@@ -111,13 +135,13 @@ double
 inline __device__
 quantize_factor<double>(const int &exponent, double)
 {
-	return  LDEXP(1.0, get_precision<double>() - 2 - exponent);
+  return LDEXP(1.0, get_precision<double>() - 2 - exponent);
 }
 
 template<typename Scalar, typename Int, int BlockSize>
 void __device__ fwd_cast(Int *iblock, const Scalar *fblock, int emax)
 {
-	Scalar s = quantize_factor(emax, Scalar());
+  Scalar s = quantize_factor(emax, Scalar());
   for(int i = 0; i < BlockSize; ++i)
   {
     iblock[i] = (Int) (s * fblock[i]);
@@ -133,7 +157,6 @@ struct transform<64>
   template<typename Int>
   __device__ void fwd_xform(Int *p)
   {
-
     uint x, y, z;
     /* transform along x */
     for (z = 0; z < 4; z++)
@@ -149,7 +172,6 @@ struct transform<64>
         fwd_lift<Int,16>(p + 1 * x + 4 * y);
 
    }
-
 };
 
 template<>
@@ -158,16 +180,14 @@ struct transform<16>
   template<typename Int>
   __device__ void fwd_xform(Int *p)
   {
-
     uint x, y;
     /* transform along x */
     for (y = 0; y < 4; y++)
-     fwd_lift<Int,1>(p + 4 * y);
+      fwd_lift<Int,1>(p + 4 * y);
     /* transform along y */
     for (x = 0; x < 4; x++)
       fwd_lift<Int,4>(p + 1 * x);
-    }
-
+  }
 };
 
 template<>
@@ -178,14 +198,14 @@ struct transform<4>
   {
     fwd_lift<Int,1>(p);
   }
-
 };
 
 template<typename Int, typename UInt, int BlockSize>
 __device__ void fwd_order(UInt *ublock, const Int *iblock)
 {
-  unsigned char *perm = get_perm<BlockSize>();
-  for(int i = 0; i < BlockSize; ++i)
+  const unsigned char *perm = get_perm<BlockSize>();
+
+  for (int i = 0; i < BlockSize; ++i)
   {
     ublock[i] = int2uint(iblock[perm[i]]);
   }
@@ -206,8 +226,8 @@ struct BlockWriter
       m_maxbits(maxbits),
       m_stream(stream)
   {
-    m_word_index = (block_idx * maxbits)  / (sizeof(Word) * 8); 
-    m_start_bit = uint((block_idx * maxbits) % (sizeof(Word) * 8)); 
+    m_word_index = ((size_t)block_idx * maxbits)  / (sizeof(Word) * 8); 
+    m_start_bit = uint(((size_t)block_idx * maxbits) % (sizeof(Word) * 8)); 
   }
 
   template<typename T>
@@ -289,41 +309,39 @@ void inline __device__ encode_block(BlockWriter<BlockSize> &stream,
                                     int maxprec,
                                     Int *iblock)
 {
+  // perform decorrelating transform
   transform<BlockSize> tform;
   tform.fwd_xform(iblock);
 
+#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
+  // bias values to achieve proper rounding
+  fwd_round<Int, BlockSize>(iblock, maxprec);
+#endif
+
+  // reorder signed coefficients and convert to unsigned integer
   typedef typename zfp_traits<Int>::UInt UInt;
   UInt ublock[BlockSize]; 
   fwd_order<Int, UInt, BlockSize>(ublock, iblock);
 
-  uint intprec = CHAR_BIT * (uint)sizeof(UInt);
+  // encode integer coefficients
+  uint intprec = (uint)(CHAR_BIT * sizeof(UInt));
   uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint bits = maxbits;
-  uint i, k, m, n;
-  uint64 x;
 
-  for (k = intprec, n = 0; bits && k-- > kmin;) {
-    /* step 1: extract bit plane #k to x */
-    x = 0;
-    for (i = 0; i < BlockSize; i++)
-    {
+  for (uint k = intprec, n = 0; bits && k-- > kmin;) {
+    // step 1: extract bit plane #k to x
+    uint64 x = 0;
+    for (uint i = 0; i < BlockSize; i++)
       x += (uint64)((ublock[i] >> k) & 1u) << i;
-    }
-    /* step 2: encode first n bits of bit plane */
-    m = min(n, bits);
-    //uint temp  = bits;
+    // step 2: encode first n bits of bit plane
+    uint m = min(n, bits);
     bits -= m;
     x = stream.write_bits(x, m);
-    
-    /* step 3: unary run-length encode remainder of bit plane */
+    // step 3: unary run-length encode remainder of bit plane
     for (; n < BlockSize && bits && (bits--, stream.write_bit(!!x)); x >>= 1, n++)
-    {
       for (; n < BlockSize - 1 && bits && (bits--, !stream.write_bit(x & 1u)); x >>= 1, n++)
-      {  
-      }
-    }
+        ;
   }
-  
 }
 
 template<typename Scalar, int BlockSize>

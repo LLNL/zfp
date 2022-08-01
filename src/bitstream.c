@@ -1,4 +1,4 @@
-#include "bitstream.h"
-#include "inline/bitstream.c"
+#include "zfp/bitstream.h"
+#include "zfp/bitstream.inl"
 
-export_ const size_t stream_word_bits = wsize;
+const size_t stream_word_bits = wsize;

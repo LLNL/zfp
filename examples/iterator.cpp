@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
-#include "zfparray1.h"
-#include "zfparray2.h"
-#include "zfparray3.h"
+#include "zfp/array1.hpp"
+#include "zfp/array2.hpp"
+#include "zfp/array3.hpp"
 
 void print1(zfp::array1<double>::pointer p, size_t n)
 {
@@ -17,9 +17,9 @@ void print2(zfp::array2<double>::pointer p, size_t n)
     std::cout << *p++ << std::endl;
 }
 
-void print3(zfp::array1<double>::iterator begin, zfp::array1<double>::iterator end)
+void print3(zfp::array1<double>::const_iterator begin, zfp::array1<double>::const_iterator end)
 {
-  for (zfp::array1<double>::iterator p = begin; p != end; p++)
+  for (zfp::array1<double>::const_iterator p = begin; p != end; p++)
     std::cout << *p << std::endl;
 }
 

@@ -1,3 +1,4 @@
+#include <float.h>
 #include <limits.h>
 #include <math.h>
 
@@ -9,13 +10,20 @@ static uint _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* f
 static int
 _t1(exponent, Scalar)(Scalar x)
 {
-  if (x > 0) {
-    int e;
+  /* use e = -EBIAS when x = 0 */
+  int e = -EBIAS;
+#ifdef ZFP_WITH_DAZ
+  /* treat subnormals as zero; resolves issue #119 by avoiding overflow */
+  if (x >= SCALAR_MIN)
     FREXP(x, &e);
-    /* clamp exponent in case x is denormal */
-    return MAX(e, 1 - EBIAS);
+#else
+  if (x > 0) {
+    FREXP(x, &e);
+    /* clamp exponent in case x is subnormal; may still result in overflow */
+    e = MAX(e, 1 - EBIAS);
   }
-  return -EBIAS;
+#endif
+  return e;
 }
 
 /* compute maximum floating-point exponent in block of n values */
@@ -35,7 +43,7 @@ _t1(exponent_block, Scalar)(const Scalar* p, uint n)
 static Scalar
 _t1(quantize, Scalar)(Scalar x, int e)
 {
-  return LDEXP(x, (CHAR_BIT * (int)sizeof(Scalar) - 2) - e);
+  return LDEXP(x, ((int)(CHAR_BIT * sizeof(Scalar)) - 2) - e);
 }
 
 /* forward block-floating-point transform to signed integers */
@@ -57,8 +65,8 @@ _t2(encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
   uint bits = 1;
   /* compute maximum exponent */
   int emax = _t1(exponent_block, Scalar)(fblock, BLOCK_SIZE);
-  int maxprec = precision(emax, zfp->maxprec, zfp->minexp, DIMS);
-  uint e = maxprec ? emax + EBIAS : 0;
+  uint maxprec = precision(emax, zfp->maxprec, zfp->minexp, DIMS);
+  uint e = maxprec ? (uint)(emax + EBIAS) : 0;
   /* encode block only if biased exponent is nonzero */
   if (e) {
     cache_align_(Int iblock[BLOCK_SIZE]);
@@ -68,7 +76,7 @@ _t2(encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
     /* perform forward block-floating-point transform */
     _t1(fwd_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
     /* encode integer block */
-    bits += _t2(encode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, maxprec, iblock);
+    bits += _t2(encode_block, Int, DIMS)(zfp->stream, zfp->minbits - MIN(bits, zfp->minbits), zfp->maxbits - bits, maxprec, iblock);
   }
   else {
     /* write single zero-bit to indicate that all values are zero */
@@ -84,7 +92,7 @@ _t2(encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
 /* public functions -------------------------------------------------------- */
 
 /* encode contiguous floating-point block */
-uint
+size_t
 _t2(zfp_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
 {
   return REVERSIBLE(zfp) ? _t2(rev_encode_block, Scalar, DIMS)(zfp, fblock) : _t2(encode_block, Scalar, DIMS)(zfp, fblock);

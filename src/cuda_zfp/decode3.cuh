@@ -12,10 +12,19 @@ __device__ __host__ inline
 void scatter_partial3(const Scalar* q, Scalar* p, int nx, int ny, int nz, int sx, int sy, int sz)
 {
   uint x, y, z;
-  for (z = 0; z < nz; z++, p += sz - ny * sy, q += 4 * (4 - ny))
-    for (y = 0; y < ny; y++, p += sy - nx * sx, q += 4 - nx)
-      for (x = 0; x < nx; x++, p += sx, q++)
-        *p = *q;
+  for (z = 0; z < 4; z++)
+    if (z < nz) {
+      for (y = 0; y < 4; y++)
+        if (y < ny) {
+          for (x = 0; x < 4; x++)
+            if (x < nx) {
+              *p = q[16 * z + 4 * y + x];
+              p += sx;
+            }
+          p += sy - nx * sx;
+        }
+      p += sz - ny * sy;
+    }
 }
 
 template<typename Scalar> 
@@ -154,9 +163,9 @@ size_t decode3launch(uint3 dims,
   cudaEventSynchronize(stop);
 	cudaStreamSynchronize(0);
 
-  float miliseconds = 0;
-  cudaEventElapsedTime(&miliseconds, start, stop);
-  float seconds = miliseconds / 1000.f;
+  float milliseconds = 0;
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  float seconds = milliseconds / 1000.f;
   float rate = (float(dims.x * dims.y * dims.z) * sizeof(Scalar) ) / seconds;
   rate /= 1024.f;
   rate /= 1024.f;
