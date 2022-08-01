@@ -115,6 +115,12 @@ Non-Enum Constants
 
 ----
 
+.. f:variable:: integer zFORp_version_tweak
+
+  Wraps :c:macro:`ZFP_VERSION_TWEAK`
+
+----
+
 .. f:variable:: integer zFORp_codec_version
 
   Wraps :c:data:`zfp_codec_version`
