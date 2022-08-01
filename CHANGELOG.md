@@ -3,7 +3,7 @@ Change Log
 
 ---
 
-## 1.0.0 (2022-07-XX)
+## 1.0.0 (2022-08-01)
 
 This release is not ABI compatible with prior releases due to numerous changes
 to function signatures and data structures like `zfp_field`.  However, few of
