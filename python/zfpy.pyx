@@ -17,6 +17,8 @@ cimport zfpy
 import numpy as np
 cimport numpy as np
 
+__version__ = ZFP_VERSION_STRING.decode()
+
 # export #define's
 HEADER_MAGIC = ZFP_HEADER_MAGIC
 HEADER_META = ZFP_HEADER_META
