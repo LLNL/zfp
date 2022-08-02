@@ -1,6 +1,9 @@
 import cython
 cimport libc.stdint as stdint
 
+cdef extern from 'zfp/version.h':
+    char* ZFP_VERSION_STRING
+
 cdef extern from "zfp/bitstream.h":
     cdef struct bitstream:
         pass
