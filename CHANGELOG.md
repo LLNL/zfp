@@ -3,6 +3,14 @@ Change Log
 
 ---
 
+## Unreleased
+
+### Fixed
+
+- #169: `libm` dependency is not always correctly detected.
+
+---
+
 ## 1.0.0 (2022-08-01)
 
 This release is not ABI compatible with prior releases due to numerous changes
