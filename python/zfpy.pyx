@@ -351,3 +351,50 @@ cpdef np.ndarray decompress_numpy(
         stream_close(bstream)
 
     return output
+
+cpdef dict header(const uint8_t[::1] compressed_data):
+    """Return stream header information in a python dict."""
+    if compressed_data is None:
+        raise TypeError("compressed_data cannot be None")
+
+    cdef const void* comp_data_pointer = <const void *>&compressed_data[0]
+    cdef zfp_field* field = zfp_field_alloc()
+    cdef bitstream* bstream = stream_open(
+        <void *>comp_data_pointer,
+        len(compressed_data)
+    )
+    cdef zfp_stream* stream = zfp_stream_open(bstream)
+    cdef zfp_mode mode
+
+    cdef zfp_stream strm
+
+    try:
+        if zfp_read_header(stream, field, HEADER_FULL) == 0:
+            raise ValueError("Failed to read required zfp header")
+
+        mode = zfp_stream_compression_mode(stream)
+        strm = stream[0]
+
+        return {
+            "nx": int(field.nx),
+            "ny": int(field.ny),
+            "nz": int(field.nz),
+            "nw": int(field.nw),
+            "type": ztype_to_dtype(field._type),
+            "sx": int(field.sx),
+            "sy": int(field.sy),
+            "sz": int(field.sz),
+            "sw": int(field.sw),
+            "mode": mode,
+            "params": {
+                "minbits": strm.minbits,
+                "maxbits": strm.minbits,
+                "maxprec": strm.maxprec,
+                "minexp": strm.minexp,
+            },
+
+        }
+    finally:
+        zfp_field_free(field)
+        zfp_stream_close(stream)
+        stream_close(bstream)

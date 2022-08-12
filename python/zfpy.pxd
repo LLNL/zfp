@@ -31,7 +31,11 @@ cdef extern from "zfp.h":
         ptrdiff_t sx, sy, sz, sw
         void* data
     ctypedef struct zfp_stream:
-        pass
+        cython.uint minbits      
+        cython.uint maxbits      
+        cython.uint maxprec      
+        int minexp        
+        bitstream* stream
 
     ctypedef int zfp_bool
 
@@ -53,6 +57,7 @@ cdef extern from "zfp.h":
     cython.uint zfp_stream_set_precision(zfp_stream* stream, cython.uint precision)
     double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance)
     zfp_mode zfp_stream_set_mode(zfp_stream* stream, stdint.uint64_t mode)
+    zfp_mode zfp_stream_compression_mode(const zfp_stream* stream)
     zfp_field* zfp_field_alloc()
     zfp_field* zfp_field_1d(void* pointer, zfp_type, size_t nx)
     zfp_field* zfp_field_2d(void* pointer, zfp_type, size_t nx, size_t ny)
