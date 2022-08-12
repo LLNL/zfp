@@ -6,7 +6,7 @@ include(FindNumPy)
 find_package(PythonInterp REQUIRED)
 find_package(PythonLibs REQUIRED)
 find_package(PythonExtensions REQUIRED)
-find_package(Cython REQUIRED)
+find_package(Cython 0.28 REQUIRED) # >= v0.28 required for const memoryview support
 find_package(NumPy REQUIRED)
 
 include_directories(${ZFP_SOURCE_DIR}/include)

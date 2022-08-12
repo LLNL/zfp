@@ -2,6 +2,7 @@
 import cython
 from libc.stdlib cimport malloc, free
 cimport libc.stdint as stdint
+from libc.stddef cimport ptrdiff_t
 from cython cimport view
 from itertools import islice, repeat, chain
 
