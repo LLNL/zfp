@@ -1,5 +1,6 @@
 import cython
 cimport libc.stdint as stdint
+from libc.stddef cimport ptrdiff_t
 
 cdef extern from "zfp/bitstream.h":
     cdef struct bitstream:
