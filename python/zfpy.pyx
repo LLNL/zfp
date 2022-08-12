@@ -385,14 +385,13 @@ cpdef dict header(const uint8_t[::1] compressed_data):
             "sy": int(field.sy),
             "sz": int(field.sz),
             "sw": int(field.sw),
-            "mode": mode,
+            "mode": int(mode),
             "params": {
-                "minbits": strm.minbits,
-                "maxbits": strm.minbits,
-                "maxprec": strm.maxprec,
-                "minexp": strm.minexp,
+                "minbits": int(strm.minbits),
+                "maxbits": int(strm.minbits),
+                "maxprec": int(strm.maxprec),
+                "minexp": int(strm.minexp),
             },
-
         }
     finally:
         zfp_field_free(field)
