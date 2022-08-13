@@ -381,10 +381,6 @@ cpdef dict header(const uint8_t[::1] compressed_data):
             "nz": int(field.nz),
             "nw": int(field.nw),
             "type": ztype_to_dtype(field._type),
-            "sx": int(field.sx),
-            "sy": int(field.sy),
-            "sz": int(field.sz),
-            "sw": int(field.sw),
             "mode": int(mode),
             "params": {
                 "minbits": int(strm.minbits),
