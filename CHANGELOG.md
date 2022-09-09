@@ -5,9 +5,20 @@ Change Log
 
 ## Unreleased
 
-This future release is not ABI compatible with prior releases due to numerous
-changes to function signatures and data structures like `zfp_field`.  However,
-few of the API changes, other than to cfp, should impact existing code.
+### Fixed
+
+- #176: `CFP` API is not exposed via CMake configuration file
+- #169: `libm` dependency is not always correctly detected.
+
+---
+
+## 1.0.0 (2022-08-01)
+
+This release is not ABI compatible with prior releases due to numerous changes
+to function signatures and data structures like `zfp_field`.  However, few of
+the API changes, other than to the cfp C API for compressed arrays, should
+impact existing code.  Note that numerous header files have been renamed or
+moved relative to prior versions.
 
 ### Added
 
@@ -16,6 +27,8 @@ few of the API changes, other than to cfp, should impact existing code.
 - Compressed-array classes for 4D data.
 - `const` versions of array references, pointers, and iterators.
 - A more complete API for pointers and iterators.
+- cfp support for proxy references and pointers, iterators, and
+  (de)serialization.
 - Support for pointers and iterators into array views.
 - `zfp::array::size_bytes()` allows querying the size of different components
   of an array object (e.g., payload, cache, index, metadata, ...).
@@ -25,13 +38,24 @@ few of the API changes, other than to cfp, should impact existing code.
 - Additional functions for querying `zfp_field` and `zfp_stream` structs.
 - `zfp_config`: struct that encapsulates compression mode and parameters.
 - Rounding modes for reducing bias in compression errors.
-- New examples: `ppm` and `iteratorC`.
+- New examples: `array`, `iteratorC`, and `ppm`.
 
 ### Changed
 
+- Headers from `array/`, `cfp/include/`, and `include/` have been renamed
+  and reorganized into a common `include/` directory.
+  - The libzfp API is now confined to `zfp.h`, `zfp.hpp`, and `zfp.mod`
+    for C, C++, and Fortran bindings, respectively.  These all appear in
+    the top-level `include/` directory upon installation.
+  - C++ headers now use a `.hpp` suffix; C headers use a `.h` suffix.
+  - C++ headers like `array/zfparray.h` have been renamed `zfp/array.hpp`.
+  - C headers like `cfp/include/cfparrays.h` have been renamed `zfp/array.h`.
 - `size_t` and `ptrdiff_t` replace `uint` and `int` for array sizes and
-  strides in the array classes and C API.
+  strides in the array classes and C/Fortran APIs.
 - `zfp_bool` replaces `int` as Boolean type in the C API.
+- `bitstream_offset` and `bitstream_size` replace `size_t` to ensure support
+  for 64-bit offsets into and lengths of bit streams.  Consequently, the
+  `bitstream` API has changed accordingly.
 - All array and view iterators are now random-access iterators.
 - Array inspectors now return `const_reference` rather than a scalar
   type like `float` to allow obtaining a `const_pointer` to an element
@@ -45,9 +69,10 @@ few of the API changes, other than to cfp, should impact existing code.
 - The compressed-array C++ implementation has been completely refactored to
   make it more modular, extensible, and reusable across array types.
 - Array block shapes are now computed on the fly rather than stored.
-- The cfp API now wraps array objects in structs.
-- The zfpy decompression API now supports the more general `memoryview` over
-  `bytes` objects.
+- The cfp C API now wraps array objects in structs.
+- The zfpy Python API now supports the more general `memoryview` over
+  `bytes` objects for decompression.
+- The zFORp Fortran module name is now `zfp` instead of `zforp_module`.
 - Some command-line options for the `diffusion` example have changed.
 - CMake 3.9 or later is now required for CMake builds.
 
@@ -55,6 +80,7 @@ few of the API changes, other than to cfp, should impact existing code.
 
 - `zfp::array::get_header()` has been replaced with a `zfp::array::header`
   constructor that accepts an array object.
+- `ZFP_VERSION_RELEASE` is no longer defined (use `ZFP_VERSION_PATCH`).
 
 ### Fixed
 
@@ -73,6 +99,7 @@ few of the API changes, other than to cfp, should impact existing code.
 - #126: `make install` does not install Fortran module.
 - #127: Reversible mode reports incorrect compressed block size.
 - #150: cmocka tests do not build on macOS.
+- #154: Thread safety is broken in `private_view` and `private_const_view`.
 - `ZFP_MAX_BITS` is off by one.
 - `diffusionC`, `iteratorC` are not being built with `gmake`.
 
@@ -119,7 +146,7 @@ few of the API changes, other than to cfp, should impact existing code.
 
 - Execution policy now applies to both compression and decompression.
 - Compressed array accessors now return Scalar type instead of
-  const Scalar& to avoid stale references to evicted cache lines.
+  `const Scalar&` to avoid stale references to evicted cache lines.
 
 ### Fixed
 
@@ -305,7 +332,7 @@ not backward compatible with previous versions of zfp.
 ### Fixed
 
 - Rare bug caused by exponent underflow in blocks with no normal and some
-  denormal numbers.
+  subnormal numbers.
 
 ---
 

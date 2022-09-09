@@ -27,9 +27,13 @@ responsible for compressing a *chunk* of several contiguous blocks.
 
 This section describes the |zfp| parallel compression algorithm and explains
 how to configure |libzfp| and enable parallel compression at run time via
-its :ref:`high-level C API <hl-api>`.  Parallel compression is not supported
-via the :ref:`low-level API <ll-api>`.
+its :ref:`high-level C API <hl-api>`.
 
+.. note::
+  Parallel compression is not supported via the :ref:`low-level API <ll-api>`,
+  which ignores all execution policy settings and always executes in serial.
+
+.. _exec-policies:
 
 Execution Policies
 ------------------
@@ -292,12 +296,15 @@ fixed storage, and therefore the decompressor needs to be instructed
 where each compressed block resides in the bit stream to enable
 parallel decompression.  Because the |zfp| bit stream does not currently
 store such information, variable-rate parallel decompression is not yet
-supported.
+supported, though plans are to make such functionality available in the
+near future.
 
 The CUDA implementation supports fixed-rate decompression.  OpenMP
-fixed-rate decompression will be added in the near future.
+fixed-rate decompression has been implemented and will be released in the
+near future.
 
 Future versions of |zfp| will allow efficient encoding of block sizes and/or
 offsets to allow each thread to quickly locate the blocks it is responsible
 for decompressing, which will allow for variable-rate compression and
-decompression.
+decompression.  Such capabilities are already present in the implementation
+of the |zfp| :ref:`read-only arrays <carray_classes>`.

@@ -1,6 +1,6 @@
-#include "array/zfparray2.h"
-#include "array/zfparray3.h"
-#include "array/zfpfactory.h"
+#include "zfp/array2.hpp"
+#include "zfp/array3.hpp"
+#include "zfp/factory.hpp"
 using namespace zfp;
 
 #include "gtest/gtest.h"
@@ -70,7 +70,7 @@ TEST_F(TEST_FIXTURE, given_onlyInclude2D3D_and_zfpHeaderFor1D_when_construct_exp
     zfp::array* arr = zfp::array::construct(h);
     FailWhenNoExceptionThrown();
   } catch (zfp::exception const & e) {
-    EXPECT_EQ(e.what(), std::string("zfparray1 not supported; include zfparray1.h before zfpfactory.h"));
+    EXPECT_EQ(e.what(), std::string("array1 not supported; include zfp/array1.hpp before zfp/factory.hpp"));
   } catch (std::exception const & e) {
     FailAndPrintException(e);
   }

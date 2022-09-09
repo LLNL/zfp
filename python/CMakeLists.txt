@@ -17,7 +17,7 @@ add_library(zfpy MODULE ${zfpy})
 target_link_libraries(zfpy zfp)
 python_extension_module(zfpy)
 
-# Build to the currrent binary dir to avoid conflicts with other libraries named zfp
+# Build to the current binary dir to avoid conflicts with other libraries named zfp
 set(PYLIB_BUILD_DIR "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Directory where zfp python library will be built")
 set_target_properties(zfpy PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYLIB_BUILD_DIR})
 

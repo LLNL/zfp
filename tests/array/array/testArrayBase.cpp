@@ -221,7 +221,7 @@ TEST_F(TEST_FIXTURE, given_zfpHeaderForCertainDimensionalityButHeaderMissing_whe
 
   } catch (zfp::exception const & e) {
     std::stringstream ss;
-    ss << "zfparray" << missingDim << " not supported; include zfparray" << missingDim << ".h before zfpfactory.h";
+    ss << "array" << missingDim << " not supported; include zfp/array" << missingDim << ".hpp before zfp/factory.hpp";
     EXPECT_EQ(e.what(), ss.str());
 
   } catch (std::exception const & e) {

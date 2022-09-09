@@ -5,8 +5,8 @@
 
 #define BIT_STREAM_STRIDED
 
-#include "include/bitstream.h"
-#include "src/inline/bitstream.c"
+#include "include/zfp/bitstream.h"
+#include "include/zfp/bitstream.inl"
 
 // 4 words per block
 #define BLOCK_SIZE 4
@@ -26,10 +26,10 @@ setup(void **state)
   struct setupVars *s = malloc(sizeof(struct setupVars));
   assert_non_null(s);
 
-  s->buffer = calloc(STREAM_STRIDED_LEN, sizeof(word));
+  s->buffer = calloc(STREAM_STRIDED_LEN, sizeof(bitstream_word));
   assert_non_null(s->buffer);
 
-  s->b = stream_open(s->buffer, STREAM_STRIDED_LEN * sizeof(word));
+  s->b = stream_open(s->buffer, STREAM_STRIDED_LEN * sizeof(bitstream_word));
   assert_non_null(s->b);
 
   assert_true(stream_set_stride(s->b, BLOCK_SIZE, DELTA));
@@ -54,7 +54,7 @@ static void
 given_Strided_when_ReadWordCompletesBlock_expect_PtrAdvancedByStrideLen(void **state)
 {
   bitstream* s = ((struct setupVars *)*state)->b;
-  word* prevPtr = s->ptr;
+  bitstream_word* prevPtr = s->ptr;
 
   int i;
   for (i = 0; i < BLOCK_SIZE - 1; i++) {
@@ -71,7 +71,7 @@ static void
 given_Strided_when_WriteWordCompletesBlock_expect_PtrAdvancedByStrideLen(void **state)
 {
   bitstream* s = ((struct setupVars *)*state)->b;
-  word* prevPtr = s->ptr;
+  bitstream_word* prevPtr = s->ptr;
 
   int i;
   for (i = 0; i < BLOCK_SIZE - 1; i++) {

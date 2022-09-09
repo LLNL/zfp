@@ -20,8 +20,16 @@ string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_MINOR[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_MINOR ${_zfp_h_contents})
 string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_PATCH[ \t]+([0-9]+).*"
     "\\1" ZFP_VERSION_PATCH ${_zfp_h_contents})
-set(ZFP_VERSION
-  "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}")
+string(REGEX REPLACE ".*#define[ \t]+ZFP_VERSION_TWEAK[ \t]+([0-9]+).*"
+    "\\1" ZFP_VERSION_TWEAK ${_zfp_h_contents})
+
+if(${ZFP_VERSION_TWEAK} EQUAL 0)
+  set(ZFP_VERSION
+    "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}")
+else()
+  set(ZFP_VERSION
+    "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}.${ZFP_VERSION_TWEAK}")
+endif()
 
 project(ZFP VERSION ${ZFP_VERSION})
 
@@ -249,10 +257,10 @@ list(APPEND ppm_private_defs PPM_CHROMA=${PPM_CHROMA})
 
 # Link libm only if necessary
 include(CheckCSourceCompiles)
-check_c_source_compiles("#include<math.h>\nfloat f; int main(){sqrt(f);return 0;}" HAVE_MATH)
+check_c_source_compiles("#include<math.h>\nint main(int n,char*v[]){return sqrt(n);}" HAVE_MATH)
 if(NOT HAVE_MATH)
   set(CMAKE_REQUIRED_LIBRARIES m)
-  check_c_source_compiles("#include<math.h>\nfloat f; int main(){sqrt(f);return 0;}" HAVE_LIBM_MATH)
+  check_c_source_compiles("#include<math.h>\nint main(int n,char*v[]){return sqrt(n);}" HAVE_LIBM_MATH)
   unset(CMAKE_REQUIRED_LIBRARIES)
   if(NOT HAVE_LIBM_MATH)
     message(FATAL_ERROR "Unable to use C math library functions (with or without -lm)")
@@ -318,11 +326,11 @@ endif()
 #------------------------------------------------------------------------------#
 # Header install
 #------------------------------------------------------------------------------#
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY array/   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
 if(BUILD_CFP)
-  install(DIRECTORY cfp/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+else()
+  install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+          PATTERN "cfp" EXCLUDE)
 endif()
 #------------------------------------------------------------------------------#
 # Build type: one of None, Debug, Release, RelWithDebInfo, MinSizeRel

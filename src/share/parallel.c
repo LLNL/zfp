@@ -79,12 +79,12 @@ compress_finish_par(zfp_stream* stream, bitstream** src, size_t chunks)
 {
   bitstream* dst = zfp_stream_bit_stream(stream);
   zfp_bool copy = (stream_data(dst) != stream_data(*src));
-  size_t offset = stream_wtell(dst);
+  bitstream_offset offset = stream_wtell(dst);
   size_t chunk;
 
   /* flush each stream and concatenate if necessary */
   for (chunk = 0; chunk < chunks; chunk++) {
-    size_t bits = stream_wtell(src[chunk]);
+    bitstream_size bits = stream_wtell(src[chunk]);
     offset += bits;
     stream_flush(src[chunk]);
     /* concatenate streams if they are not already contiguous */

@@ -28,7 +28,7 @@ consequently, larger compression errors than when the entire block is
 initialized as a whole.  Note that the iterator traversal order differs in
 this respect from traversal by :ref:`pointers <pointers>`.
 
-Blocks are visited in raster order similarly to how indidivual array
+Blocks are visited in raster order similarly to how individual array
 elements are indexed, that is, first by *x*, then by *y*, then by *z*,
 etc.  Within each block, elements are visited in the same raster
 order.  All |4powd| values in a block are visited before moving on to the
@@ -41,7 +41,8 @@ forward iterators).  |zfp| iterators are
 be used in STL algorithms that support random access iterators.
 
 |zfp| |crpirelease| adds :code:`const` qualified versions of iterators,
-given by the :code:`const_iterator` class.
+given by the :code:`const_iterator` class.  Such iterators are available
+also for :ref:`read-only arrays <carray_classes>`.
 
 Per STL mandate, the iterators define several types:
 
@@ -134,8 +135,9 @@ The following operations are defined on iterators:
 .. cpp:function:: difference_type const_iterator::operator-(const const_iterator& it) const
 
   Return difference between this iterator and *it* in number of elements.
-  The difference *p* |minus| *q* is negative if *p* < *q*.  The iterators must
-  refer to elements in the same array.
+  The difference *p* |minus| *q* between two iterators, *p* and *q*, is
+  negative if *p* < *q*.  The iterators must refer to elements in the same
+  array.
 
 ----
 

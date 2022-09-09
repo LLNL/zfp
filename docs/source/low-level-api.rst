@@ -5,14 +5,23 @@
 Low-Level C API
 ===============
 
-The low-level C API provides functionality for compressing individual
-*d*-dimensional blocks of up to |4powd| values.  If a block is not
-complete, i.e., contains fewer than |4powd| values, then |zfp|'s partial
+The |libzfp| low-level C API provides functionality for compressing individual
+*d*-dimensional blocks of up to |4powd| values.  If a block is not complete,
+i.e., contains fewer than |4powd| values, then |zfp|'s partial
 block support should be favored over padding the block with, say, zeros
 or other fill values.  The blocks (de)compressed need not be contiguous
 and can be gathered from or scattered to a larger array by setting
 appropriate strides.  As of |zfp| |cpprelease|, templated C++ wrappers
 are also available to simplify calling the low-level API from C++.
+The C API is declared in :file:`zfp.h`; the C++ wrappers are found in
+:file:`zfp.hpp`.
+
+.. note::
+  Because the unit of parallel work in |zfp| is a *block*, and because the
+  low-level API operates on individual blocks, this API supports only the
+  the serial :ref:`execution policy <exec-policies>`.  Any other execution
+  policy set in :c:type:`zfp_stream` is silently ignored.  For parallel
+  execution, see the :ref:`high-level API <hl-api>`.
 
 The following topics are available:
 
@@ -364,14 +373,14 @@ C++ Wrappers
 .. cpp:namespace:: zfp
 
 To facilitate calling the low-level API from C++, a number of wrappers are
-available that are templated on scalar type and dimensionality.  Each function
-of the form :code:`zfp_function_type_dims`, where *type* denotes scalar type
-and *dims* denotes dimensionality, has a corresponding C++ wrapper
-:code:`zfp::function<type, dims>`.  For example, the C function
-:c:func:`zfp_encode_block_float_2` has a C++ wrapper
+available (as of |zfp| |cpprelease|) that are templated on scalar type and
+dimensionality.  Each function of the form :code:`zfp_function_type_dims`,
+where *type* denotes scalar type and *dims* denotes dimensionality, has a
+corresponding C++ wrapper :code:`zfp::function<type, dims>`.  For example,
+the C function :c:func:`zfp_encode_block_float_2` has a C++ wrapper
 :cpp:func:`zfp::encode_block\<float, 2>`.  Often *dims* can be inferred from
 the parameters of overloaded functions, in which case it is omitted as
-template parameter.  The C++ wrappers are defined in :code:`zfpcpp.h`.
+template parameter.  The C++ wrappers are defined in :file:`zfp.hpp`.
 
 Encoder
 ^^^^^^^

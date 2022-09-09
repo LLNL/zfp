@@ -53,7 +53,7 @@ _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
   /* test if block-floating-point transform is reversible */
   if (_t1(rev_fwd_reversible, Scalar)(iblock, fblock, BLOCK_SIZE, emax)) {
     /* transform is reversible; test if block has any non-zeros */
-    uint e = emax + EBIAS;
+    uint e = (uint)(emax + EBIAS);
     if (e) {
       /* encode common exponent */
       bits += 2;
@@ -75,6 +75,6 @@ _t2(rev_encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
     stream_write_bits(zfp->stream, 3, 2);
   }
   /* losslessly encode integers */
-  bits += _t2(rev_encode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, zfp->maxprec, iblock);
+  bits += _t2(rev_encode_block, Int, DIMS)(zfp->stream, zfp->minbits - MIN(bits, zfp->minbits), zfp->maxbits - bits, zfp->maxprec, iblock);
   return bits;
 }

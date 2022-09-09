@@ -15,13 +15,6 @@ they call the compression library, applications must link with |libzfp|.
 
 |zfp| is preferably built using `CMake <https://cmake.org>`__, although the
 core library can also be built using GNU make on Linux, macOS, and MinGW.
-|zfp| has successfully been built and tested using these compilers:
-
-* gcc versions 4.4.7, 4.7.3, 4.8.5, 4.9.4, 5.5.0, 6.1.0, 6.4.0, 7.1.0, 7.3.0, 8.1.0
-* icc versions 14.0.3, 15.0.6, 16.0.4, 17.0.2, 18.0.2, 19.0.3
-* clang versions 3.9.1, 4.0.0, 5.0.0, 6.0.0
-* MinGW version 5.3.0
-* Visual Studio versions 14 (2015), 15 (2017)
 
 |zfp| conforms to various language standards, including C89, C99, C++98,
 C++11, and C++14.
@@ -37,7 +30,7 @@ CMake Builds
 To build |zfp| using `CMake <https://cmake.org>`__ on Linux or macOS, start
 a Unix shell and type::
 
-    cd zfp-0.5.5
+    cd zfp-1.0.0
     mkdir build
     cd build
     cmake ..
@@ -55,7 +48,7 @@ By default, CMake builds will attempt to locate and use
 To build |zfp| using Visual Studio on Windows, start a DOS shell
 and type::
 
-    cd zfp-0.5.5
+    cd zfp-1.0.0
     mkdir build
     cd build
     cmake ..
@@ -74,7 +67,7 @@ GNU Builds
 To build |zfp| using `gcc <https://gcc.gnu.org>`__ without
 `OpenMP <http://www.openmp.org>`__, type::
 
-    cd zfp-0.5.5
+    cd zfp-1.0.0
     gmake
 
 This builds |libzfp| as a static library as well as the |zfp|
@@ -138,7 +131,7 @@ Regardless of the settings below, |libzfp| will always be built.
 
 .. c:macro:: BUILD_CFP
 
-  Build |libcfp| for C bindings to compressed arrays.
+  Build |libcfp| for C bindings to the compressed-array classes.
   Default: off.
 
 
@@ -161,7 +154,7 @@ Regardless of the settings below, |libzfp| will always be built.
 .. c:macro:: BUILD_ZFORP
 
   Build |libzforp| for Fortran bindings to the C API.  Requires Fortran
-  standard 2003 or later.  GNU make users may specify the Fortran compiler
+  standard 2018 or later.  GNU make users may specify the Fortran compiler
   to use via
   ::
 
@@ -192,8 +185,6 @@ Regardless of the settings below, |libzfp| will always be built.
 .. c:macro:: BUILD_SHARED_LIBS
 
   Build shared objects (:file:`.so`, :file:`.dylib`, or :file:`.dll` files).
-  On macOS, the :code:`SOFLAGS` line in the :file:`Config` file may have
-  to be uncommented when building with GNU make.
   CMake default: on.
   GNU make default: off.
 
@@ -234,7 +225,9 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   0 or OFF to disable OpenMP support.  For GNU builds, OpenMP is disabled by
   default.  Set this macro to 1 or ON to enable OpenMP support.  See also
   OMPFLAGS in :file:`Config` in case the compiler does not recognize
-  :code:`-fopenmp`.  NOTE: clang currently does not support OpenMP on macOS.
+  ``-fopenmp``.  For example, Apple clang requires
+  ``OMPFLAGS=-Xclang -fopenmp``, ``LDFLAGS=-lomp``, and an installation of
+  ``libomp``.
   CMake default: on.
   GNU make default: off.
 
@@ -257,7 +250,7 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 
   **Experimental feature**.  By default, |zfp| coefficients are truncated,
   not rounded, which can result in biased errors (see
-  :ref:`FAQ #30 <q-err-dist>`).  To counter this, two rounding modes are
+  FAQ :ref:`#30 <q-err-dist>`).  To counter this, two rounding modes are
   available: :code:`ZFP_ROUND_FIRST` (round during compression; analogous
   to mid-tread quantization) and :code:`ZFP_ROUND_LAST` (round during
   decompression; analogous to mid-riser quantization).  With
@@ -343,8 +336,9 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 .. c:macro:: BIT_STREAM_WORD_TYPE
 
   Unsigned integer type used for buffering bits.  Wider types tend to give
-  higher performance at the expense of lower bit rate granularity.  For
-  portability of compressed files between little and big endian platforms,
+  higher performance at the expense of lower
+  :ref:`bit rate granularity <q-granularity>`.  For portability of compressed
+  files between little and big endian platforms,
   :c:macro:`BIT_STREAM_WORD_TYPE` should be set to :c:type:`uint8`.
   Default: :c:type:`uint64`.
 
@@ -436,4 +430,4 @@ The necessary dependencies can be installed using ``pip`` and the |zfp|
 Fortran
 ^^^^^^^
 
-The optional Fortran bindings require a Fortran 2003 compiler.
+The optional Fortran bindings require a Fortran 2018 compiler.

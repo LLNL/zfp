@@ -21,7 +21,7 @@ set_property(TARGET zFORp PROPERTY SOVERSION ${ZFP_VERSION_MAJOR})
 set_property(TARGET zFORp PROPERTY OUTPUT_NAME ${ZFP_LIBRARY_PREFIX}zFORp)
 
 # install location for module file
-install(FILES ${CMAKE_Fortran_MODULE_DIRECTORY}/zforp.mod
+install(FILES ${CMAKE_Fortran_MODULE_DIRECTORY}/zfp.mod
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # install location for library

@@ -1,7 +1,7 @@
 #ifndef FIXEDPT_H
 #define FIXEDPT_H
 
-#include "include/zfp/types.h"
+#include "include/zfp/internal/zfp/types.h"
 
 typedef struct {
   // the number represented = i + (2^-32)*f

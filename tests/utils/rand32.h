@@ -1,7 +1,7 @@
 #ifndef RAND_32_H
 #define RAND_32_H
 
-#include "include/zfp/types.h"
+#include "include/zfp/internal/zfp/types.h"
 
 // reset seed
 void

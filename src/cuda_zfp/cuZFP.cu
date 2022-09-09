@@ -23,7 +23,7 @@
   #define inline_ inline
 #endif
 
-#include "../inline/bitstream.c"
+#include "zfp/bitstream.inl"
 namespace internal 
 { 
   
@@ -198,7 +198,7 @@ size_t decode(uint ndims[3], int3 stride, int bits_per_block, Word *stream, T *o
 Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
 {
   bool stream_device = cuZFP::is_gpu_ptr(stream->stream->begin);
-  assert(sizeof(word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
+  assert(sizeof(bitstream_word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
 
   if(stream_device)
   {
@@ -214,7 +214,7 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
 Word *setup_device_stream_decompress(zfp_stream *stream,const zfp_field *field)
 {
   bool stream_device = cuZFP::is_gpu_ptr(stream->stream->begin);
-  assert(sizeof(word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
+  assert(sizeof(bitstream_word) == sizeof(Word)); // "CUDA version currently only supports 64bit words");
 
   if(stream_device)
   {
@@ -483,7 +483,7 @@ cuda_decompress(zfp_stream *stream, zfp_field *field)
   internal::cleanup_device_ptr(stream->stream->begin, d_stream, 0, 0, field->type);
   internal::cleanup_device_ptr(field->data, d_data, bytes, offset, field->type);
   
-  // this is how zfp determins if this was a success
+  // this is how zfp determines if this was a success
   size_t words_read = decoded_bytes / sizeof(Word);
   stream->stream->bits = wsize;
   // set stream pointer to end of stream

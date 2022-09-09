@@ -1,8 +1,8 @@
-#include "array/zfpcarray1.h"
-#include "array/zfpcarray2.h"
-#include "array/zfpcarray3.h"
-#include "array/zfpcarray4.h"
-#include "array/zfpfactory.h"
+#include "zfp/constarray1.hpp"
+#include "zfp/constarray2.hpp"
+#include "zfp/constarray3.hpp"
+#include "zfp/constarray4.hpp"
+#include "zfp/factory.hpp"
 using namespace zfp;
 
 extern "C" {

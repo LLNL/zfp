@@ -11,10 +11,10 @@
 #include <sstream>
 #include <string>
 #include "zfp.h"
-#include "zfparray1.h"
-#include "zfparray2.h"
-#include "zfparray3.h"
-#include "zfparray4.h"
+#include "zfp/array1.hpp"
+#include "zfp/array2.hpp"
+#include "zfp/array3.hpp"
+#include "zfp/array4.hpp"
 
 enum ArraySize {
   Small  = 0, // 2^12 = 4096 scalars (2^12 = (2^6)^2 = (2^4)^3 = (2^3)^4)
@@ -759,7 +759,7 @@ test(uint dims, ArraySize array_size)
   // determine array size
   uint nx, ny, nz, nw;
   zfp_field* field = zfp_field_alloc();
-  zfp_field_set_type(field, zfp::trait<Scalar>::type);
+  zfp_field_set_type(field, zfp::internal::trait<Scalar>::type);
   zfp_field_set_pointer(field, f);
   switch (dims) {
     case 1:
@@ -982,8 +982,8 @@ test(uint dims, ArraySize array_size)
     },
     // large
     {
-      {2.441e-04, 7.801e-04, 3.599e-03, 2.793e-02},
-      {2.670e-04, 9.075e-04, 3.694e-03, 2.779e-02},
+      {2.441e-04, 4.883e-04, 1.222e-03, 2.567e-02},
+      {2.670e-04, 4.883e-04, 1.222e-03, 2.567e-02},
     }
   };
   double rate = 16;

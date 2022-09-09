@@ -181,7 +181,7 @@ _t1(encode_few_ints_prec, UInt)(bitstream* restrict_ stream, uint maxprec, const
 {
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
-  size_t offset = stream_wtell(&s);
+  bitstream_offset offset = stream_wtell(&s);
   uint intprec = (uint)(CHAR_BIT * sizeof(UInt));
   uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint i, k, n;
@@ -210,7 +210,7 @@ _t1(encode_many_ints_prec, UInt)(bitstream* restrict_ stream, uint maxprec, cons
 {
   /* make a copy of bit stream to avoid aliasing */
   bitstream s = *stream;
-  size_t offset = stream_wtell(&s);
+  bitstream_offset offset = stream_wtell(&s);
   uint intprec = (uint)(CHAR_BIT * sizeof(UInt));
   uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint i, k, n, c;
@@ -240,7 +240,7 @@ _t1(encode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, 
 {
   /* use fastest available encoder implementation */
   if (with_maxbits(maxbits, maxprec, size)) {
-    /* rate contrained path: encode partial bit planes */
+    /* rate constrained path: encode partial bit planes */
     if (size <= 64)
       return _t1(encode_few_ints, UInt)(stream, maxbits, maxprec, data, size); /* 1D, 2D, 3D blocks */
     else
@@ -257,9 +257,9 @@ _t1(encode_ints, UInt)(bitstream* restrict_ stream, uint maxbits, uint maxprec, 
 
 /* encode block of integers */
 static uint
-_t2(encode_block, Int, DIMS)(bitstream* stream, int minbits, int maxbits, int maxprec, Int* iblock)
+_t2(encode_block, Int, DIMS)(bitstream* stream, uint minbits, uint maxbits, uint maxprec, Int* iblock)
 {
-  int bits;
+  uint bits;
   cache_align_(UInt ublock[BLOCK_SIZE]);
   /* perform decorrelating transform */
   _t2(fwd_xform, Int, DIMS)(iblock);

@@ -1,5 +1,5 @@
 #include "zfp.h"
-#include "zfp/macros.h"
+#include "zfp/internal/zfp/macros.h"
 #include "src/share/omp.c"
 
 #include <stdarg.h>

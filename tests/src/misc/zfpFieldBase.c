@@ -181,7 +181,6 @@ when_noncontiguousDataWithNegativeStride_fieldBeginsAtCorrectLocation(void **sta
 {
   struct setupVars *bundle = *state;
   zfp_field* field = bundle->field;
-  SCALAR* data = bundle->data;
 
 #if DIMS == 1
   ptrdiff_t min = ((int)-SX * (ptrdiff_t)(NX - 1));

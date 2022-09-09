@@ -7,8 +7,8 @@ Serialization
 
 .. cpp:namespace:: zfp
 
-|zfp|'s compressed arrays can be serialized to sequential, contiguous
-storage and later recovered back into an object, e.g., to support
+|zfp|'s read-write compressed arrays can be serialized to sequential,
+contiguous storage and later recovered back into an object, e.g., to support
 I/O of compressed-array objects.  Two pieces of information are needed
 to describe a |zfp| array: the raw compressed data, obtained via
 :cpp:func:`array::compressed_data` and :cpp:func:`array::compressed_size`,
@@ -38,10 +38,10 @@ and via a generic :ref:`factory function <array_factory>`:
   :cpp:func:`array::scalar_type` and :cpp:func:`array::dimensionality`.
 
   The (static) factory function is made available by including
-  :file:`zfpfactory.h`.  This header must be included *after* first
+  :file:`zfp/factory.hpp`.  This header must be included *after* first
   including the header files associated with the compressed arrays, i.e.,
-  :file:`zfparray1.h`, :file:`zfparray2.h`, :file:`zfparray3.h`, and
-  :file:`zfparray4.h`.  Only those arrays whose header files are included
+  :file:`zfp/array1.hpp`, :file:`zfp/array2.hpp`, :file:`zfp/array3.hpp`, and
+  :file:`zfp/array4.hpp`.  Only those arrays whose header files are included
   can be constructed by the factory function.  This design decouples the
   array classes so that they may be included independently, for example,
   to reduce compilation time.
@@ -79,6 +79,8 @@ copy::
   fread(p->compressed_data(), p->compressed_size(), 1, file);
   assert(p->dimensionality() == 3 && p->scalar_type() == zfp_type_double);
   zfp::array3d& a = *dynamic_cast<zfp::array3d*>(p);
+
+When the array is no longer in use, call :code:`delete p;` to deallocate it.
 
 .. note::
   The array serialization API changed significantly in |zfp| |crpirelease|.

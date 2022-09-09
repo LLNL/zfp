@@ -97,7 +97,7 @@ are needed::
 
   // allocate buffer for compressed data
   size_t bufsize = zfp_stream_maximum_size(zfp, field);
-  uchar* buffer = new uchar[bufsize];
+  void* buffer = malloc(bufsize);
 
 Note that :c:func:`zfp_stream_maximum_size` returns the smallest buffer
 size necessary to safely compress the data---the *actual* compressed size
@@ -235,7 +235,7 @@ The block above could also have been compressed as follows using strides::
   ptrdiff_t sx = &block[0][0][1] - &block[0][0][0]; // x stride =  1
   ptrdiff_t sy = &block[0][1][0] - &block[0][0][0]; // y stride =  4
   ptrdiff_t sz = &block[1][0][0] - &block[0][0][0]; // z stride = 16
-  size_t bits = zfp_encode_block_strided_double_3(zfp, block, sx, sy, sz);
+  size_t bits = zfp_encode_block_strided_double_3(zfp, &block[0][0][0], sx, sy, sz);
 
 The strides are measured in number of array elements, not in bytes.
 
@@ -281,17 +281,16 @@ Compressed C++ Arrays
 
 .. cpp:namespace:: zfp
 
-The |zfp| compressed array API, which currently supports 1D, 2D, and 3D
-(but not 4D) arrays, has been designed to facilitate integration with existing
-applications.  After initial array declaration, a |zfp| array can often
-be used in place of a regular C/C++ array or STL vector, e.g., using flat
-indexing via :code:`a[index]`, nested indexing :code:`a[k][j][i]` (via
-:ref:`nested views <nested_view>`), or using multidimensional indexing via
-:code:`a(i)`, :code:`a(i, j)`, or :code:`a(i, j, k)`.  There are,
-however, some important differences.  For instance, applications that
-rely on addresses or references to array elements may have to be
-modified to use special proxy classes that implement pointers and
-references; see :ref:`limitations`.
+The |zfp| compressed-array API has been designed to facilitate integration
+with existing applications.  After initial array declaration, a |zfp| array
+can often be used in place of a regular C/C++ array or STL vector, e.g.,
+using flat indexing via :code:`a[index]`, nested indexing :code:`a[k][j][i]`
+(via :ref:`nested views <nested_view>`), or using multidimensional indexing
+via :code:`a(i)`, :code:`a(i, j)`, :code:`a(i, j, k)`, or
+:code:`a(i, j, k, l)`.  There are, however, some important differences.  For
+instance, applications that rely on addresses or references to array elements
+may have to be modified to use special proxy classes that implement pointers
+and references; see :ref:`limitations`.
 
 |zfp|'s compressed arrays do not support special floating-point values like
 infinities and NaNs, although subnormal numbers are handled correctly.
@@ -305,8 +304,8 @@ The |zfp| C++ classes are implemented entirely as header files and make
 extensive use of C++ templates to reduce code redundancy.  These classes
 are wrapped in the :cpp:any:`zfp` namespace.
 
-Currently, there are six array classes for 1D, 2D, and 3D arrays, each of
-which can represent single- or double-precision values.  Although these
+Currently, there are eight array classes for 1D, 2D, 3D, and 4D arrays, each
+of which can represent single- or double-precision values.  Although these
 arrays store values in a form different from conventional single- and
 double-precision floating point, the user interacts with the arrays via
 floats and doubles.
@@ -346,6 +345,7 @@ increments of 64 / |4powd| bits in *d* dimensions, i.e.
   1D arrays: 16-bit granularity
   2D arrays: 4-bit granularity
   3D arrays: 1-bit granularity
+  4D arrays: 1/4-bit granularity
 
 For finer granularity, the :c:macro:`BIT_STREAM_WORD_TYPE` macro needs to
 be set to a type narrower than 64 bits during compilation of |libzfp|,
@@ -356,6 +356,7 @@ bits in *d* dimensions, or
   1D arrays: 2-bit granularity
   2D arrays: 1/2-bit granularity
   3D arrays: 1/8-bit granularity
+  4D arrays: 1/32-bit granularity
 
 Note that finer granularity usually implies slightly lower performance.
 Also note that because the arrays are stored compressed, their effective
@@ -403,7 +404,7 @@ directly without having to convert to/from its floating-point representation::
 
 The array can through this pointer be initialized from offline compressed
 storage, but only after its dimensions and rate have been specified (see
-above).  For this to work properly, the cache must first be emptied via a
+above).  For this to work properly, the cache must first be emptied via an
 :cpp:func:`array::clear_cache` call (see below).
 
 Through operator overloading, the array can be accessed in one of two ways.
@@ -497,14 +498,14 @@ for references and pointers that guarantee persistent access by referencing
 elements by array object and index.  These classes perform decompression on
 demand, much like how Boolean vector references are implemented in the STL.
 
-Iterators for 1D arrays support random access, while 2D and 3D array iterators
-are merely forward (sequential) iterators.  All iterators ensure that array
-values are visited one block at a time, and are the preferred way of looping
-over array elements.  Such block-by-block access is especially useful when
-performing write accesses since then complete blocks are updated one at a
-time, thus reducing the likelihood of a partially updated block being evicted
-from the cache and compressed, perhaps with some values in the block being
-uninitialized.  Here is an example of initializing a 3D array::
+As of |zfp| |raiterrelease|, all iterators for 1D-4D arrays support random
+access.  Iterators ensure that array values are visited one block at a time,
+and are the preferred way of looping over array elements.  Such block-by-block
+access is especially useful when performing write accesses since then complete
+blocks are updated one at a time, thus reducing the likelihood of a partially
+updated block being evicted from the cache and compressed, perhaps with some
+values in the block being uninitialized.  Here is an example of initializing
+a 3D array::
 
   for (zfp::array3d::iterator it = a.begin(); it != a.end(); it++) {
     size_t i = it.i();
@@ -553,9 +554,8 @@ row-major order, i.e.
 where :code:`&a(i, j, k)` and :code:`&a[0]` are both of type
 :cpp:class:`array3d::pointer`.  Thus, iterators and pointers do not
 visit arrays in the same order, except for the special case of 1D arrays.
-Unlike iterators, pointers support random access for arrays of all
-dimensions and behave very much like :code:`float*` and :code:`double*`
-built-in pointers.
+Like iterators, pointers support random access for arrays of all dimensions
+and behave very much like :code:`float*` and :code:`double*` built-in pointers.
 
 Proxy objects for array element references have been supported since the
 first release of |zfp|, and may for instance be used in place of
@@ -591,9 +591,9 @@ at least two layers of blocks (2 |times| (*nx* / 4) |times| (*ny* / 4)
 blocks) for applications that stream through the array and perform stencil
 computations such as gathering data from neighboring elements.  This allows
 limiting the cache misses to compulsory ones.  If the *cache_size* parameter
-is set to zero bytes, then a default size of |sqrt|\ *n* blocks is used,
-where *n* is the total number of blocks in the array.
-
+is set to zero bytes, then a default size of |sqrt|\ *n* blocks (rounded
+up to the next integer power of two) is used, where *n* is the total number
+of blocks in the array.
 
 The cache size can be set during construction, or can be set at a later
 time via

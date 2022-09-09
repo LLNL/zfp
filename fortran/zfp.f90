@@ -1,4 +1,4 @@
-module zFORp
+module zfp
 
   use, intrinsic :: iso_c_binding, only: c_int, c_int64_t, c_size_t, c_ptrdiff_t, c_double, c_ptr, c_null_ptr, c_loc
   implicit none
@@ -51,25 +51,28 @@ module zFORp
   ! constants are hardcoded
   ! const_xyz holds value, but xyz is the public constant
 
-  integer, parameter :: const_zFORp_version_major = 0
-  integer, parameter :: const_zFORp_version_minor = 5
-  integer, parameter :: const_zFORp_version_patch = 5
+  integer, parameter :: const_zFORp_version_major = 1
+  integer, parameter :: const_zFORp_version_minor = 0
+  integer, parameter :: const_zFORp_version_patch = 0
+  integer, parameter :: const_zFORp_version_tweak = 0
   integer, protected, bind(c, name="zFORp_version_major") :: zFORp_version_major
   integer, protected, bind(c, name="zFORp_version_minor") :: zFORp_version_minor
   integer, protected, bind(c, name="zFORp_version_patch") :: zFORp_version_patch
+  integer, protected, bind(c, name="zFORp_version_tweak") :: zFORp_version_tweak
   data zFORp_version_major/const_zFORp_version_major/, &
        zFORp_version_minor/const_zFORp_version_minor/, &
-       zFORp_version_patch/const_zFORp_version_patch/
+       zFORp_version_patch/const_zFORp_version_patch/, &
+       zFORp_version_tweak/const_zFORp_version_tweak/
 
   integer, parameter :: const_zFORp_codec_version = 5
   integer, protected, bind(c, name="zFORp_codec_version") :: zFORp_codec_version
   data zFORp_codec_version/const_zFORp_codec_version/
 
-  integer, parameter :: const_zFORp_library_version = 85 ! 0x55
+  integer, parameter :: const_zFORp_library_version = 4096 ! 0x1000
   integer, protected, bind(c, name="zFORp_library_version") :: zFORp_library_version
   data zFORp_library_version/const_zFORp_library_version/
 
-  character(len = 36), parameter :: zFORp_version_string = 'zfp version 0.5.5 (May 5, 2019)'
+  character(len = 36), parameter :: zFORp_version_string = 'zfp version 1.0.0 (August 1, 2022)'
 
   integer, parameter :: const_zFORp_min_bits = 1
   integer, parameter :: const_zFORp_max_bits = 16658
@@ -399,6 +402,12 @@ module zFORp
       integer(c_size_t) :: byte_size
     end function
 
+    function zfp_field_blocks(field) result(blocks) bind(c, name="zfp_field_blocks")
+      import
+      type(c_ptr), value :: field
+      integer(c_size_t) :: blocks
+    end function
+
     function zfp_field_stride(field, stride_arr) result(is_strided) bind(c, name="zfp_field_stride")
       import
       type(c_ptr), value :: field, stride_arr
@@ -542,7 +551,8 @@ module zFORp
   ! C macros -> constants
   public :: zFORp_version_major, &
             zFORp_version_minor, &
-            zFORp_version_patch
+            zFORp_version_patch, &
+            zFORp_version_tweak
 
   public :: zFORp_codec_version, &
             zFORp_library_version, &
@@ -629,6 +639,7 @@ module zFORp
             zFORp_field_dimensionality, &
             zFORp_field_size, &
             zFORp_field_size_bytes, &
+            zFORp_field_blocks, &
             zFORp_field_stride, &
             zFORp_field_is_contiguous, &
             zFORp_field_metadata, &
@@ -984,6 +995,13 @@ contains
     byte_size = zfp_field_size_bytes(field%object)
   end function zFORp_field_size_bytes
 
+  function zFORp_field_blocks(field) result(blocks) bind(c, name="zforp_field_blocks")
+    implicit none
+    type(zFORp_field), intent(in) :: field
+    integer (kind=8) :: blocks
+    blocks = zfp_field_blocks(field%object)
+  end function zFORp_field_blocks
+
   function zFORp_field_stride(field, stride_arr) result(is_strided) bind(c, name="zforp_field_stride")
     implicit none
     type(zFORp_field), intent(in) :: field
@@ -1113,4 +1131,4 @@ contains
     num_bits_read = zfp_read_header(stream%object, field%object, int(mask, c_int))
   end function zFORp_read_header
 
-end module zFORp
+end module zfp

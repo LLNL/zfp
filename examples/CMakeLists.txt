@@ -1,3 +1,7 @@
+add_executable(array array.cpp)
+target_compile_definitions(array PRIVATE ${zfp_compressed_array_defs})
+target_link_libraries(array zfp)
+
 add_executable(diffusion diffusion.cpp)
 target_compile_definitions(diffusion PRIVATE ${zfp_compressed_array_defs})
 if(ZFP_WITH_OPENMP)
@@ -5,7 +9,6 @@ if(ZFP_WITH_OPENMP)
 else()
   target_link_libraries(diffusion zfp)
 endif()
-
 
 if(BUILD_CFP)
   add_executable(diffusionC diffusionC.c)
@@ -38,6 +41,7 @@ add_executable(speed speed.c)
 target_link_libraries(speed zfp)
 
 if(HAVE_LIBM_MATH)
+  target_link_libraries(array m)
   target_link_libraries(diffusion m)
 
   if(BUILD_CFP)

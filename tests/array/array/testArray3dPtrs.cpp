@@ -1,4 +1,4 @@
-#include "array/zfparray3.h"
+#include "zfp/array3.hpp"
 using namespace zfp;
 
 #define ARRAY_DIMS_SCALAR_TEST Array3dTest

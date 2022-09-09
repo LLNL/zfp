@@ -2,7 +2,7 @@
 #define ZFP_HASH_H
 
 #include <stddef.h>
-#include "include/zfp/types.h"
+#include "include/zfp/internal/zfp/types.h"
 
 uint64
 hashBitstream(uint64* ptrStart, size_t bufsizeBytes);

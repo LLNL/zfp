@@ -10,11 +10,3 @@
     variables:
        ci_test_regex: "."
     extends: [.test_gpu, .pascal_job]
-
-.pascal_build_cpu:
-    extends: [.build_cpu, .pascal_job]
-
-.pascal_test_cpu:
-    variables:
-       ci_test_regex: "."
-    extends: [.test_cpu, .pascal_job]

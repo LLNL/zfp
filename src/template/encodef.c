@@ -65,8 +65,8 @@ _t2(encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
   uint bits = 1;
   /* compute maximum exponent */
   int emax = _t1(exponent_block, Scalar)(fblock, BLOCK_SIZE);
-  int maxprec = precision(emax, zfp->maxprec, zfp->minexp, DIMS);
-  uint e = maxprec ? emax + EBIAS : 0;
+  uint maxprec = precision(emax, zfp->maxprec, zfp->minexp, DIMS);
+  uint e = maxprec ? (uint)(emax + EBIAS) : 0;
   /* encode block only if biased exponent is nonzero */
   if (e) {
     cache_align_(Int iblock[BLOCK_SIZE]);
@@ -76,7 +76,7 @@ _t2(encode_block, Scalar, DIMS)(zfp_stream* zfp, const Scalar* fblock)
     /* perform forward block-floating-point transform */
     _t1(fwd_cast, Scalar)(iblock, fblock, BLOCK_SIZE, emax);
     /* encode integer block */
-    bits += _t2(encode_block, Int, DIMS)(zfp->stream, zfp->minbits - bits, zfp->maxbits - bits, maxprec, iblock);
+    bits += _t2(encode_block, Int, DIMS)(zfp->stream, zfp->minbits - MIN(bits, zfp->minbits), zfp->maxbits - bits, maxprec, iblock);
   }
   else {
     /* write single zero-bit to indicate that all values are zero */

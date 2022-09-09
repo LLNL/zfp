@@ -36,12 +36,16 @@ take the address of a reference, which yields a
 :ref:`proxy pointer <pointers>`.  When a reference appears as an rvalue in
 an expression, it is implicitly converted to a value.
 
-|zfp| |crpirelease| adds :code:`const` qualified versions of references,
+|zfp| |crpirelease| adds ``const`` qualified versions of references,
 pointers, and iterators to support const correctness and potential performance
 improvements when only read access is needed.  As with STL containers, the
-corresponding types are prefixed by :code:`const_`, e.g.,
-:code:`const_reference`.  The mutable versions of these classes inherit
+corresponding types are prefixed by ``const_``, e.g.,
+``const_reference``.  The mutable versions of these classes inherit
 the read-only API from the corresponding const versions.
+
+Only references into :ref:`read-write arrays <array_classes>` are discussed
+here; the :ref:`read-only arrays <carray_classes>` support the same
+``const_reference`` API.
 
 .. note::
   Do not confuse :code:`const_reference` and :code:`const reference`.  The

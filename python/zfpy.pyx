@@ -88,7 +88,7 @@ cpdef zmode_to_str(zfp_mode zmode):
     except KeyError:
         raise ValueError("Unsupported zfp_mode {}".format(zmode))
 
-cdef zfp_field* _init_field(np.ndarray arr):
+cdef zfp_field* _init_field(np.ndarray arr) except NULL:
     shape = arr.shape
     cdef int ndim = arr.ndim
     cdef zfp_type ztype = dtype_to_ztype(arr.dtype)

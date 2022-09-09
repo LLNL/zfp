@@ -9,9 +9,11 @@ Fortran Bindings
 
 |zfp| |zforprelease| adds |zforp|: a Fortran API providing wrappers around
 the :ref:`high-level C API <hl-api>`. Wrappers for
-:ref:`compressed arrays <arrays>` will arrive in a future release.
+:ref:`compressed-array classes <arrays>` will arrive in a future release.
 The |zforp| implementation is based on the standard :code:`iso_c_binding`
-module available since Fortran 2003.
+module available since Fortran 2003.  The use of :code:`ptrdiff_t` in
+the |zfp| |fieldrelease| C API, however, requires the corresponding
+:code:`c_ptrdiff_t` available only since Fortran 2018.
 
 Every high-level C API function can be called from a Fortran wrapper function.
 C structs are wrapped as Fortran derived types, each containing a single C
@@ -28,9 +30,13 @@ for how the Fortran API is used to compress and decompress data.
 .. _zforp_changes:
 .. note::
 
-  |zfp| |fieldrelease| simplifies the |zforp| module name from zforp_module to zforp.
-  This will likely require changing associated use statements within existing code when 
-  updating from prior versions of zFORp.
+  |zfp| |fieldrelease| simplifies the |zforp| module name from
+  ``zforp_module`` to ``zfp``.  This will likely require changing
+  associated use statements within existing code when updating
+  from prior versions of zFORp.
+
+  Furthermore, as outlined above, the |zfp| |fieldrelease| API requires
+  a Fortran 2018 compiler.
 
 
 Types
@@ -106,6 +112,12 @@ Non-Enum Constants
 .. f:variable:: integer zFORp_version_patch
 
   Wraps :c:macro:`ZFP_VERSION_PATCH`
+
+----
+
+.. f:variable:: integer zFORp_version_tweak
+
+  Wraps :c:macro:`ZFP_VERSION_TWEAK`
 
 ----
 
@@ -665,6 +677,16 @@ Array Metadata
   :p zFORp_field field [in]: Field metadata
   :r byte_size: Number of bytes spanned by field data including gaps (if any)
   :rtype byte_size: integer (kind=8)
+
+----
+
+.. f:function:: zFORp_field_blocks(field)
+
+  Wrapper for :c:func:`zfp_field_blocks`
+
+  :p zFORp_field field [in]: Field metadata
+  :r blocks: Total number of blocks spanned by field
+  :rtype blocks: integer (kind=8)
 
 ----
 

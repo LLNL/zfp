@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC and
+** Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC and
 ** other zfp project contributors. See the top-level LICENSE file for details.
 ** SPDX-License-Identifier: BSD-3-Clause
 */
@@ -7,10 +7,10 @@
 #ifndef ZFP_H
 #define ZFP_H
 
-#include "zfp/types.h"
-#include "zfp/system.h"
+#include "zfp/bitstream.h"
 #include "zfp/version.h"
-#include "bitstream.h"
+#include "zfp/internal/zfp/system.h"
+#include "zfp/internal/zfp/types.h"
 
 /* macros ------------------------------------------------------------------ */
 
@@ -77,14 +77,9 @@ typedef struct {
   uint chunk_size; /* number of blocks per chunk (1D only) */
 } zfp_exec_params_omp;
 
-/* execution parameters */
-typedef union {
-  zfp_exec_params_omp omp; /* OpenMP parameters */
-} zfp_exec_params;
-
 typedef struct {
   zfp_exec_policy policy; /* execution policy (serial, omp, ...) */
-  zfp_exec_params params; /* execution parameters */
+  void* params;           /* execution parameters */
 } zfp_execution;
 
 /* compressed stream; use accessors to get/set members */
@@ -466,6 +461,12 @@ zfp_field_size(
 /* number of bytes spanned by field data including gaps (if any) */
 size_t
 zfp_field_size_bytes(
+  const zfp_field* field /* field metadata */
+);
+
+/* field size in number of blocks */
+size_t                   /* total number of blocks */
+zfp_field_blocks(
   const zfp_field* field /* field metadata */
 );
 
