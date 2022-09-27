@@ -51,6 +51,9 @@ if(NOT CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ZFP_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 endif()
 
+# Setup RPath
+set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR})
+
 #------------------------------------------------------------------------------#
 # Top level options
 #------------------------------------------------------------------------------#
