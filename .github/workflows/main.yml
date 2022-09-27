@@ -57,7 +57,7 @@ jobs:
       - name: Install zfpy dependencies
         run: |
           python -m pip install cython
-          python -m pip install numpy
+          python -m pip install oldest-supported-numpy
       
       - name: Setup Python
         uses: actions/setup-python@v2
@@ -68,7 +68,7 @@ jobs:
       - name: Install zfpy dependencies
         run: |
           python -m pip install cython
-          python -m pip install numpy
+          python -m pip install oldest-supported-numpy
       
       - name: Setup MSBuild (Windows)
         id: msbuild
