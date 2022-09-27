@@ -53,6 +53,10 @@ cdef extern from "zfp.h":
     cython.uint zfp_stream_set_precision(zfp_stream* stream, cython.uint precision)
     double zfp_stream_set_accuracy(zfp_stream* stream, double tolerance)
     zfp_mode zfp_stream_set_mode(zfp_stream* stream, stdint.uint64_t mode)
+    zfp_mode zfp_stream_compression_mode(zfp_stream* stream)
+    double zfp_stream_accuracy(zfp_stream* stream)
+    double zfp_stream_rate(zfp_stream* stream, cython.uint dims)
+    cython.uint zfp_stream_precision(const zfp_stream* stream)
     zfp_field* zfp_field_alloc()
     zfp_field* zfp_field_1d(void* pointer, zfp_type, size_t nx)
     zfp_field* zfp_field_2d(void* pointer, zfp_type, size_t nx, size_t ny)
@@ -70,5 +74,5 @@ cdef extern from "zfp.h":
     size_t zfp_decompress(zfp_stream* stream, zfp_field* field) nogil
     size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, cython.uint mask)
     size_t zfp_read_header(zfp_stream* stream, zfp_field* field, cython.uint mask)
-
+    void zfp_stream_params(zfp_stream* stream, cython.uint* minbits, cython.uint* maxbits, cython.uint* maxprec, int* minexp);
 cdef gen_padded_int_list(orig_array, pad=*, length=*)
