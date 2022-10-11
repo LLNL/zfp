@@ -101,4 +101,71 @@ compress_finish_par(zfp_stream* stream, bitstream** src, size_t chunks)
     stream_wseek(dst, offset);
 }
 
+/* initialize per-thread bit streams for parallel decompression */
+static bitstream**
+decompress_init_par(zfp_stream* stream, uint chunks, uint blocks)
+{
+  void* buffer = stream_data(stream->stream);
+  const size_t size = stream_size(stream->stream);
+  zfp_mode mode = zfp_stream_compression_mode(stream);
+  bitstream** bs;
+  uint i;
+
+  /* set up buffer for each thread to decompress from */
+  bs = malloc(chunks * sizeof(bitstream*));
+  if (!bs)
+    return NULL;
+
+  if (mode == zfp_mode_fixed_rate) {
+    const size_t maxbits = stream->maxbits;
+    for (i = 0; i < chunks; i++) {
+      size_t offset = chunk_offset(blocks, chunks, i) * maxbits;
+      bs[i] = stream_open(buffer, size);
+      if (!bs[i]) {
+        free(bs);
+        return NULL;
+      }
+      /* point bit stream to the beginning of the chunk */
+      stream_rseek(bs[i], offset);
+    }
+  }
+  else {
+    const zfp_index_type type = stream->index->type;
+    if (type == zfp_index_offset) {
+      const uint64* offset_table = stream->index->data;
+      for (i = 0; i < chunks; i++) {
+        bs[i] = stream_open(buffer, size);
+        if (!bs[i]) {
+          free(bs);
+          return NULL;
+        }
+        /* point bit stream to the beginning of the chunk */
+        stream_rseek(bs[i], (size_t)offset_table[i]);
+      }
+    }
+    else {
+      /* unsupported index type */
+      free(bs);
+      return NULL;
+    }
+  }
+  return bs;
+}
+
+/* close all bit streams */
+static size_t
+decompress_finish_par(bitstream** bs, uint chunks)
+{
+  size_t max_offset = 0;
+  uint i;
+  for (i = 0; i < chunks; i++) {
+    size_t offset = stream_rtell(bs[i]);
+    if (max_offset < offset)
+      max_offset = offset;
+    stream_close(bs[i]);
+  }
+  free(bs);
+  return max_offset;
+}
+
 #endif

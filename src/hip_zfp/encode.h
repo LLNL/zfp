@@ -1,9 +1,9 @@
-#ifndef CUZFP_ENCODE_CUH
-#define CUZFP_ENCODE_CUH
+#ifndef HIPZFP_ENCODE_H
+#define HIPZFP_ENCODE_H
 
 #include "shared.h"
 
-namespace cuZFP {
+namespace hipZFP {
 
 // map two's complement signed integer to negabinary unsigned integer
 inline __device__
@@ -67,19 +67,12 @@ template <class Scalar>
 inline __device__
 int exponent(Scalar x)
 {
-  int e = -get_ebias<Scalar>();
-#ifdef ZFP_WITH_DAZ
-  // treat subnormals as zero; resolves issue #119 by avoiding overflow
-  if (x >= get_scalar_min<Scalar>())
-    e = get_exponent(x);
-#else
   if (x > 0) {
     int e = get_exponent(x);
     // clamp exponent in case x is subnormal
     return max(e, 1 - get_ebias<Scalar>());
   }
-#endif
-  return e;
+  return -get_ebias<Scalar>();
 }
 
 template <class Scalar, int BlockSize>
@@ -120,25 +113,6 @@ void fwd_lift(Int* p)
   p -= s; *p = y;
   p -= s; *p = x;
 }
-
-#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
-// bias values such that truncation is equivalent to round to nearest
-template <typename Int, uint BlockSize>
-__device__
-static void
-fwd_round(Int* iblock, uint maxprec)
-{
-  // add or subtract 1/6 ulp to unbias errors
-  if (maxprec < (uint)(CHAR_BIT * sizeof(Int))) {
-    Int bias = (static_cast<typename zfp_traits<Int>::UInt>(NBMASK) >> 2) >> maxprec;
-    uint n = BlockSize;
-    if (maxprec & 1u)
-      do *iblock++ += bias; while (--n);
-    else
-      do *iblock++ -= bias; while (--n);
-  }
-}
-#endif
 
 template <typename Scalar>
 inline __device__
@@ -341,16 +315,9 @@ template <typename Int, int BlockSize>
 inline __device__
 uint encode_block(BlockWriter &stream, uint maxbits, uint maxprec, Int *iblock)
 {
-  // perform decorrelating transform
   transform<BlockSize> tform;
   tform.fwd_xform(iblock);
 
-#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
-  // bias values to achieve proper rounding
-  fwd_round<Int, BlockSize>(iblock, maxprec);
-#endif
-
-  // reorder signed coefficients and convert to unsigned integer
   typedef typename zfp_traits<Int>::UInt UInt;
   UInt ublock[BlockSize];
   fwd_order<Int, UInt, BlockSize>(ublock, iblock);
@@ -467,6 +434,6 @@ void encode_block<long long int, 64>(long long int *fblock, const int maxbits, c
   writer.flush();
 }
 
-} // namespace cuZFP
+} // namespace hipZFP
 
 #endif

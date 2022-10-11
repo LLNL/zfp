@@ -6,6 +6,7 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = (const Scalar*)field->data;
+  uint16* length_table = stream->index ? stream->index->data : NULL;
   size_t nx = field->nx;
 
   /* number of omp threads, blocks, and chunks */
@@ -32,14 +33,17 @@ _t2(compress_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
     /* compress sequence of blocks */
     for (block = bmin; block < bmax; block++) {
       /* determine block origin x within array */
+      uint16 block_size;
       const Scalar* p = data;
       size_t x = 4 * block;
       p += x;
       /* compress partial or full block */
       if (nx - x < 4u)
-        _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, nx - x, 1);
+        block_size = _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, nx - x, 1);
       else
-        _t2(zfp_encode_block, Scalar, 1)(&s, p);
+        block_size = _t2(zfp_encode_block, Scalar, 1)(&s, p);
+      if (length_table)
+        length_table[block] = block_size;
     }
   }
 
@@ -53,6 +57,7 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = (const Scalar*)field->data;
+  uint16* length_table = stream->index ? stream->index->data : NULL;
   size_t nx = field->nx;
   ptrdiff_t sx = field->sx ? field->sx : 1;
 
@@ -80,14 +85,17 @@ _t2(compress_strided_omp, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
     /* compress sequence of blocks */
     for (block = bmin; block < bmax; block++) {
       /* determine block origin x within array */
+      uint16 block_size;
       const Scalar* p = data;
       size_t x = 4 * block;
       p += sx * (ptrdiff_t)x;
       /* compress partial or full block */
       if (nx - x < 4u)
-        _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, nx - x, sx);
+        block_size = _t2(zfp_encode_partial_block_strided, Scalar, 1)(&s, p, nx - x, sx);
       else
-        _t2(zfp_encode_block_strided, Scalar, 1)(&s, p, sx);
+        block_size = _t2(zfp_encode_block_strided, Scalar, 1)(&s, p, sx);
+      if (length_table)
+        length_table[block] = block_size;
     }
   }
 
@@ -101,6 +109,7 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = (const Scalar*)field->data;
+  uint16* length_table = stream->index ? stream->index->data : NULL;
   size_t nx = field->nx;
   size_t ny = field->ny;
   ptrdiff_t sx = field->sx ? field->sx : 1;
@@ -132,6 +141,7 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
     /* compress sequence of blocks */
     for (block = bmin; block < bmax; block++) {
       /* determine block origin (x, y) within array */
+      uint16 block_size;
       const Scalar* p = data;
       size_t b = block;
       size_t x, y;
@@ -140,9 +150,11 @@ _t2(compress_strided_omp, Scalar, 2)(zfp_stream* stream, const zfp_field* field)
       p += sx * (ptrdiff_t)x + sy * (ptrdiff_t)y;
       /* compress partial or full block */
       if (nx - x < 4u || ny - y < 4u)
-        _t2(zfp_encode_partial_block_strided, Scalar, 2)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), sx, sy);
+        block_size = _t2(zfp_encode_partial_block_strided, Scalar, 2)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), sx, sy);
       else
-        _t2(zfp_encode_block_strided, Scalar, 2)(&s, p, sx, sy);
+        block_size = _t2(zfp_encode_block_strided, Scalar, 2)(&s, p, sx, sy);
+      if (length_table)
+        length_table[block] = block_size;
     }
   }
 
@@ -156,6 +168,7 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = (const Scalar*)field->data;
+  uint16* length_table = stream->index ? stream->index->data : NULL;
   size_t nx = field->nx;
   size_t ny = field->ny;
   size_t nz = field->nz;
@@ -190,6 +203,7 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
     /* compress sequence of blocks */
     for (block = bmin; block < bmax; block++) {
       /* determine block origin (x, y, z) within array */
+      uint16 block_size;
       const Scalar* p = data;
       size_t b = block;
       size_t x, y, z;
@@ -199,9 +213,11 @@ _t2(compress_strided_omp, Scalar, 3)(zfp_stream* stream, const zfp_field* field)
       p += sx * (ptrdiff_t)x + sy * (ptrdiff_t)y + sz * (ptrdiff_t)z;
       /* compress partial or full block */
       if (nx - x < 4u || ny - y < 4u || nz - z < 4u)
-        _t2(zfp_encode_partial_block_strided, Scalar, 3)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), sx, sy, sz);
+        block_size = _t2(zfp_encode_partial_block_strided, Scalar, 3)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), sx, sy, sz);
       else
-        _t2(zfp_encode_block_strided, Scalar, 3)(&s, p, sx, sy, sz);
+        block_size = _t2(zfp_encode_block_strided, Scalar, 3)(&s, p, sx, sy, sz);
+      if (length_table)
+        length_table[block] = block_size;
     }
   }
 
@@ -215,6 +231,7 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
 {
   /* array metadata */
   const Scalar* data = field->data;
+  uint16* length_table = stream->index ? stream->index->data : NULL;
   size_t nx = field->nx;
   size_t ny = field->ny;
   size_t nz = field->nz;
@@ -252,6 +269,7 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
     /* compress sequence of blocks */
     for (block = bmin; block < bmax; block++) {
       /* determine block origin (x, y, z, w) within array */
+      uint16 block_size;
       const Scalar* p = data;
       size_t b = block;
       size_t x, y, z, w;
@@ -262,9 +280,11 @@ _t2(compress_strided_omp, Scalar, 4)(zfp_stream* stream, const zfp_field* field)
       p += sx * (ptrdiff_t)x + sy * (ptrdiff_t)y + sz * (ptrdiff_t)z + sw * (ptrdiff_t)w;
       /* compress partial or full block */
       if (nx - x < 4u || ny - y < 4u || nz - z < 4u || nw - w < 4u)
-        _t2(zfp_encode_partial_block_strided, Scalar, 4)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), MIN(nw - w, 4u), sx, sy, sz, sw);
+        block_size = _t2(zfp_encode_partial_block_strided, Scalar, 4)(&s, p, MIN(nx - x, 4u), MIN(ny - y, 4u), MIN(nz - z, 4u), MIN(nw - w, 4u), sx, sy, sz, sw);
       else
-        _t2(zfp_encode_block_strided, Scalar, 4)(&s, p, sx, sy, sz, sw);
+        block_size = _t2(zfp_encode_block_strided, Scalar, 4)(&s, p, sx, sy, sz, sw);
+      if (length_table)
+        length_table[block] = block_size;
     }
   }
 

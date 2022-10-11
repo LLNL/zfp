@@ -1,43 +1,37 @@
-#ifndef CUZFP_DECODE2_CUH
-#define CUZFP_DECODE2_CUH
+#include "hip/hip_runtime.h"
+#ifndef HIPZFP_DECODE1_H
+#define HIPZFP_DECODE1_H
 
 #include "shared.h"
-#include "decode.cuh"
-#include "type_info.cuh"
+#include "decode.h"
+#include "type_info.h"
 
-namespace cuZFP {
+namespace hipZFP {
 
 template <typename Scalar>
 inline __device__ __host__
-void scatter2(const Scalar* q, Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
+void scatter1(const Scalar* q, Scalar* p, ptrdiff_t sx)
 {
-  for (uint y = 0; y < 4; y++, p += sy - 4 * sx)
-    for (uint x = 0; x < 4; x++, p += sx)
-      *p = *q++;
+  for (uint x = 0; x < 4; x++, p += sx)
+    *p = *q++;
 }
 
 template <typename Scalar>
 inline __device__ __host__
-void scatter_partial2(const Scalar* q, Scalar* p, uint nx, uint ny, ptrdiff_t sx, ptrdiff_t sy)
+void scatter_partial1(const Scalar* q, Scalar* p, uint nx, ptrdiff_t sx)
 {
-  for (uint y = 0; y < 4; y++)
-    if (y < ny) {
-      for (uint x = 0; x < 4; x++)
-        if (x < nx) {
-          *p = q[x + 4 * y];
-          p += sx;
-        }
-      p += sy - nx * sx;
-    }
+  for (uint x = 0; x < 4; x++)
+    if (x < nx)
+      p[x * sx] = q[x];
 }
 
 template <class Scalar>
 __global__
 void
-cuda_decode2(
+hip_decode1(
   Scalar* d_data,
-  size2 size,
-  ptrdiff2 stride,
+  size_t size,
+  ptrdiff_t stride,
   const Word* d_stream,
   zfp_mode mode,
   int decode_parameter,
@@ -51,9 +45,7 @@ cuda_decode2(
   const size_t chunk_idx = threadIdx.x + blockDim.x * blockId;
 
   // number of zfp blocks
-  const size_t bx = (size.x + 3) / 4;
-  const size_t by = (size.y + 3) / 4;
-  const size_t blocks = bx * by;
+  const size_t blocks = (size + 3) / 4;
 
   // first and last zfp block assigned to thread
   size_t block_idx = chunk_idx * granularity;
@@ -65,6 +57,8 @@ cuda_decode2(
 
   // compute bit offset to compressed block
   unsigned long long bit_offset;
+
+  // TODO: move to separate function
   if (mode == zfp_mode_fixed_rate)
     bit_offset = chunk_idx * decode_parameter;
   else if (index_type == zfp_index_offset)
@@ -91,24 +85,22 @@ cuda_decode2(
   BlockReader reader(d_stream, bit_offset);
 
   for (; block_idx < block_end; block_idx++) {
-    Scalar fblock[ZFP_2D_BLOCK_SIZE] = { 0 };
-    decode_block<Scalar, ZFP_2D_BLOCK_SIZE>(reader, fblock, decode_parameter, mode);
+    Scalar fblock[ZFP_1D_BLOCK_SIZE] = { 0 };
+    decode_block<Scalar, ZFP_1D_BLOCK_SIZE>(reader, fblock, decode_parameter, mode);
 
-    // logical position in 2d array
-    size_t pos = block_idx;
-    ptrdiff_t x = (pos % bx) * 4; pos /= bx;
-    ptrdiff_t y = (pos % by) * 4; pos /= by;
-  
+    // logical position in 1d array
+    const size_t pos = block_idx;
+    const ptrdiff_t x = pos * 4;
+
     // offset into field
-    const ptrdiff_t offset = x * stride.x + y * stride.y;
+    const ptrdiff_t offset = x * stride;
 
     // scatter data from contiguous block
-    const uint nx = (uint)min(size.x - x, 4ull);
-    const uint ny = (uint)min(size.y - y, 4ull);
-    if (nx * ny < ZFP_2D_BLOCK_SIZE)
-      scatter_partial2(fblock, d_data + offset, nx, ny, stride.x, stride.y);
+    const uint nx = (uint)min(size - x, (size_t)4);
+    if (nx < ZFP_1D_BLOCK_SIZE)
+      scatter_partial1(fblock, d_data + offset, nx, stride);
     else
-      scatter2(fblock, d_data + offset, stride.x, stride.y);
+      scatter1(fblock, d_data + offset, stride);
   }
 
   // record maximum bit offset reached by any thread
@@ -117,7 +109,7 @@ cuda_decode2(
 }
 
 template <class Scalar>
-size_t decode2launch(
+size_t decode1launch(
   Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
@@ -130,35 +122,34 @@ size_t decode2launch(
 )
 {
   // block size is fixed to 32 in this version for hybrid index
-  const int cuda_block_size = 32;
-  const dim3 block_size = dim3(cuda_block_size, 1, 1);
+  const int hip_block_size = 32;
+  const dim3 block_size = dim3(hip_block_size, 1, 1);
 
   // number of zfp blocks to decode
-  const size_t blocks = ((size[0] + 3) / 4) *
-                        ((size[1] + 3) / 4);
+  const size_t blocks = (size[0] + 3) / 4;
 
   // number of chunks of blocks
   const size_t chunks = (blocks + granularity - 1) / granularity;
 
   // determine grid of thread blocks
-  const dim3 grid_size = calculate_grid_size(chunks, cuda_block_size);
+  const dim3 grid_size = calculate_grid_size(chunks, hip_block_size);
 
   // storage for maximum bit offset; needed to position stream
   unsigned long long int* d_offset;
-  if (cudaMalloc(&d_offset, sizeof(*d_offset)) != cudaSuccess)
+  if (hipMalloc(&d_offset, sizeof(*d_offset)) != hipSuccess)
     return 0;
-  cudaMemset(d_offset, 0, sizeof(*d_offset));
+  hipMemset(d_offset, 0, sizeof(*d_offset));
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef HIP_ZFP_RATE_PRINT
   Timer timer;
   timer.start();
 #endif
 
   // launch GPU kernel
-  cuda_decode2<Scalar><<<grid_size, block_size>>>(
+  hipLaunchKernelGGL(HIP_KERNEL_NAME(hip_decode1<Scalar>), grid_size, block_size, 0, 0, 
     d_data,
-    make_size2(size[0], size[1]),
-    make_ptrdiff2(stride[0], stride[1]),
+    size[0],
+    stride[0],
     d_stream,
     mode,
     decode_parameter,
@@ -168,20 +159,20 @@ size_t decode2launch(
     granularity
   );
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef HIP_ZFP_RATE_PRINT
   timer.stop();
-  timer.print_throughput<Scalar>("Decode", "decode2", dim3(size[0], size[1]));
+  timer.print_throughput<Scalar>("Decode", "decode1", dim3(size[0]));
 #endif
 
   unsigned long long int offset;
-  cudaMemcpy(&offset, d_offset, sizeof(offset), cudaMemcpyDeviceToHost);
-  cudaFree(d_offset);
+  hipMemcpy(&offset, d_offset, sizeof(offset), hipMemcpyDeviceToHost);
+  hipFree(d_offset);
 
   return offset;
 }
 
 template <class Scalar>
-size_t decode2(
+size_t decode1(
   Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
@@ -193,9 +184,9 @@ size_t decode2(
   uint granularity
 )
 {
-  return decode2launch<Scalar>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+  return decode1launch<Scalar>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
 }
 
-} // namespace cuZFP
+} // namespace hipZFP
 
 #endif

@@ -1,9 +1,7 @@
-#ifndef CUZFP_TYPE_INFO
-#define CUZFP_TYPE_INFO
+#ifndef HIPZFP_TYPE_INFO
+#define HIPZFP_TYPE_INFO
 
-#include <cfloat>
-
-namespace cuZFP {
+namespace hipZFP {
 
 template <typename T> inline __host__ __device__ int get_ebias();
 template <> inline __host__ __device__ int get_ebias<double>() { return 1023; }
@@ -60,6 +58,6 @@ struct zfp_traits<int> {
   typedef int Int;
 };
 
-} // namespace cuZFP
+} // namespace hipZFP
 
 #endif

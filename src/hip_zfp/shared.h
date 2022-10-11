@@ -1,13 +1,13 @@
-#ifndef CUZFP_SHARED_H
-#define CUZFP_SHARED_H
+#ifndef HIPZFP_SHARED_H
+#define HIPZFP_SHARED_H
 
 #include <math.h>
 #include <stdio.h>
 #include "zfp.h"
-#include "type_info.cuh"
+#include "type_info.h"
 #include "constants.h"
 
-//#define CUDA_ZFP_RATE_PRINT 1
+//#define HIP_ZFP_RATE_PRINT 1
 
 // bit stream word/buffer type; granularity of stream I/O operations
 typedef unsigned long long Word;
@@ -17,7 +17,7 @@ typedef unsigned long long Word;
 #define ZFP_2D_BLOCK_SIZE 16
 #define ZFP_3D_BLOCK_SIZE 64
 
-namespace cuZFP {
+namespace hipZFP {
 
 typedef ulonglong2 size2;
 typedef ulonglong3 size3;
@@ -29,28 +29,28 @@ typedef longlong3 ptrdiff3;
 #define make_size3(x, y, z) make_ulonglong3(x, y, z)
 #define make_ptrdiff3(x, y, z) make_longlong3(x, y, z)
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef HIP_ZFP_RATE_PRINT
 // timer for measuring encode/decode throughput
 class Timer {
 public:
   Timer()
   {
-    cudaEventCreate(&e_start);
-    cudaEventCreate(&e_stop);
+    hipEventCreate(&e_start);
+    hipEventCreate(&e_stop);
   }
 
   // start timer
   void start()
   {
-    cudaEventRecord(e_start);
+    hipEventRecord(e_start);
   }
 
   // stop timer
   void stop()
   {
-    cudaEventRecord(e_stop);
-    cudaEventSynchronize(e_stop);
-    cudaStreamSynchronize(0);
+    hipEventRecord(e_stop);
+    hipEventSynchronize(e_stop);
+    hipStreamSynchronize(0);
   }
 
   // print throughput in GB/s
@@ -58,7 +58,7 @@ public:
   void print_throughput(const char* task, const char* subtask, dim3 dims, FILE* file = stdout) const
   {
     float ms = 0;
-    cudaEventElapsedTime(&ms, e_start, e_stop);
+    hipEventElapsedTime(&ms, e_start, e_stop);
     double seconds = double(ms) / 1000.;
     size_t bytes = size_t(dims.x) * size_t(dims.y) * size_t(dims.z) * sizeof(Scalar);
     double throughput = bytes / seconds;
@@ -68,7 +68,7 @@ public:
   }
 
 protected:
-  cudaEvent_t e_start, e_stop;
+  hipEvent_t e_start, e_stop;
 };
 #endif
 
@@ -105,17 +105,9 @@ size_t calc_device_mem(size_t blocks, size_t bits_per_block)
 
 dim3 get_max_grid_dims()
 {
-  static cudaDeviceProp prop;
-  static bool firstTime = true;
-
-  if( firstTime )
-  {
-    firstTime = false;
-
-    int device = 0;
-    cudaGetDeviceProperties(&prop, device);
-  }
-
+  hipDeviceProp_t prop; 
+  int device = 0;
+  hipGetDeviceProperties(&prop, device);
   dim3 grid_dims;
   grid_dims.x = prop.maxGridSize[0];
   grid_dims.y = prop.maxGridSize[1];
@@ -123,11 +115,11 @@ dim3 get_max_grid_dims()
   return grid_dims;
 }
 
-dim3 calculate_grid_size(size_t threads, size_t cuda_block_size)
+dim3 calculate_grid_size(size_t threads, size_t hip_block_size)
 {
-  // round up to next multiple of cuda_block_size
-  threads = round_up(threads, cuda_block_size);
-  size_t grids = threads / cuda_block_size;
+  // round up to next multiple of hip_block_size
+  threads = round_up(threads, hip_block_size);
+  size_t grids = threads / hip_block_size;
   dim3 max_grid_dims = get_max_grid_dims();
   int dims = 1;
   // check to see if we need to add more grids
@@ -146,7 +138,7 @@ dim3 calculate_grid_size(size_t threads, size_t cuda_block_size)
 
   if (dims == 2) {
     float sq_r = sqrt((float)grids);
-    float intpart = 0;
+    float intpart = 0.;
     modf(sq_r, &intpart); 
     uint base = intpart;
     grid_size.x = base; 
@@ -161,7 +153,7 @@ dim3 calculate_grid_size(size_t threads, size_t cuda_block_size)
 
   if (dims == 3) {
     float cub_r = pow((float)grids, 1.f/3.f);;
-    float intpart = 0;
+    float intpart = 0.;
     modf(cub_r, &intpart); 
     int base = intpart;
     grid_size.x = base; 
@@ -236,6 +228,6 @@ uint precision<64>(int maxexp, uint maxprec, int minexp)
   return precision(maxexp, maxprec, minexp, 3);
 }
 
-} // namespace cuZFP
+} // namespace hipZFP
 
 #endif

@@ -24,6 +24,7 @@ The following sections are available:
   * :ref:`hl-func-bitstream`
   * :ref:`hl-func-stream`
   * :ref:`hl-func-exec`
+  * :ref:`hl-func-index`
   * :ref:`hl-func-config`
   * :ref:`hl-func-field`
   * :ref:`hl-func-codec`
@@ -310,6 +311,37 @@ Types
       uint threads;    // number of requested threads
       uint chunk_size; // number of blocks per chunk
     } zfp_exec_params_omp;
+
+----
+
+.. _index-type:
+.. c:type:: zfp_index_type
+
+  Block index implementation used to encode block offsets.
+  ::
+
+    typedef enum {
+      zfp_index_none   = 0, // no index
+      zfp_index_offset = 1, // raw 64-bit offsets (OpenMP and CUDA decompression)
+      zfp_index_length = 2, // raw 16-bit lengths
+      zfp_index_hybrid = 3  // hybrid (CUDA decompression)
+    } zfp_index_type;
+
+----
+
+.. c:type:: zfp_index
+
+  Block index data structure that encodes block offsets in variable-rate mode.
+  This data structure can be serialized by storing :code:`size` bytes from the
+  memory address given by :code:`data`.
+  ::
+
+    typedef struct {
+      zfp_index_type type; // zfp_index_none if no index
+      void* data;          // NULL if no index
+      size_t size;         // byte size of data (0 if no index)
+      uint granularity;    // granularity in #blocks/entry
+    } zfp_index;
 
 ----
 
@@ -720,6 +752,98 @@ Execution Policy
   Set the number of consecutive blocks to compress together per OpenMP thread.
   If zero, use one chunk per thread.  This function also sets the execution
   policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
+
+
+.. _hl-func-index:
+
+Block Index
+^^^^^^^^^^^
+
+When the rate is not fixed, |zfp| blocks are compressed to a variable number of
+bits.  In this case, direct random access (i.e., in time *O*\(1)) to any given
+block is not possible without encoding additional information about the
+location (bit offset) where the block is stored within the compressed stream.
+Example use cases where such random access is needed include |zfp|'s
+variable-rate compressed-array classes and parallel decompression.  Although
+storing a full 64-bit offset to each block would be possible, the relative
+overhead of doing so would be substantial when the rate and/or dimensionality
+is low, and may even exceed the payload compressed data in size.
+
+To assist with this, |zfp| |vrdecrelease| and later versions support
+constructing a *block index*, which uses concise data structures to efficiently
+encode block offsets.  Multiple implementations exist that provide different
+trade-offs in storage size, speed of encoding/decoding, and range of block
+offsets and sizes supported.  Currently, the following
+:ref:`index representations <index-type>` are available:
+
+* :code:`zfp_index_offset`: Store raw 64-bit offsets.
+* :code:`zfp_index_length`: Store only 16-bit block lengths.  To compute an
+  offset, a prefix sum over lengths must be computed.
+* :code:`zfp_index_hybrid`: Interleave offsets and lengths to accelerate
+  prefix sums while using less storage than per-block offsets.
+
+In cases like parallel decompression, where offsets are not needed for each
+block when a thread decompresses a collection of *N* consecutive blocks,
+the user may specify the granularity (i.e., *N*) at which blocks are stored.
+This allows further reducing the storage overhead of the block index.
+
+Currently the block index is not stored as part of the |zfp| codestream for
+backwards compatibility reasons.  Rather, the user must request that an
+index be built during compression, store this sideband information separately,
+and upon decompression reconstruct the index via deserialization.  Toward
+this end, the functions below are available.
+
+.. note::
+  This API currently does not provide a mechanism for querying block offsets
+  from the index, which would be valuable for applications that process
+  individual blocks through the :ref:`low-level API <ll-api>`.
+  TODO: The API will expand to adddress this limitation.
+
+.. c:function:: void zfp_stream_set_index(zfp_stream* stream, zfp_index* index)
+
+  Associate an already constructed block index with a compressed stream.
+
+----
+
+.. c:function:: zfp_index* zfp_index_create()
+
+  Construct a :c:type:`zfp_index` data structure.  This merely allocates such
+  a data structure without storing any actual block offsets.
+
+----
+
+.. c:function:: void zfp_index_set_type(zfp_index* index, zfp_index_type type, uint granularity)
+
+  Specify the type of index and its granularity in number of blocks per
+  entry.
+
+----
+
+.. c:function:: void zfp_index_set_data(zfp_index* index, void* data, size_t size);
+
+  Deserialize a previously constructed index from the data buffer of given
+  byte size.  Note that no copy is made of the buffer; it must remain
+  allocated throughout the life time of the index.
+
+.. note::
+
+  The user is also responsible for calling :c:func:`zfp_index_set_type`
+  to set the index type and granularity.  While part of the serialized data,
+  this information currently is not exposed to the user.
+  TODO: This will be addressed before the next release.
+  
+----
+
+.. c:function:: void zfp_index_free(zfp_index* index)
+
+  Free the index data structure.  Note: This does not free the buffer pointed
+  at by :code:`index->data`.
+
+.. note::
+  During compression, the implementation allocates this buffer; for
+  decompression, the user must allocate it.  It is currently unclear
+  how the user ought to deallocate data allocated by the implementation.
+  TODO: The API will change to address this shortcoming.
 
 
 .. _hl-func-config:

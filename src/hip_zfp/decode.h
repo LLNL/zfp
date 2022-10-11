@@ -1,26 +1,9 @@
-#ifndef CUZFP_DECODE_CUH
-#define CUZFP_DECODE_CUH
+#ifndef HIPZFP_DECODE_H
+#define HIPZFP_DECODE_H
 
 #include "shared.h"
 
-namespace cuZFP {
-
-#if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
-// bias values such that truncation is equivalent to round to nearest
-template <typename UInt, uint BlockSize>
-__device__
-static void
-inv_round(UInt* ublock, uint m, uint prec)
-{
-  // add 1/6 ulp to unbias errors
-  if (prec < (uint)(CHAR_BIT * sizeof(UInt) - 1)) {
-    // the first m values (0 <= m <= n) have one more bit of precision
-    uint n = BlockSize - m;
-    while (m--) *ublock++ += (((UInt)NBMASK >> 2) >> prec);
-    while (n--) *ublock++ += (((UInt)NBMASK >> 1) >> prec);
-  }
-}
-#endif
+namespace hipZFP {
 
 // map two's complement signed integer to negabinary unsigned integer
 inline __device__
@@ -183,9 +166,8 @@ uint decode_ints(BlockReader &reader, const uint maxbits, Int *iblock)
   const uint kmin = 0;
   UInt ublock[Size] = {0};
   uint bits = maxbits;
-  uint k, n;
 
-  for (k = intprec, n = 0; bits && k-- > kmin;) {
+  for (uint k = intprec, n = 0; bits && k-- > kmin;) {
     // read bit plane
     uint m = min(n, bits);
     bits -= m;
@@ -203,11 +185,6 @@ uint decode_ints(BlockReader &reader, const uint maxbits, Int *iblock)
     for (int i = 0; i < Size; i++, x >>= 1)
       ublock[i] += (UInt)(x & 1u) << k;
   }
-
-#if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
-  // bias values to achieve proper rounding
-  inv_round<UInt, size>(ublock, m, intprec - k);
-#endif
 
   const unsigned char *perm = get_perm<Size>();
 #if (CUDART_VERSION < 8000)
@@ -229,9 +206,8 @@ uint decode_ints_prec(BlockReader &reader, const uint maxprec, Int *iblock)
   const uint intprec = get_precision<Int>();
   const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   UInt ublock[Size] = {0};
-  uint k, n;
 
-  for (k = intprec, n = 0; k-- > kmin;) {
+  for (uint k = intprec, n = 0; k-- > kmin;) {
     uint64 x = reader.read_bits(n);
     for (; n < Size && reader.read_bit(); x += (uint64)1 << n, n++)
       for (; n < Size - 1 && !reader.read_bit(); n++)
@@ -246,11 +222,6 @@ uint decode_ints_prec(BlockReader &reader, const uint maxprec, Int *iblock)
     for (int i = 0; i < Size; i++, x >>= 1)
       ublock[i] += (UInt)(x & 1u) << k;
   }
-
-#if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
-  // bias values to achieve proper rounding
-  inv_round<UInt, size>(ublock, 0, intprec - k);
-#endif
 
   const unsigned char *perm = get_perm<Size>();
 #if (CUDART_VERSION < 8000)
@@ -394,8 +365,6 @@ void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp
       for (uint i = 0; i < BlockSize; ++i)
         fblock[i] = scale * (Scalar)iblock[i];
     }
-
-#warning "fblock is not populated for integer types"
   }
 
   if (mode == zfp_mode_fixed_rate) {
@@ -406,6 +375,6 @@ void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp
   }
 }
 
-} // namespace cuZFP
+} // namespace hipZFP
 
 #endif

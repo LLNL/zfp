@@ -1,11 +1,12 @@
-#ifndef CUZFP_DECODE2_CUH
-#define CUZFP_DECODE2_CUH
+#include "hip/hip_runtime.h"
+#ifndef HIPZFP_DECODE2_H
+#define HIPZFP_DECODE2_H
 
 #include "shared.h"
-#include "decode.cuh"
-#include "type_info.cuh"
+#include "decode.h"
+#include "type_info.h"
 
-namespace cuZFP {
+namespace hipZFP {
 
 template <typename Scalar>
 inline __device__ __host__
@@ -34,7 +35,7 @@ void scatter_partial2(const Scalar* q, Scalar* p, uint nx, uint ny, ptrdiff_t sx
 template <class Scalar>
 __global__
 void
-cuda_decode2(
+hip_decode2(
   Scalar* d_data,
   size2 size,
   ptrdiff2 stride,
@@ -130,8 +131,8 @@ size_t decode2launch(
 )
 {
   // block size is fixed to 32 in this version for hybrid index
-  const int cuda_block_size = 32;
-  const dim3 block_size = dim3(cuda_block_size, 1, 1);
+  const int hip_block_size = 32;
+  const dim3 block_size = dim3(hip_block_size, 1, 1);
 
   // number of zfp blocks to decode
   const size_t blocks = ((size[0] + 3) / 4) *
@@ -141,21 +142,21 @@ size_t decode2launch(
   const size_t chunks = (blocks + granularity - 1) / granularity;
 
   // determine grid of thread blocks
-  const dim3 grid_size = calculate_grid_size(chunks, cuda_block_size);
+  const dim3 grid_size = calculate_grid_size(chunks, hip_block_size);
 
   // storage for maximum bit offset; needed to position stream
   unsigned long long int* d_offset;
-  if (cudaMalloc(&d_offset, sizeof(*d_offset)) != cudaSuccess)
+  if (hipMalloc(&d_offset, sizeof(*d_offset)) != hipSuccess)
     return 0;
-  cudaMemset(d_offset, 0, sizeof(*d_offset));
+  hipMemset(d_offset, 0, sizeof(*d_offset));
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef HIP_ZFP_RATE_PRINT
   Timer timer;
   timer.start();
 #endif
 
   // launch GPU kernel
-  cuda_decode2<Scalar><<<grid_size, block_size>>>(
+  hipLaunchKernelGGL(HIP_KERNEL_NAME(hip_decode2<Scalar>), grid_size, block_size, 0, 0, 
     d_data,
     make_size2(size[0], size[1]),
     make_ptrdiff2(stride[0], stride[1]),
@@ -168,14 +169,14 @@ size_t decode2launch(
     granularity
   );
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef HIP_ZFP_RATE_PRINT
   timer.stop();
   timer.print_throughput<Scalar>("Decode", "decode2", dim3(size[0], size[1]));
 #endif
 
   unsigned long long int offset;
-  cudaMemcpy(&offset, d_offset, sizeof(offset), cudaMemcpyDeviceToHost);
-  cudaFree(d_offset);
+  hipMemcpy(&offset, d_offset, sizeof(offset), hipMemcpyDeviceToHost);
+  hipFree(d_offset);
 
   return offset;
 }
@@ -196,6 +197,6 @@ size_t decode2(
   return decode2launch<Scalar>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
 }
 
-} // namespace cuZFP
+} // namespace hipZFP
 
 #endif

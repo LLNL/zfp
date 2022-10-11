@@ -38,10 +38,158 @@ field_index_span(const zfp_field* field, ptrdiff_t* min, ptrdiff_t* max)
   return (size_t)(imax - imin + 1);
 }
 
+/* is compression mode reversible? */
 static zfp_bool
 is_reversible(const zfp_stream* zfp)
 {
   return zfp->minexp < ZFP_MIN_EXP;
+}
+
+/* number of blocks spanned by field */
+static size_t
+field_blocks(const zfp_field* field)
+{
+  size_t mx = (MAX(field->nx, 1u) + 3) / 4;
+  size_t my = (MAX(field->ny, 1u) + 3) / 4;
+  size_t mz = (MAX(field->nz, 1u) + 3) / 4;
+  size_t mw = (MAX(field->nw, 1u) + 3) / 4;
+  return mx * my * mz * mw;
+}
+
+/* convert from length table to offset index with header */
+static zfp_bool
+encode_index_offset(zfp_stream* zfp)
+{
+  /* TODO: refactor and clean up */
+  const uint16* length_table = zfp->index->data;
+  const size_t blocks = zfp->index->size / sizeof(uint16);
+  const uint granularity = zfp->index->granularity;
+  const size_t chunks = (blocks + granularity - 1) / granularity;
+
+  size_t index_size = (chunks + 1) * sizeof(uint64);
+  void* index_data = malloc(index_size);
+  uint64* index64 = index_data;
+  uint32* index32 = index_data;
+  uint64 offset = 0;
+  size_t i;
+
+  /* make sure allocation succeeded */
+  if (!index_data)
+    return zfp_false;
+
+  /* encode type offsets in the header */
+  index32[0] = zfp_index_offset;
+  index32[1] = granularity;
+  index64++;
+
+  /* compute and store offsets */
+  for (i = 0; i < blocks; i++) {
+    if (i % granularity == 0)
+      *index64++ = offset;
+    offset += *length_table++;
+  }
+
+  /* set the encoded index size and data in the stream */
+  zfp_index_set_data(zfp->index, index_data, index_size);
+
+  return zfp_true;
+}
+
+/* convert from length table to length index with header */
+static zfp_bool
+encode_index_length(zfp_stream* zfp)
+{
+  const uint16* length_table = zfp->index->data;
+  const size_t blocks = zfp->index->size / sizeof(uint16);
+
+  size_t index_size = sizeof(uint64) + blocks * sizeof(uint16);
+  void* index_data = malloc(index_size);
+  uint32* index32 = index_data;
+  uint16* index16 = index_data;
+  size_t i;
+
+  /* make sure allocation succeeded */
+  if (!index_data)
+    return zfp_false;
+
+  /* encode type lengths in the header */
+  index32[0] = zfp_index_length;
+  index32[1] = 1;
+  index16 += 4;
+
+  /* copy lengths */
+  for (i = 0; i < blocks; i++)
+    *index16++ = *length_table++;
+
+  /* set the encoded index size and data in the stream */
+  zfp_index_set_data(zfp->index, index_data, index_size);
+
+  return zfp_true;
+}
+
+/* convert from length table to hybrid index with header */
+static zfp_bool
+encode_index_hybrid(zfp_stream* zfp)
+{
+  const uint16* length_table = zfp->index->data;
+  const size_t blocks = zfp->index->size / sizeof(uint16);
+  const uint granularity = zfp->index->granularity;
+  const size_t chunks = (blocks + granularity - 1) / granularity;
+  const size_t partitions = (chunks + ZFP_PARTITION_SIZE - 1) / ZFP_PARTITION_SIZE;
+
+  size_t index_size = sizeof(uint64) + partitions * (sizeof(uint64) + ZFP_PARTITION_SIZE * sizeof(uint16));
+  void* index_data = malloc(index_size);
+  uint64* index64 = index_data;
+  uint32* index32 = index_data;
+  uint16* index16 = index_data;
+  uint64 offset = 0;
+  size_t i, j, k, chunk;
+
+  /* make sure allocation succeeded */
+  if (!index_data)
+    return zfp_false;
+
+  /* encode type hybrid in the header */
+  index32[0] = zfp_index_hybrid;
+  index32[1] = granularity;
+  index64++;
+  index16 += 4;
+
+  for (i = 0, j = 0; i < partitions; i++) {
+    index64[i * (ZFP_PARTITION_SIZE / (sizeof(uint64) / sizeof(uint16)) + 1)] = offset;
+    for (chunk = 0; chunk < ZFP_PARTITION_SIZE; chunk++) {
+      uint16 partialsum = 0;
+      for (k = 0; k < granularity && j < blocks; k++, j++)
+        partialsum += *length_table++;
+      index16[i * (ZFP_PARTITION_SIZE + (sizeof(uint64) / sizeof(uint16))) + (sizeof(uint64) / sizeof(uint16)) + chunk] = partialsum;
+      offset += partialsum;
+    }
+  }
+
+  /* finish the last partial partition with zeros */
+  for (; chunk < ZFP_PARTITION_SIZE; chunk++)
+    index16[i * 36 + 4 + chunk] = 0;
+
+  /* set the encoded index size and data in the stream */
+  zfp_index_set_data(zfp->index, index_data, index_size);
+
+  return zfp_true;
+}
+
+static zfp_bool
+encode_index(zfp_stream* zfp)
+{
+  switch (zfp->index->type) {
+    case zfp_index_offset:
+      return encode_index_offset(zfp);
+    case zfp_index_length:
+      return encode_index_length(zfp);
+    case zfp_index_hybrid:
+      return encode_index_hybrid(zfp);
+    default:
+      /* unrecognized type, return no index data */
+      return zfp_false;
+  }
 }
 
 /* shared code across template instances ------------------------------------*/
@@ -55,32 +203,44 @@ is_reversible(const zfp_stream* zfp)
 #include "template/compress.c"
 #include "template/decompress.c"
 #include "template/ompcompress.c"
+#include "template/ompdecompress.c"
 #include "template/cudacompress.c"
 #include "template/cudadecompress.c"
+#include "template/hipcompress.c"
+#include "template/hipdecompress.c"
 #undef Scalar
 
 #define Scalar int64
 #include "template/compress.c"
 #include "template/decompress.c"
 #include "template/ompcompress.c"
+#include "template/ompdecompress.c"
 #include "template/cudacompress.c"
 #include "template/cudadecompress.c"
+#include "template/hipcompress.c"
+#include "template/hipdecompress.c"
 #undef Scalar
 
 #define Scalar float
 #include "template/compress.c"
 #include "template/decompress.c"
 #include "template/ompcompress.c"
+#include "template/ompdecompress.c"
 #include "template/cudacompress.c"
 #include "template/cudadecompress.c"
+#include "template/hipcompress.c"
+#include "template/hipdecompress.c"
 #undef Scalar
 
 #define Scalar double
 #include "template/compress.c"
 #include "template/decompress.c"
 #include "template/ompcompress.c"
+#include "template/ompdecompress.c"
 #include "template/cudacompress.c"
 #include "template/cudadecompress.c"
+#include "template/hipcompress.c"
+#include "template/hipdecompress.c"
 #undef Scalar
 
 /* public functions: miscellaneous ----------------------------------------- */
@@ -544,7 +704,11 @@ zfp_stream_open(bitstream* stream)
     zfp->maxprec = ZFP_MAX_PREC;
     zfp->minexp = ZFP_MIN_EXP;
     zfp->exec.policy = zfp_exec_serial;
+<<<<<<< HEAD
     zfp->exec.params = NULL;
+=======
+    zfp->index = NULL;
+>>>>>>> feature/parallel-variable-rate
   }
   return zfp;
 }
@@ -924,6 +1088,7 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
         zfp->exec.params = NULL;
       }
       break;
+<<<<<<< HEAD
 #ifdef ZFP_WITH_CUDA
     case zfp_exec_cuda:
       if (zfp->exec.policy != policy && zfp->exec.params != NULL) {
@@ -932,9 +1097,12 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
       }
       break;
 #endif
+=======
+#ifdef ZFP_WITH_OPENMP
+>>>>>>> feature/parallel-variable-rate
     case zfp_exec_omp:
-#ifdef _OPENMP
       if (zfp->exec.policy != policy) {
+<<<<<<< HEAD
         if (zfp->exec.params != NULL) {
           free(zfp->exec.params);
         }
@@ -942,10 +1110,23 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
         params->threads = 0;
         params->chunk_size = 0;
         zfp->exec.params = (void*)params;
+=======
+        /* reset parameters to their default values */
+        zfp->exec.params.omp.threads = 0;
+        zfp->exec.params.omp.chunk_size = 0;
+>>>>>>> feature/parallel-variable-rate
       }
       break;
-#else
-      return zfp_false;
+#endif
+#ifdef ZFP_WITH_CUDA
+    case zfp_exec_cuda:
+      if (!cuda_init(zfp))
+        return zfp_false;
+      break;
+#endif
+#ifdef ZFP_WITH_HIP
+    case zfp_exec_hip:
+      break;
 #endif
     default:
       return zfp_false;
@@ -970,6 +1151,47 @@ zfp_stream_set_omp_chunk_size(zfp_stream* zfp, uint chunk_size)
     return zfp_false;
   ((zfp_exec_params_omp*)zfp->exec.params)->chunk_size = chunk_size;
   return zfp_true;
+}
+
+/* public functions: block index ------------------------------------------- */
+
+void
+zfp_stream_set_index(zfp_stream* zfp, zfp_index* index)
+{
+  zfp->index = index;
+}
+
+zfp_index*
+zfp_index_create()
+{
+  zfp_index* index = malloc(sizeof(zfp_index));
+  if (index) {
+    index->type = zfp_index_none;
+    index->data = NULL;
+    index->size = 0;
+    index->granularity = 1;
+  }
+  return index;
+}
+
+void
+zfp_index_set_type(zfp_index* index, zfp_index_type type, uint granularity)
+{
+  index->type = type;
+  index->granularity = granularity;
+}
+
+void
+zfp_index_set_data(zfp_index* index, void* data, size_t size)
+{
+  index->data = data;
+  index->size = size;
+}
+
+void
+zfp_index_free(zfp_index* index)
+{
+  free(index);
 }
 
 /* public functions: utility functions --------------------------------------*/
@@ -1052,7 +1274,7 @@ size_t
 zfp_compress(zfp_stream* zfp, const zfp_field* field)
 {
   /* function table [execution][strided][dimensionality][scalar type] */
-  void (*ftable[3][2][4][4])(zfp_stream*, const zfp_field*) = {
+  void (*ftable[4][2][4][4])(zfp_stream*, const zfp_field*) = {
     /* serial */
     {{{ compress_int32_1,         compress_int64_1,         compress_float_1,         compress_double_1 },
       { compress_strided_int32_2, compress_strided_int64_2, compress_strided_float_2, compress_strided_double_2 },
@@ -1064,7 +1286,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
       { compress_strided_int32_4, compress_strided_int64_4, compress_strided_float_4, compress_strided_double_4 }}},
 
     /* OpenMP */
-#ifdef _OPENMP
+#ifdef ZFP_WITH_OPENMP
     {{{ compress_omp_int32_1,         compress_omp_int64_1,         compress_omp_float_1,         compress_omp_double_1 },
       { compress_strided_omp_int32_2, compress_strided_omp_int64_2, compress_strided_omp_float_2, compress_strided_omp_double_2 },
       { compress_strided_omp_int32_3, compress_strided_omp_int64_3, compress_strided_omp_float_3, compress_strided_omp_double_3 },
@@ -1090,11 +1312,26 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
 #else
     {{{ NULL }}},
 #endif
+
+    /* HIP */
+#ifdef ZFP_WITH_HIP
+    {{{ compress_hip_int32_1,         compress_hip_int64_1,         compress_hip_float_1,         compress_hip_double_1 },
+      { compress_strided_hip_int32_2, compress_strided_hip_int64_2, compress_strided_hip_float_2, compress_strided_hip_double_2 },
+      { compress_strided_hip_int32_3, compress_strided_hip_int64_3, compress_strided_hip_float_3, compress_strided_hip_double_3 },
+      { NULL,                            NULL,                            NULL,                            NULL }},
+     {{ compress_strided_hip_int32_1, compress_strided_hip_int64_1, compress_strided_hip_float_1, compress_strided_hip_double_1 },
+      { compress_strided_hip_int32_2, compress_strided_hip_int64_2, compress_strided_hip_float_2, compress_strided_hip_double_2 },
+      { compress_strided_hip_int32_3, compress_strided_hip_int64_3, compress_strided_hip_float_3, compress_strided_hip_double_3 },
+      { NULL,                            NULL,                            NULL,                            NULL }}},
+#else
+    {{{ NULL }}},
+#endif
   };
   uint exec = zfp->exec.policy;
   uint strided = (uint)zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
+  void* length_table;
   void (*compress)(zfp_stream*, const zfp_field*);
 
   switch (type) {
@@ -1112,9 +1349,27 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
   if (!compress)
     return 0;
 
+  /* allocate buffer for length table */
+  if (zfp->index) {
+    size_t blocks = field_blocks(field);
+    size_t length_table_size = blocks * sizeof(uint16);
+    length_table = malloc(length_table_size);
+    if (!length_table)
+      return 0;
+    zfp_index_set_data(zfp->index, length_table, length_table_size);
+  }
+
   /* compress field and align bit stream on word boundary */
   compress(zfp, field);
   stream_flush(zfp->stream);
+
+  /* encode index and free length table */
+  if (zfp->index) {
+    zfp_bool success = encode_index(zfp);
+    free(length_table);
+    if (!success)
+      return 0;
+  }
 
   return stream_size(zfp->stream);
 }
@@ -1123,7 +1378,7 @@ size_t
 zfp_decompress(zfp_stream* zfp, zfp_field* field)
 {
   /* function table [execution][strided][dimensionality][scalar type] */
-  void (*ftable[3][2][4][4])(zfp_stream*, zfp_field*) = {
+  void (*ftable[4][2][4][4])(zfp_stream*, zfp_field*) = {
     /* serial */
     {{{ decompress_int32_1,         decompress_int64_1,         decompress_float_1,         decompress_double_1 },
       { decompress_strided_int32_2, decompress_strided_int64_2, decompress_strided_float_2, decompress_strided_double_2 },
@@ -1134,8 +1389,19 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
       { decompress_strided_int32_3, decompress_strided_int64_3, decompress_strided_float_3, decompress_strided_double_3 },
       { decompress_strided_int32_4, decompress_strided_int64_4, decompress_strided_float_4, decompress_strided_double_4 }}},
 
-    /* OpenMP; not yet supported */
-    {{{ NULL }}},
+    /* OpenMP */
+#ifdef ZFP_WITH_OPENMP
+    {{{ decompress_omp_int32_1,         decompress_omp_int64_1,         decompress_omp_float_1,         decompress_omp_double_1 },
+      { decompress_strided_omp_int32_2, decompress_strided_omp_int64_2, decompress_strided_omp_float_2, decompress_strided_omp_double_2 },
+      { decompress_strided_omp_int32_3, decompress_strided_omp_int64_3, decompress_strided_omp_float_3, decompress_strided_omp_double_3 },
+      { decompress_strided_omp_int32_4, decompress_strided_omp_int64_4, decompress_strided_omp_float_4, decompress_strided_omp_double_4 }},
+     {{ decompress_strided_omp_int32_1, decompress_strided_omp_int64_1, decompress_strided_omp_float_1, decompress_strided_omp_double_1 },
+      { decompress_strided_omp_int32_2, decompress_strided_omp_int64_2, decompress_strided_omp_float_2, decompress_strided_omp_double_2 },
+      { decompress_strided_omp_int32_3, decompress_strided_omp_int64_3, decompress_strided_omp_float_3, decompress_strided_omp_double_3 },
+      { decompress_strided_omp_int32_4, decompress_strided_omp_int64_4, decompress_strided_omp_float_4, decompress_strided_omp_double_4 }}},
+#else
+     {{{ NULL }}},
+#endif
 
     /* CUDA */
 #ifdef ZFP_WITH_CUDA
@@ -1150,12 +1416,31 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
 #else
     {{{ NULL }}},
 #endif
+
+    /* HIP */
+#ifdef ZFP_WITH_HIP
+    {{{ decompress_hip_int32_1,         decompress_hip_int64_1,         decompress_hip_float_1,         decompress_hip_double_1 },
+      { decompress_strided_hip_int32_2, decompress_strided_hip_int64_2, decompress_strided_hip_float_2, decompress_strided_hip_double_2 },
+      { decompress_strided_hip_int32_3, decompress_strided_hip_int64_3, decompress_strided_hip_float_3, decompress_strided_hip_double_3 },
+      { NULL,                            NULL,                            NULL,                            NULL }},
+     {{ decompress_strided_hip_int32_1, decompress_strided_hip_int64_1, decompress_strided_hip_float_1, decompress_strided_hip_double_1 },
+      { decompress_strided_hip_int32_2, decompress_strided_hip_int64_2, decompress_strided_hip_float_2, decompress_strided_hip_double_2 },
+      { decompress_strided_hip_int32_3, decompress_strided_hip_int64_3, decompress_strided_hip_float_3, decompress_strided_hip_double_3 },
+      { NULL,                            NULL,                            NULL,                            NULL }}},
+#else
+    {{{ NULL }}},
+#endif
   };
   uint exec = zfp->exec.policy;
   uint strided = (uint)zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
   void (*decompress)(zfp_stream*, zfp_field*);
+  zfp_mode mode = zfp_stream_compression_mode(zfp);
+  zfp_bool require_index = (exec != zfp_exec_serial) && (mode != zfp_mode_fixed_rate);
+  const uint32* index32 = NULL;
+  zfp_index_type index_type = 0;
+  uint index_granularity = 1;
 
   switch (type) {
     case zfp_type_int32:
@@ -1172,9 +1457,41 @@ zfp_decompress(zfp_stream* zfp, zfp_field* field)
   if (!decompress)
     return 0;
 
+  /* check if index for parallel variable-rate decompression is required */
+  if (require_index) {
+    /* ensure index is present */
+    if (zfp->index && zfp->index->data) {
+      index32 = (const uint32*)zfp->index->data;
+      index_type = index32[0];
+      index_granularity = index32[1];
+      /* shift the index data pointer to skip the first 8 bytes of the header since they are decoded */
+      /* TODO: this is rather ugly; make index consumer skip header if necessary */
+      index32 += 2;
+      switch (index_type) {
+        case zfp_index_offset:
+        case zfp_index_hybrid:
+          zfp->index->data = (void*)index32;
+          zfp->index->type = index_type;
+          zfp->index->granularity = index_granularity;
+          break;
+        default:
+          /* unsupported index type for parallel decompression */
+          return 0;
+      }
+    }
+    else
+      return 0;
+  }
+
   /* decompress field and align bit stream on word boundary */
   decompress(zfp, field);
   stream_align(zfp->stream);
+
+  /* restore the index header */
+  if (require_index) {
+    index32 -= 2;
+    zfp->index->data = (void*)index32;
+  }
 
   return stream_size(zfp->stream);
 }

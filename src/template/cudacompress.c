@@ -2,6 +2,7 @@
 
 #include "../cuda_zfp/cuZFP.h"
 
+/* compress 1d contiguous array */
 static void 
 _t2(compress_cuda, Scalar, 1)(zfp_stream* stream, const zfp_field* field)
 {

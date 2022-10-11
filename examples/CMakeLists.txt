@@ -15,6 +15,9 @@ if(BUILD_CFP)
   target_link_libraries(diffusionC cfp)
 endif()
 
+add_executable(index index.c)
+target_link_libraries(index zfp m dl)
+
 add_executable(inplace inplace.c)
 target_link_libraries(inplace zfp)
 

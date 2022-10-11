@@ -1,12 +1,13 @@
-#ifndef CUZFP_ENCODE1_CUH
-#define CUZFP_ENCODE1_CUH
+#include "hip/hip_runtime.h"
+#ifndef HIPZFP_ENCODE1_H
+#define HIPZFP_ENCODE1_H
 
-#include "cuZFP.h"
+#include "hipZFP.h"
 #include "shared.h"
-#include "encode.cuh"
-#include "type_info.cuh"
+#include "encode.h"
+#include "type_info.h"
 
-namespace cuZFP {
+namespace hipZFP {
 
 template <typename Scalar>
 inline __device__ __host__
@@ -30,7 +31,7 @@ void gather_partial1(Scalar* q, const Scalar* p, uint nx, ptrdiff_t sx)
 template <class Scalar>
 __global__
 void
-cuda_encode1(
+hip_encode1(
   const Scalar* d_data, // field data device pointer
   size_t size,          // field dimensions
   ptrdiff_t stride,     // field stride
@@ -78,26 +79,26 @@ size_t encode1launch(
   uint maxbits
 )
 {
-  const int cuda_block_size = 128;
-  const dim3 block_size = dim3(cuda_block_size, 1, 1);
+  const int hip_block_size = 128;
+  const dim3 block_size = dim3(hip_block_size, 1, 1);
 
   // number of zfp blocks to encode
   const size_t blocks = (size[0] + 3) / 4;
 
   // determine grid of thread blocks
-  const dim3 grid_size = calculate_grid_size(blocks, cuda_block_size);
+  const dim3 grid_size = calculate_grid_size(blocks, hip_block_size);
 
   // zero-initialize bit stream (for atomics)
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
-  cudaMemset(d_stream, 0, stream_bytes);
+  hipMemset(d_stream, 0, stream_bytes);
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef HIP_ZFP_RATE_PRINT
   Timer timer;
   timer.start();
 #endif
 
   // launch GPU kernel
-  cuda_encode1<Scalar><<<grid_size, block_size>>>(
+  hipLaunchKernelGGL(HIP_KERNEL_NAME(hip_encode1<Scalar>), grid_size, block_size, 0, 0, 
     d_data,
     size[0],
     stride[0],
@@ -105,7 +106,7 @@ size_t encode1launch(
     maxbits
   );
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef HIP_ZFP_RATE_PRINT
   timer.stop();
   timer.print_throughput<Scalar>("Encode", "encode1", dim3(size[0]));
 #endif
@@ -128,6 +129,6 @@ size_t encode1(
   return encode1launch<Scalar>(d_data, size, stride, d_stream, maxbits);
 }
 
-} // namespace cuZFP
+} // namespace hipZFP
 
 #endif

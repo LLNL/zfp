@@ -1,7 +1,7 @@
-#ifndef CUZFP_CONSTANTS_H
-#define CUZFP_CONSTANTS_H
+#ifndef HIPZFP_CONSTANTS_H
+#define HIPZFP_CONSTANTS_H
 
-namespace cuZFP {
+namespace hipZFP {
 
 __device__ static const unsigned char perm_1[4] =
 {
@@ -131,6 +131,6 @@ perm_3[64] = {
 
 #undef index
 
-} // namespace cuZFP
+} // namespace hipZFP
 
 #endif

@@ -254,21 +254,25 @@ with which :ref:`compression modes <modes>`:
   +---------------------------------+---------+---------+---------+
   | (de)compression mode            | serial  | OpenMP  | CUDA    |
   +===============+=================+=========+=========+=========+
+  |               | expert          | |check| | |check| |         |
+  |               +-----------------+---------+---------+---------+
   |               | fixed rate      | |check| | |check| | |check| |
   |               +-----------------+---------+---------+---------+
-  |               | fixed precision | |check| | |check| |         |
-  | compression   +-----------------+---------+---------+---------+
+  | compression   | fixed precision | |check| | |check| |         |
+  |               +-----------------+---------+---------+---------+
   |               | fixed accuracy  | |check| | |check| |         |
   |               +-----------------+---------+---------+---------+
   |               | reversible      | |check| | |check| |         |
   +---------------+-----------------+---------+---------+---------+
-  |               | fixed rate      | |check| |         | |check| |
+  |               | expert          | |check| | |check| |         |
   |               +-----------------+---------+---------+---------+
-  |               | fixed precision | |check| |         |         |
-  | decompression +-----------------+---------+---------+---------+
-  |               | fixed accuracy  | |check| |         |         |
+  |               | fixed rate      | |check| | |check| | |check| |
   |               +-----------------+---------+---------+---------+
-  |               | reversible      | |check| |         |         |
+  | decompression | fixed precision | |check| | |check| | |check| |
+  |               +-----------------+---------+---------+---------+
+  |               | fixed accuracy  | |check| | |check| | |check| |
+  |               +-----------------+---------+---------+---------+
+  |               | reversible      | |check| | |check| |         |
   +---------------+-----------------+---------+---------+---------+
 
 :c:func:`zfp_compress` and :c:func:`zfp_decompress` both return zero if the
@@ -289,22 +293,28 @@ for executing compression.
 Parallel Decompression
 ----------------------
 
-Parallel decompression is in principle possible using the same strategy
-as used for compression.  However, in |zfp|'s
-:ref:`variable-rate modes <modes>`, the compressed blocks do not occupy
-fixed storage, and therefore the decompressor needs to be instructed
-where each compressed block resides in the bit stream to enable
-parallel decompression.  Because the |zfp| bit stream does not currently
-store such information, variable-rate parallel decompression is not yet
-supported, though plans are to make such functionality available in the
-near future.
+Parallel decompression is possible using the same strategy as used for
+compression.  However, in |zfp|'s :ref:`variable-rate modes <modes>`, the
+compressed blocks do not occupy fixed storage, and therefore the decompressor
+needs to be instructed where each compressed block resides in the bit stream
+to enable parallel decompression.  Because the |zfp| bit stream does not
+currently store such information, a separate :ref:`block index <hl-func-index>`
+is required for encoding block offsets.  This capability is available as
+of |zfp| |vrdecrelease|.
 
-The CUDA implementation supports fixed-rate decompression.  OpenMP
-fixed-rate decompression has been implemented and will be released in the
-near future.
+To enable parallel variable-rate decompression, the application must first
+construct a block index during compression by performing these steps:
 
-Future versions of |zfp| will allow efficient encoding of block sizes and/or
-offsets to allow each thread to quickly locate the blocks it is responsible
-for decompressing, which will allow for variable-rate compression and
-decompression.  Such capabilities are already present in the implementation
-of the |zfp| :ref:`read-only arrays <carray_classes>`.
+#. Allocate a block index using :c:func:`zfp_index_create`.
+#. Set the desired index type and granularity using
+   :c:func:`zfp_index_set_type`.
+#. Associate the index with the |zfp| stream using
+   c:func:`zfp_stream_set_index`.
+
+When done successfully, :c:func:`zfp_compress` will then allocate sufficient
+space for and populate the index.
+
+The same index data is relied on when performing parallel decompression,
+which may have to be serialized (e.g., to disk) following compression and
+later deserialized before decompression.  For more details, please see the
+:ref:`hl-func-index` section.

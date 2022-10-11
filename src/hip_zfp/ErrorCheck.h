@@ -15,10 +15,10 @@ public:
 
   void chk(std::string msg)
   {
-    error = cudaGetLastError();
-    if (error != cudaSuccess) {
+    error = hipGetLastError();
+    if (error != hipSuccess) {
       std::cout << msg << " : " << error;
-      std::cout << " " << cudaGetErrorString(error) << std::endl;
+      std::cout << " " << hipGetErrorString(error) << std::endl;
     }
   }
 
@@ -28,7 +28,7 @@ public:
     str.str("");
   }
 
-  cudaError error;
+  hipError_t error;
   stringstream str;
 };
 

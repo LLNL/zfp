@@ -31,7 +31,7 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressReversible_expect_
     fail_msg("ERROR setting zfp mode");
   }
 
-  runCompressDecompressReversible(bundle, 1);
+  runCompressDecompressReversible(state, 1);
 }
 
 static void
@@ -93,6 +93,9 @@ isCompressedBitrateComparableToChosenRate(struct setupVars* bundle)
 {
   zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
+
+  // set policy for compression
+  zfp_stream_set_execution(stream, bundle->compressPolicy);
 
   // integer arithmetic allows exact comparison
   size_t compressedBytes = zfp_compress(stream, field);
@@ -165,11 +168,17 @@ isCompressedValuesWithinAccuracy(struct setupVars* bundle)
   zfp_field* field = bundle->field;
   zfp_stream* stream = bundle->stream;
 
+  // set policy for compression
+  zfp_stream_set_execution(stream, bundle->compressPolicy);
+
   size_t compressedBytes = zfp_compress(stream, field);
   if (compressedBytes == 0) {
     printf("Compression failed\n");
     return 1;
   }
+
+  // set policy for decompression
+  zfp_stream_set_execution(stream, bundle->decompressPolicy);
 
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location
@@ -277,23 +286,27 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
 static int
 setupPermuted(void **state)
 {
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_serial);
   return initZfpStreamAndField(state, PERMUTED);
 }
 
 static int
 setupInterleaved(void **state)
 {
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_serial);
   return initZfpStreamAndField(state, INTERLEAVED);
 }
 
 static int
 setupReversed(void **state)
 {
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_serial);
   return initZfpStreamAndField(state, REVERSED);
 }
 
 static int
 setupDefaultStride(void **state)
 {
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_serial);
   return initZfpStreamAndField(state, AS_IS);
 }

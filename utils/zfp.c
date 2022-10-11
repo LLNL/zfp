@@ -114,6 +114,10 @@ usage()
   fprintf(stderr, "  -x serial : serial compression (default)\n");
   fprintf(stderr, "  -x omp[=threads[,chunk_size]] : OpenMP parallel compression\n");
   fprintf(stderr, "  -x cuda : CUDA fixed rate parallel compression/decompression\n");
+  fprintf(stderr, "  -x hip : HIP fixed rate parallel compression/decompression\n");
+  fprintf(stderr, "Index for parallel decompression:\n");
+  fprintf(stderr, "  -m <path> : block index (output of compression, input to variable-rate parallel decompression)\n");
+  fprintf(stderr, "  -n <type>=<granularity>: optional type (offset or hybrid) and granularity of block index\n");
   fprintf(stderr, "Examples:\n");
   fprintf(stderr, "  -i file : read uncompressed file and compress to memory\n");
   fprintf(stderr, "  -z file : read compressed file and decompress to memory\n");
@@ -135,6 +139,7 @@ int main(int argc, char* argv[])
 {
   /* default settings */
   zfp_type type = zfp_type_none;
+  zfp_index_type index_type = zfp_index_none;
   size_t typesize = 0;
   uint dims = 0;
   size_t nx = 0;
@@ -152,9 +157,11 @@ int main(int argc, char* argv[])
   zfp_bool header = zfp_false;
   zfp_bool quiet = zfp_false;
   zfp_bool stats = zfp_false;
+  uint index_granularity = 1;
   char* inpath = 0;
   char* zfppath = 0;
   char* outpath = 0;
+  char* idxpath = 0;
   char mode = 0;
   zfp_exec_policy exec = zfp_exec_serial;
   uint threads = 0;
@@ -164,13 +171,18 @@ int main(int argc, char* argv[])
   int i;
   zfp_field* field = NULL;
   zfp_stream* zfp = NULL;
+  zfp_index* index = NULL;
   bitstream* stream = NULL;
+  void* index_data = NULL;
   void* fi = NULL;
   void* fo = NULL;
   void* buffer = NULL;
+  void* idxbuffer = NULL;
   size_t rawsize = 0;
   size_t zfpsize = 0;
   size_t bufsize = 0;
+  size_t idxsize = 0;
+  size_t idxbufsize = 0;
 
   if (argc == 1)
     usage();
@@ -292,6 +304,25 @@ int main(int argc, char* argv[])
         }
         else if (!strcmp(argv[i], "cuda"))
           exec = zfp_exec_cuda;
+        else if (!strcmp(argv[i], "hip"))
+          exec = zfp_exec_hip;
+        else
+          usage();
+        break;
+      case 'm':
+        if (++i == argc)
+          usage();
+        idxpath = argv[i];
+        break;
+      case 'n':
+        if (++i == argc)
+          usage();
+        if (sscanf(argv[i], "offset=%u", &index_granularity) == 1)
+          index_type = zfp_index_offset;
+        else if (!strcmp(argv[i], "length"))
+          index_type = zfp_index_length;
+        else if (sscanf(argv[i], "hybrid=%u", &index_granularity) == 1)
+          index_type = zfp_index_hybrid;
         else
           usage();
         break;
@@ -371,6 +402,7 @@ int main(int argc, char* argv[])
 
   zfp = zfp_stream_open(NULL);
   field = zfp_field_alloc();
+  index = zfp_index_create();
 
   /* read uncompressed or compressed file */
   if (inpath) {
@@ -479,6 +511,12 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
       }
       break;
+    case zfp_exec_hip:
+      if (!zfp_stream_set_execution(zfp, exec)) {
+        fprintf(stderr, "hip execution not available\n");
+        return EXIT_FAILURE;
+      }
+      break;
     case zfp_exec_omp:
       if (!zfp_stream_set_execution(zfp, exec) ||
           !zfp_stream_set_omp_threads(zfp, threads) ||
@@ -506,7 +544,7 @@ int main(int argc, char* argv[])
     }
     buffer = malloc(bufsize);
     if (!buffer) {
-      fprintf(stderr, "cannot allocate memory\n");
+      fprintf(stderr, "cannot allocate memory for uncompressed input file\n");
       return EXIT_FAILURE;
     }
 
@@ -524,6 +562,23 @@ int main(int argc, char* argv[])
       return EXIT_FAILURE;
     }
 
+    /* optionally set the index type */
+    if ((index_type != zfp_index_none) && index_granularity) {
+      if (index_type == zfp_index_hybrid) {
+        /* compute minimum number of block size terms that may overflow */
+        uint max_granularity = 1u << (9 - 2 * dims);
+        if (index_granularity > max_granularity) {
+          fprintf(stderr, "granularity for given dimensionality cannot exceed %u\n", max_granularity);
+          return EXIT_FAILURE;
+        }
+      }
+      zfp_index_set_type(index, index_type, index_granularity);
+    }
+
+    /* optionally set the index */
+    if (idxpath)
+      zfp_stream_set_index(zfp, index);
+
     /* compress data */
     zfpsize = zfp_compress(zfp, field);
     if (zfpsize == 0) {
@@ -540,6 +595,22 @@ int main(int argc, char* argv[])
       }
       if (fwrite(buffer, 1, zfpsize, file) != zfpsize) {
         fprintf(stderr, "cannot write compressed file\n");
+        return EXIT_FAILURE;
+      }
+      fclose(file);
+    }
+
+    /* optionally write index */
+    if (zfppath && idxpath) {
+      FILE* file = !strcmp(idxpath, "-") ? stdout : fopen(idxpath, "wb");
+      if (!file) {
+        fprintf(stderr, "cannot create index file\n");
+        return EXIT_FAILURE;
+      }
+      index_data = zfp->index->data;
+      idxsize = zfp->index->size;
+      if (fwrite(index_data, 1, idxsize, file) != idxsize) {
+        fprintf(stderr, "cannot write index file\n");
         return EXIT_FAILURE;
       }
       fclose(file);
@@ -572,10 +643,36 @@ int main(int argc, char* argv[])
     rawsize = typesize * count;
     fo = malloc(rawsize);
     if (!fo) {
-      fprintf(stderr, "cannot allocate memory\n");
+      fprintf(stderr, "cannot allocate memory for compressed input file\n");
       return EXIT_FAILURE;
     }
     zfp_field_set_pointer(field, fo);
+
+    /* read index in increasingly large chunks */
+    if (idxpath && !zfp->index) {
+      FILE* file = !strcmp(idxpath, "-") ? stdin : fopen(idxpath, "rb");
+      if (!file) {
+        fprintf(stderr, "cannot open index file\n");
+       return EXIT_FAILURE;
+      }
+      idxbufsize = 0x100;
+      do {
+        idxbufsize *= 2;
+        idxbuffer = realloc(idxbuffer, idxbufsize);
+        if (!idxbuffer) {
+          fprintf(stderr, "cannot allocate memory for index\n");
+          return EXIT_FAILURE;
+        }
+        idxsize += fread((uchar*)idxbuffer + idxsize, 1, idxbufsize - idxsize, file);
+      } while (idxsize == idxbufsize);
+      if (ferror(file)) {
+        fprintf(stderr, "cannot read index file\n");
+        return EXIT_FAILURE;
+      }
+      fclose(file);
+      zfp_index_set_data(index, idxbuffer, idxsize);
+      zfp_stream_set_index(zfp, index);
+    }
 
     /* decompress data */
     while (!zfp_decompress(zfp, field)) {
@@ -624,6 +721,10 @@ int main(int argc, char* argv[])
   free(buffer);
   free(fi);
   free(fo);
+  if (index)
+    zfp_index_free(index);
+  if (idxbuffer)
+    free(idxbuffer);
 
   return EXIT_SUCCESS;
 }

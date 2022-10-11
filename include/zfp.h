@@ -54,6 +54,10 @@
 #define ZFP_ROUND_NEVER 0    /* never round */
 #define ZFP_ROUND_LAST  1    /* round during decompression */
 
+/* index constants */
+/* TODO: needed and used correctly? */
+#define ZFP_PARTITION_SIZE 32 /* number of blocks in an index partition */
+
 /* types ------------------------------------------------------------------- */
 
 /* Boolean constants */
@@ -68,7 +72,8 @@ typedef int zfp_bool; /* Boolean type */
 typedef enum {
   zfp_exec_serial = 0, /* serial execution (default) */
   zfp_exec_omp    = 1, /* OpenMP multi-threaded execution */
-  zfp_exec_cuda   = 2  /* CUDA parallel execution */
+  zfp_exec_cuda   = 2, /* CUDA parallel execution */
+  zfp_exec_hip    = 3  /* HIP parallel execution */
 } zfp_exec_policy;
 
 /* OpenMP execution parameters */
@@ -77,10 +82,36 @@ typedef struct {
   uint chunk_size; /* number of blocks per chunk (1D only) */
 } zfp_exec_params_omp;
 
+/* CUDA execution parameters */
+typedef struct {
+  int grid_size[3]; /* maximum CUDA grid dimensions (read only) */
+} zfp_exec_params_cuda;
+
+/* HIP execution parameters */
+typedef struct {
+  int grid_size[3]; /* maximum HIP grid dimensions (read only) */
+} zfp_exec_params_hip;
+
 typedef struct {
   zfp_exec_policy policy; /* execution policy (serial, omp, ...) */
   void* params;           /* execution parameters */
 } zfp_execution;
+
+/* block index type */
+typedef enum {
+  zfp_index_none = 0,   /* no index */
+  zfp_index_offset = 1, /* raw 64-bit offsets (OpenMP and CUDA decompression) */
+  zfp_index_length = 2, /* raw 16-bit lengths */
+  zfp_index_hybrid = 3  /* hybrid (CUDA decompression) */
+} zfp_index_type;
+
+/* block index for parallel decompression */
+typedef struct {
+  zfp_index_type type; /* zfp_index_none if no index */
+  void* data;          /* NULL if no index */
+  size_t size;         /* byte size of data (0 if no index) */
+  uint granularity;    /* granularity in #blocks/entry */
+} zfp_index;
 
 /* compressed stream; use accessors to get/set members */
 typedef struct {
@@ -90,6 +121,7 @@ typedef struct {
   int minexp;         /* minimum floating point bit plane number to store */
   bitstream* stream;  /* compressed bit stream */
   zfp_execution exec; /* execution policy and parameters */
+  zfp_index* index;   /* index for parallel decompression */
 } zfp_stream;
 
 /* compression mode */
@@ -331,6 +363,40 @@ zfp_stream_set_omp_chunk_size(
   uint chunk_size     /* number of blocks per chunk (0 for default) */
 );
 
+/* high-level API: block index --------------------------------------------- */
+
+/* set block index of the stream */
+void
+zfp_stream_set_index(
+  zfp_stream* zfp, /* compressed stream */
+  zfp_index* index /* block index */
+);
+
+/* allocate block index */
+zfp_index* /* pointer to default uninitialized index */
+zfp_index_create();
+
+/* set block index type */
+void
+zfp_index_set_type(
+  zfp_index* index,    /* block index */
+  zfp_index_type type, /* index type */
+  uint granularity     /* granularity in #blocks/chunk */
+);
+
+/* specify buffer for index data */
+void
+zfp_index_set_data(
+  zfp_index* index, /* block index */
+  void* data,       /* buffer for index data */
+  size_t size       /* buffer size in bytes */
+);
+
+void
+zfp_index_free(
+  zfp_index* index /* block index */
+);
+
 /* high-level API: compression mode and parameter settings ----------------- */
 
 /* unspecified configuration */
@@ -475,6 +541,12 @@ zfp_bool                  /* true if array is not contiguous */
 zfp_field_stride(
   const zfp_field* field, /* field metadata */
   ptrdiff_t* stride       /* stride in scalars per dimension (may be NULL) */
+);
+
+/* field contiguity test */
+zfp_bool                 /* true if field layout is contiguous */
+zfp_field_is_contiguous(
+  const zfp_field* field /* field metadata */
 );
 
 /* field contiguity test */

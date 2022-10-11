@@ -1,20 +1,20 @@
-#include "cuZFP.h"
-#include "encode1.cuh"
-#include "encode2.cuh"
-#include "encode3.cuh"
-#include "decode1.cuh"
-#include "decode2.cuh"
-#include "decode3.cuh"
+#include "hipZFP.h"
+#include "encode1.h"
+#include "encode2.h"
+#include "encode3.h"
+#include "decode1.h"
+#include "decode2.h"
+#include "decode3.h"
 #include "ErrorCheck.h"
-#include "pointers.cuh"
-#include "type_info.cuh"
+#include "pointers.h"
+#include "type_info.h"
 
 // we need to know about bitstream, but we don't want duplicate symbols
 #ifndef inline_
   #define inline_ inline
 #endif
 
-#include "zfp/bitstream.inl"
+#include "../inline/bitstream.c"
 
 namespace internal {
 
@@ -39,10 +39,10 @@ void* device_pointer(void* d_begin, void* h_begin, void* h_ptr, zfp_type type)
 Word* setup_device_stream_compress(zfp_stream* stream)
 {
   Word* d_stream = (Word*)stream->stream->begin;
-  if (!cuZFP::is_gpu_ptr(d_stream)) {
+  if (!hipZFP::is_gpu_ptr(d_stream)) {
     // allocate device memory for compressed data
     size_t size = stream_capacity(stream->stream);
-    if (cudaMalloc(&d_stream, size) != cudaSuccess)
+    if (hipMalloc(&d_stream, size) != hipSuccess)
       std::cerr << "failed to allocate device memory for stream" << std::endl;
   }
 
@@ -52,16 +52,16 @@ Word* setup_device_stream_compress(zfp_stream* stream)
 Word* setup_device_stream_decompress(zfp_stream* stream)
 {
   Word* d_stream = (Word*)stream->stream->begin;
-  if (!cuZFP::is_gpu_ptr(d_stream)) {
+  if (!hipZFP::is_gpu_ptr(d_stream)) {
     // copy compressed data to device memory
     size_t size = stream_capacity(stream->stream);
-    if (cudaMalloc(&d_stream, size) != cudaSuccess) {
+    if (hipMalloc(&d_stream, size) != hipSuccess) {
       std::cerr << "failed to allocate device memory for stream" << std::endl;
       return NULL;
     }
-    if (cudaMemcpy(d_stream, stream->stream->begin, size, cudaMemcpyHostToDevice) != cudaSuccess) {
+    if (hipMemcpy(d_stream, stream->stream->begin, size, hipMemcpyHostToDevice) != hipSuccess) {
       std::cerr << "failed to copy stream from host to device" << std::endl;
-      cudaFree(d_stream);
+      hipFree(d_stream);
       return NULL;
     }
   }
@@ -72,16 +72,16 @@ Word* setup_device_stream_decompress(zfp_stream* stream)
 Word* setup_device_index(zfp_stream* stream)
 {
   Word* d_index = (Word*)stream->index->data;
-  if (!cuZFP::is_gpu_ptr(d_index)) {
+  if (!hipZFP::is_gpu_ptr(d_index)) {
     // copy index to device memory
     size_t size = stream->index->size;
-    if (cudaMalloc(&d_index, size) != cudaSuccess) {
+    if (hipMalloc(&d_index, size) != hipSuccess) {
       std::cerr << "failed to allocate device memory for index" << std::endl;
       return NULL;
     }
-    if (cudaMemcpy(d_index, stream->index->data, size, cudaMemcpyHostToDevice) != cudaSuccess) {
+    if (hipMemcpy(d_index, stream->index->data, size, hipMemcpyHostToDevice) != hipSuccess) {
       std::cerr << "failed to copy stream from host to device" << std::endl;
-      cudaFree(d_index);
+      hipFree(d_index);
       return NULL;
     }
   }
@@ -92,7 +92,7 @@ Word* setup_device_index(zfp_stream* stream)
 void* setup_device_field_compress(const zfp_field* field, void*& d_begin)
 {
   void* d_data = field->data;
-  if (cuZFP::is_gpu_ptr(d_data)) {
+  if (hipZFP::is_gpu_ptr(d_data)) {
     // field already resides on device
     d_begin = zfp_field_begin(field);
     return d_data;
@@ -102,15 +102,15 @@ void* setup_device_field_compress(const zfp_field* field, void*& d_begin)
     if (zfp_field_is_contiguous(field)) {
       // copy field from host to device
       size_t size = zfp_field_size(field, NULL) * zfp_type_size(field->type);
-      if (cudaMalloc(&d_begin, size) != cudaSuccess) {
+      if (hipMalloc(&d_begin, size) != hipSuccess) {
         std::cerr << "failed to allocate device memory for field" << std::endl;
         return NULL;
       }
       // in case of negative strides, find lowest memory address spanned by field
       void* h_begin = zfp_field_begin(field);
-      if (cudaMemcpy(d_begin, h_begin, size, cudaMemcpyHostToDevice) != cudaSuccess) {
+      if (hipMemcpy(d_begin, h_begin, size, hipMemcpyHostToDevice) != hipSuccess) {
         std::cerr << "failed to copy field from host to device" << std::endl;
-        cudaFree(d_begin);
+        hipFree(d_begin);
         return NULL;
       }
       // in case of negative strides, advance device pointer into buffer
@@ -124,7 +124,7 @@ void* setup_device_field_compress(const zfp_field* field, void*& d_begin)
 void* setup_device_field_decompress(const zfp_field* field, void*& d_begin)
 {
   void* d_data = field->data;
-  if (cuZFP::is_gpu_ptr(d_data)) {
+  if (hipZFP::is_gpu_ptr(d_data)) {
     // field has already been allocated on device
     d_begin = zfp_field_begin(field);
     return d_data;
@@ -134,7 +134,7 @@ void* setup_device_field_decompress(const zfp_field* field, void*& d_begin)
     if (zfp_field_is_contiguous(field)) {
       // allocate device memory for decompressed field
       size_t size = zfp_field_size(field, NULL) * zfp_type_size(field->type);
-      if (cudaMalloc(&d_begin, size) != cudaSuccess) {
+      if (hipMalloc(&d_begin, size) != hipSuccess) {
         std::cerr << "failed to allocate device memory for field" << std::endl;
         return NULL;
       }
@@ -153,8 +153,8 @@ void cleanup_device(void* begin, void* d_begin, size_t bytes = 0)
   if (begin != d_begin) {
     // copy data from device to host and free device memory
     if (bytes)
-      cudaMemcpy(begin, d_begin, bytes, cudaMemcpyDeviceToHost);
-    cudaFree(d_begin);
+      hipMemcpy(begin, d_begin, bytes, hipMemcpyDeviceToHost);
+    hipFree(d_begin);
   }
 }
 
@@ -176,13 +176,13 @@ encode(
   uint dims = size[0] ? size[1] ? size[2] ? 3 : 2 : 1 : 0;
   switch (dims) {
     case 1:
-      bits_written = cuZFP::encode1<T>(d_data, size, stride, d_stream, maxbits);
+      bits_written = hipZFP::encode1<T>(d_data, size, stride, d_stream, maxbits);
       break;
     case 2:
-      bits_written = cuZFP::encode2<T>(d_data, size, stride, d_stream, maxbits);
+      bits_written = hipZFP::encode2<T>(d_data, size, stride, d_stream, maxbits);
       break;
     case 3:
-      bits_written = cuZFP::encode3<T>(d_data, size, stride, d_stream, maxbits);
+      bits_written = hipZFP::encode3<T>(d_data, size, stride, d_stream, maxbits);
       break;
     default:
       break;
@@ -215,13 +215,13 @@ decode(
   uint dims = size[0] ? size[1] ? size[2] ? 3 : 2 : 1 : 0;
   switch (dims) {
     case 1:
-      bits_read = cuZFP::decode1<T>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = hipZFP::decode1<T>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     case 2:
-      bits_read = cuZFP::decode2<T>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = hipZFP::decode2<T>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     case 3:
-      bits_read = cuZFP::decode3<T>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = hipZFP::decode3<T>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     default:
       break;
@@ -236,22 +236,22 @@ decode(
 
 // TODO: move out of global namespace
 zfp_bool
-cuda_init(zfp_stream* stream)
+hip_init(zfp_stream* stream)
 {
   // ensure GPU word size equals CPU word size
   if (sizeof(Word) != sizeof(word))
     return false;
 
   static bool initialized = false;
-  static cudaDeviceProp prop;
-  if (!initialized && cudaGetDeviceProperties(&prop, 0) != cudaSuccess)
+  static hipDeviceProp_t prop;
+  if (!initialized && hipGetDeviceProperties(&prop, 0) != hipSuccess)
     return zfp_false;
 
   initialized = true;
   // TODO: take advantage of cached grid size
-  stream->exec.params.cuda.grid_size[0] = prop.maxGridSize[0];
-  stream->exec.params.cuda.grid_size[1] = prop.maxGridSize[1];
-  stream->exec.params.cuda.grid_size[2] = prop.maxGridSize[2];
+  stream->exec.params.hip.grid_size[0] = prop.maxGridSize[0];
+  stream->exec.params.hip.grid_size[1] = prop.maxGridSize[1];
+  stream->exec.params.hip.grid_size[2] = prop.maxGridSize[2];
 
   // TODO: launch warm-up kernel
 
@@ -259,7 +259,7 @@ cuda_init(zfp_stream* stream)
 }
 
 size_t
-cuda_compress(zfp_stream* stream, const zfp_field* field)
+hip_compress(zfp_stream* stream, const zfp_field* field)
 {
   // determine field dimensions
   size_t size[3];
@@ -303,7 +303,7 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
   }
 
   // copy stream from device to host if needed and free temporary buffers
-  size_t stream_bytes = cuZFP::round_up((bits_written + CHAR_BIT - 1) / CHAR_BIT, sizeof(Word));
+  size_t stream_bytes = hipZFP::round_up((bits_written + CHAR_BIT - 1) / CHAR_BIT, sizeof(Word));
   internal::cleanup_device(stream->stream->begin, d_stream, stream_bytes);
   internal::cleanup_device(zfp_field_begin(field), d_begin);
 
@@ -315,7 +315,7 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
 }
 
 size_t
-cuda_decompress(zfp_stream* stream, zfp_field* field)
+hip_decompress(zfp_stream* stream, zfp_field* field)
 {
   // determine field dimensions
   size_t size[3];

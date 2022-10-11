@@ -51,10 +51,12 @@ important features, including:
   opportunities for data parallelism on multithreaded platforms by dividing
   the blocks among threads.  An OpenMP implementation of parallel
   compression is available that produces compressed streams that
-  are identical to serially compressed streams.  However, parallel
-  decompression is not yet supported.  |zfp| also supports compression and
-  decompression on the GPU via CUDA.  However, only fixed-rate mode is
-  so far supported.
+  are identical to serially compressed streams.  As of |zfp| |vrdecrelease|,
+  parallel decompression is also supported.  |zfp| also supports compression
+  and decompression on the GPU via CUDA.  While only fixed-rate CUDA
+  compression is so far supported, decompression supports fixed rate,
+  precision, and accuracy.  The reversible and expert modes are not available
+  on the GPU.
 
 - **Variable-rate arrays**.  |zfp| currently offers only fixed-rate
   compressed arrays with random-access write support; |zfp| |carrrelease|

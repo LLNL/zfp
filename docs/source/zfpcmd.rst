@@ -241,6 +241,28 @@ decompression.  This is done only when both compression and decompression
 are performed as part of a single execution, e.g., when specifying both
 :option:`-i` and :option:`-o`.
 
+Block Index
+^^^^^^^^^^^
+
+A block index is needed to support variable-rate decompression using any
+of the parallel execution policies (OpenMP and CUDA).  This index must be
+captured and stored to file during compression and later accessed prior to
+decompression.
+
+.. option:: -m <path>
+
+  Name of block index input file (without :option:`-i`) or output file (with
+  :option:`-i`).  Use "-" for standard input or output.
+
+.. option:: -n <type=granularity>
+
+  Block index type ("offset" or "hybrid") and granularity in number of blocks
+  per index entry.  A granularity of one provides the highest flexibility and
+  performance potential (especially for CUDA) but also the highest storage
+  cost.
+
+See the :ref:`hl-func-index` section for further details.
+
 Examples
 ^^^^^^^^
 

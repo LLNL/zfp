@@ -138,15 +138,6 @@ given_withOpenMP_serialExec_when_setOmpChunkSize_expect_setToExecOmp(void **stat
   assert_int_equal(zfp_stream_execution(stream), zfp_exec_omp);
 }
 
-static void
-given_withOpenMP_whenDecompressOmpPolicy_expect_noop(void **state)
-{
-  struct setupVars *bundle = *state;
-
-  assert_int_equal(zfp_decompress(bundle->stream, bundle->field), 0);
-  assert_int_equal(stream_size(bundle->bs), bundle->streamSize);
-}
-
 #else
 static void
 given_withoutOpenMP_when_setExecutionOmp_expect_unableTo(void **state)
@@ -199,8 +190,6 @@ int main()
     cmocka_unit_test_setup_teardown(given_withOpenMP_serialExec_when_setOmpThreads_expect_setToExecOmp, setup, teardown),
     cmocka_unit_test_setup_teardown(given_withOpenMP_when_setOmpChunkSize_expect_set, setup, teardown),
     cmocka_unit_test_setup_teardown(given_withOpenMP_serialExec_when_setOmpChunkSize_expect_setToExecOmp, setup, teardown),
-
-    cmocka_unit_test_setup_teardown(given_withOpenMP_whenDecompressOmpPolicy_expect_noop, setupForCompress, teardownForCompress),
 #else
     cmocka_unit_test_setup_teardown(given_withoutOpenMP_when_setExecutionOmp_expect_unableTo, setup, teardown),
     cmocka_unit_test_setup_teardown(given_withoutOpenMP_when_setOmpParams_expect_unableTo, setup, teardown),
