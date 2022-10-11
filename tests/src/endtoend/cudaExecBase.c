@@ -245,7 +245,7 @@ isCompressedValuesWithinAccuracy(void **state)
     return 1;
   }
 
-  int strides[4];
+  ptrdiff_t strides[4];
   zfp_field_stride(field, strides);
 
   // apply strides
