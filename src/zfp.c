@@ -704,11 +704,8 @@ zfp_stream_open(bitstream* stream)
     zfp->maxprec = ZFP_MAX_PREC;
     zfp->minexp = ZFP_MIN_EXP;
     zfp->exec.policy = zfp_exec_serial;
-<<<<<<< HEAD
     zfp->exec.params = NULL;
-=======
     zfp->index = NULL;
->>>>>>> feature/parallel-variable-rate
   }
   return zfp;
 }
@@ -1083,50 +1080,42 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
 {
   switch (policy) {
     case zfp_exec_serial:
-      if (zfp->exec.policy != policy && zfp->exec.params != NULL) {
+      if (zfp->exec.policy != policy) {
         free(zfp->exec.params);
         zfp->exec.params = NULL;
       }
       break;
-<<<<<<< HEAD
-#ifdef ZFP_WITH_CUDA
-    case zfp_exec_cuda:
-      if (zfp->exec.policy != policy && zfp->exec.params != NULL) {
-        free(zfp->exec.params);
-        zfp->exec.params = NULL;
-      }
-      break;
-#endif
-=======
 #ifdef ZFP_WITH_OPENMP
->>>>>>> feature/parallel-variable-rate
     case zfp_exec_omp:
       if (zfp->exec.policy != policy) {
-<<<<<<< HEAD
-        if (zfp->exec.params != NULL) {
-          free(zfp->exec.params);
-        }
         zfp_exec_params_omp* params = malloc(sizeof(zfp_exec_params_omp));
         params->threads = 0;
         params->chunk_size = 0;
-        zfp->exec.params = (void*)params;
-=======
-        /* reset parameters to their default values */
-        zfp->exec.params.omp.threads = 0;
-        zfp->exec.params.omp.chunk_size = 0;
->>>>>>> feature/parallel-variable-rate
+        free(zfp->exec.params);
+        zfp->exec.params = params;
       }
       break;
 #endif
 #ifdef ZFP_WITH_CUDA
     case zfp_exec_cuda:
-      if (!cuda_init(zfp))
-        return zfp_false;
+      if (zfp->exec.policy != policy) {
+        zfp_exec_params_cuda* params = malloc(sizeof(zfp_exec_params_cuda));
+        params->grid_size[0] = 0;
+        params->grid_size[1] = 0;
+        params->grid_size[2] = 0;
+        if (!cuda_init(params)) {
+          free(params);
+          return zfp_false;
+        }
+        free(zfp->exec.params);
+        zfp->exec.params = params;
+      }
       break;
 #endif
 #ifdef ZFP_WITH_HIP
     case zfp_exec_hip:
-      break;
+      /* TODO: restore HIP support once CUDA is working */
+      return zfp_false;
 #endif
     default:
       return zfp_false;

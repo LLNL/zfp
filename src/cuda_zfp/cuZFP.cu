@@ -236,22 +236,22 @@ decode(
 
 // TODO: move out of global namespace
 zfp_bool
-cuda_init(zfp_stream* stream)
+cuda_init(zfp_exec_params_cuda* params)
 {
   // ensure GPU word size equals CPU word size
-  if (sizeof(Word) != sizeof(word))
+  if (sizeof(Word) != sizeof(bitstream_word))
     return false;
 
   static bool initialized = false;
   static cudaDeviceProp prop;
   if (!initialized && cudaGetDeviceProperties(&prop, 0) != cudaSuccess)
     return zfp_false;
-
   initialized = true;
+
   // TODO: take advantage of cached grid size
-  stream->exec.params.cuda.grid_size[0] = prop.maxGridSize[0];
-  stream->exec.params.cuda.grid_size[1] = prop.maxGridSize[1];
-  stream->exec.params.cuda.grid_size[2] = prop.maxGridSize[2];
+  params->grid_size[0] = prop.maxGridSize[0];
+  params->grid_size[1] = prop.maxGridSize[1];
+  params->grid_size[2] = prop.maxGridSize[2];
 
   // TODO: launch warm-up kernel
 
