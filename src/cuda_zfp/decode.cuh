@@ -394,8 +394,6 @@ void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp
       for (uint i = 0; i < BlockSize; ++i)
         fblock[i] = scale * (Scalar)iblock[i];
     }
-
-#warning "fblock is not populated for integer types"
   }
 
   if (mode == zfp_mode_fixed_rate) {
