@@ -50,7 +50,7 @@ stages:
     script:
         - mkdir build
         - cd build
-        - cmake -DBUILD_TESTING=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ..
+        - cmake -DBUILD_TESTING_FULL=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ..
         - make -j
     extends: [.build]
 
@@ -63,7 +63,7 @@ stages:
     script:
         - mkdir build
         - cd build
-        - cmake -DBUILD_TESTING=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags} ..
+        - cmake -DBUILD_TESTING_FULL=ON -DZFP_WITH_OPENMP=OFF -DBUILD_UTILITIES=OFF ${ci_cmake_flags} ..
         - make -j
     extends: [.build]
 
