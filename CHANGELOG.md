@@ -7,6 +7,7 @@ Change Log
 
 ### Fixed
 
+- # 177: Full test suite not in release
 - #176: `CFP` API is not exposed via CMake configuration file
 - #169: `libm` dependency is not always correctly detected.
 

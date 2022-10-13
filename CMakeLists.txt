@@ -274,7 +274,7 @@ endif()
 # Add source code
 #------------------------------------------------------------------------------#
 include(CTest)
-if(BUILD_TESTING)
+if(BUILD_TESTING OR BUILD_TESTING_FULL)
   enable_testing()
 endif()
 
@@ -318,7 +318,7 @@ if(BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-if(BUILD_TESTING)
+if(BUILD_TESTING OR BUILD_TESTING_FULL)
   # Disable gtest install to prevent clobbering existing installations 
   option(INSTALL_GMOCK "Install Googlemock" OFF)
   option(INSTALL_GTEST "Install Googletest" OFF)

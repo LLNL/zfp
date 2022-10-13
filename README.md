@@ -43,7 +43,8 @@ zfp may be built using either [CMake](https://cmake.org/) or
 
 This builds the zfp library in the `build/lib` directory and the zfp
 command-line executable in the `build/bin` directory.  It then runs
-the regression tests.
+the regression tests. The full test suite may be run by enabling the 
+`BUILD_TESTING_FULL` CMake option during the build step.
 
 zfp may also be built using GNU make:
 

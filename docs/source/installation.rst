@@ -177,9 +177,14 @@ Regardless of the settings below, |libzfp| will always be built.
 
 .. c:macro:: BUILD_TESTING
 
-  Build |testzfp| and (when on the GitHub
-  `develop branch <https://github.com/LLNL/zfp/tree/develop>`__) unit tests.
+  Build |testzfp| tests.
   Default: on.
+
+
+.. c:macro:: BUILD_TESTING_FULL
+
+  Build all unit tests.
+  Default: off.
 
 
 .. c:macro:: BUILD_SHARED_LIBS
