@@ -101,7 +101,24 @@ jobs:
         id: test
         working-directory: ${{github.workspace}}/build
         run: ctest -C ${{env.BUILD_TYPE}} -VV
-      
+
+      - name: Generate Coverage Report
+        if: ${{matrix.os == 'ubuntu-latest' && matrix.cxx_compiler == 'g++-10' && matrix.omp == 'ON'}}
+        uses: danielealbano/lcov-action@v1
+
+      #- name: Upload to CodeCov
+      #  if: ${{matrix.os == 'ubuntu-latest' && matrix.cxx_compiler == 'g++-10' && matrix.omp == 'ON'}}
+      #  uses: codecov/codecov-action@v3
+      #  with:
+      #    token: ${{secrets.CODECOV_TOKEN}}
+      #    directory: ./coverage/reports
+      #    fail_ci_if_error: true
+      #    files: ./coverage.xml
+      #    flags: unittests
+      #    name: codecov-umbrella
+      #    path_to_write_report: ./coverage/codecov_report.txt
+      #    verbose: true
+
       # Interactive Debug -> see: https://github.com/mxschmitt/action-tmate
       #- name: Setup Debug Session
       #  uses: mxschmitt/action-tmate@v3
