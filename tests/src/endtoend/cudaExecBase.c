@@ -45,7 +45,7 @@ _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressDecompressFixedRate_
   runCompressDecompressTests(state, zfp_mode_fixed_rate, 3);
 }
 
-// fixed precision checksum
+// fixed-precision checksum
 static void
 _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressFixedPrecision_expect_BitstreamAndArrayChecksumsMatch)(void **state)
 {
@@ -182,6 +182,7 @@ runCompressDecompressNoopTest(void **state, zfp_mode mode)
   }
 }
 
+// unsupported: interleaved arrays
 static void
 _catFunc3(given_, DESCRIPTOR, InterleavedArray_when_ZfpCompressDecompressFixedRate_expect_BitstreamUntouchedAndReturnsZero)(void **state)
 {
@@ -327,10 +328,16 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
     zfp_stream_rewind(bundle->stream);
     memset(bundle->buffer, 0, bundle->bufsizeBytes);
   }
-
   if (failures > 0) {
     fail_msg("Compressed value accuracy test failure\n");
   }
+}
+
+// ensure reversible mode is not supported
+static void
+_catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressDecompressReversible_expect_BitstreamUntouchedAndReturnsZero)(void **state)
+{
+  runCompressDecompressNoopTest(state, zfp_mode_reversible);
 }
 #endif
 

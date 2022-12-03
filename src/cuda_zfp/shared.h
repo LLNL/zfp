@@ -16,6 +16,7 @@ typedef unsigned long long Word;
 #define ZFP_1D_BLOCK_SIZE 4
 #define ZFP_2D_BLOCK_SIZE 16
 #define ZFP_3D_BLOCK_SIZE 64
+#define ZFP_4D_BLOCK_SIZE 256
 
 namespace cuZFP {
 

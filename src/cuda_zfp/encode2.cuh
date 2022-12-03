@@ -17,7 +17,7 @@ void gather2(Scalar* q, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
       *q++ = *p;
 }
 
-template <typename Scalar>
+template <typename Scalar> 
 inline __device__ __host__
 void gather_partial2(Scalar* q, const Scalar* p, uint nx, uint ny, ptrdiff_t sx, ptrdiff_t sy)
 {
@@ -36,7 +36,7 @@ void gather_partial2(Scalar* q, const Scalar* p, uint nx, uint ny, ptrdiff_t sx,
 }
 
 // encode kernel
-template <class Scalar>
+template <typename Scalar>
 __global__
 void
 cuda_encode2(
@@ -44,7 +44,11 @@ cuda_encode2(
   size2 size,           // field dimensions
   ptrdiff2 stride,      // field strides
   Word* d_stream,       // compressed bit stream device pointer
-  uint maxbits          // compressed #bits/block
+  ushort* d_index,      // block index
+  uint minbits,         // min compressed #bits/block
+  uint maxbits,         // max compressed #bits/block
+  uint maxprec,         // max uncompressed #bits/value
+  int minexp            // min bit plane index
 )
 {
   const size_t blockId = blockIdx.x + (size_t)gridDim.x * (blockIdx.y + (size_t)gridDim.y * blockIdx.z);
@@ -69,26 +73,71 @@ cuda_encode2(
   // offset into field
   const ptrdiff_t offset = x * stride.x + y * stride.y;
 
+  // initialize block writer
+  BlockWriter::Offset bit_offset = block_idx * maxbits;
+  BlockWriter writer(d_stream, bit_offset);
+
   // gather data into a contiguous block
   Scalar fblock[ZFP_2D_BLOCK_SIZE];
-  const uint nx = (uint)min(size.x - x, 4ull);
-  const uint ny = (uint)min(size.y - y, 4ull);
+  const uint nx = (uint)min(size_t(size.x - x), size_t(4));
+  const uint ny = (uint)min(size_t(size.y - y), size_t(4));
   if (nx * ny < ZFP_2D_BLOCK_SIZE)
     gather_partial2(fblock, d_data + offset, nx, ny, stride.x, stride.y);
   else
     gather2(fblock, d_data + offset, stride.x, stride.y);
 
-  encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, maxbits, block_idx, d_stream);
+  uint bits = encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, writer, minbits, maxbits, maxprec, minexp);
+
+#if 0
+  uint2 block_dims;
+  block_dims.x = padded_dims.x >> 2; 
+  block_dims.y = padded_dims.y >> 2; 
+
+  // logical pos in 3d array
+  uint2 block;
+  block.x = (block_idx % block_dims.x) * 4; 
+  block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
+
+  const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y; 
+
+  Scalar fblock[ZFP_2D_BLOCK_SIZE]; 
+
+  bool partial = false;
+  if(block.x + 4 > dims.x) partial = true;
+  if(block.y + 4 > dims.y) partial = true;
+ 
+  if(partial) 
+  {
+    const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
+    const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
+    gather_partial2(fblock, scalars + offset, nx, ny, stride.x, stride.y);
+
+  }
+  else
+  {
+    gather2(fblock, scalars + offset, stride.x, stride.y);
+  }
+
+  uint bits = zfp_encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, minbits, maxbits, maxprec,
+                                                          minexp, block_idx, stream);
+#endif
+
+  if (d_index)
+    d_index[block_idx] = (ushort)bits;
 }
 
 // launch encode kernel
-template <class Scalar>
+template <typename Scalar>
 size_t encode2launch(
   const Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
   Word* d_stream,
-  uint maxbits
+  ushort* d_index,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
 )
 {
   const int cuda_block_size = 128;
@@ -105,6 +154,68 @@ size_t encode2launch(
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
   cudaMemset(d_stream, 0, stream_bytes);
 
+#if 0
+  uint2 zfp_pad(dims); 
+  if(zfp_pad.x % 4 != 0) zfp_pad.x += 4 - dims.x % 4;
+  if(zfp_pad.y % 4 != 0) zfp_pad.y += 4 - dims.y % 4;
+
+  const uint zfp_blocks = (zfp_pad.x * zfp_pad.y) / 16; 
+
+  //
+  // we need to ensure that we launch a multiple of the 
+  // cuda block size
+  //
+  int block_pad = 0; 
+  if(zfp_blocks % cuda_block_size != 0)
+  {
+    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
+  }
+
+  size_t total_blocks = block_pad + zfp_blocks;
+
+  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
+
+  //
+  size_t stream_bytes = calc_device_mem2d(zfp_pad, maxbits);
+  // ensure we have zeros
+  cudaMemset(stream, 0, stream_bytes);
+
+#ifdef CUDA_ZFP_RATE_PRINT
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  cudaEventRecord(start);
+#endif
+
+  cudaEncode2<Scalar, variable_rate> <<<grid_size, block_size>>>
+    (minbits,
+     maxbits,
+     maxprec,
+     minexp,
+     d_data,
+     stream,
+     d_block_bits,
+     dims,
+     stride,
+     zfp_pad,
+     zfp_blocks);
+
+#ifdef CUDA_ZFP_RATE_PRINT
+  cudaDeviceSynchronize();
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
+  cudaStreamSynchronize(0);
+
+  float miliseconds = 0.f;
+  cudaEventElapsedTime(&miliseconds, start, stop);
+  float seconds = miliseconds / 1000.f;
+  float mb = (float(dims.x * dims.y) * sizeof(Scalar)) / (1024.f * 1024.f *1024.f);
+  float rate = mb / seconds;
+  printf("Encode elapsed time: %.5f (s)\n", seconds);
+  printf("# encode2 rate: %.2f (GB / sec) %d\n", rate, maxbits);
+#endif
+#endif
+
 #ifdef CUDA_ZFP_RATE_PRINT
   Timer timer;
   timer.start();
@@ -116,7 +227,11 @@ size_t encode2launch(
     make_size2(size[0], size[1]),
     make_ptrdiff2(stride[0], stride[1]),
     d_stream,
-    maxbits
+    d_index,
+    minbits,
+    maxbits,
+    maxprec,
+    minexp
   );
 
 #ifdef CUDA_ZFP_RATE_PRINT
@@ -124,23 +239,25 @@ size_t encode2launch(
   timer.print_throughput<Scalar>("Encode", "encode2", dim3(size[0], size[1]));
 #endif
 
-  const size_t bits_written = blocks * maxbits;
-
-  return bits_written;
+  return stream_bytes * CHAR_BIT;
 }
 
-template <class Scalar>
+template <typename Scalar>
 size_t encode2(
   const Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
   Word* d_stream,
-  uint maxbits
+  ushort* d_index,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
 )
 {
-  return encode2launch<Scalar>(d_data, size, stride, d_stream, maxbits);
+  return encode2launch<Scalar>(d_data, size, stride, d_stream, d_index, minbits, maxbits, maxprec, minexp);
 }
 
-} // namespace cuZFP
+}
 
 #endif

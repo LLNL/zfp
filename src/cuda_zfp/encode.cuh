@@ -22,8 +22,7 @@ template <typename Scalar>
 inline __device__
 void pad_block(Scalar *p, uint n, uint s)
 {
-  switch (n) 
-  {
+  switch (n) {
     case 0:
       p[0 * s] = 0;
       /* FALLTHROUGH */
@@ -41,7 +40,7 @@ void pad_block(Scalar *p, uint n, uint s)
   }
 }
 
-template <class Scalar>
+template <typename Scalar>
 inline __device__
 int get_exponent(Scalar x);
 
@@ -63,7 +62,7 @@ int get_exponent(double x)
   return e;
 }
 
-template <class Scalar>
+template <typename Scalar>
 inline __device__
 int exponent(Scalar x)
 {
@@ -82,16 +81,43 @@ int exponent(Scalar x)
   return e;
 }
 
-template <class Scalar, int BlockSize>
+template <typename Scalar, int BlockSize>
 inline __device__
 int max_exponent(const Scalar* p)
 {
   Scalar max_val = 0;
-  for (int i = 0; i < BlockSize; ++i) {
+  for (int i = 0; i < BlockSize; i++) {
     Scalar f = fabs(p[i]);
     max_val = max(max_val, f);
   }
   return exponent<Scalar>(max_val);
+}
+
+template <typename Scalar>
+inline __device__
+Scalar quantize_factor(const int& exponent, Scalar);
+
+template <>
+inline __device__
+float quantize_factor<float>(const int& exponent, float)
+{
+  return ldexpf(1.0f, get_precision<float>() - 2 - exponent);
+}
+
+template <>
+inline __device__
+double quantize_factor<double>(const int& exponent, double)
+{
+  return ldexp(1.0, get_precision<double>() - 2 - exponent);
+}
+
+template <typename Scalar, typename Int, int BlockSize>
+inline __device__
+void fwd_cast(Int *iblock, const Scalar *fblock, int emax)
+{
+  const Scalar s = quantize_factor(emax, Scalar());
+  for (int i = 0; i < BlockSize; i++)
+    iblock[i] = (Int)(s * fblock[i]);
 }
 
 // lifting transform of 4-vector
@@ -119,52 +145,6 @@ void fwd_lift(Int* p)
   p -= s; *p = z;
   p -= s; *p = y;
   p -= s; *p = x;
-}
-
-#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
-// bias values such that truncation is equivalent to round to nearest
-template <typename Int, uint BlockSize>
-__device__
-static void
-fwd_round(Int* iblock, uint maxprec)
-{
-  // add or subtract 1/6 ulp to unbias errors
-  if (maxprec < (uint)(CHAR_BIT * sizeof(Int))) {
-    Int bias = (static_cast<typename zfp_traits<Int>::UInt>(NBMASK) >> 2) >> maxprec;
-    uint n = BlockSize;
-    if (maxprec & 1u)
-      do *iblock++ += bias; while (--n);
-    else
-      do *iblock++ -= bias; while (--n);
-  }
-}
-#endif
-
-template <typename Scalar>
-inline __device__
-Scalar quantize_factor(const int &exponent, Scalar);
-
-template <>
-inline __device__
-float quantize_factor<float>(const int &exponent, float)
-{
-  return ldexpf(1.0f, get_precision<float>() - 2 - exponent);
-}
-
-template <>
-inline __device__
-double quantize_factor<double>(const int &exponent, double)
-{
-  return ldexp(1.0, get_precision<double>() - 2 - exponent);
-}
-
-template <typename Scalar, typename Int, int BlockSize>
-__device__
-void fwd_cast(Int *iblock, const Scalar *fblock, int emax)
-{
-  Scalar s = quantize_factor(emax, Scalar());
-  for (int i = 0; i < BlockSize; ++i)
-    iblock[i] = (Int)(s * fblock[i]);
 }
 
 template <int BlockSize>
@@ -219,13 +199,36 @@ struct transform<64>
    }
 };
 
+#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
+// bias values such that truncation is equivalent to round to nearest
+template <typename Int, uint BlockSize>
+inline __device__
+void fwd_round(Int* iblock, uint maxprec)
+{
+  // add or subtract 1/6 ulp to unbias errors
+  if (maxprec < (uint)(CHAR_BIT * sizeof(Int))) {
+    Int bias = (static_cast<typename zfp_traits<Int>::UInt>(NBMASK) >> 2) >> maxprec;
+    uint n = BlockSize;
+    if (maxprec & 1u)
+      do *iblock++ += bias; while (--n);
+    else
+      do *iblock++ -= bias; while (--n);
+  }
+}
+#endif
+
 template <typename Int, typename UInt, int BlockSize>
-__device__
+inline __device__
 void fwd_order(UInt* ublock, const Int* iblock)
 {
   const unsigned char* perm = get_perm<BlockSize>();
 
-  for (int i = 0; i < BlockSize; ++i)
+#if (CUDART_VERSION < 8000)
+  #pragma unroll
+#else
+  #pragma unroll BlockSize
+#endif
+  for (int i = 0; i < BlockSize; i++)
     ublock[i] = int2uint(iblock[perm[i]]);
 }
 
@@ -339,7 +342,7 @@ public:
 
 template <typename Int, int BlockSize> 
 inline __device__
-uint encode_block(BlockWriter &stream, uint maxbits, uint maxprec, Int *iblock)
+uint encode_ints(Int* iblock, BlockWriter& writer, uint maxbits, uint maxprec)
 {
   // perform decorrelating transform
   transform<BlockSize> tform;
@@ -367,104 +370,132 @@ uint encode_block(BlockWriter &stream, uint maxbits, uint maxprec, Int *iblock)
     // step 2: encode first n bits of bit plane
     uint m = min(n, bits);
     bits -= m;
-    x = stream.write_bits(x, m);
+    x = writer.write_bits(x, m);
     // step 3: unary run-length encode remainder of bit plane
-    for (; n < BlockSize && bits && (bits--, stream.write_bit(!!x)); x >>= 1, n++)
-      for (; n < BlockSize - 1 && bits && (bits--, !stream.write_bit(x & 1u)); x >>= 1, n++)
+    for (; n < BlockSize && bits && (bits--, writer.write_bit(!!x)); x >>= 1, n++)
+      for (; n < BlockSize - 1 && bits && (bits--, !writer.write_bit(x & 1u)); x >>= 1, n++)
         ;
   }
+
+  // output any buffered bits
+  writer.flush();
 
   return maxbits - bits;
 }
 
+// generic encoder for floating point
 template <typename Scalar, int BlockSize>
 inline __device__
-void encode_block(Scalar *fblock, const int maxbits, const uint block_idx, Word *stream)
+uint encode_block(
+  Scalar* fblock,
+  BlockWriter& writer,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+)
 {
-  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
-  BlockWriter writer(stream, offset);
-  int emax = max_exponent<Scalar, BlockSize>(fblock);
-  uint maxprec = precision<BlockSize>(emax, get_precision<Scalar>(), get_min_exp<Scalar>());
-  uint bits = 0;
+  typedef typename zfp_traits<Scalar>::Int Int;
+
+  uint bits = 1;
+  const int emax = max_exponent<Scalar, BlockSize>(fblock);
+  maxprec = precision<BlockSize>(emax, maxprec, minexp);
   uint e = maxprec ? emax + get_ebias<Scalar>() : 0;
   if (e) {
-    bits = get_ebits<Scalar>() + 1;
+    bits += get_ebits<Scalar>();
     writer.write_bits(2 * e + 1, bits);
-    typedef typename zfp_traits<Scalar>::Int Int;
     Int iblock[BlockSize];
     fwd_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);
-    bits += encode_block<Int, BlockSize>(writer, maxbits - bits, maxprec, iblock);
-    // no padding needed when bits < maxbits since stream is already zeroed
-    writer.flush();
+    bits += encode_ints<Int, BlockSize>(iblock, writer, maxbits - bits, maxprec);
   }
+
+  return max(minbits, bits);
+}
+
+// integer encoder specializations
+
+template <>
+inline __device__
+uint encode_block<int, 4>(
+  int* fblock,
+  BlockWriter& writer,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+)
+{
+  return max(minbits, encode_ints<int, 4>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
 inline __device__
-void encode_block<int, 4>(int *fblock, const int maxbits, const uint block_idx, Word *stream)
+uint encode_block<int, 16>(
+  int* fblock,
+  BlockWriter& writer,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+)
 {
-  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
-  BlockWriter writer(stream, offset);
-  const uint intprec = get_precision<int>();
-  encode_block<int, 4>(writer, maxbits, intprec, fblock);
-  writer.flush();
+  return max(minbits, encode_ints<int, 16>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
 inline __device__
-void encode_block<long long int, 4>(long long int *fblock, const int maxbits, const uint block_idx, Word *stream)
+uint encode_block<int, 64>(
+  int* fblock,
+  BlockWriter& writer,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+)
 {
-  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
-  BlockWriter writer(stream, offset);
-  const uint intprec = get_precision<long long int>();
-  encode_block<long long int, 4>(writer, maxbits, intprec, fblock);
-  writer.flush();
+  return max(minbits, encode_ints<int, 64>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
 inline __device__
-void encode_block<int, 16>(int *fblock, const int maxbits, const uint block_idx, Word *stream)
+uint encode_block<long long int, 4>(
+  long long int* fblock,
+  BlockWriter& writer,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+)
 {
-  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
-  BlockWriter writer(stream, offset);
-  const uint intprec = get_precision<int>();
-  encode_block<int, 16>(writer, maxbits, intprec, fblock);
-  writer.flush();
+  return max(minbits, encode_ints<long long int, 4>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
 inline __device__
-void encode_block<long long int, 16>(long long int *fblock, const int maxbits, const uint block_idx, Word *stream)
+uint encode_block<long long int, 16>(
+  long long int* fblock,
+  BlockWriter& writer,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+)
 {
-  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
-  BlockWriter writer(stream, offset);
-  const uint intprec = get_precision<long long int>();
-  encode_block<long long int, 16>(writer, maxbits, intprec, fblock);
-  writer.flush();
+  return max(minbits, encode_ints<long long int, 16>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
 inline __device__
-void encode_block<int, 64>(int *fblock, const int maxbits, const uint block_idx, Word *stream)
+uint encode_block<long long int, 64>(
+  long long int* fblock,
+  BlockWriter& writer,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+)
 {
-  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
-  BlockWriter writer(stream, offset);
-  const uint intprec = get_precision<int>();
-  uint bits = encode_block<int, 64>(writer, maxbits, intprec, fblock);
-  if (bits < maxbits)
-    writer.pad(maxbits - bits);
-  writer.flush();
-}
-
-template <>
-inline __device__
-void encode_block<long long int, 64>(long long int *fblock, const int maxbits, const uint block_idx, Word *stream)
-{
-  const unsigned long long int offset = (unsigned long long int)block_idx * maxbits;
-  BlockWriter writer(stream, offset);
-  const uint intprec = get_precision<long long int>();
-  encode_block<long long int, 64>(writer, maxbits, intprec, fblock);
-  writer.flush();
+  return max(minbits, encode_ints<long long int, 64>(fblock, writer, maxbits, maxprec));
 }
 
 } // namespace cuZFP

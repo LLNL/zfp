@@ -262,6 +262,44 @@ zfp_type_size(zfp_type type)
   }
 }
 
+size_t
+zfp_maximum_block_size_bits(const zfp_stream* zfp, const zfp_field* field)
+{
+  size_t maxbits = 0;
+  const uint dims = zfp_field_dimensionality(field);
+  const uint values = 1u << (2 * dims);
+  const uint maxprec = MIN(zfp->maxprec, zfp_field_precision(field));
+  const zfp_bool reversible = is_reversible(zfp);
+
+  if (!dims)
+    return 0;
+
+  /* block header including exponent */
+  switch (field->type) {
+    case zfp_type_int32:
+      maxbits += reversible ? 5 : 0;
+      break;
+    case zfp_type_int64:
+      maxbits += reversible ? 6 : 0;
+      break;
+    case zfp_type_float:
+      maxbits += reversible ? 1 + 1 + 8 + 5 : 1 + 8;
+      break;
+    case zfp_type_double:
+      maxbits += reversible ? 1 + 1 + 11 + 6 : 1 + 11;
+      break;
+    default:
+      return 0;
+  }
+
+  maxbits += values - 1; /* group test bits */
+  maxbits += maxprec * values; /* coefficient value bits */
+  maxbits = MAX(maxbits, zfp->minbits);
+  maxbits = MIN(maxbits, zfp->maxbits);
+
+  return maxbits;
+}
+
 /* public functions: fields ------------------------------------------------ */
 
 zfp_field*
@@ -414,6 +452,17 @@ zfp_field_blocks(const zfp_field* field)
     case 4: return bx * by * bz * bw;
     default: return 0;
   }
+}
+
+size_t
+zfp_field_num_blocks (const zfp_field* field)
+{
+  uint mx = (MAX(field->nx, 1u) + 3) / 4;
+  uint my = (MAX(field->ny, 1u) + 3) / 4;
+  uint mz = (MAX(field->nz, 1u) + 3) / 4;
+  uint mw = (MAX(field->nw, 1u) + 3) / 4;
+  size_t blocks = (size_t)mx * (size_t)my * (size_t)mz * (size_t)mw;
+  return blocks;
 }
 
 zfp_bool
@@ -675,7 +724,7 @@ zfp_config_reversible()
 }
 
 zfp_config
-zfp_config_expert(    
+zfp_config_expert(
   uint minbits,
   uint maxbits,
   uint maxprec,
@@ -872,33 +921,12 @@ zfp_stream_compressed_size(const zfp_stream* zfp)
 size_t
 zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
 {
-  zfp_bool reversible = is_reversible(zfp);
-  uint dims = zfp_field_dimensionality(field);
-  size_t blocks = zfp_field_blocks(field);
-  uint values = 1u << (2 * dims);
-  uint maxbits = 0;
+  const size_t blocks = zfp_field_blocks(field);
+  const size_t maxbits = zfp_maximum_block_size_bits(zfp, field);
 
-  if (!dims)
+  if (!maxbits)
     return 0;
-  switch (field->type) {
-    case zfp_type_int32:
-      maxbits += reversible ? 5 : 0;
-      break;
-    case zfp_type_int64:
-      maxbits += reversible ? 6 : 0;
-      break;
-    case zfp_type_float:
-      maxbits += reversible ? 1 + 1 + 8 + 5 : 1 + 8;
-      break;
-    case zfp_type_double:
-      maxbits += reversible ? 1 + 1 + 11 + 6 : 1 + 11;
-      break;
-    default:
-      return 0;
-  }
-  maxbits += values - 1 + values * MIN(zfp->maxprec, zfp_field_precision(field));
-  maxbits = MIN(maxbits, zfp->maxbits);
-  maxbits = MAX(maxbits, zfp->minbits);
+
   return ((ZFP_HEADER_MAX_BITS + blocks * maxbits + stream_word_bits - 1) & ~(stream_word_bits - 1)) / CHAR_BIT;
 }
 
@@ -1062,7 +1090,7 @@ zfp_stream_execution(const zfp_stream* zfp)
 uint
 zfp_stream_omp_threads(const zfp_stream* zfp)
 {
-  if (zfp->exec.policy == zfp_exec_omp) 
+  if (zfp->exec.policy == zfp_exec_omp)
     return ((zfp_exec_params_omp*)zfp->exec.params)->threads;
   return 0u;
 }
@@ -1070,7 +1098,7 @@ zfp_stream_omp_threads(const zfp_stream* zfp)
 uint
 zfp_stream_omp_chunk_size(const zfp_stream* zfp)
 {
-  if (zfp->exec.policy == zfp_exec_omp) 
+  if (zfp->exec.policy == zfp_exec_omp)
     return ((zfp_exec_params_omp*)zfp->exec.params)->chunk_size;
   return 0u;
 }
@@ -1100,6 +1128,7 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
     case zfp_exec_cuda:
       if (zfp->exec.policy != policy) {
         zfp_exec_params_cuda* params = malloc(sizeof(zfp_exec_params_cuda));
+        params->processors = 0;
         params->grid_size[0] = 0;
         params->grid_size[1] = 0;
         params->grid_size[2] = 0;
@@ -1320,7 +1349,7 @@ zfp_compress(zfp_stream* zfp, const zfp_field* field)
   uint strided = (uint)zfp_field_stride(field, NULL);
   uint dims = zfp_field_dimensionality(field);
   uint type = field->type;
-  void* length_table;
+  void* length_table = NULL;
   void (*compress)(zfp_stream*, const zfp_field*);
 
   switch (type) {

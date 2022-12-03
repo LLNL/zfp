@@ -24,7 +24,7 @@ void scatter_partial1(const Scalar* q, Scalar* p, uint nx, ptrdiff_t sx)
       p[x * sx] = q[x];
 }
 
-template <class Scalar>
+template <typename Scalar>
 __global__
 void
 cuda_decode1(
@@ -95,7 +95,7 @@ cuda_decode1(
     const ptrdiff_t offset = x * stride;
 
     // scatter data from contiguous block
-    const uint nx = (uint)min(size - x, (size_t)4);
+    const uint nx = (uint)min(size_t(size - x), size_t(4));
     if (nx < ZFP_1D_BLOCK_SIZE)
       scatter_partial1(fblock, d_data + offset, nx, stride);
     else
@@ -107,7 +107,7 @@ cuda_decode1(
   atomicMax(max_offset, bit_offset);
 }
 
-template <class Scalar>
+template <typename Scalar>
 size_t decode1launch(
   Scalar* d_data,
   const size_t size[],
@@ -170,7 +170,7 @@ size_t decode1launch(
   return offset;
 }
 
-template <class Scalar>
+template <typename Scalar>
 size_t decode1(
   Scalar* d_data,
   const size_t size[],

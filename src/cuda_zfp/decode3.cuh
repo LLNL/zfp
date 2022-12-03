@@ -36,7 +36,7 @@ void scatter_partial3(const Scalar* q, Scalar* p, uint nx, uint ny, uint nz, ptr
     }
 }
 
-template <class Scalar>
+template <typename Scalar>
 __global__
 void
 cuda_decode3(
@@ -110,9 +110,9 @@ cuda_decode3(
     const ptrdiff_t offset = x * stride.x + y * stride.y + z * stride.z;
 
     // scatter data from contiguous block
-    const uint nx = (uint)min(size.x - x, 4ull);
-    const uint ny = (uint)min(size.y - y, 4ull);
-    const uint nz = (uint)min(size.z - z, 4ull);
+    const uint nx = (uint)min(size_t(size.x - x), size_t(4));
+    const uint ny = (uint)min(size_t(size.y - y), size_t(4));
+    const uint nz = (uint)min(size_t(size.z - z), size_t(4));
     if (nx * ny * nz < ZFP_3D_BLOCK_SIZE)
       scatter_partial3(fblock, d_data + offset, nx, ny, nz, stride.x, stride.y, stride.z);
     else
@@ -124,7 +124,7 @@ cuda_decode3(
   atomicMax(max_offset, bit_offset);
 }
 
-template <class Scalar>
+template <typename Scalar>
 size_t decode3launch(
   Scalar* d_data,
   const size_t size[],
@@ -189,7 +189,7 @@ size_t decode3launch(
   return offset;
 }
 
-template <class Scalar>
+template <typename Scalar>
 size_t decode3(
   Scalar* d_data,
   const size_t size[],

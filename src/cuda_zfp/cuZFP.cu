@@ -1,3 +1,5 @@
+#include <iostream>
+#include <cub/cub.cuh>
 #include "cuZFP.h"
 #include "encode1.cuh"
 #include "encode2.cuh"
@@ -5,6 +7,7 @@
 #include "decode1.cuh"
 #include "decode2.cuh"
 #include "decode3.cuh"
+#include "variable.cuh"
 #include "ErrorCheck.h"
 #include "pointers.cuh"
 #include "type_info.cuh"
@@ -36,14 +39,50 @@ void* device_pointer(void* d_begin, void* h_begin, void* h_ptr, zfp_type type)
   }
 }
 
+// allocate device memory
+template <typename T>
+bool device_malloc(T** d_pointer, size_t size, const char* what = 0)
+{
+  bool success;
+
+#if CUDART_VERSION >= 11020
+  success = (cudaMallocAsync(d_pointer, size, 0) == cudaSuccess);
+#else
+  success = (cudaMalloc(d_pointer, size) == cudaSuccess);
+#endif
+
+  if (!success) {
+    std::cerr << "failed to allocate device memory";
+    if (what)
+      std::cerr << " for " << what;
+    std::cerr << std::endl;
+  }
+
+  return true;
+}
+
+// allocate device memory and copy from host
+template <typename T>
+bool device_copy_from_host(T** d_pointer, size_t size, void* h_pointer, const char* what = 0)
+{
+  if (!device_malloc(d_pointer, size, what))
+    return false;
+  if (cudaMemcpy(*d_pointer, h_pointer, size, cudaMemcpyHostToDevice) != cudaSuccess) {
+    std::cerr << "failed to copy " << (what ? what : "data") << " from host to device" << std::endl;
+    cudaFree(*d_pointer);
+    *d_pointer = NULL;
+    return false;
+  }
+  return true;
+}
+
 Word* setup_device_stream_compress(zfp_stream* stream)
 {
   Word* d_stream = (Word*)stream->stream->begin;
   if (!cuZFP::is_gpu_ptr(d_stream)) {
     // allocate device memory for compressed data
     size_t size = stream_capacity(stream->stream);
-    if (cudaMalloc(&d_stream, size) != cudaSuccess)
-      std::cerr << "failed to allocate device memory for stream" << std::endl;
+    device_malloc(&d_stream, size, "stream");
   }
 
   return d_stream;
@@ -55,38 +94,58 @@ Word* setup_device_stream_decompress(zfp_stream* stream)
   if (!cuZFP::is_gpu_ptr(d_stream)) {
     // copy compressed data to device memory
     size_t size = stream_capacity(stream->stream);
-    if (cudaMalloc(&d_stream, size) != cudaSuccess) {
-      std::cerr << "failed to allocate device memory for stream" << std::endl;
-      return NULL;
-    }
-    if (cudaMemcpy(d_stream, stream->stream->begin, size, cudaMemcpyHostToDevice) != cudaSuccess) {
-      std::cerr << "failed to copy stream from host to device" << std::endl;
-      cudaFree(d_stream);
-      return NULL;
-    }
+    device_copy_from_host(&d_stream, size, stream->stream->begin, "stream");
   }
 
   return d_stream;
 }
 
-Word* setup_device_index(zfp_stream* stream)
+ushort* setup_device_index_compress(zfp_stream *stream, const zfp_field *field)
+{
+  ushort* d_index = stream->index ? (ushort*)stream->index->data : NULL;
+  if (!cuZFP::is_gpu_ptr(d_index)) {
+    // allocate device memory for block index
+    size_t size = zfp_field_blocks(field) * sizeof(ushort);
+    device_malloc(&d_index, size, "index");
+  }
+
+  return d_index;
+}
+
+Word* setup_device_index_decompress(zfp_stream* stream)
 {
   Word* d_index = (Word*)stream->index->data;
   if (!cuZFP::is_gpu_ptr(d_index)) {
     // copy index to device memory
     size_t size = stream->index->size;
-    if (cudaMalloc(&d_index, size) != cudaSuccess) {
-      std::cerr << "failed to allocate device memory for index" << std::endl;
-      return NULL;
-    }
-    if (cudaMemcpy(d_index, stream->index->data, size, cudaMemcpyHostToDevice) != cudaSuccess) {
-      std::cerr << "failed to copy stream from host to device" << std::endl;
-      cudaFree(d_index);
-      return NULL;
-    }
+    device_copy_from_host(&d_index, size, stream->index->data, "index");
   }
 
   return d_index;
+}
+
+bool setup_device_chunking(size_t* chunk_size, unsigned long long** d_offsets, size_t* lcubtemp, void** d_cubtemp, uint processors)
+{
+  // TODO : Error handling for CUDA malloc and CUB?
+  // Assuming 1 thread = 1 ZFP block,
+  // launching 1024 threads per SM should give a decent occupancy
+  *chunk_size = processors * 1024; 
+  size_t size = (*chunk_size + 1) * sizeof(unsigned long long);
+  if (!device_malloc(d_offsets, size, "offsets"))
+    return false;
+  cudaMemset(*d_offsets, 0, size); // ensure offsets are zeroed
+
+  // Using CUB for the prefix sum. CUB needs a bit of temp memory too
+  size_t tempsize;
+  cub::DeviceScan::InclusiveSum(nullptr, tempsize, *d_offsets, *d_offsets, *chunk_size + 1);
+  *lcubtemp = tempsize;
+  if (!device_malloc(d_cubtemp, tempsize, "offsets")) {
+    cudaFree(*d_offsets);
+    *d_offsets = NULL;
+    return false;
+  }
+
+  return true;
 }
 
 void* setup_device_field_compress(const zfp_field* field, void*& d_begin)
@@ -102,17 +161,9 @@ void* setup_device_field_compress(const zfp_field* field, void*& d_begin)
     if (zfp_field_is_contiguous(field)) {
       // copy field from host to device
       size_t size = zfp_field_size(field, NULL) * zfp_type_size(field->type);
-      if (cudaMalloc(&d_begin, size) != cudaSuccess) {
-        std::cerr << "failed to allocate device memory for field" << std::endl;
-        return NULL;
-      }
-      // in case of negative strides, find lowest memory address spanned by field
       void* h_begin = zfp_field_begin(field);
-      if (cudaMemcpy(d_begin, h_begin, size, cudaMemcpyHostToDevice) != cudaSuccess) {
-        std::cerr << "failed to copy field from host to device" << std::endl;
-        cudaFree(d_begin);
+      if (!device_copy_from_host(&d_begin, size, h_begin, "field"))
         return NULL;
-      }
       // in case of negative strides, advance device pointer into buffer
       return device_pointer(d_begin, h_begin, d_data, field->type);
     }
@@ -134,10 +185,8 @@ void* setup_device_field_decompress(const zfp_field* field, void*& d_begin)
     if (zfp_field_is_contiguous(field)) {
       // allocate device memory for decompressed field
       size_t size = zfp_field_size(field, NULL) * zfp_type_size(field->type);
-      if (cudaMalloc(&d_begin, size) != cudaSuccess) {
-        std::cerr << "failed to allocate device memory for field" << std::endl;
+      if (!device_malloc(&d_begin, size, "field"))
         return NULL;
-      }
       void* h_begin = zfp_field_begin(field);
       // in case of negative strides, advance device pointer into buffer
       return device_pointer(d_begin, h_begin, d_data, field->type);
@@ -148,13 +197,18 @@ void* setup_device_field_decompress(const zfp_field* field, void*& d_begin)
 }
 
 // copy from device to host (if needed) and deallocate device memory
+// TODO: d_begin should be first argument, with begin = NULL as default
 void cleanup_device(void* begin, void* d_begin, size_t bytes = 0)
 {
   if (begin != d_begin) {
     // copy data from device to host and free device memory
     if (bytes)
       cudaMemcpy(begin, d_begin, bytes, cudaMemcpyDeviceToHost);
+#if CUDART_VERSION >= 11020
+    cudaFreeAsync(d_begin, 0);
+#else
     cudaFree(d_begin);
+#endif
   }
 }
 
@@ -166,7 +220,11 @@ encode(
   const size_t size[],      // field dimensions
   const ptrdiff_t stride[], // field strides
   Word* d_stream,           // compressed bit stream device pointer
-  uint maxbits              // compressed #bits/block
+  ushort* d_index,          // block index device pointer
+  uint minbits,             // minimum compressed #bits/block
+  uint maxbits,             // maximum compressed #bits/block
+  uint maxprec,             // maximum uncompressed #bits/value
+  int minexp                // minimum bit plane index
 )
 {
   size_t bits_written = 0;
@@ -176,13 +234,13 @@ encode(
   uint dims = size[0] ? size[1] ? size[2] ? 3 : 2 : 1 : 0;
   switch (dims) {
     case 1:
-      bits_written = cuZFP::encode1<T>(d_data, size, stride, d_stream, maxbits);
+      bits_written = cuZFP::encode1<T>(d_data, size, stride, d_stream, d_index, minbits, maxbits, maxprec, minexp);
       break;
     case 2:
-      bits_written = cuZFP::encode2<T>(d_data, size, stride, d_stream, maxbits);
+      bits_written = cuZFP::encode2<T>(d_data, size, stride, d_stream, d_index, minbits, maxbits, maxprec, minexp);
       break;
     case 3:
-      bits_written = cuZFP::encode3<T>(d_data, size, stride, d_stream, maxbits);
+      bits_written = cuZFP::encode3<T>(d_data, size, stride, d_stream, d_index, minbits, maxbits, maxprec, minexp);
       break;
     default:
       break;
@@ -232,6 +290,52 @@ decode(
   return bits_read;
 }
 
+// compact variable-rate stream
+unsigned long long
+compact_stream(
+  Word* d_stream,
+  uint maxbits,
+  ushort* d_index,
+  size_t blocks,
+  size_t processors
+)
+{
+  unsigned long long bits_written = 0;
+  size_t chunk_size;
+  unsigned long long *d_offsets;
+  size_t lcubtemp;
+  void *d_cubtemp;
+
+  if (internal::setup_device_chunking(&chunk_size, &d_offsets, &lcubtemp, &d_cubtemp, processors)) {
+    // in-place compact variable-length blocks stored as fixed-length records
+    for (size_t i = 0; i < blocks; i += chunk_size) { 
+      int cur_blocks = chunk_size;
+      bool last_chunk = false;
+      if (i + chunk_size > blocks) { 
+        cur_blocks = (int)(blocks - i);
+        last_chunk = true;
+      }
+      // copy the 16-bit lengths in the offset array
+      cuZFP::copy_length_launch(d_index, d_offsets, i, cur_blocks);
+    
+      // prefix sum to turn length into offsets
+      cub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, cur_blocks + 1);
+    
+      // compact the stream array in-place
+      cuZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, last_chunk, maxbits, processors);
+    }
+    // update compressed size and pad to whole words
+    cudaMemcpy(&bits_written, d_offsets, sizeof(unsigned long long), cudaMemcpyDeviceToHost);
+    bits_written = cuZFP::round_up(bits_written, sizeof(Word) * CHAR_BIT);
+
+    // free temporary buffers
+    internal::cleanup_device(NULL, d_offsets);
+    internal::cleanup_device(NULL, d_cubtemp);
+  }
+
+  return bits_written;
+}
+
 } // namespace internal
 
 // TODO: move out of global namespace
@@ -249,6 +353,7 @@ cuda_init(zfp_exec_params_cuda* params)
   initialized = true;
 
   // TODO: take advantage of cached grid size
+  params->processors = prop.multiProcessorCount;
   params->grid_size[0] = prop.maxGridSize[0];
   params->grid_size[1] = prop.maxGridSize[1];
   params->grid_size[2] = prop.maxGridSize[2];
@@ -261,6 +366,21 @@ cuda_init(zfp_exec_params_cuda* params)
 size_t
 cuda_compress(zfp_stream* stream, const zfp_field* field)
 {
+  // determine compression mode and ensure it is supported
+  bool variable_rate = false;
+  switch (zfp_stream_compression_mode(stream)) {
+    case zfp_mode_fixed_rate:
+      break;
+    case zfp_mode_fixed_precision:
+    case zfp_mode_fixed_accuracy:
+    case zfp_mode_expert:
+      variable_rate = true;
+      break;
+    default:
+      // unsupported compression mode
+      return 0;
+  }
+
   // determine field dimensions
   size_t size[3];
   size[0] = field->nx;
@@ -273,6 +393,7 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
   stride[1] = field->sy ? field->sy : (ptrdiff_t)field->nx;
   stride[2] = field->sz ? field->sz : (ptrdiff_t)field->nx * (ptrdiff_t)field->ny;
 
+  // copy field to device if not already there
   void* d_begin = NULL;
   void* d_data = internal::setup_device_field_compress(field, d_begin);
 
@@ -280,30 +401,51 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
   if (!d_data)
     return 0;
 
+  // allocate compressed buffer
   Word* d_stream = internal::setup_device_stream_compress(stream);
+  // TODO: populate stream->index even in fixed-rate mode if non-null
+  ushort* d_index = variable_rate ? internal::setup_device_index_compress(stream, field) : NULL;
+
+  // determine minimal slot needed to hold a compressed block
+  uint maxbits = (uint)zfp_maximum_block_size_bits(stream, field);
 
   // encode data
-  size_t bits_written = 0;
-  size_t pos = stream_wtell(stream->stream);
+  const bitstream_offset pos = stream_wtell(stream->stream);
+  unsigned long long bits_written = 0;
+#warning "internal::encode() should return ull"
   switch (field->type) {
     case zfp_type_int32:
-      bits_written = internal::encode((int*)d_data, size, stride, d_stream, stream->maxbits);
+      bits_written = internal::encode((int*)d_data, size, stride, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
       break;
     case zfp_type_int64:
-      bits_written = internal::encode((long long int*)d_data, size, stride, d_stream, stream->maxbits);
+      bits_written = internal::encode((long long int*)d_data, size, stride, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
       break;
     case zfp_type_float:
-      bits_written = internal::encode((float*)d_data, size, stride, d_stream, stream->maxbits);
+      bits_written = internal::encode((float*)d_data, size, stride, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
       break;
     case zfp_type_double:
-      bits_written = internal::encode((double*)d_data, size, stride, d_stream, stream->maxbits);
+      bits_written = internal::encode((double*)d_data, size, stride, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
       break;
     default:
       break;
   }
 
+  // compact stream of variable-length blocks stored in fixed-length slots
+  if (variable_rate) {
+    const size_t blocks = zfp_field_blocks(field);
+    const size_t processors = ((zfp_exec_params_cuda*)stream->exec.params)->processors;
+    bits_written = internal::compact_stream(d_stream, maxbits, d_index, blocks, processors);
+  }
+
+  const size_t stream_bytes = cuZFP::round_up((bits_written + CHAR_BIT - 1) / CHAR_BIT, sizeof(Word));
+
+  if (d_index) {
+    const size_t size = zfp_field_blocks(field) * sizeof(ushort);
+#warning "assumes index stores block sizes"
+    internal::cleanup_device(stream->index ? stream->index->data : NULL, d_index, size);
+  }
+
   // copy stream from device to host if needed and free temporary buffers
-  size_t stream_bytes = cuZFP::round_up((bits_written + CHAR_BIT - 1) / CHAR_BIT, sizeof(Word));
   internal::cleanup_device(stream->stream->begin, d_stream, stream_bytes);
   internal::cleanup_device(zfp_field_begin(field), d_begin);
 
@@ -363,16 +505,17 @@ cuda_decompress(zfp_stream* stream, zfp_field* field)
         return 0;
       }
       granularity = stream->index->granularity;
-      d_index = internal::setup_device_index(stream);
+      d_index = internal::setup_device_index_decompress(stream);
       break;
     default:
+      // TODO: clean up device to avoid memory leak
       std::cerr << "zfp compression mode not supported on GPU" << std::endl;
       return 0;
   }
 
   // decode compressed data
-  size_t bits_read = 0;
-  size_t pos = stream_rtell(stream->stream);
+  const bitstream_offset pos = stream_rtell(stream->stream);
+  unsigned long long bits_read = 0;
   switch (field->type) {
     case zfp_type_int32:
       bits_read = internal::decode((int*)d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);

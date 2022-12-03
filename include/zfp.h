@@ -84,11 +84,13 @@ typedef struct {
 
 /* CUDA execution parameters */
 typedef struct {
+  int processors;   /* number of CUDA multiprocessors */
   int grid_size[3]; /* maximum CUDA grid dimensions (read only) */
 } zfp_exec_params_cuda;
 
 /* HIP execution parameters */
 typedef struct {
+  int processors;   /* number of HIP multiprocessors */
   int grid_size[3]; /* maximum HIP grid dimensions (read only) */
 } zfp_exec_params_hip;
 
@@ -847,6 +849,9 @@ size_t zfp_decode_partial_block_strided_float_4(zfp_stream* stream, float* p, si
 size_t zfp_decode_partial_block_strided_double_4(zfp_stream* stream, double* p, size_t nx, size_t ny, size_t nz, size_t nw, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz, ptrdiff_t sw);
 
 /* low-level API: utility functions ---------------------------------------- */
+
+/* compressed block size */
+size_t zfp_maximum_block_size_bits(const zfp_stream* stream, const zfp_field* field);
 
 /* convert dims-dimensional contiguous block to 32-bit integer type */
 void zfp_promote_int8_to_int32(int32* oblock, const int8* iblock, uint dims);
