@@ -25,11 +25,11 @@ void gather_partial2(Scalar* q, const Scalar* p, uint nx, uint ny, ptrdiff_t sx,
     if (y < ny) {
       for (uint x = 0; x < 4; x++)
         if (x < nx) {
-          q[x + 4 * y] = *p;
+          q[4 * y + x] = *p;
           p += sx;
         }
       pad_block(q + 4 * y, nx, 1);
-      p += sy - nx * sx;
+      p += sy - (ptrdiff_t)nx * sx;
     }
   for (uint x = 0; x < 4; x++)
     pad_block(q + x, ny, 4);

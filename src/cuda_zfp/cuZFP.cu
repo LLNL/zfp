@@ -412,7 +412,7 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
   // encode data
   const bitstream_offset pos = stream_wtell(stream->stream);
   unsigned long long bits_written = 0;
-#warning "internal::encode() should return ull"
+  // TODO: internal::encode() should return ull
   switch (field->type) {
     case zfp_type_int32:
       bits_written = internal::encode((int*)d_data, size, stride, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
@@ -441,7 +441,7 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
 
   if (d_index) {
     const size_t size = zfp_field_blocks(field) * sizeof(ushort);
-#warning "assumes index stores block sizes"
+    // TODO: assumes index stores block sizes
     internal::cleanup_device(stream->index ? stream->index->data : NULL, d_index, size);
   }
 

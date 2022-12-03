@@ -28,15 +28,15 @@ void gather_partial3(Scalar* q, const Scalar* p, uint nx, uint ny, uint nz, ptrd
         if (y < ny) {
           for (uint x = 0; x < 4; x++)
             if (x < nx) {
-              q[x + 4 * y + 16 * z] = *p;
+              q[16 * z + 4 * y + x] = *p;
               p += sx;
-          }
-          p += sy - nx * sx;
+            }
+          p += sy - (ptrdiff_t)nx * sx;
           pad_block(q + 16 * z + 4 * y, nx, 1);
         }
       for (uint x = 0; x < 4; x++)
         pad_block(q + 16 * z + x, ny, 4);
-      p += sz - ny * sy;
+      p += sz - (ptrdiff_t)ny * sy;
     }
   for (uint y = 0; y < 4; y++)
     for (uint x = 0; x < 4; x++)
@@ -77,7 +77,7 @@ cuda_encode3(
   size_t pos = block_idx;
   const ptrdiff_t x = (pos % bx) * 4; pos /= bx;
   const ptrdiff_t y = (pos % by) * 4; pos /= by;
-  const ptrdiff_t z = (pos % bx) * 4; pos /= bz;
+  const ptrdiff_t z = (pos % bz) * 4; pos /= bz;
 
   // offset into field
   const ptrdiff_t offset = x * stride.x + y * stride.y + z * stride.z;
