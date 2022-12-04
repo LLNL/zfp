@@ -5,6 +5,7 @@
 
 namespace cuZFP {
 
+// TODO: fold these into the traits structs
 template <typename T> inline __host__ __device__ int get_ebias();
 template <> inline __host__ __device__ int get_ebias<double>() { return 1023; }
 template <> inline __host__ __device__ int get_ebias<float>() { return 127; }
@@ -37,9 +38,9 @@ template <typename T>
 struct zfp_traits;
 
 template <>
-struct zfp_traits<double> {
-  typedef unsigned long long int UInt;
-  typedef long long int Int;
+struct zfp_traits<int> {
+  typedef unsigned int UInt;
+  typedef int Int;
 };
 
 template <>
@@ -55,9 +56,9 @@ struct zfp_traits<float> {
 };
 
 template <>
-struct zfp_traits<int> {
-  typedef unsigned int UInt;
-  typedef int Int;
+struct zfp_traits<double> {
+  typedef unsigned long long int UInt;
+  typedef long long int Int;
 };
 
 } // namespace cuZFP

@@ -1,16 +1,18 @@
 #include <iostream>
 #include <cub/cub.cuh>
 #include "cuZFP.h"
+#include "error.cuh"
+#include "pointers.cuh"
+#include "traits.cuh"
+#include "encode.cuh"
 #include "encode1.cuh"
 #include "encode2.cuh"
 #include "encode3.cuh"
+#include "variable.cuh"
+#include "decode.cuh"
 #include "decode1.cuh"
 #include "decode2.cuh"
 #include "decode3.cuh"
-#include "variable.cuh"
-#include "ErrorCheck.h"
-#include "pointers.cuh"
-#include "type_info.cuh"
 
 // we need to know about bitstream, but we don't want duplicate symbols
 #ifndef inline_

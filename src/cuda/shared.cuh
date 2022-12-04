@@ -1,22 +1,21 @@
-#ifndef CUZFP_SHARED_H
-#define CUZFP_SHARED_H
+#ifndef CUZFP_SHARED_CUH
+#define CUZFP_SHARED_CUH
 
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 #include "zfp.h"
-#include "type_info.cuh"
-#include "constants.h"
+#include "traits.cuh"
+#include "constants.cuh"
 
 //#define CUDA_ZFP_RATE_PRINT 1
 
 // bit stream word/buffer type; granularity of stream I/O operations
 typedef unsigned long long Word;
-#define Wsize ((uint)(sizeof(Word) * CHAR_BIT))
 
 #define ZFP_1D_BLOCK_SIZE 4
 #define ZFP_2D_BLOCK_SIZE 16
 #define ZFP_3D_BLOCK_SIZE 64
-#define ZFP_4D_BLOCK_SIZE 256
+#define ZFP_4D_BLOCK_SIZE 256 // not yet supported
 
 namespace cuZFP {
 

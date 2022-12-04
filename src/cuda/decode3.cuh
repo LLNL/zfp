@@ -1,9 +1,8 @@
 #ifndef CUZFP_DECODE3_CUH
 #define CUZFP_DECODE3_CUH
 
-#include "shared.h"
-#include "decode.cuh"
-#include "type_info.cuh"
+#include "shared.cuh"
+#include "traits.cuh"
 
 namespace cuZFP {
 

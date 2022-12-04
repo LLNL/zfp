@@ -1,5 +1,5 @@
-#ifndef ERRORCHECK_H
-#define ERRORCHECK_H
+#ifndef CUZFP_ERROR_CUH
+#define CUZFP_ERROR_CUH
 
 #include <iostream>
 #include <sstream>
@@ -7,6 +7,7 @@
 
 using std::stringstream;
 
+// TODO: put in appropriate namespace
 class ErrorCheck {
 public:
   ErrorCheck()
@@ -32,4 +33,4 @@ public:
   stringstream str;
 };
 
-#endif // ERRORCHECK_H
+#endif // CUZFP_ERROR_CUH

@@ -1,15 +1,13 @@
 #ifndef CU_ZFP_VARIABLE_CUH
 #define CU_ZFP_VARIABLE_CUH
 
-#include "shared.h"
-
 #include <cub/cub.cuh>
-
 #include <cooperative_groups.h> // Requires CUDA >= 9
+#include "shared.cuh"
+
 namespace cg = cooperative_groups;
 
-namespace cuZFP
-{
+namespace cuZFP {
 
     // *******************************************************************************
 
@@ -315,4 +313,5 @@ namespace cuZFP
     // *******************************************************************************
 
 } // namespace cuZFP
+
 #endif

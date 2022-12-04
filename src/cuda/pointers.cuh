@@ -2,7 +2,7 @@
 #define CUZFP_POINTERS_CUH
 
 #include <iostream>
-#include "ErrorCheck.h"
+#include "error.cuh"
 
 namespace cuZFP {
 

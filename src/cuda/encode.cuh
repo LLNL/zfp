@@ -1,7 +1,7 @@
 #ifndef CUZFP_ENCODE_CUH
 #define CUZFP_ENCODE_CUH
 
-#include "shared.h"
+#include "shared.cuh"
 
 namespace cuZFP {
 

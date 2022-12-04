@@ -1,6 +1,6 @@
 #ifdef ZFP_WITH_CUDA
 
-#include "../cuda_zfp/cuZFP.h"
+#include "../cuda/cuZFP.h"
 
 /* compress 1d contiguous array */
 static void 

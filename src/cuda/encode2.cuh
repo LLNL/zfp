@@ -1,10 +1,8 @@
 #ifndef CUZFP_ENCODE2_CUH
 #define CUZFP_ENCODE2_CUH
 
-#include "cuZFP.h"
-#include "shared.h"
-#include "encode.cuh"
-#include "type_info.cuh"
+#include "shared.cuh"
+#include "traits.cuh"
 
 namespace cuZFP {
 

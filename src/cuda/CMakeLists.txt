@@ -14,11 +14,10 @@ set(cuZFP_sources
     encode1.cuh
     encode2.cuh
     encode3.cuh
+    error.cuh
     pointers.cuh
-    type_info.cuh)
+    shared.cuh
+    traits.cuh)
 
 set(cuZFP_headers
-    shared.h
-    cuZFP.h
-    ErrorCheck.h)
-
+    cuZFP.h)
