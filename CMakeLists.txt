@@ -216,9 +216,9 @@ if(ZFP_WITH_CUDA)
     message(FATAL_ERROR "TODO: Install CUB for CUDA < 11")
   endif()
   set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
-                        -gencode arch=compute_35,code=compute_35 \
                         -gencode arch=compute_60,code=compute_60 \
-                        -gencode arch=compute_70,code=compute_70")
+                        -gencode arch=compute_70,code=compute_70 \
+                        -gencode arch=compute_80,code=compute_80")
 endif()
 
 if(ZFP_WITH_HIP)
