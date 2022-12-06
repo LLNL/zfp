@@ -312,6 +312,51 @@ namespace cuZFP {
 
     // *******************************************************************************
 
+    unsigned long long
+    compact_stream(
+      Word* d_stream,
+      uint maxbits,
+      ushort* d_index,
+      size_t blocks,
+      size_t processors
+    )
+    {
+      unsigned long long bits_written = 0;
+      unsigned long long *d_offsets;
+      size_t chunk_size;
+      size_t lcubtemp;
+      void *d_cubtemp;
+    
+      if (internal::setup_device_chunking(&chunk_size, &d_offsets, &lcubtemp, &d_cubtemp, processors)) {
+        // in-place compact variable-length blocks stored as fixed-length records
+        for (size_t i = 0; i < blocks; i += chunk_size) { 
+          int cur_blocks = chunk_size;
+          bool last_chunk = false;
+          if (i + chunk_size > blocks) { 
+            cur_blocks = (int)(blocks - i);
+            last_chunk = true;
+          }
+          // copy the 16-bit lengths in the offset array
+          cuZFP::copy_length_launch(d_index, d_offsets, i, cur_blocks);
+
+          // prefix sum to turn length into offsets
+          cub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, cur_blocks + 1);
+
+          // compact the stream array in-place
+          cuZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, last_chunk, maxbits, processors);
+        }
+        // update compressed size and pad to whole words
+        cudaMemcpy(&bits_written, d_offsets, sizeof(unsigned long long), cudaMemcpyDeviceToHost);
+        bits_written = cuZFP::round_up(bits_written, sizeof(Word) * CHAR_BIT);
+
+        // free temporary buffers
+        internal::cleanup_device(NULL, d_offsets);
+        internal::cleanup_device(NULL, d_cubtemp);
+      }
+
+      return bits_written;
+    }
+
 } // namespace cuZFP
 
 #endif

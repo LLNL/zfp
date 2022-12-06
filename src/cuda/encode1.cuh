@@ -1,9 +1,6 @@
 #ifndef CUZFP_ENCODE1_CUH
 #define CUZFP_ENCODE1_CUH
 
-#include "shared.cuh"
-#include "traits.cuh"
-
 namespace cuZFP {
 
 template <typename Scalar> 
@@ -51,17 +48,6 @@ void cuda_encode1(
   if (block_idx >= blocks)
     return;
 
-#if 0
-  uint block_dim;
-  block_dim = padded_dim >> 2; 
-
-  // logical pos in 3d array
-  uint block;
-  block = (block_idx % block_dim) * 4; 
-
-  const ptrdiff_t offset = (ll)block * sx; 
-#endif
-
   // logical position in 1d array
   const size_t pos = block_idx;
   const ptrdiff_t x = pos * 4;
@@ -89,10 +75,12 @@ void cuda_encode1(
 
 // launch encode kernel
 template <typename Scalar>
-size_t encode1launch(
+unsigned long long
+encode1(
   const Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
   Word* d_stream,
   ushort* d_index,
   uint minbits,
@@ -106,38 +94,13 @@ size_t encode1launch(
 
   // number of zfp blocks to encode
   const size_t blocks = (size[0] + 3) / 4;
-  
+
   // determine grid of thread blocks
-  const dim3 grid_size = calculate_grid_size(blocks, cuda_block_size);
-  
+  const dim3 grid_size = calculate_grid_size(params, blocks, cuda_block_size);
+
   // zero-initialize bit stream (for atomics)
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
   cudaMemset(d_stream, 0, stream_bytes);
-
-#if 0
-  uint zfp_pad(dim); 
-  if(zfp_pad % 4 != 0) zfp_pad += 4 - dim % 4;
-
-  const uint zfp_blocks = (zfp_pad) / 4; 
-  //
-  // we need to ensure that we launch a multiple of the 
-  // cuda block size
-  //
-  int block_pad = 0; 
-  if(zfp_blocks % cuda_block_size != 0)
-  {
-    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
-  }
-
-  size_t total_blocks = block_pad + zfp_blocks;
- 
-  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
-
-  //
-  size_t stream_bytes = calc_device_mem1d(zfp_pad, maxbits);
-  // ensure we have zeros
-  cudaMemset(stream, 0, stream_bytes);
-#endif
 
 #ifdef CUDA_ZFP_RATE_PRINT
   Timer timer;
@@ -162,24 +125,7 @@ size_t encode1launch(
   timer.print_throughput<Scalar>("Encode", "encode1", dim3(size[0]));
 #endif
 
-  return stream_bytes * CHAR_BIT;
-}
-
-// TODO: remove wrapper
-template <typename Scalar>
-size_t encode1(
-  const Scalar* d_data,
-  const size_t size[],
-  const ptrdiff_t stride[],
-  Word* d_stream,
-  ushort* d_index,
-  uint minbits,
-  uint maxbits,
-  uint maxprec,
-  int minexp
-)
-{
-  return encode1launch<Scalar>(d_data, size, stride, d_stream, d_index, minbits, maxbits, maxprec, minexp);
+  return (unsigned long long)stream_bytes * CHAR_BIT;
 }
 
 }

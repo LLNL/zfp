@@ -1,9 +1,6 @@
 #ifndef CUZFP_DECODE3_CUH
 #define CUZFP_DECODE3_CUH
 
-#include "shared.cuh"
-#include "traits.cuh"
-
 namespace cuZFP {
 
 template <typename Scalar>
@@ -35,6 +32,7 @@ void scatter_partial3(const Scalar* q, Scalar* p, uint nx, uint ny, uint nz, ptr
     }
 }
 
+// decode kernel
 template <typename Scalar>
 __global__
 void
@@ -101,9 +99,9 @@ cuda_decode3(
 
     // logical position in 3d array
     size_t pos = block_idx;
-    ptrdiff_t x = (pos % bx) * 4; pos /= bx;
-    ptrdiff_t y = (pos % by) * 4; pos /= by;
-    ptrdiff_t z = (pos % bz) * 4; pos /= bz;
+    const ptrdiff_t x = (pos % bx) * 4; pos /= bx;
+    const ptrdiff_t y = (pos % by) * 4; pos /= by;
+    const ptrdiff_t z = (pos % bz) * 4; pos /= bz;
 
     // offset into field
     const ptrdiff_t offset = x * stride.x + y * stride.y + z * stride.z;
@@ -123,11 +121,14 @@ cuda_decode3(
   atomicMax(max_offset, bit_offset);
 }
 
+// launch decode kernel
 template <typename Scalar>
-size_t decode3launch(
+unsigned long long
+decode3(
   Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
   const Word* d_stream,
   zfp_mode mode,
   int decode_parameter,
@@ -149,7 +150,7 @@ size_t decode3launch(
   const size_t chunks = (blocks + granularity - 1) / granularity;
 
   // determine grid of thread blocks
-  const dim3 grid_size = calculate_grid_size(chunks, cuda_block_size);
+  const dim3 grid_size = calculate_grid_size(params, chunks, cuda_block_size);
 
   // storage for maximum bit offset; needed to position stream
   unsigned long long int* d_offset;
@@ -181,27 +182,12 @@ size_t decode3launch(
   timer.print_throughput<Scalar>("Decode", "decode3", dim3(size[0], size[1], size[2]));
 #endif
 
+  // copy bit offset
   unsigned long long int offset;
   cudaMemcpy(&offset, d_offset, sizeof(offset), cudaMemcpyDeviceToHost);
   cudaFree(d_offset);
 
   return offset;
-}
-
-template <typename Scalar>
-size_t decode3(
-  Scalar* d_data,
-  const size_t size[],
-  const ptrdiff_t stride[],
-  const Word* d_stream,
-  zfp_mode mode,
-  int decode_parameter,
-  const Word* d_index,
-  zfp_index_type index_type,
-  uint granularity
-)
-{
-  return decode3launch<Scalar>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
 }
 
 } // namespace cuZFP

@@ -232,114 +232,6 @@ void fwd_order(UInt* ublock, const Int* iblock)
     ublock[i] = int2uint(iblock[perm[i]]);
 }
 
-class BlockWriter {
-private:
-  // number of bits in a buffered word
-  static constexpr size_t wsize = sizeof(Word) * CHAR_BIT;
-
-  uint bits;         // number of buffered bits (0 <= bits < wsize)
-  Word buffer;       // buffer for incoming bits (buffer < 2^bits)
-  Word* ptr;         // pointer to next word to be read
-  Word* const begin; // beginning of stream
-
-  // use atomic write to avoid write race conditions
-  inline __device__
-  void write_word(Word w) { atomicAdd(ptr++, w); }
-
-public:
-  typedef unsigned long long int Offset;
-
-  __device__
-  BlockWriter(Word *data, Offset offset = 0) :
-    begin(data)
-  {
-    wseek(offset);
-  }
-
-  // return bit offset to next bit to be written
-  inline __device__
-  Offset wtell() const { return wsize * (Offset)(ptr - begin) + bits; }
-
-  // position stream for writing at given bit offset
-  inline __device__
-  void wseek(Offset offset)
-  {
-    uint n = (uint)(offset % wsize);
-    ptr = begin + (size_t)(offset / wsize);
-    if (n) {
-      buffer = *ptr & (((Word)1 << n) - 1);
-      bits = n;
-    }
-    else {
-      buffer = 0;
-      bits = 0;
-    }
-  }
-
-  // write single bit (must be 0 or 1)
-  inline __device__
-  uint write_bit(uint bit)
-  {
-    buffer += (Word)bit << bits;
-    if (++bits == wsize) {
-      write_word(buffer);
-      buffer = 0;
-      bits = 0;
-    }
-    return bit;
-  }
-
-  // write 0 <= n <= 64 low bits of value and return remaining bits
-  inline __device__
-  uint64 write_bits(uint64 value, uint n)
-  {
-    // append bit string to buffer
-    buffer += (Word)(value << bits);
-    bits += n;
-    // is buffer full?
-    if (bits >= wsize) {
-      // 1 <= n <= 64; decrement n to ensure valid right shifts below
-      value >>= 1;
-      n--;
-      // assert: 0 <= n < 64; wsize <= bits <= wsize + n
-      do {
-        // output wsize bits while buffer is full
-        bits -= wsize;
-        // assert: 0 <= bits <= n
-        write_word(buffer);
-        // assert: 0 <= n - bits < 64
-        buffer = (Word)(value >> (n - bits));
-      } while (sizeof(buffer) < sizeof(value) && bits >= wsize);
-    }
-    // assert: 0 <= bits < wsize
-    buffer &= ((Word)1 << bits) - 1;
-    // assert: 0 <= n < 64
-    return value >> n;
-  }
-
-  // append n zero-bits to stream (n >= 0)
-  inline __device__
-  void pad(size_t n)
-  {
-    Offset count = bits;
-    for (count += n; count >= wsize; count -= wsize) {
-      write_word(buffer);
-      buffer = 0;
-    }
-    bits = (uint)count;
-  }
-
-  // write any remaining buffered bits and align stream on next word boundary
-  inline __device__
-  uint flush()
-  {
-    uint count = (wsize - bits) % wsize;
-    if (count)
-      pad(count);
-    return count;
-  }
-}; // BlockWriter
-
 template <typename Int, int BlockSize> 
 inline __device__
 uint encode_ints(Int* iblock, BlockWriter& writer, uint maxbits, uint maxprec)
@@ -496,6 +388,92 @@ uint encode_block<long long int, 64>(
 )
 {
   return max(minbits, encode_ints<long long int, 64>(fblock, writer, maxbits, maxprec));
+}
+
+// forward declarations
+template <typename T>
+unsigned long long
+encode1(
+  const T* d_data,
+  const size_t size[],
+  const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
+  Word* d_stream,
+  ushort* d_index,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+);
+
+template <typename T>
+unsigned long long
+encode2(
+  const T* d_data,
+  const size_t size[],
+  const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
+  Word* d_stream,
+  ushort* d_index,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+);
+
+template <typename T>
+unsigned long long
+encode3(
+  const T* d_data,
+  const size_t size[],
+  const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
+  Word* d_stream,
+  ushort* d_index,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+);
+
+// encode field from d_data to d_stream
+template <typename T>
+unsigned long long
+encode(
+  const T* d_data,                    // field data device pointer
+  const size_t size[],                // field dimensions
+  const ptrdiff_t stride[],           // field strides
+  const zfp_exec_params_cuda* params, // execution parameters
+  Word* d_stream,                     // compressed bit stream device pointer
+  ushort* d_index,                    // block index device pointer
+  uint minbits,                       // minimum compressed #bits/block
+  uint maxbits,                       // maximum compressed #bits/block
+  uint maxprec,                       // maximum uncompressed #bits/value
+  int minexp                          // minimum bit plane index
+)
+{
+  unsigned long long bits_written = 0;
+
+  ErrorCheck errors;
+
+  uint dims = size[0] ? size[1] ? size[2] ? 3 : 2 : 1 : 0;
+  switch (dims) {
+    case 1:
+      bits_written = cuZFP::encode1<T>(d_data, size, stride, params, d_stream, d_index, minbits, maxbits, maxprec, minexp);
+      break;
+    case 2:
+      bits_written = cuZFP::encode2<T>(d_data, size, stride, params, d_stream, d_index, minbits, maxbits, maxprec, minexp);
+      break;
+    case 3:
+      bits_written = cuZFP::encode3<T>(d_data, size, stride, params, d_stream, d_index, minbits, maxbits, maxprec, minexp);
+      break;
+    default:
+      break;
+  }
+
+  errors.chk("Encode");
+
+  return bits_written;
 }
 
 } // namespace cuZFP

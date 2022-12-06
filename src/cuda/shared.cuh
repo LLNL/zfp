@@ -7,10 +7,17 @@
 #include "traits.cuh"
 #include "constants.cuh"
 
-//#define CUDA_ZFP_RATE_PRINT 1
+// we need to know about bitstream, but we don't want duplicate symbols
+#ifndef inline_
+  #define inline_ inline
+#endif
+
+#include "zfp/bitstream.inl"
 
 // bit stream word/buffer type; granularity of stream I/O operations
 typedef unsigned long long Word;
+
+//#define CUDA_ZFP_RATE_PRINT 1
 
 #define ZFP_1D_BLOCK_SIZE 4
 #define ZFP_2D_BLOCK_SIZE 16
@@ -103,32 +110,21 @@ size_t calc_device_mem(size_t blocks, size_t bits_per_block)
   return words * sizeof(Word);
 }
 
-dim3 get_max_grid_dims()
+dim3 get_max_grid_dims(const zfp_exec_params_cuda* params)
 {
-  static cudaDeviceProp prop;
-  static bool firstTime = true;
-
-  if( firstTime )
-  {
-    firstTime = false;
-
-    int device = 0;
-    cudaGetDeviceProperties(&prop, device);
-  }
-
   dim3 grid_dims;
-  grid_dims.x = prop.maxGridSize[0];
-  grid_dims.y = prop.maxGridSize[1];
-  grid_dims.z = prop.maxGridSize[2];
+  grid_dims.x = params->grid_size[0];
+  grid_dims.y = params->grid_size[1];
+  grid_dims.z = params->grid_size[2];
   return grid_dims;
 }
 
-dim3 calculate_grid_size(size_t threads, size_t cuda_block_size)
+dim3 calculate_grid_size(const zfp_exec_params_cuda* params, size_t threads, size_t cuda_block_size)
 {
   // round up to next multiple of cuda_block_size
   threads = round_up(threads, cuda_block_size);
   size_t grids = threads / cuda_block_size;
-  dim3 max_grid_dims = get_max_grid_dims();
+  dim3 max_grid_dims = get_max_grid_dims(params);
   int dims = 1;
   // check to see if we need to add more grids
   if (grids > max_grid_dims.x)

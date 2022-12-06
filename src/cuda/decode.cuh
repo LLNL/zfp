@@ -159,114 +159,6 @@ void inv_order(const UInt* ublock, Int* iblock)
     iblock[perm[i]] = uint2int(ublock[i]);
 }
 
-class BlockReader {
-private:
-  // number of bits in a buffered word
-  static constexpr size_t wsize = sizeof(Word) * CHAR_BIT;
-
-  uint bits;               // number of buffered bits (0 <= bits < wsize)
-  Word buffer;             // buffer for incoming bits (buffer < 2^bits)
-  const Word* ptr;         // pointer to next word to be read
-  const Word* const begin; // beginning of stream
-
-  // read a single word from memory
-  inline __device__
-  Word read_word() { return *ptr++; }
-
-public:
-  typedef unsigned long long int Offset;
-
-  __device__ BlockReader(const Word* data, Offset offset = 0) :
-    begin(data)
-  {
-    rseek(offset);
-  }
-
-  // return bit offset to next bit to be read
-  inline __device__
-  Offset rtell() const { return wsize * (Offset)(ptr - begin) - bits; }
-
-  // position stream for reading at given bit offset
-  inline __device__
-  void rseek(Offset offset)
-  {
-    uint n = (uint)(offset % wsize);
-    ptr = begin + (size_t)(offset / wsize);
-    if (n) {
-      buffer = read_word() >> n;
-      bits = wsize - n;
-    }
-    else {
-      buffer = 0;
-      bits = 0;
-    }
-  }
-
-  // read single bit (0 or 1)
-  inline __device__ 
-  uint read_bit()
-  {
-    uint bit;
-    if (!bits) {
-      buffer = read_word();
-      bits = wsize;
-    }
-    bits--;
-    bit = (uint)buffer & 1u;
-    buffer >>= 1;
-    return bit;
-  }
-
-  // read 0 <= n <= 64 bits
-  inline __device__ 
-  uint64 read_bits(uint n)
-  {
-    uint64 value = buffer;
-    if (bits < n) {
-      // keep fetching wsize bits until enough bits are buffered
-      do {
-        // assert: 0 <= bits < n <= 64
-        buffer = read_word();
-        value += (uint64)buffer << bits;
-        bits += wsize;
-      } while (sizeof(buffer) < sizeof(value) && bits < n);
-      // assert: 1 <= n <= bits < n + wsize
-      bits -= n;
-      if (!bits) {
-        // value holds exactly n bits; no need for masking
-        buffer = 0;
-      }
-      else {
-        // assert: 1 <= bits < wsize
-        buffer >>= wsize - bits;
-        // assert: 1 <= n <= 64
-        value &= ((uint64)2 << (n - 1)) - 1;
-      }
-    }
-    else {
-      // assert: 0 <= n <= bits < wsize <= 64 */
-      bits -= n;
-      buffer >>= n;
-      value &= ((uint64)1 << n) - 1;
-    }
-    return value;
-  }
-
-  // skip over the next n bits (n >= 0)
-  inline __device__
-  void skip(Offset n) { rseek(rtell() + n); }
-
-  // align stream on next word boundary
-  inline __device__
-  uint align()
-  {
-    uint count = bits;
-    if (count)
-      skip(count);
-    return count;
-  }
-}; // BlockReader
-
 template <typename Scalar, int BlockSize, typename UInt, typename Int>
 inline __device__
 uint decode_ints(BlockReader& reader, const uint maxbits, Int* iblock)
@@ -405,6 +297,92 @@ void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp
     if (bits < maxbits)
       reader.skip(maxbits - bits);
   }
+}
+
+// forward declarations
+template <typename T>
+unsigned long long
+decode1(
+  T* d_data,
+  const size_t size[],
+  const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
+  const Word* d_stream,
+  zfp_mode mode,
+  int decode_parameter,
+  const Word* d_index,
+  zfp_index_type index_type,
+  uint granularity
+);
+
+template <typename T>
+unsigned long long
+decode2(
+  T* d_data,
+  const size_t size[],
+  const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
+  const Word* d_stream,
+  zfp_mode mode,
+  int decode_parameter,
+  const Word* d_index,
+  zfp_index_type index_type,
+  uint granularity
+);
+
+template <typename T>
+unsigned long long
+decode3(
+  T* d_data,
+  const size_t size[],
+  const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
+  const Word* d_stream,
+  zfp_mode mode,
+  int decode_parameter,
+  const Word* d_index,
+  zfp_index_type index_type,
+  uint granularity
+);
+
+// decode field from d_stream to d_data
+template <typename T>
+unsigned long long
+decode(
+  T* d_data,                          // field data device pointer
+  const size_t size[],                // field dimensions
+  const ptrdiff_t stride[],           // field strides
+  const zfp_exec_params_cuda* params, // execution parameters
+  const Word* d_stream,               // compressed bit stream device pointer
+  zfp_mode mode,                      // compression mode
+  int decode_parameter,               // compression parameter
+  const Word* d_index,                // block index device pointer
+  zfp_index_type index_type,          // block index type
+  uint granularity                    // block index granularity in blocks/entry
+)
+{
+  unsigned long long bits_read = 0;
+
+  ErrorCheck errors;
+
+  uint dims = size[0] ? size[1] ? size[2] ? 3 : 2 : 1 : 0;
+  switch (dims) {
+    case 1:
+      bits_read = cuZFP::decode1<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      break;
+    case 2:
+      bits_read = cuZFP::decode2<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      break;
+    case 3:
+      bits_read = cuZFP::decode3<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      break;
+    default:
+      break;
+  }
+
+  errors.chk("Decode");
+
+  return bits_read;
 }
 
 } // namespace cuZFP

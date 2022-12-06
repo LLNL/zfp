@@ -1,9 +1,6 @@
 #ifndef CUZFP_DECODE1_CUH
 #define CUZFP_DECODE1_CUH
 
-#include "shared.cuh"
-#include "traits.cuh"
-
 namespace cuZFP {
 
 template <typename Scalar>
@@ -23,6 +20,7 @@ void scatter_partial1(const Scalar* q, Scalar* p, uint nx, ptrdiff_t sx)
       p[x * sx] = q[x];
 }
 
+// decode kernel
 template <typename Scalar>
 __global__
 void
@@ -87,7 +85,7 @@ cuda_decode1(
     decode_block<Scalar, ZFP_1D_BLOCK_SIZE>(reader, fblock, decode_parameter, mode);
 
     // logical position in 1d array
-    const size_t pos = block_idx;
+    size_t pos = block_idx;
     const ptrdiff_t x = pos * 4;
 
     // offset into field
@@ -106,11 +104,14 @@ cuda_decode1(
   atomicMax(max_offset, bit_offset);
 }
 
+// launch decode kernel
 template <typename Scalar>
-size_t decode1launch(
+unsigned long long
+decode1(
   Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
   const Word* d_stream,
   zfp_mode mode,
   int decode_parameter,
@@ -130,7 +131,7 @@ size_t decode1launch(
   const size_t chunks = (blocks + granularity - 1) / granularity;
 
   // determine grid of thread blocks
-  const dim3 grid_size = calculate_grid_size(chunks, cuda_block_size);
+  const dim3 grid_size = calculate_grid_size(params, chunks, cuda_block_size);
 
   // storage for maximum bit offset; needed to position stream
   unsigned long long int* d_offset;
@@ -162,27 +163,12 @@ size_t decode1launch(
   timer.print_throughput<Scalar>("Decode", "decode1", dim3(size[0]));
 #endif
 
+  // copy bit offset
   unsigned long long int offset;
   cudaMemcpy(&offset, d_offset, sizeof(offset), cudaMemcpyDeviceToHost);
   cudaFree(d_offset);
 
   return offset;
-}
-
-template <typename Scalar>
-size_t decode1(
-  Scalar* d_data,
-  const size_t size[],
-  const ptrdiff_t stride[],
-  const Word* d_stream,
-  zfp_mode mode,
-  int decode_parameter,
-  const Word* d_index,
-  zfp_index_type index_type,
-  uint granularity
-)
-{
-  return decode1launch<Scalar>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
 }
 
 } // namespace cuZFP

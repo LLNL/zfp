@@ -1,9 +1,6 @@
 #ifndef CUZFP_ENCODE2_CUH
 #define CUZFP_ENCODE2_CUH
 
-#include "shared.cuh"
-#include "traits.cuh"
-
 namespace cuZFP {
 
 template <typename Scalar>
@@ -86,50 +83,18 @@ cuda_encode2(
 
   uint bits = encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, writer, minbits, maxbits, maxprec, minexp);
 
-#if 0
-  uint2 block_dims;
-  block_dims.x = padded_dims.x >> 2; 
-  block_dims.y = padded_dims.y >> 2; 
-
-  // logical pos in 3d array
-  uint2 block;
-  block.x = (block_idx % block_dims.x) * 4; 
-  block.y = ((block_idx/ block_dims.x) % block_dims.y) * 4; 
-
-  const ll offset = (ll)block.x * stride.x + (ll)block.y * stride.y; 
-
-  Scalar fblock[ZFP_2D_BLOCK_SIZE]; 
-
-  bool partial = false;
-  if(block.x + 4 > dims.x) partial = true;
-  if(block.y + 4 > dims.y) partial = true;
- 
-  if(partial) 
-  {
-    const uint nx = block.x + 4 > dims.x ? dims.x - block.x : 4;
-    const uint ny = block.y + 4 > dims.y ? dims.y - block.y : 4;
-    gather_partial2(fblock, scalars + offset, nx, ny, stride.x, stride.y);
-
-  }
-  else
-  {
-    gather2(fblock, scalars + offset, stride.x, stride.y);
-  }
-
-  uint bits = zfp_encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, minbits, maxbits, maxprec,
-                                                          minexp, block_idx, stream);
-#endif
-
   if (d_index)
     d_index[block_idx] = (ushort)bits;
 }
 
 // launch encode kernel
 template <typename Scalar>
-size_t encode2launch(
+unsigned long long
+encode2(
   const Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
+  const zfp_exec_params_cuda* params,
   Word* d_stream,
   ushort* d_index,
   uint minbits,
@@ -146,73 +111,11 @@ size_t encode2launch(
                         ((size[1] + 3) / 4);
 
   // determine grid of thread blocks
-  const dim3 grid_size = calculate_grid_size(blocks, cuda_block_size);
+  const dim3 grid_size = calculate_grid_size(params, blocks, cuda_block_size);
 
   // zero-initialize bit stream (for atomics)
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
   cudaMemset(d_stream, 0, stream_bytes);
-
-#if 0
-  uint2 zfp_pad(dims); 
-  if(zfp_pad.x % 4 != 0) zfp_pad.x += 4 - dims.x % 4;
-  if(zfp_pad.y % 4 != 0) zfp_pad.y += 4 - dims.y % 4;
-
-  const uint zfp_blocks = (zfp_pad.x * zfp_pad.y) / 16; 
-
-  //
-  // we need to ensure that we launch a multiple of the 
-  // cuda block size
-  //
-  int block_pad = 0; 
-  if(zfp_blocks % cuda_block_size != 0)
-  {
-    block_pad = cuda_block_size - zfp_blocks % cuda_block_size; 
-  }
-
-  size_t total_blocks = block_pad + zfp_blocks;
-
-  dim3 grid_size = calculate_grid_size(total_blocks, cuda_block_size);
-
-  //
-  size_t stream_bytes = calc_device_mem2d(zfp_pad, maxbits);
-  // ensure we have zeros
-  cudaMemset(stream, 0, stream_bytes);
-
-#ifdef CUDA_ZFP_RATE_PRINT
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  cudaEventRecord(start);
-#endif
-
-  cudaEncode2<Scalar, variable_rate> <<<grid_size, block_size>>>
-    (minbits,
-     maxbits,
-     maxprec,
-     minexp,
-     d_data,
-     stream,
-     d_block_bits,
-     dims,
-     stride,
-     zfp_pad,
-     zfp_blocks);
-
-#ifdef CUDA_ZFP_RATE_PRINT
-  cudaDeviceSynchronize();
-  cudaEventRecord(stop);
-  cudaEventSynchronize(stop);
-  cudaStreamSynchronize(0);
-
-  float miliseconds = 0.f;
-  cudaEventElapsedTime(&miliseconds, start, stop);
-  float seconds = miliseconds / 1000.f;
-  float mb = (float(dims.x * dims.y) * sizeof(Scalar)) / (1024.f * 1024.f *1024.f);
-  float rate = mb / seconds;
-  printf("Encode elapsed time: %.5f (s)\n", seconds);
-  printf("# encode2 rate: %.2f (GB / sec) %d\n", rate, maxbits);
-#endif
-#endif
 
 #ifdef CUDA_ZFP_RATE_PRINT
   Timer timer;
@@ -237,23 +140,7 @@ size_t encode2launch(
   timer.print_throughput<Scalar>("Encode", "encode2", dim3(size[0], size[1]));
 #endif
 
-  return stream_bytes * CHAR_BIT;
-}
-
-template <typename Scalar>
-size_t encode2(
-  const Scalar* d_data,
-  const size_t size[],
-  const ptrdiff_t stride[],
-  Word* d_stream,
-  ushort* d_index,
-  uint minbits,
-  uint maxbits,
-  uint maxprec,
-  int minexp
-)
-{
-  return encode2launch<Scalar>(d_data, size, stride, d_stream, d_index, minbits, maxbits, maxprec, minexp);
+  return (unsigned long long)stream_bytes * CHAR_BIT;
 }
 
 }
