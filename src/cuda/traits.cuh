@@ -1,9 +1,11 @@
-#ifndef CUZFP_TYPE_INFO
-#define CUZFP_TYPE_INFO
+#ifndef ZFP_CUDA_TRAITS_CUH
+#define ZFP_CUDA_TRAITS_CUH
 
 #include <cfloat>
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 // TODO: fold these into the traits structs
 template <typename T> inline __host__ __device__ int get_ebias();
@@ -61,6 +63,8 @@ struct zfp_traits<double> {
   typedef long long int Int;
 };
 
-} // namespace cuZFP
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
 #endif

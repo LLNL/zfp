@@ -1,7 +1,9 @@
-#ifndef CUZFP_CONSTANTS_CUH
-#define CUZFP_CONSTANTS_CUH
+#ifndef ZFP_CUDA_CONSTANTS_CUH
+#define ZFP_CUDA_CONSTANTS_CUH
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 __device__ static const unsigned char perm_1[4] = {
   0, 1, 2, 3
@@ -130,6 +132,8 @@ __device__ static const unsigned char perm_3[64] = {
 
 #undef index
 
-} // namespace cuZFP
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
 #endif

@@ -1,7 +1,9 @@
-#ifndef CUZFP_ENCODE2_CUH
-#define CUZFP_ENCODE2_CUH
+#ifndef ZFP_CUDA_ENCODE2_CUH
+#define ZFP_CUDA_ENCODE2_CUH
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 template <typename Scalar>
 inline __device__ __host__
@@ -34,7 +36,7 @@ void gather_partial2(Scalar* q, const Scalar* p, uint nx, uint ny, ptrdiff_t sx,
 template <typename Scalar>
 __global__
 void
-cuda_encode2(
+encode2_kernel(
   const Scalar* d_data, // field data device pointer
   size2 size,           // field dimensions
   ptrdiff2 stride,      // field strides
@@ -117,13 +119,13 @@ encode2(
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
   cudaMemset(d_stream, 0, stream_bytes);
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef ZFP_CUDA_PROFILE
   Timer timer;
   timer.start();
 #endif
 
   // launch GPU kernel
-  cuda_encode2<Scalar><<<grid_size, block_size>>>(
+  encode2_kernel<Scalar><<<grid_size, block_size>>>(
     d_data,
     make_size2(size[0], size[1]),
     make_ptrdiff2(stride[0], stride[1]),
@@ -135,7 +137,7 @@ encode2(
     minexp
   );
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef ZFP_CUDA_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Encode", "encode2", dim3(size[0], size[1]));
 #endif
@@ -143,6 +145,8 @@ encode2(
   return (unsigned long long)stream_bytes * CHAR_BIT;
 }
 
-}
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
 #endif

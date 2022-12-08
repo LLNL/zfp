@@ -1,7 +1,9 @@
-#ifndef CUZFP_WRITER_CUH
-#define CUZFP_WRITER_CUH
+#ifndef ZFP_CUDA_WRITER_CUH
+#define ZFP_CUDA_WRITER_CUH
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 class BlockWriter {
 private:
@@ -111,6 +113,8 @@ public:
   }
 }; // BlockWriter
 
-}
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
-#endif // CUZFP_WRITER_CUH
+#endif

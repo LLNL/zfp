@@ -1,11 +1,17 @@
-#ifndef CUZFP_SHARED_CUH
-#define CUZFP_SHARED_CUH
+#ifndef ZFP_CUDA_SHARED_CUH
+#define ZFP_CUDA_SHARED_CUH
+
+// report throughput
+//#define ZFP_CUDA_PROFILE 1
 
 #include <cmath>
 #include <cstdio>
 #include "zfp.h"
 #include "traits.cuh"
 #include "constants.cuh"
+#ifdef ZFP_CUDA_PROFILE
+  #include "timer.cuh"
+#endif
 
 // we need to know about bitstream, but we don't want duplicate symbols
 #ifndef inline_
@@ -17,14 +23,14 @@
 // bit stream word/buffer type; granularity of stream I/O operations
 typedef unsigned long long Word;
 
-//#define CUDA_ZFP_RATE_PRINT 1
-
 #define ZFP_1D_BLOCK_SIZE 4
 #define ZFP_2D_BLOCK_SIZE 16
 #define ZFP_3D_BLOCK_SIZE 64
 #define ZFP_4D_BLOCK_SIZE 256 // not yet supported
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 typedef ulonglong2 size2;
 typedef ulonglong3 size3;
@@ -35,64 +41,6 @@ typedef longlong3 ptrdiff3;
 #define make_ptrdiff2(x, y) make_longlong2(x, y)
 #define make_size3(x, y, z) make_ulonglong3(x, y, z)
 #define make_ptrdiff3(x, y, z) make_longlong3(x, y, z)
-
-#ifdef CUDA_ZFP_RATE_PRINT
-// timer for measuring encode/decode throughput
-class Timer {
-public:
-  Timer()
-  {
-    cudaEventCreate(&e_start);
-    cudaEventCreate(&e_stop);
-  }
-
-  // start timer
-  void start()
-  {
-    cudaEventRecord(e_start);
-  }
-
-  // stop timer
-  void stop()
-  {
-    cudaEventRecord(e_stop);
-    cudaEventSynchronize(e_stop);
-    cudaStreamSynchronize(0);
-  }
-
-  // print throughput in GB/s
-  template <typename Scalar>
-  void print_throughput(const char* task, const char* subtask, dim3 dims, FILE* file = stdout) const
-  {
-    float ms = 0;
-    cudaEventElapsedTime(&ms, e_start, e_stop);
-    double seconds = double(ms) / 1000.;
-    size_t bytes = size_t(dims.x) * size_t(dims.y) * size_t(dims.z) * sizeof(Scalar);
-    double throughput = bytes / seconds;
-    throughput /= 1024 * 1024 * 1024;
-    fprintf(file, "%s elapsed time: %.5f (s)\n", task, seconds);
-    fprintf(file, "# %s rate: %.2f (GB / sec)\n", subtask, throughput);
-  }
-
-protected:
-  cudaEvent_t e_start, e_stop;
-};
-#endif
-
-template <typename T>
-__device__
-void print_bits(const T &bits)
-{
-  const int bit_size = sizeof(T) * 8;
-
-  for (int i = bit_size - 1; i >= 0; --i) {
-    T one = 1;
-    T mask = one << i;
-    T val = (bits & mask) >> i ;
-    printf("%d", (int)val);
-  }
-  printf("\n");
-}
 
 inline __host__ __device__
 size_t round_up(size_t size, size_t unit)
@@ -232,6 +180,8 @@ uint precision<64>(int maxexp, uint maxprec, int minexp)
   return precision(maxexp, maxprec, minexp, 3);
 }
 
-} // namespace cuZFP
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
 #endif

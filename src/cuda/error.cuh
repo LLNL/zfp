@@ -1,13 +1,16 @@
-#ifndef CUZFP_ERROR_CUH
-#define CUZFP_ERROR_CUH
+#ifndef ZFP_CUDA_ERROR_CUH
+#define ZFP_CUDA_ERROR_CUH
 
 #include <iostream>
 #include <sstream>
 #include <string>
 
-using std::stringstream;
+namespace zfp {
+namespace cuda {
+namespace internal {
 
-// TODO: put in appropriate namespace
+//using std::stringstream;
+
 class ErrorCheck {
 public:
   ErrorCheck()
@@ -30,7 +33,11 @@ public:
   }
 
   cudaError error;
-  stringstream str;
+  std::stringstream str;
 };
 
-#endif // CUZFP_ERROR_CUH
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
+
+#endif

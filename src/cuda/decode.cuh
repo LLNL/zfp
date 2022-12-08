@@ -1,9 +1,11 @@
-#ifndef CUZFP_DECODE_CUH
-#define CUZFP_DECODE_CUH
+#ifndef ZFP_CUDA_DECODE_CUH
+#define ZFP_CUDA_DECODE_CUH
 
 #include "shared.cuh"
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 // map negabinary unsigned integer to two's complement signed integer
 inline __device__
@@ -150,7 +152,7 @@ void inv_order(const UInt* ublock, Int* iblock)
 {
   const unsigned char* perm = get_perm<BlockSize>();
 
-#if (CUDART_VERSION < 8000)
+#if CUDART_VERSION < 8000
   #pragma unroll
 #else
   #pragma unroll BlockSize
@@ -179,7 +181,7 @@ uint decode_ints(BlockReader& reader, const uint maxbits, Int* iblock)
         ;
 
     // deposit bit plane; use fixed bound to prevent warp divergence
-#if (CUDART_VERSION < 8000)
+#if CUDART_VERSION < 8000
     #pragma unroll
 #else
     #pragma unroll BlockSize
@@ -216,7 +218,7 @@ uint decode_ints_prec(BlockReader& reader, const uint maxprec, Int* iblock)
         ;
 
     // deposit bit plane, use fixed bound to prevent warp divergence
-#if (CUDART_VERSION < 8000)
+#if CUDART_VERSION < 8000
     #pragma unroll
 #else
     #pragma unroll BlockSize
@@ -281,7 +283,7 @@ void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp
     if (!is_int<Scalar>()) {
       // cast to floating type
       Scalar scale = dequantize<Int, Scalar>(1, emax);
-#if (CUDART_VERSION < 8000)
+#if CUDART_VERSION < 8000
       #pragma unroll 
 #else
       #pragma unroll BlockSize
@@ -345,6 +347,8 @@ decode3(
   uint granularity
 );
 
+} // namespace internal
+
 // decode field from d_stream to d_data
 template <typename T>
 unsigned long long
@@ -363,28 +367,29 @@ decode(
 {
   unsigned long long bits_read = 0;
 
-  ErrorCheck errors;
+  internal::ErrorCheck error;
 
   uint dims = size[0] ? size[1] ? size[2] ? 3 : 2 : 1 : 0;
   switch (dims) {
     case 1:
-      bits_read = cuZFP::decode1<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = internal::decode1<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     case 2:
-      bits_read = cuZFP::decode2<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = internal::decode2<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     case 3:
-      bits_read = cuZFP::decode3<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = internal::decode3<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     default:
       break;
   }
 
-  errors.chk("Decode");
+  error.chk("Decode");
 
   return bits_read;
 }
 
-} // namespace cuZFP
+} // namespace cuda
+} // namespace zfp
 
 #endif

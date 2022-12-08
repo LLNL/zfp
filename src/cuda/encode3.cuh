@@ -1,7 +1,9 @@
-#ifndef CUZFP_ENCODE3_CUH
-#define CUZFP_ENCODE3_CUH
+#ifndef ZFP_CUDA_ENCODE3_CUH
+#define ZFP_CUDA_ENCODE3_CUH
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 template <typename Scalar>
 inline __device__ __host__
@@ -42,7 +44,7 @@ void gather_partial3(Scalar* q, const Scalar* p, uint nx, uint ny, uint nz, ptrd
 template <typename Scalar>
 __global__
 void
-cuda_encode3(
+encode3_kernel(
   const Scalar* d_data, // field data device pointer
   size3 size,           // field dimensions
   ptrdiff3 stride,      // field strides
@@ -129,13 +131,13 @@ encode3(
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
   cudaMemset(d_stream, 0, stream_bytes);
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef ZFP_CUDA_PROFILE
   Timer timer;
   timer.start();
 #endif
 
   // launch GPU kernel
-  cuda_encode3<Scalar><<<grid_size, block_size>>>(
+  encode3_kernel<Scalar><<<grid_size, block_size>>>(
     d_data,
     make_size3(size[0], size[1], size[2]),
     make_ptrdiff3(stride[0], stride[1], stride[2]),
@@ -147,7 +149,7 @@ encode3(
     minexp
   );
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef ZFP_CUDA_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Encode", "encode3", dim3(size[0], size[1], size[2]));
 #endif
@@ -155,6 +157,8 @@ encode3(
   return (unsigned long long)stream_bytes * CHAR_BIT;
 }
 
-}
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
 #endif

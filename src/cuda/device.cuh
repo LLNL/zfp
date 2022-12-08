@@ -1,9 +1,29 @@
-#ifndef CUZFP_DEVICE_CUH
-#define CUZFP_DEVICE_CUH
+#ifndef ZFP_CUDA_DEVICE_CUH
+#define ZFP_CUDA_DEVICE_CUH
 
 #include <cub/cub.cuh>
 
+namespace zfp {
+namespace cuda {
 namespace internal {
+
+// determine whether ptr points to device memory
+// https://gitlab.kitware.com/third-party/nvpipe/blob/master/encode.c
+bool is_gpu_ptr(const void* ptr)
+{
+  cudaPointerAttributes atts;
+  const cudaError_t perr = cudaPointerGetAttributes(&atts, ptr);
+
+  // clear last error so other error checking does not pick it up
+  cudaError_t error = cudaGetLastError();
+#if CUDART_VERSION >= 10000
+  return perr == cudaSuccess &&
+                (atts.type == cudaMemoryTypeDevice ||
+                 atts.type == cudaMemoryTypeManaged);
+#else
+  return perr == cudaSuccess && atts.memoryType == cudaMemoryTypeDevice;
+#endif
+}
 
 // advance pointer from d_begin to address difference between h_ptr and h_begin
 template <typename T>
@@ -63,7 +83,7 @@ bool device_copy_from_host(T** d_pointer, size_t size, void* h_pointer, const ch
 Word* setup_device_stream_compress(zfp_stream* stream)
 {
   Word* d_stream = (Word*)stream->stream->begin;
-  if (!cuZFP::is_gpu_ptr(d_stream)) {
+  if (!is_gpu_ptr(d_stream)) {
     // allocate device memory for compressed data
     size_t size = stream_capacity(stream->stream);
     device_malloc(&d_stream, size, "stream");
@@ -75,7 +95,7 @@ Word* setup_device_stream_compress(zfp_stream* stream)
 Word* setup_device_stream_decompress(zfp_stream* stream)
 {
   Word* d_stream = (Word*)stream->stream->begin;
-  if (!cuZFP::is_gpu_ptr(d_stream)) {
+  if (!is_gpu_ptr(d_stream)) {
     // copy compressed data to device memory
     size_t size = stream_capacity(stream->stream);
     device_copy_from_host(&d_stream, size, stream->stream->begin, "stream");
@@ -87,7 +107,7 @@ Word* setup_device_stream_decompress(zfp_stream* stream)
 ushort* setup_device_index_compress(zfp_stream *stream, const zfp_field *field)
 {
   ushort* d_index = stream->index ? (ushort*)stream->index->data : NULL;
-  if (!cuZFP::is_gpu_ptr(d_index)) {
+  if (!is_gpu_ptr(d_index)) {
     // allocate device memory for block index
     size_t size = zfp_field_blocks(field) * sizeof(ushort);
     device_malloc(&d_index, size, "index");
@@ -99,7 +119,7 @@ ushort* setup_device_index_compress(zfp_stream *stream, const zfp_field *field)
 Word* setup_device_index_decompress(zfp_stream* stream)
 {
   Word* d_index = (Word*)stream->index->data;
-  if (!cuZFP::is_gpu_ptr(d_index)) {
+  if (!is_gpu_ptr(d_index)) {
     // copy index to device memory
     size_t size = stream->index->size;
     device_copy_from_host(&d_index, size, stream->index->data, "index");
@@ -135,7 +155,7 @@ bool setup_device_chunking(size_t* chunk_size, unsigned long long** d_offsets, s
 void* setup_device_field_compress(const zfp_field* field, void*& d_begin)
 {
   void* d_data = field->data;
-  if (cuZFP::is_gpu_ptr(d_data)) {
+  if (is_gpu_ptr(d_data)) {
     // field already resides on device
     d_begin = zfp_field_begin(field);
     return d_data;
@@ -159,7 +179,7 @@ void* setup_device_field_compress(const zfp_field* field, void*& d_begin)
 void* setup_device_field_decompress(const zfp_field* field, void*& d_begin)
 {
   void* d_data = field->data;
-  if (cuZFP::is_gpu_ptr(d_data)) {
+  if (is_gpu_ptr(d_data)) {
     // field has already been allocated on device
     d_begin = zfp_field_begin(field);
     return d_data;
@@ -197,5 +217,7 @@ void cleanup_device(void* begin, void* d_begin, size_t bytes = 0)
 }
 
 } // namespace internal
+} // namespace cuda
+} // namespace zfp
 
-#endif // CUZFP_DEVICE_CUH
+#endif

@@ -1,9 +1,11 @@
-#ifndef CUZFP_ENCODE_CUH
-#define CUZFP_ENCODE_CUH
+#ifndef ZFP_CUDA_ENCODE_CUH
+#define ZFP_CUDA_ENCODE_CUH
 
 #include "shared.cuh"
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 // map two's complement signed integer to negabinary unsigned integer
 inline __device__
@@ -223,7 +225,7 @@ void fwd_order(UInt* ublock, const Int* iblock)
 {
   const unsigned char* perm = get_perm<BlockSize>();
 
-#if (CUDART_VERSION < 8000)
+#if CUDART_VERSION < 8000
   #pragma unroll
 #else
   #pragma unroll BlockSize
@@ -436,6 +438,8 @@ encode3(
   int minexp
 );
 
+} // namespace internal
+
 // encode field from d_data to d_stream
 template <typename T>
 unsigned long long
@@ -454,28 +458,29 @@ encode(
 {
   unsigned long long bits_written = 0;
 
-  ErrorCheck errors;
+  internal::ErrorCheck error;
 
   uint dims = size[0] ? size[1] ? size[2] ? 3 : 2 : 1 : 0;
   switch (dims) {
     case 1:
-      bits_written = cuZFP::encode1<T>(d_data, size, stride, params, d_stream, d_index, minbits, maxbits, maxprec, minexp);
+      bits_written = internal::encode1<T>(d_data, size, stride, params, d_stream, d_index, minbits, maxbits, maxprec, minexp);
       break;
     case 2:
-      bits_written = cuZFP::encode2<T>(d_data, size, stride, params, d_stream, d_index, minbits, maxbits, maxprec, minexp);
+      bits_written = internal::encode2<T>(d_data, size, stride, params, d_stream, d_index, minbits, maxbits, maxprec, minexp);
       break;
     case 3:
-      bits_written = cuZFP::encode3<T>(d_data, size, stride, params, d_stream, d_index, minbits, maxbits, maxprec, minexp);
+      bits_written = internal::encode3<T>(d_data, size, stride, params, d_stream, d_index, minbits, maxbits, maxprec, minexp);
       break;
     default:
       break;
   }
 
-  errors.chk("Encode");
+  error.chk("Encode");
 
   return bits_written;
 }
 
-} // namespace cuZFP
+} // namespace cuda
+} // namespace zfp
 
 #endif

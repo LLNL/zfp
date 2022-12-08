@@ -1,13 +1,19 @@
-#ifndef CU_ZFP_VARIABLE_CUH
-#define CU_ZFP_VARIABLE_CUH
+#ifndef ZFP_CUDA_VARIABLE_CUH
+#define ZFP_CUDA_VARIABLE_CUH
 
 #include <cub/cub.cuh>
-#include <cooperative_groups.h> // Requires CUDA >= 9
+#if CUDART_VERSION >= 9000
+  #include <cooperative_groups.h>
+#else
+  #error "zfp variable-rate compression requires CUDA 9.0 or later"
+#endif
 #include "shared.cuh"
 
-namespace cg = cooperative_groups;
+namespace zfp {
+namespace cuda {
+namespace internal {
 
-namespace cuZFP {
+namespace cg = cooperative_groups;
 
     // *******************************************************************************
 
@@ -337,17 +343,17 @@ namespace cuZFP {
             last_chunk = true;
           }
           // copy the 16-bit lengths in the offset array
-          cuZFP::copy_length_launch(d_index, d_offsets, i, cur_blocks);
+          copy_length_launch(d_index, d_offsets, i, cur_blocks);
 
           // prefix sum to turn length into offsets
           cub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, cur_blocks + 1);
 
           // compact the stream array in-place
-          cuZFP::chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, last_chunk, maxbits, processors);
+          chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, last_chunk, maxbits, processors);
         }
         // update compressed size and pad to whole words
         cudaMemcpy(&bits_written, d_offsets, sizeof(unsigned long long), cudaMemcpyDeviceToHost);
-        bits_written = cuZFP::round_up(bits_written, sizeof(Word) * CHAR_BIT);
+        bits_written = round_up(bits_written, sizeof(Word) * CHAR_BIT);
 
         // free temporary buffers
         internal::cleanup_device(NULL, d_offsets);
@@ -357,6 +363,8 @@ namespace cuZFP {
       return bits_written;
     }
 
-} // namespace cuZFP
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
 #endif

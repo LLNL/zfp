@@ -1,7 +1,9 @@
-#ifndef CUZFP_DECODE1_CUH
-#define CUZFP_DECODE1_CUH
+#ifndef ZFP_CUDA_DECODE1_CUH
+#define ZFP_CUDA_DECODE1_CUH
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 template <typename Scalar>
 inline __device__ __host__
@@ -24,7 +26,7 @@ void scatter_partial1(const Scalar* q, Scalar* p, uint nx, ptrdiff_t sx)
 template <typename Scalar>
 __global__
 void
-cuda_decode1(
+decode1_kernel(
   Scalar* d_data,
   size_t size,
   ptrdiff_t stride,
@@ -134,18 +136,19 @@ decode1(
   const dim3 grid_size = calculate_grid_size(params, chunks, cuda_block_size);
 
   // storage for maximum bit offset; needed to position stream
+  // TODO: add helper function to device.cuh for return values
   unsigned long long int* d_offset;
   if (cudaMalloc(&d_offset, sizeof(*d_offset)) != cudaSuccess)
     return 0;
   cudaMemset(d_offset, 0, sizeof(*d_offset));
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef ZFP_CUDA_PROFILE
   Timer timer;
   timer.start();
 #endif
 
   // launch GPU kernel
-  cuda_decode1<Scalar><<<grid_size, block_size>>>(
+  decode1_kernel<Scalar><<<grid_size, block_size>>>(
     d_data,
     size[0],
     stride[0],
@@ -158,7 +161,7 @@ decode1(
     granularity
   );
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef ZFP_CUDA_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Decode", "decode1", dim3(size[0]));
 #endif
@@ -171,6 +174,8 @@ decode1(
   return offset;
 }
 
-} // namespace cuZFP
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
 #endif

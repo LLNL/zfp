@@ -1132,7 +1132,7 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
         params->grid_size[0] = 0;
         params->grid_size[1] = 0;
         params->grid_size[2] = 0;
-        if (!cuda_init(params)) {
+        if (!zfp_internal_cuda_init(params)) {
           free(params);
           return zfp_false;
         }

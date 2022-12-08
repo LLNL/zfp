@@ -1,8 +1,7 @@
 #include <iostream>
-#include "cuZFP.h"
+#include "interface.h"
 #include "shared.cuh"
 #include "error.cuh"
-#include "pointers.cuh"
 #include "traits.cuh"
 #include "device.cuh"
 #include "writer.cuh"
@@ -17,9 +16,8 @@
 #include "decode2.cuh"
 #include "decode3.cuh"
 
-// TODO: move out of global namespace
 zfp_bool
-cuda_init(zfp_exec_params_cuda* params)
+zfp_internal_cuda_init(zfp_exec_params_cuda* params)
 {
   // ensure GPU word size equals CPU word size
   if (sizeof(Word) != sizeof(bitstream_word))
@@ -44,7 +42,7 @@ cuda_init(zfp_exec_params_cuda* params)
 }
 
 size_t
-cuda_compress(zfp_stream* stream, const zfp_field* field)
+zfp_internal_cuda_compress(zfp_stream* stream, const zfp_field* field)
 {
   // determine compression mode and ensure it is supported
   bool variable_rate = false;
@@ -75,16 +73,16 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
 
   // copy field to device if not already there
   void* d_begin = NULL;
-  void* d_data = internal::setup_device_field_compress(field, d_begin);
+  void* d_data = zfp::cuda::internal::setup_device_field_compress(field, d_begin);
 
   // null means the array is non-contiguous host memory, which is not supported
   if (!d_data)
     return 0;
 
   // allocate compressed buffer
-  Word* d_stream = internal::setup_device_stream_compress(stream);
+  Word* d_stream = zfp::cuda::internal::setup_device_stream_compress(stream);
   // TODO: populate stream->index even in fixed-rate mode if non-null
-  ushort* d_index = variable_rate ? internal::setup_device_index_compress(stream, field) : NULL;
+  ushort* d_index = variable_rate ? zfp::cuda::internal::setup_device_index_compress(stream, field) : NULL;
 
   // determine minimal slot needed to hold a compressed block
   uint maxbits = (uint)zfp_maximum_block_size_bits(stream, field);
@@ -95,16 +93,16 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
   unsigned long long bits_written = 0;
   switch (field->type) {
     case zfp_type_int32:
-      bits_written = cuZFP::encode((int*)d_data, size, stride, params, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
+      bits_written = zfp::cuda::encode((int*)d_data, size, stride, params, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
       break;
     case zfp_type_int64:
-      bits_written = cuZFP::encode((long long int*)d_data, size, stride, params, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
+      bits_written = zfp::cuda::encode((long long int*)d_data, size, stride, params, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
       break;
     case zfp_type_float:
-      bits_written = cuZFP::encode((float*)d_data, size, stride, params, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
+      bits_written = zfp::cuda::encode((float*)d_data, size, stride, params, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
       break;
     case zfp_type_double:
-      bits_written = cuZFP::encode((double*)d_data, size, stride, params, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
+      bits_written = zfp::cuda::encode((double*)d_data, size, stride, params, d_stream, d_index, stream->minbits, maxbits, stream->maxprec, stream->minexp);
       break;
     default:
       break;
@@ -113,20 +111,20 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
   // compact stream of variable-length blocks stored in fixed-length slots
   if (variable_rate) {
     const size_t blocks = zfp_field_blocks(field);
-    bits_written = cuZFP::compact_stream(d_stream, maxbits, d_index, blocks, params->processors);
+    bits_written = zfp::cuda::internal::compact_stream(d_stream, maxbits, d_index, blocks, params->processors);
   }
 
-  const size_t stream_bytes = cuZFP::round_up((bits_written + CHAR_BIT - 1) / CHAR_BIT, sizeof(Word));
+  const size_t stream_bytes = zfp::cuda::internal::round_up((bits_written + CHAR_BIT - 1) / CHAR_BIT, sizeof(Word));
 
   if (d_index) {
     const size_t size = zfp_field_blocks(field) * sizeof(ushort);
     // TODO: assumes index stores block sizes
-    internal::cleanup_device(stream->index ? stream->index->data : NULL, d_index, size);
+    zfp::cuda::internal::cleanup_device(stream->index ? stream->index->data : NULL, d_index, size);
   }
 
   // copy stream from device to host if needed and free temporary buffers
-  internal::cleanup_device(stream->stream->begin, d_stream, stream_bytes);
-  internal::cleanup_device(zfp_field_begin(field), d_begin);
+  zfp::cuda::internal::cleanup_device(stream->stream->begin, d_stream, stream_bytes);
+  zfp::cuda::internal::cleanup_device(zfp_field_begin(field), d_begin);
 
   // update bit stream to point just past produced data
   if (bits_written)
@@ -136,7 +134,7 @@ cuda_compress(zfp_stream* stream, const zfp_field* field)
 }
 
 size_t
-cuda_decompress(zfp_stream* stream, zfp_field* field)
+zfp_internal_cuda_decompress(zfp_stream* stream, zfp_field* field)
 {
   // determine field dimensions
   size_t size[3];
@@ -151,13 +149,13 @@ cuda_decompress(zfp_stream* stream, zfp_field* field)
   stride[2] = field->sz ? field->sz : (ptrdiff_t)field->nx * (ptrdiff_t)field->ny;
 
   void* d_begin;
-  void* d_data = internal::setup_device_field_decompress(field, d_begin);
+  void* d_data = zfp::cuda::internal::setup_device_field_decompress(field, d_begin);
 
   // null means the array is non-contiguous host memory, which is not supported
   if (!d_data)
     return 0;
 
-  Word* d_stream = internal::setup_device_stream_decompress(stream);
+  Word* d_stream = zfp::cuda::internal::setup_device_stream_decompress(stream);
   Word* d_index = NULL;
 
   // decode_parameter differs per execution policy
@@ -184,7 +182,7 @@ cuda_decompress(zfp_stream* stream, zfp_field* field)
         return 0;
       }
       granularity = stream->index->granularity;
-      d_index = internal::setup_device_index_decompress(stream);
+      d_index = zfp::cuda::internal::setup_device_index_decompress(stream);
       break;
     default:
       // TODO: clean up device to avoid memory leak
@@ -198,16 +196,16 @@ cuda_decompress(zfp_stream* stream, zfp_field* field)
   unsigned long long bits_read = 0;
   switch (field->type) {
     case zfp_type_int32:
-      bits_read = cuZFP::decode((int*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = zfp::cuda::decode((int*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     case zfp_type_int64:
-      bits_read = cuZFP::decode((long long int*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = zfp::cuda::decode((long long int*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     case zfp_type_float:
-      bits_read = cuZFP::decode((float*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = zfp::cuda::decode((float*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     case zfp_type_double:
-      bits_read = cuZFP::decode((double*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = zfp::cuda::decode((double*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
       break;
     default:
       break;
@@ -215,10 +213,10 @@ cuda_decompress(zfp_stream* stream, zfp_field* field)
 
   // copy field from device to host if needed and free temporary buffers
   size_t field_bytes = zfp_field_size(field, NULL) * zfp_type_size(field->type);
-  internal::cleanup_device(zfp_field_begin(field), d_begin, field_bytes);
-  internal::cleanup_device(stream->stream->begin, d_stream);
+  zfp::cuda::internal::cleanup_device(zfp_field_begin(field), d_begin, field_bytes);
+  zfp::cuda::internal::cleanup_device(stream->stream->begin, d_stream);
   if (d_index)
-    internal::cleanup_device(stream->index->data, d_index);
+    zfp::cuda::internal::cleanup_device(stream->index->data, d_index);
 
   // update bit stream to point just past consumed data
   if (bits_read)

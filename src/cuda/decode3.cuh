@@ -1,7 +1,9 @@
-#ifndef CUZFP_DECODE3_CUH
-#define CUZFP_DECODE3_CUH
+#ifndef ZFP_CUDA_DECODE3_CUH
+#define ZFP_CUDA_DECODE3_CUH
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 template <typename Scalar>
 inline __device__ __host__
@@ -36,7 +38,7 @@ void scatter_partial3(const Scalar* q, Scalar* p, uint nx, uint ny, uint nz, ptr
 template <typename Scalar>
 __global__
 void
-cuda_decode3(
+decode3_kernel(
   Scalar* d_data,
   size3 size,
   ptrdiff3 stride,
@@ -158,13 +160,13 @@ decode3(
     return 0;
   cudaMemset(d_offset, 0, sizeof(*d_offset));
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef ZFP_CUDA_PROFILE
   Timer timer;
   timer.start();
 #endif
 
   // launch GPU kernel
-  cuda_decode3<Scalar><<<grid_size, block_size>>>(
+  decode3_kernel<Scalar><<<grid_size, block_size>>>(
     d_data,
     make_size3(size[0], size[1], size[2]),
     make_ptrdiff3(stride[0], stride[1], stride[2]),
@@ -177,7 +179,7 @@ decode3(
     granularity
   );
 
-#ifdef CUDA_ZFP_RATE_PRINT
+#ifdef ZFP_CUDA_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Decode", "decode3", dim3(size[0], size[1], size[2]));
 #endif
@@ -190,6 +192,8 @@ decode3(
   return offset;
 }
 
-} // namespace cuZFP
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
 #endif

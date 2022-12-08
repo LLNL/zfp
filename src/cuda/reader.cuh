@@ -1,7 +1,9 @@
-#ifndef CUZFP_READER_CUH
-#define CUZFP_READER_CUH
+#ifndef ZFP_CUDA_READER_CUH
+#define ZFP_CUDA_READER_CUH
 
-namespace cuZFP {
+namespace zfp {
+namespace cuda {
+namespace internal {
 
 class BlockReader {
 private:
@@ -111,6 +113,8 @@ public:
   }
 }; // BlockReader
 
-}
+} // namespace internal
+} // namespace cuda
+} // namespace zfp
 
-#endif // CUZFP_READER_CUH
+#endif

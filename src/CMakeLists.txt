@@ -8,7 +8,7 @@ if(ZFP_WITH_CUDA)
 
   add_subdirectory(cuda)
   cuda_include_directories(${PROJECT_SOURCE_DIR}/include)
-  cuda_wrap_srcs(zfp OBJ zfp_cuda_backend_obj cuda/cuZFP.cu OPTIONS ${CMAKE_CUDA_FLAGS})
+  cuda_wrap_srcs(zfp OBJ zfp_cuda_backend_obj cuda/interface.cu OPTIONS ${CMAKE_CUDA_FLAGS})
   set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_PREVIOUS})
   add_definitions(-DZFP_WITH_CUDA)
 endif()
@@ -21,7 +21,6 @@ endif()
 set(zfp_source
   zfp.c
   bitstream.c
-#  traitsf.h traitsd.h block1.h block2.h block3.h block4.h
   encode1f.c encode1d.c encode1i.c encode1l.c
   decode1f.c decode1d.c decode1i.c decode1l.c
   encode2f.c encode2d.c encode2i.c encode2l.c
