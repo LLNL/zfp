@@ -5,6 +5,8 @@
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
     LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -A asccasc -t 00:15:00"
+    CUSTOM_CI_BUILDS_DIR: "/usr/workspace/zfp/gitlab-ci"
+    LLNL_SERVICE_USER: zfp
 
 stages:
     - build
