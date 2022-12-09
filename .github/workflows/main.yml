@@ -18,8 +18,8 @@ jobs:
           - os: ubuntu-latest
             cxx_compiler: clang++
             c_compiler: clang
-            omp: ON
-            omp_flags: -DOpenMP_C=clang -DOpenMP_CXX=clang++ -DOpenMP_C_FLAGS="-fopenmp=libomp -Wno-unused-command-line-argument" -DOpenMP_CXX_FLAGS="-fopenmp=libomp -Wno-unused-command-line-argument" -DOpenMP_C_LIB_NAMES=libomp -DOpenMP_CXX_LIB_NAMES=libomp -DOpenMP_libomp_LIBRARY=libomp
+            omp: OFF
+            #omp_flags: -DOpenMP_C=clang -DOpenMP_CXX=clang++ -DOpenMP_C_FLAGS="-fopenmp=libomp -Wno-unused-command-line-argument" -DOpenMP_CXX_FLAGS="-fopenmp=libomp -Wno-unused-command-line-argument" -DOpenMP_C_LIB_NAMES=libomp -DOpenMP_CXX_LIB_NAMES=libomp -DOpenMP_libomp_LIBRARY=libomp
             target: all            
     steps:
       - uses: actions/checkout@v3
