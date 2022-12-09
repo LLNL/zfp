@@ -1,10 +1,11 @@
-#ifndef ZFP_CUDA_VARIABLE_CUH
-#define ZFP_CUDA_VARIABLE_CUH
+#include "hip/hip_runtime.h"
+#ifndef ZFP_HIP_VARIABLE_H
+#define ZFP_HIP_VARIABLE_H
 
-#include "shared.cuh"
+#include "shared.h"
 
 namespace zfp {
-namespace cuda {
+namespace hip {
 namespace internal {
 
 namespace cg = cooperative_groups;
@@ -30,7 +31,7 @@ namespace cg = cooperative_groups;
                             int nstreams_chunk)
     {
         dim3 blocks((nstreams_chunk - 1) / 1024 + 1, 1, 1);
-        copy_length<<<blocks, 1024>>>(bitlengths, chunk_offsets, first, nstreams_chunk);
+        hipLaunchKernelGGL(copy_length, blocks, 1024, 0, 0, bitlengths, chunk_offsets, first, nstreams_chunk);
     }
 
     // *******************************************************************************
@@ -257,13 +258,13 @@ namespace cg = cooperative_groups;
             constexpr int tile_size = 1;
             constexpr int num_tiles = 512;
             size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
-            cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
+            hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
             max_blocks = min(nstream_chunk, max_blocks);
             dim3 threads(tile_size, num_tiles, 1);
-            cudaLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
+            hipLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
                                         dim3(max_blocks, 1, 1), threads, kernelArgs, shmem, 0);
         }
         else if (nbitsmax <= 1504)
@@ -271,13 +272,13 @@ namespace cg = cooperative_groups;
             constexpr int tile_size = 4;
             constexpr int num_tiles = 128;
             size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
-            cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
+            hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
             max_blocks = min(nstream_chunk, max_blocks);
             dim3 threads(tile_size, num_tiles, 1);
-            cudaLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
+            hipLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
                                         dim3(max_blocks, 1, 1), threads, kernelArgs, shmem, 0);
         }
         else if (nbitsmax <= 6112)
@@ -285,13 +286,13 @@ namespace cg = cooperative_groups;
             constexpr int tile_size = 16;
             constexpr int num_tiles = 32;
             size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
-            cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
+            hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
             max_blocks = min(nstream_chunk, max_blocks);
             dim3 threads(tile_size, num_tiles, 1);
-            cudaLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
+            hipLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
                                         dim3(max_blocks, 1, 1), threads, kernelArgs, shmem, 0);
         }
         else // Up to 24512 bits, so works even for largest 4D.
@@ -299,13 +300,13 @@ namespace cg = cooperative_groups;
             constexpr int tile_size = 64;
             constexpr int num_tiles = 8;
             size_t shmem = (2 * num_tiles * maxpad32 + 2) * sizeof(uint);
-            cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
+            hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
                                                           concat_bitstreams_chunk<tile_size, num_tiles>,
                                                           tile_size * num_tiles, shmem);
             max_blocks *= num_sm;
             max_blocks = min(nstream_chunk, max_blocks);
             dim3 threads(tile_size, num_tiles, 1);
-            cudaLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
+            hipLaunchCooperativeKernel((void *)concat_bitstreams_chunk<tile_size, num_tiles>,
                                         dim3(max_blocks, 1, 1), threads, kernelArgs, shmem, 0);
         }
     }
@@ -340,13 +341,13 @@ namespace cg = cooperative_groups;
           copy_length_launch(d_index, d_offsets, i, cur_blocks);
 
           // prefix sum to turn length into offsets
-          cub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, cur_blocks + 1);
+          hipcub::DeviceScan::InclusiveSum(d_cubtemp, lcubtemp, d_offsets, d_offsets, cur_blocks + 1);
 
           // compact the stream array in-place
           chunk_process_launch((uint*)d_stream, d_offsets, i, cur_blocks, last_chunk, maxbits, processors);
         }
         // update compressed size and pad to whole words
-        cudaMemcpy(&bits_written, d_offsets, sizeof(unsigned long long), cudaMemcpyDeviceToHost);
+        hipMemcpy(&bits_written, d_offsets, sizeof(unsigned long long), hipMemcpyDeviceToHost);
         bits_written = round_up(bits_written, sizeof(Word) * CHAR_BIT);
 
         // free temporary buffers
@@ -358,7 +359,7 @@ namespace cg = cooperative_groups;
     }
 
 } // namespace internal
-} // namespace cuda
+} // namespace hip
 } // namespace zfp
 
 #endif

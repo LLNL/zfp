@@ -1,10 +1,10 @@
-#ifndef ZFP_CUDA_DECODE_CUH
-#define ZFP_CUDA_DECODE_CUH
+#ifndef ZFP_HIP_DECODE_H
+#define ZFP_HIP_DECODE_H
 
-#include "shared.cuh"
+#include "shared.h"
 
 namespace zfp {
-namespace cuda {
+namespace hip {
 namespace internal {
 
 // map negabinary unsigned integer to two's complement signed integer
@@ -308,7 +308,7 @@ decode1(
   T* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
-  const zfp_exec_params_cuda* params,
+  const zfp_exec_params_hip* params,
   const Word* d_stream,
   zfp_mode mode,
   int decode_parameter,
@@ -323,7 +323,7 @@ decode2(
   T* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
-  const zfp_exec_params_cuda* params,
+  const zfp_exec_params_hip* params,
   const Word* d_stream,
   zfp_mode mode,
   int decode_parameter,
@@ -338,7 +338,7 @@ decode3(
   T* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
-  const zfp_exec_params_cuda* params,
+  const zfp_exec_params_hip* params,
   const Word* d_stream,
   zfp_mode mode,
   int decode_parameter,
@@ -356,7 +356,7 @@ decode(
   T* d_data,                          // field data device pointer
   const size_t size[],                // field dimensions
   const ptrdiff_t stride[],           // field strides
-  const zfp_exec_params_cuda* params, // execution parameters
+  const zfp_exec_params_hip* params, // execution parameters
   const Word* d_stream,               // compressed bit stream device pointer
   zfp_mode mode,                      // compression mode
   int decode_parameter,               // compression parameter
@@ -390,7 +390,7 @@ decode(
   return bits_read;
 }
 
-} // namespace cuda
+} // namespace hip
 } // namespace zfp
 
 #endif

@@ -1,24 +1,28 @@
 ###############################################################################
 #
-#  file: src/hipZFP/CMakeLists.txt 
+#  file: src/hip/CMakeLists.txt 
 #
 ###############################################################################
 
-set(hipZFP_sources
-    hipZFP.cpp         # main entry point
+set(zfp_hip_sources
+    interface.cpp         # main entry point
     decode.h
     decode1.h
     decode2.h
     decode3.h
+    reader.h
     encode.h
     encode1.h
     encode2.h
     encode3.h
-    pointers.h
-    type_info.h)
-
-set(hipZFP_headers
+    writer.h
+    constants.h
+    device.h
+    error.h
     shared.h
-    hipZFP.h
-    ErrorCheck.h)
+    timer.h
+    traits.h
+    variable.h)
 
+set(zfp_hip_headers
+    interface.h)

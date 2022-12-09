@@ -15,7 +15,8 @@ endif()
 
 if(ZFP_WITH_HIP)
   add_definitions(-DZFP_WITH_HIP)
-  set(HIPZFP_SOURCE hip_zfp/hipZFP.cpp)
+  set(ZFP_HIP_SOURCE hip/interface.cpp)
+  set_source_files_properties(${ZFP_HIP_SOURCE} PROPERTIES LANGUAGE HIP)
 endif()
 
 set(zfp_source
@@ -29,16 +30,11 @@ set(zfp_source
   decode3f.c decode3d.c decode3i.c decode3l.c
   encode4f.c encode4d.c encode4i.c encode4l.c
   decode4f.c decode4d.c decode4i.c decode4l.c
-  ${HIPZFP_SOURCE})
+  ${ZFP_HIP_SOURCE})
 
 if(ZFP_WITH_CUDA)
   add_library(zfp ${zfp_source}
                   ${zfp_cuda_backend_obj})
-elseif(ZFP_WITH_HIP)
-  set_source_files_properties(${zfp_source}
-          PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
-  hip_add_library(zfp SHARED ${zfp_source})
-  target_link_libraries(zfp PRIVATE hip::hipcub)
 else()
   add_library(zfp ${zfp_source})
 endif()

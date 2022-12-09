@@ -1,11 +1,11 @@
-#ifndef ZFP_CUDA_TIMER_CUH
-#define ZFP_CUDA_TIMER_CUH
+#ifndef ZFP_HIP_TIMER_H
+#define ZFP_HIP_TIMER_H
 
 #include <iomanip>
 #include <iostream>
 
 namespace zfp {
-namespace cuda {
+namespace hip {
 namespace internal {
 
 // timer for measuring encode/decode throughput
@@ -13,22 +13,22 @@ class Timer {
 public:
   Timer()
   {
-    cudaEventCreate(&e_start);
-    cudaEventCreate(&e_stop);
+    hipEventCreate(&e_start);
+    hipEventCreate(&e_stop);
   }
 
   // start timer
   void start()
   {
-    cudaEventRecord(e_start);
+    hipEventRecord(e_start);
   }
 
   // stop timer
   void stop()
   {
-    cudaEventRecord(e_stop);
-    cudaEventSynchronize(e_stop);
-    cudaStreamSynchronize(0);
+    hipEventRecord(e_stop);
+    hipEventSynchronize(e_stop);
+    hipStreamSynchronize(0);
   }
 
   // print throughput in GB/s
@@ -36,7 +36,7 @@ public:
   void print_throughput(const char* task, const char* subtask, dim3 dims) const
   {
     float ms = 0;
-    cudaEventElapsedTime(&ms, e_start, e_stop);
+    hipEventElapsedTime(&ms, e_start, e_stop);
     double seconds = double(ms) / 1000.;
     size_t bytes = size_t(dims.x) * size_t(dims.y) * size_t(dims.z) * sizeof(Scalar);
     double throughput = bytes / seconds;
@@ -46,11 +46,11 @@ public:
   }
 
 protected:
-  cudaEvent_t e_start, e_stop;
+  hipEvent_t e_start, e_stop;
 };
 
 } // namespace internal
-} // namespace cuda
+} // namespace hip
 } // namespace zfp
 
 #endif

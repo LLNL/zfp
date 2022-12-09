@@ -1143,8 +1143,20 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
 #endif
 #ifdef ZFP_WITH_HIP
     case zfp_exec_hip:
-      /* TODO: restore HIP support once CUDA is working */
-      return zfp_false;
+      if (zfp->exec.policy != policy) {
+        zfp_exec_params_hip* params = malloc(sizeof(zfp_exec_params_hip));
+        params->processors = 0;
+        params->grid_size[0] = 0;
+        params->grid_size[1] = 0;
+        params->grid_size[2] = 0;
+        if (!zfp_internal_hip_init(params)) {
+          free(params);
+          return zfp_false;
+        }
+        free(zfp->exec.params);
+        zfp->exec.params = params;
+      }
+      break;
 #endif
     default:
       return zfp_false;

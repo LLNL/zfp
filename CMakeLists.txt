@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
+if(ZFP_WITH_HIP)
+  cmake_minimum_required(VERSION 3.21)
+endif()
 
 # Enable MACOSX_RPATH by default
 cmake_policy(SET CMP0042 NEW)
@@ -83,6 +86,9 @@ message(STATUS "Compiling with C standard: ${CMAKE_C_STANDARD}")
 # Suggest C++98
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 98)
+endif()
+if(ZFP_WITH_HIP)
+  set(CMAKE_CXX_STANDARD 14)
 endif()
 message(STATUS "Compiling with C++ standard: ${CMAKE_CXX_STANDARD}")
 
@@ -222,23 +228,7 @@ if(ZFP_WITH_CUDA)
 endif()
 
 if(ZFP_WITH_HIP)
-  if (DEFINED ENV{HIP_PATH} AND NOT $ENV{HIP_PATH} STREQUAL "")
-    set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to where HIP has been installed")
-  endif()
-  set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
-  find_package(HIP REQUIRED)
-  if(HIP_FOUND)
-    message(STATUS "Found HIP(${HIP_VERSION}) in ${HIP_PATH}")
-  else()
-    message(FATAL_ERROR "Could not find HIP. Ensure that HIP is either installed in /opt/rocm/hip or the variable HIP_PATH is set to point to the right location.")
-  endif()
-  find_package(hipcub REQUIRED)
-  if(hipcub_FOUND)
-    message(STATUS "Found hipCUB.")
-  else()
-    message(FATAL_ERROR "Could not find hipCUB.")
-  endif()
-  set(CMAKE_CXX_STANDARD 11)
+  enable_language(HIP)
 endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
@@ -247,7 +237,6 @@ endif()
 
 if(DEFINED ZFP_CACHE_LINE_SIZE)
   # Add to zfp_public_defs since many tests currently include files from src.
-#  list(APPEND zfp_public_defs ZFP_CACHE_LINE_SIZE=${ZFP_CACHE_LINE_SIZE})
   list(APPEND zfp_private_defs ZFP_CACHE_LINE_SIZE=${ZFP_CACHE_LINE_SIZE})
 endif()
 

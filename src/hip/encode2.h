@@ -1,13 +1,10 @@
 #include "hip/hip_runtime.h"
-#ifndef HIPZFP_ENCODE2_H
-#define HIPZFP_ENCODE2_H
+#ifndef ZFP_HIP_ENCODE2_H
+#define ZFP_HIP_ENCODE2_H
 
-#include "hipZFP.h"
-#include "shared.h"
-#include "encode.h"
-#include "type_info.h"
-
-namespace hipZFP {
+namespace zfp {
+namespace hip {
+namespace internal {
 
 template <typename Scalar>
 inline __device__ __host__
@@ -18,7 +15,7 @@ void gather2(Scalar* q, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
       *q++ = *p;
 }
 
-template <typename Scalar>
+template <typename Scalar> 
 inline __device__ __host__
 void gather_partial2(Scalar* q, const Scalar* p, uint nx, uint ny, ptrdiff_t sx, ptrdiff_t sy)
 {
@@ -26,26 +23,30 @@ void gather_partial2(Scalar* q, const Scalar* p, uint nx, uint ny, ptrdiff_t sx,
     if (y < ny) {
       for (uint x = 0; x < 4; x++)
         if (x < nx) {
-          q[x + 4 * y] = *p;
+          q[4 * y + x] = *p;
           p += sx;
         }
       pad_block(q + 4 * y, nx, 1);
-      p += sy - nx * sx;
+      p += sy - (ptrdiff_t)nx * sx;
     }
   for (uint x = 0; x < 4; x++)
     pad_block(q + x, ny, 4);
 }
 
 // encode kernel
-template <class Scalar>
+template <typename Scalar>
 __global__
 void
-hip_encode2(
+encode2_kernel(
   const Scalar* d_data, // field data device pointer
   size2 size,           // field dimensions
   ptrdiff2 stride,      // field strides
   Word* d_stream,       // compressed bit stream device pointer
-  uint maxbits          // compressed #bits/block
+  ushort* d_index,      // block index
+  uint minbits,         // min compressed #bits/block
+  uint maxbits,         // max compressed #bits/block
+  uint maxprec,         // max uncompressed #bits/value
+  int minexp            // min bit plane index
 )
 {
   const size_t blockId = blockIdx.x + (size_t)gridDim.x * (blockIdx.y + (size_t)gridDim.y * blockIdx.z);
@@ -70,78 +71,83 @@ hip_encode2(
   // offset into field
   const ptrdiff_t offset = x * stride.x + y * stride.y;
 
+  // initialize block writer
+  BlockWriter::Offset bit_offset = block_idx * maxbits;
+  BlockWriter writer(d_stream, bit_offset);
+
   // gather data into a contiguous block
   Scalar fblock[ZFP_2D_BLOCK_SIZE];
-  const uint nx = (uint)min(size.x - x, 4ull);
-  const uint ny = (uint)min(size.y - y, 4ull);
+  const uint nx = (uint)min(size_t(size.x - x), size_t(4));
+  const uint ny = (uint)min(size_t(size.y - y), size_t(4));
   if (nx * ny < ZFP_2D_BLOCK_SIZE)
     gather_partial2(fblock, d_data + offset, nx, ny, stride.x, stride.y);
   else
     gather2(fblock, d_data + offset, stride.x, stride.y);
 
-  encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, maxbits, block_idx, d_stream);
+  uint bits = encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, writer, minbits, maxbits, maxprec, minexp);
+
+  if (d_index)
+    d_index[block_idx] = (ushort)bits;
 }
 
 // launch encode kernel
-template <class Scalar>
-size_t encode2launch(
+template <typename Scalar>
+unsigned long long
+encode2(
   const Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
+  const zfp_exec_params_hip* params,
   Word* d_stream,
-  uint maxbits
+  ushort* d_index,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
 )
 {
-  const int hip_block_size = 128;
-  const dim3 block_size = dim3(hip_block_size, 1, 1);
+  const int cuda_block_size = 128;
+  const dim3 block_size = dim3(cuda_block_size, 1, 1);
 
   // number of zfp blocks to encode
   const size_t blocks = ((size[0] + 3) / 4) *
                         ((size[1] + 3) / 4);
 
   // determine grid of thread blocks
-  const dim3 grid_size = calculate_grid_size(blocks, hip_block_size);
+  const dim3 grid_size = calculate_grid_size(params, blocks, cuda_block_size);
 
   // zero-initialize bit stream (for atomics)
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
   hipMemset(d_stream, 0, stream_bytes);
 
-#ifdef HIP_ZFP_RATE_PRINT
+#ifdef ZFP_HIP_PROFILE
   Timer timer;
   timer.start();
 #endif
 
   // launch GPU kernel
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(hip_encode2<Scalar>), grid_size, block_size, 0, 0, 
+  hipLaunchKernelGGL(HIP_KERNEL_NAME(encode2_kernel<Scalar>), grid_size, block_size, 0, 0, 
     d_data,
     make_size2(size[0], size[1]),
     make_ptrdiff2(stride[0], stride[1]),
     d_stream,
-    maxbits
+    d_index,
+    minbits,
+    maxbits,
+    maxprec,
+    minexp
   );
 
-#ifdef HIP_ZFP_RATE_PRINT
+#ifdef ZFP_HIP_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Encode", "encode2", dim3(size[0], size[1]));
 #endif
 
-  const size_t bits_written = blocks * maxbits;
-
-  return bits_written;
+  return (unsigned long long)stream_bytes * CHAR_BIT;
 }
 
-template <class Scalar>
-size_t encode2(
-  const Scalar* d_data,
-  const size_t size[],
-  const ptrdiff_t stride[],
-  Word* d_stream,
-  uint maxbits
-)
-{
-  return encode2launch<Scalar>(d_data, size, stride, d_stream, maxbits);
-}
-
-} // namespace hipZFP
+} // namespace internal
+} // namespace hip
+} // namespace zfp
 
 #endif

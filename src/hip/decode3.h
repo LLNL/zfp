@@ -1,37 +1,48 @@
 #include "hip/hip_runtime.h"
-#ifndef HIPZFP_DECODE1_H
-#define HIPZFP_DECODE1_H
+#ifndef ZFP_HIP_DECODE3_H
+#define ZFP_HIP_DECODE3_H
 
-#include "shared.h"
-#include "decode.h"
-#include "type_info.h"
-
-namespace hipZFP {
+namespace zfp {
+namespace hip {
+namespace internal {
 
 template <typename Scalar>
 inline __device__ __host__
-void scatter1(const Scalar* q, Scalar* p, ptrdiff_t sx)
+void scatter3(const Scalar* q, Scalar* p, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
 {
-  for (uint x = 0; x < 4; x++, p += sx)
-    *p = *q++;
+  for (uint z = 0; z < 4; z++, p += sz - 4 * sy)
+    for (uint y = 0; y < 4; y++, p += sy - 4 * sx)
+      for (uint x = 0; x < 4; x++, p += sx)
+        *p = *q++;
 }
 
 template <typename Scalar>
 inline __device__ __host__
-void scatter_partial1(const Scalar* q, Scalar* p, uint nx, ptrdiff_t sx)
+void scatter_partial3(const Scalar* q, Scalar* p, uint nx, uint ny, uint nz, ptrdiff_t sx, ptrdiff_t sy, ptrdiff_t sz)
 {
-  for (uint x = 0; x < 4; x++)
-    if (x < nx)
-      p[x * sx] = q[x];
+  for (uint z = 0; z < 4; z++)
+    if (z < nz) {
+      for (uint y = 0; y < 4; y++)
+        if (y < ny) {
+          for (uint x = 0; x < 4; x++)
+            if (x < nx) {
+              *p = q[x + 4 * y + 16 * z];
+              p += sx;
+            }
+          p += sy - nx * sx;
+        }
+      p += sz - ny * sy;
+    }
 }
 
-template <class Scalar>
+// decode kernel
+template <typename Scalar>
 __global__
 void
-hip_decode1(
+decode3_kernel(
   Scalar* d_data,
-  size_t size,
-  ptrdiff_t stride,
+  size3 size,
+  ptrdiff3 stride,
   const Word* d_stream,
   zfp_mode mode,
   int decode_parameter,
@@ -45,7 +56,10 @@ hip_decode1(
   const size_t chunk_idx = threadIdx.x + blockDim.x * blockId;
 
   // number of zfp blocks
-  const size_t blocks = (size + 3) / 4;
+  const size_t bx = (size.x + 3) / 4;
+  const size_t by = (size.y + 3) / 4;
+  const size_t bz = (size.z + 3) / 4;
+  const size_t blocks = bx * by * bz;
 
   // first and last zfp block assigned to thread
   size_t block_idx = chunk_idx * granularity;
@@ -57,8 +71,6 @@ hip_decode1(
 
   // compute bit offset to compressed block
   unsigned long long bit_offset;
-
-  // TODO: move to separate function
   if (mode == zfp_mode_fixed_rate)
     bit_offset = chunk_idx * decode_parameter;
   else if (index_type == zfp_index_offset)
@@ -85,22 +97,26 @@ hip_decode1(
   BlockReader reader(d_stream, bit_offset);
 
   for (; block_idx < block_end; block_idx++) {
-    Scalar fblock[ZFP_1D_BLOCK_SIZE] = { 0 };
-    decode_block<Scalar, ZFP_1D_BLOCK_SIZE>(reader, fblock, decode_parameter, mode);
+    Scalar fblock[ZFP_3D_BLOCK_SIZE] = { 0 };
+    decode_block<Scalar, ZFP_3D_BLOCK_SIZE>(reader, fblock, decode_parameter, mode);
 
-    // logical position in 1d array
-    const size_t pos = block_idx;
-    const ptrdiff_t x = pos * 4;
+    // logical position in 3d array
+    size_t pos = block_idx;
+    const ptrdiff_t x = (pos % bx) * 4; pos /= bx;
+    const ptrdiff_t y = (pos % by) * 4; pos /= by;
+    const ptrdiff_t z = (pos % bz) * 4; pos /= bz;
 
     // offset into field
-    const ptrdiff_t offset = x * stride;
+    const ptrdiff_t offset = x * stride.x + y * stride.y + z * stride.z;
 
     // scatter data from contiguous block
-    const uint nx = (uint)min(size - x, (size_t)4);
-    if (nx < ZFP_1D_BLOCK_SIZE)
-      scatter_partial1(fblock, d_data + offset, nx, stride);
+    const uint nx = (uint)min(size_t(size.x - x), size_t(4));
+    const uint ny = (uint)min(size_t(size.y - y), size_t(4));
+    const uint nz = (uint)min(size_t(size.z - z), size_t(4));
+    if (nx * ny * nz < ZFP_3D_BLOCK_SIZE)
+      scatter_partial3(fblock, d_data + offset, nx, ny, nz, stride.x, stride.y, stride.z);
     else
-      scatter1(fblock, d_data + offset, stride);
+      scatter3(fblock, d_data + offset, stride.x, stride.y, stride.z);
   }
 
   // record maximum bit offset reached by any thread
@@ -108,11 +124,14 @@ hip_decode1(
   atomicMax(max_offset, bit_offset);
 }
 
-template <class Scalar>
-size_t decode1launch(
+// launch decode kernel
+template <typename Scalar>
+unsigned long long
+decode3(
   Scalar* d_data,
   const size_t size[],
   const ptrdiff_t stride[],
+  const zfp_exec_params_hip* params,
   const Word* d_stream,
   zfp_mode mode,
   int decode_parameter,
@@ -122,17 +141,19 @@ size_t decode1launch(
 )
 {
   // block size is fixed to 32 in this version for hybrid index
-  const int hip_block_size = 32;
-  const dim3 block_size = dim3(hip_block_size, 1, 1);
+  const int cuda_block_size = 32;
+  const dim3 block_size = dim3(cuda_block_size, 1, 1);
 
   // number of zfp blocks to decode
-  const size_t blocks = (size[0] + 3) / 4;
+  const size_t blocks = ((size[0] + 3) / 4) *
+                        ((size[1] + 3) / 4) *
+                        ((size[2] + 3) / 4);
 
   // number of chunks of blocks
   const size_t chunks = (blocks + granularity - 1) / granularity;
 
   // determine grid of thread blocks
-  const dim3 grid_size = calculate_grid_size(chunks, hip_block_size);
+  const dim3 grid_size = calculate_grid_size(params, chunks, cuda_block_size);
 
   // storage for maximum bit offset; needed to position stream
   unsigned long long int* d_offset;
@@ -140,16 +161,16 @@ size_t decode1launch(
     return 0;
   hipMemset(d_offset, 0, sizeof(*d_offset));
 
-#ifdef HIP_ZFP_RATE_PRINT
+#ifdef ZFP_HIP_PROFILE
   Timer timer;
   timer.start();
 #endif
 
   // launch GPU kernel
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(hip_decode1<Scalar>), grid_size, block_size, 0, 0, 
+  hipLaunchKernelGGL(HIP_KERNEL_NAME(decode3_kernel<Scalar>), grid_size, block_size, 0, 0, 
     d_data,
-    size[0],
-    stride[0],
+    make_size3(size[0], size[1], size[2]),
+    make_ptrdiff3(stride[0], stride[1], stride[2]),
     d_stream,
     mode,
     decode_parameter,
@@ -159,11 +180,12 @@ size_t decode1launch(
     granularity
   );
 
-#ifdef HIP_ZFP_RATE_PRINT
+#ifdef ZFP_HIP_PROFILE
   timer.stop();
-  timer.print_throughput<Scalar>("Decode", "decode1", dim3(size[0]));
+  timer.print_throughput<Scalar>("Decode", "decode3", dim3(size[0], size[1], size[2]));
 #endif
 
+  // copy bit offset
   unsigned long long int offset;
   hipMemcpy(&offset, d_offset, sizeof(offset), hipMemcpyDeviceToHost);
   hipFree(d_offset);
@@ -171,22 +193,8 @@ size_t decode1launch(
   return offset;
 }
 
-template <class Scalar>
-size_t decode1(
-  Scalar* d_data,
-  const size_t size[],
-  const ptrdiff_t stride[],
-  const Word* d_stream,
-  zfp_mode mode,
-  int decode_parameter,
-  const Word* d_index,
-  zfp_index_type index_type,
-  uint granularity
-)
-{
-  return decode1launch<Scalar>(d_data, size, stride, d_stream, mode, decode_parameter, d_index, index_type, granularity);
-}
-
-} // namespace hipZFP
+} // namespace internal
+} // namespace hip
+} // namespace zfp
 
 #endif

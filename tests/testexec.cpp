@@ -307,8 +307,20 @@ int main(int argc, char* argv[])
         }
       }
 
+      // deallocate buffers
+      for (size_t i = 0; i < exec_modes; i++) {
+        zfp_stream_close(zfp[i]);
+        stream_close(stream[i]);
+        delete[] static_cast<uint64*>(buffer[i]);
+      }
+
       fprintf(stderr, "\n");
     }
+
+    if (data_type == 0)
+      delete[] static_cast<float*>(array);
+    else
+      delete[] static_cast<double*>(array);
   }
 
   // count total tests and failures

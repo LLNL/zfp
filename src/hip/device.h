@@ -1,10 +1,11 @@
-#ifndef ZFP_CUDA_DEVICE_CUH
-#define ZFP_CUDA_DEVICE_CUH
+#include "hip/hip_runtime.h"
+#ifndef ZFP_HIP_DEVICE_H
+#define ZFP_HIP_DEVICE_H
 
 #define ZFP_MAGIC 0x7a667000u
 
 namespace zfp {
-namespace cuda {
+namespace hip {
 namespace internal {
 
 // dummy kernel for warming the GPU
@@ -22,32 +23,32 @@ bool device_init()
 
   // allocate device memory
   unsigned int* d_word = NULL;
-  cudaMalloc(&d_word, sizeof(*d_word));
-  success &= error.check("zfp device init - cudaMalloc");
+  hipMalloc(&d_word, sizeof(*d_word));
+  success &= error.check("zfp device init - hipMalloc");
 
   // launch a dummy kernel
-  device_init_kernel<<<1, 1>>>(d_word);
+  hipLaunchKernelGGL(device_init_kernel, 1, 1, 0, 0, d_word);
   success &= error.check("zfp device init - kernel");
 
   // allocate host memory
   unsigned int* h_word = NULL;
-  cudaMallocHost(&h_word, sizeof(*h_word));
-  success &= error.check("zfp device init - cudaMallocHost");
+  hipHostMalloc(&h_word, sizeof(*h_word));
+  success &= error.check("zfp device init - hipHostMalloc");
 
   // copy from device to host
   if (success) {
-    cudaMemcpy(h_word, d_word, sizeof(*h_word), cudaMemcpyDeviceToHost);
-    success &= error.check("zfp device init - cudaMemcpy");
+    hipMemcpy(h_word, d_word, sizeof(*h_word), hipMemcpyDeviceToHost);
+    success &= error.check("zfp device init - hipMemcpy");
     success &= (*h_word == ZFP_MAGIC);
   }
 
   // free host memory
-  cudaFreeHost(h_word);
-  success &= error.check("zfp device init - cudaFreeHost");
+  hipHostFree(h_word);
+  success &= error.check("zfp device init - hipHostFree");
 
   // free device memory
-  cudaFree(d_word);
-  success &= error.check("zfp device init - cudaFree");
+  hipFree(d_word);
+  success &= error.check("zfp device init - hipFree");
 
   return success;
 }
@@ -78,7 +79,7 @@ bool device_malloc(T** d_pointer, size_t size, const char* what = 0)
 
 #ifdef ZFP_DEBUG
   if (!success) {
-    std::cerr << "zfp_cuda : failed to allocate device memory";
+    std::cerr << "zfp_hip : failed to allocate device memory";
     if (what)
       std::cerr << " for " << what;
     std::cerr << std::endl;
@@ -94,11 +95,11 @@ bool device_copy_from_host(T** d_pointer, size_t size, void* h_pointer, const ch
 {
   if (!device_malloc(d_pointer, size, what))
     return false;
-  if (cudaMemcpy(*d_pointer, h_pointer, size, cudaMemcpyHostToDevice) != cudaSuccess) {
+  if (hipMemcpy(*d_pointer, h_pointer, size, hipMemcpyHostToDevice) != hipSuccess) {
 #ifdef ZFP_DEBUG
-    std::cerr << "zfp_cuda : failed to copy " << (what ? what : "data") << " from host to device" << std::endl;
+    std::cerr << "zfp_hip : failed to copy " << (what ? what : "data") << " from host to device" << std::endl;
 #endif
-    cudaFree(*d_pointer);
+    hipFree(*d_pointer);
     *d_pointer = NULL;
     return false;
   }
@@ -162,14 +163,14 @@ bool setup_device_chunking(size_t* chunk_size, unsigned long long** d_offsets, s
   size_t size = (*chunk_size + 1) * sizeof(unsigned long long);
   if (!device_malloc(d_offsets, size, "offsets"))
     return false;
-  cudaMemset(*d_offsets, 0, size); // ensure offsets are zeroed
+  hipMemset(*d_offsets, 0, size); // ensure offsets are zeroed
 
   // Using CUB for the prefix sum. CUB needs a bit of temp memory too
   size_t tempsize;
-  cub::DeviceScan::InclusiveSum(nullptr, tempsize, *d_offsets, *d_offsets, *chunk_size + 1);
+  hipcub::DeviceScan::InclusiveSum(nullptr, tempsize, *d_offsets, *d_offsets, *chunk_size + 1);
   *lcubtemp = tempsize;
   if (!device_malloc(d_cubtemp, tempsize, "offsets")) {
-    cudaFree(*d_offsets);
+    hipFree(*d_offsets);
     *d_offsets = NULL;
     return false;
   }
@@ -232,13 +233,13 @@ void cleanup_device(void* begin, void* d_begin, size_t bytes = 0)
   if (d_begin != begin) {
     // copy data from device to host and free device memory
     if (begin && bytes)
-      cudaMemcpy(begin, d_begin, bytes, cudaMemcpyDeviceToHost);
+      hipMemcpy(begin, d_begin, bytes, hipMemcpyDeviceToHost);
     free_async(d_begin);
   }
 }
 
 } // namespace internal
-} // namespace cuda
+} // namespace hip
 } // namespace zfp
 
 #endif

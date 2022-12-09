@@ -1,23 +1,36 @@
-#ifndef HIPZFP_SHARED_H
-#define HIPZFP_SHARED_H
+#ifndef ZFP_HIP_SHARED_H
+#define ZFP_HIP_SHARED_H
 
-#include <math.h>
-#include <stdio.h>
+// report throughput
+//#define ZFP_HIP_PROFILE 1
+
+#include <cmath>
+#include <cstdio>
 #include "zfp.h"
-#include "type_info.h"
+#include "traits.h"
 #include "constants.h"
+#ifdef ZFP_HIP_PROFILE
+  #include "timer.h"
+#endif
 
-//#define HIP_ZFP_RATE_PRINT 1
+// we need to know about bitstream, but we don't want duplicate symbols
+#ifndef inline_
+  #define inline_ inline
+#endif
+
+#include "zfp/bitstream.inl"
 
 // bit stream word/buffer type; granularity of stream I/O operations
 typedef unsigned long long Word;
-#define Wsize ((uint)(sizeof(Word) * CHAR_BIT))
 
 #define ZFP_1D_BLOCK_SIZE 4
 #define ZFP_2D_BLOCK_SIZE 16
 #define ZFP_3D_BLOCK_SIZE 64
+#define ZFP_4D_BLOCK_SIZE 256 // not yet supported
 
-namespace hipZFP {
+namespace zfp {
+namespace hip {
+namespace internal {
 
 typedef ulonglong2 size2;
 typedef ulonglong3 size3;
@@ -28,64 +41,6 @@ typedef longlong3 ptrdiff3;
 #define make_ptrdiff2(x, y) make_longlong2(x, y)
 #define make_size3(x, y, z) make_ulonglong3(x, y, z)
 #define make_ptrdiff3(x, y, z) make_longlong3(x, y, z)
-
-#ifdef HIP_ZFP_RATE_PRINT
-// timer for measuring encode/decode throughput
-class Timer {
-public:
-  Timer()
-  {
-    hipEventCreate(&e_start);
-    hipEventCreate(&e_stop);
-  }
-
-  // start timer
-  void start()
-  {
-    hipEventRecord(e_start);
-  }
-
-  // stop timer
-  void stop()
-  {
-    hipEventRecord(e_stop);
-    hipEventSynchronize(e_stop);
-    hipStreamSynchronize(0);
-  }
-
-  // print throughput in GB/s
-  template <typename Scalar>
-  void print_throughput(const char* task, const char* subtask, dim3 dims, FILE* file = stdout) const
-  {
-    float ms = 0;
-    hipEventElapsedTime(&ms, e_start, e_stop);
-    double seconds = double(ms) / 1000.;
-    size_t bytes = size_t(dims.x) * size_t(dims.y) * size_t(dims.z) * sizeof(Scalar);
-    double throughput = bytes / seconds;
-    throughput /= 1024 * 1024 * 1024;
-    fprintf(file, "%s elapsed time: %.5f (s)\n", task, seconds);
-    fprintf(file, "# %s rate: %.2f (GB / sec)\n", subtask, throughput);
-  }
-
-protected:
-  hipEvent_t e_start, e_stop;
-};
-#endif
-
-template <typename T>
-__device__
-void print_bits(const T &bits)
-{
-  const int bit_size = sizeof(T) * 8;
-
-  for (int i = bit_size - 1; i >= 0; --i) {
-    T one = 1;
-    T mask = one << i;
-    T val = (bits & mask) >> i ;
-    printf("%d", (int)val);
-  }
-  printf("\n");
-}
 
 inline __host__ __device__
 size_t round_up(size_t size, size_t unit)
@@ -103,24 +58,21 @@ size_t calc_device_mem(size_t blocks, size_t bits_per_block)
   return words * sizeof(Word);
 }
 
-dim3 get_max_grid_dims()
+dim3 get_max_grid_dims(const zfp_exec_params_hip* params)
 {
-  hipDeviceProp_t prop; 
-  int device = 0;
-  hipGetDeviceProperties(&prop, device);
   dim3 grid_dims;
-  grid_dims.x = prop.maxGridSize[0];
-  grid_dims.y = prop.maxGridSize[1];
-  grid_dims.z = prop.maxGridSize[2];
+  grid_dims.x = params->grid_size[0];
+  grid_dims.y = params->grid_size[1];
+  grid_dims.z = params->grid_size[2];
   return grid_dims;
 }
 
-dim3 calculate_grid_size(size_t threads, size_t hip_block_size)
+dim3 calculate_grid_size(const zfp_exec_params_hip* params, size_t threads, size_t cuda_block_size)
 {
-  // round up to next multiple of hip_block_size
-  threads = round_up(threads, hip_block_size);
-  size_t grids = threads / hip_block_size;
-  dim3 max_grid_dims = get_max_grid_dims();
+  // round up to next multiple of cuda_block_size
+  threads = round_up(threads, cuda_block_size);
+  size_t grids = threads / cuda_block_size;
+  dim3 max_grid_dims = get_max_grid_dims(params);
   int dims = 1;
   // check to see if we need to add more grids
   if (grids > max_grid_dims.x)
@@ -138,7 +90,7 @@ dim3 calculate_grid_size(size_t threads, size_t hip_block_size)
 
   if (dims == 2) {
     float sq_r = sqrt((float)grids);
-    float intpart = 0.;
+    float intpart = 0;
     modf(sq_r, &intpart); 
     uint base = intpart;
     grid_size.x = base; 
@@ -153,7 +105,7 @@ dim3 calculate_grid_size(size_t threads, size_t hip_block_size)
 
   if (dims == 3) {
     float cub_r = pow((float)grids, 1.f/3.f);;
-    float intpart = 0.;
+    float intpart = 0;
     modf(cub_r, &intpart); 
     int base = intpart;
     grid_size.x = base; 
@@ -228,6 +180,8 @@ uint precision<64>(int maxexp, uint maxprec, int minexp)
   return precision(maxexp, maxprec, minexp, 3);
 }
 
-} // namespace hipZFP
+} // namespace internal
+} // namespace hip
+} // namespace zfp
 
 #endif
