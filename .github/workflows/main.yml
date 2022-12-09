@@ -53,6 +53,8 @@ jobs:
           -DCMAKE_C_COMPILER=${{matrix.c_compiler}} 
           -DBUILD_TESTING_FULL=ON 
           -DZFP_WITH_OPENMP=${{matrix.omp}} 
+          -DOpenMP_C=${{matrix.c_compiler}}
+          -DOpenMP_CXX=${{matrix.cxx_compiler}}
           -DBUILD_ZFPY=ON 
           -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
           -DPYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
