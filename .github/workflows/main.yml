@@ -18,7 +18,7 @@ jobs:
           - os: ubuntu-latest
             cxx_compiler: clang++
             c_compiler: clang
-            omp: OFF
+            omp: ON
             target: all
             
           #- os: windows-latest
