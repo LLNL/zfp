@@ -14,7 +14,12 @@ jobs:
             c_compiler: gcc-10
             omp: ON
             target: all
-            
+          
+          - os: ubuntu-latest
+            cxx_compiler: clang++
+            c_compiler: clang
+            omp: ON
+            target: all            
     steps:
       - uses: actions/checkout@v3
 
