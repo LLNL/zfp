@@ -18,7 +18,7 @@ jobs:
           - os: ubuntu-latest
             cxx_compiler: clang++
             c_compiler: clang
-            omp: ON
+            omp: OFF
             target: all
             
           #- os: windows-latest
@@ -41,9 +41,9 @@ jobs:
             target: all
           
           - os: macos-latest
-            cxx_compiler: g++-10
-            c_compiler: gcc-10
-            omp: ON
+            cxx_compiler: g++-11
+            c_compiler: gcc-11
+            omp: OFF
             target: all
     steps:
       - uses: actions/checkout@v3
