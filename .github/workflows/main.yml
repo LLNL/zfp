@@ -45,22 +45,22 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: >
           cmake ${{github.workspace}} 
-            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} 
-            -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} 
-            -DCMAKE_C_COMPILER=${{matrix.c_compiler}} 
-            -DBUILD_TESTING_FULL=ON 
-            -DZFP_WITH_OPENMP=${{matrix.omp}} 
-            -DBUILD_ZFPY=ON 
-            -DPYTHON_INCLUDE_DIR=${{env.pyinc_dir}} 
-            -DPYTHON_LIBRARY=${{env.pylib_dir}}
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} 
+          -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} 
+          -DCMAKE_C_COMPILER=${{matrix.c_compiler}} 
+          -DBUILD_TESTING_FULL=ON 
+          -DZFP_WITH_OPENMP=${{matrix.omp}} 
+          -DBUILD_ZFPY=ON 
+          -DPYTHON_INCLUDE_DIR=${{env.pyinc_dir}} 
+          -DPYTHON_LIBRARY=${{env.pylib_dir}}
         
       - name: Build
         id: build
         working-directory: ${{github.workspace}}/build
         run: >
           cmake --build . 
-            --target ${{matrix.target}} 
-            --config ${{env.BUILD_TYPE}}
+          --target ${{matrix.target}} 
+          --config ${{env.BUILD_TYPE}}
 
       - name: Run Tests
         id: test
