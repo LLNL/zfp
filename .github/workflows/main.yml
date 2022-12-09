@@ -37,17 +37,30 @@ jobs:
       - name: Setup Build
         run: |
           mkdir ${{github.workspace}}/build
+          "pyinc_dir=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")" >> $GITHUB_ENV
+          "pylib_dir=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")" >> $GITHUB_ENV
  
       - name: Run CMake
         id: cmake
         working-directory: ${{github.workspace}}/build
-        run: | 
-          cmake ${{github.workspace}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DBUILD_TESTING_FULL=ON -DZFP_WITH_OPENMP=${{matrix.omp}} -DBUILD_ZFPY=ON -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")  -DPYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+        run: >
+          cmake ${{github.workspace}} 
+            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} 
+            -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} 
+            -DCMAKE_C_COMPILER=${{matrix.c_compiler}} 
+            -DBUILD_TESTING_FULL=ON 
+            -DZFP_WITH_OPENMP=${{matrix.omp}} 
+            -DBUILD_ZFPY=ON 
+            -DPYTHON_INCLUDE_DIR=${{env.pyinc_dir}} 
+            -DPYTHON_LIBRARY=${{env.pylib_dir}}
         
       - name: Build
         id: build
         working-directory: ${{github.workspace}}/build
-        run: cmake --build . --target ${{matrix.target}} --config ${{env.BUILD_TYPE}}
+        run: >
+          cmake --build . 
+            --target ${{matrix.target}} 
+            --config ${{env.BUILD_TYPE}}
 
       - name: Run Tests
         id: test
