@@ -19,6 +19,7 @@ jobs:
             cxx_compiler: clang++
             c_compiler: clang
             omp: ON
+            omp_flags: -DOpenMP_C=clang -DOpenMP_CXX=clang++ -DOpenMP_C_FLAGS="-fopenmp=libomp -Wno-unused-command-line-argument" -DOpenMP_CXX_FLAGS="-fopenmp=libomp -Wno-unused-command-line-argument" -DOpenMP_C_LIB_NAMES=libomp -DOpenMP_CXX_LIB_NAMES=libomp -DOpenMP_libomp_LIBRARY=libomp
             target: all            
     steps:
       - uses: actions/checkout@v3
@@ -43,7 +44,6 @@ jobs:
         run: |
           mkdir ${{github.workspace}}/build
 
- 
       - name: Run CMake
         id: cmake
         working-directory: ${{github.workspace}}/build
@@ -54,13 +54,7 @@ jobs:
           -DCMAKE_C_COMPILER=${{matrix.c_compiler}} 
           -DBUILD_TESTING_FULL=ON 
           -DZFP_WITH_OPENMP=${{matrix.omp}} 
-          -DOpenMP_C=${{matrix.c_compiler}}
-          -DOpenMP_CXX=${{matrix.cxx_compiler}}
-          -DOpenMP_C_FLAGS="-fopenmp=libomp -Wno-unused-command-line-argument"
-          -DOpenMP_CXX_FLAGS="-fopenmp=libomp -Wno-unused-command-line-argument"
-          -DOpenMP_C_LIB_NAMES=libomp
-          -DOpenMP_CXX_LIB_NAMES=libomp
-          -DOpenMP_libomp_LIBRARY=libomp
+          ${{matrix.omp_flags}}
           -DBUILD_ZFPY=ON 
           -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
           -DPYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
