@@ -24,13 +24,13 @@ jobs:
           - os: macos-latest
             cxx_compiler: clang++
             c_compiler: clang
-            omp: OFF
+            omp: ON
             target: all
           
           - os: macos-latest
             cxx_compiler: g++-11
             c_compiler: gcc-11
-            omp: OFF
+            omp: ON
             target: all
     steps:
       - uses: actions/checkout@v3
