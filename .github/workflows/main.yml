@@ -27,12 +27,10 @@ jobs:
             omp: ON
             target: all
 
-          # OpenMP on mac clang requires manually setting flags
           - os: macos-latest
             cxx_compiler: clang++
             c_compiler: clang
-            omp: ON
-            omp_flags: -DOpenMP_CXX=clang++ -DOpenMP_CXX_FLAGS="-Xclang -fopenmp -I $(brew --prefix)/cellar/libomp/15.0.6/include -L $(brew --prefix)/cellar/libomp/15.0.6/lib" -DOpenMP_CXX_LIB_NAMES=libomp -DOpenMP_C=clang -DOpenMP_C_FLAGS="-Xclang -fopenmp -I $(brew --prefix)/cellar/libomp/15.0.6/include -L $(brew --prefix)/cellar/libomp/15.0.6/lib" -DOpenMP_C_LIB_NAMES=libomp -DOpenMP_libomp_LIBRARY=omp
+            omp: OFF
             target: all
 
     steps:
@@ -60,7 +58,7 @@ jobs:
 
       - name: Run CMake
         id: cmake
-        run: cmake -B ${{github.workspace}}/build ${{matrix.generator}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DBUILD_TESTING_FULL=ON -DZFP_WITH_OPENMP=${{matrix.omp}} ${{matrix.omp_flags}} -DBUILD_ZFPY=ON -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")  -DPYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+        run: cmake -B ${{github.workspace}}/build ${{matrix.generator}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DBUILD_TESTING_FULL=ON -DZFP_WITH_OPENMP=${{matrix.omp}} -DBUILD_ZFPY=ON -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")  -DPYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
         
       - name: Build
         id: build
