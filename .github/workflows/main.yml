@@ -9,30 +9,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            cxx_compiler: g++-10
-            c_compiler: gcc-10
-            omp: ON
-            target: all
-            
-          - os: ubuntu-latest
-            cxx_compiler: clang++
-            c_compiler: clang
-            omp: ON
-            target: all
+          #- os: ubuntu-latest
+          #  cxx_compiler: g++-10
+          #  c_compiler: gcc-10
+          #  omp: ON
+          #  target: all
+          #  
+          #- os: ubuntu-latest
+          #  cxx_compiler: clang++
+          #  c_compiler: clang
+          #  omp: ON
+          #  target: all
             
           - os: macos-latest
             cxx_compiler: clang++
             c_compiler: clang
             omp: ON
-            omp_flags: -DOpenMP_CXX=clang++ -DOpenMP_CXX_FLAGS="-Xclang -fopenmp -I/usr/local/Cellar/libomp/14.0.0/include" -DOpenMP_CXX_LIB_NAMES=libomp -DOpenMP_C=clang -DOpenMP_C_FLAGS="-Xclang -fopenmp -I/usr/local/Cellar/libomp/14.0.0/include" -DOpenMP_C_LIB_NAMES=libomp -DOpenMP_libomp_LIBRARY=omp
+            omp_flags: -DOpenMP_CXX=clang++ -DOpenMP_CXX_FLAGS="-Xclang -fopenmp -I $(brew --prefix)/libomp/14.0.0/include" -DOpenMP_CXX_LIB_NAMES=libomp -DOpenMP_C=clang -DOpenMP_C_FLAGS="-Xclang -fopenmp -I $(brew --prefix)/libomp/14.0.0/include" -DOpenMP_C_LIB_NAMES=libomp -DOpenMP_libomp_LIBRARY=omp
             target: all
 
-          - os: macos-latest
-            cxx_compiler: g++-11
-            c_compiler: gcc-11
-            omp: ON
-            target: all
+          #- os: macos-latest
+          #  cxx_compiler: g++-11
+          #  c_compiler: gcc-11
+          #  omp: ON
+          #  target: all
     steps:
       - uses: actions/checkout@v3
 
@@ -53,7 +53,10 @@ jobs:
 
       - name: Setup OpenMP (MacOS)
         if: ${{matrix.os == 'macos-latest'}}
-        run: brew install libomp
+        run: |
+          brew install libomp
+          echo $(brew --prefix)/libomp/14.0.0/include
+          ls $(brew --prefix)/libomp
 
       - name: Run CMake
         id: cmake
@@ -63,7 +66,7 @@ jobs:
         id: build
         run: cmake --build ${{github.workspace}}/build --target ${{matrix.target}} --config ${{env.BUILD_TYPE}}
 
-      - name: Run Tests
-        id: test
-        working-directory: ${{github.workspace}}/build
-        run: ctest -C ${{env.BUILD_TYPE}} -VV
+      #- name: Run Tests
+      #  id: test
+      #  working-directory: ${{github.workspace}}/build
+      #  run: ctest -C ${{env.BUILD_TYPE}} -VV
