@@ -37,6 +37,7 @@ void scatter_partial3(const Scalar* q, Scalar* p, uint nx, uint ny, uint nz, ptr
 // decode kernel
 template <typename Scalar>
 __global__
+__launch_bounds__(256, 1) // avoid register spillage
 void
 decode3_kernel(
   Scalar* d_data,

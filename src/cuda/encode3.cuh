@@ -43,6 +43,7 @@ void gather_partial3(Scalar* q, const Scalar* p, uint nx, uint ny, uint nz, ptrd
 // encode kernel
 template <typename Scalar>
 __global__
+__launch_bounds__(256, 1) // avoid register spillage
 void
 encode3_kernel(
   const Scalar* d_data, // field data device pointer
