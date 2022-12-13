@@ -5,7 +5,7 @@
 cuda-10.1.168_build:
     variables:
         ci_cmake: "cmake/3.9.2"
-        ci_cmp_mod: "cuda/10.1.168"
+        ci_cmp_mod: "cuda/11.6.1"
     extends: [.cuda, .pascal_build_gpu]
     needs: []
 
