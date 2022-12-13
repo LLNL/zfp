@@ -143,7 +143,7 @@ decode1(
     return 0;
   hipMemset(d_offset, 0, sizeof(*d_offset));
 
-#ifdef ZFP_HIP_PROFILE
+#ifdef ZFP_WITH_HIP_PROFILE
   Timer timer;
   timer.start();
 #endif
@@ -162,7 +162,7 @@ decode1(
     granularity
   );
 
-#ifdef ZFP_HIP_PROFILE
+#ifdef ZFP_WITH_HIP_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Decode", "decode1", dim3(size[0]));
 #endif

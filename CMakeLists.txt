@@ -139,15 +139,17 @@ set(ZFP_ROUNDING_MODE ZFP_ROUND_NEVER CACHE STRING
   "Rounding mode for reducing bias")
 set_property(CACHE ZFP_ROUNDING_MODE PROPERTY STRINGS "ZFP_ROUND_NEVER;ZFP_ROUND_FIRST;ZFP_ROUND_LAST")
 
+option(ZFP_WITH_TIGHT_ERROR "Reduce slack in absolute errors" OFF)
+
 option(ZFP_WITH_DAZ "Treat subnormals as zero to avoid overflow" OFF)
 
 option(ZFP_WITH_CUDA "Enable CUDA parallel compression" OFF)
 option(ZFP_WITH_HIP "Enable HIP parallel compression" OFF)
 
+# Advanced options
+
 option(ZFP_WITH_BIT_STREAM_STRIDED "Enable strided access for progressive zfp streams" OFF)
 mark_as_advanced(ZFP_WITH_BIT_STREAM_STRIDED)
-
-option(ZFP_WITH_TIGHT_ERROR "Reduce slack in absolute errors" OFF)
 
 option(ZFP_WITH_ALIGNED_ALLOC "Enable aligned memory allocation" OFF)
 mark_as_advanced(ZFP_WITH_ALIGNED_ALLOC)
@@ -161,6 +163,12 @@ mark_as_advanced(ZFP_WITH_CACHE_FAST_HASH)
 
 option(ZFP_WITH_CACHE_PROFILE "Count cache misses" OFF)
 mark_as_advanced(ZFP_WITH_CACHE_PROFILE)
+
+option(ZFP_WITH_CUDA_PROFILE "Report CUDA throughput" OFF)
+mark_as_advanced(ZFP_CUDA_PROFILE)
+
+option(ZFP_WITH_HIP_PROFILE "Report HIP throughput" OFF)
+mark_as_advanced(ZFP_HIP_PROFILE)
 
 # Handle compile-time macros
 
@@ -273,6 +281,14 @@ endif()
 
 if(ZFP_WITH_CACHE_PROFILE)
   list(APPEND zfp_compressed_array_defs ZFP_WITH_CACHE_PROFILE)
+endif()
+
+if(ZFP_WITH_CUDA_PROFILE)
+  list(APPEND zfp_private_defs ZFP_WITH_CUDA_PROFILE)
+endif()
+
+if(ZFP_WITH_HIP_PROFILE)
+  list(APPEND zfp_private_defs ZFP_WITH_HIP_PROFILE)
 endif()
 
 list(APPEND ppm_private_defs PPM_CHROMA=${PPM_CHROMA})

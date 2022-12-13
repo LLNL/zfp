@@ -1,15 +1,15 @@
 #ifndef ZFP_HIP_SHARED_H
 #define ZFP_HIP_SHARED_H
 
-// report throughput
-//#define ZFP_HIP_PROFILE 1
+// report throughput; set via CMake
+// #define ZFP_WITH_HIP_PROFILE 1
 
 #include <cmath>
 #include <cstdio>
 #include "zfp.h"
 #include "traits.h"
 #include "constants.h"
-#ifdef ZFP_HIP_PROFILE
+#ifdef ZFP_WITH_HIP_PROFILE
   #include "timer.h"
 #endif
 

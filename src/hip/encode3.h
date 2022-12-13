@@ -44,6 +44,7 @@ void gather_partial3(Scalar* q, const Scalar* p, uint nx, uint ny, uint nz, ptrd
 // encode kernel
 template <typename Scalar>
 __global__
+__launch_bounds__(256, 1) // avoid register spillage
 void
 encode3_kernel(
   const Scalar* d_data, // field data device pointer
@@ -132,7 +133,7 @@ encode3(
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
   hipMemset(d_stream, 0, stream_bytes);
 
-#ifdef ZFP_HIP_PROFILE
+#ifdef ZFP_WITH_HIP_PROFILE
   Timer timer;
   timer.start();
 #endif
@@ -150,7 +151,7 @@ encode3(
     minexp
   );
 
-#ifdef ZFP_HIP_PROFILE
+#ifdef ZFP_WITH_HIP_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Encode", "encode3", dim3(size[0], size[1], size[2]));
 #endif

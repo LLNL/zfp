@@ -38,6 +38,7 @@ void scatter_partial3(const Scalar* q, Scalar* p, uint nx, uint ny, uint nz, ptr
 // decode kernel
 template <typename Scalar>
 __global__
+__launch_bounds__(256, 1) // avoid register spillage
 void
 decode3_kernel(
   Scalar* d_data,
@@ -161,7 +162,7 @@ decode3(
     return 0;
   hipMemset(d_offset, 0, sizeof(*d_offset));
 
-#ifdef ZFP_HIP_PROFILE
+#ifdef ZFP_WITH_HIP_PROFILE
   Timer timer;
   timer.start();
 #endif
@@ -180,7 +181,7 @@ decode3(
     granularity
   );
 
-#ifdef ZFP_HIP_PROFILE
+#ifdef ZFP_WITH_HIP_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Decode", "decode3", dim3(size[0], size[1], size[2]));
 #endif

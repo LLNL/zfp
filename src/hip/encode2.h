@@ -120,7 +120,7 @@ encode2(
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
   hipMemset(d_stream, 0, stream_bytes);
 
-#ifdef ZFP_HIP_PROFILE
+#ifdef ZFP_WITH_HIP_PROFILE
   Timer timer;
   timer.start();
 #endif
@@ -138,7 +138,7 @@ encode2(
     minexp
   );
 
-#ifdef ZFP_HIP_PROFILE
+#ifdef ZFP_WITH_HIP_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Encode", "encode2", dim3(size[0], size[1]));
 #endif

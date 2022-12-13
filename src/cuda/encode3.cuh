@@ -132,7 +132,7 @@ encode3(
   const size_t stream_bytes = calc_device_mem(blocks, maxbits);
   cudaMemset(d_stream, 0, stream_bytes);
 
-#ifdef ZFP_CUDA_PROFILE
+#ifdef ZFP_WITH_CUDA_PROFILE
   Timer timer;
   timer.start();
 #endif
@@ -150,7 +150,7 @@ encode3(
     minexp
   );
 
-#ifdef ZFP_CUDA_PROFILE
+#ifdef ZFP_WITH_CUDA_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Encode", "encode3", dim3(size[0], size[1], size[2]));
 #endif

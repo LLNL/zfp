@@ -1,15 +1,15 @@
 #ifndef ZFP_CUDA_SHARED_CUH
 #define ZFP_CUDA_SHARED_CUH
 
-// report throughput
-//#define ZFP_CUDA_PROFILE 1
+// report throughput; set via CMake
+// #define ZFP_WITH_CUDA_PROFILE 1
 
 #include <cmath>
 #include <cstdio>
 #include "zfp.h"
 #include "traits.cuh"
 #include "constants.cuh"
-#ifdef ZFP_CUDA_PROFILE
+#ifdef ZFP_WITH_CUDA_PROFILE
   #include "timer.cuh"
 #endif
 

@@ -151,7 +151,7 @@ decode2(
     return 0;
   cudaMemset(d_offset, 0, sizeof(*d_offset));
 
-#ifdef ZFP_CUDA_PROFILE
+#ifdef ZFP_WITH_CUDA_PROFILE
   Timer timer;
   timer.start();
 #endif
@@ -170,7 +170,7 @@ decode2(
     granularity
   );
 
-#ifdef ZFP_CUDA_PROFILE
+#ifdef ZFP_WITH_CUDA_PROFILE
   timer.stop();
   timer.print_throughput<Scalar>("Decode", "decode2", dim3(size[0], size[1]));
 #endif
