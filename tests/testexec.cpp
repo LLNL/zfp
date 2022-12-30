@@ -95,7 +95,7 @@ test(zfp_mode mode, int param, zfp_stream* zfp, const zfp_field* field, zfp_exec
   uint32 zsum = checksum(stream_data(zfp_stream_bit_stream(zfp)), zsize);
 
   if (zsize > stream_capacity(zfp_stream_bit_stream(zfp))) {
-    fprintf(stderr, "ERROR: buffer overrun\n");
+    fprintf(stderr, "ERROR: buffer overrun (%lu > %lu)\n", (unsigned long)zsize, (unsigned long)stream_capacity(zfp_stream_bit_stream(zfp)));
     return 1;
   }
 
@@ -257,7 +257,9 @@ int main(int argc, char* argv[])
       }
 
       // allocate compressed-data buffers and bit streams
-      size_t bufsize = 2 * n * sizeof(uint64);
+      size_t blocks = zfp_field_blocks(field);
+      size_t scalars = blocks << (2 * dims);
+      size_t bufsize = 2 * scalars * sizeof(uint64);
       void* buffer[exec_modes];
       bitstream* stream[exec_modes];
       zfp_stream* zfp[exec_modes];
