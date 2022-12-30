@@ -8,16 +8,11 @@ namespace hip {
 namespace internal {
 
 // map two's complement signed integer to negabinary unsigned integer
+template <typename Int, typename UInt>
 inline __device__
-unsigned long long int int2uint(const long long int x)
+UInt int2uint(const Int x)
 {
-  return ((unsigned long long)x + 0xaaaaaaaaaaaaaaaaull) ^ 0xaaaaaaaaaaaaaaaaull;
-}
-
-inline __device__
-unsigned int int2uint(const int x)
-{
-  return ((unsigned int)x + 0xaaaaaaaau) ^ 0xaaaaaaaau;
+  return ((UInt)x + traits<Int>::nbmask) ^ traits<Int>::nbmask;
 }
 
 template <typename Scalar>
@@ -68,7 +63,7 @@ template <typename Scalar>
 inline __device__
 int exponent(Scalar x)
 {
-  int e = -get_ebias<Scalar>();
+  int e = -traits<Scalar>::ebias;
 #ifdef ZFP_WITH_DAZ
   // treat subnormals as zero; resolves issue #119 by avoiding overflow
   if (x >= get_scalar_min<Scalar>())
@@ -77,7 +72,7 @@ int exponent(Scalar x)
   if (x > 0) {
     int e = get_exponent(x);
     // clamp exponent in case x is subnormal
-    return max(e, 1 - get_ebias<Scalar>());
+    return max(e, 1 - traits<Scalar>::ebias);
   }
 #endif
   return e;
@@ -103,14 +98,14 @@ template <>
 inline __device__
 float quantize_factor<float>(const int& exponent, float)
 {
-  return ldexpf(1.0f, get_precision<float>() - 2 - exponent);
+  return ldexpf(1.0f, traits<float>::precision - 2 - exponent);
 }
 
 template <>
 inline __device__
 double quantize_factor<double>(const int& exponent, double)
 {
-  return ldexp(1.0, get_precision<double>() - 2 - exponent);
+  return ldexp(1.0, traits<double>::precision - 2 - exponent);
 }
 
 template <typename Scalar, typename Int, int BlockSize>
@@ -209,7 +204,7 @@ void fwd_round(Int* iblock, uint maxprec)
 {
   // add or subtract 1/6 ulp to unbias errors
   if (maxprec < (uint)(CHAR_BIT * sizeof(Int))) {
-    Int bias = (static_cast<typename zfp_traits<Int>::UInt>(NBMASK) >> 2) >> maxprec;
+    Int bias = (traits<Int>::nbmask >> 2) >> maxprec;
     uint n = BlockSize;
     if (maxprec & 1u)
       do *iblock++ += bias; while (--n);
@@ -231,7 +226,7 @@ void fwd_order(UInt* ublock, const Int* iblock)
   #pragma unroll BlockSize
 #endif
   for (int i = 0; i < BlockSize; i++)
-    ublock[i] = int2uint(iblock[perm[i]]);
+    ublock[i] = int2uint<Int, UInt>(iblock[perm[i]]);
 }
 
 template <typename Int, int BlockSize> 
@@ -248,7 +243,7 @@ uint encode_ints(Int* iblock, BlockWriter& writer, uint maxbits, uint maxprec)
 #endif
 
   // reorder signed coefficients and convert to unsigned integer
-  typedef typename zfp_traits<Int>::UInt UInt;
+  typedef typename traits<Int>::UInt UInt;
   UInt ublock[BlockSize];
   fwd_order<Int, UInt, BlockSize>(ublock, iblock);
 
@@ -289,14 +284,14 @@ uint encode_block(
   int minexp
 )
 {
-  typedef typename zfp_traits<Scalar>::Int Int;
+  typedef typename traits<Scalar>::Int Int;
 
   uint bits = 1;
   const int emax = max_exponent<Scalar, BlockSize>(fblock);
   maxprec = precision<BlockSize>(emax, maxprec, minexp);
-  uint e = maxprec ? emax + get_ebias<Scalar>() : 0;
+  uint e = maxprec ? emax + traits<Scalar>::ebias : 0;
   if (e) {
-    bits += get_ebits<Scalar>();
+    bits += traits<Scalar>::ebits;
     writer.write_bits(2 * e + 1, bits);
     Int iblock[BlockSize];
     fwd_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);

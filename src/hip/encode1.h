@@ -102,7 +102,7 @@ encode1(
   const dim3 grid_size = calculate_grid_size(params, blocks, cuda_block_size);
 
   // zero-initialize bit stream (for atomics)
-  const size_t stream_bytes = calc_device_mem(blocks, maxbits);
+  const size_t stream_bytes = calculate_device_memory(blocks, maxbits);
   hipMemset(d_stream, 0, stream_bytes);
 
 #ifdef ZFP_WITH_HIP_PROFILE

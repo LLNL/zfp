@@ -8,16 +8,11 @@ namespace hip {
 namespace internal {
 
 // map negabinary unsigned integer to two's complement signed integer
+template <typename Int, typename UInt>
 inline __device__
-long long int uint2int(unsigned long long int x)
+Int uint2int(UInt x)
 {
-  return (long long int)((x ^ 0xaaaaaaaaaaaaaaaaull) - 0xaaaaaaaaaaaaaaaaull);
-}
-
-inline __device__
-int uint2int(unsigned int x)
-{
-  return (int)((x ^ 0xaaaaaaaau) - 0xaaaaaaaau);
+  return (Int)((x ^ traits<Int>::nbmask) - traits<Int>::nbmask);
 }
 
 template <typename Int, typename Scalar>
@@ -158,14 +153,14 @@ void inv_order(const UInt* ublock, Int* iblock)
   #pragma unroll BlockSize
 #endif
   for (int i = 0; i < BlockSize; i++)
-    iblock[perm[i]] = uint2int(ublock[i]);
+    iblock[perm[i]] = uint2int<Int, UInt>(ublock[i]);
 }
 
 template <typename Scalar, int BlockSize, typename UInt, typename Int>
 inline __device__
 uint decode_ints(BlockReader& reader, const uint maxbits, Int* iblock)
 {
-  const uint intprec = get_precision<Int>();
+  const uint intprec = traits<Int>::precision;
   const uint kmin = 0;
   UInt ublock[BlockSize] = {0};
   uint bits = maxbits;
@@ -206,7 +201,7 @@ inline __device__
 uint decode_ints_prec(BlockReader& reader, const uint maxprec, Int* iblock)
 {
   const BlockReader::Offset offset = reader.rtell();
-  const uint intprec = get_precision<Int>();
+  const uint intprec = traits<Int>::precision;
   const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   UInt ublock[BlockSize] = {0};
   uint k, n;
@@ -242,15 +237,15 @@ template <typename Scalar, int BlockSize>
 __device__
 void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp_mode mode)
 {
-  typedef typename zfp_traits<Scalar>::UInt UInt;
-  typedef typename zfp_traits<Scalar>::Int Int;
+  typedef typename traits<Scalar>::UInt UInt;
+  typedef typename traits<Scalar>::Int Int;
 
   uint bits = 0;
-  if (is_int<Scalar>() || (bits++, reader.read_bit())) {
+  if (traits<Scalar>::is_int || (bits++, reader.read_bit())) {
     int emax = 0;
-    if (!is_int<Scalar>()) {
-      bits += get_ebits<Scalar>();
-      emax = (int)reader.read_bits(bits - 1) - (int)get_ebias<Scalar>();
+    if (!traits<Scalar>::is_int) {
+      bits += traits<Scalar>::ebits;
+      emax = (int)reader.read_bits(bits - 1) - traits<Scalar>::ebias;
     }
 
     Int* iblock = (Int*)fblock;
@@ -269,7 +264,7 @@ void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp
       case zfp_mode_fixed_accuracy:
         // decode_parameter contains minexp
         minexp = decode_parameter;
-        maxprec = precision<BlockSize>(emax, get_precision<Scalar>(), minexp);
+        maxprec = precision<BlockSize>(emax, traits<Scalar>::precision, minexp);
         bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
         break;
       default:
@@ -280,7 +275,7 @@ void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp
     inv_transform<BlockSize> trans;
     trans.inv_xform(iblock);
 
-    if (!is_int<Scalar>()) {
+    if (!traits<Scalar>::is_int) {
       // cast to floating type
       Scalar scale = dequantize<Int, Scalar>(1, emax);
 #if CUDART_VERSION < 8000

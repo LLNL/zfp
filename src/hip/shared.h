@@ -42,6 +42,7 @@ typedef longlong3 ptrdiff3;
 #define make_size3(x, y, z) make_ulonglong3(x, y, z)
 #define make_ptrdiff3(x, y, z) make_longlong3(x, y, z)
 
+// round size up to the next multiple of unit
 inline __host__ __device__
 size_t round_up(size_t size, size_t unit)
 {
@@ -50,76 +51,46 @@ size_t round_up(size_t size, size_t unit)
   return size;
 }
 
-size_t calc_device_mem(size_t blocks, size_t bits_per_block)
+// size / unit rounded up to the next integer
+inline __host__ __device__
+size_t count_up(size_t size, size_t unit)
+{
+  return (size + unit - 1) / unit; 
+}
+
+size_t calculate_device_memory(size_t blocks, size_t bits_per_block)
 {
   const size_t bits_per_word = sizeof(Word) * CHAR_BIT;
   const size_t bits = blocks * bits_per_block;
-  const size_t words = (bits + bits_per_word - 1) / bits_per_word;
+  const size_t words = count_up(bits, bits_per_word);
   return words * sizeof(Word);
-}
-
-dim3 get_max_grid_dims(const zfp_exec_params_hip* params)
-{
-  dim3 grid_dims;
-  grid_dims.x = params->grid_size[0];
-  grid_dims.y = params->grid_size[1];
-  grid_dims.z = params->grid_size[2];
-  return grid_dims;
 }
 
 dim3 calculate_grid_size(const zfp_exec_params_hip* params, size_t threads, size_t cuda_block_size)
 {
-  // round up to next multiple of cuda_block_size
-  threads = round_up(threads, cuda_block_size);
-  size_t grids = threads / cuda_block_size;
-  dim3 max_grid_dims = get_max_grid_dims(params);
-  int dims = 1;
-  // check to see if we need to add more grids
-  if (grids > max_grid_dims.x)
-    dims = 2; 
-  if (grids > max_grid_dims.x * max_grid_dims.y)
-    dims = 3;
+  // compute minimum number of thread blocks needed
+  const size_t blocks = count_up(threads, cuda_block_size);
+  const dim3 max_grid_dims(params->grid_size[0], params->grid_size[1], params->grid_size[2]);
 
-  dim3 grid_size;
-  grid_size.x = 1;
-  grid_size.y = 1;
-  grid_size.z = 1;
- 
-  if (dims == 1)
-    grid_size.x = grids; 
-
-  if (dims == 2) {
-    float sq_r = sqrt((float)grids);
-    float intpart = 0;
-    modf(sq_r, &intpart); 
-    uint base = intpart;
-    grid_size.x = base; 
-    grid_size.y = base; 
-    // figure out how many y to add
-    uint rem = threads - base * base;
-    uint y_rows = rem / base;
-    if (rem % base != 0)
-      y_rows++;
-    grid_size.y += y_rows; 
+  // compute grid dimensions
+  if (blocks <= (size_t)max_grid_dims.x) {
+    // 1D grid
+    return dim3(blocks);
   }
-
-  if (dims == 3) {
-    float cub_r = pow((float)grids, 1.f/3.f);;
-    float intpart = 0;
-    modf(cub_r, &intpart); 
-    int base = intpart;
-    grid_size.x = base; 
-    grid_size.y = base; 
-    grid_size.z = base; 
-    // figure out how many z to add
-    uint rem = threads - base * base * base;
-    uint z_rows = rem / (base * base);
-    if (rem % (base * base) != 0)
-      z_rows++;
-    grid_size.z += z_rows; 
+  else if (blocks <= (size_t)max_grid_dims.x * max_grid_dims.y) {
+    // 2D grid
+    const size_t base = (size_t)std::sqrt((double)blocks);
+    return dim3(base, round_up(blocks, base));
   }
-
-  return grid_size;
+  else if (blocks <= (size_t)max_grid_dims.x * max_grid_dims.y * max_grid_dims.z) {
+    // 3D grid
+    const size_t base = (size_t)std::cbrt((double)blocks);
+    return dim3(base, base, round_up(blocks, base * base));
+  }
+  else {
+    // too many thread blocks
+    return dim3(0, 0, 0);
+  }
 }
 
 // coefficient permutations
