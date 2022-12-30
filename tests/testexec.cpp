@@ -69,6 +69,12 @@ test(zfp_mode mode, int param, zfp_stream* zfp, const zfp_field* field, zfp_exec
   uint prec = param;
   double tol = std::ldexp(1., -param);
 
+  if (exec == zfp_exec_serial) {
+    static const char* type_string[] = {
+      "none", "int32", "int64", "float", "double"
+    };
+    fprintf(stderr, "type=%s dims=%u ", type_string[zfp_field_type(field)], zfp_field_dimensionality(field));
+  }
   switch (mode) {
     case zfp_mode_fixed_rate:
       zfp_stream_set_rate(zfp, rate, zfp_field_type(field), zfp_field_dimensionality(field), zfp_false);
@@ -264,7 +270,7 @@ int main(int argc, char* argv[])
       bitstream* stream[exec_modes];
       zfp_stream* zfp[exec_modes];
       for (size_t i = 0; i < exec_modes; i++) {
-        buffer[i] = new uint64[2 * n];
+        buffer[i] = new uint64[2 * scalars];
         stream[i] = stream_open(buffer[i], bufsize);
         zfp[i] = zfp_stream_open(stream[i]);
         if (!zfp_stream_set_execution(zfp[i], exec[i])) {
