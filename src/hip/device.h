@@ -190,7 +190,7 @@ void* setup_device_field_compress(const zfp_field* field, void*& d_begin)
     // GPU implementation currently requires contiguous field
     if (zfp_field_is_contiguous(field)) {
       // copy field from host to device
-      size_t size = zfp_field_size(field, NULL) * zfp_type_size(field->type);
+      size_t size = zfp_field_size_bytes(field);
       void* h_begin = zfp_field_begin(field);
       if (!device_copy_from_host(&d_begin, size, h_begin, "field"))
         return NULL;
@@ -214,7 +214,7 @@ void* setup_device_field_decompress(const zfp_field* field, void*& d_begin)
     // GPU implementation currently requires contiguous field
     if (zfp_field_is_contiguous(field)) {
       // allocate device memory for decompressed field
-      size_t size = zfp_field_size(field, NULL) * zfp_type_size(field->type);
+      size_t size = zfp_field_size_bytes(field);
       if (!device_malloc(&d_begin, size, "field"))
         return NULL;
       void* h_begin = zfp_field_begin(field);
