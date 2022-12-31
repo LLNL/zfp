@@ -99,7 +99,7 @@ namespace cg = cooperative_groups;
                     mask &= 0xffffffff << misaligned;
                 if ((i + 1) * 32 > misaligned + length_bits)
                     mask &= ~(0xffffffff << ((misaligned + length_bits) & 31));
-                
+
                 atomicAdd(sm_out + off_smout + i, v1 & mask);
             }
         }
@@ -327,13 +327,13 @@ namespace cg = cooperative_groups;
       size_t chunk_size;
       size_t lcubtemp;
       void *d_cubtemp;
-    
+
       if (internal::setup_device_chunking(&chunk_size, &d_offsets, &lcubtemp, &d_cubtemp, processors)) {
         // in-place compact variable-length blocks stored as fixed-length records
-        for (size_t i = 0; i < blocks; i += chunk_size) { 
+        for (size_t i = 0; i < blocks; i += chunk_size) {
           int cur_blocks = chunk_size;
           bool last_chunk = false;
-          if (i + chunk_size > blocks) { 
+          if (i + chunk_size > blocks) {
             cur_blocks = (int)(blocks - i);
             last_chunk = true;
           }

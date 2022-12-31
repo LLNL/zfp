@@ -92,13 +92,13 @@ decode2_kernel(
 
   for (; block_idx < block_end; block_idx++) {
     Scalar fblock[ZFP_2D_BLOCK_SIZE] = { 0 };
-    decode_block<Scalar, ZFP_2D_BLOCK_SIZE>(reader, fblock, decode_parameter, mode);
+    decode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, reader, mode, decode_parameter);
 
     // logical position in 2d array
     size_t pos = block_idx;
     const ptrdiff_t x = (pos % bx) * 4; pos /= bx;
     const ptrdiff_t y = (pos % by) * 4; pos /= by;
-  
+
     // offset into field
     const ptrdiff_t offset = x * stride.x + y * stride.y;
 

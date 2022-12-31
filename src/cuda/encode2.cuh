@@ -14,7 +14,7 @@ void gather2(Scalar* q, const Scalar* p, ptrdiff_t sx, ptrdiff_t sy)
       *q++ = *p;
 }
 
-template <typename Scalar> 
+template <typename Scalar>
 inline __device__ __host__
 void gather_partial2(Scalar* q, const Scalar* p, uint nx, uint ny, ptrdiff_t sx, ptrdiff_t sy)
 {

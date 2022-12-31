@@ -6,7 +6,7 @@ namespace zfp {
 namespace hip {
 namespace internal {
 
-template <typename Scalar> 
+template <typename Scalar>
 inline __device__ __host__
 void gather1(Scalar* q, const Scalar* p, ptrdiff_t sx)
 {
@@ -14,7 +14,7 @@ void gather1(Scalar* q, const Scalar* p, ptrdiff_t sx)
     *q++ = *p;
 }
 
-template <typename Scalar> 
+template <typename Scalar>
 inline __device__ __host__
 void gather_partial1(Scalar* q, const Scalar* p, uint nx, ptrdiff_t sx)
 {
@@ -63,7 +63,7 @@ void encode1_kernel(
   BlockWriter writer(d_stream, bit_offset);
 
   // gather data into a contiguous block
-  Scalar fblock[ZFP_1D_BLOCK_SIZE]; 
+  Scalar fblock[ZFP_1D_BLOCK_SIZE];
   const uint nx = (uint)min(size_t(size - x), size_t(4));
   if (nx < ZFP_1D_BLOCK_SIZE)
     gather_partial1(fblock, d_data + offset, nx, stride);

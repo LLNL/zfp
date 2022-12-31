@@ -158,7 +158,7 @@ bool setup_device_chunking(size_t* chunk_size, unsigned long long** d_offsets, s
   // TODO : Error handling for CUDA malloc and CUB?
   // Assuming 1 thread = 1 ZFP block,
   // launching 1024 threads per SM should give a decent occupancy
-  *chunk_size = processors * 1024; 
+  *chunk_size = processors * 1024;
   size_t size = (*chunk_size + 1) * sizeof(unsigned long long);
   if (!device_malloc(d_offsets, size, "offsets"))
     return false;

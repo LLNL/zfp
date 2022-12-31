@@ -85,7 +85,7 @@ decode1_kernel(
 
   for (; block_idx < block_end; block_idx++) {
     Scalar fblock[ZFP_1D_BLOCK_SIZE] = { 0 };
-    decode_block<Scalar, ZFP_1D_BLOCK_SIZE>(reader, fblock, decode_parameter, mode);
+    decode_block<Scalar, ZFP_1D_BLOCK_SIZE>(fblock, reader, mode, decode_parameter);
 
     // logical position in 1d array
     size_t pos = block_idx;

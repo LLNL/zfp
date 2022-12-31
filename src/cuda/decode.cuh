@@ -15,36 +15,52 @@ Int uint2int(UInt x)
   return (Int)((x ^ traits<Int>::nbmask) - traits<Int>::nbmask);
 }
 
-template <typename Int, typename Scalar>
+// map exponent e to dequantization scale factor
+template <typename Scalar>
 inline __device__
-Scalar dequantize(const Int &x, const int &e);
+Scalar dequantize_factor(int e);
 
 template <>
 inline __device__
-double dequantize<long long int, double>(const long long int &x, const int &e)
+double dequantize_factor<double>(int e)
 {
-  return ldexp((double)x, e - (sizeof(x) * CHAR_BIT - 2));
+  return ldexp(1.0, e - (int)(traits<double>::precision - 2));
 }
 
 template <>
 inline __device__
-float dequantize<int, float>(const int &x, const int &e)
+float dequantize_factor<float>(int e)
 {
-  return ldexpf((float)x, e - (sizeof(x) * CHAR_BIT - 2));
+  return ldexpf(1.0f, e - (int)(traits<float>::precision - 2));
 }
 
 template <>
 inline __device__
-int dequantize<int, int>(const int &x, const int &e)
+int dequantize_factor<int>(int)
 {
   return 1;
 }
 
 template <>
 inline __device__
-long long int dequantize<long long int, long long int>(const long long int &x, const int &e)
+long long int dequantize_factor<long long int>(int)
 {
   return 1;
+}
+
+// inverse block-floating-point transform from signed integers
+template <typename Scalar, typename Int, int BlockSize>
+inline __device__
+void inv_cast(const Int *iblock, Scalar *fblock, int emax)
+{
+  const Scalar scale = dequantize_factor<Scalar>(emax);
+#if CUDART_VERSION < 8000
+  #pragma unroll
+#else
+  #pragma unroll BlockSize
+#endif
+  for (int i = 0; i < BlockSize; ++i)
+    fblock[i] = scale * (Scalar)iblock[i];
 }
 
 // inverse lifting transform of 4-vector
@@ -75,24 +91,23 @@ void inv_lift(Int* p)
   p -= s; *p = x;
 }
 
-template <int BlockSize>
-struct inv_transform;
+// inverse decorrelating transform (partial specialization via functor)
+template <typename Int, int BlockSize>
+struct inv_xform;
 
-template <>
-struct inv_transform<4> {
-  template <typename Int>
-  __device__
-  void inv_xform(Int *p)
+template <typename Int>
+struct inv_xform<Int, 4> {
+  inline __device__
+  void operator()(Int* p) const
   {
     inv_lift<Int, 1>(p);
   }
 };
 
-template <>
-struct inv_transform<16> {
-  template <typename Int>
-  __device__
-  void inv_xform(Int *p)
+template <typename Int>
+struct inv_xform<Int, 16> {
+  inline __device__
+  void operator()(Int* p) const
   {
     // transform along y
     for (uint x = 0; x < 4; ++x)
@@ -103,11 +118,10 @@ struct inv_transform<16> {
   }
 };
 
-template <>
-struct inv_transform<64> {
-  template <typename Int>
-  __device__
-  void inv_xform(Int *p)
+template <typename Int>
+struct inv_xform<Int, 64> {
+  inline __device__
+  void operator()(Int* p) const
   {
     // transform along z
     for (uint y = 0; y < 4; y++)
@@ -120,23 +134,22 @@ struct inv_transform<64> {
     // transform along x
     for (uint z = 0; z < 4; z++)
       for (uint y = 0; y < 4; y++)
-        inv_lift<Int, 1>(p + 4 * y + 16 * z); 
+        inv_lift<Int, 1>(p + 4 * y + 16 * z);
   }
 };
 
 #if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
 // bias values such that truncation is equivalent to round to nearest
-template <typename UInt, uint BlockSize>
-__device__
-static void
-inv_round(UInt* ublock, uint m, uint prec)
+template <typename Int, typename UInt, uint BlockSize>
+inline __device__
+void inv_round(UInt* ublock, uint m, uint prec)
 {
   // add 1/6 ulp to unbias errors
-  if (prec < (uint)(CHAR_BIT * sizeof(UInt) - 1)) {
+  if (prec < (uint)(traits<Int>::precision - 1)) {
     // the first m values (0 <= m <= n) have one more bit of precision
     uint n = BlockSize - m;
-    while (m--) *ublock++ += (((UInt)NBMASK >> 2) >> prec);
-    while (n--) *ublock++ += (((UInt)NBMASK >> 1) >> prec);
+    while (m--) *ublock++ += ((traits<Int>::nbmask >> 2) >> prec);
+    while (n--) *ublock++ += ((traits<Int>::nbmask >> 1) >> prec);
   }
 }
 #endif
@@ -158,24 +171,23 @@ void inv_order(const UInt* ublock, Int* iblock)
 
 template <typename Scalar, int BlockSize, typename UInt, typename Int>
 inline __device__
-uint decode_ints(BlockReader& reader, const uint maxbits, Int* iblock)
+uint decode_ints(UInt* ublock, BlockReader& reader, uint maxbits)
 {
   const uint intprec = traits<Int>::precision;
   const uint kmin = 0;
-  UInt ublock[BlockSize] = {0};
   uint bits = maxbits;
-  uint k, n;
+  uint k, m, n;
 
-  for (k = intprec, n = 0; bits && k-- > kmin;) {
-    // read bit plane
-    uint m = min(n, bits);
+  for (k = intprec, m = n = 0; bits && k-- > kmin;) {
+    // decode bit plane
+    m = min(n, bits);
     bits -= m;
     uint64 x = reader.read_bits(m);
     for (; n < BlockSize && bits && (bits--, reader.read_bit()); x += (uint64)1 << n++)
       for (; n < BlockSize - 1 && bits && (bits--, !reader.read_bit()); n++)
         ;
 
-    // deposit bit plane; use fixed bound to prevent warp divergence
+    // deposit bit plane (use fixed bound to prevent warp divergence)
 #if CUDART_VERSION < 8000
     #pragma unroll
 #else
@@ -187,32 +199,29 @@ uint decode_ints(BlockReader& reader, const uint maxbits, Int* iblock)
 
 #if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
   // bias values to achieve proper rounding
-  inv_round<UInt, BlockSize>(ublock, m, intprec - k);
+  inv_round<Int, UInt, BlockSize>(ublock, m, intprec - k);
 #endif
-
-  // reorder unsigned coefficients and convert to signed integer
-  inv_order<Int, UInt, BlockSize>(ublock, iblock);
 
   return maxbits - bits;
 }
 
 template <typename Scalar, int BlockSize, typename UInt, typename Int>
 inline __device__
-uint decode_ints_prec(BlockReader& reader, const uint maxprec, Int* iblock)
+uint decode_ints_prec(UInt* ublock, BlockReader& reader, const uint maxprec)
 {
   const BlockReader::Offset offset = reader.rtell();
   const uint intprec = traits<Int>::precision;
   const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
-  UInt ublock[BlockSize] = {0};
   uint k, n;
 
   for (k = intprec, n = 0; k-- > kmin;) {
+    // decode bit plane
     uint64 x = reader.read_bits(n);
     for (; n < BlockSize && reader.read_bit(); x += (uint64)1 << n, n++)
       for (; n < BlockSize - 1 && !reader.read_bit(); n++)
         ;
 
-    // deposit bit plane, use fixed bound to prevent warp divergence
+    // deposit bit plane (use fixed bound to prevent warp divergence)
 #if CUDART_VERSION < 8000
     #pragma unroll
 #else
@@ -224,18 +233,20 @@ uint decode_ints_prec(BlockReader& reader, const uint maxprec, Int* iblock)
 
 #if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
   // bias values to achieve proper rounding
-  inv_round<UInt, BlockSize>(ublock, 0, intprec - k);
+  inv_round<Int, UInt, BlockSize>(ublock, 0, intprec - k);
 #endif
-
-  // reorder unsigned coefficients and convert to signed integer
-  inv_order<Int, UInt, BlockSize>(ublock, iblock);
 
   return (uint)(reader.rtell() - offset);
 }
 
 template <typename Scalar, int BlockSize>
-__device__
-void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp_mode mode)
+inline __device__
+void decode_block(
+  Scalar* fblock,
+  BlockReader& reader,
+  zfp_mode mode,
+  int decode_parameter
+)
 {
   typedef typename traits<Scalar>::UInt UInt;
   typedef typename traits<Scalar>::Int Int;
@@ -248,44 +259,40 @@ void decode_block(BlockReader& reader, Scalar* fblock, int decode_parameter, zfp
       emax = (int)reader.read_bits(bits - 1) - traits<Scalar>::ebias;
     }
 
-    Int* iblock = (Int*)fblock;
+    UInt ublock[BlockSize] = {0};
     int maxbits, maxprec, minexp;
     switch (mode) {
       case zfp_mode_fixed_rate:
         // decode_parameter contains maxbits
         maxbits = decode_parameter;
-        bits += decode_ints<Scalar, BlockSize, UInt, Int>(reader, maxbits - bits, iblock);
+        bits += decode_ints<Scalar, BlockSize, UInt, Int>(ublock, reader, maxbits - bits);
         break;
       case zfp_mode_fixed_precision:
         // decode_parameter contains maxprec
         maxprec = decode_parameter;
-        bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
+        bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(ublock, reader, maxprec);
         break;
       case zfp_mode_fixed_accuracy:
         // decode_parameter contains minexp
         minexp = decode_parameter;
         maxprec = precision<BlockSize>(emax, traits<Scalar>::precision, minexp);
-        bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(reader, maxprec, iblock);
+        bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(ublock, reader, maxprec);
         break;
       default:
         // mode not supported
         return;
     }
 
-    inv_transform<BlockSize> trans;
-    trans.inv_xform(iblock);
+    // reorder unsigned coefficients and convert to signed integer
+    Int* iblock = (Int*)fblock;
+    inv_order<Int, UInt, BlockSize>(ublock, iblock);
 
-    if (!traits<Scalar>::is_int) {
-      // cast to floating type
-      Scalar scale = dequantize<Int, Scalar>(1, emax);
-#if CUDART_VERSION < 8000
-      #pragma unroll 
-#else
-      #pragma unroll BlockSize
-#endif
-      for (uint i = 0; i < BlockSize; ++i)
-        fblock[i] = scale * (Scalar)iblock[i];
-    }
+    // perform decorrelating transform
+    inv_xform<Int, BlockSize>()(iblock);
+
+    // perform inverse block-floating-point transform
+    if (!traits<Scalar>::is_int)
+      inv_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);
   }
 
   if (mode == zfp_mode_fixed_rate) {

@@ -49,7 +49,7 @@ public:
   }
 
   // read single bit (0 or 1)
-  inline __device__ 
+  inline __device__
   uint read_bit()
   {
     uint bit;
@@ -64,7 +64,7 @@ public:
   }
 
   // read 0 <= n <= 64 bits
-  inline __device__ 
+  inline __device__
   uint64 read_bits(uint n)
   {
     uint64 value = buffer;

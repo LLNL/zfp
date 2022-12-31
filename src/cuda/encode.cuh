@@ -15,9 +15,10 @@ UInt int2uint(const Int x)
   return ((UInt)x + traits<Int>::nbmask) ^ traits<Int>::nbmask;
 }
 
+// pad partial block of width n <= 4 and stride s
 template <typename Scalar>
 inline __device__
-void pad_block(Scalar *p, uint n, uint s)
+void pad_block(Scalar* p, uint n, ptrdiff_t s)
 {
   switch (n) {
     case 0:
@@ -90,20 +91,21 @@ int max_exponent(const Scalar* p)
   return exponent<Scalar>(max_val);
 }
 
+// map exponent to power-of-two quantization factor
 template <typename Scalar>
 inline __device__
-Scalar quantize_factor(const int& exponent, Scalar);
+Scalar quantize_factor(int exponent);
 
 template <>
 inline __device__
-float quantize_factor<float>(const int& exponent, float)
+float quantize_factor<float>(int exponent)
 {
   return ldexpf(1.0f, traits<float>::precision - 2 - exponent);
 }
 
 template <>
 inline __device__
-double quantize_factor<double>(const int& exponent, double)
+double quantize_factor<double>(int exponent)
 {
   return ldexp(1.0, traits<double>::precision - 2 - exponent);
 }
@@ -112,14 +114,19 @@ template <typename Scalar, typename Int, int BlockSize>
 inline __device__
 void fwd_cast(Int *iblock, const Scalar *fblock, int emax)
 {
-  const Scalar s = quantize_factor(emax, Scalar());
+  const Scalar s = quantize_factor<Scalar>(emax);
+#if CUDART_VERSION < 8000
+  #pragma unroll
+#else
+  #pragma unroll BlockSize
+#endif
   for (int i = 0; i < BlockSize; i++)
     iblock[i] = (Int)(s * fblock[i]);
 }
 
 // lifting transform of 4-vector
 template <class Int, uint s>
-inline __device__ 
+inline __device__
 void fwd_lift(Int* p)
 {
   Int x = *p; p += s;
@@ -144,26 +151,23 @@ void fwd_lift(Int* p)
   p -= s; *p = x;
 }
 
-template <int BlockSize>
-struct transform;
+// forward decorrelating transform (partial specialization via functor)
+template <typename Int, int BlockSize>
+struct fwd_xform;
 
-template <>
-struct transform<4>
-{
-  template <typename Int>
-  __device__
-  void fwd_xform(Int *p)
+template <typename Int>
+struct fwd_xform<Int, 4> {
+  inline __device__
+  void operator()(Int* p) const
   {
     fwd_lift<Int, 1>(p);
   }
 };
 
-template <>
-struct transform<16>
-{
-  template <typename Int>
-  __device__
-  void fwd_xform(Int *p)
+template <typename Int>
+struct fwd_xform<Int, 16> {
+  inline __device__
+  void operator()(Int* p) const
   {
     // transform along x
     for (uint y = 0; y < 4; y++)
@@ -174,12 +178,10 @@ struct transform<16>
   }
 };
 
-template <>
-struct transform<64>
-{
-  template <typename Int>
-  __device__
-  void fwd_xform(Int *p)
+template <typename Int>
+struct fwd_xform<Int, 64> {
+  inline __device__
+  void operator()(Int* p) const
   {
     // transform along x
     for (uint z = 0; z < 4; z++)
@@ -203,7 +205,7 @@ inline __device__
 void fwd_round(Int* iblock, uint maxprec)
 {
   // add or subtract 1/6 ulp to unbias errors
-  if (maxprec < (uint)(CHAR_BIT * sizeof(Int))) {
+  if (maxprec < (uint)traits<Int>::precision) {
     Int bias = (traits<Int>::nbmask >> 2) >> maxprec;
     uint n = BlockSize;
     if (maxprec & 1u)
@@ -229,25 +231,19 @@ void fwd_order(UInt* ublock, const Int* iblock)
     ublock[i] = int2uint<Int, UInt>(iblock[perm[i]]);
 }
 
-template <typename Int, int BlockSize> 
+// true if max compressed size exceeds maxbits
+template <int BlockSize>
 inline __device__
-uint encode_ints(Int* iblock, BlockWriter& writer, uint maxbits, uint maxprec)
+bool with_maxbits(uint maxbits, uint maxprec)
 {
-  // perform decorrelating transform
-  transform<BlockSize> tform;
-  tform.fwd_xform(iblock);
+  return (maxprec + 1) * BlockSize - 1 > maxbits;
+}
 
-#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
-  // bias values to achieve proper rounding
-  fwd_round<Int, BlockSize>(iblock, maxprec);
-#endif
-
-  // reorder signed coefficients and convert to unsigned integer
-  typedef typename traits<Int>::UInt UInt;
-  UInt ublock[BlockSize];
-  fwd_order<Int, UInt, BlockSize>(ublock, iblock);
-
-  const uint intprec = CHAR_BIT * (uint)sizeof(UInt);
+template <typename UInt, int BlockSize>
+inline __device__
+uint encode_ints(UInt* ublock, BlockWriter& writer, uint maxbits, uint maxprec)
+{
+  const uint intprec = (uint)(sizeof(UInt) * CHAR_BIT);
   const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint bits = maxbits;
 
@@ -270,6 +266,60 @@ uint encode_ints(Int* iblock, BlockWriter& writer, uint maxbits, uint maxprec)
   writer.flush();
 
   return maxbits - bits;
+}
+
+template <typename UInt, int BlockSize>
+inline __device__
+uint encode_ints_prec(UInt* ublock, BlockWriter& writer, uint maxprec)
+{
+  const BlockWriter::Offset offset = writer.wtell();
+  const uint intprec = (uint)(sizeof(UInt) * CHAR_BIT);
+  const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
+
+  for (uint k = intprec, n = 0; k-- > kmin;) {
+    // step 1: extract bit plane #k to x
+    uint64 x = 0;
+    for (uint i = 0; i < BlockSize; i++)
+      x += (uint64)((ublock[i] >> k) & 1u) << i;
+    // step 2: encode first n bits of bit plane
+    x = writer.write_bits(x, n);
+    // step 3: unary run-length encode remainder of bit plane
+    for (; n < BlockSize && writer.write_bit(!!x); x >>= 1, n++)
+      for (; n < BlockSize - 1 && !writer.write_bit(x & 1u); x >>= 1, n++)
+        ;
+  }
+
+  // compute number of bits written
+  uint bits = (uint)(writer.wtell() - offset);
+
+  // output any buffered bits
+  writer.flush();
+
+  return bits;
+}
+
+// common integer and block-floating-point encoder
+template <typename Int, int BlockSize>
+inline __device__
+uint encode_block(Int* iblock, BlockWriter& writer, uint maxbits, uint maxprec)
+{
+  // perform decorrelating transform
+  fwd_xform<Int, BlockSize>()(iblock);
+
+#if ZFP_ROUNDING_MODE == ZFP_ROUND_FIRST
+  // bias values to achieve proper rounding
+  fwd_round<Int, BlockSize>(iblock, maxprec);
+#endif
+
+  // reorder signed coefficients and convert to unsigned integer
+  typedef typename traits<Int>::UInt UInt;
+  UInt ublock[BlockSize];
+  fwd_order<Int, UInt, BlockSize>(ublock, iblock);
+
+  // encode integer coefficients
+  return with_maxbits<BlockSize>(maxbits, maxprec)
+           ? encode_ints<UInt, BlockSize>(ublock, writer, maxbits, maxprec)
+           : encode_ints_prec<UInt, BlockSize>(ublock, writer, maxprec);
 }
 
 // generic encoder for floating point
@@ -295,7 +345,7 @@ uint encode_block(
     writer.write_bits(2 * e + 1, bits);
     Int iblock[BlockSize];
     fwd_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);
-    bits += encode_ints<Int, BlockSize>(iblock, writer, maxbits - bits, maxprec);
+    bits += encode_block<Int, BlockSize>(iblock, writer, maxbits - bits, maxprec);
   }
 
   return max(minbits, bits);
@@ -314,7 +364,7 @@ uint encode_block<int, 4>(
   int minexp
 )
 {
-  return max(minbits, encode_ints<int, 4>(fblock, writer, maxbits, maxprec));
+  return max(minbits, encode_block<int, 4>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
@@ -328,7 +378,7 @@ uint encode_block<int, 16>(
   int minexp
 )
 {
-  return max(minbits, encode_ints<int, 16>(fblock, writer, maxbits, maxprec));
+  return max(minbits, encode_block<int, 16>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
@@ -342,7 +392,7 @@ uint encode_block<int, 64>(
   int minexp
 )
 {
-  return max(minbits, encode_ints<int, 64>(fblock, writer, maxbits, maxprec));
+  return max(minbits, encode_block<int, 64>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
@@ -356,7 +406,7 @@ uint encode_block<long long int, 4>(
   int minexp
 )
 {
-  return max(minbits, encode_ints<long long int, 4>(fblock, writer, maxbits, maxprec));
+  return max(minbits, encode_block<long long int, 4>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
@@ -370,7 +420,7 @@ uint encode_block<long long int, 16>(
   int minexp
 )
 {
-  return max(minbits, encode_ints<long long int, 16>(fblock, writer, maxbits, maxprec));
+  return max(minbits, encode_block<long long int, 16>(fblock, writer, maxbits, maxprec));
 }
 
 template <>
@@ -384,7 +434,7 @@ uint encode_block<long long int, 64>(
   int minexp
 )
 {
-  return max(minbits, encode_ints<long long int, 64>(fblock, writer, maxbits, maxprec));
+  return max(minbits, encode_block<long long int, 64>(fblock, writer, maxbits, maxprec));
 }
 
 // forward declarations

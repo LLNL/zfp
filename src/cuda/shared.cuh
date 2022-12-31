@@ -55,7 +55,7 @@ size_t round_up(size_t size, size_t unit)
 inline __host__ __device__
 size_t count_up(size_t size, size_t unit)
 {
-  return (size + unit - 1) / unit; 
+  return (size + unit - 1) / unit;
 }
 
 size_t calculate_device_memory(size_t blocks, size_t bits_per_block)
@@ -137,7 +137,7 @@ uint precision(int maxexp, uint maxprec, int minexp);
 template <>
 inline __device__
 uint precision<4>(int maxexp, uint maxprec, int minexp)
-{ 
+{
   return precision(maxexp, maxprec, minexp, 1);
 }
 
