@@ -423,7 +423,10 @@ runZfpCompress(void **state, size_t* compressedBytes)
   zfp_timer* timer = bundle->timer;
 
   // set policy for compression
-  zfp_stream_set_execution(stream, bundle->compressPolicy);
+  if (!zfp_stream_set_execution(stream, bundle->compressPolicy)) {
+    printf("ERROR: Failed to set compression execution policy\n");
+    return 1;
+  }
 
   // perform compression and time it
   if (zfp_timer_start(timer)) {
@@ -469,7 +472,10 @@ runZfpDecompress(void **state, size_t compressedBytes)
   zfp_timer* timer = bundle->timer;
 
   // set policy for decompression
-  zfp_stream_set_execution(stream, bundle->decompressPolicy);
+  if (!zfp_stream_set_execution(stream, bundle->decompressPolicy)) {
+    printf("ERROR: Failed to set decompression execution policy\n");
+    return 1;
+  }
 
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location

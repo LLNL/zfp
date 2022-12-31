@@ -95,7 +95,10 @@ isCompressedBitrateComparableToChosenRate(struct setupVars* bundle)
   zfp_stream* stream = bundle->stream;
 
   // set policy for compression
-  zfp_stream_set_execution(stream, bundle->compressPolicy);
+  if (!zfp_stream_set_execution(stream, bundle->compressPolicy)) {
+    printf("Failed to set compression execution policy\n");
+    return 1;
+  }
 
   // integer arithmetic allows exact comparison
   size_t compressedBytes = zfp_compress(stream, field);
@@ -169,7 +172,10 @@ isCompressedValuesWithinAccuracy(struct setupVars* bundle)
   zfp_stream* stream = bundle->stream;
 
   // set policy for compression
-  zfp_stream_set_execution(stream, bundle->compressPolicy);
+  if (!zfp_stream_set_execution(stream, bundle->compressPolicy)) {
+    printf("Failed to set compression execution policy\n");
+    return 1;
+  }
 
   size_t compressedBytes = zfp_compress(stream, field);
   if (compressedBytes == 0) {
@@ -178,7 +184,10 @@ isCompressedValuesWithinAccuracy(struct setupVars* bundle)
   }
 
   // set policy for decompression
-  zfp_stream_set_execution(stream, bundle->decompressPolicy);
+  if (!zfp_stream_set_execution(stream, bundle->decompressPolicy)) {
+    printf("Failed to set decompression execution policy\n");
+    return 1;
+  }
 
   // zfp_decompress() will write to bundle->decompressedArr
   // assert bitstream ends in same location
