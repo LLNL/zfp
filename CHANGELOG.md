@@ -7,8 +7,9 @@ Change Log
 
 ### Fixed
 
-- #176: `CFP` API is not exposed via CMake configuration file
 - #169: `libm` dependency is not always correctly detected.
+- #176: `CFP` API is not exposed via CMake configuration file.
+- #196: CUDA backend ignores `ZFP_WITH_TIGHT_ERROR`.
 
 ---
 

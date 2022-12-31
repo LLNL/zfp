@@ -122,8 +122,12 @@ const unsigned char* get_perm<64>()
 // maximum number of bit planes to encode/decode
 inline __device__
 uint precision(int maxexp, uint maxprec, int minexp, int dims)
-{ 
-  return min(maxprec, max(0, maxexp - minexp + 2 * (dims + 1)));
+{
+#if (ZFP_ROUNDING_MODE != ZFP_ROUND_NEVER) && defined(ZFP_WITH_TIGHT_ERROR)
+  return min(maxprec, max(0, maxexp - minexp + 2 * dims + 1));
+#else
+  return min(maxprec, max(0, maxexp - minexp + 2 * dims + 2));
+#endif
 }
 
 template <int BlockSize>
