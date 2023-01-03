@@ -236,6 +236,9 @@ if(ZFP_WITH_CUDA)
 endif()
 
 if(ZFP_WITH_HIP)
+  if (DEFINED ENV{HIP_PATH} AND NOT $ENV{HIP_PATH} STREQUAL "")
+    set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to where HIP has been installed")
+  endif()
   enable_language(HIP)
 endif()
 
