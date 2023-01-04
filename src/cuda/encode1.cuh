@@ -69,7 +69,7 @@ void encode1_kernel(
   else
     gather1(fblock, d_data + offset, stride);
 
-  uint bits = encode_block<Scalar, ZFP_1D_BLOCK_SIZE>(fblock, writer, minbits, maxbits, maxprec, minexp);
+  uint bits = encode_block<Scalar, ZFP_1D_BLOCK_SIZE>()(fblock, writer, minbits, maxbits, maxprec, minexp);
 
   if (d_index)
     d_index[block_idx] = (ushort)bits;

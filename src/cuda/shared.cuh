@@ -58,6 +58,14 @@ size_t count_up(size_t size, size_t unit)
   return (size + unit - 1) / unit;
 }
 
+// true if max compressed size exceeds maxbits
+template <int BlockSize>
+inline __device__
+bool with_maxbits(uint maxbits, uint maxprec)
+{
+  return (maxprec + 1) * BlockSize - 1 > maxbits;
+}
+
 size_t calculate_device_memory(size_t blocks, size_t bits_per_block)
 {
   const size_t bits_per_word = sizeof(Word) * CHAR_BIT;

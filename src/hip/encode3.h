@@ -96,7 +96,7 @@ encode3_kernel(
   else
     gather3(fblock, d_data + offset, stride.x, stride.y, stride.z);
 
-  uint bits = encode_block<Scalar, ZFP_3D_BLOCK_SIZE>(fblock, writer, minbits, maxbits, maxprec, minexp);
+  uint bits = encode_block<Scalar, ZFP_3D_BLOCK_SIZE>()(fblock, writer, minbits, maxbits, maxprec, minexp);
 
   if (d_index)
     d_index[block_idx] = (ushort)bits;

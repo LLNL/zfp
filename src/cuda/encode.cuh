@@ -7,14 +7,6 @@ namespace zfp {
 namespace cuda {
 namespace internal {
 
-// map two's complement signed integer to negabinary unsigned integer
-template <typename Int, typename UInt>
-inline __device__
-UInt int2uint(const Int x)
-{
-  return ((UInt)x + traits<Int>::nbmask) ^ traits<Int>::nbmask;
-}
-
 // pad partial block of width n <= 4 and stride s
 template <typename Scalar>
 inline __device__
@@ -110,21 +102,22 @@ double quantize_factor<double>(int exponent)
   return ldexp(1.0, traits<double>::precision - 2 - exponent);
 }
 
+// forward block-floating-point transform to signed integers
 template <typename Scalar, typename Int, int BlockSize>
 inline __device__
 void fwd_cast(Int *iblock, const Scalar *fblock, int emax)
 {
-  const Scalar s = quantize_factor<Scalar>(emax);
+  const Scalar scale = quantize_factor<Scalar>(emax);
 #if CUDART_VERSION < 8000
   #pragma unroll
 #else
   #pragma unroll BlockSize
 #endif
   for (int i = 0; i < BlockSize; i++)
-    iblock[i] = (Int)(s * fblock[i]);
+    iblock[i] = (Int)(scale * fblock[i]);
 }
 
-// lifting transform of 4-vector
+// forward lifting transform of 4-vector
 template <class Int, uint s>
 inline __device__
 void fwd_lift(Int* p)
@@ -216,6 +209,14 @@ void fwd_round(Int* iblock, uint maxprec)
 }
 #endif
 
+// map two's complement signed integer to negabinary unsigned integer
+template <typename Int, typename UInt>
+inline __device__
+UInt int2uint(const Int x)
+{
+  return ((UInt)x + traits<UInt>::nbmask) ^ traits<UInt>::nbmask;
+}
+
 template <typename Int, typename UInt, int BlockSize>
 inline __device__
 void fwd_order(UInt* ublock, const Int* iblock)
@@ -231,26 +232,23 @@ void fwd_order(UInt* ublock, const Int* iblock)
     ublock[i] = int2uint<Int, UInt>(iblock[perm[i]]);
 }
 
-// true if max compressed size exceeds maxbits
-template <int BlockSize>
-inline __device__
-bool with_maxbits(uint maxbits, uint maxprec)
-{
-  return (maxprec + 1) * BlockSize - 1 > maxbits;
-}
-
 template <typename UInt, int BlockSize>
 inline __device__
 uint encode_ints(UInt* ublock, BlockWriter& writer, uint maxbits, uint maxprec)
 {
-  const uint intprec = (uint)(sizeof(UInt) * CHAR_BIT);
+  const uint intprec = traits<UInt>::precision;
   const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint bits = maxbits;
 
   for (uint k = intprec, n = 0; bits && k-- > kmin;) {
     // step 1: extract bit plane #k to x
     uint64 x = 0;
-    for (uint i = 0; i < BlockSize; i++)
+#if CUDART_VERSION < 8000
+    #pragma unroll
+#else
+    #pragma unroll BlockSize
+#endif
+    for (int i = 0; i < BlockSize; i++)
       x += (uint64)((ublock[i] >> k) & 1u) << i;
     // step 2: encode first n bits of bit plane
     uint m = min(n, bits);
@@ -273,13 +271,18 @@ inline __device__
 uint encode_ints_prec(UInt* ublock, BlockWriter& writer, uint maxprec)
 {
   const BlockWriter::Offset offset = writer.wtell();
-  const uint intprec = (uint)(sizeof(UInt) * CHAR_BIT);
+  const uint intprec = traits<UInt>::precision;
   const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
 
   for (uint k = intprec, n = 0; k-- > kmin;) {
     // step 1: extract bit plane #k to x
     uint64 x = 0;
-    for (uint i = 0; i < BlockSize; i++)
+#if CUDART_VERSION < 8000
+    #pragma unroll
+#else
+    #pragma unroll BlockSize
+#endif
+    for (int i = 0; i < BlockSize; i++)
       x += (uint64)((ublock[i] >> k) & 1u) << i;
     // step 2: encode first n bits of bit plane
     x = writer.write_bits(x, n);
@@ -301,7 +304,13 @@ uint encode_ints_prec(UInt* ublock, BlockWriter& writer, uint maxprec)
 // common integer and block-floating-point encoder
 template <typename Int, int BlockSize>
 inline __device__
-uint encode_block(Int* iblock, BlockWriter& writer, uint maxbits, uint maxprec)
+uint encode_int_block(
+  Int* iblock,
+  BlockWriter& writer,
+  uint minbits,
+  uint maxbits,
+  uint maxprec
+)
 {
   // perform decorrelating transform
   fwd_xform<Int, BlockSize>()(iblock);
@@ -317,15 +326,17 @@ uint encode_block(Int* iblock, BlockWriter& writer, uint maxbits, uint maxprec)
   fwd_order<Int, UInt, BlockSize>(ublock, iblock);
 
   // encode integer coefficients
-  return with_maxbits<BlockSize>(maxbits, maxprec)
-           ? encode_ints<UInt, BlockSize>(ublock, writer, maxbits, maxprec)
-           : encode_ints_prec<UInt, BlockSize>(ublock, writer, maxprec);
+  uint bits = with_maxbits<BlockSize>(maxbits, maxprec)
+                ? encode_ints<UInt, BlockSize>(ublock, writer, maxbits, maxprec)
+                : encode_ints_prec<UInt, BlockSize>(ublock, writer, maxprec);
+
+  return max(minbits, bits);
 }
 
 // generic encoder for floating point
 template <typename Scalar, int BlockSize>
 inline __device__
-uint encode_block(
+uint encode_float_block(
   Scalar* fblock,
   BlockWriter& writer,
   uint minbits,
@@ -334,108 +345,70 @@ uint encode_block(
   int minexp
 )
 {
-  typedef typename traits<Scalar>::Int Int;
-
   uint bits = 1;
+  // compute maximum exponent
   const int emax = max_exponent<Scalar, BlockSize>(fblock);
   maxprec = precision<BlockSize>(emax, maxprec, minexp);
   uint e = maxprec ? emax + traits<Scalar>::ebias : 0;
+  // encode block only if biased exponent is nonzero
   if (e) {
+    // encode common exponent
     bits += traits<Scalar>::ebits;
     writer.write_bits(2 * e + 1, bits);
+    // perform forward block-floating-point transform
+    typedef typename traits<Scalar>::Int Int;
     Int iblock[BlockSize];
     fwd_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);
-    bits += encode_block<Int, BlockSize>(iblock, writer, maxbits - bits, maxprec);
+    // encode integer block
+    bits += encode_int_block<Int, BlockSize>(iblock, writer, max(minbits, bits) - bits, max(maxbits, bits) - bits, maxprec);
   }
 
   return max(minbits, bits);
 }
 
-// integer encoder specializations
+// generic encoder
+template <typename Scalar, int BlockSize>
+struct encode_block;
 
-template <>
-inline __device__
-uint encode_block<int, 4>(
-  int* fblock,
-  BlockWriter& writer,
-  uint minbits,
-  uint maxbits,
-  uint maxprec,
-  int minexp
-)
-{
-  return max(minbits, encode_block<int, 4>(fblock, writer, maxbits, maxprec));
-}
+// encoder specialization for ints
+template <int BlockSize>
+struct encode_block<int, BlockSize> {
+  inline __device__
+  uint operator()(int* iblock, BlockWriter& writer, uint minbits, uint maxbits, uint maxprec, int) const
+  {
+    return encode_int_block<int, BlockSize>(iblock, writer, minbits, maxbits, maxprec);
+  }
+};
 
-template <>
-inline __device__
-uint encode_block<int, 16>(
-  int* fblock,
-  BlockWriter& writer,
-  uint minbits,
-  uint maxbits,
-  uint maxprec,
-  int minexp
-)
-{
-  return max(minbits, encode_block<int, 16>(fblock, writer, maxbits, maxprec));
-}
+// encoder specialization for long longs
+template <int BlockSize>
+struct encode_block<long long, BlockSize> {
+  inline __device__
+  uint operator()(long long* iblock, BlockWriter& writer, uint minbits, uint maxbits, uint maxprec, int) const
+  {
+    return encode_int_block<long long, BlockSize>(iblock, writer, minbits, maxbits, maxprec);
+  }
+};
 
-template <>
-inline __device__
-uint encode_block<int, 64>(
-  int* fblock,
-  BlockWriter& writer,
-  uint minbits,
-  uint maxbits,
-  uint maxprec,
-  int minexp
-)
-{
-  return max(minbits, encode_block<int, 64>(fblock, writer, maxbits, maxprec));
-}
+// encoder specialization for floats
+template <int BlockSize>
+struct encode_block<float, BlockSize> {
+  inline __device__
+  uint operator()(float* fblock, BlockWriter& writer, uint minbits, uint maxbits, uint maxprec, int minexp) const
+  {
+    return encode_float_block<float, BlockSize>(fblock, writer, minbits, maxbits, maxprec, minexp);
+  }
+};
 
-template <>
-inline __device__
-uint encode_block<long long int, 4>(
-  long long int* fblock,
-  BlockWriter& writer,
-  uint minbits,
-  uint maxbits,
-  uint maxprec,
-  int minexp
-)
-{
-  return max(minbits, encode_block<long long int, 4>(fblock, writer, maxbits, maxprec));
-}
-
-template <>
-inline __device__
-uint encode_block<long long int, 16>(
-  long long int* fblock,
-  BlockWriter& writer,
-  uint minbits,
-  uint maxbits,
-  uint maxprec,
-  int minexp
-)
-{
-  return max(minbits, encode_block<long long int, 16>(fblock, writer, maxbits, maxprec));
-}
-
-template <>
-inline __device__
-uint encode_block<long long int, 64>(
-  long long int* fblock,
-  BlockWriter& writer,
-  uint minbits,
-  uint maxbits,
-  uint maxprec,
-  int minexp
-)
-{
-  return max(minbits, encode_block<long long int, 64>(fblock, writer, maxbits, maxprec));
-}
+// encoder specialization for doubles
+template <int BlockSize>
+struct encode_block<double, BlockSize> {
+  inline __device__
+  uint operator()(double* fblock, BlockWriter& writer, uint minbits, uint maxbits, uint maxprec, int minexp) const
+  {
+    return encode_float_block<double, BlockSize>(fblock, writer, minbits, maxbits, maxprec, minexp);
+  }
+};
 
 // forward declarations
 template <typename T>

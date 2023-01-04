@@ -54,6 +54,28 @@ struct traits<double> {
   static const UInt nbmask = 0xaaaaaaaaaaaaaaaaull;
 };
 
+template <>
+struct traits<unsigned int> {
+  typedef int Int;
+  typedef unsigned int UInt;
+  static const bool is_int = true;
+  static const int ebits = 0;
+  static const int ebias = 0;
+  static const int precision = 32;
+  static const UInt nbmask = 0xaaaaaaaau;
+};
+
+template <>
+struct traits<unsigned long long int> {
+  typedef long long int Int;
+  typedef unsigned long long int UInt;
+  static const bool is_int = true;
+  static const int ebits = 0;
+  static const int ebias = 0;
+  static const int precision = 64;
+  static const UInt nbmask = 0xaaaaaaaaaaaaaaaaull;
+};
+
 } // namespace internal
 } // namespace hip
 } // namespace zfp

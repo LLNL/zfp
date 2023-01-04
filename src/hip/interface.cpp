@@ -160,18 +160,15 @@ zfp_internal_hip_decompress(zfp_stream* stream, zfp_field* field)
 
   // decode_parameter differs per execution policy
   zfp_mode mode = zfp_stream_compression_mode(stream);
-  int decode_parameter;
   zfp_index_type index_type = zfp_index_none;
   uint granularity;
 
   switch (mode) {
     case zfp_mode_fixed_rate:
-      decode_parameter = (int)stream->maxbits;
       granularity = 1;
       break;
     case zfp_mode_fixed_precision:
     case zfp_mode_fixed_accuracy:
-      decode_parameter = (mode == zfp_mode_fixed_precision ? (int)stream->maxprec : (int)stream->minexp);
       if (!stream->index) {
 #ifdef ZFP_DEBUG
         std::cerr << "zfp_hip : variable-rate decompression requires block index" << std::endl;
@@ -199,26 +196,30 @@ zfp_internal_hip_decompress(zfp_stream* stream, zfp_field* field)
   // decode compressed data
   const bitstream_offset pos = stream_rtell(stream->stream);
   const zfp_exec_params_hip* params = static_cast<zfp_exec_params_hip*>(stream->exec.params);
+  const uint minbits = stream->minbits;
+  const uint maxbits = stream->maxbits;
+  const uint maxprec = stream->maxprec;
+  const int minexp = stream->minexp;
   unsigned long long bits_read = 0;
   switch (field->type) {
     case zfp_type_int32:
-      bits_read = zfp::hip::decode((int*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = zfp::hip::decode((int*)d_data, size, stride, params, d_stream, minbits, maxbits, maxprec, minexp, d_index, index_type, granularity);
       break;
     case zfp_type_int64:
-      bits_read = zfp::hip::decode((long long int*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = zfp::hip::decode((long long int*)d_data, size, stride, params, d_stream, minbits, maxbits, maxprec, minexp, d_index, index_type, granularity);
       break;
     case zfp_type_float:
-      bits_read = zfp::hip::decode((float*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = zfp::hip::decode((float*)d_data, size, stride, params, d_stream, minbits, maxbits, maxprec, minexp, d_index, index_type, granularity);
       break;
     case zfp_type_double:
-      bits_read = zfp::hip::decode((double*)d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = zfp::hip::decode((double*)d_data, size, stride, params, d_stream, minbits, maxbits, maxprec, minexp, d_index, index_type, granularity);
       break;
     default:
       break;
   }
 
   // copy field from device to host if needed and free temporary buffers
-  size_t field_bytes = zfp_field_size(field, NULL) * zfp_type_size(field->type);
+  size_t field_bytes = zfp_field_size_bytes(field);
   zfp::hip::internal::cleanup_device(zfp_field_begin(field), d_begin, field_bytes);
   zfp::hip::internal::cleanup_device(stream->stream->begin, d_stream);
   if (d_index)

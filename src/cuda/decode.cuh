@@ -7,14 +7,6 @@ namespace zfp {
 namespace cuda {
 namespace internal {
 
-// map negabinary unsigned integer to two's complement signed integer
-template <typename Int, typename UInt>
-inline __device__
-Int uint2int(UInt x)
-{
-  return (Int)((x ^ traits<Int>::nbmask) - traits<Int>::nbmask);
-}
-
 // map exponent e to dequantization scale factor
 template <typename Scalar>
 inline __device__
@@ -34,20 +26,6 @@ float dequantize_factor<float>(int e)
   return ldexpf(1.0f, e - (int)(traits<float>::precision - 2));
 }
 
-template <>
-inline __device__
-int dequantize_factor<int>(int)
-{
-  return 1;
-}
-
-template <>
-inline __device__
-long long int dequantize_factor<long long int>(int)
-{
-  return 1;
-}
-
 // inverse block-floating-point transform from signed integers
 template <typename Scalar, typename Int, int BlockSize>
 inline __device__
@@ -59,7 +37,7 @@ void inv_cast(const Int *iblock, Scalar *fblock, int emax)
 #else
   #pragma unroll BlockSize
 #endif
-  for (int i = 0; i < BlockSize; ++i)
+  for (int i = 0; i < BlockSize; i++)
     fblock[i] = scale * (Scalar)iblock[i];
 }
 
@@ -110,10 +88,10 @@ struct inv_xform<Int, 16> {
   void operator()(Int* p) const
   {
     // transform along y
-    for (uint x = 0; x < 4; ++x)
+    for (uint x = 0; x < 4; x++)
       inv_lift<Int, 4>(p + 1 * x);
     // transform along x
-    for (uint y = 0; y < 4; ++y)
+    for (uint y = 0; y < 4; y++)
       inv_lift<Int, 1>(p + 4 * y);
   }
 };
@@ -140,19 +118,27 @@ struct inv_xform<Int, 64> {
 
 #if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
 // bias values such that truncation is equivalent to round to nearest
-template <typename Int, typename UInt, uint BlockSize>
+template <typename UInt, uint BlockSize>
 inline __device__
 void inv_round(UInt* ublock, uint m, uint prec)
 {
   // add 1/6 ulp to unbias errors
-  if (prec < (uint)(traits<Int>::precision - 1)) {
+  if (prec < (uint)(traits<UInt>::precision - 1)) {
     // the first m values (0 <= m <= n) have one more bit of precision
     uint n = BlockSize - m;
-    while (m--) *ublock++ += ((traits<Int>::nbmask >> 2) >> prec);
-    while (n--) *ublock++ += ((traits<Int>::nbmask >> 1) >> prec);
+    while (m--) *ublock++ += ((traits<UInt>::nbmask >> 2) >> prec);
+    while (n--) *ublock++ += ((traits<UInt>::nbmask >> 1) >> prec);
   }
 }
 #endif
+
+// map negabinary unsigned integer to two's complement signed integer
+template <typename Int, typename UInt>
+inline __device__
+Int uint2int(UInt x)
+{
+  return (Int)((x ^ traits<UInt>::nbmask) - traits<UInt>::nbmask);
+}
 
 template <typename Int, typename UInt, int BlockSize>
 inline __device__
@@ -169,12 +155,12 @@ void inv_order(const UInt* ublock, Int* iblock)
     iblock[perm[i]] = uint2int<Int, UInt>(ublock[i]);
 }
 
-template <typename Scalar, int BlockSize, typename UInt, typename Int>
+template <typename UInt, int BlockSize>
 inline __device__
-uint decode_ints(UInt* ublock, BlockReader& reader, uint maxbits)
+uint decode_ints(UInt* ublock, BlockReader& reader, uint maxbits, uint maxprec)
 {
-  const uint intprec = traits<Int>::precision;
-  const uint kmin = 0;
+  const uint intprec = traits<UInt>::precision;
+  const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint bits = maxbits;
   uint k, m, n;
 
@@ -199,18 +185,18 @@ uint decode_ints(UInt* ublock, BlockReader& reader, uint maxbits)
 
 #if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
   // bias values to achieve proper rounding
-  inv_round<Int, UInt, BlockSize>(ublock, m, intprec - k);
+  inv_round<UInt, BlockSize>(ublock, m, intprec - k);
 #endif
 
   return maxbits - bits;
 }
 
-template <typename Scalar, int BlockSize, typename UInt, typename Int>
+template <typename UInt, int BlockSize>
 inline __device__
 uint decode_ints_prec(UInt* ublock, BlockReader& reader, const uint maxprec)
 {
   const BlockReader::Offset offset = reader.rtell();
-  const uint intprec = traits<Int>::precision;
+  const uint intprec = traits<UInt>::precision;
   const uint kmin = intprec > maxprec ? intprec - maxprec : 0;
   uint k, n;
 
@@ -233,75 +219,124 @@ uint decode_ints_prec(UInt* ublock, BlockReader& reader, const uint maxprec)
 
 #if ZFP_ROUNDING_MODE == ZFP_ROUND_LAST
   // bias values to achieve proper rounding
-  inv_round<Int, UInt, BlockSize>(ublock, 0, intprec - k);
+  inv_round<UInt, BlockSize>(ublock, 0, intprec - k);
 #endif
 
   return (uint)(reader.rtell() - offset);
 }
 
-template <typename Scalar, int BlockSize>
+// common integer and floating-point decoder
+template <typename Int, int BlockSize>
 inline __device__
-void decode_block(
-  Scalar* fblock,
+uint decode_int_block(
+  Int* iblock,
   BlockReader& reader,
-  zfp_mode mode,
-  int decode_parameter
+  uint minbits,
+  uint maxbits,
+  uint maxprec
 )
 {
-  typedef typename traits<Scalar>::UInt UInt;
-  typedef typename traits<Scalar>::Int Int;
+  // decode integer coefficients
+  typedef typename traits<Int>::UInt UInt;
+  UInt ublock[BlockSize] = { 0 };
+  uint bits = with_maxbits<BlockSize>(maxbits, maxprec)
+                ? decode_ints<UInt, BlockSize>(ublock, reader, maxbits, maxprec)
+                : decode_ints_prec<UInt, BlockSize>(ublock, reader, maxprec);
 
-  uint bits = 0;
-  if (traits<Scalar>::is_int || (bits++, reader.read_bit())) {
-    int emax = 0;
-    if (!traits<Scalar>::is_int) {
-      bits += traits<Scalar>::ebits;
-      emax = (int)reader.read_bits(bits - 1) - traits<Scalar>::ebias;
-    }
-
-    UInt ublock[BlockSize] = {0};
-    int maxbits, maxprec, minexp;
-    switch (mode) {
-      case zfp_mode_fixed_rate:
-        // decode_parameter contains maxbits
-        maxbits = decode_parameter;
-        bits += decode_ints<Scalar, BlockSize, UInt, Int>(ublock, reader, maxbits - bits);
-        break;
-      case zfp_mode_fixed_precision:
-        // decode_parameter contains maxprec
-        maxprec = decode_parameter;
-        bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(ublock, reader, maxprec);
-        break;
-      case zfp_mode_fixed_accuracy:
-        // decode_parameter contains minexp
-        minexp = decode_parameter;
-        maxprec = precision<BlockSize>(emax, traits<Scalar>::precision, minexp);
-        bits += decode_ints_prec<Scalar, BlockSize, UInt, Int>(ublock, reader, maxprec);
-        break;
-      default:
-        // mode not supported
-        return;
-    }
-
-    // reorder unsigned coefficients and convert to signed integer
-    Int* iblock = (Int*)fblock;
-    inv_order<Int, UInt, BlockSize>(ublock, iblock);
-
-    // perform decorrelating transform
-    inv_xform<Int, BlockSize>()(iblock);
-
-    // perform inverse block-floating-point transform
-    if (!traits<Scalar>::is_int)
-      inv_cast<Scalar, Int, BlockSize>(iblock, fblock, emax);
+  // read at least minbits bits
+  if (minbits > bits) {
+    reader.skip(minbits - bits);
+    bits = minbits;
   }
 
-  if (mode == zfp_mode_fixed_rate) {
-    // skip ahead in stream to ensure maxbits bits are read
-    uint maxbits = decode_parameter;
-    if (bits < maxbits)
-      reader.skip(maxbits - bits);
-  }
+  // reorder unsigned coefficients and convert to signed integer
+  inv_order<Int, UInt, BlockSize>(ublock, iblock);
+
+  // perform decorrelating transform
+  inv_xform<Int, BlockSize>()(iblock);
+
+  return bits;
 }
+
+// decoder specialization for floats and doubles
+template <typename Float, int BlockSize>
+inline __device__
+uint decode_float_block(
+  Float* fblock,
+  BlockReader& reader,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp
+)
+{
+  uint bits = 1;
+  if (reader.read_bit()) {
+    // decode block exponent
+    bits += traits<Float>::ebits;
+    int emax = (int)reader.read_bits(bits - 1) - traits<Float>::ebias;
+    maxprec = precision<BlockSize>(emax, maxprec, minexp);
+    // decode integer block
+    typedef typename traits<Float>::Int Int;
+    Int* iblock = (Int*)fblock;
+    bits += decode_int_block<Int, BlockSize>(iblock, reader, max(minbits, bits) - bits, max(maxbits, bits) - bits, maxprec);
+    // perform inverse block-floating-point transform
+    inv_cast<Float, Int, BlockSize>(iblock, fblock, emax);
+  }
+  else {
+    // read at least minbits bits
+    if (minbits > bits) {
+      reader.skip(minbits - bits);
+      bits = minbits;
+    }
+  }
+
+  return bits;
+}
+
+// generic decoder
+template <typename Scalar, int BlockSize>
+struct decode_block;
+
+// decoder specialization for ints
+template <int BlockSize>
+struct decode_block<int, BlockSize> {
+  inline __device__
+  uint operator()(int* iblock, BlockReader& reader, uint minbits, uint maxbits, uint maxprec, int) const
+  {
+    return decode_int_block<int, BlockSize>(iblock, reader, minbits, maxbits, maxprec);
+  }
+};
+
+// decoder specialization for long longs
+template <int BlockSize>
+struct decode_block<long long, BlockSize> {
+  inline __device__
+  uint operator()(long long* iblock, BlockReader& reader, uint minbits, uint maxbits, uint maxprec, int) const
+  {
+    return decode_int_block<long long, BlockSize>(iblock, reader, minbits, maxbits, maxprec);
+  }
+};
+
+// decoder specialization for floats
+template <int BlockSize>
+struct decode_block<float, BlockSize> {
+  inline __device__
+  uint operator()(float* fblock, BlockReader& reader, uint minbits, uint maxbits, uint maxprec, int minexp) const
+  {
+    return decode_float_block<float, BlockSize>(fblock, reader, minbits, maxbits, maxprec, minexp);
+  }
+};
+
+// decoder specialization for doubles
+template <int BlockSize>
+struct decode_block<double, BlockSize> {
+  inline __device__
+  uint operator()(double* fblock, BlockReader& reader, uint minbits, uint maxbits, uint maxprec, int minexp) const
+  {
+    return decode_float_block<double, BlockSize>(fblock, reader, minbits, maxbits, maxprec, minexp);
+  }
+};
 
 // forward declarations
 template <typename T>
@@ -312,8 +347,10 @@ decode1(
   const ptrdiff_t stride[],
   const zfp_exec_params_cuda* params,
   const Word* d_stream,
-  zfp_mode mode,
-  int decode_parameter,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp,
   const Word* d_index,
   zfp_index_type index_type,
   uint granularity
@@ -327,8 +364,10 @@ decode2(
   const ptrdiff_t stride[],
   const zfp_exec_params_cuda* params,
   const Word* d_stream,
-  zfp_mode mode,
-  int decode_parameter,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp,
   const Word* d_index,
   zfp_index_type index_type,
   uint granularity
@@ -342,12 +381,44 @@ decode3(
   const ptrdiff_t stride[],
   const zfp_exec_params_cuda* params,
   const Word* d_stream,
-  zfp_mode mode,
-  int decode_parameter,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp,
   const Word* d_index,
   zfp_index_type index_type,
   uint granularity
 );
+
+// compute bit offset to compressed block
+inline __device__
+unsigned long long
+block_offset(const Word* d_index, zfp_index_type index_type, size_t chunk_idx)
+{
+  if (index_type == zfp_index_offset)
+    return d_index[chunk_idx];
+
+  if (index_type == zfp_index_hybrid) {
+    const size_t thread_idx = threadIdx.x;
+    // TODO: Why subtract thread_idx? And should granularity not matter?
+    const size_t warp_idx = (chunk_idx - thread_idx) / 32;
+    // warp operates on 32 blocks indexed by one 64-bit offset, 32 16-bit sizes
+    const uint64* data64 = (const uint64*)d_index + warp_idx * 9;
+    const uint16* data16 = (const uint16*)data64 + 3;
+    // TODO: use warp shuffle instead of shared memory
+    __shared__ uint64 offset[32];
+    offset[thread_idx] = thread_idx ? data16[thread_idx] : *data64;
+    // compute prefix sum in parallel
+    for (uint i = 1u; i < 32u; i <<= 1) {
+      if (thread_idx + i < 32u)
+        offset[thread_idx + i] += offset[thread_idx];
+      __syncthreads();
+    }
+    return offset[thread_idx];
+  }
+
+  return 0;
+}
 
 } // namespace internal
 
@@ -360,8 +431,10 @@ decode(
   const ptrdiff_t stride[],           // field strides
   const zfp_exec_params_cuda* params, // execution parameters
   const Word* d_stream,               // compressed bit stream device pointer
-  zfp_mode mode,                      // compression mode
-  int decode_parameter,               // compression parameter
+  uint minbits,                       // minimum compressed #bits/block
+  uint maxbits,                       // maximum compressed #bits/block
+  uint maxprec,                       // maximum uncompressed #bits/value
+  int minexp,                         // minimum bit plane index
   const Word* d_index,                // block index device pointer
   zfp_index_type index_type,          // block index type
   uint granularity                    // block index granularity in blocks/entry
@@ -371,16 +444,16 @@ decode(
 
   internal::ErrorCheck error;
 
-  uint dims = size[0] ? size[1] ? size[2] ? 3 : 2 : 1 : 0;
+  const uint dims = size[0] ? size[1] ? size[2] ? 3 : 2 : 1 : 0;
   switch (dims) {
     case 1:
-      bits_read = internal::decode1<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = internal::decode1<T>(d_data, size, stride, params, d_stream, minbits, maxbits, maxprec, minexp, d_index, index_type, granularity);
       break;
     case 2:
-      bits_read = internal::decode2<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = internal::decode2<T>(d_data, size, stride, params, d_stream, minbits, maxbits, maxprec, minexp, d_index, index_type, granularity);
       break;
     case 3:
-      bits_read = internal::decode3<T>(d_data, size, stride, params, d_stream, mode, decode_parameter, d_index, index_type, granularity);
+      bits_read = internal::decode3<T>(d_data, size, stride, params, d_stream, minbits, maxbits, maxprec, minexp, d_index, index_type, granularity);
       break;
     default:
       break;

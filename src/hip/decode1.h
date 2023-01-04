@@ -32,8 +32,10 @@ decode1_kernel(
   size_t size,
   ptrdiff_t stride,
   const Word* d_stream,
-  zfp_mode mode,
-  int decode_parameter,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp,
   unsigned long long int* max_offset,
   const Word* d_index,
   zfp_index_type index_type,
@@ -56,36 +58,16 @@ decode1_kernel(
 
   // compute bit offset to compressed block
   unsigned long long bit_offset;
-
-  // TODO: move to separate function
-  if (mode == zfp_mode_fixed_rate)
-    bit_offset = chunk_idx * decode_parameter;
-  else if (index_type == zfp_index_offset)
-    bit_offset = d_index[chunk_idx];
-  else if (index_type == zfp_index_hybrid) {
-    const uint thread_idx = threadIdx.x;
-    const size_t warp_idx = (chunk_idx - thread_idx) / 32;
-    __shared__ uint64 offsets[32];
-    uint64* data64 = (uint64*)d_index;
-    uint16* data16 = (uint16*)d_index;
-    data16 += warp_idx * 36 + 3;
-    offsets[thread_idx] = (uint64)data16[thread_idx];
-    offsets[0] = data64[warp_idx * 9];
-    // compute prefix sum in parallel
-    for (uint i = 0; i < 5; i++) {
-      uint j = 1u << i;
-      if (thread_idx + j < 32u)
-        offsets[thread_idx + j] += offsets[thread_idx];
-      __syncthreads();
-    }
-    bit_offset = offsets[thread_idx];
-  }
-
+  if (minbits == maxbits)
+    bit_offset = chunk_idx * maxbits;
+  else
+    bit_offset = block_offset(d_index, index_type, chunk_idx);
   BlockReader reader(d_stream, bit_offset);
 
+  // decode blocks assigned to this thread
   for (; block_idx < block_end; block_idx++) {
     Scalar fblock[ZFP_1D_BLOCK_SIZE] = { 0 };
-    decode_block<Scalar, ZFP_1D_BLOCK_SIZE>(fblock, reader, mode, decode_parameter);
+    decode_block<Scalar, ZFP_1D_BLOCK_SIZE>()(fblock, reader, minbits, maxbits, maxprec, minexp);
 
     // logical position in 1d array
     size_t pos = block_idx;
@@ -116,8 +98,10 @@ decode1(
   const ptrdiff_t stride[],
   const zfp_exec_params_hip* params,
   const Word* d_stream,
-  zfp_mode mode,
-  int decode_parameter,
+  uint minbits,
+  uint maxbits,
+  uint maxprec,
+  int minexp,
   const Word* d_index,
   zfp_index_type index_type,
   uint granularity
@@ -137,7 +121,6 @@ decode1(
   const dim3 grid_size = calculate_grid_size(params, chunks, cuda_block_size);
 
   // storage for maximum bit offset; needed to position stream
-  // TODO: add helper function to device.h for return values
   unsigned long long int* d_offset;
   if (hipMalloc(&d_offset, sizeof(*d_offset)) != hipSuccess)
     return 0;
@@ -154,8 +137,10 @@ decode1(
     size[0],
     stride[0],
     d_stream,
-    mode,
-    decode_parameter,
+    minbits,
+    maxbits,
+    maxprec,
+    minexp,
     d_offset,
     d_index,
     index_type,

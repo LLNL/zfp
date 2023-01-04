@@ -83,7 +83,7 @@ encode2_kernel(
   else
     gather2(fblock, d_data + offset, stride.x, stride.y);
 
-  uint bits = encode_block<Scalar, ZFP_2D_BLOCK_SIZE>(fblock, writer, minbits, maxbits, maxprec, minexp);
+  uint bits = encode_block<Scalar, ZFP_2D_BLOCK_SIZE>()(fblock, writer, minbits, maxbits, maxprec, minexp);
 
   if (d_index)
     d_index[block_idx] = (ushort)bits;
