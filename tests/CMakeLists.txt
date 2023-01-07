@@ -142,7 +142,7 @@ endif()
 # testviews
 add_executable(testviews testviews.cpp)
 if(ZFP_WITH_OPENMP)
-  target_link_libraries(testviews zfp OpenMP::OpenMP_C)
+  target_link_libraries(testviews zfp OpenMP::OpenMP_CXX)
 else()
   target_link_libraries(testviews zfp)
 endif()
