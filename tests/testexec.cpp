@@ -65,65 +65,67 @@ checksum(const void* p, size_t n)
 inline int
 test(zfp_mode mode, int param, zfp_stream* zfp, const zfp_field* field, zfp_exec_policy exec, size_t& size, uint32& sum)
 {
+  static const char* type_string[] = { "none", "int32", "int64", "float", "double" };
   double rate = param;
   uint prec = param;
   double tol = std::ldexp(1., -param);
 
-  if (exec == zfp_exec_serial) {
-    static const char* type_string[] = {
-      "none", "int32", "int64", "float", "double"
-    };
-    fprintf(stderr, "type=%s dims=%u ", type_string[zfp_field_type(field)], zfp_field_dimensionality(field));
-  }
+  fprintf(stderr, "type=%s dims=%u ", type_string[zfp_field_type(field)], zfp_field_dimensionality(field));
+
   switch (mode) {
     case zfp_mode_fixed_rate:
       zfp_stream_set_rate(zfp, rate, zfp_field_type(field), zfp_field_dimensionality(field), zfp_false);
-      if (exec == zfp_exec_serial)
-        fprintf(stderr, "rate=%g ", rate);
+      fprintf(stderr, "rate=%g ", rate);
       break;
     case zfp_mode_fixed_precision:
       zfp_stream_set_precision(zfp, prec);
-      if (exec == zfp_exec_serial)
-        fprintf(stderr, "prec=%d ", prec);
+      fprintf(stderr, "prec=%d ", prec);
       break;
     case zfp_mode_fixed_accuracy:
       zfp_stream_set_accuracy(zfp, tol);
-      if (exec == zfp_exec_serial)
-        fprintf(stderr, "tol=%g ", tol);
+      fprintf(stderr, "tol=%g ", tol);
       break;
     default:
-      fprintf(stderr, "invalid execution mode\n");
+      fprintf(stderr, "[FAIL]\n");
+      fprintf(stderr, "  ERROR: invalid execution mode\n");
       return 1;
   }
+
+  fprintf(stderr, "exec=%-6s ", exec_string(exec));
 
   zfp_stream_rewind(zfp);
   size_t zsize = zfp_compress(zfp, field);
   uint32 zsum = checksum(stream_data(zfp_stream_bit_stream(zfp)), zsize);
+  fprintf(stderr, "size=%lu checksum=%#x ", (unsigned long)zsize, zsum);
 
   if (zsize > stream_capacity(zfp_stream_bit_stream(zfp))) {
-    fprintf(stderr, "ERROR: buffer overrun (%lu > %lu)\n", (unsigned long)zsize, (unsigned long)stream_capacity(zfp_stream_bit_stream(zfp)));
+    fprintf(stderr, "[FAIL]\n");
+    fprintf(stderr, "  ERROR: buffer overrun (%lu > %lu)\n", (unsigned long)zsize, (unsigned long)stream_capacity(zfp_stream_bit_stream(zfp)));
     return 1;
   }
 
   switch (exec) {
     case zfp_exec_serial:
-      fprintf(stderr, "size=%lu checksum=%#x\n", (unsigned long)zsize, zsum);
       size = zsize;
       sum = zsum;
       break;
     default:
       if (zsize != size) {
+        fprintf(stderr, "[FAIL]\n");
         fprintf(stderr, "  ERROR: %s size (%lu) does not match serial\n", exec_string(exec), (unsigned long)zsize);
         return 1;
       }
       else {
         if (zsum != sum) {
+          fprintf(stderr, "[FAIL]\n");
           fprintf(stderr, "  ERROR: %s checksum (%#x) does not match serial\n", exec_string(exec), zsum);
           return 1;
         }
       }
       break;
   }
+
+  fprintf(stderr, "[ OK ]\n");
 
   return 0;
 }
