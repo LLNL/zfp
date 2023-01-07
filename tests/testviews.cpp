@@ -18,16 +18,37 @@ rand(size_t begin, size_t end)
 }
 
 // ensure f and g are sufficiently close
-static void
+static bool
 verify(double f, double g)
 {
   if (std::fabs(f - g) > EPSILON) {
 #ifdef _OPENMP
     #pragma omp critical
 #endif
-    std::cerr << "error: " << f << " != " << g << std::endl;
-    exit(EXIT_FAILURE);
+    std::cout << " [FAIL]" << std::endl;
+    std::cerr << "  error: " << f << " != " << g << std::endl;
+    return false;
   }
+  return true;
+}
+
+static void
+test(const char* name, bool verbose)
+{
+  if (verbose)
+    std::cout << std::endl;
+  std::cout << name;
+}
+
+static void
+tally(size_t& pass, size_t& fail, bool success)
+{
+  if (success) {
+    std::cout << " [OK]" << std::endl;
+    pass++;
+  }
+  else
+    fail++;
 }
 
 static int
@@ -45,6 +66,9 @@ int main(int argc, char* argv[])
   size_t x0, y0, z0;
   size_t mx, my, mz;
   double rate = 16;
+  bool verbose = false;
+  size_t pass = 0;
+  size_t fail = 0;
 
   // parse command-line arguments
   switch (argc) {
@@ -95,128 +119,163 @@ int main(int argc, char* argv[])
       for (size_t x = 0; x < nx; x++)
         a(x, y, z) = static_cast<double>(x + nx * (y + ny * z));
 
+  bool success;
+
   // rectangular view into a
-  std::cout << std::endl << "3D view" << std::endl;
+  test("3D view", verbose);
   zfp::array3<double>::view v(&a, x0, y0, z0, mx, my, mz);
-  for (size_t z = 0; z < v.size_z(); z++)
-    for (size_t y = 0; y < v.size_y(); y++)
-      for (size_t x = 0; x < v.size_x(); x++) {
-        std::cout << x << " " << y << " " << z << ": " << a(x0 + x, y0 + y, z0 + z) << " " << v(x, y, z) << std::endl;
-        verify(a(x0 + x, y0 + y, z0 + z), v(x, y, z));
+  success = true;
+  for (size_t z = 0; z < v.size_z() && success; z++)
+    for (size_t y = 0; y < v.size_y() && success; y++)
+      for (size_t x = 0; x < v.size_x() && success; x++) {
+        if (verbose)
+          std::cout << x << " " << y << " " << z << ": " << a(x0 + x, y0 + y, z0 + z) << " " << v(x, y, z) << std::endl;
+        success = verify(a(x0 + x, y0 + y, z0 + z), v(x, y, z));
       }
+  tally(pass, fail, success);
 
   // flat view of all of a
-  std::cout << std::endl << "3D flat view" << std::endl;
+  test("3D flat view", verbose);
   zfp::array3<double>::flat_view fv(&a);
-  for (size_t z = 0; z < fv.size_z(); z++)
-    for (size_t y = 0; y < fv.size_y(); y++)
-      for (size_t x = 0; x < fv.size_x(); x++) {
-        std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << fv[fv.index(x, y, z)] << std::endl;
-        verify(a(x, y, z), fv[fv.index(x, y, z)]);
+  success = true;
+  for (size_t z = 0; z < fv.size_z() && success; z++)
+    for (size_t y = 0; y < fv.size_y() && success; y++)
+      for (size_t x = 0; x < fv.size_x() && success; x++) {
+        if (verbose)
+          std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << fv[fv.index(x, y, z)] << std::endl;
+        success = verify(a(x, y, z), fv[fv.index(x, y, z)]);
       }
+  tally(pass, fail, success);
 
   // nested view of all of a
-  std::cout << std::endl << "3D nested view" << std::endl;
+  test("3D nested view", verbose);
   zfp::array3<double>::nested_view nv(&a);
-  for (size_t z = 0; z < nv.size_z(); z++)
-    for (size_t y = 0; y < nv.size_y(); y++)
-      for (size_t x = 0; x < nv.size_x(); x++) {
-        std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << nv[z][y][x] << std::endl;
-        verify(a(x, y, z), nv[z][y][x]);
+  success = true;
+  for (size_t z = 0; z < nv.size_z() && success; z++)
+    for (size_t y = 0; y < nv.size_y() && success; y++)
+      for (size_t x = 0; x < nv.size_x() && success; x++) {
+        if (verbose)
+          std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << nv[z][y][x] << std::endl;
+        success = verify(a(x, y, z), nv[z][y][x]);
       }
+  tally(pass, fail, success);
 
   // pointers and iterators into a via view v
-  std::cout << std::endl << "3D view pointers and iterators" << std::endl;
+  test("3D view pointers and iterators", verbose);
   zfp::array3<double>::view::const_reference vr = v(0, 0, 0);
   zfp::array3<double>::view::const_pointer p = &vr;
   p = &v(0, 0, 0);
-  for (zfp::array3<double>::view::const_iterator it = v.begin(); it != v.end(); it++) {
+  success = true;
+  for (zfp::array3<double>::view::const_iterator it = v.begin(); it != v.end() && success; it++) {
     size_t x = it.i();
     size_t y = it.j();
     size_t z = it.k();
-std::cout << x << " " << y << " " << z << std::endl;
-std::cout << mx << " " << my << " " << std::endl;
-    verify(*it, p[x + mx * (y + my * z)]);
+    if (verbose)
+      std::cout << x << " " << y << " " << z << ": " << *it << " " << p[x + mx * (y + my * z)] << std::endl;
+    success = verify(*it, p[x + mx * (y + my * z)]);
   }
+  tally(pass, fail, success);
 
   // pointers and iterators into a via flat view fv
-  std::cout << std::endl << "3D flat view pointers and iterators" << std::endl;
+  test("3D flat view pointers and iterators", verbose);
   zfp::array3<double>::flat_view::const_reference fvr = fv[0];
   zfp::array3<double>::flat_view::const_pointer fp = &fvr;
   fp = &fv(0, 0, 0);
-  for (zfp::array3<double>::flat_view::const_iterator it = fv.begin(); it != fv.end(); it++) {
+  success = true;
+  for (zfp::array3<double>::flat_view::const_iterator it = fv.begin(); it != fv.end() && success; it++) {
     size_t x = it.i();
     size_t y = it.j();
     size_t z = it.k();
-    verify(*it, fp[x + nx * (y + ny * z)]);
+    if (verbose)
+      std::cout << x << " " << y << " " << z << ": " << *it << " " << fp[x + nx * (y + ny * z)] << std::endl;
+    success = verify(*it, fp[x + nx * (y + ny * z)]);
   }
+  tally(pass, fail, success);
 
   // 2D slice of a
-  std::cout << std::endl << "2D slice" << std::endl;
+  test("2D slice", verbose);
   size_t z = rand(0, nv.size_z() - 1);
   zfp::array3<double>::nested_view2 slice2(nv[z]);
-  for (size_t y = 0; y < slice2.size_y(); y++)
-    for (size_t x = 0; x < slice2.size_x(); x++) {
-      std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << slice2[y][x] << std::endl;
-      verify(a(x, y, z), slice2[y][x]);
+  success = true;
+  for (size_t y = 0; y < slice2.size_y() && success; y++)
+    for (size_t x = 0; x < slice2.size_x() && success; x++) {
+      if (verbose)
+        std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << slice2[y][x] << std::endl;
+      success = verify(a(x, y, z), slice2[y][x]);
     }
+  tally(pass, fail, success);
 
   // 2D array constructed from 2D slice (exercises deep copy via iterator)
-  std::cout << std::endl << "2D array from 2D slice" << std::endl;
+  test("2D array from 2D slice", verbose);
   zfp::array2<double> b(slice2);
-  for (size_t y = 0; y < b.size_y(); y++)
-    for (size_t x = 0; x < b.size_x(); x++) {
-      std::cout << x << " " << y << ": " << b(x, y) << " " << slice2[y][x] << std::endl;
-      verify(b(x, y), slice2[y][x]);
+  success = true;
+  for (size_t y = 0; y < b.size_y() && success; y++)
+    for (size_t x = 0; x < b.size_x() && success; x++) {
+      if (verbose)
+        std::cout << x << " " << y << ": " << b(x, y) << " " << slice2[y][x] << std::endl;
+      success = verify(b(x, y), slice2[y][x]);
     }
+  tally(pass, fail, success);
 
   // 1D slice of a
-  std::cout << std::endl << "1D slice" << std::endl;
+  test("1D slice", verbose);
   size_t y = rand(0, slice2.size_y() - 1);
   zfp::array3<double>::nested_view1 slice1 = slice2[y];
-  for (size_t x = 0; x < slice1.size_x(); x++) {
-    std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << slice1[x] << std::endl;
-    verify(a(x, y, z), slice1[x]);
+  success = true;
+  for (size_t x = 0; x < slice1.size_x() && success; x++) {
+    if (verbose)
+      std::cout << x << " " << y << " " << z << ": " << a(x, y, z) << " " << slice1[x] << std::endl;
+    success = verify(a(x, y, z), slice1[x]);
   }
+  tally(pass, fail, success);
 
   // 2D array constructed from 2D slice of 3D array (exercises deep copy via iterator)
-  std::cout << std::endl << "2D array from 2D slice of 3D array" << std::endl;
+  test("2D array from 2D slice of 3D array", verbose);
   zfp::array2<double> c(slice2);
-  for (size_t y = 0; y < c.size_y(); y++)
-    for (size_t x = 0; x < c.size_x(); x++) {
-      std::cout << x << " " << y << ": " << c(x, y) << " " << slice2[y][x] << std::endl;
-      verify(c(x, y), slice2[y][x]);
+  success = true;
+  for (size_t y = 0; y < c.size_y() && success; y++)
+    for (size_t x = 0; x < c.size_x() && success; x++) {
+      if (verbose)
+        std::cout << x << " " << y << ": " << c(x, y) << " " << slice2[y][x] << std::endl;
+      success = verify(c(x, y), slice2[y][x]);
     }
+  tally(pass, fail, success);
 
   // 2D thread-safe read-only view of c
-  std::cout << std::endl << "2D private read-only view" << std::endl;
+  test("2D private read-only view", verbose);
   zfp::array2<double>::private_const_view d(&c);
-  for (size_t y = 0; y < c.size_y(); y++)
-    for (size_t x = 0; x < c.size_x(); x++) {
-      std::cout << x << " " << y << ": " << c(x, y) << " " << d(x, y) << std::endl;
-      verify(c(x, y), d(x, y));
+  success = true;
+  for (size_t y = 0; y < c.size_y() && success; y++)
+    for (size_t x = 0; x < c.size_x() && success; x++) {
+      if (verbose)
+        std::cout << x << " " << y << ": " << c(x, y) << " " << d(x, y) << std::endl;
+      success = verify(c(x, y), d(x, y));
     }
+  tally(pass, fail, success);
 
 #ifdef _OPENMP
-  std::cout << std::endl << "multithreaded 2D private read-only views" << std::endl;
+  test("multithreaded 2D private read-only views", verbose);
   // copy c for verification; direct accesses to c are not thread-safe
   double* data = new double[c.size()];
   c.get(data);
-  #pragma omp parallel
+  success = true;
+  #pragma omp parallel reduction(&&:success)
   {
     // make a thread-local view into c
     zfp::array2<double>::private_const_view d(&c);
-    for (size_t y = 0; y < d.size_y(); y++)
-      for (size_t x = 0; x < d.size_x(); x++) {
+    for (size_t y = 0; y < d.size_y() && success; y++)
+      for (size_t x = 0; x < d.size_x() && success; x++) {
         double val = data[x + nx * y];
-        if (omp_get_thread_num() == 0)
+        if (verbose && omp_get_thread_num() == 0)
           std::cout << x << " " << y << ": " << val << " " << d(x, y) << std::endl;
-        verify(val, d(x, y));
+        success = verify(val, d(x, y));
       }
   }
+  tally(pass, fail, success);
 
-  std::cout << std::endl << "multithreaded 2D private read-write views" << std::endl;
-  #pragma omp parallel
+  test("multithreaded 2D private read-write views", verbose);
+  success = true;
+  #pragma omp parallel reduction(&&:success)
   {
     // partition c into disjoint views
     zfp::array2<double>::private_view d(&c);
@@ -227,15 +286,22 @@ std::cout << mx << " " << my << " " << std::endl;
         size_t x = d.global_x(i);
         size_t y = d.global_y(j);
         double val = data[x + nx * y] + 1;
-        if (omp_get_thread_num() == 0)
+        if (verbose && omp_get_thread_num() == 0)
           std::cout << x << " " << y << ": " << val << " " << d(i, j) << std::endl;
-        verify(val, d(i, j));
+        success = verify(val, d(i, j));
       }
   }
+  tally(pass, fail, success);
+
   delete[] data;
 #endif
 
-  std::cout << std::endl << "all tests passed" << std::endl;
-
-  return 0;
+  if (!fail) {
+    std::cout << std::endl << "all " << pass << " tests passed" << std::endl;
+    return EXIT_SUCCESS;
+  }
+  else {
+    std::cout << std::endl << fail << " of " << pass + fail << " tests failed" << std::endl;
+    return EXIT_FAILURE;
+  }
 }
