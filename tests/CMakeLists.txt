@@ -32,7 +32,7 @@ if(BUILD_TESTING_FULL)
   ExternalProject_Add(
     cmocka_cloned
     GIT_REPOSITORY    https://gitlab.com/cmocka/cmocka.git
-    GIT_TAG           cmocka-1.1.0
+    GIT_TAG           cmocka-1.1.5
     SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
     BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
     CMAKE_ARGS        "${CMOCKA_ARGS}"
@@ -47,9 +47,9 @@ if(BUILD_TESTING_FULL)
   
   # choose proper library path & extension
   if(MSVC)
-    set(IMPORTED_LOCATION_PATH "${binary_dir}/src/${CMAKE_BUILD_TYPE}/cmocka.lib")
+    set(IMPORTED_LOCATION_PATH "${binary_dir}/src/${CMAKE_BUILD_TYPE}/cmocka-static.lib")
   else()
-    set(IMPORTED_LOCATION_PATH "${binary_dir}/src/libcmocka.a")
+    set(IMPORTED_LOCATION_PATH "${binary_dir}/src/libcmocka-static.a")
   endif()
   set_property(TARGET cmocka
     PROPERTY
