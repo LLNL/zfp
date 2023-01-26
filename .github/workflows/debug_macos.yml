@@ -17,7 +17,7 @@ jobs:
           run: |
             python -m pip install cython
             python -m pip install oldest-supported-numpy
-        
+
         - name: Install OpenMP
           run: |
             brew install libomp
