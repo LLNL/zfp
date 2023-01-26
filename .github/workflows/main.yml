@@ -55,6 +55,10 @@ jobs:
         if: ${{matrix.os == 'macos-latest'}}
         run: |
           brew install libomp
+          echo "CC=$(brew --prefix llvm)/bin/clang" >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix llvm)/bin/clang++" >> $GITHUB_ENV
+          echo "LDFLAGS=\"-L$(brew --prefix llvm)/lib\"" >> $GITHUB_ENV
+          echo "CPPFLAGS=\"-I$(brew --prefix llvm)/include\"" >> $GITHUB_ENV
 
       - name: Run CMake
         id: cmake
