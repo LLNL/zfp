@@ -66,7 +66,6 @@ stages:
             elif [ "$ci_c_cmp" == "clang" ]; then
                 export ci_cmake_cmp_flags="-DCMAKE_CXX_FLAGS=--gcc-toolchain=${GXX_PATH} -DCMAKE_C_FLAGS=--gcc-toolchain=${GXX_PATH}"
             fi
-        - echo "cmake flags: ${ci_cmake_flags} ${ci_cmake_cmp_flags}"
         - cmake -DBUILD_TESTING_FULL=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ${ci_cmake_cmp_flags} ..
         - cmake --build .
     extends: [.build]
