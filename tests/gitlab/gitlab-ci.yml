@@ -62,9 +62,8 @@ stages:
         - |-
             export ci_cmake_cmp_flags=""
             if [ "$ci_c_cmp" == "intel" ]; then
-                export GXX_ROOT=${GXX_PATH}/bin/
-                export GXX_INCLUDE=${GXX_PATH}/include/
-            elif [ "$ci_c_cmp" == "clang" ] || [ "$ci_c_cmp" == "pgcc" ]; then
+                export ci_cmake_cmp_flags="-DCMAKE_CXX_FLAGS=-gcc-name=${GXX_PATH}/gcc -DCMAKE_C_FLAGS=-gcc-name=${GXX_PATH}/gcc"
+            elif [ "$ci_c_cmp" == "clang" ]; then
                 export ci_cmake_cmp_flags="-DCMAKE_CXX_FLAGS=--gcc-toolchain=${GXX_PATH} -DCMAKE_C_FLAGS=--gcc-toolchain=${GXX_PATH}"
             fi
         - cmake -DBUILD_TESTING_FULL=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ${ci_cmake_cmp_flags} ..

@@ -30,32 +30,19 @@ cpp_clang-10.0.0_test:
     needs: [cpp_clang-10.0.0_build]
 
 
-cpp_intel-19.0.4_build:
+cpp_intel-2022.3_build:
     variables:
         ci_cmake: "cmake/3.9.2"
         ci_cxx_cmp: "icpc"
         ci_c_cmp: "icc"
-        ci_cmp_mod: "intel/19.0.4"
+        ci_cmp_mod: "intel/2022.3"
     extends: [.cpp, .quartz_build_cpu]
     needs: []
 
-cpp_intel-19.0.4_test:
+cpp_intel-2022.3_test:
     extends: [.quartz_test_cpu]
-    needs: [cpp_intel-19.0.4_build]
+    needs: [cpp_intel-2022.3_build]
 
-
-cpp_pgi-21.1_build:
-    variables:
-        ci_cmake: "cmake/3.9.2"
-        ci_cxx_cmp: "pgc++"
-        ci_c_cmp: "pgcc"
-        ci_cmp_mod: "pgi/21.1"
-    extends: [.cpp, .quartz_build_cpu]
-    needs: []
-
-cpp_pgi-21.1_test:
-    extends: [.quartz_test_cpu]
-    needs: [cpp_pgi-21.1_build]
 
 
 #########
