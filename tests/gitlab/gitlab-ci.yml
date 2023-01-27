@@ -61,7 +61,7 @@ stages:
         - cd build
         - |-
             export ci_cmake_cmp_flags=""
-            if [ "$ci_c_cmp" == "intel" ]; then
+            if [ "$ci_c_cmp" == "icc" ]; then
                 export ci_cmake_cmp_flags="-DCMAKE_CXX_FLAGS=-gcc-name=${GXX_PATH}/gcc -DCMAKE_C_FLAGS=-gcc-name=${GXX_PATH}/gcc"
             elif [ "$ci_c_cmp" == "clang" ]; then
                 export ci_cmake_cmp_flags="-DCMAKE_CXX_FLAGS=--gcc-toolchain=${GXX_PATH} -DCMAKE_C_FLAGS=--gcc-toolchain=${GXX_PATH}"
