@@ -26,6 +26,15 @@ stages:
 
 .build_cpu:
     before_script:
+        - |- 
+            if [ "$ci_c_cmp" != "gcc" ]; then
+                module --latest load gcc
+                if (( $(gcc -dumpversion | sed 's/\..*//') < 5 )); then
+                    echo "unable to find new enough gcc to support ${ci_c_cmp} build"
+                    exit 1
+                fi
+                export GXX_PATH=$(dirname $(which gcc))/../
+            fi
         - module reset
         - module load $ci_cmake
         - module load $ci_cmp_mod
@@ -50,8 +59,15 @@ stages:
     script:
         - mkdir build
         - cd build
-        - cmake -DBUILD_TESTING_FULL=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ..
-        - make -j
+        - |-
+            export ci_cmake_cmp_flags=""
+            if [ "$ci_c_cmp" == "icc" ]; then
+                export ci_cmake_cmp_flags="-DCMAKE_CXX_FLAGS=-gcc-name=${GXX_PATH}/bin/gcc -DCMAKE_C_FLAGS=-gcc-name=${GXX_PATH}/bin/gcc"
+            elif [ "$ci_c_cmp" == "clang" ]; then
+                export ci_cmake_cmp_flags="-DCMAKE_CXX_FLAGS=--gcc-toolchain=${GXX_PATH} -DCMAKE_C_FLAGS=--gcc-toolchain=${GXX_PATH}"
+            fi
+        - cmake -DBUILD_TESTING_FULL=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ${ci_cmake_cmp_flags} ..
+        - cmake --build .
     extends: [.build]
 
 .build_gpu:
@@ -60,6 +76,7 @@ stages:
         - module load opt
         - module load $ci_cmake
         - module load $ci_cmp_mod
+        - module load $ci_gcc_mod
     script:
         - mkdir build
         - cd build
