@@ -76,8 +76,8 @@ stages:
         - |- 
             if [ "$ci_lang" == "cuda" ]; then
                 module load opt
-                module load $ci_gcc_mod
             fi
+        - module --latest load gcc
         - module load $ci_cmake
         - module load $ci_cmp_mod
     script:
