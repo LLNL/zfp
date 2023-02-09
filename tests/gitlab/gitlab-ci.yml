@@ -67,6 +67,7 @@ stages:
                 export ci_cmake_cmp_flags="-DCMAKE_CXX_FLAGS=--gcc-toolchain=${GXX_PATH} -DCMAKE_C_FLAGS=--gcc-toolchain=${GXX_PATH}"
             fi
         - cmake -DBUILD_TESTING_FULL=ON -DBUILD_UTILITIES=OFF -DZFP_WITH_CUDA=OFF ${ci_cmake_flags} ${ci_cmake_cmp_flags} ..
+        - export CMAKE_BUILD_PARALLEL_LEVEL=8
         - cmake --build .
     extends: [.build]
 
@@ -84,7 +85,8 @@ stages:
         - mkdir build
         - cd build
         - cmake -DBUILD_TESTING_FULL=ON ${ci_cmake_flags} ..
-        - make -j
+        - export CMAKE_BUILD_PARALLEL_LEVEL=8
+        - cmake --build .
     extends: [.build]
 
 
@@ -125,12 +127,12 @@ stages:
 .cuda:
     variables:
         ci_lang: "cuda"
-        ci_cmake_flags: "-DZFP_WITH_CUDA=ON -DBUILD_TESTING_FULL=ON -DZFP_WITH_CUDA_PROFILE=ON"
+        ci_cmake_flags: "-DZFP_WITH_CUDA=ON -DZFP_WITH_CUDA_PROFILE=ON"
 
 .hip:
     variables:
         ci_lang: "hip"
-        ci_cmake_flags: "-DZFP_WITH_HIP=ON -DBUILD_TESTING_FULL=ON -DCMAKE_C_COMPILER=hipcc -DCMAKE_CXX_COMPILER=hipcc -DHIP_PATH=$HIP_PATH -DZFP_WITH_HIP_PROFILE=ON"
+        ci_cmake_flags: "-DZFP_WITH_HIP=ON -DZFP_WITH_OPENMP=OFF -DCMAKE_C_COMPILER=hipcc -DCMAKE_CXX_COMPILER=hipcc -DHIP_PATH=$HIP_PATH -DZFP_WITH_HIP_PROFILE=ON"
 
 
 ############
