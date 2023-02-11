@@ -1,7 +1,10 @@
-name: build
+name: Run Tests
+
 on: push
+
 env:
   BUILD_TYPE: Release
+
 jobs:
   build:
     runs-on: ${{matrix.os}}

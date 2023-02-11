@@ -1,5 +1,7 @@
 name: Debug (Linux)
+
 on: [workflow_dispatch]
+
 jobs:
     debug:
       runs-on: ubuntu-latest

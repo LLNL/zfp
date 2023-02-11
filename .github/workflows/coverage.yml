@@ -1,3 +1,5 @@
+name: Generate Coverage Report
+
 on:
   workflow_run:
     workflows: [build]
@@ -45,5 +47,3 @@ jobs:
            files: ${{github.workspace}}/build/coverage.xml
            env_vars: Actions
            fail_ci_if_error: true
-           verbose: true
-           dry_run: true
