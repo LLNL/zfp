@@ -1,8 +1,8 @@
-name: Generate Coverage Report
+name: Coverage Report
 
 on:
   workflow_run:
-    workflows: [build]
+    workflows: [Tests]
     types: [completed]
 
 jobs:

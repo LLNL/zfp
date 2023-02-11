@@ -1,8 +1,9 @@
 ZFP
 ===
-[![Github Actions Build Status](https://github.com/LLNL/zfp/actions/workflows/main.yml/badge.svg?branch=release1.0.0)](https://github.com/LLNL/zfp/actions/workflows/main.yml)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/qb3ld7j11segy52k/branch/release1.0.0?svg=true)](https://ci.appveyor.com/project/lindstro/zfp)
+[![Github Actions Build Status](https://github.com/LLNL/zfp/workflows/Run%20Tests/badge.svg)](https://github.com/LLNL/zfp/actions/workflows/tests.yml)
+[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/qb3ld7j11segy52k/branch/develop?svg=true)](https://ci.appveyor.com/project/lindstro/zfp)
 [![Documentation Status](https://readthedocs.org/projects/zfp/badge/?version=release1.0.0)](https://zfp.readthedocs.io/en/release1.0.0/)
+[![codecov](https://codecov.io/gh/LLNL/zfp/branch/develop/graph/badge.svg?token=jqvMVvgRQ9)](https://codecov.io/gh/LLNL/zfp)
 
 zfp is a compressed format for representing multidimensional floating-point
 and integer arrays.  zfp provides compressed-array classes that support high
