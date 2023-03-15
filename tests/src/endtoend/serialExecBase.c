@@ -295,6 +295,8 @@ _catFunc3(given_, DESCRIPTOR, Array_when_ZfpCompressFixedAccuracy_expect_Compres
 static int
 setupPermuted(void **state)
 {
+  struct setupVars *bundle = *state;
+  bundle->index_type = zfp_index_none;
   setupExecPolicy(state, zfp_exec_serial, zfp_exec_serial);
   return initZfpStreamAndField(state, PERMUTED);
 }
@@ -302,6 +304,8 @@ setupPermuted(void **state)
 static int
 setupInterleaved(void **state)
 {
+  struct setupVars *bundle = *state;
+  bundle->index_type = zfp_index_none;
   setupExecPolicy(state, zfp_exec_serial, zfp_exec_serial);
   return initZfpStreamAndField(state, INTERLEAVED);
 }
@@ -309,6 +313,8 @@ setupInterleaved(void **state)
 static int
 setupReversed(void **state)
 {
+  struct setupVars *bundle = *state;
+  bundle->index_type = zfp_index_none;
   setupExecPolicy(state, zfp_exec_serial, zfp_exec_serial);
   return initZfpStreamAndField(state, REVERSED);
 }
@@ -316,6 +322,8 @@ setupReversed(void **state)
 static int
 setupDefaultStride(void **state)
 {
+  struct setupVars *bundle = *state;
+  bundle->index_type = zfp_index_none;
   setupExecPolicy(state, zfp_exec_serial, zfp_exec_serial);
   return initZfpStreamAndField(state, AS_IS);
 }

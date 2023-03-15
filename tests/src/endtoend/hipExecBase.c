@@ -368,13 +368,15 @@ setupHipConfig(void **state, stride_config stride, zfp_index_type index_type, ui
 {
   int result;
 
+  struct setupVars *bundle = *state;
+  bundle->index_type = index_type;
+  bundle->index_granularity = granularity;
+
   if (index_type == zfp_index_none) {
     result = initZfpStreamAndField(state, stride);
   } else {
     result = initZfpStreamAndFieldIndexed(state, stride, index_type, granularity);
   }
-
-  struct setupVars *bundle = *state;
 
   return result;
 }

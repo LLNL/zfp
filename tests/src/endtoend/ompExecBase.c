@@ -197,9 +197,9 @@ _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedPrecision_expec
 static int
 setupOmpConfig(void **state, stride_config stride)
 {
-  int result = initZfpStreamAndField(state, stride);
-
   struct setupVars *bundle = *state;
+  bundle->index_type = zfp_index_none;
+  int result = initZfpStreamAndField(state, stride);
 
   return result;
 }

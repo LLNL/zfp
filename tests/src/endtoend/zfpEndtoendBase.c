@@ -46,7 +46,10 @@ struct setupVars {
   zfp_field* decompressField;
   zfp_stream* stream;
   zfp_mode mode;
+
   zfp_index* index;
+  zfp_index_type index_type;
+  uint index_granularity;
 
   // compressParamNum is 0, 1, or 2
   //   used to compute fixed mode param
@@ -273,14 +276,14 @@ setupZfpStream(struct setupVars* bundle)
 }
 
 static void
-setupZfpIndexedStream(struct setupVars* bundle, zfp_index_type index_type, uint index_granularity)
+setupZfpIndexedStream(struct setupVars* bundle)
 {
   // setup zfp_stream (compression settings)
   zfp_stream* stream = zfp_stream_open(NULL);
   assert_non_null(stream);
 
   bundle->index = zfp_index_create();
-  zfp_index_set_type(bundle->index, index_type, index_granularity);
+  zfp_index_set_type(bundle->index, bundle->index_type, bundle->index_granularity);
   zfp_stream_set_index(stream, bundle->index);
 
   bundle->bufsizeBytes = zfp_stream_maximum_size(stream, bundle->field);
@@ -345,6 +348,14 @@ setupCompressParam(struct setupVars* bundle, zfp_mode zfpMode, int compressParam
       return 1;
   }
 
+  if (bundle->index_type != zfp_index_none)
+  {
+      printf("\t\t\t\tBlock-Index Params:\n");
+      printf("\t\t\t\t\ttype: %d\n", bundle->index_type);
+      printf("\t\t\t\t\tgranularity: %d\n", bundle->index_granularity);
+  }
+
+
   return 0;
 }
 
@@ -365,12 +376,12 @@ initZfpStreamAndField(void **state, stride_config stride)
 }
 
 static int
-initZfpStreamAndFieldIndexed(void **state, stride_config stride, zfp_index_type index_type, uint granularity)
+initZfpStreamAndFieldIndexed(void **state, stride_config stride)
 {
   struct setupVars *bundle = *state;
 
   initStridedFields(bundle, stride);
-  setupZfpIndexedStream(bundle, index_type, granularity);
+  setupZfpIndexedStream(bundle);
 
   bundle->timer = zfp_timer_alloc();
 

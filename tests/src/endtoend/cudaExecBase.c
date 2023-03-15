@@ -368,13 +368,15 @@ setupCudaConfig(void **state, stride_config stride, zfp_index_type index_type, u
 {
   int result;
 
+  struct setupVars *bundle = *state;
+  bundle->index_type = index_type;
+  bundle->index_granularity = granularity;
+
   if (index_type == zfp_index_none) {
     result = initZfpStreamAndField(state, stride);
   } else {
-    result = initZfpStreamAndFieldIndexed(state, stride, index_type, granularity);
+    result = initZfpStreamAndFieldIndexed(state, stride);
   }
-
-  struct setupVars *bundle = *state;
 
   return result;
 }
@@ -412,6 +414,27 @@ setupDefaultIndexed(void **state)
 {
   setupExecPolicy(state, zfp_exec_serial, zfp_exec_cuda);
   return setupCudaConfig(state, AS_IS, zfp_index_offset, 1);
+}
+
+static int
+setupDefaultIndexedWithGranularity(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_cuda);
+  return setupCudaConfig(state, AS_IS, zfp_index_offset, 16);
+}
+
+static int
+setupDefaultHybridIndexed(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_cuda);
+  return setupCudaConfig(state, AS_IS, zfp_index_hybrid, 1);
+}
+
+static int
+setupDefaultHybridIndexedWithGranularity(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_cuda);
+  return setupCudaConfig(state, AS_IS, zfp_index_hybrid, 16);
 }
 
 static int
