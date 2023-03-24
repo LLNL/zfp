@@ -195,11 +195,20 @@ _catFunc3(given_, DESCRIPTOR, PermutedArray_when_ZfpCompressFixedPrecision_expec
 /* setup functions (pre-test) */
 
 static int
-setupOmpConfig(void **state, stride_config stride)
+setupOmpConfig(void **state, stride_config stride, zfp_index_type index_type, uint granularity)
 {
+  int result;
+
   struct setupVars *bundle = *state;
-  bundle->index_type = zfp_index_none;
-  int result = initZfpStreamAndField(state, stride);
+  bundle->index_type = index_type;
+  bundle->index_granularity = granularity;
+
+
+  if (index_type == zfp_index_none) {
+    result = initZfpStreamAndField(state, stride);
+  } else {
+    result = initZfpStreamAndFieldIndexed(state, stride);
+  }
 
   return result;
 }
@@ -210,28 +219,56 @@ static int
 setupPermuted(void **state)
 {
   setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
-  return setupOmpConfig(state, PERMUTED);
+  return setupOmpConfig(state, PERMUTED, zfp_index_none, 1);
 }
 
 static int
 setupInterleaved(void **state)
 {
   setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
-  return setupOmpConfig(state, INTERLEAVED);
+  return setupOmpConfig(state, INTERLEAVED, zfp_index_none, 1);
 }
 
 static int
 setupReversed(void **state)
 {
   setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
-  return setupOmpConfig(state, REVERSED);
+  return setupOmpConfig(state, REVERSED, zfp_index_none, 1);
 }
 
 static int
 setupDefaultStride(void **state)
 {
   setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
-  return setupOmpConfig(state, AS_IS);
+  return setupOmpConfig(state, AS_IS, zfp_index_none, 1);
+}
+
+static int
+setupDefaultIndexed(void **state)
+{
+  setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
+  return setupOmpConfig(state, AS_IS, zfp_index_offset, 1);
+}
+
+static int
+setupDefaultIndexedWithGranularity(void **state)
+{
+  setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
+  return setupOmpConfig(state, AS_IS, zfp_index_offset, 16);
+}
+
+static int
+setupHybridIndexed(void **state)
+{
+  setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
+  return setupOmpConfig(state, AS_IS, zfp_index_hybrid, 1);
+}
+
+static int
+setupHybridIndexedWithGranularity(void **state)
+{
+  setupExecPolicy(state, zfp_exec_omp, zfp_exec_omp);
+  return setupOmpConfig(state, AS_IS, zfp_index_hybrid, 16);
 }
 
 // end #ifdef _OPENMP
