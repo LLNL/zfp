@@ -209,7 +209,7 @@ Word *setup_device_stream_compress(zfp_stream *stream,const zfp_field *field)
 
   Word *d_stream = NULL;
   size_t max_size = zfp_stream_maximum_size(stream, field);
-  cudaMallociAsync(&d_stream, max_size, field->cuStream);
+  cudaMallocAsync(&d_stream, max_size, field->cuStream);
   return d_stream;
 }
 
