@@ -113,6 +113,10 @@ zfp_field_alloc()
     field->nx = field->ny = field->nz = field->nw = 0;
     field->sx = field->sy = field->sz = field->sw = 0;
     field->data = 0;
+
+#ifdef ZFP_WITH_CUDA
+    field->cuStream = 0; /* set to default stream */ 
+#endif 
   }
   return field;
 }
@@ -334,6 +338,14 @@ zfp_field_set_pointer(zfp_field* field, void* data)
 {
   field->data = data;
 }
+
+#ifdef ZFP_WITH_CUDA
+void
+zfp_field_set_cuda_stream(zfp_field* field, cudaStream_t custream) 
+{
+  field->cuStream = custream;
+}
+#endif
 
 zfp_type
 zfp_field_set_type(zfp_field* field, zfp_type type)

@@ -12,6 +12,10 @@
 #include "zfp/internal/zfp/system.h"
 #include "zfp/internal/zfp/types.h"
 
+#ifdef ZFP_WITH_CUDA
+#include <cuda_runtime.h>
+#endif
+
 /* macros ------------------------------------------------------------------ */
 
 /* default compression parameters */
@@ -133,6 +137,11 @@ typedef struct {
   size_t nx, ny, nz, nw;    /* sizes (zero for unused dimensions) */
   ptrdiff_t sx, sy, sz, sw; /* strides (zero for contiguous array a[nw][nz][ny][nx]) */
   void* data;               /* pointer to array data */
+
+#ifdef ZFP_WITH_CUDA
+  cudaStream_t cuStream; /* Provision to execute in stream */
+#endif
+
 } zfp_field;
 
 #ifdef __cplusplus
@@ -579,6 +588,12 @@ zfp_field_set_metadata(
   zfp_field* field, /* field metadata */
   uint64 meta       /* compact 52-bit encoding of metadata */
 );
+
+/* Set cuda stream in case of strem execution */
+
+#ifdef ZFP_WITH_CUDA
+void zfp_field_set_cuda_stream(zfp_field* field, cudaStream_t custream);
+#endif
 
 /* high-level API: compression and decompression --------------------------- */
 
