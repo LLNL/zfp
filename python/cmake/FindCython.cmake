@@ -36,23 +36,22 @@
 
 # Use the Cython executable that lives next to the Python executable
 # if it is a local installation.
+if(Python_EXECUTABLE)
+  get_filename_component(_python_path ${Python_EXECUTABLE} PATH)
+elseif(Python3_EXECUTABLE)
+  get_filename_component(_python_path ${Python3_EXECUTABLE} PATH)
+elseif(DEFINED PYTHON_EXECUTABLE)
+  get_filename_component(_python_path ${PYTHON_EXECUTABLE} PATH)
+endif()
 
-find_package(PythonInterp)
-if(PYTHONINTERP_FOUND)
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from os import path; import cython; print(path.dirname(cython.__file__))"
-                  OUTPUT_VARIABLE CYTHON_PATH
-                  ERROR_VARIABLE  CYTHON_PATH
-                  OUTPUT_STRIP_TRAILING_WHITESPACE
-                  ERROR_STRIP_TRAILING_WHITESPACE)
-
+if(DEFINED _python_path)
   find_program(CYTHON_EXECUTABLE
                NAMES cython cython.bat cython3
-               HINTS ${CYTHON_PATH}
+               HINTS ${_python_path}
                DOC "path to the cython executable")
 else()
   find_program(CYTHON_EXECUTABLE
                NAMES cython cython.bat cython3
-               HINTS ${CYTHON_PATH}
                DOC "path to the cython executable")
 endif()
 

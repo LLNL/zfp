@@ -248,7 +248,7 @@ function(_test_weak_link_project
 
     if(link_mod_lib)
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(counter number)
+        target_link_libraries(counter ${SKBUILD_LINK_LIBRARIES_KEYWORD} number)
       ")
     elseif(NOT link_flag STREQUAL "")
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
@@ -262,21 +262,21 @@ function(_test_weak_link_project
 
     if(link_exe_lib)
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(main number)
+        target_link_libraries(main ${SKBUILD_LINK_LIBRARIES_KEYWORD} number)
       ")
     elseif(NOT link_flag STREQUAL "")
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(main \"${link_flag}\")
+        target_link_libraries(main ${SKBUILD_LINK_LIBRARIES_KEYWORD} \"${link_flag}\")
       ")
     endif()
 
     if(link_exe_mod)
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(main counter)
+        target_link_libraries(main ${SKBUILD_LINK_LIBRARIES_KEYWORD} counter)
       ")
     else()
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(main \"${CMAKE_DL_LIBS}\")
+        target_link_libraries(main ${SKBUILD_LINK_LIBRARIES_KEYWORD} \"${CMAKE_DL_LIBS}\")
       ")
     endif()
 
@@ -408,6 +408,9 @@ function(_test_weak_link_project
     if(project_works EQUAL 0)
       set(project_works TRUE)
       message(STATUS "Performing Test ${test_description} - Success")
+    elseif (CMAKE_CROSSCOMPILING AND APPLE AND "${link_flag_spec}" STREQUAL "osx_dynamic_lookup")
+      set(project_works TRUE)
+      message(STATUS "Performing Test ${test_description} - Cross compiling: assume success")
     else()
       set(project_works FALSE)
       message(STATUS "Performing Test ${test_description} - Failed")
@@ -576,6 +579,6 @@ function(target_link_libraries_with_dynamic_lookup target)
 
   set(links "${link_items}" "${link_libs}")
   if(links)
-    target_link_libraries(${target} "${links}")
+    target_link_libraries(${target} ${SKBUILD_LINK_LIBRARIES_KEYWORD} "${links}")
   endif()
 endfunction()

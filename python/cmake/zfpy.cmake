@@ -1,0 +1,8 @@
+function(zfpy_add_module name file)
+    add_cython_target(${name} ${zfpy_SOURCE_DIR}/${file} CXX PY3)
+    add_library(${name} MODULE ${${name}})
+    target_include_directories(${name} PRIVATE ${ZFP_SOURCE_DIR}/include)
+    target_link_libraries(${name} zfp)
+    set_property(TARGET ${name} APPEND PROPERTY BUILD_RPATH "$<TARGET_FILE_DIR:zfp>")
+    python_extension_module(${name})
+endfunction()

@@ -1,26 +1,24 @@
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/scikit-build-cmake)
-include(UseCython)
-include(FindPythonExtensions)
-include(FindNumPy)
+cmake_minimum_required(VERSION 3.12)
 
-find_package(PythonInterp REQUIRED)
-find_package(PythonLibs REQUIRED)
-find_package(PythonExtensions REQUIRED)
-find_package(Cython 0.28 REQUIRED) # >= v0.28 required for const memoryview support
-find_package(NumPy REQUIRED)
+project(zfpy)
 
-include_directories(${ZFP_SOURCE_DIR}/include)
-include_directories(${NumPy_INCLUDE_DIR})
+list(APPEND CMAKE_MODULE_PATH "${zfpy_SOURCE_DIR}/cmake")
 
-add_cython_target(zfpy zfpy.pyx C)
-add_library(zfpy MODULE ${zfpy})
-target_link_libraries(zfpy zfp)
-python_extension_module(zfpy)
+find_package(Python3 COMPONENTS Interpreter Development NumPy)
+find_package(PythonExtensions)
+find_package(Cython REQUIRED)
 
-# Build to the current binary dir to avoid conflicts with other libraries named zfp
-set(PYLIB_BUILD_DIR "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Directory where zfp python library will be built")
-set_target_properties(zfpy PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYLIB_BUILD_DIR})
+set(CMAKE_SHARED_MODULE_PREFIX "")
 
-# Install to the typical python module directory
-set(python_install_lib_dir "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/")
-install(TARGETS zfpy LIBRARY DESTINATION ${python_install_lib_dir})
+include(${zfpy_SOURCE_DIR}/cmake/zfpy.cmake)
+
+zfpy_add_module(version version.pyx)
+zfpy_add_module(zfpy zfpy.pyx)
+
+## Build to the current binary dir to avoid conflicts with other libraries named zfp
+#set(PYLIB_BUILD_DIR "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Directory where zfp python library will be built")
+#set_target_properties(zfpy PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYLIB_BUILD_DIR})
+#
+## Install to the typical python module directory
+#set(python_install_lib_dir "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/")
+#install(TARGETS zfpy LIBRARY DESTINATION ${python_install_lib_dir})
