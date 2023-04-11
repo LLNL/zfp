@@ -464,25 +464,25 @@ module zfp
     subroutine zfp_field_set_stride_1d(field, sx) bind(c, name="zfp_field_set_stride_1d")
       import
       type(c_ptr), value :: field
-      integer(c_ptrdiff_t) :: sx
+      integer(c_ptrdiff_t), value :: sx
     end subroutine
 
     subroutine zfp_field_set_stride_2d(field, sx, sy) bind(c, name="zfp_field_set_stride_2d")
       import
       type(c_ptr), value :: field
-      integer(c_ptrdiff_t) :: sx, sy
+      integer(c_ptrdiff_t), value :: sx, sy
     end subroutine
 
     subroutine zfp_field_set_stride_3d(field, sx, sy, sz) bind(c, name="zfp_field_set_stride_3d")
       import
       type(c_ptr), value :: field
-      integer(c_ptrdiff_t) :: sx, sy, sz
+      integer(c_ptrdiff_t), value :: sx, sy, sz
     end subroutine
 
     subroutine zfp_field_set_stride_4d(field, sx, sy, sz, sw) bind(c, name="zfp_field_set_stride_4d")
       import
       type(c_ptr), value :: field
-      integer(c_ptrdiff_t) :: sx, sy, sz, sw
+      integer(c_ptrdiff_t), value :: sx, sy, sz, sw
     end subroutine
 
     function zfp_field_set_metadata(field, encoded_metadata) result(is_success) bind(c, name="zfp_field_set_metadata")
