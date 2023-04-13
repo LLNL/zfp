@@ -1,4 +1,4 @@
-from version cimport *
+from zfpy_version cimport *
 
 # constants
 major = ZFP_VERSION_MAJOR
