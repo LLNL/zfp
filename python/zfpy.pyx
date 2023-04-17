@@ -18,9 +18,25 @@ cimport zfpy
 import numpy as np
 cimport numpy as np
 
+# export #define's
+HEADER_MAGIC = ZFP_HEADER_MAGIC
+HEADER_META = ZFP_HEADER_META
+HEADER_MODE = ZFP_HEADER_MODE
+HEADER_FULL = ZFP_HEADER_FULL
 
+# export enums
+type_none = zfp_type_none
+type_int32 = zfp_type_int32
+type_int64 = zfp_type_int64
+type_float = zfp_type_float
+type_double = zfp_type_double
 
-# Internals
+mode_null = zfp_mode_null
+mode_expert = zfp_mode_expert
+mode_fixed_rate = zfp_mode_fixed_rate
+mode_fixed_precision = zfp_mode_fixed_precision
+mode_fixed_accuracy = zfp_mode_fixed_accuracy
+
 def dtype_to_ztype(dtype):
     if dtype == np.int32:
         return zfp_type_int32
@@ -129,12 +145,41 @@ cpdef bytes compress_numpy(
     int precision = -1,
     write_header=True
 ):
+    '''
+    compress_numpy(arr, tolerance=-1, rate=-1, precision=-1, write_header=True)
+        
+        Compress NumPy array and return a compressed byte stream.
+        
+        Parameters
+        ----------
+        arr : numpy.ndarray
+            NumPy array to compress
+        tolerance : float
+            Enable fixed-accuracy mode with the given tolerance. Only one of tolerance, rate, or precision may be set. 
+            If none are used, reversible-mode is used.
+        rate : float
+            Enable fixed-rate mode with the given rate. Only one of tolerance, rate, or precision may be set. If none 
+            are used, reversible-mode is used.
+        precision : int
+            Enable fixed-precision mode with the given precision. Only one of tolerance, rate, or precision may be set. 
+            If none are used, reversible-mode is used.
+        write_header : bool
+            If enabled prepends a header to the compressed data that encodes the compressed array's shape, scalar type, 
+            and the compression parameters used.
+
+        Returns
+        -------
+        A byte stream containing the compressed array data and (optionally) a prepended header describing the data 
+        compressed. If this function fails for any reason, an exception is thrown.
+    '''
     # Input validation
     if arr is None:
         raise TypeError("Input array cannot be None")
     num_params_set = sum([1 for x in [tolerance, rate, precision] if x >= 0])
     if num_params_set > 1:
         raise ValueError("Only one of tolerance, rate, or precision can be set")
+    if tolerance >= 0 and dtype_to_ztype(arr.dtype) in (zfp_type_int32, zfp_type_int64):
+        raise TypeError("Fixed-accuracy mode should only be used for floating-point data") 
 
     # Setup zfp structs to begin compression
     cdef zfp_field* field = _init_field(arr)
@@ -328,6 +373,21 @@ cpdef np.ndarray _decompress(
 cpdef np.ndarray decompress_numpy(
     const uint8_t[::1] compressed_data,
 ):
+    '''
+    decompress_numpy(compressed_data)
+        
+        Decompress a byte stream produced by compress_numpy() (with header enabled) and return the decompressed data as 
+        a NumPy array.
+        
+        Parameters
+        ----------
+        compressed_data : bytes
+            byte data to decompress
+
+        Returns
+        -------
+        A NumPy array containing the decompressed data based on the contents of the compressed data's header.
+    '''
     if compressed_data is None:
         raise TypeError("compressed_data cannot be None")
 
@@ -352,7 +412,20 @@ cpdef np.ndarray decompress_numpy(
     return output
 
 cpdef dict header(const uint8_t[::1] compressed_data):
-    """Return stream header information in a python dict."""
+    """
+    header(compressed_data)
+
+        Return stream header information.
+
+        Parameters
+        ----------
+        compressed_data : bytes
+            byte data to extract header from
+        
+        Returns
+        -------
+        Python dictionary containing header fields and their associated values
+    """
     if compressed_data is None:
         raise TypeError("compressed_data cannot be None")
 
