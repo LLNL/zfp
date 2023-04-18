@@ -5,9 +5,21 @@ Change Log
 
 ## Unreleased
 
+### Added
+
+- New `zfpy.policy_serial`, `zfpy.policy_omp`, and `zfpy.policy_cuda` constants 
+  for use with `zfpy.compress_numpy` and `zfpy.decompress_numpy`.
+
+### Changed
+
+- `zfpy.compress_numpy` now protects against using fixed-accuracy mode when 
+  compressing non-floating-point data.
+- `zfpy.compress_numpy` and `zfpy.decompress_numpy` now support selection of 
+  execution policy.
+
 ### Fixed
 
-- # 177: Full test suite not in release
+- #177: Full test suite not in release
 - #176: `CFP` API is not exposed via CMake configuration file
 - #169: `libm` dependency is not always correctly detected.
 
