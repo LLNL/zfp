@@ -29,6 +29,11 @@ cdef extern from "zfp.h":
         zfp_mode_fixed_accuracy  = 4,
         zfp_mode_reversible      = 5 
 
+    ctypedef enum zfp_exec_policy:
+        zfp_exec_serial = 0,
+        zfp_exec_omp    = 1,
+        zfp_exec_cuda   = 2 
+
     # Structs
     ctypedef struct zfp_field:
         zfp_type _type "type"
@@ -82,3 +87,4 @@ cdef extern from "zfp.h":
     cdef size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, cython.uint mask)
     cdef size_t zfp_read_header(zfp_stream* stream, zfp_field* field, cython.uint mask)
     cdef void zfp_stream_params(zfp_stream* stream, cython.uint* minbits, cython.uint* maxbits, cython.uint* maxprec, int* minexp)
+    cdef zfp_bool zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)

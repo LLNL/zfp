@@ -37,6 +37,10 @@ mode_fixed_rate = zfp_mode_fixed_rate
 mode_fixed_precision = zfp_mode_fixed_precision
 mode_fixed_accuracy = zfp_mode_fixed_accuracy
 
+policy_serial = zfp_exec_serial
+policy_omp = zfp_exec_omp   
+policy_cuda = zfp_exec_cuda  
+
 def dtype_to_ztype(dtype):
     if dtype == np.int32:
         return zfp_type_int32
@@ -88,6 +92,17 @@ cpdef zmode_to_str(zfp_mode zmode):
         return zfp_mode_map[zmode]
     except KeyError:
         raise ValueError("Unsupported zfp_mode {}".format(zmode))
+
+zfp_policy_map = {
+    zfp_exec_serial: "serial",
+    zfp_exec_omp: "openmp",
+    zfp_exec_cuda: "cuda",
+}
+cpdef zpolicy_to_str(zfp_exec_policy zpolicy):
+    try:
+        return zfp_policy_map[zpolicy]
+    except KeyError:
+        raise ValueError("Unsupported zfp_exec_policy {}".format(zpolicy))
 
 cdef zfp_field* _init_field(np.ndarray arr) except NULL:
     shape = arr.shape
@@ -143,7 +158,8 @@ cpdef bytes compress_numpy(
     double tolerance = -1,
     double rate = -1,
     int precision = -1,
-    write_header=True
+    write_header=True,
+    policy=policy_serial,
 ):
     '''
     compress_numpy(arr, tolerance=-1, rate=-1, precision=-1, write_header=True)
@@ -179,7 +195,7 @@ cpdef bytes compress_numpy(
     if num_params_set > 1:
         raise ValueError("Only one of tolerance, rate, or precision can be set")
     if tolerance >= 0 and dtype_to_ztype(arr.dtype) in (zfp_type_int32, zfp_type_int64):
-        raise TypeError("Fixed-accuracy mode should only be used for floating-point data") 
+        raise TypeError("Fixed-accuracy mode only supports floating-point data") 
 
     # Setup zfp structs to begin compression
     cdef zfp_field* field = _init_field(arr)
@@ -188,6 +204,10 @@ cpdef bytes compress_numpy(
     cdef zfp_type ztype = zfp_type_none
     cdef int ndim = arr.ndim
     _set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
+
+    cdef zfp_bool exec_policy_set = zfp_stream_set_execution(stream, policy)
+    if not exec_policy_set:
+        raise ValueError("{} execution policy is not supported".format(zpolicy_to_str(policy)))
 
     # Allocate space based on the maximum size potentially required by zfp to
     # store the compressed array
@@ -372,6 +392,7 @@ cpdef np.ndarray _decompress(
 
 cpdef np.ndarray decompress_numpy(
     const uint8_t[::1] compressed_data,
+    policy=policy_serial,
 ):
     '''
     decompress_numpy(compressed_data)
@@ -399,6 +420,10 @@ cpdef np.ndarray decompress_numpy(
     )
     cdef zfp_stream* stream = zfp_stream_open(bstream)
     cdef np.ndarray output
+
+    cdef zfp_bool exec_policy_set = zfp_stream_set_execution(stream, policy)
+    if not exec_policy_set:
+        raise ValueError("{} execution policy is not supported".format(policy))
 
     try:
         if zfp_read_header(stream, field, ZFP_HEADER_FULL) == 0:
