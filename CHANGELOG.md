@@ -16,6 +16,8 @@ Change Log
   compressing non-floating-point data.
 - `zfpy.compress_numpy` and `zfpy.decompress_numpy` now support selection of 
   execution policy.
+- `zfpy.header` return's mode field gives a more accurate string representation 
+  of the header's stored mode.
 
 ### Fixed
 

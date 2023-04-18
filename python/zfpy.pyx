@@ -83,9 +83,9 @@ zfp_mode_map = {
     zfp_mode_null: "null",
     zfp_mode_expert: "expert",
     zfp_mode_reversible: "reversible",
-    zfp_mode_fixed_accuracy: "tolerance",
-    zfp_mode_fixed_precision: "precision",
-    zfp_mode_fixed_rate: "rate",
+    zfp_mode_fixed_accuracy: "fixed-accuracy",
+    zfp_mode_fixed_precision: "fixed-precision",
+    zfp_mode_fixed_rate: "fixed-rate",
 }
 cpdef zmode_to_str(zfp_mode zmode):
     try:
@@ -103,6 +103,29 @@ cpdef zpolicy_to_str(zfp_exec_policy zpolicy):
         return zfp_policy_map[zpolicy]
     except KeyError:
         raise ValueError("Unsupported zfp_exec_policy {}".format(zpolicy))
+cpdef _compression_mode_supported(zfp_mode mode, policy):
+    policy_map = {
+        policy_serial: [zfp_mode_fixed_rate, 
+                        zfp_mode_fixed_precision, 
+                        zfp_mode_fixed_accuracy, 
+                        zfp_mode_reversible],
+        policy_omp:    [zfp_mode_fixed_rate,
+                        zfp_mode_fixed_precision, 
+                        zfp_mode_fixed_accuracy, 
+                        zfp_mode_reversible],
+        policy_cuda:   [zfp_mode_fixed_rate]
+    }
+    return mode in policy_map[policy]
+cpdef _decompression_mode_supported(zfp_mode mode, policy):
+    policy_map = {
+        policy_serial: [zfp_mode_fixed_rate, 
+                        zfp_mode_fixed_precision, 
+                        zfp_mode_fixed_accuracy, 
+                        zfp_mode_reversible],
+        policy_omp:    [],
+        policy_cuda:   [zfp_mode_fixed_rate]
+    }
+    return mode in policy_map[policy]
 
 cdef zfp_field* _init_field(np.ndarray arr) except NULL:
     shape = arr.shape
@@ -203,7 +226,10 @@ cpdef bytes compress_numpy(
 
     cdef zfp_type ztype = zfp_type_none
     cdef int ndim = arr.ndim
-    _set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
+    cdef zfp_mode mode = _set_compression_mode(stream, ztype, ndim, tolerance, rate, precision)
+
+    if not _compression_mode_supported(mode, policy):
+        raise ValueError("{} execution policy doesn't support {} mode compression".format(zpolicy_to_str(policy), zmode_to_str(mode)))
 
     cdef zfp_bool exec_policy_set = zfp_stream_set_execution(stream, policy)
     if not exec_policy_set:
@@ -281,12 +307,16 @@ cdef _set_compression_mode(
 ):
     if tolerance >= 0:
         zfp_stream_set_accuracy(stream, tolerance)
+        return zfp_mode_fixed_accuracy
     elif rate >= 0:
         zfp_stream_set_rate(stream, rate, ztype, ndim, 0)
+        return zfp_mode_fixed_rate
     elif precision >= 0:
         zfp_stream_set_precision(stream, precision)
+        return zfp_mode_fixed_precision
     else:
         zfp_stream_set_reversible(stream)
+        return zfp_mode_reversible
 
 cdef _validate_4d_list(in_list, list_name):
     # Validate that the input list is either a valid list for strides or shape
@@ -423,11 +453,14 @@ cpdef np.ndarray decompress_numpy(
 
     cdef zfp_bool exec_policy_set = zfp_stream_set_execution(stream, policy)
     if not exec_policy_set:
-        raise ValueError("{} execution policy is not supported".format(policy))
+        raise ValueError("{} execution policy is not supported".format(zpolicy_to_str(policy)))
 
     try:
         if zfp_read_header(stream, field, ZFP_HEADER_FULL) == 0:
             raise ValueError("Failed to read required zfp header")
+        mode = zfp_stream_compression_mode(stream)
+        if not _decompression_mode_supported(mode, policy):
+            raise ValueError("{} execution policy doesn't support {} mode decompression".format(zpolicy_to_str(policy), zmode_to_str(mode)))
         output = np.asarray(_decompress_with_view(field, stream))
     finally:
         zfp_field_free(field)
