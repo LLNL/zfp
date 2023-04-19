@@ -40,3 +40,4 @@
 .. |carrrelease| replace:: 1.0.0
 .. |cpprelease| replace:: 1.0.0
 .. |verrelease| replace:: 1.0.0
+.. |zfpyversrelease| replace:: VERSION HERE

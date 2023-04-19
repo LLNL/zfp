@@ -9,14 +9,11 @@ tweak = ZFP_VERSION_TWEAK
 codec = ZFP_CODEC
 
 # zfpy specific calls
-cpdef version(full = False):
-    vstr = "{}.{}.{}".format(major, minor, patch)
-    if full:
-        vstr += ".{}".format(tweak)
-    return vstr
+cpdef version():
+    return "{}.{}.{}".format(major, minor, patch)
 
 cpdef full_version():
-    return version(True)
+    return "{}.{}.{}.{}".format(major, minor, patch, tweak)
 
 cpdef version_string():
     return c_zfp_version_string.decode()

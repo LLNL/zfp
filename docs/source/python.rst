@@ -11,15 +11,13 @@ Python Bindings
 and decompressing `NumPy <https://www.numpy.org>`_ integer and
 floating-point arrays.  The |zfpy| implementation is based on
 `Cython <https://cython.org>`_ and requires both NumPy and Cython
-to be installed.  Currently, |zfpy| supports only serial execution.
-
-The |zfpy| API is limited to two functions, for compression and
-decompression, which are described below.
+to be installed. The |zfpy| API is limited to two functions, for compression 
+and decompression, which are described below.
 
 Compression
 -----------
 
-.. py:function:: compress_numpy(arr, tolerance = -1, rate = -1, precision = -1, write_header = True)
+.. py:function:: zfpy.compress_numpy(arr, tolerance = -1, rate = -1, precision = -1, write_header = True, policy = policy_serial)
 
   Compress NumPy array, *arr*, and return a compressed byte stream.  The
   non-expert :ref:`compression mode <modes>` is selected by setting one of
@@ -86,11 +84,11 @@ be :ref:`deserialized <serialization>` as compressed arrays, however.
 Decompression
 -------------
 
-.. py:function:: decompress_numpy(compressed_data)
+.. py:function:: zfpy.decompress_numpy(compressed_data, policy = policy_serial)
 
   Decompress a byte stream, *compressed_data*, produced by
   :py:func:`compress_numpy` (with header enabled) and return the
-  decompressed NumPy array.  This function throws on exception upon error.
+  decompressed NumPy array. This function throws an exception upon error.
 
 :py:func:`decompress_numpy` consumes a compressed stream that includes a
 header and produces a NumPy array with metadata populated based on the
@@ -111,7 +109,7 @@ compatible shape.
   internal :py:func:`_decompress` Python function (or the
   :ref:`C API <hl-api>`).
 
-.. py:function:: _decompress(compressed_data, ztype, shape, out = None, tolerance = -1, rate = -1, precision = -1)
+.. py:function:: zfpy._decompress(compressed_data, ztype, shape, out = None, tolerance = -1, rate = -1, precision = -1)
 
   Decompress a headerless compressed stream (if a header is present in
   the stream, it will be incorrectly interpreted as compressed data).
@@ -122,7 +120,7 @@ compatible shape.
   by the caller.  If *out = None*, a new NumPy array is allocated.  Otherwise,
   *out* specifies the NumPy array or memory buffer to decompress into.
   Regardless, the decompressed NumPy array is returned unless an error occurs,
-  in which case an exception is thrown.
+  in which case an exception is thrown.G
 
 In :py:func:`_decompress`, *ztype* is one of the |zfp| supported scalar types
 (see :c:type:`zfp_type`), which are available in |zfpy| as
@@ -153,3 +151,81 @@ constraint check, use :code:`out = ndarray.data` rather than
   headers, but providing too small of an output buffer or incorrectly
   specifying the shape or strides can result in segmentation faults.
   Use with care.
+
+Execution Policy
+----------------
+
+|zfp| |zfpyversrelease| adds execution policy support for |zfpy| compression and 
+decompression. These are passed as optional policy parameters to 
+:code:`zfpy.compress_numpy` and :code:`zfpy.decompress_numpy`. The following 
+policies are supported (see :c:type:`zfp_exec_policy`)
+::
+
+  zfpy.policy_serial
+  zfpy.policy_omp
+  zfpy.policy_cuda
+
+.. note::
+  Both `zfpy.policy_omp` and `zfpy.policy_cuda` expect that the underlying |zfp| 
+  library be built with support for the equivalent |zfp| execution policies. See 
+  the :ref:`compression modes table <compression_mode_support>` for details on 
+  execution policy support.
+
+Version
+-------
+
+.. py:module:: zfpy.version
+
+|zfp| |zfpyversrelease| adds support for querying version info much like that 
+provided by the |zfp| `version.h` header. This is accessible as 
+`zfpy.version`. It may also be accessed seperately via 
+:code:`import zfpy_version`.
+
+.. py:function:: zfpy.version.version()
+
+  Returns the version number as a string with the form "MAJOR.MINOR.PATCH".
+
+.. py:function:: zfpy.version.full_version()
+
+  Returns the version number as a string with the form 
+  "MAJOR.MINOR.PATCH.TWEAK".
+
+.. py:function:: zfpy.version.version_string()
+
+  Returns the full zfp version string (see :c:var:`zfp_version_string`).
+
+.. py:data:: zfpy.version.major
+
+  Integer representation of zfp major version
+
+.. py:data:: zfpy.version.minor
+
+  Integer representation of zfp minor version
+
+.. py:data:: zfpy.version.patch
+
+  Integer representation of the patch version
+
+.. py:data:: zfpy.version.tweak
+
+  Integer representation of the tweak version
+
+.. py:data:: zfpy.version.codec
+
+  Integer representation of zfp codec version
+
+Much as with `version.h`, `zfpy_version` serves as a standalone method for 
+validating that code will have access to version-dependent API calls prior to 
+any attempts to access those calls. As some early versions of |zfpy| lack this 
+functionality it is a good idea to verify it exists as part of version 
+checking. For example::
+
+  import zfpy
+
+  if not hasattr(zfpy, 'version'):
+      # Using version too old for zfpy_version, fall back to alternate option
+
+  if zfpy.version.major >= 1 and (zfpy.version.minor >= 1 or zfpy.version.major >= 1):
+      # Use new API call
+  else:
+      # Fall back to alternate option

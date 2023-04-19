@@ -248,6 +248,8 @@ decompression in this tool, see the :option:`-x` command-line option.
   supports only fixed-rate mode and will fail if other compression modes
   are specified.
 
+.. _compression_mode_support:
+
 The following table summarizes which execution policies are supported
 with which :ref:`compression modes <modes>`:
 
