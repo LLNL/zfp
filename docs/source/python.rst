@@ -181,18 +181,22 @@ provided by the |zfp| `version.h` header. This is accessible as
 `zfpy.version`. It may also be accessed seperately via 
 :code:`import zfpy_version`.
 
-.. py:function:: zfpy.version.version()
+.. py:function:: zfpy.version.geq(major, minor, patch, tweak=zfpy.version.tweak)
 
-  Returns the version number as a string with the form "MAJOR.MINOR.PATCH".
+  Returns whether the current version of zfpy is greater than or equal to the 
+  given version.
 
-.. py:function:: zfpy.version.full_version()
+.. py:data:: zfpy.version.version
 
-  Returns the version number as a string with the form 
-  "MAJOR.MINOR.PATCH.TWEAK".
+  Version number as a string with the form "major.minor.patch".
 
-.. py:function:: zfpy.version.version_string()
+.. py:data:: zfpy.version.full_version
 
-  Returns the full zfp version string (see :c:var:`zfp_version_string`).
+  Version number as a string with the form "major.minor.patch.tweak".
+
+.. py:data:: zfpy.version.version_string
+
+  Full zfp version string (see :c:var:`zfp_version_string`).
 
 .. py:data:: zfpy.version.major
 
@@ -225,7 +229,7 @@ checking. For example::
   if not hasattr(zfpy, 'version'):
       # Using version too old for zfpy_version, fall back to alternate option
 
-  if zfpy.version.major >= 1 and (zfpy.version.minor >= 1 or zfpy.version.major >= 1):
+  if zfpy.version.geq(req_major, req_minor, req_patch):
       # Use new API call
   else:
       # Fall back to alternate option

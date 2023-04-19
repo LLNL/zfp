@@ -7,17 +7,18 @@ Change Log
 
 ### Added
 
-- New `zfpy.policy_serial`, `zfpy.policy_omp`, and `zfpy.policy_cuda` constants 
-  for use with `zfpy.compress_numpy` and `zfpy.decompress_numpy`.
+- `zfpy.version`: zfpy module counterpart to zfp `version.h` header.
+- New execution policy constants for use with `zfpy.compress_numpy()` and 
+  `zfpy.decompress_numpy()`.
 
 ### Changed
 
-- `zfpy.compress_numpy` now protects against using fixed-accuracy mode when 
+- `zfpy.compress_numpy()` now protects against using fixed-accuracy mode when 
   compressing non-floating-point data.
-- `zfpy.compress_numpy` and `zfpy.decompress_numpy` now support selection of 
-  execution policy.
-- `zfpy.header` return's mode field gives a more accurate string representation 
-  of the header's stored mode.
+- `zfpy.compress_numpy()` and `zfpy.decompress_numpy()` now support selection 
+  of execution policy.
+- `zfpy.header()` returned mode field gives more accurate string representation 
+  of the compression mode used.
 
 ### Fixed
 

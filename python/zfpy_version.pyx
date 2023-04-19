@@ -8,12 +8,12 @@ tweak = ZFP_VERSION_TWEAK
 
 codec = ZFP_CODEC
 
+version = "{}.{}.{}".format(major, minor, patch)
+
+full_version = "{}.{}.{}.{}".format(major, minor, patch, tweak)
+
+version_string = c_zfp_version_string.decode()
+
 # zfpy specific calls
-cpdef version():
-    return "{}.{}.{}".format(major, minor, patch)
-
-cpdef full_version():
-    return "{}.{}.{}.{}".format(major, minor, patch, tweak)
-
-cpdef version_string():
-    return c_zfp_version_string.decode()
+cpdef geq(major, minor, patch, tweak=ZFP_VERSION_TWEAK):
+    return (ZFP_VERSION_MAJOR, ZFP_VERSION_MINOR, ZFP_VERSION_PATCH, ZFP_VERSION_TWEAK) >= (major, minor, patch, tweak)
