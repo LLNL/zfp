@@ -8,6 +8,8 @@ tweak = ZFP_VERSION_TWEAK
 
 codec = ZFP_CODEC
 
+develop = ZFP_VERSION_DEVELOP
+
 version = "{}.{}.{}".format(major, minor, patch)
 
 full_version = "{}.{}.{}.{}".format(major, minor, patch, tweak)

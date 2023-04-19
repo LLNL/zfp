@@ -11,8 +11,11 @@ Python Bindings
 and decompressing `NumPy <https://www.numpy.org>`_ integer and
 floating-point arrays.  The |zfpy| implementation is based on
 `Cython <https://cython.org>`_ and requires both NumPy and Cython
-to be installed. The |zfpy| API is limited to two functions, for compression 
-and decompression, which are described below.
+to be installed. As of version |zfpyversrelease|, |zfpy| provides support for 
+:ref:`execution policy selection <zfpy_exec_policy>`.
+
+The |zfpy| API is limited to two functions, for compression 
+and decompression, which are described below. 
 
 Compression
 -----------
@@ -152,13 +155,15 @@ constraint check, use :code:`out = ndarray.data` rather than
   specifying the shape or strides can result in segmentation faults.
   Use with care.
 
+.. _zfpy_exec_policy:
+
 Execution Policy
 ----------------
 
 |zfp| |zfpyversrelease| adds execution policy support for |zfpy| compression and 
 decompression. These are passed as optional policy parameters to 
-:code:`zfpy.compress_numpy` and :code:`zfpy.decompress_numpy`. The following 
-policies are supported (see :c:type:`zfp_exec_policy`)
+:py:func:`zfpy.compress_numpy` and :py:func:`zfpy.decompress_numpy`. The 
+following policies are supported (see :c:type:`zfp_exec_policy`)
 ::
 
   zfpy.policy_serial
@@ -166,9 +171,12 @@ policies are supported (see :c:type:`zfp_exec_policy`)
   zfpy.policy_cuda
 
 .. note::
-  Both `zfpy.policy_omp` and `zfpy.policy_cuda` expect that the underlying |zfp| 
-  library be built with support for the equivalent |zfp| execution policies. See 
-  the :ref:`compression modes table <compression_mode_support>` for details on 
+  Both `zfpy.policy_omp` and `zfpy.policy_cuda` expect that the |zfp| library
+  used be built with support for the equivalent |zfp| execution policies. 
+  
+  In addition, |zfpy| execution policies are bound by the same constraints as 
+  |zfp| execution policies. See the 
+  :ref:`compression modes table <compression_mode_support>` for details on 
   execution policy support.
 
 Version
@@ -200,23 +208,33 @@ provided by the |zfp| `version.h` header. This is accessible as
 
 .. py:data:: zfpy.version.major
 
-  Integer representation of zfp major version
+  Integer representation of zfp major version 
+  (see :c:macro:`ZFP_VERSION_MAJOR`).
 
 .. py:data:: zfpy.version.minor
 
-  Integer representation of zfp minor version
+  Integer representation of zfp minor version 
+  (see :c:macro:`ZFP_VERSION_MINOR`).
 
 .. py:data:: zfpy.version.patch
 
-  Integer representation of the patch version
+  Integer representation of the patch version 
+  (see :c:macro:`ZFP_VERSION_PATCH`).
 
 .. py:data:: zfpy.version.tweak
 
-  Integer representation of the tweak version
+  Integer representation of the tweak version 
+  (see :c:macro:`ZFP_VERSION_TWEAK`).
 
 .. py:data:: zfpy.version.codec
 
-  Integer representation of zfp codec version
+  Integer representation of zfp codec version 
+  (see :c:macro:`ZFP_CODEC`).
+
+.. py:data:: zfpy.version.develop
+
+  Boolean value denoting if this is an intermediate (develop) version of zfp 
+  (see :c:macro:`ZFP_VERSION_DEVELOP`).
 
 Much as with `version.h`, `zfpy_version` serves as a standalone method for 
 validating that code will have access to version-dependent API calls prior to 
