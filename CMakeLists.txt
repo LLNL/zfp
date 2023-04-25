@@ -305,6 +305,14 @@ endif()
 
 option(BUILD_ZFPY "Build python bindings for zfp" OFF)
 if(BUILD_ZFPY)
+  set(PYLIB_BUILD_DIR "${CMAKE_BINARY_DIR}/lib" CACHE PATH "Directory where zfp python library will be built")
+  list(APPEND CMAKE_MODULE_PATH "${ZFP_SOURCE_DIR}/cmake")
+
+  find_package(Python3 COMPONENTS Interpreter Development NumPy)
+  find_package(PythonExtensions)
+  find_package(Cython REQUIRED)
+  find_package(NumPy REQUIRED)
+
   add_subdirectory(python)
 endif()
 
