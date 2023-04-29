@@ -7,7 +7,7 @@ Release Notes
 ------------------
 
 This release is not ABI compatible with prior releases due to numerous changes
-to function signatures and data structures like zfp_fieldu.  However, few of
+to function signatures and data structures like ``zfp_field``.  However, few of
 the API changes, other than to the |cfp| C API for compressed arrays, should
 impact existing code.  Note that numerous header files have been renamed or
 moved relative to prior versions.

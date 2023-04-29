@@ -508,7 +508,7 @@ with only a few differences:
 
 - Whereas the constructors for fixed-rate arrays accept a *rate* parameter,
   the read-only arrays allow specifying any compression mode and
-  corresponding parameters (if any) via a :c:struct:`zfp_config` object.
+  corresponding parameters (if any) via a :c:type:`zfp_config` object.
 
 - Additional methods are available for setting and querying compression
   mode and parameters after construction.
