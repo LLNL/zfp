@@ -555,6 +555,8 @@ Compressed Stream
   parameters stored in *stream* and the array whose scalar type and dimensions
   are given by *field*.  This function may be used to determine how large a
   memory buffer to allocate to safely hold the entire compressed array.
+  The buffer may then be resized (using :code:`realloc()`) after the actual
+  number of bytes is known, as returned by :c:func:`zfp_compress`.
 
 
 .. _hl-func-stream:
