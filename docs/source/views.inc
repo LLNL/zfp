@@ -655,6 +655,13 @@ cache owned by the array.  Multiple threads may thus access the
 same array in parallel through their own private views.
 
 .. note::
+  Thread safety is ensured only for OpenMP threads, and the |zfp|
+  views must be compiled by an OpenMP compliant compiler.  As the
+  |zfp| compressed-array class implementation is defined in headers,
+  the application code using |zfp| must also be compiled with OpenMP
+  enabled if multithreaded access to |zfp| arrays is desired.
+
+.. note::
   Private views **do not guarantee cache coherence**.  If, for example,
   the array is modified, then already cached data in a private view is
   not automatically updated.  It is up to the user to ensure cache

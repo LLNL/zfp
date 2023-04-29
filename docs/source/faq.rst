@@ -1036,7 +1036,7 @@ Q24: *Are zfp's compressed arrays and other data structures thread-safe?*
 A: Yes, compressed arrays can be made thread-safe; no, data structures
 like :c:type:`zfp_stream` and :c:type:`bitstream` are not necessarily
 thread-safe.  As of |zfp| |viewsrelease|, thread-safe read and write access
-to compressed arrays is provided through the use of
+to compressed arrays via OpenMP threads is provided through the use of
 :ref:`private views <private_immutable_view>`, although these come with
 certain restrictions and requirements such as the need for the user to
 enforce cache coherence.  Please see the documentation on
