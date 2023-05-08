@@ -1,6 +1,5 @@
 import cython
 
-from libcpp.string cimport string
 from libcpp cimport bool as cybool
 cimport libc.stdint as stdint
 

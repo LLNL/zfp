@@ -153,17 +153,6 @@ cdef zfp_field* _init_field(np.ndarray arr) except NULL:
 
     return field
 
-cdef gen_padded_int_list(orig_array, pad=0, length=4):
-    return [int(x) for x in
-            itertools.islice(
-                itertools.chain(
-                    orig_array,
-                    itertools.repeat(pad)
-                ),
-                length
-            )
-    ]
-
 @cython.final
 cdef class Memory:
     cdef void* data
@@ -337,6 +326,17 @@ cdef _validate_4d_list(in_list, list_name):
             "User-provided {} is not an iterable"
         )
 
+cpdef gen_padded_int_list(orig_array, pad=0, length=4):
+    return [int(x) for x in
+            itertools.islice(
+                itertools.chain(
+                    orig_array,
+                    itertools.repeat(pad)
+                ),
+                length
+            )
+    ]
+
 cpdef np.ndarray _decompress(
     const uint8_t[::1] compressed_data,
     zfp_type ztype,
@@ -378,7 +378,7 @@ cpdef np.ndarray _decompress(
         if out is None:
             output = np.asarray(_decompress_with_view(field, stream))
         else:
-            dtype = zfpy.ztype_to_dtype(ztype)
+            dtype = ztype_to_dtype(ztype)
             if isinstance(out, np.ndarray):
                 output = out
 

@@ -88,3 +88,5 @@ cdef extern from "zfp.h":
     cdef size_t zfp_read_header(zfp_stream* stream, zfp_field* field, cython.uint mask)
     cdef void zfp_stream_params(zfp_stream* stream, cython.uint* minbits, cython.uint* maxbits, cython.uint* maxprec, int* minexp)
     cdef zfp_bool zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)
+
+#cdef gen_padded_int_list(orig_array, pad=*, length=*)

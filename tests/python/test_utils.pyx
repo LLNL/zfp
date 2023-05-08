@@ -4,7 +4,6 @@ from libc.stdlib cimport malloc, free
 cimport libc.stdint as stdint
 from libc.stddef cimport ptrdiff_t
 from cython cimport view
-from itertools import islice, repeat, chain
 
 import zfpy
 cimport zfpy
@@ -17,26 +16,57 @@ ctypedef stdint.int64_t int64_t
 ctypedef stdint.uint32_t uint32_t
 ctypedef stdint.uint64_t uint64_t
 
+cdef extern from "zfp.h":
+    # Enums
+    ctypedef enum zfp_type:
+        zfp_type_none   = 0,
+        zfp_type_int32  = 1,
+        zfp_type_int64  = 2,
+        zfp_type_float  = 3,
+        zfp_type_double = 4
+
+    ctypedef enum zfp_mode:
+        zfp_mode_null            = 0,
+        zfp_mode_expert          = 1,
+        zfp_mode_fixed_rate      = 2,
+        zfp_mode_fixed_precision = 3,
+        zfp_mode_fixed_accuracy  = 4,
+        zfp_mode_reversible      = 5 
+
+type_none   = zfp_type_none
+type_int32  = zfp_type_int32
+type_int64  = zfp_type_int64
+type_float  = zfp_type_float
+type_double = zfp_type_double
+
+mode_null            = zfp_mode_null
+mode_expert          = zfp_mode_expert
+mode_fixed_rate      = zfp_mode_fixed_rate
+mode_fixed_precision = zfp_mode_fixed_precision
+mode_fixed_accuracy  = zfp_mode_fixed_accuracy
+mode_reversible      = zfp_mode_reversible
+
+
 cdef extern from "genSmoothRandNums.h":
-    size_t intPow(size_t base, int exponent)
-    void generateSmoothRandInts64(size_t minTotalElements,
+    cdef size_t intPow(size_t base, int exponent)
+    cdef void generateSmoothRandInts64(size_t minTotalElements,
                                   int numDims,
                                   int amplitudeExp,
                                   int64_t** outputArr,
                                   size_t* outputSideLen,
                                   size_t* outputTotalLen)
-    void generateSmoothRandInts32(size_t minTotalElements,
+    cdef void generateSmoothRandInts32(size_t minTotalElements,
                                   int numDims,
                                   int amplitudeExp,
                                   int32_t** outputArr32Ptr,
                                   size_t* outputSideLen,
                                   size_t* outputTotalLen)
-    void generateSmoothRandFloats(size_t minTotalElements,
+    cdef void generateSmoothRandFloats(size_t minTotalElements,
                                   int numDims,
                                   float** outputArrPtr,
                                   size_t* outputSideLen,
                                   size_t* outputTotalLen)
-    void generateSmoothRandDoubles(size_t minTotalElements,
+    cdef void generateSmoothRandDoubles(size_t minTotalElements,
                                    int numDims,
                                    double** outputArrPtr,
                                    size_t* outputSideLen,
@@ -49,41 +79,33 @@ cdef extern from "stridedOperations.h":
         INTERLEAVED = 2,
         REVERSED = 3
 
-    void reverseArray(void* inputArr,
+    cdef void reverseArray(void* inputArr,
                       void* outputArr,
                       size_t inputArrLen,
-                      zfpy.zfp_type zfpType)
-    void interleaveArray(void* inputArr,
+                      zfp_type zfpType)
+    cdef void interleaveArray(void* inputArr,
                          void* outputArr,
                          size_t inputArrLen,
-                         zfpy.zfp_type zfpType)
-    int permuteSquareArray(void* inputArr,
+                         zfp_type zfpType)
+    cdef int permuteSquareArray(void* inputArr,
                            void* outputArr,
                            size_t sideLen,
                            int dims,
-                           zfpy.zfp_type zfpType)
-    void getReversedStrides(int dims,
+                           zfp_type zfpType)
+    cdef void getReversedStrides(int dims,
                             size_t n[4],
                             ptrdiff_t s[4])
-    void getInterleavedStrides(int dims,
+    cdef void getInterleavedStrides(int dims,
                                size_t n[4],
                                ptrdiff_t s[4])
-    void getPermutedStrides(int dims,
+    cdef void getPermutedStrides(int dims,
                             size_t n[4],
                             ptrdiff_t s[4])
 
 cdef extern from "zfpCompressionParams.h":
-    int computeFixedPrecisionParam(int param)
-    size_t computeFixedRateParam(int param)
-    double computeFixedAccuracyParam(int param)
-
-cdef extern from "zfp.h":
-    ctypedef enum zfp_type:
-        zfp_type_none = 0,
-        zfp_type_int32 = 1,
-        zfp_type_int64 = 2,
-        zfp_type_float = 3,
-        zfp_type_double = 4 
+    cdef int computeFixedPrecisionParam(int param)
+    cdef size_t computeFixedRateParam(int param)
+    cdef double computeFixedAccuracyParam(int param)
 
 cdef extern from "zfpChecksums.h":
     ctypedef enum test_type:
@@ -96,58 +118,58 @@ cdef extern from "zfpChecksums.h":
         COMPRESSED_BITSTREAM = 1,
         DECOMPRESSED_ARRAY = 2,
 
-    void computeKeyOriginalInput(test_type tt,
+    cdef void computeKeyOriginalInput(test_type tt,
                                  size_t n[4],
                                  uint64_t* key1,
                                  uint64_t* key2)
-    void computeKey(test_type tt,
+    cdef void computeKey(test_type tt,
                     subject sjt,
                     size_t n[4],
-                    zfpy.zfp_mode mode,
+                    zfp_mode mode,
                     int miscParam,
                     uint64_t* key1,
                     uint64_t* key2)
-    uint64_t getChecksumByKey(int dims,
-                              zfp_type type,
+    cdef uint64_t getChecksumByKey(int dims,
+                              zfp_type _type,
                               uint64_t key1,
                               uint64_t key2)
-    uint64_t getChecksumOriginalDataBlock(int dims,
-                                          zfpy.zfp_type type)
-    uint64_t getChecksumEncodedBlock(int dims,
-                                     zfpy.zfp_type type)
-    uint64_t getChecksumEncodedPartialBlock(int dims,
-                                            zfpy.zfp_type type)
-    uint64_t getChecksumDecodedBlock(int dims,
-                                     zfpy.zfp_type type)
-    uint64_t getChecksumDecodedPartialBlock(int dims,
-                                            zfpy.zfp_type type)
-    uint64_t getChecksumOriginalDataArray(int ndims,
+    cdef uint64_t getChecksumOriginalDataBlock(int dims,
+                                          zfp_type _type)
+    cdef uint64_t getChecksumEncodedBlock(int dims,
+                                     zfp_type _type)
+    cdef uint64_t getChecksumEncodedPartialBlock(int dims,
+                                            zfp_type _type)
+    cdef uint64_t getChecksumDecodedBlock(int dims,
+                                     zfp_type _type)
+    cdef uint64_t getChecksumDecodedPartialBlock(int dims,
+                                            zfp_type _type)
+    cdef uint64_t getChecksumOriginalDataArray(int ndims,
                                           size_t[4] dims,
-                                          zfpy.zfp_type type)
-    uint64_t getChecksumCompressedBitstream(int ndims,
+                                          zfp_type _type)
+    cdef uint64_t getChecksumCompressedBitstream(int ndims,
                                             size_t[4] dims,
-                                            zfpy.zfp_type type,
-                                            zfpy.zfp_mode mode,
+                                            zfp_type _type,
+                                            zfp_mode mode,
                                             int compressParamNum)
-    uint64_t getChecksumDecompressedArray(int ndims,
+    cdef uint64_t getChecksumDecompressedArray(int ndims,
                                           size_t[4] dims,
-                                          zfpy.zfp_type ztype,
-                                          zfpy.zfp_mode mode,
+                                          zfp_type ztype,
+                                          zfp_mode mode,
                                           int compressParamNum)
 
 cdef extern from "zfpHash.h":
-    uint64_t hashBitstream(uint64_t* ptrStart,
+    cdef uint64_t hashBitstream(uint64_t* ptrStart,
                            size_t bufsizeBytes)
-    uint32_t hashArray32(const uint32_t* arr,
+    cdef uint32_t hashArray32(const uint32_t* arr,
                          size_t nx,
                          ptrdiff_t sx)
-    uint32_t hashStridedArray32(const uint32_t* arr,
+    cdef uint32_t hashStridedArray32(const uint32_t* arr,
                                 size_t n[4],
                                 ptrdiff_t s[4])
-    uint64_t hashArray64(const uint64_t* arr,
+    cdef uint64_t hashArray64(const uint64_t* arr,
                          size_t nx,
                          ptrdiff_t sx)
-    uint64_t hashStridedArray64(const uint64_t* arr,
+    cdef uint64_t hashStridedArray64(const uint64_t* arr,
                                 size_t n[4],
                                 ptrdiff_t s[4])
 
@@ -162,20 +184,20 @@ cdef validate_num_dimensions(int dims):
     if dims > 4 or dims < 1:
         raise ValueError("Unsupported number of dimensions: {}".format(dims))
 
-cdef validate_ztype(zfpy.zfp_type ztype):
+cdef validate_ztype(zfp_type ztype):
     if ztype not in [
-            zfpy.type_float,
-            zfpy.type_double,
-            zfpy.type_int32,
-            zfpy.type_int64
+            type_float,
+            type_double,
+            type_int32,
+            type_int64
     ]:
         raise ValueError("Unsupported ztype: {}".format(ztype))
 
-cdef validate_mode(zfpy.zfp_mode mode):
+cdef validate_mode(zfp_mode mode):
     if mode not in [
-            zfpy.mode_fixed_rate,
-            zfpy.mode_fixed_precision,
-            zfpy.mode_fixed_accuracy,
+            mode_fixed_rate,
+            mode_fixed_precision,
+            mode_fixed_accuracy,
     ]:
         raise ValueError("Unsupported mode: {}".format(mode))
 
@@ -187,7 +209,7 @@ cdef validate_compress_param(int comp_param):
 
 cpdef getRandNumpyArray(
     int numDims,
-    zfpy.zfp_type ztype,
+    zfp_type ztype,
 ):
     validate_num_dimensions(numDims)
     validate_ztype(ztype)
@@ -195,9 +217,9 @@ cpdef getRandNumpyArray(
     cdef size_t minTotalElements = 0
     cdef int amplitudeExp = 0
 
-    if ztype in [zfpy.type_float, zfpy.type_double]:
+    if ztype in [type_float, type_double]:
         minTotalElements = 1000000
-    elif ztype in [zfpy.type_int32, zfpy.type_int64]:
+    elif ztype in [type_int32, type_int64]:
         minTotalElements = 4096
 
     cdef int64_t* outputArrInt64 = NULL
@@ -208,7 +230,7 @@ cpdef getRandNumpyArray(
     cdef size_t outputTotalLen = 0
     cdef view.array viewArr = None
 
-    if ztype == zfpy.type_int64:
+    if ztype == type_int64:
         amplitudeExp = 64 - 2
         generateSmoothRandInts64(minTotalElements,
                                  numDims,
@@ -224,7 +246,7 @@ cpdef getRandNumpyArray(
             viewArr = <int64_t[:outputSideLen, :outputSideLen, :outputSideLen]> outputArrInt64
         elif numDims == 4:
             viewArr = <int64_t[:outputSideLen, :outputSideLen, :outputSideLen, :outputSideLen]> outputArrInt64
-    elif ztype == zfpy.type_int32:
+    elif ztype == type_int32:
         amplitudeExp = 32 - 2
         generateSmoothRandInts32(minTotalElements,
                                  numDims,
@@ -240,7 +262,7 @@ cpdef getRandNumpyArray(
             viewArr = <int32_t[:outputSideLen, :outputSideLen, :outputSideLen]> outputArrInt32
         elif numDims == 4:
             viewArr = <int32_t[:outputSideLen, :outputSideLen, :outputSideLen, :outputSideLen]> outputArrInt32
-    elif ztype == zfpy.type_float:
+    elif ztype == type_float:
         generateSmoothRandFloats(minTotalElements,
                                  numDims,
                                  &outputArrFloat,
@@ -254,7 +276,7 @@ cpdef getRandNumpyArray(
             viewArr = <float[:outputSideLen, :outputSideLen, :outputSideLen]> outputArrFloat
         elif numDims == 4:
             viewArr = <float[:outputSideLen, :outputSideLen, :outputSideLen, :outputSideLen]> outputArrFloat
-    elif ztype == zfpy.type_double:
+    elif ztype == type_double:
         generateSmoothRandDoubles(minTotalElements,
                                  numDims,
                                  &outputArrDouble,
@@ -277,35 +299,35 @@ cpdef getRandNumpyArray(
 # TODO: examine best way to add python block level support
 cdef uint64_t getChecksumOriginalDataBlock(
     int dims,
-    zfpy.zfp_type ztype
+    zfp_type ztype
 ):
     return 0
 
 
 cdef uint64_t getChecksumEncodedBlock(
     int dims,
-    zfpy.zfp_type ztype
+    zfp_type ztype
 ):
     return 0
 
 
 cdef uint64_t getChecksumEncodedPartialBlock(
     int dims,
-    zfpy.zfp_type ztype
+    zfp_type ztype
 ):
     return 0
 
 
 cdef uint64_t getChecksumDecodedBlock(
     int dims,
-    zfpy.zfp_type ztype
+    zfp_type ztype
 ):
     return 0
 
 
 cdef uint64_t getChecksumDecodedPartialBlock(
     int dims,
-    zfpy.zfp_type ztype
+    zfp_type ztype
 ):
     return 0
 # ======================================================
@@ -313,7 +335,7 @@ cdef uint64_t getChecksumDecodedPartialBlock(
 cdef uint64_t getChecksumOriginalDataArray(
     int ndims,
     size_t[4] dims,
-    zfpy.zfp_type ztype
+    zfp_type ztype
 ):
     cdef uint64_t[1] key1, key2
     computeKeyOriginalInput(ARRAY_TEST, dims, key1, key2)
@@ -322,8 +344,8 @@ cdef uint64_t getChecksumOriginalDataArray(
 cdef  uint64_t getChecksumCompressedBitstream(
     int ndims,
     size_t[4] dims,
-    zfpy.zfp_type ztype,
-    zfpy.zfp_mode mode,
+    zfp_type ztype,
+    zfp_mode mode,
     int compressParamNum
 ):
     cdef uint64_t[1] key1, key2
@@ -333,8 +355,8 @@ cdef  uint64_t getChecksumCompressedBitstream(
 cdef uint64_t getChecksumDecompressedArray(
     int ndims,
     size_t[4] dims,
-    zfpy.zfp_type ztype,
-    zfpy.zfp_mode mode,
+    zfp_type ztype,
+    zfp_mode mode,
     int compressParamNum
 ):
     cdef uint64_t[1] key1, key2
@@ -344,7 +366,7 @@ cdef uint64_t getChecksumDecompressedArray(
 
 cpdef uint64_t getChecksumOrigArray(
     dims,
-    zfpy.zfp_type ztype
+    zfp_type ztype
 ):
     cdef int ndims = 4-dims.count(0)
     validate_num_dimensions(ndims)
@@ -357,8 +379,8 @@ cpdef uint64_t getChecksumOrigArray(
 
 cpdef uint64_t getChecksumCompArray(
     dims,
-    zfpy.zfp_type ztype,
-    zfpy.zfp_mode mode,
+    zfp_type ztype,
+    zfp_mode mode,
     int compressParamNum
 ):
     cdef int ndims = 4-dims.count(0)
@@ -374,8 +396,8 @@ cpdef uint64_t getChecksumCompArray(
 
 cpdef uint64_t getChecksumDecompArray(
     dims,
-    zfpy.zfp_type ztype,
-    zfpy.zfp_mode mode,
+    zfp_type ztype,
+    zfp_mode mode,
     int compressParamNum
 ):
     cdef int ndims = 4-dims.count(0)
@@ -390,20 +412,20 @@ cpdef uint64_t getChecksumDecompArray(
     return getChecksumDecompressedArray(ndims, d, ztype, mode, compressParamNum)
 
 
-cpdef computeParameterValue(zfpy.zfp_mode mode, int param):
+cpdef computeParameterValue(zfp_mode mode, int param):
     validate_mode(mode)
     validate_compress_param(param)
 
-    if mode == zfpy.mode_fixed_accuracy:
+    if mode == mode_fixed_accuracy:
         return computeFixedAccuracyParam(param)
-    elif mode == zfpy.mode_fixed_precision:
+    elif mode == mode_fixed_precision:
         return computeFixedPrecisionParam(param)
-    elif mode == zfpy.mode_fixed_rate:
+    elif mode == mode_fixed_rate:
         return computeFixedRateParam(param)
 
 cpdef hashStridedArray(
     bytes inarray,
-    zfpy.zfp_type ztype,
+    zfp_type ztype,
     shape,
     strides,
 ):
@@ -415,9 +437,9 @@ cpdef hashStridedArray(
     for i in range(4):
         padded_strides[i] = zfpy.gen_padded_int_list(strides)[i]
 
-    if ztype == zfpy.type_int32 or ztype == zfpy.type_float:
+    if ztype == type_int32 or ztype == type_float:
         return hashStridedArray32(<uint32_t*>array, padded_shape, padded_strides)
-    elif ztype == zfpy.type_int64 or ztype == zfpy.type_double:
+    elif ztype == type_int64 or ztype == type_double:
         return hashStridedArray64(<uint64_t*>array, padded_shape, padded_strides)
 
 cpdef hashNumpyArray(
@@ -468,7 +490,7 @@ cpdef generateStridedRandomNumpyArray(
     cdef int ndim = randomArray.ndim
     shape = [int(x) for x in randomArray.shape[:ndim]]
     dtype = randomArray.dtype
-    cdef zfpy.zfp_type ztype = zfpy.dtype_to_ztype(dtype)
+    cdef zfp_type ztype = zfpy.dtype_to_ztype(dtype)
     cdef ptrdiff_t[4] strides
     for i in range(4):
         strides[i] = 0
