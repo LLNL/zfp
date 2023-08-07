@@ -171,7 +171,7 @@ stream_write_word(bitstream* s, bitstream_word value)
 
 /* word size in bits (equals bitstream_word_bits) */
 inline_ bitstream_count
-stream_alignment()
+stream_alignment(void)
 {
   return wsize;
 }

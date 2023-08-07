@@ -335,7 +335,7 @@ zfp_stream_set_omp_chunk_size(
 
 /* unspecified configuration */
 zfp_config /* compression mode and parameter settings */
-zfp_config_none();
+zfp_config_none(void);
 
 /* fixed-rate configuration */
 zfp_config       /* compression mode and parameter settings */
@@ -358,7 +358,7 @@ zfp_config_accuracy(
 
 /* reversible (lossless) configuration */
 zfp_config /* compression mode and parameter settings */
-zfp_config_reversible();
+zfp_config_reversible(void);
 
 /* expert configuration */
 zfp_config      /* compression mode and parameter settings */
@@ -373,7 +373,7 @@ zfp_config_expert(
 
 /* allocate field struct */
 zfp_field* /* pointer to default initialized field */
-zfp_field_alloc();
+zfp_field_alloc(void);
 
 /* allocate metadata for 1D field f[nx] */
 zfp_field*       /* allocated field metadata */

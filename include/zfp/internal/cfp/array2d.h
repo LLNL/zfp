@@ -97,7 +97,7 @@ typedef struct {
 } cfp_header2d_api;
 
 typedef struct {
-  cfp_array2d (*ctor_default)();
+  cfp_array2d (*ctor_default)(void);
   cfp_array2d (*ctor)(size_t nx, size_t ny, double rate, const double* p, size_t cache_size);
   cfp_array2d (*ctor_copy)(const cfp_array2d src);
   cfp_array2d (*ctor_header)(const cfp_header h, const void* buffer, size_t buffer_size_bytes);

@@ -30,7 +30,7 @@ void print3(cfp_iter1d begin, cfp_iter1d end)
     printf("%g\n", _.reference.get(_.iterator.ref(p)));
 }
 
-int main()
+int main(void)
 {
   const cfp_array1d_api _1d = cfp.array1d;
   const cfp_array2d_api _2d = cfp.array2d;
