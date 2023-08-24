@@ -2,23 +2,23 @@
 # CXX CPU #
 ###########
 
-cpp_gnu-7.3.0_build:
+cpp_gnu-10.3.1_build:
     variables:
-        ci_cmake: "cmake/3.9.2"
+        ci_cmake: "cmake/3.14.5"
         ci_cxx_cmp: "g++"
         ci_c_cmp: "gcc"
-        ci_cmp_mod: "gcc/7.3.0"
+        ci_cmp_mod: "gcc/10.3.1"
     extends: [.cpp, .quartz_build_cpu]
     needs: []
 
-cpp_gnu-7.3.0_test:
+cpp_gnu-10.3.1_test:
     extends: [.quartz_test_cpu]
-    needs: [cpp_gnu-7.3.0_build]
+    needs: [cpp_gnu-10.3.1_build]
 
 
 cpp_clang-10.0.0_build:
     variables:
-        ci_cmake: "cmake/3.9.2"
+        ci_cmake: "cmake/3.14.5"
         ci_cxx_cmp: "clang++"
         ci_c_cmp: "clang"
         ci_cmp_mod: "clang/10.0.0"
@@ -32,7 +32,7 @@ cpp_clang-10.0.0_test:
 
 cpp_intel-2022.3_build:
     variables:
-        ci_cmake: "cmake/3.9.2"
+        ci_cmake: "cmake/3.14.5"
         ci_cxx_cmp: "icpc"
         ci_c_cmp: "icc"
         ci_cmp_mod: "intel/2022.3"
@@ -49,16 +49,16 @@ cpp_intel-2022.3_test:
 # C CPU #
 #########
 
-c_gnu-7.3.0_build:
+c_gnu-10.3.1_build:
     variables:
-        ci_cmake: "cmake/3.9.2"
+        ci_cmake: "cmake/3.14.5"
         ci_c_cmp: "gcc"
-        ci_cmp_mod: "gcc/7.3.0"
+        ci_cmp_mod: "gcc/10.3.1"
     extends: [.c, .quartz_build_cpu]
     needs: []
 
-c_gnu-7.3.0_test:
+c_gnu-10.3.1_test:
     variables:
        ci_test_regex: "Cfp"
     extends: [.quartz_test_cpu]
-    needs: [c_gnu-7.3.0_build]
+    needs: [c_gnu-10.3.1_build]
