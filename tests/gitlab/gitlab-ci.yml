@@ -73,7 +73,6 @@ stages:
 .build_gpu:
     before_script:
         - module reset
-        - module load opt
         - module load $ci_cmake
         - module load $ci_cmp_mod
         - module load $ci_gcc_mod

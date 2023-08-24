@@ -16,32 +16,32 @@ cpp_gnu-10.3.1_test:
     needs: [cpp_gnu-10.3.1_build]
 
 
-cpp_clang-10.0.0_build:
+cpp_clang-14.0.6_build:
     variables:
         ci_cmake: "cmake/3.14.5"
         ci_cxx_cmp: "clang++"
         ci_c_cmp: "clang"
-        ci_cmp_mod: "clang/10.0.0"
+        ci_cmp_mod: "clang/14.0.6"
     extends: [.cpp, .quartz_build_cpu]
     needs: []
 
-cpp_clang-10.0.0_test:
+cpp_clang-14.0.6_test:
     extends: [.quartz_test_cpu]
-    needs: [cpp_clang-10.0.0_build]
+    needs: [cpp_clang-14.0.6_build]
 
 
-cpp_intel-2022.3_build:
+cpp_intel-2022.1.0_build:
     variables:
         ci_cmake: "cmake/3.14.5"
         ci_cxx_cmp: "icpc"
         ci_c_cmp: "icc"
-        ci_cmp_mod: "intel/2022.3"
+        ci_cmp_mod: "intel/2022.1.0"
     extends: [.cpp, .quartz_build_cpu]
     needs: []
 
-cpp_intel-2022.3_test:
+cpp_intel-2022.1.0_test:
     extends: [.quartz_test_cpu]
-    needs: [cpp_intel-2022.3_build]
+    needs: [cpp_intel-2022.1.0_build]
 
 
 
