@@ -111,29 +111,6 @@ cdef extern from "zfpChecksums.h":
                               zfp_type type,
                               uint64_t key1,
                               uint64_t key2)
-    uint64_t getChecksumOriginalDataBlock(int dims,
-                                          zfpy.zfp_type type)
-    uint64_t getChecksumEncodedBlock(int dims,
-                                     zfpy.zfp_type type)
-    uint64_t getChecksumEncodedPartialBlock(int dims,
-                                            zfpy.zfp_type type)
-    uint64_t getChecksumDecodedBlock(int dims,
-                                     zfpy.zfp_type type)
-    uint64_t getChecksumDecodedPartialBlock(int dims,
-                                            zfpy.zfp_type type)
-    uint64_t getChecksumOriginalDataArray(int ndims,
-                                          size_t[4] dims,
-                                          zfpy.zfp_type type)
-    uint64_t getChecksumCompressedBitstream(int ndims,
-                                            size_t[4] dims,
-                                            zfpy.zfp_type type,
-                                            zfpy.zfp_mode mode,
-                                            int compressParamNum)
-    uint64_t getChecksumDecompressedArray(int ndims,
-                                          size_t[4] dims,
-                                          zfpy.zfp_type ztype,
-                                          zfpy.zfp_mode mode,
-                                          int compressParamNum)
 
 cdef extern from "zfpHash.h":
     uint64_t hashBitstream(uint64_t* ptrStart,
