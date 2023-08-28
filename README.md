@@ -4,6 +4,7 @@ ZFP
 [![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/qb3ld7j11segy52k/branch/develop?svg=true)](https://ci.appveyor.com/project/lindstro/zfp)
 [![Documentation Status](https://readthedocs.org/projects/zfp/badge/?version=release1.0.0)](https://zfp.readthedocs.io/en/release1.0.0/)
 [![codecov](https://codecov.io/gh/LLNL/zfp/branch/develop/graph/badge.svg?token=jqvMVvgRQ9)](https://codecov.io/gh/LLNL/zfp)
+[![R&D100 - Winner](https://img.shields.io/badge/R%26D100-Winner-gold)](https://www.rdworldonline.com/rd-100-winners-for-2023-are-announced-2/)
 
 zfp is a compressed format for representing multidimensional floating-point
 and integer arrays.  zfp provides compressed-array classes that support high
