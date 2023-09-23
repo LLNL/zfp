@@ -968,7 +968,7 @@ and *q* = 55 + 4 |times| *d* |leq| 64 bits of precision for double-precision
 data.  Of course, the constraint imposed by the available integer precision
 *n* implies that lossless compression of such data is possible only in 1D for
 single-precision data and only in 1D and 2D for double-precision data.
-Finally, to preserve special values such as negative zero, plus and minues
+Finally, to preserve special values such as negative zero, plus and minus
 infinity, and NaNs, reversible mode is needed.
 
 -------------------------------------------------------------------------------
