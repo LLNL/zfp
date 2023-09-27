@@ -66,7 +66,7 @@ typedef unsigned long ulong;
   typedef unsigned int uint32;
 
   /* determine 64-bit data model */
-  #if defined(_WIN32) || defined(_WIN64)
+  #if defined(_WIN32)
     /* assume ILP32 or LLP64 (MSVC, MinGW) */
     #define ZFP_LLP64 1
   #else
