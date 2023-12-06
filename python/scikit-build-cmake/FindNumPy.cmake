@@ -32,6 +32,8 @@
 #         set(NumPy_FROM_TEMPLATE_EXECUTABLE /path/to/python /path/to/site-packages/numpy/distutils/from_template.py CACHE STRING "Command executing from-template program" FORCE)
 #
 
+cmake_policy(SET CMP0148 OLD)
+
 if(NOT NumPy_FOUND)
   set(_find_extra_args)
   if(NumPy_FIND_REQUIRED)
