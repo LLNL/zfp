@@ -193,6 +193,8 @@ Regardless of the settings below, |libzfp| will always be built.
   CMake default: on.
   GNU make default: off.
 
+.. note::
+  On macOS, add :code:`OS=mac` when building shared libraries with GNU make.
 
 .. index::
    single: Configuration
