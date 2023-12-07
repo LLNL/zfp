@@ -251,7 +251,7 @@ find_package(PythonLibs)
 include(targetLinkLibrariesWithDynamicLookup)
 
 set(_command "
-import distutils.sysconfig
+import sysconfig
 import itertools
 import os
 import os.path
@@ -263,7 +263,7 @@ rel_result = None
 candidate_lists = []
 
 try:
-    candidate_lists.append((distutils.sysconfig.get_python_lib(),))
+    candidate_lists.append((sysconfig.get_paths()['purelib'],))
 except AttributeError: pass
 
 try:
@@ -284,17 +284,13 @@ for candidate in candidates:
         rel_result = rel_candidate
         break
 
-ext_suffix_var = 'SO'
-if sys.version_info[:2] >= (3, 5):
-    ext_suffix_var = 'EXT_SUFFIX'
-
 sys.stdout.write(\";\".join((
     os.sep,
     os.pathsep,
     sys.prefix,
     result,
     rel_result,
-    distutils.sysconfig.get_config_var(ext_suffix_var)
+    sysconfig.get_config_var('EXT_SUFFIX')
 )))
 ")
 
