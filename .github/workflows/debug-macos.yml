@@ -19,6 +19,7 @@ jobs:
           run: |
             python -m pip install cython
             python -m pip install oldest-supported-numpy
+            python -m pip install setuptools
 
         - name: Install OpenMP
           run: |
