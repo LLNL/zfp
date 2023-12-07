@@ -1,3 +1,5 @@
+cmake_policy(SET CMP0148 OLD)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/scikit-build-cmake)
 include(UseCython)
 include(FindPythonExtensions)

@@ -244,6 +244,8 @@
 # limitations under the License.
 #=============================================================================
 
+cmake_policy(SET CMP0148 OLD)
+
 find_package(PythonInterp REQUIRED)
 find_package(PythonLibs)
 include(targetLinkLibrariesWithDynamicLookup)

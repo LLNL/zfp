@@ -94,6 +94,8 @@
 # limitations under the License.
 #=============================================================================
 
+cmake_policy(SET CMP0148 OLD)
+
 # Configuration options.
 set(CYTHON_ANNOTATE OFF
     CACHE BOOL "Create an annotated .html file when compiling *.pyx.")

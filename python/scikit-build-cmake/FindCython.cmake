@@ -37,6 +37,8 @@
 # Use the Cython executable that lives next to the Python executable
 # if it is a local installation.
 
+cmake_policy(SET CMP0148 OLD)
+
 find_package(PythonInterp)
 if(PYTHONINTERP_FOUND)
   execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from os import path; import cython; print(path.dirname(cython.__file__))"
