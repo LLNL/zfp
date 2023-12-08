@@ -39,6 +39,9 @@ environment:
       PLATFORM: x64
       BUILD_TYPE: Release
 
+on_failure:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
 install:
   - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
   - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
@@ -64,5 +67,4 @@ install:
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python --version
 
 build_script:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - sh appveyor.sh
