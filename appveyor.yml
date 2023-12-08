@@ -64,5 +64,5 @@ install:
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python --version
 
 build_script:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1')
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - sh appveyor.sh
