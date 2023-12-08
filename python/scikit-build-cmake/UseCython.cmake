@@ -94,8 +94,6 @@
 # limitations under the License.
 #=============================================================================
 
-cmake_policy(SET CMP0148 OLD)
-
 # Configuration options.
 set(CYTHON_ANNOTATE OFF
     CACHE BOOL "Create an annotated .html file when compiling *.pyx.")
@@ -103,8 +101,6 @@ set(CYTHON_ANNOTATE OFF
 set(CYTHON_FLAGS "" CACHE STRING
     "Extra flags to the cython compiler.")
 mark_as_advanced(CYTHON_ANNOTATE CYTHON_FLAGS)
-
-find_package(PythonLibs REQUIRED)
 
 set(CYTHON_CXX_EXTENSION "cxx")
 set(CYTHON_C_EXTENSION "c")
@@ -147,12 +143,6 @@ function(add_cython_target _name)
     message(FATAL_ERROR "Either C or CXX must be enabled to use Cython")
   endif()
 
-  if("${PYTHONLIBS_VERSION_STRING}" MATCHES "^2.")
-    set(_input_syntax "PY2")
-  else()
-    set(_input_syntax "PY3")
-  endif()
-
   if(_args_EMBED_MAIN)
     set(_embed_main TRUE)
   endif()
@@ -164,6 +154,10 @@ function(add_cython_target _name)
   if(_args_CXX)
     set(_output_syntax "CXX")
   endif()
+
+  # Doesn't select an input syntax - Cython
+  # defaults to 2 for Cython 2 and 3 for Cython 3
+  set(_input_syntax "default")
 
   if(_args_PY2)
     set(_input_syntax "PY2")
@@ -210,15 +204,15 @@ function(add_cython_target _name)
   set(c_header_dependencies "")
 
   # Get the include directories.
-  get_source_file_property(pyx_location ${_source_file} LOCATION)
-  get_filename_component(pyx_path ${pyx_location} PATH)
   get_directory_property(cmake_include_directories
-                         DIRECTORY ${pyx_path}
+                         DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                          INCLUDE_DIRECTORIES)
   list(APPEND cython_include_directories ${cmake_include_directories})
 
   # Determine dependencies.
   # Add the pxd file with the same basename as the given pyx file.
+  get_source_file_property(pyx_location ${_source_file} LOCATION)
+  get_filename_component(pyx_path ${pyx_location} PATH)
   get_filename_component(pyx_file_basename ${_source_file} NAME_WE)
   unset(corresponding_pxd_file CACHE)
   find_file(corresponding_pxd_file ${pyx_file_basename}.pxd
