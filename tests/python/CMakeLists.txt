@@ -1,5 +1,3 @@
-cmake_policy(SET CMP0148 OLD)
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/python/scikit-build-cmake)
 
 find_package(PythonInterp REQUIRED)
