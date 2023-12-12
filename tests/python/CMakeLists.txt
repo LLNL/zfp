@@ -1,3 +1,7 @@
+if (CMAKE_VERSION VERSION_GREATER 3.27.0)
+    cmake_policy(SET CMP0148 OLD)
+endif ()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/python/scikit-build-cmake)
 
 find_package(PythonInterp REQUIRED)
