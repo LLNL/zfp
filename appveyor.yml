@@ -63,7 +63,7 @@ install:
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" pip install -r python\requirements.txt
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python --version
 
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 build_script:
   - sh appveyor.sh
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
