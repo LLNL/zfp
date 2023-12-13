@@ -39,10 +39,6 @@ environment:
       PLATFORM: x64
       BUILD_TYPE: Release
 
-# Uncomment this to enable interactive debugging on build failure
-on_failure:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-
 install:
   - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
   - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
@@ -66,6 +62,8 @@ install:
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" "%VIRTUALENV_NAME%\\Scripts\\activate.bat"
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" pip install -r python\requirements.txt
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python --version
+
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 build_script:
   - sh appveyor.sh
