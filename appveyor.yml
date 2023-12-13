@@ -39,12 +39,13 @@ environment:
       PLATFORM: x64
       BUILD_TYPE: Release
 
+# Uncomment this to enable interactive debugging on build failure
 #on_failure:
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 install:
-  - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
-  - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
+  - if "%COMPILER%"=="mingw" set PATH=%PATH%;C:\MinGW\bin
+  - if "%COMPILER%"=="mingw-w64" set PATH=%PATH%;C:\MinGW\bin
 
   # set env vars for Python system dir (assumed to always be MSVC)
   - ps: |
