@@ -16,7 +16,7 @@ find_package(NumPy REQUIRED)
 include_directories(${ZFP_SOURCE_DIR}/include)
 include_directories(${NumPy_INCLUDE_DIR})
 
-add_cython_target(zfpy zfpy.pyx C)
+add_cython_target(zfpy zfpy.pyx C PY3)
 add_library(zfpy MODULE ${zfpy})
 target_link_libraries(zfpy zfp)
 python_extension_module(zfpy)
