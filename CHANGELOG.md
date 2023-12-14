@@ -5,12 +5,21 @@ Change Log
 
 ## Unreleased
 
+### Added
+
+- A new build macro, `BUILD_TESTING_FULL`, specifies that all unit tests be
+  built; `BUILD_TESTING` produces a smaller subset of tests.  Full tests and
+  documentation are now included in releases.
+
 ### Fixed
 
-- #220: Errors reported with scikit-build when running `CMake` with `BUILD_ZFPY` enabled
-- #177: Full test suite not in release
-- #176: `CFP` API is not exposed via CMake configuration file
 - #169: `libm` dependency is not always correctly detected.
+- #171: `ptrdiff_t` is not always imported in Cython.
+- #176: `CFP` API is not exposed via CMake configuration file.
+- #177: Full test suite is not included in release.
+- #181: `rpath` is not set correctly in executables.
+- #204: Array strides are not passed by value in `zFORp`.
+- #220: Errors reported with scikit-build when running `CMake` with `BUILD_ZFPY` enabled.
 
 ---
 
