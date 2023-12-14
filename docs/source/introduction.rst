@@ -41,6 +41,8 @@ exactly, is also supported.
 `Lawrence Livermore National Laboratory <https://www.llnl.gov>`__
 and is supported by the U.S. Department of Energy's
 `Exascale Computing Project <https://www.exascaleproject.org>`__.
+|zfp| is a
+`2023 R&D 100 Award Winner <https://www.rdworldonline.com/2023-rd-100-award-winners/>`__.
 
 
 Availability
