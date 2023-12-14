@@ -1,4 +1,6 @@
-cmake_policy(SET CMP0148 OLD)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0)
+    cmake_policy(SET CMP0148 OLD)
+endif ()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/scikit-build-cmake)
 include(UseCython)
@@ -14,7 +16,7 @@ find_package(NumPy REQUIRED)
 include_directories(${ZFP_SOURCE_DIR}/include)
 include_directories(${NumPy_INCLUDE_DIR})
 
-add_cython_target(zfpy zfpy.pyx C)
+add_cython_target(zfpy zfpy.pyx C PY3)
 add_library(zfpy MODULE ${zfpy})
 target_link_libraries(zfpy zfp)
 python_extension_module(zfpy)

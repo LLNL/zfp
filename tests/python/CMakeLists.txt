@@ -1,4 +1,7 @@
-cmake_policy(SET CMP0148 OLD)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0)
+    cmake_policy(SET CMP0148 OLD)
+endif ()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/python/scikit-build-cmake)
 
 find_package(PythonInterp REQUIRED)
@@ -14,7 +17,7 @@ include_directories(${NumPy_INCLUDE_DIR})
 include_directories(${ZFP_SOURCE_DIR}/tests/python)
 include_directories(${ZFP_SOURCE_DIR}/tests/utils)
 include_directories(${ZFP_SOURCE_DIR})
-add_cython_target(test_utils test_utils.pyx C)
+add_cython_target(test_utils test_utils.pyx C PY3)
 add_library(test_utils MODULE ${test_utils})
 target_link_libraries(test_utils zfp genSmoothRandNumsLib stridedOperationsLib zfpCompressionParamsLib zfpChecksumsLib zfpHashLib)
 python_extension_module(test_utils)

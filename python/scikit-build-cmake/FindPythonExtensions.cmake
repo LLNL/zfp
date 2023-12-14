@@ -168,8 +168,6 @@
 #
 # .. code-block:: cmake
 #
-#    find_package(PythonInterp)
-#    find_package(PythonLibs)
 #    find_package(PythonExtensions)
 #    find_package(Cython)
 #    find_package(Boost COMPONENTS python)
@@ -244,14 +242,19 @@
 # limitations under the License.
 #=============================================================================
 
-cmake_policy(SET CMP0148 OLD)
-
 find_package(PythonInterp REQUIRED)
-find_package(PythonLibs)
+if(SKBUILD AND NOT PYTHON_LIBRARY)
+  set(PYTHON_LIBRARY "no-library-required")
+  find_package(PythonLibs)
+  unset(PYTHON_LIBRARY)
+  unset(PYTHON_LIBRARIES)
+else()
+  find_package(PythonLibs)
+endif()
 include(targetLinkLibrariesWithDynamicLookup)
 
 set(_command "
-import sysconfig
+import distutils.sysconfig
 import itertools
 import os
 import os.path
@@ -263,7 +266,7 @@ rel_result = None
 candidate_lists = []
 
 try:
-    candidate_lists.append((sysconfig.get_paths()['purelib'],))
+    candidate_lists.append((distutils.sysconfig.get_python_lib(),))
 except AttributeError: pass
 
 try:
@@ -290,7 +293,7 @@ sys.stdout.write(\";\".join((
     sys.prefix,
     result,
     rel_result,
-    sysconfig.get_config_var('EXT_SUFFIX')
+    distutils.sysconfig.get_config_var('EXT_SUFFIX')
 )))
 ")
 
@@ -329,20 +332,38 @@ function(_set_python_extension_symbol_visibility _target)
   else()
     set(_modinit_prefix "init")
   endif()
+  message("_modinit_prefix:${_modinit_prefix}")
   if("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
     set_target_properties(${_target} PROPERTIES LINK_FLAGS
         "/EXPORT:${_modinit_prefix}${_target}"
     )
   elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    # Option to not run version script. See https://github.com/scikit-build/scikit-build/issues/668
+    if(NOT DEFINED SKBUILD_GNU_SKIP_LOCAL_SYMBOL_EXPORT_OVERRIDE)
+       set(SKBUILD_GNU_SKIP_LOCAL_SYMBOL_EXPORT_OVERRIDE FALSE)
+    endif()
     set(_script_path
       ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${_target}-version-script.map
     )
-    file(WRITE ${_script_path}
-               "{global: ${_modinit_prefix}${_target}; local: *; };"
-    )
-    set_property(TARGET ${_target} APPEND_STRING PROPERTY LINK_FLAGS
+    # Export all symbols. See https://github.com/scikit-build/scikit-build/issues/668
+    if(SKBUILD_GNU_SKIP_LOCAL_SYMBOL_EXPORT_OVERRIDE)
+      file(WRITE ${_script_path}
+                 "{global: ${_modinit_prefix}${_target};};"
+      )
+    else()
+      file(WRITE ${_script_path}
+                 "{global: ${_modinit_prefix}${_target}; local: *;};"
+      )
+    endif()
+    if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
+      set_property(TARGET ${_target} APPEND_STRING PROPERTY LINK_FLAGS
         " -Wl,--version-script=\"${_script_path}\""
-    )
+      )
+    else()
+      set_property(TARGET ${_target} APPEND_STRING PROPERTY LINK_FLAGS
+        " -Wl,-M \"${_script_path}\""
+      )
+    endif()
   endif()
 endfunction()
 
@@ -431,7 +452,7 @@ endfunction()
 
 function(python_standalone_executable _target)
   include_directories(${PYTHON_INCLUDE_DIRS})
-  target_link_libraries(${_target} ${PYTHON_LIBRARIES})
+  target_link_libraries(${_target} ${SKBUILD_LINK_LIBRARIES_KEYWORD} ${PYTHON_LIBRARIES})
 endfunction()
 
 function(python_modules_header _name)
@@ -572,3 +593,5 @@ function(python_modules_header _name)
   endif()
   set(${_include_dirs_var} ${CMAKE_CURRENT_BINARY_DIR} PARENT_SCOPE)
 endfunction()
+
+include(UsePythonExtensions)

@@ -20,8 +20,17 @@
 #
 # ``NumPy_INCLUDE_DIR``
 #
-
-cmake_policy(SET CMP0148 OLD)
+# .. note::
+#
+#     To support NumPy < v0.15.0 where ``from-template`` and ``conv-template`` are not declared as entry points,
+#     the module emulates the behavior of standalone executables by setting the corresponding variables with the
+#     path the the python interpreter and the path to the associated script. For example:
+#     ::
+#
+#         set(NumPy_CONV_TEMPLATE_EXECUTABLE /path/to/python /path/to/site-packages/numpy/distutils/conv_template.py CACHE STRING "Command executing conv-template program" FORCE)
+#
+#         set(NumPy_FROM_TEMPLATE_EXECUTABLE /path/to/python /path/to/site-packages/numpy/distutils/from_template.py CACHE STRING "Command executing from-template program" FORCE)
+#
 
 if(NOT NumPy_FOUND)
   set(_find_extra_args)
@@ -31,8 +40,6 @@ if(NOT NumPy_FOUND)
   if(NumPy_FIND_QUIET)
     list(APPEND _find_extra_args QUIET)
   endif()
-  find_package(PythonInterp ${_find_extra_args})
-  find_package(PythonLibs ${_find_extra_args})
 
   find_program(NumPy_CONV_TEMPLATE_EXECUTABLE NAMES conv-template)
   find_program(NumPy_FROM_TEMPLATE_EXECUTABLE NAMES from-template)
@@ -50,6 +57,28 @@ if(NOT NumPy_FOUND)
       OUTPUT_STRIP_TRAILING_WHITESPACE
       ERROR_QUIET
       )
+
+    # XXX This is required to support NumPy < v0.15.0. See note in module documentation above.
+    if(NOT NumPy_CONV_TEMPLATE_EXECUTABLE)
+      execute_process(COMMAND "${PYTHON_EXECUTABLE}"
+        -c "from numpy.distutils import conv_template; print(conv_template.__file__)"
+        OUTPUT_VARIABLE _numpy_conv_template_file
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        )
+      set(NumPy_CONV_TEMPLATE_EXECUTABLE "${PYTHON_EXECUTABLE}" "${_numpy_conv_template_file}" CACHE STRING "Command executing conv-template program" FORCE)
+    endif()
+
+    # XXX This is required to support NumPy < v0.15.0. See note in module documentation above.
+    if(NOT NumPy_FROM_TEMPLATE_EXECUTABLE)
+      execute_process(COMMAND "${PYTHON_EXECUTABLE}"
+        -c "from numpy.distutils import from_template; print(from_template.__file__)"
+        OUTPUT_VARIABLE _numpy_from_template_file
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        )
+      set(NumPy_FROM_TEMPLATE_EXECUTABLE "${PYTHON_EXECUTABLE}" "${_numpy_from_template_file}" CACHE STRING "Command executing from-template program" FORCE)
+    endif()
   endif()
 endif()
 
