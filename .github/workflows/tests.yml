@@ -1,0 +1,78 @@
+name: Tests
+
+on: push
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cxx_compiler: g++-10
+            c_compiler: gcc-10
+            omp: ON
+            target: all
+            
+          - os: ubuntu-latest
+            cxx_compiler: clang++
+            c_compiler: clang
+            omp: ON
+            target: all
+            
+          - os: macos-latest
+            cxx_compiler: g++-11
+            c_compiler: gcc-11
+            omp: ON
+            target: all
+
+          - os: macos-latest
+            cxx_compiler: clang++
+            c_compiler: clang
+            omp: OFF
+            target: all
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          architecture: x64
+
+      - name: Install zfpy dependencies
+        run: |
+          python -m pip install cython
+          python -m pip install oldest-supported-numpy
+          python -m pip install setuptools
+      
+      - name: Setup OpenMP (Linux)
+        if: ${{matrix.os == 'ubuntu-latest' && matrix.cxx_compiler == 'clang++'}}
+        run: sudo apt-get update; sudo apt-get install -y libomp5 libomp-dev
+
+      - name: Setup OpenMP (MacOS)
+        if: ${{matrix.os == 'macos-latest'}}
+        run: |
+          brew install libomp
+          echo "CC=$(brew --prefix llvm)/bin/clang" >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix llvm)/bin/clang++" >> $GITHUB_ENV
+          echo "LDFLAGS=\"-L$(brew --prefix llvm)/lib\"" >> $GITHUB_ENV
+          echo "CPPFLAGS=\"-I$(brew --prefix llvm)/include\"" >> $GITHUB_ENV
+
+      - name: Run CMake
+        id: cmake
+        run: cmake -B ${{github.workspace}}/build ${{matrix.generator}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DBUILD_TESTING_FULL=ON -DZFP_WITH_OPENMP=${{matrix.omp}} -DBUILD_ZFPY=ON -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")  -DPYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+        
+      - name: Build
+        id: build
+        run: cmake --build ${{github.workspace}}/build --target ${{matrix.target}} --config ${{env.BUILD_TYPE}}
+
+      - name: Run Tests
+        id: test
+        working-directory: ${{github.workspace}}/build
+        run: ctest -C ${{env.BUILD_TYPE}} -VV

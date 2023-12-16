@@ -80,7 +80,7 @@ print_error(const void* fin, const void* fout, zfp_type type, size_t n)
 }
 
 static void
-usage()
+usage(void)
 {
   fprintf(stderr, "%s\n", zfp_version_string);
   fprintf(stderr, "Usage: zfp <options>\n");

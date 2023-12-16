@@ -98,7 +98,7 @@ typedef struct {
 } cfp_header3f_api;
 
 typedef struct {
-  cfp_array3f (*ctor_default)();
+  cfp_array3f (*ctor_default)(void);
   cfp_array3f (*ctor)(size_t nx, size_t ny, size_t nz, double rate, const float* p, size_t cache_size);
   cfp_array3f (*ctor_copy)(const cfp_array3f src);
   cfp_array3f (*ctor_header)(const cfp_header h, const void* buffer, size_t buffer_size_bytes);

@@ -198,6 +198,28 @@ function(_test_weak_link_project
   set(osx_dynamic_lookup           "-undefined dynamic_lookup")
   set(no_flag                                               "")
 
+  if(CMAKE_CROSSCOMPILING)
+    set(link_flag_spec "no_flag")
+    set(link_flag "${${link_flag_spec}}")
+    set(test_skipping_reason "")
+    set(test_pass FALSE)
+
+    if(APPLE AND NOT CMAKE_CROSSCOMPILING_EMULATOR)
+      set(link_flag_spec "osx_dynamic_lookup")
+      set(link_flag "${${link_flag_spec}}")
+      set(test_skipping_reason " (Cross compiling without emulator on macOS)")
+      set(test_pass TRUE)
+    endif()
+
+    if(test_pass)
+      set(test_description "Weak Link ${target_type} -> ${lib_type} (${link_flag_spec})")
+      message(STATUS "Performing Test ${test_description} - Assuming Success${test_skipping_reason}")
+      set(${can_weak_link_var} ${test_pass} PARENT_SCOPE)
+      set(${project_name} ${link_flag} PARENT_SCOPE)
+      return()
+    endif()
+  endif()
+
   foreach(link_flag_spec gnu_ld_ignore osx_dynamic_lookup no_flag)
     set(link_flag "${${link_flag_spec}}")
 
@@ -248,7 +270,7 @@ function(_test_weak_link_project
 
     if(link_mod_lib)
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(counter number)
+        target_link_libraries(counter ${SKBUILD_LINK_LIBRARIES_KEYWORD} number)
       ")
     elseif(NOT link_flag STREQUAL "")
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
@@ -262,21 +284,21 @@ function(_test_weak_link_project
 
     if(link_exe_lib)
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(main number)
+        target_link_libraries(main ${SKBUILD_LINK_LIBRARIES_KEYWORD} number)
       ")
     elseif(NOT link_flag STREQUAL "")
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(main \"${link_flag}\")
+        target_link_libraries(main ${SKBUILD_LINK_LIBRARIES_KEYWORD} \"${link_flag}\")
       ")
     endif()
 
     if(link_exe_mod)
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(main counter)
+        target_link_libraries(main ${SKBUILD_LINK_LIBRARIES_KEYWORD} counter)
       ")
     else()
       file(APPEND "${test_project_src_dir}/CMakeLists.txt" "
-        target_link_libraries(main \"${CMAKE_DL_LIBS}\")
+        target_link_libraries(main ${SKBUILD_LINK_LIBRARIES_KEYWORD} \"${CMAKE_DL_LIBS}\")
       ")
     endif()
 
@@ -492,21 +514,15 @@ function(_check_dynamic_lookup
   endif()
 
   if(NOT DEFINED ${cache_var})
-    set(skip_test FALSE)
 
-   if(CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR)
+    if(CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR)
       set(skip_test TRUE)
     endif()
 
-    if(skip_test)
-      set(has_dynamic_lookup FALSE)
-      set(link_flags)
-    else()
-      _test_weak_link_project(${target_type}
-                              ${lib_type}
-                              has_dynamic_lookup
-                              link_flags)
-    endif()
+    _test_weak_link_project(${target_type}
+                            ${lib_type}
+                            has_dynamic_lookup
+                            link_flags)
 
     set(caveat " (when linking ${target_type} against ${lib_type})")
 
@@ -576,6 +592,6 @@ function(target_link_libraries_with_dynamic_lookup target)
 
   set(links "${link_items}" "${link_libs}")
   if(links)
-    target_link_libraries(${target} "${links}")
+    target_link_libraries(${target} ${SKBUILD_LINK_LIBRARIES_KEYWORD} "${links}")
   endif()
 endfunction()

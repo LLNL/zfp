@@ -34,7 +34,7 @@ void stream_close(bitstream* stream);
 bitstream* stream_clone(const bitstream* stream);
 
 /* word size in bits (equal to stream_word_bits) */
-bitstream_count stream_alignment();
+bitstream_count stream_alignment(void);
 
 /* pointer to beginning of stream */
 void* stream_data(const bitstream* stream);

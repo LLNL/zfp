@@ -1,0 +1,4 @@
+sphinx-fortran==1.1.1
+
+# required by sphinx-fortran but not installed on RTD
+six

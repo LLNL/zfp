@@ -4,7 +4,7 @@
 /* library version information */
 #define ZFP_VERSION_MAJOR 1   /* library major version number */
 #define ZFP_VERSION_MINOR 0   /* library minor version number */
-#define ZFP_VERSION_PATCH 0   /* library patch version number */
+#define ZFP_VERSION_PATCH 1   /* library patch version number */
 #define ZFP_VERSION_TWEAK 0   /* library tweak version number */
 
 /* codec version number (see also zfp_codec_version) */

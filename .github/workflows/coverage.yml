@@ -1,0 +1,49 @@
+name: Coverage Report
+
+on:
+  workflow_run:
+    workflows: [Tests]
+    types: [completed]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          architecture: x64
+
+      - name: Install Dependencies
+        run: |-
+          sudo apt install lcov
+          python -m pip install lcov_cobertura
+
+      - name: Run CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-11 -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_FLAGS="-fprofile-arcs -ftest-coverage" -DCMAKE_C_FLAGS="-fprofile-arcs -ftest-coverage" -DBUILD_TESTING_FULL=ON -DBUILD_CFP=ON -DZFP_WITH_OPENMP=ON
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build
+
+      - name: Run Tests
+        working-directory: ${{github.workspace}}/build
+        run: ctest -j 8
+
+      - name: Generate Coverage Report
+        working-directory: ${{github.workspace}}/build
+        run: |-
+          lcov -c --directory ${{github.workspace}}/build --output-file coverage.info
+          lcov --remove coverage.info '${{github.workspace}}/build/tests/*' --remove coverage.info '${{github.workspace}}/tests/*' --remove coverage.info '/usr/include/*' -o coverage.info
+          lcov_cobertura ${{github.workspace}}/build/coverage.info -d -o ${{github.workspace}}/build/coverage.xml
+
+      - name: Upload Report to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+           files: ${{github.workspace}}/build/coverage.xml
+           env_vars: Actions
+           fail_ci_if_error: true

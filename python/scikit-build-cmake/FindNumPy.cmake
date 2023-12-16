@@ -40,8 +40,6 @@ if(NOT NumPy_FOUND)
   if(NumPy_FIND_QUIET)
     list(APPEND _find_extra_args QUIET)
   endif()
-  find_package(PythonInterp ${_find_extra_args})
-  find_package(PythonLibs ${_find_extra_args})
 
   find_program(NumPy_CONV_TEMPLATE_EXECUTABLE NAMES conv-template)
   find_program(NumPy_FROM_TEMPLATE_EXECUTABLE NAMES from-template)

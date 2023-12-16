@@ -1,0 +1,22 @@
+function(cfp_add_test dims type bits)
+  set(test_name testCfpArray${dims}${type})
+  add_executable(${test_name} ${test_name}.c)
+  target_link_libraries(${test_name}
+    cmocka cfp zfpHashLib genSmoothRandNumsLib zfpChecksumsLib)
+  add_test(NAME ${test_name} COMMAND ${test_name})
+endfunction()
+
+cfp_add_test(1 f 32)
+cfp_add_test(2 f 32)
+cfp_add_test(3 f 32)
+cfp_add_test(4 f 32)
+cfp_add_test(1 d 64)
+cfp_add_test(2 d 64)
+cfp_add_test(3 d 64)
+cfp_add_test(4 d 64)
+
+if(DEFINED CFP_NAMESPACE)
+  add_executable(testCfpNamespace testCfpNamespace.c)
+  target_link_libraries(testCfpNamespace cmocka cfp)
+  add_test(NAME testCfpNamespace COMMAND testCfpNamespace)
+endif()

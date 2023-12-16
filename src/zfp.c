@@ -11,7 +11,7 @@
 
 const uint zfp_codec_version = ZFP_CODEC;
 const uint zfp_library_version = ZFP_VERSION;
-const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (August 1, 2022)";
+const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (December 15, 2023)";
 
 /* private functions ------------------------------------------------------- */
 
@@ -105,7 +105,7 @@ zfp_type_size(zfp_type type)
 /* public functions: fields ------------------------------------------------ */
 
 zfp_field*
-zfp_field_alloc()
+zfp_field_alloc(void)
 {
   zfp_field* field = (zfp_field*)malloc(sizeof(zfp_field));
   if (field) {
@@ -465,7 +465,7 @@ zfp_field_set_metadata(zfp_field* field, uint64 meta)
 /* public functions: compression mode and parameter settings --------------- */
 
 zfp_config
-zfp_config_none()
+zfp_config_none(void)
 {
   zfp_config config;
   config.mode = zfp_mode_null;
@@ -507,7 +507,7 @@ zfp_config_accuracy(
 }
 
 zfp_config
-zfp_config_reversible()
+zfp_config_reversible(void)
 {
   zfp_config config;
   config.mode = zfp_mode_reversible;

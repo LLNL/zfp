@@ -1,0 +1,6 @@
+if(ZFP_WITH_ALIGNED_ALLOC)
+  add_executable(testAlignedMemory testAlignedMemory.cpp)
+  target_link_libraries(testAlignedMemory gtest gtest_main zfp)
+  target_compile_definitions(testAlignedMemory PRIVATE ${zfp_compressed_array_defs})
+  add_test(NAME testAlignedMemory COMMAND testAlignedMemory)
+endif()

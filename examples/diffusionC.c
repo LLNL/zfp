@@ -216,7 +216,7 @@ error(const double* u, const constants* c, double t)
 }
 
 static int
-usage()
+usage(void)
 {
   fprintf(stderr, "Usage: diffusionC [options]\n");
   fprintf(stderr, "Options:\n");

@@ -53,7 +53,7 @@ module zfp
 
   integer, parameter :: const_zFORp_version_major = 1
   integer, parameter :: const_zFORp_version_minor = 0
-  integer, parameter :: const_zFORp_version_patch = 0
+  integer, parameter :: const_zFORp_version_patch = 1
   integer, parameter :: const_zFORp_version_tweak = 0
   integer, protected, bind(c, name="zFORp_version_major") :: zFORp_version_major
   integer, protected, bind(c, name="zFORp_version_minor") :: zFORp_version_minor
@@ -68,11 +68,11 @@ module zfp
   integer, protected, bind(c, name="zFORp_codec_version") :: zFORp_codec_version
   data zFORp_codec_version/const_zFORp_codec_version/
 
-  integer, parameter :: const_zFORp_library_version = 4096 ! 0x1000
+  integer, parameter :: const_zFORp_library_version = 4112 ! 0x1010
   integer, protected, bind(c, name="zFORp_library_version") :: zFORp_library_version
   data zFORp_library_version/const_zFORp_library_version/
 
-  character(len = 36), parameter :: zFORp_version_string = 'zfp version 1.0.0 (August 1, 2022)'
+  character(len = 36), parameter :: zFORp_version_string = 'zfp version 1.0.1 (December 15, 2023)'
 
   integer, parameter :: const_zFORp_min_bits = 1
   integer, parameter :: const_zFORp_max_bits = 16658
@@ -464,25 +464,25 @@ module zfp
     subroutine zfp_field_set_stride_1d(field, sx) bind(c, name="zfp_field_set_stride_1d")
       import
       type(c_ptr), value :: field
-      integer(c_ptrdiff_t) :: sx
+      integer(c_ptrdiff_t), value :: sx
     end subroutine
 
     subroutine zfp_field_set_stride_2d(field, sx, sy) bind(c, name="zfp_field_set_stride_2d")
       import
       type(c_ptr), value :: field
-      integer(c_ptrdiff_t) :: sx, sy
+      integer(c_ptrdiff_t), value :: sx, sy
     end subroutine
 
     subroutine zfp_field_set_stride_3d(field, sx, sy, sz) bind(c, name="zfp_field_set_stride_3d")
       import
       type(c_ptr), value :: field
-      integer(c_ptrdiff_t) :: sx, sy, sz
+      integer(c_ptrdiff_t), value :: sx, sy, sz
     end subroutine
 
     subroutine zfp_field_set_stride_4d(field, sx, sy, sz, sw) bind(c, name="zfp_field_set_stride_4d")
       import
       type(c_ptr), value :: field
-      integer(c_ptrdiff_t) :: sx, sy, sz, sw
+      integer(c_ptrdiff_t), value :: sx, sy, sz, sw
     end subroutine
 
     function zfp_field_set_metadata(field, encoded_metadata) result(is_success) bind(c, name="zfp_field_set_metadata")
