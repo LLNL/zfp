@@ -7,7 +7,7 @@ Contributors
 * |zfp| development team
 
   - Peter Lindstrom
-  - Garrett Morrison
+  - Danielle Asher
 
 * Major contributors
 

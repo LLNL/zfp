@@ -11,7 +11,7 @@
 
 const uint zfp_codec_version = ZFP_CODEC;
 const uint zfp_library_version = ZFP_VERSION;
-const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (August 1, 2022)";
+const char* const zfp_version_string = "zfp version " ZFP_VERSION_STRING " (December 15, 2023)";
 
 /* private functions ------------------------------------------------------- */
 

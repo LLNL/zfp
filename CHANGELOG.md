@@ -3,7 +3,10 @@ Change Log
 
 ---
 
-## Unreleased
+## 1.0.1 (2023-12-15)
+
+This patch release primarily addresses minor bug fixes and is needed to update
+the zfpy Python wheels.
 
 ### Added
 
@@ -15,11 +18,11 @@ Change Log
 
 - #169: `libm` dependency is not always correctly detected.
 - #171: `ptrdiff_t` is not always imported in Cython.
-- #176: `CFP` API is not exposed via CMake configuration file.
+- #176: cfp API is not exposed via CMake configuration file.
 - #177: Full test suite is not included in release.
 - #181: `rpath` is not set correctly in executables.
-- #204: Array strides are not passed by value in `zFORp`.
-- #220: Errors reported with scikit-build when running `CMake` with `BUILD_ZFPY` enabled.
+- #204: Array strides are not passed by value in zFORp.
+- #220: Errors reported with scikit-build when building zfpy.
 
 ---
 
