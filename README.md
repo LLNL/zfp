@@ -58,9 +58,9 @@ Note: GNU builds are less flexible and do not support all available features,
 e.g., CUDA support.
 
 For further configuration and build instructions, please consult the
-[documentation](https://zfp.readthedocs.io/en/release1.0.0/installation.html).
+[documentation](https://zfp.readthedocs.io/en/release1.0.1/installation.html).
 For examples of how to call the C library and use the C++ array classes,
-see the [examples](https://zfp.readthedocs.io/en/release1.0.0/examples.html)
+see the [examples](https://zfp.readthedocs.io/en/release1.0.1/examples.html)
 section.
 
 

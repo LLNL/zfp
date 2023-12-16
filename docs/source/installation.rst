@@ -30,7 +30,7 @@ CMake Builds
 To build |zfp| using `CMake <https://cmake.org>`__ on Linux or macOS, start
 a Unix shell and type::
 
-    cd zfp-1.0.0
+    cd zfp-1.0.1
     mkdir build
     cd build
     cmake ..
@@ -48,7 +48,7 @@ By default, CMake builds will attempt to locate and use
 To build |zfp| using Visual Studio on Windows, start a DOS shell
 and type::
 
-    cd zfp-1.0.0
+    cd zfp-1.0.1
     mkdir build
     cd build
     cmake ..
@@ -67,7 +67,7 @@ GNU Builds
 To build |zfp| using `gcc <https://gcc.gnu.org>`__ without
 `OpenMP <http://www.openmp.org>`__, type::
 
-    cd zfp-1.0.0
+    cd zfp-1.0.1
     gmake
 
 This builds |libzfp| as a static library as well as the |zfp|
