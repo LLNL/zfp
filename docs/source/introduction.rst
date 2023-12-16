@@ -41,6 +41,8 @@ exactly, is also supported.
 `Lawrence Livermore National Laboratory <https://www.llnl.gov>`__
 and is supported by the U.S. Department of Energy's
 `Exascale Computing Project <https://www.exascaleproject.org>`__.
+|zfp| is a
+`2023 R&D 100 Award Winner <https://www.rdworldonline.com/2023-rd-100-award-winners/>`__.
 
 
 Availability
@@ -57,11 +59,12 @@ bindings) to install.
 |zfp| is also available through several package managers, including
 Conda (both `C/C++ <https://anaconda.org/conda-forge/zfp>`__ and
 `Python <https://anaconda.org/conda-forge/zfpy>`__ packages are available),
-`PIP <https://pypi.org/project/zfpy>`__, and
-`Spack <https://spack.readthedocs.io/en/latest/package_list.html#zfp>`__.
-`RPM packages <https://repology.org/project/zfp/versions>`__ are available
-for several Linux distributions and may be installed using :code:`apt` or
-:code:`yum`.
+`PIP <https://pypi.org/project/zfpy>`__,
+`Spack <https://packages.spack.io/package.html?name=zfp>`__, and
+`MacPorts <https://ports.macports.org/port/zfp/details/>`__.
+`Linux packages <https://repology.org/project/zfp/versions>`__ are available
+for several distributions and may be installed, for example, using :code:`apt`
+and :code:`yum`.
 
 
 .. _app-support:
@@ -83,7 +86,7 @@ plugins, and formats, such as
   select compressors shipped with
   `HDF5 binaries <https://www.hdfgroup.org/downloads/hdf5/>`__.
 
-* `Compression functions <https://software.intel.com/en-us/ipp-dev-reference-zfp-compression-functions>`__
+* `Compression functions <https://www.intel.com/content/www/us/en/developer/articles/technical/parallel-compression-and-decompression-in-intel-integrated-performance-primitives-zfp-.html>`__
   for Intel\ |reg| `Integrated Performance Primitives <https://software.intel.com/en-us/intel-ipp>`__.
 
 * `Compressed MPI messages <https://doi.org/10.1109/IPDPS49936.2021.00053>`__

@@ -3,6 +3,30 @@
 Release Notes
 =============
 
+1.0.1 (2023-12-15)
+------------------
+
+This patch release primarily addresses minor bug fixes and is needed to update
+the zfpy Python wheels.
+
+**Added**
+
+- A new build macro, ``BUILD_TESTING_FULL``, specifies that all unit tests be
+  built; ``BUILD_TESTING`` produces a smaller subset of tests.  Full tests and
+  documentation are now included in releases.
+
+**Fixed**
+
+- #169: `libm` dependency is not always correctly detected.
+- #171: `ptrdiff_t` is not always imported in Cython.
+- #176: cfp API is not exposed via CMake configuration file.
+- #177: Full test suite is not included in release.
+- #181: `rpath` is not set correctly in executables.
+- #204: Array strides are not passed by value in zFORp.
+- #220: Errors reported with scikit-build when building zfpy.
+
+----
+
 1.0.0 (2022-08-01)
 ------------------
 

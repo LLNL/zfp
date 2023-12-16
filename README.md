@@ -2,7 +2,7 @@ ZFP
 ===
 [![Github Actions Build Status](https://github.com/LLNL/zfp/workflows/Run%20Tests/badge.svg)](https://github.com/LLNL/zfp/actions/workflows/tests.yml)
 [![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/qb3ld7j11segy52k/branch/develop?svg=true)](https://ci.appveyor.com/project/lindstro/zfp)
-[![Documentation Status](https://readthedocs.org/projects/zfp/badge/?version=release1.0.0)](https://zfp.readthedocs.io/en/release1.0.0/)
+[![Documentation Status](https://readthedocs.org/projects/zfp/badge/?version=release1.0.1)](https://zfp.readthedocs.io/en/release1.0.1/)
 [![codecov](https://codecov.io/gh/LLNL/zfp/branch/develop/graph/badge.svg?token=jqvMVvgRQ9)](https://codecov.io/gh/LLNL/zfp)
 [![R&D100 - Winner](https://img.shields.io/badge/R%26D100-Winner-gold)](https://www.rdworldonline.com/rd-100-winners-for-2023-are-announced-2/)
 
@@ -58,18 +58,18 @@ Note: GNU builds are less flexible and do not support all available features,
 e.g., CUDA support.
 
 For further configuration and build instructions, please consult the
-[documentation](https://zfp.readthedocs.io/en/release1.0.0/installation.html).
+[documentation](https://zfp.readthedocs.io/en/release1.0.1/installation.html).
 For examples of how to call the C library and use the C++ array classes,
-see the [examples](https://zfp.readthedocs.io/en/release1.0.0/examples.html)
+see the [examples](https://zfp.readthedocs.io/en/release1.0.1/examples.html)
 section.
 
 
 Documentation
 -------------
 
-Full HTML [documentation](http://zfp.readthedocs.io/en/release1.0.0) is
+Full HTML [documentation](http://zfp.readthedocs.io/en/release1.0.1) is
 available online.
-A [PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release1.0.0/)
+A [PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release1.0.1/)
 version is also available.
 
 Further information on the zfp software is included in these files:
