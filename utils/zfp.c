@@ -30,14 +30,14 @@ The 7 major tasks to be accomplished are:
 static void
 print_error(const void* fin, const void* fout, zfp_type type, size_t n)
 {
-  const int32* i32i = (const int32*)fin;
-  const int64* i64i = (const int64*)fin;
-  const float* f32i = (const float*)fin;
-  const double* f64i = (const double*)fin;
-  const int32* i32o = (const int32*)fout;
-  const int64* i64o = (const int64*)fout;
-  const float* f32o = (const float*)fout;
-  const double* f64o = (const double*)fout;
+  const int32* i32i = fin;
+  const int64* i64i = fin;
+  const float* f32i = fin;
+  const double* f64i = fin;
+  const int32* i32o = fout;
+  const int64* i64o = fout;
+  const float* f32o = fout;
+  const double* f64o = fout;
   double fmin = +DBL_MAX;
   double fmax = -DBL_MAX;
   double erms = 0;

@@ -49,7 +49,7 @@ compress_init_par(zfp_stream* stream, const zfp_field* field, size_t chunks, siz
          (stream_wtell(stream->stream) % stream_word_bits != 0);
 
   /* set up buffer for each thread to compress to */
-  bs = (bitstream**)malloc(chunks * sizeof(bitstream*));
+  bs = malloc(chunks * sizeof(bitstream*));
   if (!bs)
     return NULL;
   for (chunk = 0; chunk < chunks; chunk++) {

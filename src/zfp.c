@@ -107,7 +107,7 @@ zfp_type_size(zfp_type type)
 zfp_field*
 zfp_field_alloc(void)
 {
-  zfp_field* field = (zfp_field*)malloc(sizeof(zfp_field));
+  zfp_field* field = malloc(sizeof(zfp_field));
   if (field) {
     field->type = zfp_type_none;
     field->nx = field->ny = field->nz = field->nw = 0;
@@ -189,7 +189,7 @@ zfp_field_begin(const zfp_field* field)
   if (field->data) {
     ptrdiff_t min;
     field_index_span(field, &min, NULL);
-    return (void*)((uchar*)field->data + min * (ptrdiff_t)zfp_type_size(field->type));
+    return (uchar*)field->data + min * (ptrdiff_t)zfp_type_size(field->type);
   }
   else
     return NULL;
@@ -536,7 +536,7 @@ zfp_config_expert(
 zfp_stream*
 zfp_stream_open(bitstream* stream)
 {
-  zfp_stream* zfp = (zfp_stream*)malloc(sizeof(zfp_stream));
+  zfp_stream* zfp = malloc(sizeof(zfp_stream));
   if (zfp) {
     zfp->stream = stream;
     zfp->minbits = ZFP_MIN_BITS;
@@ -941,7 +941,7 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
         zfp_exec_params_omp* params = malloc(sizeof(zfp_exec_params_omp));
         params->threads = 0;
         params->chunk_size = 0;
-        zfp->exec.params = (void*)params;
+        zfp->exec.params = params;
       }
       break;
 #else
