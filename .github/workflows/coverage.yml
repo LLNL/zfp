@@ -42,7 +42,7 @@ jobs:
           lcov_cobertura ${{github.workspace}}/build/coverage.info -d -o ${{github.workspace}}/build/coverage.xml
 
       - name: Upload Report to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
            files: ${{github.workspace}}/build/coverage.xml
            env_vars: Actions
