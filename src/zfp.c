@@ -220,13 +220,13 @@ zfp_field_size(const zfp_field* field, size_t* size)
     switch (zfp_field_dimensionality(field)) {
       case 4:
         size[3] = field->nw;
-        /* FALLTHROUGH */
+        fallthrough_
       case 3:
         size[2] = field->nz;
-        /* FALLTHROUGH */
+        fallthrough_
       case 2:
         size[1] = field->ny;
-        /* FALLTHROUGH */
+        fallthrough_
       case 1:
         size[0] = field->nx;
         break;
@@ -263,13 +263,13 @@ zfp_field_stride(const zfp_field* field, ptrdiff_t* stride)
     switch (zfp_field_dimensionality(field)) {
       case 4:
         stride[3] = field->sw ? field->sw : (ptrdiff_t)(field->nx * field->ny * field->nz);
-        /* FALLTHROUGH */
+        fallthrough_
       case 3:
         stride[2] = field->sz ? field->sz : (ptrdiff_t)(field->nx * field->ny);
-        /* FALLTHROUGH */
+        fallthrough_
       case 2:
         stride[1] = field->sy ? field->sy : (ptrdiff_t)field->nx;
-        /* FALLTHROUGH */
+        fallthrough_
       case 1:
         stride[0] = field->sx ? field->sx : 1;
         break;

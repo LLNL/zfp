@@ -1,12 +1,27 @@
 #ifndef ZFP_SYSTEM_H
 #define ZFP_SYSTEM_H
 
+/* restrict keyword */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
   /* C99: use restrict */
   #define restrict_ restrict
 #else
   /* C89: no restrict keyword */
   #define restrict_
+#endif
+
+/* fallthrough in switch statements */
+#define fallthrough_ /* FALLTHROUGH */
+#if defined(__cplusplus) && __cplusplus >= 201703L
+  /* C++17: use [[fallthrough]] */
+  #undef fallthrough_
+  #define fallthrough_ [[fallthrough]];
+#elif defined(__has_attribute)
+  #if __has_attribute(fallthrough)
+    /* GNUC: use __attribute__((fallthrough)) */
+    #undef fallthrough_
+    #define fallthrough_ __attribute__((fallthrough));
+  #endif
 #endif
 
 /* macros for exporting and importing symbols */

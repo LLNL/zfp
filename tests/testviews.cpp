@@ -56,13 +56,13 @@ int main(int argc, char* argv[])
           (std::istringstream(argv[8]) >> my).fail() || !my ||
           (std::istringstream(argv[9]) >> mz).fail() || !mz)
         return usage();
-      // FALLTHROUGH
+      fallthrough_
     case 4:
       if ((std::istringstream(argv[1]) >> nx).fail() || !nx ||
           (std::istringstream(argv[2]) >> ny).fail() || !ny ||
           (std::istringstream(argv[3]) >> nz).fail() || !nz)
         return usage();
-      // FALLTHROUGH
+      fallthrough_
     case 1:
       break;
     default:

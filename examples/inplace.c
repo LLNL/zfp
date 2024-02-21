@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     case 2:
       if (sscanf(argv[1], "%lf", &tolerance) != 1)
         goto usage;
-      /* FALLTHROUGH */
+      fallthrough_
     case 1:
       break;
     default:

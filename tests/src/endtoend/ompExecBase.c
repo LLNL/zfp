@@ -20,10 +20,13 @@ computeTotalBlocks(zfp_field* field)
   switch (zfp_field_dimensionality(field)) {
     case 4:
       bw = (field->nw + 3) / 4;
+      fallthrough_
     case 3:
       bz = (field->nz + 3) / 4;
+      fallthrough_
     case 2:
       by = (field->ny + 3) / 4;
+      fallthrough_
     case 1:
       bx = (field->nx + 3) / 4;
       return bx * by * bz * bw;

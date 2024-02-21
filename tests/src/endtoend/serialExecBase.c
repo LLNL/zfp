@@ -112,12 +112,16 @@ isCompressedBitrateComparableToChosenRate(struct setupVars* bundle)
   switch (DIMS) {
     case 4:
       paddedArrayLen *= paddedNw;
+      fallthrough_
     case 3:
       paddedArrayLen *= paddedNz;
+      fallthrough_
     case 2:
       paddedArrayLen *= paddedNy;
+      fallthrough_
     case 1:
       paddedArrayLen *= paddedNx;
+      break;
   }
 
   // expect bitrate to scale wrt padded array length

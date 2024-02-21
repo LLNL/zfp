@@ -11,16 +11,16 @@ _t1(pad_block, Scalar)(Scalar* p, size_t n, ptrdiff_t s)
   switch (n) {
     case 0:
       p[0 * s] = 0;
-      /* FALLTHROUGH */
+      fallthrough_
     case 1:
       p[1 * s] = p[0 * s];
-      /* FALLTHROUGH */
+      fallthrough_
     case 2:
       p[2 * s] = p[1 * s];
-      /* FALLTHROUGH */
+      fallthrough_
     case 3:
       p[3 * s] = p[0 * s];
-      /* FALLTHROUGH */
+      fallthrough_
     default:
       break;
   }

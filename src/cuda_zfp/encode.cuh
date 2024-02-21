@@ -22,16 +22,16 @@ void pad_block(Scalar *p, uint n, uint s)
   {
     case 0:
       p[0 * s] = 0;
-      /* FALLTHROUGH */
+      fallthrough_
     case 1:
       p[1 * s] = p[0 * s];
-      /* FALLTHROUGH */
+      fallthrough_
     case 2:
       p[2 * s] = p[1 * s];
-      /* FALLTHROUGH */
+      fallthrough_
     case 3:
       p[3 * s] = p[0 * s];
-      /* FALLTHROUGH */
+      fallthrough_
     default:
       break;
   }

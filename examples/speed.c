@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
   switch (argc) {
     case 3:
       sscanf(argv[2], "%u", &blocks);
-      /* FALLTHROUGH */
+      fallthrough_
     case 2:
       sscanf(argv[1], "%lf", &rate);
       break;

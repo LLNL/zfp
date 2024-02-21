@@ -5,6 +5,7 @@
 #include "genSmoothRandNums.h"
 #include "fixedpoint96.h"
 #include "rand64.h"
+#include "zfp.h"
 
 #define FLOAT_MANTISSA_BITS 23
 #define DOUBLE_MANTISSA_BITS 52
@@ -30,15 +31,19 @@ computeOffset(size_t l, size_t k, size_t j, size_t i, size_t sideLen, int numDim
   switch (numDims) {
     case 4:
       result += l * sideLen * sideLen * sideLen;
+      fallthrough_
 
     case 3:
       result += k * sideLen * sideLen;
+      fallthrough_
 
     case 2:
       result += j * sideLen;
+      fallthrough_
 
     case 1:
       result += i;
+      break;
   }
 
   return result;

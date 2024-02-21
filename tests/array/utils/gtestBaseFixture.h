@@ -65,12 +65,14 @@ protected:
         config = zfp_config_reversible();
         break;
       }
+#if 0
       case zfp_mode_expert:
       {
         //TODO: do we need this one?
         //config = zfp_config_expert(uint minbits, uint maxbits, uint maxprec, int minexp);
         //break;
       }
+#endif
       default:
       {
         config = zfp_config_none();
