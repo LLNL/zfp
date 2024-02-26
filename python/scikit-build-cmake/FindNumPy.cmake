@@ -44,14 +44,14 @@ if(NOT NumPy_FOUND)
   find_program(NumPy_CONV_TEMPLATE_EXECUTABLE NAMES conv-template)
   find_program(NumPy_FROM_TEMPLATE_EXECUTABLE NAMES from-template)
 
-  if(PYTHON_EXECUTABLE)
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}"
+  if(Python_EXECUTABLE)
+    execute_process(COMMAND "${Python_EXECUTABLE}"
       -c "import numpy; print(numpy.get_include())"
       OUTPUT_VARIABLE _numpy_include_dir
       OUTPUT_STRIP_TRAILING_WHITESPACE
       ERROR_QUIET
       )
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}"
+    execute_process(COMMAND "${Python_EXECUTABLE}"
       -c "import numpy; print(numpy.__version__)"
       OUTPUT_VARIABLE NumPy_VERSION
       OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -60,31 +60,31 @@ if(NOT NumPy_FOUND)
 
     # XXX This is required to support NumPy < v0.15.0. See note in module documentation above.
     if(NOT NumPy_CONV_TEMPLATE_EXECUTABLE)
-      execute_process(COMMAND "${PYTHON_EXECUTABLE}"
+      execute_process(COMMAND "${Python_EXECUTABLE}"
         -c "from numpy.distutils import conv_template; print(conv_template.__file__)"
         OUTPUT_VARIABLE _numpy_conv_template_file
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_QUIET
         )
-      set(NumPy_CONV_TEMPLATE_EXECUTABLE "${PYTHON_EXECUTABLE}" "${_numpy_conv_template_file}" CACHE STRING "Command executing conv-template program" FORCE)
+      set(NumPy_CONV_TEMPLATE_EXECUTABLE "${Python_EXECUTABLE}" "${_numpy_conv_template_file}" CACHE STRING "Command executing conv-template program" FORCE)
     endif()
 
     # XXX This is required to support NumPy < v0.15.0. See note in module documentation above.
     if(NOT NumPy_FROM_TEMPLATE_EXECUTABLE)
-      execute_process(COMMAND "${PYTHON_EXECUTABLE}"
+      execute_process(COMMAND "${Python_EXECUTABLE}"
         -c "from numpy.distutils import from_template; print(from_template.__file__)"
         OUTPUT_VARIABLE _numpy_from_template_file
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_QUIET
         )
-      set(NumPy_FROM_TEMPLATE_EXECUTABLE "${PYTHON_EXECUTABLE}" "${_numpy_from_template_file}" CACHE STRING "Command executing from-template program" FORCE)
+      set(NumPy_FROM_TEMPLATE_EXECUTABLE "${Python_EXECUTABLE}" "${_numpy_from_template_file}" CACHE STRING "Command executing from-template program" FORCE)
     endif()
   endif()
 endif()
 
 find_path(NumPy_INCLUDE_DIR
   numpy/arrayobject.h
-  PATHS "${_numpy_include_dir}" "${PYTHON_INCLUDE_DIR}"
+  PATHS "${_numpy_include_dir}" "${Python_INCLUDE_DIR}"
   PATH_SUFFIXES numpy/core/include
   )
 

@@ -36,13 +36,7 @@
 
 # Use the Cython executable that lives next to the Python executable
 # if it is a local installation.
-if(Python_EXECUTABLE)
-  get_filename_component(_python_path ${Python_EXECUTABLE} PATH)
-elseif(Python3_EXECUTABLE)
-  get_filename_component(_python_path ${Python3_EXECUTABLE} PATH)
-elseif(DEFINED PYTHON_EXECUTABLE)
-  get_filename_component(_python_path ${PYTHON_EXECUTABLE} PATH)
-endif()
+get_filename_component(_python_path ${Python_EXECUTABLE} PATH)
 
 if(DEFINED _python_path)
   find_program(CYTHON_EXECUTABLE
