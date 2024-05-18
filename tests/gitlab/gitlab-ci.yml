@@ -135,6 +135,8 @@ stages:
 ############
 
 include:
+    - project: 'lc-templates/id_tokens'
+      file: 'id_tokens.yml'
     - local: tests/gitlab/pascal-templates.yml
     - local: tests/gitlab/pascal-jobs.yml
     - local: tests/gitlab/quartz-templates.yml
