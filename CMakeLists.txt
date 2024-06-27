@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.20)
 
 # Enable MACOSX_RPATH by default
 cmake_policy(SET CMP0042 NEW)
@@ -200,15 +200,8 @@ if(ZFP_WITH_OPENMP AND NOT OpenMP_C_LIBRARIES)
 endif()
 
 if(ZFP_WITH_CUDA)
-  # use CUDA_BIN_DIR hint
-  set(ENV{CUDA_BIN_PATH} ${CUDA_BIN_DIR})
-  find_package(CUDA)
-  if(NOT CUDA_FOUND)
-    message(FATAL_ERROR "ZFP_WITH_CUDA is enabled, but a CUDA installation was not found.")
-  endif()
-  if(${CUDA_VERSION_MAJOR} LESS 7)
-    message(FATAL_ERROR "zfp requires at least CUDA 7.0.")
-  endif()
+    enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
 endif()
 
 if(NOT (ZFP_BIT_STREAM_WORD_SIZE EQUAL 64))
