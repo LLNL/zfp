@@ -151,6 +151,14 @@ Regardless of the settings below, |libzfp| will always be built.
   GNU make default: off and ignored.
 
 
+  On systems with rpath (e.g. linux), it is also possible to
+  install the python bindings *after* installing the C
+  library (e.g. to /prefix_of_zfp/lib/libzfp.so)
+  by setting rpath during pip install:
+
+  LDFLAGS=-Wl,-rpath,/prefix_of_zfp/lib' pip install .
+
+
 .. c:macro:: BUILD_ZFORP
 
   Build |libzforp| for Fortran bindings to the C API.  Requires Fortran
