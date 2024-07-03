@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 import sys
 import operator
 import functools
