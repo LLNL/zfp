@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 import cython
 cimport libc.stdint as stdint
 from libc.stddef cimport ptrdiff_t
