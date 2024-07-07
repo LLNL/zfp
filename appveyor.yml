@@ -4,7 +4,7 @@ environment:
   # zfpy only build for Release builds (otherwise need debug python libs python27_d.lib)
   matrix:
     - COMPILER: msvc
-      GENERATOR: Visual Studio 17 2022 Win64
+      GENERATOR: Visual Studio 17 2022
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
       PLATFORM: x64
       BUILD_TYPE: Release
@@ -18,7 +18,7 @@ environment:
       PYTHON_VERSION: 39
 
     - COMPILER: msvc
-      GENERATOR: Visual Studio 16 2019 Win64
+      GENERATOR: Visual Studio 16 2019
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       PLATFORM: x64
       BUILD_TYPE: Release

@@ -46,9 +46,9 @@ cd tmpBuild
 # (CMAKE_SH satisfies mingw builds)
 set +e
 if [ $COMPILER != "msvc" ]; then
-  cmake -G "$GENERATOR" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils" -DCMAKE_SH=CMAKE_SH-NOTFOUND
+  cmake -G "$GENERATOR" -A "$PLATFORM" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils" -DCMAKE_SH=CMAKE_SH-NOTFOUND
 else
-  cmake -G "$GENERATOR" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils"
+  cmake -G "$GENERATOR" -A "$PLATFORM" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils"
 fi
 
 if [ $? -eq 0 ]; then
