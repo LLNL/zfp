@@ -55,13 +55,13 @@ install:
       }
 
   # placing these behind a conditional for some reason prevents CMake from picking up the virtualenv
-  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
-  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" pip install virtualenv
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" set "PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%"
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python3 -m pip install virtualenv
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" set VIRTUALENV_NAME=pyVirtualEnv
-  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" virtualenv %VIRTUALENV_NAME%
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python3 -m virtualenv %VIRTUALENV_NAME%
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" "%VIRTUALENV_NAME%\\Scripts\\activate.bat"
-  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" pip install -r python\requirements.txt
-  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python --version
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python3 -m pip install -r python\requirements.txt
+  - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" python3 --version
 
 
 build_script:
