@@ -5,54 +5,58 @@ environment:
   matrix:
     - COMPILER: msvc
       GENERATOR: Visual Studio 15 2017 Win64
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
       PLATFORM: x64
       BUILD_TYPE: Release
       PYTHON_VERSION: 39
 
     - COMPILER: msvc
       GENERATOR: Visual Studio 15 2017
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
       PLATFORM: Win32
       BUILD_TYPE: Release
       PYTHON_VERSION: 39
 
     - COMPILER: msvc
-      GENERATOR: Visual Studio 14 2015 Win64
+      GENERATOR: Visual Studio 14 2019 Win64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       PLATFORM: x64
       BUILD_TYPE: Release
       PYTHON_VERSION: 39
 
     - COMPILER: msvc
-      GENERATOR: Visual Studio 14 2015
+      GENERATOR: Visual Studio 14 2019
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       PLATFORM: Win32
       BUILD_TYPE: Release
       PYTHON_VERSION: 39
 
     - COMPILER: mingw
       GENERATOR: MinGW Makefiles
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       PLATFORM: Win32
       BUILD_TYPE: Release
+      PYTHON_VERSION: 39
 
     - COMPILER: mingw-w64
       GENERATOR: MinGW Makefiles
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
       PLATFORM: x64
       BUILD_TYPE: Release
+      PYTHON_VERSION: 39
 
 install:
   - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
   - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
 
   # set env vars for Python system dir (assumed to always be MSVC)
-  - ps: |
-      if ($env:PYTHON_VERSION) {
-        $env:PYTHON_DIR = "C:\Python$env:PYTHON_VERSION"
-        if ($env:PLATFORM -eq "x64") {
-          $env:PYTHON_DIR = "$env:PYTHON_DIR-x64"
-        }
-
-        $env:PYTHON_LIB_PATH = "$env:PYTHON_DIR\libs\python$env:PYTHON_VERSION.lib"
-      }
+  - if "%PYTHON_VERSION%" != "" (
+      set "PYTHON_DIR=C:\Python%PYTHON_VERSION%"
+      if "%PLATFORM%" == "x64" (
+        set "PYTHON_DIR=%PYTHON_DIR%-x64"
+      )
+      set "PYTHON_LIB_PATH=%PYTHON_DIR%\libs\python%PYTHON_VERSION%.lib"
+    )
 
   # placing these behind a conditional for some reason prevents CMake from picking up the virtualenv
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" set "PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%"
@@ -67,4 +71,4 @@ install:
 build_script:
   - sh appveyor.sh
   # uncomment to enable interactive remote desktop mode
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+  # - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
