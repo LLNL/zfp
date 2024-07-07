@@ -50,13 +50,16 @@ install:
   - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
 
   # set env vars for Python system dir (assumed to always be MSVC)
-  - if not "%PYTHON_VERSION%" == "" (
-      set "PYTHON_DIR=C:\Python%PYTHON_VERSION%"
-      if "%PLATFORM%" == "x64" (
-        set "PYTHON_DIR=%PYTHON_DIR%-x64"
-      )
-      set "PYTHON_LIB_PATH=%PYTHON_DIR%\libs\python%PYTHON_VERSION%.lib"
-    )
+  - ps: |
+      if ($env:PYTHON_VERSION) {
+        $env:PYTHON_DIR = "C:\Python$env:PYTHON_VERSION"
+        if ($env:PLATFORM -eq "x64") {
+          $env:PYTHON_DIR = "$env:PYTHON_DIR-x64"
+        }
+
+        $env:PYTHON_LIB_PATH = "$env:PYTHON_DIR\libs\python$env:PYTHON_VERSION.lib"
+      }
+
   - if not "%PYTHON_DIR%" == "" if not exists "%PYTHON_DIR%" exit 1
   # placing these behind a conditional for some reason prevents CMake from picking up the virtualenv
   - if "%COMPILER%"=="msvc" if "%BUILD_TYPE%"=="Release" set "PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%"
