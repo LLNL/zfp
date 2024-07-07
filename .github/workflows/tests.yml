@@ -2,8 +2,8 @@ name: Tests
 
 on:
   push:
-    branches:
-      - develop
+    # branches:
+    #   - develop
   pull_request:
 
 concurrency:
