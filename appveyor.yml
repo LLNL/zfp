@@ -72,6 +72,6 @@ install:
 
 
 build_script:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-  # - sh appveyor.sh
+  - sh appveyor.sh
   # uncomment to enable interactive remote desktop mode
+  # - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
