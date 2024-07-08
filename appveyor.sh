@@ -31,8 +31,8 @@ if [ $COMPILER == "msvc" ] && [ $BUILD_TYPE == "Release" ]; then
   if [ $ACTIVE_PY_VERSION != $PYTHON_VERSION ]; then
     exit 1
   fi
-
-  BUILD_FLAGS="$BUILD_FLAGS -DBUILD_ZFPY=ON -DPYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR"
+  PYTHON_DIR=$(python -c 'import sys; print(sys.prefix)')
+  BUILD_FLAGS="$BUILD_FLAGS -DBUILD_ZFPY=ON -DPYTHON_INCLUDE_DIR=$PYTHON_DIR\\include"
 fi
 
 BUILD_FLAGS="$BUILD_FLAGS -DBUILD_OPENMP=OFF"

@@ -46,8 +46,8 @@ environment:
       PYTHON_VERSION: 39
 
 install:
-  - if "%COMPILER%"=="mingw" set PATH=C:\MinGW\bin;%PATH%
-  - if "%COMPILER%"=="mingw-w64" set PATH=C:\MinGW\bin;%PATH%
+  - if "%COMPILER%"=="mingw" set "PATH=C:\MinGW\bin;%PATH%"
+  - if "%COMPILER%"=="mingw-w64" set "PATH=C:\MinGW\bin;%PATH%"
 
   # set env vars for Python system dir (assumed to always be MSVC)
   - ps: |
@@ -56,9 +56,6 @@ install:
         if ($env:PLATFORM -eq "x64") {
           $env:PYTHON_DIR = "$env:PYTHON_DIR-x64"
         }
-
-        $env:PYTHON_LIB_PATH = "$env:PYTHON_DIR\libs\python$env:PYTHON_VERSION.lib"
-        $env:PYTHON_INCLUDE_DIR = "$env:PYTHON_DIR\Include"
       }
 
   - if not "%PYTHON_DIR%" == "" if not exist "%PYTHON_DIR%" exit 1
