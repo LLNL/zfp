@@ -58,6 +58,7 @@ install:
         }
 
         $env:PYTHON_LIB_PATH = "$env:PYTHON_DIR\libs\python$env:PYTHON_VERSION.lib"
+        $env:PYTHON_INCLUDE_DIR = "$env:PYTHON_DIR\Include"
       }
 
   - if not "%PYTHON_DIR%" == "" if not exist "%PYTHON_DIR%" exit 1
