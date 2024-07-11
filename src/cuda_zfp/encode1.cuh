@@ -95,7 +95,8 @@ size_t encode1launch(uint dim,
                      int sx,
                      const Scalar *d_data,
                      Word *stream,
-                     const int maxbits)
+                     const int maxbits,
+                     cudaStream_t custream)
 {
   const int cuda_block_size = 128;
   dim3 block_size = dim3(cuda_block_size, 1, 1);
@@ -121,17 +122,17 @@ size_t encode1launch(uint dim,
   //
   size_t stream_bytes = calc_device_mem1d(zfp_pad, maxbits);
   // ensure we have zeros
-  cudaMemset(stream, 0, stream_bytes);
+  cudaMemsetAsync(stream, 0, stream_bytes, custream);
 
 #ifdef CUDA_ZFP_RATE_PRINT
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
-  cudaEventRecord(start);
+  cudaEventRecord(start, custream);
 #endif
 
-  cudaEncode1<Scalar> <<<grid_size, block_size>>>
+  cudaEncode1<Scalar> <<<grid_size, block_size, 0, custream>>>
     (maxbits,
      d_data,
      stream,
@@ -141,9 +142,9 @@ size_t encode1launch(uint dim,
      zfp_blocks);
 
 #ifdef CUDA_ZFP_RATE_PRINT
-  cudaEventRecord(stop);
+  cudaEventRecord(stop, custream);
   cudaEventSynchronize(stop);
-  cudaStreamSynchronize(0);
+  cudaStreamSynchronize(custream);
 
   float milliseconds = 0.f;
   cudaEventElapsedTime(&milliseconds, start, stop);
@@ -152,6 +153,9 @@ size_t encode1launch(uint dim,
   float rate = gb / seconds;
   printf("Encode elapsed time: %.5f (s)\n", seconds);
   printf("# encode1 rate: %.2f (GB / sec) %d\n", rate, maxbits);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 #endif
   return stream_bytes;
 }
@@ -164,9 +168,10 @@ size_t encode1(int dim,
                int sx,
                Scalar *d_data,
                Word *stream,
-               const int maxbits)
+               const int maxbits,
+               cudaStream_t custream)
 {
-  return encode1launch<Scalar>(dim, sx, d_data, stream, maxbits);
+  return encode1launch<Scalar>(dim, sx, d_data, stream, maxbits, custream);
 }
 
 }

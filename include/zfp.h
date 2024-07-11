@@ -12,6 +12,10 @@
 #include "zfp/internal/zfp/system.h"
 #include "zfp/internal/zfp/types.h"
 
+#ifdef ZFP_WITH_CUDA
+#include <cuda_runtime_api.h>
+#endif
+
 /* macros ------------------------------------------------------------------ */
 
 /* default compression parameters */
@@ -76,6 +80,13 @@ typedef struct {
   uint threads;    /* number of requested threads */
   uint chunk_size; /* number of blocks per chunk (1D only) */
 } zfp_exec_params_omp;
+
+#ifdef ZFP_WITH_CUDA
+/* CUDA execution parameters */
+typedef struct {
+  cudaStream_t stream; /* */
+} zfp_exec_params_cuda;
+#endif
 
 typedef struct {
   zfp_exec_policy policy; /* execution policy (serial, omp, ...) */
@@ -310,6 +321,14 @@ zfp_stream_omp_chunk_size(
   const zfp_stream* stream /* compressed stream */
 );
 
+#ifdef ZFP_WITH_CUDA
+/* cuda stream */
+cudaStream_t
+zfp_stream_cuda_stream(    /* cuda stream */
+  const zfp_stream* stream /* compressed stream */
+);
+#endif
+
 /* set execution policy */
 zfp_bool                 /* true upon success */
 zfp_stream_set_execution(
@@ -330,6 +349,14 @@ zfp_stream_set_omp_chunk_size(
   zfp_stream* stream, /* compressed stream */
   uint chunk_size     /* number of blocks per chunk (0 for default) */
 );
+
+#ifdef ZFP_WITH_CUDA
+zfp_bool
+zfp_stream_set_cuda_stream(
+  zfp_stream* zfp,
+  cudaStream_t custream
+);
+#endif
 
 /* high-level API: compression mode and parameter settings ----------------- */
 

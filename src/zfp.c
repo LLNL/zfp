@@ -914,6 +914,16 @@ zfp_stream_omp_chunk_size(const zfp_stream* zfp)
   return 0u;
 }
 
+#ifdef ZFP_WITH_CUDA
+cudaStream_t
+zfp_stream_cuda_stream(const zfp_stream* zfp)
+{
+  if(zfp->exec.policy == zfp_exec_cuda)
+    return ((zfp_exec_params_cuda*)zfp->exec.params)->stream;
+  return 0;
+}
+#endif
+
 zfp_bool
 zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
 {
@@ -926,9 +936,13 @@ zfp_stream_set_execution(zfp_stream* zfp, zfp_exec_policy policy)
       break;
 #ifdef ZFP_WITH_CUDA
     case zfp_exec_cuda:
-      if (zfp->exec.policy != policy && zfp->exec.params != NULL) {
-        free(zfp->exec.params);
-        zfp->exec.params = NULL;
+      if (zfp->exec.policy != policy) {
+        if (zfp->exec.params != NULL) {
+          free(zfp->exec.params);
+        }
+        zfp_exec_params_cuda* params = malloc(sizeof(zfp_exec_params_cuda));
+        params->stream = 0;
+        zfp->exec.params = params;
       }
       break;
 #endif
@@ -971,6 +985,17 @@ zfp_stream_set_omp_chunk_size(zfp_stream* zfp, uint chunk_size)
   ((zfp_exec_params_omp*)zfp->exec.params)->chunk_size = chunk_size;
   return zfp_true;
 }
+
+#ifdef ZFP_WITH_CUDA
+zfp_bool
+zfp_stream_set_cuda_stream(zfp_stream* zfp, cudaStream_t custream)
+{
+  if (!zfp_stream_set_execution(zfp, zfp_exec_cuda))
+    return zfp_false;
+  ((zfp_exec_params_cuda*)zfp->exec.params)->stream = custream;
+  return zfp_true;
+}
+#endif
 
 /* public functions: utility functions --------------------------------------*/
 
