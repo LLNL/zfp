@@ -699,6 +699,13 @@ Execution Policy
 
 ----
 
+.. c:function:: cudaStream_t zfp_stream_cuda_stream(zfp_stream* stream)
+
+   Return the stream on which CUDA operations are performed.
+   See :c:func:`zfp_stream_set_cuda_stream`.
+
+----
+
 .. c:function:: zfp_bool zfp_stream_set_execution(zfp_stream* stream, zfp_exec_policy policy)
 
   Set :ref:`execution policy <execution>`.  If different from the previous
@@ -723,6 +730,12 @@ Execution Policy
   If zero, use one chunk per thread.  This function also sets the execution
   policy to OpenMP.  Upon success, :code:`zfp_true` is returned.
 
+----
+
+.. c:function:: zfp_bool zfp_stream_set_cuda_stream(zfp_stream* stream, cudaStream_t custream)
+
+   Set the CUDA stream on which all CUDA operations will be performed. This function
+   also sets the execution policy to CUDA. Upon success, :code:`zfp_true` is returned.
 
 .. _hl-func-config:
 

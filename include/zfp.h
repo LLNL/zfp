@@ -84,7 +84,7 @@ typedef struct {
 #ifdef ZFP_WITH_CUDA
 /* CUDA execution parameters */
 typedef struct {
-  cudaStream_t stream; /* */
+  cudaStream_t stream;  /* The stream on which to perform all CUDA operations */
 } zfp_exec_params_cuda;
 #endif
 
@@ -324,7 +324,7 @@ zfp_stream_omp_chunk_size(
 #ifdef ZFP_WITH_CUDA
 /* cuda stream */
 cudaStream_t
-zfp_stream_cuda_stream(    /* cuda stream */
+zfp_stream_cuda_stream(
   const zfp_stream* stream /* compressed stream */
 );
 #endif
@@ -351,10 +351,11 @@ zfp_stream_set_omp_chunk_size(
 );
 
 #ifdef ZFP_WITH_CUDA
+/* set CUDA stream on which to perform all CUDA operations */
 zfp_bool
 zfp_stream_set_cuda_stream(
-  zfp_stream* zfp,
-  cudaStream_t custream
+  zfp_stream* zfp,       /* compressed stream */
+  cudaStream_t custream  /* cuda stream */
 );
 #endif
 

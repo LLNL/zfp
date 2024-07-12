@@ -125,6 +125,18 @@ in use.  Future versions of |zfp| may allow specifying how threads are
 mapped to chunks, whether to use static or dynamic scheduling, etc.
 
 
+CUDA Stream
+^^^^^^^^^^^
+
+By default, all CUDA operations are performed on the default stream (also
+known as stream '0'). Using :c:func:`zfp_stream_set_cuda_stream` the user
+can specify a different, non-0 stream. This allows for potential overlap
+between execution units. For instance, when compressing two buffers and
+copying the results back to the host, using different streams for each
+would enable the second compression kernel to start concurrently with the
+transfer of the compressed first buffer.
+
+
 .. _exec-mode:
 
 Fixed- vs. Variable-Rate Compression
