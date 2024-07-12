@@ -348,6 +348,11 @@ void cleanup_device_ptr(void *orig_ptr, void *d_ptr, size_t bytes, long long int
   }
 
   cudaFreeAsync(d_offset_ptr, custream);
+
+  if(!custream) {
+      // Maintain blocking behavior if no stream was specified
+      cudaStreamSynchronize(0);
+  }
 }
 
 } // namespace internal
