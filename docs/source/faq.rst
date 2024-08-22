@@ -42,6 +42,7 @@ Questions answered in this FAQ:
   #. :ref:`How large a buffer is needed for compressed storage? <q-max-size>`
   #. :ref:`How can I print array values? <q-printf>`
   #. :ref:`What is known about zfp compression errors? <q-err-dist>`
+  #. :ref:`Why are zfp blocks 4 * 4 * 4 values? <q-block-size>`
 
 -------------------------------------------------------------------------------
 
@@ -1312,3 +1313,90 @@ done to combat such issues by supporting optional
   (left), errors are biased and depend on the relative location within a |zfp|
   block, resulting in errors not centered on zero.  With proper rounding
   (right), errors are both smaller and unbiased.
+
+-------------------------------------------------------------------------------
+
+.. _q-block-size:
+
+Q31: *Why are zfp blocks 4 * 4 * 4 values?*
+
+One might ask why |zfp| uses *d*-dimensional blocks of |4powd| values and not
+some other, perhaps configurable block size, *n*\ :sup:`d`.  There are several
+reasons why *n* = 4 was chosen:
+
+* For good performance, *n* should be an integer power of two so that indexing
+  can be done efficiently using bit masks and shifts rather than more
+  expensive division and modulo operations.  As compression demands *n* > 1,
+  possible choices for *n* are 2, 4, 8, 16, ...
+
+* When *n* = 2, blocks are too small to exhibit significant redundancy; there
+  simply is insufficient spatial correlation to exploit for sufficient data
+  reduction.  Additionally, excessive software cache thrashing would likely
+  occur for stencil computations, as even the smallest centered difference
+  stencil spans more than one block.  Finally, per-block overhead in storage
+  (e.g., shared exponent, bit offset) and computation (e.g., software cache
+  lookup) could be amortized over only few values.  Such small blocks were
+  immediately dismissed.
+
+* When *n* = 8, blocks are too large, for several reasons:
+
+  * Each uncompressed block occupies a large number of hardware cache lines.
+    For example, a single 3D block of double-precision values would occupy
+    4,096 bytes, which would represent a significant fraction of L1 cache.
+    |zfp| reduces data movement in computations by ensuring that repeated
+    accesses are to cached data rather than to main memory.
+
+  * A generalization of the |zfp| :ref:`decorrelating transform <algorithm>`
+    to *n* = 8 would require many more operations as well as "arbitrary"
+    numerical constants in need of expensive multiplication instead of cheap
+    bit shifts.  The number of operations in this more general case scales as
+    *d* |times| *n*\ :sup:`d+1`.  For *d* = 4, *n* = 8, this implies
+    2\ :sup:`17` = 131,072 multiplications and 114,688 additions per block.
+    Contrast this with the algorithm optimized for *n* = 4, which uses only
+    1,536 bit shifts and 2,560 additions or subtractions per 4D block.
+
+  * The additional computational cost would also significantly increase the
+    latency of decoding a single block or filling a pipeline of concurrently
+    (de)compressed blocks, as in existing |zfp| hardware implementations.
+
+  * The computational and cache storage overhead of accessing a single value
+    in a block would be very large: 4,096 values in *d* = 4 dimensions would
+    have to be decoded even if only one value were requested.
+
+  * "Skinny" arrays would have to be padded to multiples of *n* = 8, which
+    could introduce an unaccepable storage overhead.  For instance, a
+    30 |times| 20 |times| 3 array of 1,800 values would be padded to
+    32 |times| 24 |times| 8 = 6,144 values, an increase of about 3.4 times.
+    In contrast, when *n* = 4, only 32 |times| 20 |times| 4 = 2,560 values
+    would be needed, representing a 60% overhead.
+
+  * The opportunity for data parallelism would be reduced by a factor of
+    2\ :sup:`d` compared to using *n* = 4.  The finer granularity and larger
+    number of blocks provided by *n* = 4 helps with load balancing and maps
+    well to today's GPUs that can concurrently process thousands of blocks.
+
+  * With blocks comprising as many as 8\ :sup:`4` = 4,096 values, register
+    spillage would be substantial in GPU kernels for compression and
+    decompression.
+
+The choice *n* = 4 seems to be a sweet spot that well balances all of the
+above factors.  Additionally, *n* = 4 has these benefits:
+
+  * *n* = 4 admits a very simple lifted implementation of the decorrelating
+    transform that can be performed using only integer addition, subtraction,
+    and bit shifts.
+
+  * *n* = 4 allows taking advantage of AVX/SSE instructions designed for
+    vectors of length four, both in the (de)compression algorithm and
+    application code.
+
+  * For 2D and 3D data, a block is 16 and 64 values, respectively, which
+    either equals or is close to the warp size on current GPU hardware.  This
+    allows multiple cooperating threads to execute the same instruction on one
+    value in 1-4 blocks (either during (de)compression or in the numerical
+    application code).
+
+  * Using a rate of 16 bits/value (a common choice for numerical computations),
+    a compressed 3D block occupies 128 bytes, or 1-2 hardware cache lines on
+    contemporary computers.  Hence, a fair number of *compressed* blocks can
+    also fit in hardware cache.
