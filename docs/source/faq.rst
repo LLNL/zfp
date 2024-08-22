@@ -498,31 +498,48 @@ information independently.
 
 Q15: *Must I use the same parameters during compression and decompression?*
 
-A: Not necessarily.  When decompressing one block at a time, it is possible
-to use more tightly constrained :c:type:`zfp_stream` parameters during
-decompression than were used during compression.  For instance, one may use a
-smaller :c:member:`zfp_stream.maxbits`,
-smaller :c:member:`zfp_stream.maxprec`, or larger :c:member:`zfp_stream.minexp`
-during decompression to process fewer compressed bits than are stored, and to
-decompress the array more quickly at a lower precision.  This may be useful
-in situations where the precision and accuracy requirements are not known a
-priori, thus forcing conservative settings during compression, or when the
-compressed stream is used for multiple purposes.  For instance, visualization
-usually has less stringent precision requirements than quantitative data
-analysis.  This feature of decompressing to a lower precision is particularly
-useful when the stream is stored progressively (see :ref:`Q13 <q-progressive>`).
+A: Usually, but there are exceptions.  When decompressing one block at a time
+using the :ref:`low-level API <ll-api>`, it is possible to use more tightly
+constrained :c:type:`zfp_stream` parameters during decompression than were
+used during compression.  For instance, one may use a smaller
+:c:member:`zfp_stream.maxbits`, smaller :c:member:`zfp_stream.maxprec`, or
+larger :c:member:`zfp_stream.minexp` during decompression to process fewer
+compressed bits than are stored, and to decompress the array more quickly at
+a lower precision.  This may be useful in situations where the precision and
+accuracy requirements are not known a priori, thus forcing conservative
+settings during compression, or when the compressed stream is used for
+multiple purposes.  For instance, visualization usually has less stringent
+precision requirements than quantitative data analysis.  This feature of
+decompressing to a lower precision is particularly useful when the stream is
+stored progressively (see :ref:`Q13 <q-progressive>`).
 
-Note that one may not use less constrained parameters during decompression,
-e.g., one cannot ask for more than :c:member:`zfp_stream.maxprec` bits of
-precision when decompressing.  Furthermore, the parameters must agree between
-compression and decompression when calling the high-level API function
-:c:func:`zfp_decompress`.
+Note, however, that when doing so, the caller must manually fast-forward
+the stream (using :c:func:`stream_rseek`) to the beginning of the next block
+before decompressing it, which may require extra bookkeeping.
 
-Currently float arrays have a different compressed representation from
-compressed double arrays due to differences in exponent width.  It is not
-possible to compress a double array and then decompress (demote) the result
-to floats, for instance.  Future versions of the |zfp| codec may use a unified
-representation that does allow this.
+Also note that one may not use less constrained parameters during
+decompression, e.g., one cannot ask for more than
+:c:member:`zfp_stream.maxprec` bits of precision when decompressing.
+Furthermore, the parameters must agree between compression and decompression
+when calling the high-level API function :c:func:`zfp_decompress`.
+
+With regards to the :c:type:`zfp_field` struct passed to
+:c:func:`zfp_compress` and :c:func:`zfp_decompress`, field dimensions must
+match between compression and decompression, however strides need not match
+(see :ref:`Q16 <q-strides>`).  Additionally, the scalar type,
+:c:type:`zfp_type`, must match.  For example, float arrays currently have a
+compressed representation different from compressed double arrays due to
+differences in exponent width.  It is not possible to compress a double array
+and then decompress (demote) the result to floats, for instance.  Future
+versions of the |zfp| codec may use a unified representation that does allow
+this.
+
+By default, compression parameters and array metadata are not stored in the
+compressed stream, as often such information is recorded separately.
+However, the user may optionally record both compression parameters and array
+metadata in a header at the beginning of the compressed stream; see
+:c:func:`zfp_write_header`, :c:func:`zfp_read_header`, and further discussion
+:ref:`here <field-match>`.
 
 -------------------------------------------------------------------------------
 
@@ -543,6 +560,33 @@ scalar fields can later be decompressed as non-interleaved fields::
 
 using strides *sx* = 1, *sy* = *nx* and pointers :code:`&out[0][0][0]`
 and :code:`&out[1][0][0]`.
+
+Another use case is when a compressed array is to be decompressed into a
+larger surrounding array.  For example, a 3D subarray with dimensions
+*mx* |times| *my* |times| *mz* may be decompressed into a larger array
+with dimensions *nx* |times| *ny* |times| *nz*, with *mx* |leq| *nx*,
+*my* |leq| *ny*, *mz* |leq| *nz*.  This can be achieved by setting the strides
+to *sx* = 1, *sy* = *nx*, *sz* = *nx* |times| *ny* upon decompression (using
+:c:func:`zfp_field_set_stride_3d`), while specifying *mx*, *my*, and *mz* as
+the field dimensions (using :c:func:`zfp_field_3d` or
+:c:func:`zfp_field_set_size_3d`).  In this case, one may also wish to offset
+the decompressed subarray to (*ox*, *oy*, *oz*) within the larger array
+using::
+
+  float* data = new float[nx * ny * nz];
+  pointer = data + ox * sx + oy * sy + oz * sz
+
+where *data* specifies the beginning of the larger array.  *pointer* rather
+than *data* would then be passed to :c:func:`zfp_field_3d` or
+:c:func:`zfp_field_set_pointer` before calling :c:func:`zfp_decompress`.
+
+.. note::
+  Strides are a property of the in-memory layout of an uncompressed array
+  and have no meaning with respect to the compressed bit stream representation
+  of the array.  As such, |zfp| provides no mechanism for storing information
+  about the original strides in the compressed stream.  If strides are to be
+  retained upon decompression, then the user needs to record them as auxiliary
+  metadata and initialize :c:type:`zfp_field` with them.
 
 -------------------------------------------------------------------------------
 

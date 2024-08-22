@@ -403,16 +403,26 @@ Types
   The strides, when nonzero, specify how the array is laid out in memory.
   Strides can be used in case multiple fields are stored interleaved via
   "array of struct" (AoS) rather than "struct of array" (SoA) storage,
-  or if the dimensions should be transposed during (de)compression.
-  Strides may even be negative, allowing one or more dimensions to be
-  traversed in reverse order.  Given 4D array indices (*x*, *y*, *z*, *w*),
-  the corresponding array element is stored at
-  ::
+  or if the dimensions should be transposed during (de)compression; see
+  :ref:`this FAQ <q-strides>`.  Strides may even be negative, allowing one
+  or more dimensions to be traversed in reverse order.  Given 4D array
+  indices (*x*, *y*, *z*, *w*), the corresponding array element is stored
+  at::
 
     data[x * sx + y * sy + z * sz + w * sw]
 
   where :code:`data` is a pointer to the first array element.
 
+.. _field-match:
+.. warning::
+  The user must ensure that the scalar type and field dimensions *nx*, *ny*,
+  *nz*, and *nw* used during compression are matched during decompression.
+  Such metadata must either be maintained separately by the user or be
+  embedded in the compressed stream using :c:func:`zfp_write_header` and
+  recovered during decompression using :c:func:`zfp_read_header`.  Strides,
+  on the other hand, need not match, which can be exploited, for example, to
+  decompress the array into a larger array.  See :ref:`this FAQ <q-same>` and
+  the :ref:`tutorial <tut-hl>` for more details.
 
 .. _new-field:
 .. warning::
@@ -1022,6 +1032,14 @@ Compression and Decompression
   i.e., the current byte offset or the number of compressed bytes consumed.
   Zero is returned if decompression failed.
 
+  The field dimensions and scalar type used during decompression must match
+  those used during compression (see :c:type:`zfp_field`).  This function
+  further requires that :c:type:`zfp_stream` is initialized with the same
+  :ref:`compression parameters <modes>` used during compression.  To assist
+  with this, an optional :ref:`header <zfp-header>` may be prepended that
+  encodes such metadata, which must be explicitly read using
+  :c:func:`zfp_read_header` to initialize *stream* and *field*.
+
 ----
 
 .. _zfp-header:
@@ -1039,8 +1057,8 @@ Compression and Decompression
 
 .. c:function:: size_t zfp_read_header(zfp_stream* stream, zfp_field* field, uint mask)
 
-  Read header if one was previously written using :c:func:`zfp_write_header`.
-  The *stream* and *field* data structures are populated with the information
+  Read header previously written using :c:func:`zfp_write_header`.  The
+  *stream* and *field* data structures are populated with the information
   stored in the header, as specified by the bit *mask* (see
   :c:macro:`macros <ZFP_HEADER_MAGIC>`).  The caller must ensure that *mask*
   agrees between header read and write calls.  The return value is the number
