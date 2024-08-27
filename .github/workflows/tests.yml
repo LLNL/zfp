@@ -27,6 +27,13 @@ jobs:
           - os: macos-latest
             cxx_compiler: g++-11
             c_compiler: gcc-11
+            packages: 'g++-11-multilib gcc-11-multilib'
+            omp: ON
+            target: all
+
+          - os: macos-latest
+            cxx_compiler: g++-12
+            c_compiler: gcc-12
             omp: ON
             target: all
 
