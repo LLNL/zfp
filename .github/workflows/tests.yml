@@ -33,7 +33,7 @@ jobs:
           - os: macos-latest
             cxx_compiler: clang++
             c_compiler: clang
-            omp: ON
+            omp: OFF
             target: all
 
     steps:
