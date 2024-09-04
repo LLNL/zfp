@@ -139,7 +139,9 @@ include:
       file: 'id_tokens.yml'
     - local: tests/gitlab/pascal-templates.yml
     - local: tests/gitlab/pascal-jobs.yml
-    - local: tests/gitlab/quartz-templates.yml
-    - local: tests/gitlab/quartz-jobs.yml
+    - local: tests/gitlab/dane-templates.yml
+    - local: tests/gitlab/dane-jobs.yml
+#    - local: tests/gitlab/quartz-templates.yml
+#    - local: tests/gitlab/quartz-jobs.yml
 #    - local: tests/gitlab/corona-templates.yml
 #    - local: tests/gitlab/corona-jobs.yml

@@ -1,0 +1,12 @@
+.dane_job:
+    tags:
+        - batch
+        - dane
+
+.dane_build_cpu:
+    extends: [.build_cpu, .dane_job]
+
+.dane_test_cpu:
+    variables:
+       ci_test_regex: "."
+    extends: [.test_cpu, .dane_job]
