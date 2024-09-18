@@ -1,0 +1,64 @@
+###########
+# CXX CPU #
+###########
+
+cpp_gnu-10.3.1_build:
+    variables:
+        ci_cmake: "cmake/3.14.5"
+        ci_cxx_cmp: "g++"
+        ci_c_cmp: "gcc"
+        ci_cmp_mod: "gcc/10.3.1"
+    extends: [.cpp, .dane_build_cpu]
+    needs: []
+
+cpp_gnu-10.3.1_test:
+    extends: [.dane_test_cpu]
+    needs: [cpp_gnu-10.3.1_build]
+
+
+cpp_clang-14.0.6_build:
+    variables:
+        ci_cmake: "cmake/3.14.5"
+        ci_cxx_cmp: "clang++"
+        ci_c_cmp: "clang"
+        ci_cmp_mod: "clang/14.0.6"
+    extends: [.cpp, .dane_build_cpu]
+    needs: []
+
+cpp_clang-14.0.6_test:
+    extends: [.dane_test_cpu]
+    needs: [cpp_clang-14.0.6_build]
+
+
+cpp_intel-2022.1.0_build:
+    variables:
+        ci_cmake: "cmake/3.14.5"
+        ci_cxx_cmp: "icpc"
+        ci_c_cmp: "icc"
+        ci_cmp_mod: "intel/2022.1.0"
+    extends: [.cpp, .dane_build_cpu]
+    needs: []
+
+cpp_intel-2022.1.0_test:
+    extends: [.dane_test_cpu]
+    needs: [cpp_intel-2022.1.0_build]
+
+
+
+#########
+# C CPU #
+#########
+
+c_gnu-10.3.1_build:
+    variables:
+        ci_cmake: "cmake/3.14.5"
+        ci_c_cmp: "gcc"
+        ci_cmp_mod: "gcc/10.3.1"
+    extends: [.c, .dane_build_cpu]
+    needs: []
+
+c_gnu-10.3.1_test:
+    variables:
+       ci_test_regex: "Cfp"
+    extends: [.dane_test_cpu]
+    needs: [c_gnu-10.3.1_build]
