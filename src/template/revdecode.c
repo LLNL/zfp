@@ -6,7 +6,7 @@ static void _t2(rev_inv_xform, Int, DIMS)(Int* p);
 static void
 _t1(rev_inv_lift, Int)(Int* p, ptrdiff_t s)
 {
-  Int x, y, z, w;
+  UInt x, y, z, w;
   x = *p; p += s;
   y = *p; p += s;
   z = *p; p += s;
@@ -14,19 +14,22 @@ _t1(rev_inv_lift, Int)(Int* p, ptrdiff_t s)
 
   /*
   ** high-order Lorenzo transform (P4 Pascal matrix)
+  **
   ** ( 1  0  0  0) (x)
   ** ( 1  1  0  0) (y)
   ** ( 1  2  1  0) (z)
   ** ( 1  3  3  1) (w)
+  **
+  ** unsigned arithmetic is used to avoid integer overflow
   */
   w += z;
   z += y; w += z;
   y += x; z += y; w += z;
 
-  p -= s; *p = w;
-  p -= s; *p = z;
-  p -= s; *p = y;
-  p -= s; *p = x;
+  p -= s; *p = (Int)w;
+  p -= s; *p = (Int)z;
+  p -= s; *p = (Int)y;
+  p -= s; *p = (Int)x;
 }
 
 /* decode block of integers using reversible algorithm */
