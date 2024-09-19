@@ -1,0 +1,6 @@
+include python/zfpy.pxd
+include python/zfpy.pyx
+recursive-include include *.h
+recursive-include src *.c *.h
+include LICENSE
+include pyproject.toml
