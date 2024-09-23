@@ -119,7 +119,8 @@ size_t encode3launch(uint3 dims,
                      int3 stride,
                      const Scalar *d_data,
                      Word *stream,
-                     const int maxbits)
+                     const int maxbits,
+                     cudaStream_t custream)
 {
 
   const int cuda_block_size = 128;
@@ -148,16 +149,16 @@ size_t encode3launch(uint3 dims,
 
   size_t stream_bytes = calc_device_mem3d(zfp_pad, maxbits);
   //ensure we start with 0s
-  cudaMemset(stream, 0, stream_bytes);
+  cudaMemsetAsync(stream, 0, stream_bytes, custream);
 
 #ifdef CUDA_ZFP_RATE_PRINT
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
-  cudaEventRecord(start);
+  cudaEventRecord(start, custream);
 #endif
 
-  cudaEncode<Scalar> <<<grid_size, block_size>>>
+  cudaEncode<Scalar> <<<grid_size, block_size, 0, custream>>>
     (maxbits,
      d_data,
      stream,
@@ -167,9 +168,9 @@ size_t encode3launch(uint3 dims,
      zfp_blocks);
 
 #ifdef CUDA_ZFP_RATE_PRINT
-  cudaEventRecord(stop);
+  cudaEventRecord(stop, custream);
   cudaEventSynchronize(stop);
-  cudaStreamSynchronize(0);
+  cudaStreamSynchronize(custream);
 
   float milliseconds = 0;
   cudaEventElapsedTime(&milliseconds, start, stop);
@@ -187,14 +188,17 @@ size_t encode3launch(uint3 dims,
 //
 // Just pass the raw pointer to the "real" encode
 //
+// Modifiled - Function name should be encode3, as it is followed in 1, 2 - D cases
+
 template<class Scalar>
-size_t encode(uint3 dims, 
+size_t encode3(uint3 dims, 
               int3 stride,
               Scalar *d_data,
               Word *stream,
-              const int bits_per_block)
+              const int bits_per_block,
+              cudaStream_t custream)
 {
-  return encode3launch<Scalar>(dims, stride, d_data, stream, bits_per_block);
+  return encode3launch<Scalar>(dims, stride, d_data, stream, bits_per_block, custream);
 }
 
 }
