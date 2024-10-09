@@ -417,6 +417,27 @@ setupDefaultIndexed(void **state)
 }
 
 static int
+setupDefaultIndexedWithGranularity(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_hip);
+  return setupHipConfig(state, AS_IS, zfp_index_offset, 16);
+}
+
+static int
+setupDefaultHybridIndexed(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_hip);
+  return setupHipConfig(state, AS_IS, zfp_index_hybrid, 1);
+}
+
+static int
+setupDefaultHybridIndexedWithGranularity(void **state)
+{
+  setupExecPolicy(state, zfp_exec_serial, zfp_exec_hip);
+  return setupHipConfig(state, AS_IS, zfp_index_hybrid, 16);
+}
+
+static int
 setupReversedIndexed(void **state)
 {
   setupExecPolicy(state, zfp_exec_serial, zfp_exec_hip);
