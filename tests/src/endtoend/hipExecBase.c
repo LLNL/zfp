@@ -375,7 +375,7 @@ setupHipConfig(void **state, stride_config stride, zfp_index_type index_type, ui
   if (index_type == zfp_index_none) {
     result = initZfpStreamAndField(state, stride);
   } else {
-    result = initZfpStreamAndFieldIndexed(state, stride, index_type, granularity);
+    result = initZfpStreamAndFieldIndexed(state, stride);
   }
 
   return result;
