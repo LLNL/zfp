@@ -94,9 +94,9 @@ decode2_kernel(
       scatter2(fblock, d_data + offset, stride.x, stride.y);
   }
 
-  // record maximum bit offset reached by any thread
-  bit_offset = reader.rtell();
-  atomicMax(max_offset, bit_offset);
+  // record bit offset of last block
+  if (block_idx == blocks)
+    *max_offset = reader.rtell();
 }
 
 // launch decode kernel
@@ -118,7 +118,7 @@ decode2(
 )
 {
   // block size is fixed to 32 in this version for hybrid index
-  const int cuda_block_size = 32;
+  const int cuda_block_size = 128;
   const dim3 block_size = dim3(cuda_block_size, 1, 1);
 
   // number of zfp blocks to decode
