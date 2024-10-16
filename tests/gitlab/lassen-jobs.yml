@@ -13,5 +13,5 @@ cuda-11.6.1_build:
 cuda-11.6.1_test:
     variables:
        ci_test_regex: "Cuda"
-    extends: [.pascal_test_gpu]
+    extends: [.lassen_test_gpu]
     needs: [cuda-11.8.0_build]
