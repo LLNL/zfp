@@ -168,7 +168,7 @@ function(add_python_library _name)
       _remove_whitespace(_tempita_command)
       add_custom_command(
         OUTPUT ${_source_we}
-        COMMAND ${PYTHON_EXECUTABLE} -c "${_tempita_command}"
+        COMMAND ${Python_EXECUTABLE} -c "${_tempita_command}"
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_source}"
                 ${_args_DEPENDS}
       )
