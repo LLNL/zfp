@@ -44,16 +44,16 @@ test_size(ArraySize size)
 inline void
 refine1d(int* g, const int* f, size_t m)
 {
-  const int weight[4] = { -1, 9, 9, -1 };
+  const int64 weight[4] = { -1, 9, 9, -1 };
   const size_t n = 2 * m;
 
   for (size_t x = 0; x < n; x++) {
-    int s = 0;
+    int64 s = 0;
     for (size_t i = 0; i < 4; i++) {
       size_t xx = x & 1u ? (x / 2 + i - 1 + m) % m : x / 2;
       s += weight[i] * f[xx];
     }
-    g[x] = s / 16;
+    g[x] = static_cast<int>(s / 16);
   }
 }
 
@@ -61,12 +61,12 @@ refine1d(int* g, const int* f, size_t m)
 inline void
 refine2d(int* g, const int* f, size_t m)
 {
-  const int weight[4] = { -1, 9, 9, -1 };
+  const int64 weight[4] = { -1, 9, 9, -1 };
   const size_t n = 2 * m;
 
   for (size_t y = 0; y < n; y++)
     for (size_t x = 0; x < n; x++) {
-      int s = 0;
+      int64 s = 0;
       for (size_t j = 0; j < 4; j++) {
         size_t yy = y & 1u ? (y / 2 + j - 1 + m) % m : y / 2;
         for (size_t i = 0; i < 4; i++) {
@@ -74,7 +74,7 @@ refine2d(int* g, const int* f, size_t m)
           s += weight[i] * weight[j] * f[xx + m * yy];
         }
       }
-      g[x + n * y] = s / (16 * 16);
+      g[x + n * y] = static_cast<int>(s / (16 * 16));
     }
 }
 
@@ -82,13 +82,13 @@ refine2d(int* g, const int* f, size_t m)
 inline void
 refine3d(int* g, const int* f, size_t m)
 {
-  const int weight[4] = { -1, 9, 9, -1 };
+  const int64 weight[4] = { -1, 9, 9, -1 };
   const size_t n = 2 * m;
 
   for (size_t z = 0; z < n; z++)
     for (size_t y = 0; y < n; y++)
       for (size_t x = 0; x < n; x++) {
-        int s = 0;
+        int64 s = 0;
         for (size_t k = 0; k < 4; k++) {
           size_t zz = z & 1u ? (z / 2 + k - 1 + m) % m : z / 2;
           for (size_t j = 0; j < 4; j++) {
@@ -99,7 +99,7 @@ refine3d(int* g, const int* f, size_t m)
             }
           }
         }
-        g[x + n * (y + n * z)] = s / (16 * 16 * 16);
+        g[x + n * (y + n * z)] = static_cast<int>(s / (16 * 16 * 16));
       }
 }
 
@@ -107,14 +107,14 @@ refine3d(int* g, const int* f, size_t m)
 inline void
 refine4d(int* g, const int* f, size_t m)
 {
-  const int weight[4] = { -1, 9, 9, -1 };
+  const int64 weight[4] = { -1, 9, 9, -1 };
   const size_t n = 2 * m;
 
   for (size_t w = 0; w < n; w++)
     for (size_t z = 0; z < n; z++)
       for (size_t y = 0; y < n; y++)
         for (size_t x = 0; x < n; x++) {
-          int s = 0;
+          int64 s = 0;
           for (size_t l = 0; l < 4; l++) {
             size_t ww = w & 1u ? (w / 2 + l - 1 + m) % m : w / 2;
             for (size_t k = 0; k < 4; k++) {
@@ -128,7 +128,7 @@ refine4d(int* g, const int* f, size_t m)
               }
             }
           }
-          g[x + n * (y + n * (z + n * w))] = s / (16 * 16 * 16 * 16);
+          g[x + n * (y + n * (z + n * w))] = static_cast<int>(s / (16 * 16 * 16 * 16));
         }
 }
 
@@ -792,11 +792,11 @@ test(uint dims, ArraySize array_size)
   // test data integrity
   uint32 checksum[2][2][4] = { // [size][type][dims]
     // small
-    {{ 0x54174c44u, 0x86609589u, 0xfc0a6a76u, 0xa3481e00u },
-     { 0x7d257bb6u, 0x294bb210u, 0x68614d26u, 0xf6bd3a21u }},
+    {{ 0x54174c44u, 0x86609589u, 0xfc0a6a76u, 0x28708a2bu },
+     { 0x7d257bb6u, 0x294bb210u, 0x68614d26u, 0xd58a5fe7u }},
     // large
-    {{ 0xd1ce1aceu, 0x644274dau, 0xc0ad63fau, 0x700de480u },
-     { 0xc3ed7116u, 0x644e2117u, 0xd7464b07u, 0x2516382eu }},
+    {{ 0xd1ce1aceu, 0x644274dau, 0xc0ad63fau, 0xdc65b02eu },
+     { 0xc3ed7116u, 0x644e2117u, 0xd7464b07u, 0xe4b60fbbu }},
   };
   uint32 h = hash(f, n * sizeof(Scalar));
   if (h != checksum[array_size][t][dims - 1])
@@ -815,13 +815,13 @@ test(uint dims, ArraySize array_size)
           {1.627e+01, 8.277e-02, 0.000e+00},
           {1.500e+00, 3.663e-03, 0.000e+00},
           {1.500e+00, 9.583e-03, 0.000e+00},
-          {1.373e+01, 6.633e-01, 0.000e+00},
+          {6.750e+00, 1.931e-01, 0.000e+00},
         },
         {
           {1.627e+01, 1.601e+01, 1.832e-04, 0.000e+00},
           {2.376e+01, 1.797e-01, 8.584e-06, 0.000e+00},
           {5.210e+00, 2.002e-01, 3.338e-05, 0.000e+00},
-          {1.016e+01, 8.985e+00, 3.312e-03, 0.000e+00},
+          {9.594e+00, 2.264e+00, 8.282e-04, 0.000e+00},
         },
       },
       // large
@@ -830,13 +830,13 @@ test(uint dims, ArraySize array_size)
           {1.627e+01, 2.100e-02, 0.000e+00},
           {1.624e-01, 7.439e-05, 0.000e+00},
           {1.001e-02, 7.248e-05, 0.000e+00},
-          {2.527e-02, 2.460e-04, 0.000e+00},
+          {1.038e-02, 1.078e-04, 0.000e+00},
         },
         {
           {1.627e+01, 1.601e+01, 2.289e-05, 0.000e+00},
           {1.607e+01, 2.076e-03, 0.000e+00, 0.000e+00},
           {1.407e-01, 7.344e-04, 0.000e+00, 0.000e+00},
-          {1.436e-01, 2.659e-03, 8.801e-08, 0.000e+00},
+          {8.130e-02, 1.515e-03, 4.401e-08, 0.000e+00},
         }
       }
     };
@@ -856,13 +856,13 @@ test(uint dims, ArraySize array_size)
           {2192, 3280, 6328},
           { 592, 1328, 4384},
           { 152, 1040, 4600},
-          {  64, 1760, 5856},
+          {  32,  352, 4168},
         },
         {
           {3664, 6712, 14104},
           {1424, 4480, 12616},
           {1064, 4624, 12808},
-          {1768, 5864, 14056},
+          { 360, 4168, 12360},
         },
       },
       // large
@@ -871,13 +871,13 @@ test(uint dims, ArraySize array_size)
           {8965672, 13160560, 21835352},
           {2235560,  3512848, 10309240},
           { 568456,  1361056,  8759696},
-          { 134344,   739632,  8896360},
+          { 135344,   706600,  8207768},
         },
         {
           {14733112, 23407904, 44997832},
           { 3905240, 10701640, 40856544},
           { 1458368,  8857008, 41270184},
-          {  763928,  8920656, 41574712},
+          {  730896,  8232056, 40581448},
         },
       }
     };
@@ -895,13 +895,13 @@ test(uint dims, ArraySize array_size)
           {6328, 11944, 13720},
           {4936, 11064, 12520},
           {6104, 11752, 12784},
-          {9440, 14048, 14048},
+          {8776, 12360, 12360},
         },
         {
           {6712, 25888, 29064},
           {5032, 26016, 28984},
           {6128, 27120, 29192},
-          {9448, 30440, 30440},
+          {8776, 28744, 28744},
         },
       },
       // large
@@ -910,13 +910,13 @@ test(uint dims, ArraySize array_size)
           {21815976, 38285256, 43425280},
           { 9187232, 32695984, 40464144},
           { 8914336, 33364208, 41172864},
-          {12109200, 35921784, 41550416},
+          {11394368, 34992872, 40557152},
         },
         {
           {23388528, 79426016,  88659304},
           { 9579632, 89770896, 103388072},
           { 9011648, 94009072, 107606336},
-          {12133496, 97126288, 107911568},
+          {11418664, 96325984, 106922328},
         },
       }
     };
@@ -933,13 +933,13 @@ test(uint dims, ArraySize array_size)
           7272,
           5104,
           6096,
-          6864,
+          7208,
         },
         {
           7784,
           5232,
           6128,
-          6872,
+          7216,
         },
       },
       // large
@@ -948,13 +948,13 @@ test(uint dims, ArraySize array_size)
           25037288,
           12792440,
           14187128,
-          17135704,
+          17222720,
         },
         {
           27134024,
           13315632,
           14316880,
-          17168096,
+          17255112,
         },
       }
     };
@@ -965,25 +965,25 @@ test(uint dims, ArraySize array_size)
   double emax[2][2][4] = { // [size][type][dims] (construct test)
     // small
     {
-      {4.578e-05, 7.630e-06, 3.148e-05, 3.598e-03},
-      {1.832e-04, 8.584e-06, 3.338e-05, 3.312e-03},
+      {4.578e-05, 7.630e-06, 3.148e-05, 8.197e-04},
+      {1.832e-04, 8.584e-06, 3.338e-05, 8.282e-04},
     },
     // large
     {
-      {0.000e+00, 0.000e+00, 0.000e+00, 1.193e-07},
-      {2.289e-05, 0.000e+00, 0.000e+00, 8.801e-08},
+      {0.000e+00, 0.000e+00, 0.000e+00, 2.981e-08},
+      {2.289e-05, 0.000e+00, 0.000e+00, 4.401e-08},
     }
   };
   double dfmax[2][2][4] = { // [size][type][dims] (update test)
     // small
     {
-      {2.155e-02, 3.755e-01, 1.846e+00, 4.843e+01},
-      {2.155e-02, 3.755e-01, 1.846e+00, 4.844e+01},
+      {2.155e-02, 3.755e-01, 1.846e+00, 1.601e+01},
+      {2.155e-02, 3.755e-01, 1.846e+00, 1.601e+01},
     },
     // large
     {
-      {2.441e-04, 4.883e-04, 1.222e-03, 2.567e-02},
-      {2.670e-04, 4.883e-04, 1.222e-03, 2.567e-02},
+      {2.441e-04, 4.883e-04, 1.222e-03, 8.794e-03},
+      {2.670e-04, 4.883e-04, 1.222e-03, 8.795e-03},
     }
   };
   double rate = 16;
