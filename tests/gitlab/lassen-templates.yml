@@ -1,0 +1,12 @@
+.lassen_job:
+    tags:
+        - batch
+        - lassen
+
+.lassen_build_gpu:
+    extends: [.build_gpu, .lassen_job]
+
+.lassen_test_gpu:
+    variables:
+       ci_test_regex: "."
+    extends: [.test_gpu, .lassen_job]
