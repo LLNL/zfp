@@ -1,0 +1,12 @@
+# pyproject.toml
+[build-system]
+requires = ["setuptools", "cython", "numpy"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="zfpy"
+version="1.0.1"
+authors = [ {name="Peter Lindstrom", email="zfp@llnl.gov"},
+            {name="Danielle Asher"} ]
+description="zfp compression in Python"
+requires-python = ">=3.0"
