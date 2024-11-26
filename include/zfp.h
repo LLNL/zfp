@@ -631,11 +631,11 @@ zfp_stream_align(
 /*
 The functions below all compress either a complete contiguous d-dimensional
 block of 4^d scalars or a complete or partial block assembled from a strided
-array.  In the latter case, p points to the first scalar; (nx, ny, nz) specify
-the size of the block, with 1 <= nx, ny, nz <= 4; and (sx, sy, sz) specify the
-strides, i.e. the number of scalars to advance to get to the next scalar along
-each dimension.  The functions return the number of bits of compressed storage
-needed for the compressed block.
+array.  In the latter case, p points to the first scalar; (nx, ny, nz, nw)
+specify the size of the block, with 1 <= nx, ny, nz, nw <= 4; and
+(sx, sy, sz, sw) specify the strides, i.e., the number of scalars to advance
+to get to the next scalar along each dimension.  The functions return the
+number of bits of compressed storage needed for the compressed block.
 */
 
 /* encode 1D contiguous block of 4 values */
