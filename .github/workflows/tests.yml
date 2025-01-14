@@ -13,8 +13,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            cxx_compiler: g++-10
-            c_compiler: gcc-10
+            cxx_compiler: g++-14
+            c_compiler: gcc-14
             omp: ON
             target: all
             
