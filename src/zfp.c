@@ -102,6 +102,34 @@ zfp_type_size(zfp_type type)
   }
 }
 
+size_t
+zfp_block_maximum_size(zfp_type type, uint dims, zfp_bool reversible)
+{
+  static const size_t size_table[2][4][4] = {
+    /* non-reversible mode */
+    {
+      { 131,  527, 2111,  8447 }, /* int32 */
+      { 259, 1039, 4159, 16639 }, /* int64 */
+      { 140,  536, 2120,  8456 }, /* float */
+      { 271, 1051, 4171, 16651 }, /* double */
+    },
+    /* reversible mode */
+    {
+      { 136,  532, 2116,  8452 }, /* int32 */
+      { 265, 1045, 4165, 16645 }, /* int64 */
+      { 146,  542, 2126,  8462 }, /* float */
+      { 278, 1058, 4178, 16658 }, /* double */
+    },
+  };
+
+  /* check arguments */
+  if (!(zfp_type_int32 <= type && type <= zfp_type_double) ||
+      !(1 <= dims && dims <= 4))
+    return 0;
+
+  return size_table[reversible ? 1 : 0][type - 1][dims - 1];
+}
+
 /* public functions: fields ------------------------------------------------ */
 
 zfp_field*

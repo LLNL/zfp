@@ -8,6 +8,8 @@ Change Log
 ### Added
 
 - A new code example, `chunk`, shows how to perform (de)compression in chunks.
+- A new utility function `zfp_block_maximum_size()` returns maximum block size
+  for given scalar type, dimensionality, and compression mode.
 
 ### Fixed
 

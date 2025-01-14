@@ -1204,6 +1204,8 @@ it is useful to know the maximum number of bits that a compressed block
 can occupy.  In addition to the :c:macro:`ZFP_MAX_BITS` macro, the following
 table lists the maximum block size (in bits) for each scalar type, whether
 :ref:`reversible mode <mode-reversible>` is used, and block dimensionality.
+Note that these sizes are upper bounds that are independent of compression
+parameter settings, which may further constrain the storage size.
 
   +--------+---------+-------+-------+-------+-------+
   | type   | rev.    |   1D  |   2D  |   3D  |   4D  |
@@ -1224,6 +1226,9 @@ table lists the maximum block size (in bits) for each scalar type, whether
   | double +---------+-------+-------+-------+-------+
   |        | |check| |   278 |  1058 |  4178 | 16658 |
   +--------+---------+-------+-------+-------+-------+
+
+The function :c:func:`zfp_block_maximum_size` returns the block sizes encoded
+in this table.
 
 -------------------------------------------------------------------------------
 

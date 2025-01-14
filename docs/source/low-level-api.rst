@@ -365,6 +365,22 @@ appropriate bias for unsigned integer data.
   Convert *dims*-dimensional contiguous block from 32-bit integer type.
   Use *dims* = 0 to demote a single value.
 
+----
+
+.. c:function:: size_t zfp_block_maximum_size(zfp_type type, uint dims, zfp_bool reversible)
+
+  Maximum compressed size in bits of a single *dims*-dimensional block of
+  the specified scalar type.  Use *reversible* = :code:`zfp_true` with
+  :ref:`reversible mode <mode-reversible>`.  Note that this bound does not
+  include any potential padding at the end of the stream to fill out a whole
+  number of words of length :c:var:`stream_word_bits`, which is inserted
+  when calling :c:func:`zfp_stream_flush` or :c:func:`stream_flush`.
+  Similarly, it includes no storage for the optional header.  The storage
+  bounds returned by this function are known to be loose, and it is
+  possible that they will be tightened in future releases.  This function
+  returns zero if any of the arguments are invalid.  See also
+  :ref:`Q28 <q-max-size>`.
+
 .. _ll-cpp-wrappers:
 
 C++ Wrappers

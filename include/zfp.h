@@ -788,6 +788,9 @@ void zfp_demote_int32_to_uint8(uint8* oblock, const int32* iblock, uint dims);
 void zfp_demote_int32_to_int16(int16* oblock, const int32* iblock, uint dims);
 void zfp_demote_int32_to_uint16(uint16* oblock, const int32* iblock, uint dims);
 
+/* maximum number of bits/block of compressed storage */
+size_t zfp_block_maximum_size(zfp_type type, uint dims, zfp_bool reversible);
+
 #ifdef __cplusplus
 }
 #endif
