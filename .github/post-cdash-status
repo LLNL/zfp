@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -eo pipefail
+
+readonly API_BASE="https://api.github.com/repos/LLNL/zfp"
+readonly TOKEN="${CI_GITHUB_ROBOT_TOKEN}"
+readonly COMMIT="${GITHUB_SHA}"
+readonly CDASH_STATUS_CONTEXT="cdash"
+
+#==============================================================================
+
+function build_status_body() {
+  cat <<EOF
+{
+  "state": "success",
+  "target_url": "https://open.cdash.org/index.php?compare1=61&filtercount=1&field1=revision&project=ZFP&showfilters=0&limit=100&value1=${COMMIT}&showfeed=0",
+  "description": "Build and test results available on CDash",
+  "context": "${CDASH_STATUS_CONTEXT}"
+}
+EOF
+}
+
+#==============================================================================
+
+command -v curl &> /dev/null || { echo "jq not found"; exit 1; }
+command -v jq &> /dev/null || { echo "jq not found"; exit 2; }
+
+[ -z "${CI_GITHUB_ROBOT_TOKEN}" ] && { echo "CI_GITHUB_ROBOT_TOKEN env variable empty"; exit 3; }
+[ -z "${COMMIT_SHA}" ] && { echo "COMMIT_SHA env variable empty"; exit 4; }
+
+#==============================================================================
+
+statuses=$(curl -q -s \
+                -H "Content-Type: application/json" \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "${API_BASE}/commits/${COMMIT}/statuses" |\
+                jq -r '[.[].context] | @json')
+
+if jq -re 'all(. != "dash")' <<<"${statuses}"; then
+  echo "Need to post a status for context ${CDASH_STATUS_CONTEXT}"
+
+  postBody="$(build_status_body)"
+  postUrl="${API_BASE}/statuses/${COMMIT}"
+
+  curl -X POST -q -s \
+       -H "Authorization: Bearer ${TOKEN}" \
+       -H "Content-Type: application/json" \
+       -H "Accept: application/vnd.github+json" \
+       -H "X-GitHub-Api-Version: 2022-11-28" \
+       -d "${postBody}" "${postUrl}"
+fi
