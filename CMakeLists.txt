@@ -362,6 +362,12 @@ if(BUILD_TESTING OR BUILD_TESTING_FULL)
   add_subdirectory(tests)
 endif()
 
+configure_file(
+  ${PROJECT_SOURCE_DIR}/cmake/CTestCustom.cmake.in
+  ${PROJECT_BINARY_DIR}/CTestCustom.cmake
+  @ONLY
+)
+
 #------------------------------------------------------------------------------#
 # Header install
 #------------------------------------------------------------------------------#

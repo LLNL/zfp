@@ -1,0 +1,10 @@
+set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_ERRORS 1000)
+set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 1000)
+list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
+  "ld: warning: search path '/opt/homebrew/opt/llvm/lib' not found"
+  "ld: warning: directory not found for option '-L/opt/homebrew/opt/llvm/lib'"
+  "Using deprecated NumPy API, disable it with"
+  "clang: warning: argument unused during compilation: '-fstack-clash-protection'"
+)
+list(APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE)
+list(APPEND CTEST_CUSTOM_TESTS_IGNORE)
