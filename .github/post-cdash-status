@@ -4,7 +4,7 @@ set -eo pipefail
 
 readonly API_BASE="https://api.github.com/repos/LLNL/zfp"
 readonly TOKEN="${CI_GITHUB_ROBOT_TOKEN}"
-readonly COMMIT="${GITHUB_SHA}"
+readonly COMMIT="${GITHUB_WORKFLOW_SHA}"
 readonly CDASH_STATUS_CONTEXT="cdash"
 
 #==============================================================================
@@ -26,7 +26,7 @@ command -v curl &> /dev/null || { echo "jq not found"; exit 1; }
 command -v jq &> /dev/null || { echo "jq not found"; exit 2; }
 
 [ -z "${CI_GITHUB_ROBOT_TOKEN}" ] && { echo "CI_GITHUB_ROBOT_TOKEN env variable empty"; exit 3; }
-[ -z "${COMMIT_SHA}" ] && { echo "COMMIT_SHA env variable empty"; exit 4; }
+[ -z "${GITHUB_WORKFLOW_SHA}" ] && { echo "GITHUB_WORKFLOW_SHA env variable empty"; exit 4; }
 
 #==============================================================================
 
