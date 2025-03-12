@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: env
       - run: .github/post-cdash-status
         env:
-          CI_GITHUB_ROBOT_TOKEN: ${{ env.CI_GITHUB_ROBOT_TOKEN }}
+          CI_GITHUB_ROBOT_TOKEN: ${{ secrets.CI_GITHUB_ROBOT_TOKEN }}
