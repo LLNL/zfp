@@ -7,9 +7,15 @@ permissions: write-all
 
 jobs:
   generate_statuses:
+    env:
+      CI_GITHUB_ROBOT_TOKEN: ${{ secrets.CI_GITHUB_ROBOT_TOKEN }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - if: ${{ github.event_name == 'pull_request_target' }}
+        run: echo "COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> "${GITHUB_ENV}"
+
+      - if: ${{ github.event_name == 'push' }}
+        run: echo "COMMIT_SHA=${{ github.sha }}" >> "${GITHUB_ENV}"
+
       - run: .github/post-cdash-status
-        env:
-          CI_GITHUB_ROBOT_TOKEN: ${{ secrets.CI_GITHUB_ROBOT_TOKEN }}
