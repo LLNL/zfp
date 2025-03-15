@@ -7,7 +7,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  unix:
     runs-on: ${{matrix.os}}
     strategy:
       fail-fast: false
@@ -49,7 +49,6 @@ jobs:
           -DCTEST_CMAKE_GENERATOR="Unix Makefiles"
           -DCTEST_SITE="Github"
           -DCTEST_BUILD_NAME="${{matrix.os}}-${{matrix.cxx_compiler}}"
-          -DCTEST_BUILD_FLAGS="-j"
 
     steps:
       - uses: actions/checkout@v4
@@ -79,8 +78,10 @@ jobs:
           echo "LDFLAGS=\"-L$(brew --prefix llvm)/lib\"" >> $GITHUB_ENV
           echo "CPPFLAGS=\"-I$(brew --prefix llvm)/include\"" >> $GITHUB_ENV
 
+      - if: github.event_name == 'pull_request'
+        run: echo "CDASH_ARGS=${CDASH_ARGS} -DCTEST_UPDATE_VERSION_OVERRIDE=${{ github.event.pull_request.head.sha }}" > "${GITHUB_ENV}"
+
       - name: Run CMake
-        id: cmake
         run: >-
           ctest -VV -S .github/ctest_configure.cmake ${{ env.CDASH_ARGS }}
           -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
@@ -92,9 +93,100 @@ jobs:
           -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
           -DPYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
       - name: Build
-        id: build
         run: ctest -VV -S .github/ctest_build.cmake ${{ env.CDASH_ARGS }}
 
       - name: Run Tests
-        id: test
         run: ctest -VV -S .github/ctest_test.cmake ${{ env.CDASH_ARGS }}
+
+  windows:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - generator: Visual Studio 16 2019
+            os: windows-2019
+            platform: x64
+            build_type: Release
+
+          - generator: Visual Studio 16 2019
+            os: windows-2019
+            platform: x86
+            build_type: Release
+
+          - generator: Visual Studio 17 2022
+            os: windows-2022
+            platform: x64
+            build_type: Release
+
+          - generator: Visual Studio 17 2022
+            os: windows-2022
+            platform: x86
+            build_type: Release
+
+          - generator: MinGW Makefiles
+            os: windows-2022
+            platform: x64
+            build_type: Release
+    defaults:
+      run:
+        shell: bash
+    env:
+      CDASH_ARGS: >-
+          -DCTEST_BINARY_DIRECTORY="${{github.workspace}}\\build"
+          -DCTEST_BUILD_NAME="${{matrix.os}}-${{matrix.platform}}-${{matrix.generator}}"
+          -DCTEST_CMAKE_GENERATOR="${{matrix.generator}}"
+          -DCTEST_SITE="Github"
+          -DCTEST_SOURCE_DIRECTORY="${{github.workspace}}"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        if: startsWith(matrix.generator, 'Visual Studio')
+        with:
+          arch: ${{matrix.platform}}
+
+      - name: Install compiler
+        if: startsWith(matrix.generator, 'MinGW')
+        id: install_cc
+        uses: rlalik/setup-cpp-compiler@master
+        with:
+          compiler: latest
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          architecture: ${{matrix.platform}}
+
+      - name: Install zfpy dependencies
+        run: |
+          python -m pip install cython
+          python -m pip install oldest-supported-numpy
+          python -m pip install setuptools
+
+      - if: github.event_name == 'pull_request'
+        run: echo "CDASH_ARGS=${CDASH_ARGS} -DCTEST_UPDATE_VERSION_OVERRIDE=${{ github.event.pull_request.head.sha }}" > "${GITHUB_ENV}"
+
+      - if: startsWith(matrix.generator, 'Visual Studio')
+        run: |
+          echo "CDASH_ARGS=${CDASH_ARGS} -DCMAKE_CXX_FLAGS:STRING=//wd4530 -DCTEST_CMAKE_EXTRA_OPTIONS=\"-A ${{matrix.platform == 'x86' && 'Win32' || 'x64'}}\"" >> "${GITHUB_ENV}"
+
+      - if: startsWith(matrix.generator, 'MinGW')
+        run: echo "CDASH_ARGS=${CDASH_ARGS} -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_FLAGS=-DMS_WIN64" > "${GITHUB_ENV}"
+
+      - name: Configure
+        run: >-
+          ctest -VV -S .github/ctest_configure.cmake ${{ env.CDASH_ARGS }}
+          -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+          -DBUILD_TESTING_FULL=ON
+          -DZFP_WITH_OPENMP=OFF
+          -DBUILD_ZFPY=ON
+
+      - name: Build
+        run: ctest -VV -S .github/ctest_build.cmake ${{ env.CDASH_ARGS }}
+
+      - name: Test
+        run: ctest -C ${{ matrix.build_type }} -VV -S .github/ctest_test.cmake ${{ env.CDASH_ARGS }}

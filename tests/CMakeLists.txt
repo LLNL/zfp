@@ -41,7 +41,6 @@ if(BUILD_TESTING_FULL)
 
   # CMAKE_SH-NOTFOUND needed for mingw builds
   if(MINGW)
-    list(APPEND CMOCKA_ARGS "-DCMAKE_SH=CMAKE_SH-NOTFOUND")
     list(APPEND GTEST_ARGS "-DCMAKE_SH=CMAKE_SH-NOTFOUND")
   endif()
 
@@ -106,11 +105,6 @@ if(BUILD_TESTING_FULL)
 
   if(BUILD_ZFORP)
     add_subdirectory(fortran)
-  endif()
-
-  # needed to compile gtest on MSVC
-  if(MSVC)
-    list(APPEND GTEST_ARGS "/D:_SILENCE_TR1_DEPRECATION_NAMESPACE_WARNING=1")
   endif()
 
   # TODO: spend time getting googletest to compile on MinGW

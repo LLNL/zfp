@@ -5,6 +5,9 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   "ld: warning: directory not found for option '-L/opt/homebrew/opt/llvm/lib'"
   "Using deprecated NumPy API, disable it with"
   "clang: warning: argument unused during compilation: '-fstack-clash-protection'"
+  "warning LNK4197:.*googletest"
+  "_ftelli64"
+  "_fseeki64"
 )
 list(APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE)
 list(APPEND CTEST_CUSTOM_TESTS_IGNORE)
