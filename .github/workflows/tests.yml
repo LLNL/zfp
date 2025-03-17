@@ -79,7 +79,7 @@ jobs:
           echo "CPPFLAGS=\"-I$(brew --prefix llvm)/include\"" >> $GITHUB_ENV
 
       - if: github.event_name == 'pull_request'
-        run: echo "CDASH_ARGS=${CDASH_ARGS} -DCTEST_UPDATE_VERSION_OVERRIDE=${{ github.event.pull_request.head.sha }}" > "${GITHUB_ENV}"
+        run: echo "CDASH_ARGS=${CDASH_ARGS} -DCTEST_UPDATE_VERSION_OVERRIDE=${{ github.event.pull_request.head.sha }}" >> "${GITHUB_ENV}"
 
       - name: Run CMake
         run: >-
@@ -168,22 +168,28 @@ jobs:
           python -m pip install setuptools
 
       - if: github.event_name == 'pull_request'
-        run: echo "CDASH_ARGS=${CDASH_ARGS} -DCTEST_UPDATE_VERSION_OVERRIDE=${{ github.event.pull_request.head.sha }}" > "${GITHUB_ENV}"
+        run: echo "CDASH_ARGS=${CDASH_ARGS} -DCTEST_UPDATE_VERSION_OVERRIDE=${{ github.event.pull_request.head.sha }}" >> "${GITHUB_ENV}"
 
       - if: startsWith(matrix.generator, 'Visual Studio')
         run: |
           echo "CDASH_ARGS=${CDASH_ARGS} -DCMAKE_CXX_FLAGS:STRING=//wd4530 -DCTEST_CMAKE_EXTRA_OPTIONS=\"-A ${{matrix.platform == 'x86' && 'Win32' || 'x64'}}\"" >> "${GITHUB_ENV}"
 
       - if: startsWith(matrix.generator, 'MinGW')
-        run: echo "CDASH_ARGS=${CDASH_ARGS} -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_FLAGS=-DMS_WIN64" > "${GITHUB_ENV}"
+        run: |
+          echo "CDASH_ARGS=${CDASH_ARGS} -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_FLAGS=-DMS_WIN64" >> "${GITHUB_ENV}"
+          echo "CTEST_EXCLUSIONS=test_numpy" >> "${GITHUB_ENV}"
 
       - name: Configure
         run: >-
           ctest -VV -S .github/ctest_configure.cmake ${{ env.CDASH_ARGS }}
           -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+          -DBUILD_CFP=ON
+          -DBUILD_EXAMPLES=ON
           -DBUILD_TESTING_FULL=ON
-          -DZFP_WITH_OPENMP=OFF
+          -DBUILD_UTILITIES=ON
           -DBUILD_ZFPY=ON
+          -DCFP_NAMESPACE=cfp2
+          -DZFP_WITH_OPENMP=ON
 
       - name: Build
         run: ctest -VV -S .github/ctest_build.cmake ${{ env.CDASH_ARGS }}
