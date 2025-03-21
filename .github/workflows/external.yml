@@ -7,10 +7,10 @@ permissions: write-all
 
 jobs:
   generate_statuses:
-    env:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: vicentebolea/cdash-status@v1
-        project: ZFP
-        github-token: ${{ secrets.CI_GITHUB_ROBOT_TOKEN }}
+      - uses: vicentebolea/cdash-status@v1.2.1
+        with:
+          project: ZFP
+          github-token: ${{ secrets.CI_GITHUB_ROBOT_TOKEN }}
