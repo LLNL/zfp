@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: vicentebolea/cdash-status@v1.2.1
+      - uses: Kitware/cdash-status@v1.2.1
         with:
           project: ZFP
           github-token: ${{ secrets.CI_GITHUB_ROBOT_TOKEN }}
