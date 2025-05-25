@@ -403,6 +403,14 @@ decode3(
   uint granularity
 );
 
+#pragma pack(1)
+typedef struct  {
+    uint64 base_offset;
+    uint16 lengths[ZFP_PARTITION_SIZE];
+} hybrid_index_entry;
+
+static_assert(ZFP_PARTITION_SIZE == 32, "CUDA backend expects that the hybrid index partition size is equal to the size of a CUDA warp");
+
 // compute bit offset to compressed block
 inline __device__
 unsigned long long
@@ -412,22 +420,20 @@ block_offset(const Word* d_index, zfp_index_type index_type, size_t chunk_idx)
     return d_index[chunk_idx];
 
   if (index_type == zfp_index_hybrid) {
-    const size_t thread_idx = threadIdx.x;
-    // TODO: Why subtract thread_idx? And should granularity not matter?
-    const size_t warp_idx = (chunk_idx - thread_idx) / 32;
-    // warp operates on 32 blocks indexed by one 64-bit offset, 32 16-bit sizes
-    const uint64* data64 = (const uint64*)d_index + warp_idx * 9;
-    const uint16* data16 = (const uint16*)data64 + 3;
-    // TODO: use warp shuffle instead of shared memory
-    __shared__ uint64 offset[32];
-    offset[thread_idx] = thread_idx ? data16[thread_idx] : *data64;
-    // compute prefix sum in parallel
-    for (uint i = 1u; i < 32u; i <<= 1) {
-      if (thread_idx + i < 32u)
-        offset[thread_idx + i] += offset[thread_idx];
-      __syncthreads();
+    const uint local_id = threadIdx.x & 0x1f;
+    const size_t index_partition = chunk_idx / ZFP_PARTITION_SIZE;
+    const hybrid_index_entry * const idx = (hybrid_index_entry *)d_index + index_partition;
+
+    size_t offset = local_id > 0 ? idx->lengths[local_id - 1] : idx->base_offset;
+
+    __syncwarp();
+    #pragma unroll
+    for (uint i = 1; i < 32; i<<=1) {
+        size_t v =  __shfl_up_sync(__activemask(), offset, i);
+        offset = local_id >= i ? offset + v : offset;
     }
-    return offset[thread_idx];
+    __syncwarp();
+    return offset;
   }
 
   return 0;
