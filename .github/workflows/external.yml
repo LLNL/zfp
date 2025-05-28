@@ -12,5 +12,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Kitware/cdash-status@v1.2.1
         with:
-          project: ZFP
+          project: zfp
           github-token: ${{ secrets.CI_GITHUB_ROBOT_TOKEN }}
