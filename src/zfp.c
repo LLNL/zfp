@@ -744,6 +744,7 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
   size_t blocks = zfp_field_blocks(field);
   uint values = 1u << (2 * dims);
   uint maxbits = 0;
+  bitstream_size maxsize;
 
   if (!dims)
     return 0;
@@ -766,7 +767,13 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
   maxbits += values - 1 + values * MIN(zfp->maxprec, zfp_field_precision(field));
   maxbits = MIN(maxbits, zfp->maxbits);
   maxbits = MAX(maxbits, zfp->minbits);
-  return ((ZFP_HEADER_MAX_BITS + blocks * maxbits + stream_word_bits - 1) & ~(stream_word_bits - 1)) / CHAR_BIT;
+  
+  maxsize = ((ZFP_HEADER_MAX_BITS + ((bitstream_size)blocks) * maxbits + stream_word_bits - 1) & ~(stream_word_bits - 1)) / CHAR_BIT;
+
+  /* check if the maxsize fits into size_t to avoid silent truncation */
+  if (((size_t)maxsize) != maxsize)
+    return 0;
+  return (size_t)maxsize;
 }
 
 void
