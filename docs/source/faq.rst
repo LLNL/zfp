@@ -478,6 +478,20 @@ implies that after every *m* 64-bit words have been decoded, the bit stream
 is advanced by *m* |times| *n* words to the next set of m 64-bit words
 associated with the block.
 
+Rather than overcoming the technical challenges discussed here, we advocate a
+simpler, compressor-agnostic approach to progressive-precision access:
+
+#. V. Magri, P. Lindstrom,
+   "`A General Framework for Progressive Data Compression and Retrieval <https://doi.org/10.1109/TVCG.2023.3327186>`__,"
+   IEEE Transactions on Visualization and Computer Graphics, 2024.
+
+Additional benefits of this framework include:
+
+- No need to perform surgery on |zfp|.
+- Support for arbitrarily small |zfp| error tolerances (see
+  :ref:`Q17 <q-tolerance>`) and even lossless compression in the limit.
+- Easy integratation with current file formats and I/O libraries.
+
 -------------------------------------------------------------------------------
 
 .. _q-init:
@@ -1300,7 +1314,7 @@ resulting from |zfp|, as detailed in the following publications:
    SIAM Journal on Scientific Computing, 2020.
 #. P. Lindstrom, J. Hittinger, J. Diffenderfer, A. Fox, D. Osei-Kuffuor, J. Banks.
    "`ZFP: A Compressed Array Representation for Numerical Computations <https://doi.org/10.1177/10943420241284023>`__,"
-   International Journal of High-Performance Computing Applications, 2024.
+   International Journal of High-Performance Computing Applications, 2025.
 #. A. Fox, P. Lindstrom.
    "`Statistical Analysis of ZFP: Understanding Bias <https://doi.org/10.48550/arXiv.2407.01826>`__,"
    LLNL-JRNL-858256, Lawrence Livermore National Laboratory, 2024.
