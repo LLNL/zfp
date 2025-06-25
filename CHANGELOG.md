@@ -14,6 +14,7 @@ Change Log
 ### Fixed
 
 - #241: Signed left shifts, integer overflow invoke undefined behavior.
+- #270: Overflow of maximum stream size when `size_t` is 32 bits.
 
 ---
 

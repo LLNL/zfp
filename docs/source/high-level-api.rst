@@ -568,6 +568,9 @@ Compressed Stream
   The buffer may then be resized (using :code:`realloc()`) after the actual
   number of bytes is known, as returned by :c:func:`zfp_compress`.
 
+  This function returns zero if the size exceeds what can be represented in
+  a :code:`size_t`.
+
 
 .. _hl-func-stream:
 

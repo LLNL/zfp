@@ -768,11 +768,16 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
   maxbits = MIN(maxbits, zfp->maxbits);
   maxbits = MAX(maxbits, zfp->minbits);
   
-  maxsize = ((ZFP_HEADER_MAX_BITS + ((bitstream_size)blocks) * maxbits + stream_word_bits - 1) & ~(stream_word_bits - 1)) / CHAR_BIT;
+  /* compute number of bytes in multiples of words */
+  maxsize = ZFP_HEADER_MAX_BITS;
+  maxsize += (bitstream_size)blocks * maxbits;
+  maxsize = (maxsize + stream_word_bits - 1) & ~((bitstream_size)stream_word_bits - 1);
+  maxsize /= CHAR_BIT;
 
-  /* check if the maxsize fits into size_t to avoid silent truncation */
-  if (((size_t)maxsize) != maxsize)
+  /* ensure maxsize fits in size_t to avoid silent truncation */
+  if ((size_t)maxsize != maxsize)
     return 0;
+
   return (size_t)maxsize;
 }
 
