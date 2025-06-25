@@ -14,7 +14,7 @@ class array {
 public:
   #include "zfp/internal/array/header.hpp"
 
-  // factory function (see zfpfactory.h)
+  // factory function (see factory.hpp)
   static zfp::array* construct(const zfp::array::header& header, const void* buffer = 0, size_t buffer_size_bytes = 0);
 
   // public virtual destructor (can delete array through base class pointer)
