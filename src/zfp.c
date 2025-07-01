@@ -49,6 +49,10 @@ is_reversible(const zfp_stream* zfp)
 #include "share/parallel.c"
 #include "share/omp.c"
 
+/* template instantiation of utility functions ------------------------------*/
+
+#include "template/utils.c"
+
 /* template instantiation of integer and float compressor -------------------*/
 
 #define Scalar int32
@@ -769,9 +773,8 @@ zfp_stream_maximum_size(const zfp_stream* zfp, const zfp_field* field)
   maxbits = MAX(maxbits, zfp->minbits);
   
   /* compute number of bytes in multiples of words */
-  maxsize = ZFP_HEADER_MAX_BITS;
-  maxsize += (bitstream_size)blocks * maxbits;
-  maxsize = (maxsize + stream_word_bits - 1) & ~((bitstream_size)stream_word_bits - 1);
+  maxsize = ZFP_HEADER_MAX_BITS + (bitstream_size)blocks * maxbits;
+  maxsize = _t1(round_up, bitstream_size)(maxsize, stream_word_bits);
   maxsize /= CHAR_BIT;
 
   /* ensure maxsize fits in size_t to avoid silent truncation */
@@ -799,8 +802,9 @@ zfp_stream_set_reversible(zfp_stream* zfp)
 double
 zfp_stream_set_rate(zfp_stream* zfp, double rate, zfp_type type, uint dims, zfp_bool align)
 {
-  uint n = 1u << (2 * dims);
+  const uint n = 1u << (2 * dims);
   uint bits = (uint)floor(n * rate + 0.5);
+
   switch (type) {
     case zfp_type_float:
       bits = MAX(bits, 1 + 8u);
@@ -811,15 +815,16 @@ zfp_stream_set_rate(zfp_stream* zfp, double rate, zfp_type type, uint dims, zfp_
     default:
       break;
   }
-  if (align) {
-    /* for write random access, round up to next multiple of stream word size */
-    bits += (uint)stream_word_bits - 1;
-    bits &= ~(stream_word_bits - 1);
-  }
+
+  /* for write random access, round up to next multiple of stream word size */
+  if (align)
+    bits = _t1(round_up, uint)(bits, (uint)stream_word_bits);
+
   zfp->minbits = bits;
   zfp->maxbits = bits;
   zfp->maxprec = ZFP_MAX_PREC;
   zfp->minexp = ZFP_MIN_EXP;
+
   return (double)bits / n;
 }
 
