@@ -1115,6 +1115,7 @@ int main(int argc, char* argv[])
       break;
   }
   std::cout << std::endl;
+  std::cout << "word size " << stream_word_bits << std::endl;
   std::cout << std::endl;
 
   uint sizes = 0;
