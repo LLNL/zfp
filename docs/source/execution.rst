@@ -200,7 +200,7 @@ The CUDA implementation has a number of limitations:
 * Only the :ref:`fixed-rate mode <mode-fixed-rate>` mode is supported.
   Other modes will be supported in a future release.
 * 4D arrays are not supported.
-* :ref:`Headers <header>` are not supported.  Any header already present in
+* :ref:`Headers <headers>` are not supported.  Any header already present in
   the stream will be silently overwritten on compression.
 * |zfp| must be built with a :c:macro:`ZFP_BIT_STREAM_WORD_SIZE` of 64 bits.
 * Although :ref:`strides <field>` are supported, fields must be contiguous

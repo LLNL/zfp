@@ -148,7 +148,7 @@ the compressed data, or via the :c:func:`zfp_write_header` and
 :c:func:`zfp_compress` and :c:func:`zfp_decompress` calls, respectively.
 These calls allow the user to specify what information to store in the header,
 including a 'magic' format identifier, the field type and dimensions, and the
-compression parameters (see the :ref:`ZFP_HEADER <header-macros>` macros).
+compression parameters (see the :ref:`headers` section).
 
 In addition to this initialization, the bit stream has to be rewound to
 the beginning (before reading the header and decompressing the data)::

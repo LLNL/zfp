@@ -26,6 +26,7 @@ The following sections are available:
   * :ref:`hl-func-exec`
   * :ref:`hl-func-config`
   * :ref:`hl-func-field`
+  * :ref:`hl-func-headers`
   * :ref:`hl-func-codec`
 
 .. _hl-macros:
@@ -226,16 +227,6 @@ bitwise ORed together.  Use :c:macro:`ZFP_DATA_ALL` to count all storage used.
 .. c:macro:: ZFP_DATA_ALL
 
   All storage (bitwise OR of all :code:`ZFP_DATA` constants).
-
-----
-
-.. c:macro:: ZFP_ROUND_FIRST
-.. c:macro:: ZFP_ROUND_NEVER
-.. c:macro:: ZFP_ROUND_LAST
-
-  Available rounding modes for :c:macro:`ZFP_ROUNDING_MODE`, which
-  specifies at build time how |zfp| performs rounding in lossy compression
-  mode.
 
 
 .. _hl-types:
@@ -1010,6 +1001,105 @@ Array Metadata
   Return :code:`zfp_true` upon success.  See :c:func:`zfp_field_metadata` for
   how to encode *meta*.
 
+.. index::
+   single: Header
+
+.. _headers:
+.. _hl-func-headers:
+
+Stream Headers
+^^^^^^^^^^^^^^
+
+When decompressing data, |zfp| needs sufficient information to determine
+:ref:`compression mode <modes>` and settings (like rate, precision, or
+accuracy) as well as the underlying type and dimensions of the uncompressed
+array.  The compressed stream itself does not store this information unless
+the user encodes it in a short, optional header.  The functions below allow
+writing such headers on compression and later reading them during
+decompression.
+
+|zfp| headers have been designed to be very concise representations of
+:ref:`compression parameters <hl-func-stream>` and
+:ref:`array metadata <hl-func-field>` to accommodate compression of many
+small (sub)arrays or spatially varying compression settings with low storage
+overhead.  In most cases, 64 bits of header data suffice to describe both
+array and compression parameters.
+
+Headers are divided into three separate fields, each of which is optional
+and included in the header by passing a :ref:`bit mask <header-macros>` to
+one of the functions below:
+
+* :c:macro:`ZFP_HEADER_MAGIC`: A 32-bit "magic" constant for identifying the
+  stream as |zfp| data.
+
+* :c:macro:`ZFP_HEADER_META`: A 52-bit metadata field that specifies the type
+  and shape of the uncompressed array.  This field encodes one of four scalar
+  types (32- and 64-bit integer and floating-point types), one of four
+  dimensionalities 1 |leq| *d* |leq| 4, and the array dimensions (or shape).
+  The array dimensions supported are limited to 48 / *d* bits each.  For
+  example, when *d* = 2, 24 bits are used to encode the number of rows and
+  columns, which each must be at most 2\ :sup:`24`.  If dimensions exceed
+  these limits, an error code is generated.
+
+* :c:macro:`ZFP_HEADER_MODE`: A 12- or 64-bit compression settings field.
+  This variable-rate encoding has been designed to support most common
+  compression parameters through only 12 bits, which when combined with the
+  52-bit metadata supports magic-less headers of 64 bits (perhaps for many
+  small subarrays with their own sizes and compression settings).  The
+  following compression modes and parameters are supported in the short 12-bit
+  encoding:
+
+  - :ref:`Fixed-rate mode <mode-fixed-rate>`: 1 to 2048 bits per block of
+    |4powd| values.  For example, all possible rates up to
+    2048 / 4\ :sup:`3` = 32 bits/value are supported for 3D arrays.
+
+  - :ref:`Fixed-precision mode <mode-fixed-precision>`: 1 to 128 bits of
+    precision, which covers all precisions currently supported by |zfp|.
+
+  - :ref:`Fixed-accuracy mode <mode-fixed-accuracy>`: All tolerances in
+    the range [2\ :sup:`-1074`, 2\ :sup:`843`] |approx|
+    [5 |times| 10\ :sup:`-324`, 6 |times| 10\ :sup:`253`].
+    Note that |zfp| error tolerances are limited to integer powers of two
+    (|zfp| will round down other tolerances).
+
+  - :ref:`Reversible mode <mode-reversible>`: Takes no compression parameters.
+
+  If compression parameters do not respect these constraints, then a longer
+  64-bit encoding is used that supports all |zfp| compression modes and
+  parameter settings, including any :ref:`expert-mode <mode-expert>` settings
+  not covered by this list.  A reserved 12-bit code is used to denote that
+  52 additional bits follow for a full 64-bit encoding.
+
+.. note::
+  Stream headers are not necessarily comprised of a whole number of
+  :ref:`words <word-size>`.  Hence, the payload compressed data may not be
+  word aligned when headers are prepended.
+
+The |zfp| high-level API provides the following two functions for reading and
+writing headers, which should be called before (de)compressing data so that
+the :c:struct:`zfp_stream` and :c:struct:`zfp_field` objects can be properly
+initialized before decompression.
+
+.. c:function:: size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, uint mask)
+
+  Write an optional variable-length header to the stream that encodes
+  compression parameters, array metadata, etc.  The header information written
+  is determined by the bit *mask* (see :c:macro:`macros <ZFP_HEADER_MAGIC>`).
+  Unlike in :c:func:`zfp_compress`, no word alignment is enforced.  See the
+  :ref:`limitations <limitations>` section for limits on the maximum array
+  size supported by the header.  The return value is the number of bits
+  written, or zero upon failure.
+
+----
+
+.. c:function:: size_t zfp_read_header(zfp_stream* stream, zfp_field* field, uint mask)
+
+  Read header previously written using :c:func:`zfp_write_header`.  The
+  *stream* and *field* data structures are populated with the information
+  stored in the header, as specified by the bit *mask* (see
+  :c:macro:`macros <ZFP_HEADER_MAGIC>`).  The caller must ensure that *mask*
+  agrees between header read and write calls.  The return value is the number
+  of bits read, or zero upon failure.
 
 .. _hl-func-codec:
 
@@ -1039,30 +1129,6 @@ Compression and Decompression
   those used during compression (see :c:type:`zfp_field`).  This function
   further requires that :c:type:`zfp_stream` is initialized with the same
   :ref:`compression parameters <modes>` used during compression.  To assist
-  with this, an optional :ref:`header <zfp-header>` may be prepended that
+  with this, an optional :ref:`header <headers>` may be prepended that
   encodes such metadata, which must be explicitly read using
   :c:func:`zfp_read_header` to initialize *stream* and *field*.
-
-----
-
-.. _zfp-header:
-.. c:function:: size_t zfp_write_header(zfp_stream* stream, const zfp_field* field, uint mask)
-
-  Write an optional variable-length header to the stream that encodes
-  compression parameters, array metadata, etc.  The header information written
-  is determined by the bit *mask* (see :c:macro:`macros <ZFP_HEADER_MAGIC>`).
-  Unlike in :c:func:`zfp_compress`, no word alignment is enforced.  See the
-  :ref:`limitations <limitations>` section for limits on the maximum array
-  size supported by the header.  The return value is the number of bits
-  written, or zero upon failure.
-
-----
-
-.. c:function:: size_t zfp_read_header(zfp_stream* stream, zfp_field* field, uint mask)
-
-  Read header previously written using :c:func:`zfp_write_header`.  The
-  *stream* and *field* data structures are populated with the information
-  stored in the header, as specified by the bit *mask* (see
-  :c:macro:`macros <ZFP_HEADER_MAGIC>`).  The caller must ensure that *mask*
-  agrees between header read and write calls.  The return value is the number
-  of bits read, or zero upon failure.

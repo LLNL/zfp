@@ -20,7 +20,7 @@ that will address some of these limitations.
   extensions to other floating-point formats should be possible with
   minor effort.
 
-- The optional |zfp| :ref:`header <zfp-header>` supports arrays with at
+- The optional |zfp| :ref:`header <headers>` supports arrays with at
   most 2\ :sup:`48` elements.  The |zfp| header limits each dimension
   to 2\ :sup:`48/d` elements in a *d*-dimensional array, i.e.,
   2\ :sup:`48`, 2\ :sup:`24`, 2\ :sup:`16`, and 2\ :sup:`12` for 1D through
