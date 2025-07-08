@@ -1316,8 +1316,8 @@ resulting from |zfp|, as detailed in the following publications:
    "`ZFP: A Compressed Array Representation for Numerical Computations <https://doi.org/10.1177/10943420241284023>`__,"
    International Journal of High-Performance Computing Applications, 2025.
 #. A. Fox, P. Lindstrom.
-   "`Statistical Analysis of ZFP: Understanding Bias <https://doi.org/10.48550/arXiv.2407.01826>`__,"
-   LLNL-JRNL-858256, Lawrence Livermore National Laboratory, 2024.
+   "`Enhancing ZFP: A Statistical Approach to Understanding and Reducing Error Bias in a Lossy Floating-Point Compression Algorithm <https://doi.org/10.48550/arXiv.2407.01826>`__,"
+   SIAM Journal on Scientific Computing, to appear.
 
 In short, |zfp| compression errors are roughly normally distributed as a
 consequence of the central limit theorem, and can be bounded.  Because the
