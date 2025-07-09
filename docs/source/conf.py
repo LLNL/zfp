@@ -30,7 +30,14 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.imgmath', 'sphinxfortran.fortran_domain']
+extensions = [
+  'sphinx.ext.imgmath',
+  'sphinx.ext.imgconverter',
+  'sphinxfortran.fortran_domain'
+]
+
+# Ensure rasterization of vector graphics uses sufficient DPI
+image_converter_args = ['-density', '300', '-geometry', '50%']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -137,7 +144,12 @@ latex_elements = {
 
     # Additional stuff for the LaTeX preamble.
     #
-    # 'preamble': '',
+    # Unicode definitions needed for TeX Live 2024
+    'preamble': ('\\DeclareUnicodeCharacter{2212}{\\ensuremath{-}}'
+                 '\\DeclareUnicodeCharacter{2264}{\\ensuremath{\\leq}}'
+                 '\\DeclareUnicodeCharacter{2265}{\\ensuremath{\\geq}}'
+                 '\\DeclareUnicodeCharacter{221A}{\\ensuremath{\\sqrt{}}}'
+                 '\\DeclareUnicodeCharacter{2248}{\\ensuremath{\\approx}}'),
 
     # Latex figure (float) alignment
     #

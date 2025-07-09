@@ -10,6 +10,7 @@
    introduction
    license
    installation
+   configuration
    algorithm
    modes
    execution

@@ -198,10 +198,10 @@ Regardless of the settings below, |libzfp| will always be built.
 
 .. index::
    single: Configuration
-.. _config:
+.. _settings:
 
 
-Configuration
+Build Options
 -------------
 
 The behavior of |zfp| can be configured at compile time via a set of macros
@@ -210,6 +210,9 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
 
     cmake -DZFP_WITH_OPENMP=OFF ..
 
+Some of the settings that impact |zfp|'s behavior and what ultimately is
+stored in the compressed stream are further discussed in greater detail in
+the :ref:`config` section.
 
 .. c:macro:: ZFP_INT64
 .. c:macro:: ZFP_INT64_SUFFIX
@@ -252,32 +255,32 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   CMake default: off.
   GNU make default: off and ignored.
 
-.. _rounding:
+.. _rounding-parameter:
+
 .. c:macro:: ZFP_ROUNDING_MODE
 
   **Experimental feature**.  By default, |zfp| coefficients are truncated,
   not rounded, which can result in biased errors (see
   FAQ :ref:`#30 <q-err-dist>`).  To counter this, two rounding modes are
-  available: :code:`ZFP_ROUND_FIRST` (round during compression; analogous
-  to mid-tread quantization) and :code:`ZFP_ROUND_LAST` (round during
+  available: :c:macro:`ZFP_ROUND_FIRST` (round during compression; analogous
+  to mid-tread quantization) and :c:macro:`ZFP_ROUND_LAST` (round during
   decompression; analogous to mid-riser quantization).  With
-  :code:`ZFP_ROUND_LAST`, the values returned on decompression are slightly
+  :c:macro:`ZFP_ROUND_LAST`, the values returned on decompression are slightly
   modified (and usually closer to the original values) without impacting the
   compressed data itself.  This rounding mode works with all
   :ref:`compression modes <modes>`.
-  With :code:`ZFP_ROUND_FIRST`, the values are modified before compression,
+  With :c:macro:`ZFP_ROUND_FIRST`, the values are modified before compression,
   thus impacting the compressed stream.  This rounding mode tends to be more
   effective at reducing bias, but is invoked only with
   :ref:`fixed-precision <mode-fixed-precision>` and
   :ref:`fixed-accuracy <mode-fixed-accuracy>` compression modes.
   Both of these rounding modes break the regression tests since they alter
   the compressed or decompressed representation, but they may be used with
-  libraries built with the default rounding mode, :code:`ZFP_ROUND_NEVER`,
+  libraries built with the default rounding mode, :c:macro:`ZFP_ROUND_NEVER`,
   and versions of |zfp| that do not support a rounding mode with no adverse
-  effects.
-  Note: :c:macro:`ZFP_ROUNDING_MODE` is currently supported only by the
-  :code:`serial` and :code:`omp` :ref:`execution policies <execution>`.
-  Default: :code:`ZFP_ROUND_NEVER`.
+  effects.  For additional information, see the detailed :ref:`rounding`
+  section.
+  Default: :c:macro:`ZFP_ROUND_NEVER`.
 
 .. c:macro:: ZFP_WITH_TIGHT_ERROR
 
@@ -288,8 +291,8 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   to be satisfied using fewer bits of compressed data.  As a result, when
   enabled, the observed maximum absolute error is closer to the tolerance and
   the compression ratio is increased.  This feature requires the rounding mode
-  to be :code:`ZFP_ROUND_FIRST` or :code:`ZFP_ROUND_LAST` and is supported
-  only by the :code:`serial` and :code:`omp`
+  to be :c:macro:`ZFP_ROUND_FIRST` or :c:macro:`ZFP_ROUND_LAST` and is
+  supported only by the :code:`serial` and :code:`omp`
   :ref:`execution policies <execution>`.
   Default: undefined/off.
 
@@ -340,7 +343,7 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   Default: undefined/off.
 
 
-.. _word-size:
+.. _word-size-parameter:
 
 .. c:macro:: BIT_STREAM_WORD_TYPE
 

@@ -14,7 +14,7 @@ against.
 
 From an implementation standpoint, bit streams are read from and written
 to memory in increments of *words* of bits.  The constant power-of-two
-word size is configured at :ref:`compile time <config>`, and is limited
+:ref:`word size <word-size>` is configured at compile time, and is limited
 to 8, 16, 32, or 64 bits.
 
 The bit stream API is publicly exposed and may be used to write additional
