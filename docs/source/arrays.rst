@@ -502,7 +502,7 @@ with only a few differences:
 - All methods other than those that specify array-wide settings, such as
   compression mode and parameters, array dimensions, and array contents,
   are :code:`const` qualified.  There are, thus, no methods for obtaining
-  a writeable reference, pointer, or iterator.  Consequently, one may not
+  a writable reference, pointer, or iterator.  Consequently, one may not
   initialize such arrays one element at a time.  Rather, the user initializes
   the whole array by passing a pointer to uncompressed data.
 

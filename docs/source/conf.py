@@ -27,6 +27,8 @@
 #
 # needs_sphinx = '1.0'
 
+import sys
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
@@ -35,6 +37,10 @@ extensions = [
   'sphinx.ext.imgconverter',
   'sphinxfortran.fortran_domain'
 ]
+
+# Require sphinxcontrib.spelling only when running spell checker.
+if 'spelling' in sys.argv:
+    extensions += ['sphinxcontrib.spelling']
 
 # Ensure rasterization of vector graphics uses sufficient DPI
 image_converter_args = ['-density', '300', '-geometry', '50%']
@@ -164,7 +170,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'zfp.tex', u'zfp Documentation',
-     u'\shortstack[l]{Peter Lindstrom\\\\Danielle Asher}', 'manual'),
+     u'\\shortstack[l]{Peter Lindstrom\\\\Danielle Asher}', 'manual'),
 ]
 
 
@@ -188,6 +194,3 @@ texinfo_documents = [
      author, 'zfp', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

@@ -109,7 +109,7 @@ moved relative to prior versions.
 - #86: C++ compiler warns when ``__STDC_VERSION__`` is undefined.
 - #87: ``CXXFLAGS`` is misspelled in ``cfp/src/Makefile``.
 - #98: ``zfp_stream_maximum_size()`` underestimates size in reversible mode.
-- #99: Incorrect ``private_view`` reads due to missing writeback.
+- #99: Incorrect ``private_view`` reads due to missing write-back.
 - #109: Unused CPython array is incompatible with PyPy.
 - #112: PGI compiler bug causes issues with memory alignment.
 - #119: All-subnormal blocks may cause floating-point overflow.
@@ -328,7 +328,7 @@ not backward compatible with previous versions of |zfp|.
 
 - Support for 31-bit and 63-bit integer data, as well as shorter integer types.
 - New examples for evaluating the throughput of the (de)compressor and for
-  compressing grayscale images in the pgm format.
+  compressing grayscale images in the ``pgm`` format.
 - Frequently asked questions.
 
 **Changed**

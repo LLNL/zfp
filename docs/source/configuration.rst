@@ -122,7 +122,7 @@ or written is one byte, and endianness does not matter.  Such |zfp| streams
 are portable.
 
 .. warning::
-  For compressed streams to be portabile across platforms with different byte
+  For compressed streams to be portable across platforms with different byte
   order, |zfp| must be built with a word size of 8 bits.
 
 When using the |zfp| :ref:`bitstream API <bs-api>`, it is possible to write

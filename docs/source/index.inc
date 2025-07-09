@@ -44,7 +44,7 @@ and speed of access:
   The top 32 bits of a 44-bit base offset are stored, with the 12 least
   significant bits of this base set to zero.  Four unsigned 16-bit deltas
   from the base offset complete the representation.  The default for
-  variable-rate arrays, this index offers a good tradeoff between storage,
+  variable-rate arrays, this index offers a good trade-off between storage,
   offset range, and speed.
 
 * :cpp:class:`hybrid8`: Eight consecutive offsets are encoded together

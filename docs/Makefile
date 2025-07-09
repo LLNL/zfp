@@ -3,17 +3,25 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = /usr/bin/python3 -msphinx
+SPHINXBUILD   = /usr/bin/python3 -m sphinx
 SPHINXPROJ    = zfp
 SOURCEDIR     = source
 BUILDDIR      = build
 
+# Needed for spell checking on macOS
+PYENCHANT_LIBRARY_PATH = /opt/homebrew/lib/libenchant-2.dylib
+
+# Build HTML by default
 all:
 	@$(MAKE) html
 
-# Put it first so that "make" without argument is like "make help".
+# List targets
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# Run spell checker
+spell:
+	@PYENCHANT_LIBRARY_PATH=$(PYENCHANT_LIBRARY_PATH) $(SPHINXBUILD) -b spelling -d "$(BUILDDIR)/doctrees" "$(SOURCEDIR)" "$(BUILDDIR)/spelling"
 
 .PHONY: help Makefile
 

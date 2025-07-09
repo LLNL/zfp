@@ -115,10 +115,10 @@ General options
 
   Evaluate and print the following error statistics:
 
-  * rmse: The root mean square error.
-  * nrmse: The root mean square error normalized to the range.
-  * maxe: The maximum absolute pointwise error.
-  * psnr: The peak signal to noise ratio in decibels.
+  * ``rmse``: The root mean square error.
+  * ``nrmse``: The root mean square error normalized to the range.
+  * ``maxe``: The maximum absolute pointwise error.
+  * ``psnr``: The peak signal to noise ratio in decibels.
 
 Input and output
 ^^^^^^^^^^^^^^^^
@@ -246,11 +246,11 @@ Examples
 
   * :code:`-i file` : read uncompressed file and compress to memory
   * :code:`-z file` : read compressed file and decompress to memory
-  * :code:`-i ifile -z zfile` : read uncompressed ifile, write compressed zfile
-  * :code:`-z zfile -o ofile` : read compressed zfile, write decompressed ofile
-  * :code:`-i ifile -o ofile` : read ifile, compress, decompress, write ofile
+  * :code:`-i ifile -z zfile` : read uncompressed ``ifile``, write compressed ``zfile``
+  * :code:`-z zfile -o ofile` : read compressed ``zfile``, write decompressed ``ofile``
+  * :code:`-i ifile -o ofile` : read ``ifile``, compress, decompress, write ``ofile``
   * :code:`-i file -s` : read uncompressed file, compress to memory, print stats
-  * :code:`-i - -o - -s` : read stdin, compress, decompress, write stdout, print stats
+  * :code:`-i - -o - -s` : read ``stdin``, compress, decompress, write ``stdout``, print stats
   * :code:`-f -3 100 100 100 -r 16` : 2x fixed-rate compression of 100 |times| 100 |times| 100 floats
   * :code:`-d -1 1000000 -r 32` : 2x fixed-rate compression of 1,000,000 doubles
   * :code:`-d -2 1000 1000 -p 32` : 32-bit precision compression of 1000 |times| 1000 doubles

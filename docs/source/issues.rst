@@ -296,7 +296,7 @@ the exponent of the largest (in magnitude) value within a block, but produces
 unspecified behavior if that value is not finite.  
 
 |zfp| currently has no independent mechanism for handling fill values.  Ideally
-such special values would be signalled separately, e.g., using a bit mask, 
+such special values would be signaled separately, e.g., using a bit mask, 
 and then replaced with zeros to ensure that they both compress well and do
 not pollute actual data.
 

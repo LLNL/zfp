@@ -490,7 +490,7 @@ Additional benefits of this framework include:
 - No need to perform surgery on |zfp|.
 - Support for arbitrarily small |zfp| error tolerances (see
   :ref:`Q17 <q-tolerance>`) and even lossless compression in the limit.
-- Easy integratation with current file formats and I/O libraries.
+- Easy integration with current file formats and I/O libraries.
 
 -------------------------------------------------------------------------------
 
@@ -733,8 +733,8 @@ the number of blocks *bx* |times| *by*::
 
   bitsize = (4 * bx) * (4 * by) * rate
 
-where *nx* |leq| 4 |times| bx < *nx* + 4 and
-*ny* |leq| 4 |times| *by* < *ny* + 4.  When amortizing bitsize over the
+where *nx* |leq| 4 |times| *bx* < *nx* + 4 and
+*ny* |leq| 4 |times| *by* < *ny* + 4.  When amortizing *bitsize* over the
 *nx* |times| *ny* values, a slightly higher rate than requested may result.
 
 Third, to support updating compressed blocks, as is needed by |zfp|'s
@@ -770,8 +770,8 @@ uncompressed array to avoid having to allocate separate storage for the
 compressed stream.  |zfp| does allow for the possibility of such in-place
 compression, but with several caveats and restrictions:
 
-  1. A bitstream must be created whose buffer points to the beginning of
-     uncompressed (and to be compressed) storage.
+  1. A :c:type:`bitstream` must be created whose buffer points to the beginning
+     of uncompressed (and to be compressed) storage.
 
   2. The array must be compressed using |zfp|'s low-level API.  In particular,
      the data must already be partitioned and organized into contiguous blocks
@@ -1308,7 +1308,7 @@ resulting from |zfp|, as detailed in the following publications:
    SIAM Journal on Scientific Computing, 2019.
 #. D. Hammerling, A. Baker, A. Pinard, P. Lindstrom,
    "`A Collaborative Effort to Improve Lossy Compression Methods for Climate Data <https://doi.org/10.1109/DRBSD-549595.2019.00008>`__,"
-   5th International Workshop on Data Analysis and Reduction for Big Scientific Data, 2019.
+   5\ :sup:`th` International Workshop on Data Analysis and Reduction for Big Scientific Data, 2019.
 #. A. Fox, J. Diffenderfer, J. Hittinger, G. Sanders, P. Lindstrom.
    "`Stability Analysis of Inline ZFP Compression for Floating-Point Data in Iterative Methods <https://doi.org/10.1137/19M126904X>`__,"
    SIAM Journal on Scientific Computing, 2020.
