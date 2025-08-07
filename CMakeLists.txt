@@ -31,7 +31,7 @@ else()
     "${ZFP_VERSION_MAJOR}.${ZFP_VERSION_MINOR}.${ZFP_VERSION_PATCH}.${ZFP_VERSION_TWEAK}")
 endif()
 
-project(ZFP VERSION ${ZFP_VERSION})
+project(ZFP VERSION ${ZFP_VERSION} LANGUAGES C CXX)
 
 #------------------------------------------------------------------------------#
 # Some boilerplate to setup nice output directories
@@ -200,6 +200,7 @@ if(ZFP_WITH_OPENMP AND NOT OpenMP_C_LIBRARIES)
 endif()
 
 if(ZFP_WITH_CUDA)
+  enable_language(CUDA)
   # use CUDA_BIN_DIR hint
   set(ENV{CUDA_BIN_PATH} ${CUDA_BIN_DIR})
   find_package(CUDA)
