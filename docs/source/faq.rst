@@ -828,8 +828,11 @@ floating-point values and then losslessly compressing the result.  The
 *q* least significant bits of *n*-bit floating-point numbers (*n* = 32
 for floats and *n* = 64 for doubles) are truncated by |zfp| by specifying a
 maximum precision of *p* = *n* |minus| *q*.  The resulting point-wise relative
-error is then at most 2\ :sup:`q - 23` (for floats) or 2\ :sup:`q - 52`
-(for doubles).
+error is then at most 2\ :sup:`3 d + q - 23` for floats and
+2\ :sup:`3 d + q - 52` for doubles, where *d* is the dimensionality of
+the data (1 |leq| *d* |leq| 4).  Expressed in terms of *p*, the relative error
+is at most 2\ :sup:`3 (d + 3) - p` for floats and 2\ :sup:`3 (d + 4) - p`
+for doubles.
 
 .. note::
   For large enough *q*, floating-point exponent bits will be discarded,
@@ -838,15 +841,21 @@ error is then at most 2\ :sup:`q - 23` (for floats) or 2\ :sup:`q - 52`
   for subnormals; however, such values are likely too small for relative
   errors to be meaningful.
 
+.. warning::
+  For the bound to hold, |zfp| must be modified to avoid the non-reversible
+  code path when less than full precision is used.  This issue will be
+  addressed in the next |zfp| release.
+
 To bound the relative error, set the expert mode parameters to::
 
-  minbits = 0
-  maxbits = 0
+  minbits = ZFP_MIN_BITS
+  maxbits = ZFP_MAX_BITS
   maxprec = p
   minexp = ZFP_MIN_EXP - 1 = -1075
 
 For example, using the |zfpcmd| command-line tool, set the parameters using
-:option:`-c` :code:`0 0 p -1075`.
+:option:`-c` :code:`0 0 p -1075` (|zfpcmd| will replace the zeros with
+defaults).
 
 Note that while the above approach respects the error bound when the
 above conditions are met, it uses |zfp| for a purpose it was not designed
