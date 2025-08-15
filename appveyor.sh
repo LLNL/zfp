@@ -31,8 +31,8 @@ if [ $COMPILER == "msvc" ] && [ $BUILD_TYPE == "Release" ]; then
   if [ $ACTIVE_PY_VERSION != $PYTHON_VERSION ]; then
     exit 1
   fi
-
-  BUILD_FLAGS="$BUILD_FLAGS -DBUILD_ZFPY=ON"
+  PYTHON_DIR=$(python -c 'import sys; print(sys.prefix)')
+  BUILD_FLAGS="$BUILD_FLAGS -DBUILD_ZFPY=ON -DPYTHON_INCLUDE_DIR=$PYTHON_DIR\\include"
 fi
 
 BUILD_FLAGS="$BUILD_FLAGS -DBUILD_OPENMP=OFF"
@@ -46,9 +46,9 @@ cd tmpBuild
 # (CMAKE_SH satisfies mingw builds)
 set +e
 if [ $COMPILER != "msvc" ]; then
-  cmake -G "$GENERATOR" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils" -DCMAKE_SH=CMAKE_SH-NOTFOUND
+  cmake -G "$GENERATOR" -A "$PLATFORM" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils" -DCMAKE_SH=CMAKE_SH-NOTFOUND
 else
-  cmake -G "$GENERATOR" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils"
+  cmake -G "$GENERATOR" -A "$PLATFORM" "$APPVEYOR_BUILD_FOLDER/tests/ci-utils"
 fi
 
 if [ $? -eq 0 ]; then
