@@ -38,7 +38,12 @@ jobs:
             target: all
             architecture: arm64
             
-          - os: macos-latest
+# macos-latest = macos-15 is currently incompatible with Homebrew gcc;
+# see https://github.com/actions/runner-images/issues/12745.
+# For now, use macos-14.
+
+#         - os: macos-latest
+          - os: macos-14
             cxx_compiler: g++-12
             c_compiler: gcc-12
             omp: ON
@@ -70,7 +75,7 @@ jobs:
         run: sudo apt-get update; sudo apt-get install -y libomp5 libomp-dev
 
       - name: Setup OpenMP (MacOS)
-        if: ${{matrix.os == 'macos-latest'}}
+        if: ${{(matrix.os == 'macos-latest' || matrix.os == 'macos-14')}}
         run: |
           brew install libomp
           echo "CC=$(brew --prefix llvm)/bin/clang" >> $GITHUB_ENV
