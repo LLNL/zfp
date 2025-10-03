@@ -4,7 +4,7 @@
 
 cpp_gnu-10.3.1_build:
     variables:
-        ci_cmake: "cmake/3.14.5"
+        ci_cmake: "cmake/3.23.1"
         ci_cxx_cmp: "g++"
         ci_c_cmp: "gcc"
         ci_cmp_mod: "gcc/10.3.1"
@@ -18,7 +18,7 @@ cpp_gnu-10.3.1_test:
 
 cpp_clang-14.0.6_build:
     variables:
-        ci_cmake: "cmake/3.14.5"
+        ci_cmake: "cmake/3.23.1"
         ci_cxx_cmp: "clang++"
         ci_c_cmp: "clang"
         ci_cmp_mod: "clang/14.0.6"
@@ -32,7 +32,7 @@ cpp_clang-14.0.6_test:
 
 cpp_intel-2022.1.0_build:
     variables:
-        ci_cmake: "cmake/3.14.5"
+        ci_cmake: "cmake/3.23.1"
         ci_cxx_cmp: "icpc"
         ci_c_cmp: "icc"
         ci_cmp_mod: "intel/2022.1.0"
@@ -51,7 +51,7 @@ cpp_intel-2022.1.0_test:
 
 c_gnu-10.3.1_build:
     variables:
-        ci_cmake: "cmake/3.14.5"
+        ci_cmake: "cmake/3.23.1"
         ci_c_cmp: "gcc"
         ci_cmp_mod: "gcc/10.3.1"
     extends: [.c, .dane_build_cpu]

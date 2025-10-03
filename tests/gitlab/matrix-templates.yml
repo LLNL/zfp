@@ -1,0 +1,12 @@
+.matrix_job:
+    tags:
+        - batch
+        - matrix
+
+.matrix_build_gpu:
+    extends: [.build_gpu, .matrix_job]
+
+.matrix_test_gpu:
+    variables:
+       ci_test_regex: "."
+    extends: [.test_gpu, .matrix_job]
