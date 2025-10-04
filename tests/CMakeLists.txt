@@ -48,7 +48,7 @@ if(BUILD_TESTING_FULL)
   
   # choose proper library path & extension
   if(MSVC)
-    set(IMPORTED_LOCATION_PATH "${binary_dir}/src/${CMAKE_BUILD_TYPE}/cmocka-static.lib")
+    set(IMPORTED_LOCATION_PATH "${binary_dir}/src/${CMAKE_BUILD_TYPE}/cmocka.lib")
   else()
     set(IMPORTED_LOCATION_PATH "${binary_dir}/src/libcmocka.a")
   endif()
