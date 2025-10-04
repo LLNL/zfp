@@ -17,7 +17,8 @@ if(BUILD_TESTING OR BUILD_TESTING_FULL)
 endif()
 
 if(BUILD_TESTING_FULL)
-  set(CMAKE_CXX_STANDARD 11)
+  # C++17 needed as of GoogleTest 1.17.0
+  set(CMAKE_CXX_STANDARD 17)
   
   # CMAKE_SH-NOTFOUND needed for mingw builds
   if(MINGW)
@@ -25,20 +26,20 @@ if(BUILD_TESTING_FULL)
     list(APPEND GTEST_ARGS "-DCMAKE_SH=CMAKE_SH-NOTFOUND")
   endif()
   
-  # clone cmocka 1.1.0 into /build
-  list(APPEND CMOCKA_ARGS "-DWITH_STATIC_LIB=ON;-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER};-DUNIT_TESTING=OFF")
+  # clone cmocka into /build (WITH_STATIC_LIB replaced by BUILD_SHARED_LIBS in cmocka 1.1.6)
+  list(APPEND CMOCKA_ARGS "-DBUILD_SHARED_LIBS=OFF;-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER};-DUNIT_TESTING=OFF")
   
   include(ExternalProject)
   ExternalProject_Add(
     cmocka_cloned
     GIT_REPOSITORY    https://gitlab.com/cmocka/cmocka.git
-    GIT_TAG           cmocka-1.1.5
+    GIT_TAG           cmocka-1.1.8
     SOURCE_DIR        "${CMAKE_BINARY_DIR}/cmocka-src"
     BINARY_DIR        "${CMAKE_BINARY_DIR}/cmocka-build"
     CMAKE_ARGS        "${CMOCKA_ARGS}"
     INSTALL_COMMAND   ""
-    STEP_TARGETS build
-    EXCLUDE_FROM_ALL TRUE
+    STEP_TARGETS      build
+    EXCLUDE_FROM_ALL  TRUE
   )
   ExternalProject_Get_Property(cmocka_cloned source_dir binary_dir)
   
@@ -49,7 +50,7 @@ if(BUILD_TESTING_FULL)
   if(MSVC)
     set(IMPORTED_LOCATION_PATH "${binary_dir}/src/${CMAKE_BUILD_TYPE}/cmocka-static.lib")
   else()
-    set(IMPORTED_LOCATION_PATH "${binary_dir}/src/libcmocka-static.a")
+    set(IMPORTED_LOCATION_PATH "${binary_dir}/src/libcmocka.a")
   endif()
   set_property(TARGET cmocka
     PROPERTY
@@ -76,8 +77,7 @@ if(BUILD_TESTING_FULL)
   if(MSVC)
     add_compile_options(/wd4244)
   endif()
-  
-  
+
   add_subdirectory(utils)
   add_subdirectory(src)
   
