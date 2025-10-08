@@ -6,7 +6,7 @@ cuda-11.8.0_build:
     variables:
         ci_cmake: "cmake/3.23.1"
         ci_cmp_mod: "cuda/11.8.0"
-        ci_gcc_mod: "gcc/8.3.1"
+        ci_gcc_mod: "gcc/10.3.1"
     extends: [.cuda, .matrix_build_gpu]
     needs: []
 
