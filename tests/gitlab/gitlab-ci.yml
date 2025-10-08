@@ -141,8 +141,8 @@ include:
 #    - local: tests/gitlab/pascal-jobs.yml
 #    - local: tests/gitlab/lassen-templates.yml
 #    - local: tests/gitlab/lassen-jobs.yml
-#    - local: tests/gitlab/matrix-templates.yml
-#    - local: tests/gitlab/matrix-jobs.yml
+    - local: tests/gitlab/matrix-templates.yml
+    - local: tests/gitlab/matrix-jobs.yml
     - local: tests/gitlab/dane-templates.yml
     - local: tests/gitlab/dane-jobs.yml
 #    - local: tests/gitlab/quartz-templates.yml
