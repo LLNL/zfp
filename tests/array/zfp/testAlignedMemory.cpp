@@ -6,7 +6,7 @@ using namespace zfp;
 #include "../utils/gtestSingleFixture.h"
 #include "../utils/predicates.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 TestEnv* const testEnv = new TestEnv;
 
