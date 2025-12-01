@@ -44,8 +44,8 @@ jobs:
 
 #         - os: macos-latest
           - os: macos-14
-            cxx_compiler: g++-12
-            c_compiler: gcc-12
+            cxx_compiler: g++-13
+            c_compiler: gcc-13
             omp: ON
             target: all
 
