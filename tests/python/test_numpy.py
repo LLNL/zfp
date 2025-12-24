@@ -10,6 +10,11 @@ try:
 except ImportError:
     version_parse = None
 
+def test_zfpy_version():
+    # Just ensure that the version contains 3 numbers separated by dots
+    assert len(zfpy.__version__.split('.')) == 3
+    # Ensure it is a string, not bytes
+    assert isinstance(zfpy.__version__, str)
 
 class TestNumpy(unittest.TestCase):
     def lossless_round_trip(self, orig_array):

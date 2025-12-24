@@ -37,6 +37,8 @@ mode_fixed_rate = zfp_mode_fixed_rate
 mode_fixed_precision = zfp_mode_fixed_precision
 mode_fixed_accuracy = zfp_mode_fixed_accuracy
 
+__version__ = str(ZFP_VERSION_STRING, encoding='utf-8')
+
 
 cpdef dtype_to_ztype(dtype):
     if dtype == np.int32:

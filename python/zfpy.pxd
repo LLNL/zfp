@@ -11,6 +11,7 @@ cdef extern from "zfp/bitstream.h":
     void stream_close(bitstream* stream)
 
 cdef extern from "zfp.h":
+    cython.char * ZFP_VERSION_STRING
     # enums
     ctypedef enum zfp_type:
         zfp_type_none   = 0,
