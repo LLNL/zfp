@@ -10,6 +10,7 @@ Change Log
 - A new code example, `chunk`, shows how to perform (de)compression in chunks.
 - A new utility function `zfp_block_maximum_size()` returns maximum block size
   for given scalar type, dimensionality, and compression mode.
+- `zfpy.__version__` for straightfoward access to the zfp version string in Python.
 
 ### Fixed
 
