@@ -69,6 +69,7 @@ jobs:
           python -m pip install cython
           python -m pip install oldest-supported-numpy
           python -m pip install setuptools
+          python -m pip install packaging
       
       - name: Setup OpenMP (Linux)
         if: ${{(matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-24.04-arm') && matrix.cxx_compiler == 'clang++'}}
