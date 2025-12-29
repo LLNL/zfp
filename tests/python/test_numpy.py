@@ -34,7 +34,12 @@ class TestNumpy(unittest.TestCase):
         for dtype in [np.float32, np.float64]:
             elements = np.random.random_sample(num_elements)
             elements = elements.astype(dtype, casting="same_kind")
-            array = np.reshape(elements, newshape=shape)
+            if (version_parse is not None and
+                (version_parse(np.__version__) >= version_parse("2.1.0"))
+            ):
+                array = np.reshape(elements, shape=shape)
+            else:
+                array = np.reshape(elements, newshape=shape)
             self.lossless_round_trip(array)
 
         if (version_parse is not None and
