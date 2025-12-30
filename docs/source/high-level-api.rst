@@ -84,9 +84,11 @@ Macros
 
 .. c:macro:: ZFP_VERSION_STRING
 
-  :c:macro:`ZFP_VERSION_STRING` is a string literal composed of the four
-  :ref:`version identifiers <version-id>`.  It is a component of
-  :c:data:`zfp_version_string`.
+  :c:macro:`ZFP_VERSION_STRING` is a string literal composed of the three
+  to four :ref:`version identifiers <version-id>`.  The string does not
+  include the fourth identifier, :c:macro:`ZFP_VERSION_TWEAK`, if it is
+  zero.  For example, version `1.2.3.0` is identified as `"1.2.3"`.  This
+  macro is one of the components of :c:data:`zfp_version_string`.
 
 ----
 
