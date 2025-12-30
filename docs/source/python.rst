@@ -13,8 +13,17 @@ floating-point arrays.  The |zfpy| implementation is based on
 `Cython <https://cython.org>`_ and requires both NumPy and Cython
 to be installed.  Currently, |zfpy| supports only serial execution.
 
-The |zfpy| API is limited to two functions, for compression and
-decompression, which are described below.
+The |zfpy| API is limited to two functions, for compression and decompression,
+and a version identifier, which are described below.
+
+Constants
+---------
+
+.. py:data:: __version__
+
+  Python string identical to :c:macro:`ZFP_VERSION_STRING` representing the
+  |zfpy| library version, e.g., `'1.1.0'`.  Available as of |zfp|
+  |nextrelease|.
 
 Compression
 -----------
