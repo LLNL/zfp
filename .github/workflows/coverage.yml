@@ -44,7 +44,9 @@ jobs:
 
       - name: Upload Report to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-           files: ${{github.workspace}}/build/coverage.xml
-           env_vars: Actions
-           fail_ci_if_error: true
+          files: ${{github.workspace}}/build/coverage.xml
+          env_vars: Actions
+          fail_ci_if_error: true
