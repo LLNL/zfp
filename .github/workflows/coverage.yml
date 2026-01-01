@@ -36,8 +36,9 @@ jobs:
 
       - name: Generate Coverage Report
         working-directory: ${{github.workspace}}/build
+        # for now, suppress mismatch errors (likely gcc/gcov bug)
         run: |-
-          lcov -c --directory ${{github.workspace}}/build --output-file coverage.info
+          lcov -c --directory ${{github.workspace}}/build --output-file coverage.info --ignore-errors mismatch
           lcov --remove coverage.info '${{github.workspace}}/build/tests/*' --remove coverage.info '${{github.workspace}}/tests/*' --remove coverage.info '/usr/include/*' -o coverage.info
           lcov_cobertura ${{github.workspace}}/build/coverage.info -d -o ${{github.workspace}}/build/coverage.xml
 
