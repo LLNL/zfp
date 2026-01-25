@@ -2,6 +2,9 @@ name: Debug (Linux)
 
 on: [workflow_dispatch]
 
+permissions:
+  contents: read
+
 jobs:
     debug:
       runs-on: ubuntu-latest
