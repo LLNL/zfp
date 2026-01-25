@@ -2,6 +2,9 @@ name: Debug (MacOS)
 
 on: [workflow_dispatch]
 
+permissions:
+  contents: read
+
 jobs:
     debug:
       runs-on: macos-latest
