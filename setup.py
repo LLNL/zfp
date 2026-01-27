@@ -22,6 +22,7 @@ setup(
         Extension(
             "zfpy",
             sources=["python/zfpy.pyx"],
+            define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')],
             include_dirs=["include", str(NumpyImport())],
             libraries=["zfp"],
             library_dirs=["build/lib64", "build/lib/Release"],
