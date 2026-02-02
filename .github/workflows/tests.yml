@@ -19,26 +19,22 @@ jobs:
             cxx_compiler: g++-14
             c_compiler: gcc-14
             omp: ON
-            target: all
             
           - os: ubuntu-latest
             cxx_compiler: clang++
             c_compiler: clang
             omp: ON
-            target: all
             
           - os: ubuntu-24.04-arm
             cxx_compiler: g++-14
             c_compiler: gcc-14
             omp: ON
-            target: all
             architecture: arm64
             
           - os: ubuntu-24.04-arm
             cxx_compiler: clang++
             c_compiler: clang
             omp: ON
-            target: all
             architecture: arm64
             
 # macos-latest = macos-15 is currently incompatible with Homebrew gcc;
@@ -50,13 +46,11 @@ jobs:
             cxx_compiler: g++-13
             c_compiler: gcc-13
             omp: ON
-            target: all
 
           - os: macos-latest
             cxx_compiler: clang++
             c_compiler: clang
             omp: OFF
-            target: all
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -87,15 +81,21 @@ jobs:
           echo "LDFLAGS=\"-L$(brew --prefix llvm)/lib\"" >> $GITHUB_ENV
           echo "CPPFLAGS=\"-I$(brew --prefix llvm)/include\"" >> $GITHUB_ENV
 
-      - name: Run CMake
-        id: cmake
-        run: cmake -B ${{github.workspace}}/build ${{matrix.generator}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DBUILD_TESTING_FULL=ON -DZFP_WITH_OPENMP=${{matrix.omp}} -DBUILD_ZFPY=ON -DPYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")  -DPYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
-        
-      - name: Build
-        id: build
-        run: cmake --build ${{github.workspace}}/build --target ${{matrix.target}} --config ${{env.BUILD_TYPE}}
+      - name: Run Configure, Build, Test
+        run: |
+          if [[ "${GITHUB_REF}" == "develop" ]] ; then
+            BUILD_GROUP="Continuous";
+          else
+            BUILD_GROUP="Experimental";
+          fi
 
-      - name: Run Tests
-        id: test
-        working-directory: ${{github.workspace}}/build
-        run: ctest -C ${{env.BUILD_TYPE}} -VV
+          ctest -S cmake/github_actions.cmake \
+            -VV \
+            -j 4 \
+            -C ${{env.BUILD_TYPE}} \
+            -D CTEST_SITE="GitHub Actions" \
+            -D CTEST_BUILD_NAME="${{matrix.os}}-${{matrix.cxx_compiler}}-${{matrix.architecture || 'x64'}}" \
+            -D BUILD_GROUP="${BUILD_GROUP}" \
+            -D CXX_COMPILER=${{matrix.cxx_compiler}} \
+            -D C_COMPILER=${{matrix.c_compiler}} \
+            -D OMP_SETTING=${{matrix.omp}}
