@@ -80,6 +80,12 @@ command-line utility.  To enable OpenMP parallel compression, type::
   CUDA and Python support are not included.  For full functionality,
   build |zfp| using CMake.
 
+Homebrew 
+----------
+
+If you use Homebrew, zfp can be installed as follows::
+
+    brew install zfp
 
 Testing
 -------

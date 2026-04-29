@@ -57,6 +57,10 @@ zfp may also be built using GNU make:
 Note: GNU builds are less flexible and do not support all available features,
 e.g., CUDA support.
 
+Alternatively, zfp may be installed using [Homebrew](https://brew.sh):
+
+    brew install zfp
+
 For further configuration and build instructions, please consult the
 [documentation](https://zfp.readthedocs.io/en/release1.0.1/installation.html).
 For examples of how to call the C library and use the C++ array classes,
