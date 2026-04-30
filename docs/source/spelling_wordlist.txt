@@ -40,6 +40,7 @@ destructor
 destructors
 dimensionalities
 dimensionality
+dnf
 endian
 endianness
 enum
@@ -52,6 +53,7 @@ googletest
 grayscale
 Hadamard
 headerless
+Homebrew
 libzfp
 linearizing
 lossy
@@ -70,6 +72,7 @@ NaN
 negabinary
 optimality
 ORed
+pacman
 partitioner
 piecewise
 pointwise
@@ -92,6 +95,7 @@ scikit
 significand
 significands
 SoA
+Spack
 strided
 struct
 structs
@@ -121,4 +125,5 @@ Kuffuor
 Magri
 Osei
 Pinard
+vcpkg
 Xu

@@ -13,6 +13,46 @@ should conform to both the ISO C89 and C99 standards.  The C++ array classes
 are implemented entirely in header files and can be included as is, but since
 they call the compression library, applications must link with |libzfp|.
 
+.. _package_managers:
+
+Using Package Managers
+----------------------
+
+Several package managers can readily install |zfp| or |zfpy| (the |zfp|
+:ref:`Python bindings <zfpy>`) on a variety of platforms.  The table below
+provides basic usage for some common package managers:
+
+  +------------------+-----------------+--------------------------------------+
+  | operating system | package manager | installation command                 |
+  +==================+=================+======================================+
+  | *multiple*       | Conda           | ``conda install -c conda-forge zfp`` |
+  +------------------+-----------------+--------------------------------------+
+  | *multiple*       | Pip             | ``pip install zfpy``                 |
+  +------------------+-----------------+--------------------------------------+
+  | *multiple*       | Spack           | ``spack install zfp``                |
+  +------------------+-----------------+--------------------------------------+
+  | Arch, MSYS2      | pacman          | ``sudo pacman -S zfp``               |
+  +------------------+-----------------+--------------------------------------+
+  | Fedora           | dnf             | ``sudo dnf install zfp``             |
+  +------------------+-----------------+--------------------------------------+
+  | Red Hat          | yum             | ``sudo yum install zfp``             |
+  +------------------+-----------------+--------------------------------------+
+  | Ubuntu           | apt             | ``sudo apt install zfp``             |
+  +------------------+-----------------+--------------------------------------+
+  | macOS            | Homebrew        | ``brew install zfp``                 |
+  +------------------+-----------------+--------------------------------------+
+  | macOS            | MacPorts        | ``port install zfp``                 |
+  +------------------+-----------------+--------------------------------------+
+  | Windows          | vcpkg           | ``vcpkg install zfp``                |
+  +------------------+-----------------+--------------------------------------+
+
+Additional |zfp| packages available for some platforms include ``zfpy`` and
+``python3-zfpy`` (for Python) and ``zfp-devel`` (development headers and CMake
+configuration).
+
+Installation from Source
+------------------------
+
 |zfp| is preferably built using `CMake <https://cmake.org>`__, although the
 core library can also be built using GNU make on Linux, macOS, and MinGW.
 

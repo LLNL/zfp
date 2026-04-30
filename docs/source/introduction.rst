@@ -60,11 +60,13 @@ bindings) to install.
 Conda (both `C/C++ <https://anaconda.org/conda-forge/zfp>`__ and
 `Python <https://anaconda.org/conda-forge/zfpy>`__ packages are available),
 `PIP <https://pypi.org/project/zfpy>`__,
-`Spack <https://packages.spack.io/package.html?name=zfp>`__, and
-`MacPorts <https://ports.macports.org/port/zfp/details/>`__.
+`Spack <https://packages.spack.io/package.html?name=zfp>`__,
+`Homebrew <https://formulae.brew.sh/formula/zfp>`__,
+`MacPorts <https://ports.macports.org/port/zfp/details/>`__, and
+`vcpkg <https://vcpkg.io/en/package/zfp.html>`__.
 `Linux packages <https://repology.org/project/zfp/versions>`__ are available
-for several distributions and may be installed, for example, using :code:`apt`
-and :code:`yum`.
+for several distributions and may be installed, for example, using ``apt``,
+``dnf``, and ``yum``.  See :ref:`package_managers`.
 
 
 .. _app-support:
@@ -91,9 +93,6 @@ plugins, and formats, such as
 
 * `Compressed MPI messages <https://doi.org/10.1109/IPDPS49936.2021.00053>`__
   in `MVAPICH2-GDR <https://mvapich.cse.ohio-state.edu/userguide/gdr/>`__.
-
-* `Compressed file I/O <https://www.openinventor.com/en/features/oil-gas-geoscience/zfp-compression/>`__
-  in `OpenInventor <https://www.openinventor.com>`__\ |tm|.
 
 * `Compression codec <https://community.opengroup.org/osdu/platform/domain-data-mgmt-services/seismic/open-zgy/-/raw/master/doc/compress.html>`__
   underlying the
