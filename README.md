@@ -57,19 +57,20 @@ zfp may also be built using GNU make:
 Note: GNU builds are less flexible and do not support all available features,
 e.g., CUDA support.
 
-For further configuration and build instructions, please consult the
-[documentation](https://zfp.readthedocs.io/en/release1.0.1/installation.html).
+Finally, zfp may also be installed using package managers such as `apt`,
+`brew`, `conda`, `dnf`, `pacman`, `pip`, `port`, `spack`, `vcpkg`, and
+`yum`.  For further installation instructions, please consult the
+[documentation](https://zfp.readthedocs.io/en/latest/installation.html).
 For examples of how to call the C library and use the C++ array classes,
-see the [examples](https://zfp.readthedocs.io/en/release1.0.1/examples.html)
+see the [examples](https://zfp.readthedocs.io/en/latest/examples.html)
 section.
 
 
 Documentation
 -------------
 
-Full HTML [documentation](http://zfp.readthedocs.io/en/release1.0.1) is
-available online.
-A [PDF](http://readthedocs.org/projects/zfp/downloads/pdf/release1.0.1/)
+Full HTML [documentation](http://zfp.readthedocs.io) is available online.
+A [PDF](http://readthedocs.org/projects/zfp/downloads/pdf/latest/)
 version is also available.
 
 Further information on the zfp software is included in these files:
