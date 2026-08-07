@@ -55,6 +55,7 @@ typedef unsigned long ulong;
   typedef int64_t int64;
   typedef uint64_t uint64;
 #else
+  #include <limits.h>
   /* C89: assume common integer types */
   typedef signed char int8;
   typedef unsigned char uint8;
@@ -69,9 +70,11 @@ typedef unsigned long ulong;
   #if defined(_WIN32)
     /* assume ILP32 or LLP64 (MSVC, MinGW) */
     #define ZFP_LLP64 1
-  #else
+  #elif ULONG_MAX > UINT_MAX
     /* assume LP64 (Linux, macOS, ...) */
     #define ZFP_LP64 1
+  #else
+    #define ZFP_LP32 1
   #endif
 
   /* concatenation for literal suffixes */
@@ -89,7 +92,7 @@ typedef unsigned long ulong;
     #define INT64PRId "ld"
     #define INT64PRIi "li"
     typedef signed long int64;
-  #elif ZFP_LLP64
+  #elif ZFP_LLP64 || ZFP_LP32
     #define INT64C(x) x ## ll
     #define INT64PRId "lld"
     #define INT64PRIi "lli"
@@ -115,7 +118,7 @@ typedef unsigned long ulong;
     #define UINT64PRIu "lu"
     #define UINT64PRIx "lx"
     typedef unsigned long uint64;
-  #elif ZFP_LLP64
+  #elif ZFP_LLP64 || ZFP_LP32
     #define UINT64C(x) x ## ull
     #define UINT64PRIo "llo"
     #define UINT64PRIu "llu"
