@@ -1,11 +1,6 @@
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0)
-    cmake_policy(SET CMP0148 OLD)
-endif ()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/python/scikit-build-cmake)
 
-find_package(PythonInterp REQUIRED)
-find_package(PythonLibs REQUIRED)
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(PythonExtensions REQUIRED)
 find_package(Cython REQUIRED)
 find_package(NumPy REQUIRED)
@@ -33,7 +28,7 @@ if(DEFINED ENV{PYTHONPATH})
 endif()
 
 add_test(NAME test_numpy
-  COMMAND ${PYTHON_EXECUTABLE} test_numpy.py
+  COMMAND ${Python_EXECUTABLE} test_numpy.py
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_tests_properties(test_numpy PROPERTIES

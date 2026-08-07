@@ -182,10 +182,10 @@ Regardless of the settings below, |libzfp| will always be built.
   CMake will attempt to automatically detect the Python installation to use.
   If CMake finds multiple Python installations, it will use the newest one.
   To specify a specific Python installation to use, set
-  :c:macro:`PYTHON_LIBRARY` and :c:macro:`PYTHON_INCLUDE_DIR` on the
+  :c:macro:`Python_LIBRARY` and :c:macro:`Python_INCLUDE_DIR` on the
   cmake line::
 
-      cmake -DBUILD_ZFPY=ON -DPYTHON_LIBRARY=/path/to/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=/path/to/include/python2.7 ..
+      cmake -DBUILD_ZFPY=ON -DPython_LIBRARY=/path/to/lib/libpython2.7.so -DPython_INCLUDE_DIR=/path/to/include/python2.7 ..
 
   CMake default: off.
   GNU make default: off and ignored.
@@ -416,14 +416,14 @@ the :ref:`config` section.
   Default: :code:`cfp`.
 
 
-.. c:macro:: PYTHON_LIBRARY
+.. c:macro:: Python_LIBRARY
 
   Path to the Python library, e.g., :file:`/usr/lib/libpython2.7.so`.
   CMake default: undefined/off.
   GNU make default: off and ignored.
 
 
-.. c:macro:: PYTHON_INCLUDE_DIR
+.. c:macro:: Python_INCLUDE_DIR
 
   Path to the Python include directory, e.g., :file:`/usr/include/python2.7`.
   CMake default: undefined/off.
@@ -441,7 +441,7 @@ in the sections below.
 CMake
 ^^^^^
 
-CMake builds require version 3.9 or later.  CMake is available
+CMake builds require version 3.12 or later.  CMake is available
 `here <https://cmake.org>`__.
 
 OpenMP

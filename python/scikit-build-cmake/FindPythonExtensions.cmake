@@ -242,14 +242,14 @@
 # limitations under the License.
 #=============================================================================
 
-find_package(PythonInterp REQUIRED)
-if(SKBUILD AND NOT PYTHON_LIBRARY)
-  set(PYTHON_LIBRARY "no-library-required")
-  find_package(PythonLibs)
-  unset(PYTHON_LIBRARY)
-  unset(PYTHON_LIBRARIES)
+find_package(Python REQUIRED)
+if(SKBUILD AND NOT Python_LIBRARY)
+  set(Python_LIBRARY "no-library-required")
+  find_package(Python COMPONENTS Development)
+  unset(Python_LIBRARY)
+  unset(Python_LIBRARIES)
 else()
-  find_package(PythonLibs)
+  find_package(Python COMPONENTS Development)
 endif()
 include(targetLinkLibrariesWithDynamicLookup)
 
@@ -297,7 +297,7 @@ sys.stdout.write(\";\".join((
 )))
 ")
 
-execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c "${_command}"
+execute_process(COMMAND "${Python_EXECUTABLE}" -c "${_command}"
                 OUTPUT_VARIABLE _list
                 RESULT_VARIABLE _result)
 
@@ -327,7 +327,7 @@ if(NOT DEFINED PYTHON_EXTENSION_MODULE_SUFFIX)
 endif()
 
 function(_set_python_extension_symbol_visibility _target)
-  if(PYTHON_VERSION_MAJOR VERSION_GREATER 2)
+  if(Python_VERSION_MAJOR VERSION_GREATER 2)
     set(_modinit_prefix "PyInit_")
   else()
     set(_modinit_prefix "init")
@@ -417,7 +417,7 @@ function(python_extension_module _target)
   endif()
 
   if(NOT _is_non_lib)
-    include_directories("${PYTHON_INCLUDE_DIRS}")
+    include_directories("${Python_INCLUDE_DIRS}")
   endif()
 
   if(_is_module_lib)
@@ -442,7 +442,7 @@ function(python_extension_module _target)
       endif()
     endif()
 
-    target_link_libraries_with_dynamic_lookup(${_target} ${PYTHON_LIBRARIES})
+    target_link_libraries_with_dynamic_lookup(${_target} ${Python_LIBRARIES})
 
     if(_is_module_lib)
       _set_python_extension_symbol_visibility(${_target})
@@ -451,8 +451,8 @@ function(python_extension_module _target)
 endfunction()
 
 function(python_standalone_executable _target)
-  include_directories(${PYTHON_INCLUDE_DIRS})
-  target_link_libraries(${_target} ${SKBUILD_LINK_LIBRARIES_KEYWORD} ${PYTHON_LIBRARIES})
+  include_directories(${Python_INCLUDE_DIRS})
+  target_link_libraries(${_target} ${SKBUILD_LINK_LIBRARIES_KEYWORD} ${Python_LIBRARIES})
 endfunction()
 
 function(python_modules_header _name)

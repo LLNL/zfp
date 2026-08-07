@@ -53,12 +53,12 @@ if(BUILD_ZFPY)
   set(CTEST_SITE "${CTEST_SITE}_zfpy$ENV{PYTHON_VERSION}")
 
   # sanitize python include dir path (ex. windows vs linux slashes)
-  set(PYTHON_INCLUDE_DIR "")
-  file(TO_CMAKE_PATH "${CTEST_SOURCE_DIRECTORY}\\$ENV{VIRTUALENV_NAME}\\Include" PYTHON_INCLUDE_DIR)
+  set(Python_INCLUDE_DIR "")
+  file(TO_CMAKE_PATH "${CTEST_SOURCE_DIRECTORY}\\$ENV{VIRTUALENV_NAME}\\Include" Python_INCLUDE_DIR)
 
   list(APPEND cfg_options
-    -DPYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR}
-    -DPYTHON_LIBRARY=$ENV{PYTHON_LIB_PATH}
+    -DPython_INCLUDE_DIR=${Python_INCLUDE_DIR}
+    -DPython_LIBRARY=$ENV{PYTHON_LIB_PATH}
     )
 endif()
 
